@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: global styles */
+body {
+  @apply bg-gray-50 dark:bg-gray-900 antialiased;
+}
+
+.calendar-container .react-calendar {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+}
+
+.calendar-container .react-calendar__tile {
+  padding: 1rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.calendar-container .react-calendar__tile--active {
+  background: #f97316;
+  color: white;
+}
+
+.calendar-container .react-calendar__tile--now {
+  background: #fff7ed;
+}
+
+.dark .calendar-container .react-calendar__tile--now {
+  background: #1e293b;
+}
+
+.calendar-container .react-calendar__navigation button {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.calendar-container .react-calendar__navigation button:enabled:hover,
+.calendar-container .react-calendar__navigation button:enabled:focus {
+  background-color: #f97316;
+  color: white;
+  border-radius: 1rem;
+}
+
+.dark .calendar-container .react-calendar {
+  color: #f9fafb;
+  background: #1f2937;
+}
+
+.dark .calendar-container .react-calendar__tile {
+  color: #f9fafb;
+}
+
+.dark .calendar-container .react-calendar__navigation button {
+  color: #f9fafb;
+}

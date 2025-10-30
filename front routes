@@ -1,0 +1,2607 @@
+FrontEnd Api
+// index.js
+import { authService }from './services/auth.service.js';
+import eventService from './services/event.service.js';
+import clientService from './services/client.service.js';
+import partnerService from './services/partner.service.js';
+import paymentService from './services/payment.service.js';
+import financeService from './services/finance.service.js';
+import taskService from './services/task.service.js';
+import reminderService from './services/reminder.service.js';
+import teamService from './services/team.service.js';
+import roleService from './services/role.service.js';
+import venueService from './services/venue.service.js';
+
+export {
+  authService,
+  eventService,
+  clientService,
+  partnerService,
+  paymentService,
+  financeService,
+  taskService,
+  reminderService,
+  teamService,
+  roleService,
+  venueService,
+};
+
+//axios.js
+import axios from 'axios';
+
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  timeout: 30000, // 30 seconds
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor - Add auth token to requests
+api.interceptors.request.use(
+  (config) => {
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Get venueId from localStorage (for multi-tenancy)
+    const venueId = localStorage.getItem('venueId');
+    if (venueId) {
+      config.headers['X-Venue-ID'] = venueId;
+    }
+
+    // Log request in development
+    if (import.meta.env.DEV) {
+      console.log('🚀 API Request:', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        data: config.data,
+      });
+    }
+
+    return config;
+  },
+  (error) => {
+    console.error('❌ Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - Handle responses and errors
+api.interceptors.response.use(
+  (response) => {
+    // Log response in development
+    if (import.meta.env.DEV) {
+      console.log('✅ API Response:', {
+        url: response.config.url,
+        status: response.status,
+        data: response.data,
+      });
+    }
+
+    return response;
+  },
+  (error) => {
+    // Log error in development
+    if (import.meta.env.DEV) {
+      console.error('❌ API Error:', {
+        url: error.config?.url,
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+      });
+    }
+
+    // Handle specific error cases
+    if (error.response) {
+      const { status, data } = error.response;
+
+      switch (status) {
+        case 401:
+          // Unauthorized - Clear auth data and redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('venueId');
+          
+          // Only redirect if not already on login page
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+          break;
+
+        case 403:
+          // Forbidden - User doesn't have permission
+          console.error('Access forbidden:', data.message);
+          break;
+
+        case 404:
+          // Not found
+          console.error('Resource not found:', data.message);
+          break;
+
+        case 422:
+          // Validation error
+          console.error('Validation error:', data.errors);
+          break;
+
+        case 500:
+          // Server error
+          console.error('Server error:', data.message);
+          break;
+
+        default:
+          console.error('API Error:', data.message || 'Unknown error occurred');
+      }
+
+      // Return a consistent error object
+      return Promise.reject({
+        status,
+        message: data.message || 'An error occurred',
+        errors: data.errors || {},
+        data: data,
+      });
+    } else if (error.request) {
+      // Request was made but no response received
+      console.error('No response received:', error.message);
+      return Promise.reject({
+        status: 0,
+        message: 'No response from server. Please check your connection.',
+        errors: {},
+        data: {},
+      });
+    } else {
+      // Something happened in setting up the request
+      console.error('Request setup error:', error.message);
+      return Promise.reject({
+        status: 0,
+        message: error.message || 'Request failed',
+        errors: {},
+        data: {},
+      });
+    }
+  }
+);
+
+export default api;
+//service/api.js
+import axios from '../axios';
+
+// ============================================
+// AUTH SERVICE
+// ============================================
+export const authService = {
+  // Authentication
+  login: (credentials) => axios.post('/auth/login', credentials),
+  register: (userData) => axios.post('/auth/register', userData),
+  logout: () => axios.post('/auth/logout'),
+  
+  // Password Management
+  forgotPassword: (email) => axios.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => axios.post(`/auth/reset-password/${token}`, { password }),
+  changePassword: (data) => axios.put('/auth/change-password', data),
+  
+  // Profile
+  getMe: () => axios.get('/auth/me'),       
+  updateProfile: (data) => axios.put('/auth/profile', data),
+  
+  // Team Invitations
+  acceptInvitation: (token) => axios.post(`/auth/accept-invitation/${token}`),
+  verifyInvitation: (token) => axios.get(`/auth/verify-invitation/${token}`), //to add later
+};
+
+// ============================================
+// VENUE SERVICE
+// ============================================
+export const venueService = {
+  getAll: () => axios.get('/venues'),
+  getById: (id) => axios.get(`/venues/${id}`),
+  create: (data) => axios.post('/venues', data),
+  update: (id, data) => axios.put(`/venues/${id}`, data),
+  delete: (id) => axios.delete(`/venues/${id}`),
+  
+  // Venue Settings
+  updateSettings: (id, data) => axios.put(`/venues/${id}/settings`, data),
+  updateOperatingHours: (id, data) => axios.put(`/venues/${id}/operating-hours`, data),
+  updateAmenities: (id, data) => axios.put(`/venues/${id}/amenities`, data),
+};
+
+// ============================================
+// EVENT SERVICE
+// ============================================
+export const eventService = {
+  getAll: (params) => axios.get('/events', { params }),
+  getById: (id) => axios.get(`/events/${id}`),
+  create: (data) => axios.post('/events', data),
+  update: (id, data) => axios.put(`/events/${id}`, data),
+  delete: (id) => axios.delete(`/events/${id}`),
+  
+  // Event Status
+  updateStatus: (id, status) => axios.patch(`/events/${id}/status`, { status }),
+  
+  // Event Calendar
+  getCalendar: (params) => axios.get('/events/calendar', { params }),
+};
+
+// ============================================
+// CLIENT SERVICE
+// ============================================
+export const clientService = {
+  getAll: (params) => axios.get('/clients', { params }),
+  getById: (id) => axios.get(`/clients/${id}`),
+  create: (data) => axios.post('/clients', data),
+  update: (id, data) => axios.put(`/clients/${id}`, data),
+  delete: (id) => axios.delete(`/clients/${id}`),
+  
+  // Client Events
+  getEvents: (id) => axios.get(`/clients/${id}/events`),
+};
+
+// ============================================
+// PARTNER SERVICE
+// ============================================
+export const partnerService = {
+  getAll: (params) => axios.get('/partners', { params }),
+  getById: (id) => axios.get(`/partners/${id}`),
+  create: (data) => axios.post('/partners', data),
+  update: (id, data) => axios.put(`/partners/${id}`, data),
+  delete: (id) => axios.delete(`/partners/${id}`),
+  
+  // Partner Events
+  getEvents: (id) => axios.get(`/partners/${id}/events`),
+};
+
+// ============================================
+// PAYMENT SERVICE
+// ============================================
+export const paymentService = {
+  getAll: (params) => axios.get('/payments', { params }),
+  getById: (id) => axios.get(`/payments/${id}`),
+  create: (data) => axios.post('/payments', data),
+  update: (id, data) => axios.put(`/payments/${id}`, data),
+  delete: (id) => axios.delete(`/payments/${id}`),
+  
+  // Payment Actions
+  markAsPaid: (id) => axios.patch(`/payments/${id}/paid`),
+  refund: (id, data) => axios.post(`/payments/${id}/refund`, data),
+};
+
+// ============================================
+// INVOICE SERVICE
+// ============================================
+export const invoiceService = {
+  getAll: (params) => axios.get('/invoices', { params }),
+  getById: (id) => axios.get(`/invoices/${id}`),
+  create: (data) => axios.post('/invoices', data),
+  update: (id, data) => axios.put(`/invoices/${id}`, data),
+  delete: (id) => axios.delete(`/invoices/${id}`),
+  
+  // Invoice Actions
+  send: (id) => axios.post(`/invoices/${id}/send`),
+  download: (id) => axios.get(`/invoices/${id}/download`, { responseType: 'blob' }),
+};
+
+// ============================================
+// FINANCE SERVICE
+// ============================================
+export const financeService = {
+  getAll: (params) => axios.get('/finance', { params }),
+  getById: (id) => axios.get(`/finance/${id}`),
+  create: (data) => axios.post('/finance', data),
+  update: (id, data) => axios.put(`/finance/${id}`, data),
+  delete: (id) => axios.delete(`/finance/${id}`),
+  
+  // Reports
+  getSummary: (params) => axios.get('/finance/summary', { params }),
+  getReports: (params) => axios.get('/finance/reports', { params }),
+  exportTransactions: (params) => axios.get('/finance/export', { params, responseType: 'blob' }),
+  getCashflow: () => axios.get('/finance/cashflow'),
+  getExpensesBreakdown: () => axios.get('/finance/expenses/breakdown'),
+  getIncomeBreakdown: () => axios.get('/finance/income/breakdown'),
+  getProfitLoss: () => axios.get('/finance/profit-loss'),
+  getTrends: () => axios.get('/finance/trends'),
+  getTaxSummary: () => axios.get('/finance/tax-summary'),
+};
+
+// ============================================
+// TASK SERVICE
+// ============================================
+export const taskService = {
+  getAll: (params) => axios.get('/tasks', { params }),
+  getById: (id) => axios.get(`/tasks/${id}`),
+  create: (data) => axios.post('/tasks', data),
+  update: (id, data) => axios.put(`/tasks/${id}`, data),
+  delete: (id) => axios.delete(`/tasks/${id}`),
+  
+  // Task Actions
+   getBoard: () => axios.get('/tasks/board'),
+  getMyTasks: () => axios.get('/tasks/my'),
+  addComment: (id, comment) => axios.post(`/tasks/${id}/comments`, { comment }),
+  addSubtask: (id, subtask) => axios.post(`/tasks/${id}/subtasks`, subtask),
+  updateSubtask: (id, subtaskId, data) => axios.put(`/tasks/${id}/subtasks/${subtaskId}`, data),
+  deleteSubtask: (id, subtaskId) => axios.delete(`/tasks/${id}/subtasks/${subtaskId}`),
+  addAttachment: (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axios.post(`/tasks/${id}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteAttachment: (id, attachmentId) => axios.delete(`/tasks/${id}/attachments/${attachmentId}`),
+};
+// ============================================
+// REMINDER SERVICE
+// ============================================
+export const reminderService = {
+  getAll: (params) => axios.get('/reminders', { params }),
+  getById: (id) => axios.get(`/reminders/${id}`),
+  create: (data) => axios.post('/reminders', data),
+  update: (id, data) => axios.put(`/reminders/${id}`, data),
+  delete: (id) => axios.delete(`/reminders/${id}`),
+  
+  // Reminder Actions
+  snooze: (id, data) => axios.patch(`/reminders/${id}/snooze`, data),
+  complete: (id) => axios.patch(`/reminders/${id}/complete`),
+};
+
+// ============================================
+// TEAM SERVICE
+// ============================================
+export const teamService = {
+  getAll: (params) => axios.get('/users', { params }),
+  getById: (id) => axios.get(`/users/${id}`),
+  create: (data) => axios.post('/users', data),
+  update: (id, data) => axios.put(`/users/${id}`, data),
+  delete: (id) => axios.delete(`/users/${id}`),
+  
+  // Invitations
+  invite: (data) => axios.post('/team/invite', data),
+  acceptInvitation: (token) => axios.post('/team/accept-invitation', { token }),
+  resendInvitation: (id) => axios.post(`/team/invitations/${id}/resend`),
+  cancelInvitation: (id) => axios.delete(`/team/invitations/${id}`),
+  
+  // Permissions
+  getPermissions: () => axios.get('/permissions'),
+  getUserPermissions: (userId) => axios.get(`/users/${userId}/permissions`),
+  updatePermissions: (userId, data) => axios.put(`/users/${userId}/permissions`, data),
+};
+
+// ============================================
+// ROLE SERVICE
+// ============================================
+export const roleService = {
+  getAll: (params) => axios.get('/roles', { params }),
+  getById: (id) => axios.get(`/roles/${id}`),
+  create: (data) => axios.post('/roles', data),
+  update: (id, data) => axios.put(`/roles/${id}`, data),
+  delete: (id) => axios.delete(`/roles/${id}`),
+  
+  // Role Permissions
+  getPermissions: (id) => axios.get(`/roles/${id}/permissions`),
+  updatePermissions: (id, permissions) => axios.put(`/roles/${id}/permissions`, { permissions }),
+};
+
+// ============================================
+// PERMISSION SERVICE
+// ============================================
+export const permissionService = {
+  getAll: () => axios.get('/permissions'),
+  getById: (id) => axios.get(`/permissions/${id}`),
+  getByModule: (module) => axios.get(`/permissions/module/${module}`),
+};
+
+// ============================================
+// USER SERVICE (Current User)
+// ============================================
+export const userService = {
+  getProfile: () => axios.get('/users/profile'),
+  updateProfile: (data) => axios.put('/users/profile', data),
+  uploadAvatar: (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return axios.post('/users/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteAvatar: () => axios.delete('/users/avatar'),
+  
+  // Security
+  changePassword: (data) => axios.put('/users/password', data),
+  enable2FA: () => axios.post('/users/2fa/enable'),
+  disable2FA: () => axios.post('/users/2fa/disable'),
+  getActiveSessions: () => axios.get('/users/sessions'),
+  terminateSession: (sessionId) => axios.delete(`/users/sessions/${sessionId}`),
+};
+
+// ============================================
+// DASHBOARD SERVICE
+// ============================================
+export const dashboardService = {
+  getStats: () => axios.get('/venues/dashboard'), 
+  getRevenueChart: () => axios.get('/finance/revenue'),
+  getUpcomingEvents: () => axios.get('/events?upcoming=true&limit=5'), // Fetch next events
+  getRecentPayments: () => axios.get('/payments?recent=true&limit=5'), // Fetch latest payments
+  getTasks: () => axios.get('/tasks/my'), // Fetch tasks assigned to current user
+};
+import api from '../axios';
+
+// ============================================
+// AUTH SERVICE
+// ============================================
+
+export const authService = {
+  // Register new user
+  register: async (data) => {
+    const response = await api.post('/auth/register', data);
+    
+    console.log('📥 Register API response:', response.data);
+    
+    // ✅ Access the nested data object
+    const { data: responseData } = response;
+    
+    if (responseData.data && responseData.data.token) {
+      localStorage.setItem('token', responseData.data.token);
+      localStorage.setItem('user', JSON.stringify(responseData.data.user));
+      if (responseData.data.user.venue?.id) {
+        localStorage.setItem('venueId', responseData.data.user.venue.id);
+      }
+    }
+    
+    // ✅ Return the nested data
+    return responseData.data;
+  },
+
+  // Login user
+  login: async (email, password) => {
+    const response = await api.post('/auth/login', { email, password });
+    
+    console.log('📥 Login API response:', response.data);
+    
+    // ✅ Access the nested data object
+    const { data: responseData } = response;
+    
+    if (responseData.data && responseData.data.token) {
+      localStorage.setItem('token', responseData.data.token);
+      localStorage.setItem('user', JSON.stringify(responseData.data.user));
+      if (responseData.data.user.venue?.id) {
+        localStorage.setItem('venueId', responseData.data.user.venue.id);
+      }
+    }
+    
+    // ✅ Return the nested data
+    return responseData.data;
+  },
+
+  // Logout user
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('venueId');
+    }
+  },
+
+  // Get current user
+  getCurrentUser: async () => {
+    const response = await api.get('/auth/me');
+    const { data: responseData } = response;
+    
+    if (responseData.data && responseData.data.user) {
+      localStorage.setItem('user', JSON.stringify(responseData.data.user));
+    }
+    
+    return responseData.data;
+  },
+
+  // Update profile
+  updateProfile: async (data) => {
+    const response = await api.put('/auth/profile', data);
+    const { data: responseData } = response;
+    
+    if (responseData.data && responseData.data.user) {
+      localStorage.setItem('user', JSON.stringify(responseData.data.user));
+    }
+    
+    return responseData.data;
+  },
+
+  // Change password
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await api.put('/auth/change-password', {
+      currentPassword,
+      newPassword,
+    });
+    
+    return response.data.data;
+  },
+
+  // Forgot password
+  forgotPassword: async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data.data;
+  },
+
+  // Reset password
+  resetPassword: async (token, password) => {
+    const response = await api.post('/auth/reset-password', {
+      token,
+      password,
+    });
+    return response.data.data;
+  },
+
+  // Verify email
+  verifyEmail: async (token) => {
+    const response = await api.post('/auth/verify-email', { token });
+    return response.data.data;
+  },
+
+  // Resend verification email
+  resendVerification: async (email) => {
+    const response = await api.post('/auth/resend-verification', { email });
+    return response.data.data;
+  },
+
+  // Check if user is authenticated
+  isAuthenticated: () => {
+    return !!localStorage.getItem('token');
+  },
+
+  // Get stored token
+  getToken: () => {
+    return localStorage.getItem('token');
+  },
+
+  // Get stored user
+  getUser: () => {
+    const userStr = localStorage.getItem('user');
+    try {
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+      return null;
+    }
+  },
+
+  // Get stored venue ID
+  getVenueId: () => {
+    return localStorage.getItem('venueId');
+  },
+};
+
+// ============================================
+// VENUE SERVICE
+// ============================================
+export const venueService = {
+  getAll: async () => {
+    const response = await api.get('/venues');
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/venues/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/venues', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/venues/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/venues/${id}`);
+    return response.data;
+  },
+
+  updateSettings: async (id, data) => {
+    const response = await api.put(`/venues/${id}/settings`, data);
+    return response.data;
+  },
+
+  updateOperatingHours: async (id, data) => {
+    const response = await api.put(`/venues/${id}/operating-hours`, data);
+    return response.data;
+  },
+};
+
+// ============================================
+// EVENT SERVICE
+// ============================================
+export const eventService = {
+  getAll: async (params) => {
+    const response = await api.get('/events', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/events/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/events', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/events/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/events/${id}`);
+    return response.data;
+  },
+
+  updateStatus: async (id, status) => {
+    const response = await api.patch(`/events/${id}/status`, { status });
+    return response.data;
+  },
+
+  getCalendar: async (params) => {
+    const response = await api.get('/events/calendar', { params });
+    return response.data;
+  },
+};
+
+// ============================================
+// CLIENT SERVICE
+// ============================================
+export const clientService = {
+  getAll: async (params) => {
+    const response = await api.get('/clients', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/clients/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/clients', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/clients/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/clients/${id}`);
+    return response.data;
+  },
+
+  getEvents: async (id) => {
+    const response = await api.get(`/clients/${id}/events`);
+    return response.data;
+  },
+};
+
+// ============================================
+// PARTNER SERVICE
+// ============================================
+export const partnerService = {
+  getAll: async (params) => {
+    const response = await api.get('/partners', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/partners/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/partners', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/partners/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/partners/${id}`);
+    return response.data;
+  },
+
+  getEvents: async (id) => {
+    const response = await api.get(`/partners/${id}/events`);
+    return response.data;
+  },
+};
+
+// ============================================
+// PAYMENT SERVICE
+// ============================================
+export const paymentService = {
+  getAll: async (params) => {
+    const response = await api.get('/payments', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/payments/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/payments', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/payments/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/payments/${id}`);
+    return response.data;
+  },
+
+  markAsPaid: async (id) => {
+    const response = await api.patch(`/payments/${id}/paid`);
+    return response.data;
+  },
+
+  refund: async (id, data) => {
+    const response = await api.post(`/payments/${id}/refund`, data);
+    return response.data;
+  },
+};
+
+// ============================================
+// INVOICE SERVICE
+// ============================================
+export const invoiceService = {
+  getAll: async (params) => {
+    const response = await api.get('/invoices', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/invoices/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/invoices', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/invoices/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/invoices/${id}`);
+    return response.data;
+  },
+
+  send: async (id) => {
+    const response = await api.post(`/invoices/${id}/send`);
+    return response.data;
+  },
+
+  download: async (id) => {
+    const response = await api.get(`/invoices/${id}/download`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+// ============================================
+// FINANCE SERVICE
+// ============================================
+export const financeService = {
+  getAll: async (params) => {
+    const response = await api.get('/finance', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/finance/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/finance', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/finance/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/finance/${id}`);
+    return response.data;
+  },
+
+  getSummary: async (params) => {
+    const response = await api.get('/finance/summary', { params });
+    return response.data;
+  },
+
+  getReports: async (params) => {
+    const response = await api.get('/finance/reports', { params });
+    return response.data;
+  },
+};
+
+// ============================================
+// TASK SERVICE
+// ============================================
+export const taskService = {
+  getAll: async (params) => {
+    const response = await api.get('/tasks', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/tasks/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/tasks', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/tasks/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/tasks/${id}`);
+    return response.data;
+  },
+
+  updateStatus: async (id, status) => {
+    const response = await api.patch(`/tasks/${id}/status`, { status });
+    return response.data;
+  },
+
+  addComment: async (id, comment) => {
+    const response = await api.post(`/tasks/${id}/comments`, comment);
+    return response.data;
+  },
+};
+
+// ============================================
+// REMINDER SERVICE
+// ============================================
+export const reminderService = {
+  getAll: async (params) => {
+    const response = await api.get('/reminders', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/reminders/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/reminders', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/reminders/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/reminders/${id}`);
+    return response.data;
+  },
+
+  snooze: async (id, data) => {
+    const response = await api.patch(`/reminders/${id}/snooze`, data);
+    return response.data;
+  },
+
+  complete: async (id) => {
+    const response = await api.patch(`/reminders/${id}/complete`);
+    return response.data;
+  },
+};
+
+// ============================================
+// TEAM SERVICE
+// ============================================
+export const teamService = {
+  getAll: async (params) => {
+    const response = await api.get('/users', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/users', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/users/${id}`);
+    return response.data;
+  },
+
+  invite: async (data) => {
+    const response = await api.post('/users/invite', data);
+    return response.data;
+  },
+
+  getPermissions: async () => {
+    const response = await api.get('/permissions');
+    return response.data;
+  },
+
+  getUserPermissions: async (userId) => {
+    const response = await api.get(`/users/${userId}/permissions`);
+    return response.data;
+  },
+};
+
+// ============================================
+// ROLE SERVICE
+// ============================================
+export const roleService = {
+  getAll: async (params) => {
+    const response = await api.get('/roles', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/roles/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/roles', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/roles/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/roles/${id}`);
+    return response.data;
+  },
+
+  updatePermissions: async (id, permissions) => {
+    const response = await api.put(`/roles/${id}/permissions`, { permissions });
+    return response.data;
+  },
+};
+
+// ============================================
+// PERMISSION SERVICE
+// ============================================
+export const permissionService = {
+  getAll: async () => {
+    const response = await api.get('/permissions');
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/permissions/${id}`);
+    return response.data;
+  },
+
+  getByModule: async (module) => {
+    const response = await api.get(`/permissions/module/${module}`);
+    return response.data;
+  },
+};
+
+// ============================================
+// DASHBOARD SERVICE
+// ============================================
+export const dashboardService = {
+  getStats: async () => {
+    const response = await api.get('/dashboard/stats');
+    return response.data;
+  },
+
+  getRevenueChart: async (params) => {
+    const response = await api.get('/dashboard/revenue', { params });
+    return response.data;
+  },
+
+  getUpcomingEvents: async (params) => {
+    const response = await api.get('/dashboard/upcoming-events', { params });
+    return response.data;
+  },
+
+  getRecentPayments: async (params) => {
+    const response = await api.get('/dashboard/recent-payments', { params });
+    return response.data;
+  },
+
+  getTasks: async (params) => {
+    const response = await api.get('/dashboard/tasks', { params });
+    return response.data;
+  },
+};
+
+// Export all services as default for backward compatibility
+export default {
+  authService,
+  venueService,
+  eventService,
+  clientService,
+  partnerService,
+  paymentService,
+  invoiceService,
+  financeService,
+  taskService,
+  reminderService,
+  teamService,
+  roleService,
+  permissionService,
+  dashboardService,
+};
+import api from '../axios';
+
+const clientsService = {
+  // Get all clients with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/clients', { params });
+    return response.data;
+  },
+
+  // Get single client by ID
+  getById: async (id) => {
+    const response = await api.get(`/clients/${id}`);
+    return response.data;
+  },
+
+  // Create new client
+  create: async (data) => {
+    const response = await api.post('/clients', data);
+    return response.data;
+  },
+
+  // Update client
+  update: async (id, data) => {
+    const response = await api.put(`/clients/${id}`, data);
+    return response.data;
+  },
+
+  // Delete client
+  delete: async (id) => {
+    const response = await api.delete(`/clients/${id}`);
+    return response.data;
+  },
+
+  // Get client events
+  getEvents: async (id) => {
+    const response = await api.get(`/clients/${id}/events`);
+    return response.data;
+  },
+
+  // Get client payments
+  getPayments: async (id) => {
+    const response = await api.get(`/clients/${id}/payments`);
+    return response.data;
+  },
+
+  // Search clients
+  search: async (query) => {
+    const response = await api.get('/clients/search', { params: { q: query } });
+    return response.data;
+  },
+
+  // Get clients by status
+  getByStatus: async (status) => {
+    const response = await api.get('/clients', { params: { status } });
+    return response.data;
+  },
+
+  // Update client status
+  updateStatus: async (id, status) => {
+    const response = await api.patch(`/clients/${id}/status`, { status });
+    return response.data;
+  },
+
+  // Get client statistics
+  getStats: async (id) => {
+    const response = await api.get(`/clients/${id}/stats`);
+    return response.data;
+  },
+
+  // Export clients
+  export: async (format = 'csv', filters = {}) => {
+    const response = await api.get('/clients/export', {
+      params: { format, ...filters },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+export default clientsService;
+import api from '../axios';
+
+const eventsService = {
+  // Get all events with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/events', { params });
+    return response.data;
+  },
+
+  // Get single event by ID
+  getById: async (id) => {
+    const response = await api.get(`/events/${id}`);
+    return response.data;
+  },
+
+  // Create new event
+  create: async (data) => {
+    const response = await api.post('/events', data);
+    return response.data;
+  },
+
+  // Update event
+  update: async (id, data) => {
+    const response = await api.put(`/events/${id}`, data);
+    return response.data;
+  },
+
+  // Delete event
+  delete: async (id) => {
+    const response = await api.delete(`/events/${id}`);
+    return response.data;
+  },
+
+  // Get events by status
+  getByStatus: async (status) => {
+    const response = await api.get('/events', { params: { status } });
+    return response.data;
+  },
+
+  // Get events by date range
+  getByDateRange: async (startDate, endDate) => {
+    const response = await api.get('/events', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Get upcoming events
+  getUpcoming: async (limit = 10) => {
+    const response = await api.get('/events/upcoming', { params: { limit } });
+    return response.data;
+  },
+
+  // Get events by client
+  getByClient: async (clientId) => {
+    const response = await api.get('/events', { params: { clientId } });
+    return response.data;
+  },
+
+  // Update event status
+  updateStatus: async (id, status) => {
+    const response = await api.patch(`/events/${id}/status`, { status });
+    return response.data;
+  },
+
+  // Add partner to event
+  addPartner: async (id, partnerId, service, cost) => {
+    const response = await api.post(`/events/${id}/partners`, {
+      partnerId,
+      service,
+      cost,
+    });
+    return response.data;
+  },
+
+  // Remove partner from event
+  removePartner: async (id, partnerId) => {
+    const response = await api.delete(`/events/${id}/partners/${partnerId}`);
+    return response.data;
+  },
+
+  // Get event statistics
+  getStats: async () => {
+    const response = await api.get('/events/stats');
+    return response.data;
+  },
+
+  // Export events
+  export: async (format = 'csv', filters = {}) => {
+    const response = await api.get('/events/export', {
+      params: { format, ...filters },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+export default eventsService;
+// src/api/services/eventService.js
+import api from '../axios';
+
+const eventService = {
+  getAll: (params = {}) => api.get('/events', { params }),
+  getById: (id) => api.get(`/events/${id}`),
+  create: (data) => api.post('/events', data),
+  update: (id, data) => api.put(`/events/${id}`, data),
+  delete: (id) => api.delete(`/events/${id}`),
+};
+
+export default eventService;
+    
+import api from '../axios';
+
+const financeService = {
+  // Get all finance records with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/finance', { params });
+    return response.data;
+  },
+
+  // Get single finance record by ID
+  getById: async (id) => {
+    const response = await api.get(`/finance/${id}`);
+    return response.data;
+  },
+
+  // Create new finance record
+  create: async (data) => {
+    const response = await api.post('/finance', data);
+    return response.data;
+  },
+
+  // Update finance record
+  update: async (id, data) => {
+    const response = await api.put(`/finance/${id}`, data);
+    return response.data;
+  },
+
+  // Delete finance record
+  delete: async (id) => {
+    const response = await api.delete(`/finance/${id}`);
+    return response.data;
+  },
+
+  // Get records by type (income/expense)
+  getByType: async (type) => {
+    const response = await api.get('/finance', { params: { type } });
+    return response.data;
+  },
+
+  // Get records by category
+  getByCategory: async (category) => {
+    const response = await api.get('/finance', { params: { category } });
+    return response.data;
+  },
+
+  // Get records by date range
+  getByDateRange: async (startDate, endDate) => {
+    const response = await api.get('/finance', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Get income summary
+  getIncomeSummary: async (startDate, endDate) => {
+    const response = await api.get('/finance/income/summary', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Get expense summary
+  getExpenseSummary: async (startDate, endDate) => {
+    const response = await api.get('/finance/expense/summary', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Get profit/loss report
+  getProfitLoss: async (startDate, endDate) => {
+    const response = await api.get('/finance/profit-loss', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Get dashboard statistics
+  getDashboardStats: async () => {
+    const response = await api.get('/finance/dashboard');
+    return response.data;
+  },
+
+  // Get monthly revenue chart data
+  getMonthlyRevenue: async (year) => {
+    const response = await api.get('/finance/revenue/monthly', {
+      params: { year },
+    });
+    return response.data;
+  },
+
+  // Get category breakdown
+  getCategoryBreakdown: async (type, startDate, endDate) => {
+    const response = await api.get('/finance/category-breakdown', {
+      params: { type, startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Upload receipt
+  uploadReceipt: async (id, file) => {
+    const formData = new FormData();
+    formData.append('receipt', file);
+    const response = await api.post(`/finance/${id}/receipt`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Delete receipt
+  deleteReceipt: async (id) => {
+    const response = await api.delete(`/finance/${id}/receipt`);
+    return response.data;
+  },
+
+  // Export finance records
+  export: async (format = 'csv', filters = {}) => {
+    const response = await api.get('/finance/export', {
+      params: { format, ...filters },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+export default financeService;
+import api from '../axios';
+
+const invoiceService = {
+  // Get all invoices with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/invoices', { params });
+    return response.data;
+  },
+
+  // Get single invoice by ID
+  getById: async (id) => {
+    const response = await api.get(`/invoices/${id}`);
+    return response.data;
+  },
+
+  // Create new invoice
+  create: async (data) => {
+    const response = await api.post('/invoices', data);
+    return response.data;
+  },
+
+  // Update invoice
+  update: async (id, data) => {
+    const response = await api.put(`/invoices/${id}`, data);
+    return response.data;
+  },
+
+  // Delete invoice
+  delete: async (id) => {
+    const response = await api.delete(`/invoices/${id}`);
+    return response.data;
+  },
+
+  // Get invoices by status
+  getByStatus: async (status) => {
+    const response = await api.get('/invoices', { params: { status } });
+    return response.data;
+  },
+
+  // Get invoices by client
+  getByClient: async (clientId) => {
+    const response = await api.get('/invoices', {
+      params: { client: clientId },
+    });
+    return response.data;
+  },
+
+  // Get invoices by event
+  getByEvent: async (eventId) => {
+    const response = await api.get('/invoices', {
+      params: { event: eventId },
+    });
+    return response.data;
+  },
+
+  // Get draft invoices
+  getDrafts: async () => {
+    const response = await api.get('/invoices', { params: { status: 'draft' } });
+    return response.data;
+  },
+
+  // Get sent invoices
+  getSent: async () => {
+    const response = await api.get('/invoices', { params: { status: 'sent' } });
+    return response.data;
+  },
+
+  // Get paid invoices
+  getPaid: async () => {
+    const response = await api.get('/invoices', { params: { status: 'paid' } });
+    return response.data;
+  },
+
+  // Get overdue invoices
+  getOverdue: async () => {
+    const response = await api.get('/invoices/overdue');
+    return response.data;
+  },
+
+  // Get invoices by date range
+  getByDateRange: async (startDate, endDate) => {
+    const response = await api.get('/invoices', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Send invoice to client
+  send: async (id) => {
+    const response = await api.post(`/invoices/${id}/send`);
+    return response.data;
+  },
+
+  // Download invoice as PDF
+  downloadPDF: async (id) => {
+    const response = await api.get(`/invoices/${id}/pdf`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Mark invoice as sent
+  markSent: async (id) => {
+    const response = await api.patch(`/invoices/${id}/sent`);
+    return response.data;
+  },
+
+  // Mark invoice as paid
+  markPaid: async (id, paidDate = new Date().toISOString()) => {
+    const response = await api.patch(`/invoices/${id}/paid`, { paidDate });
+    return response.data;
+  },
+
+  // Cancel invoice
+  cancel: async (id) => {
+    const response = await api.patch(`/invoices/${id}/cancel`);
+    return response.data;
+  },
+
+  // Record payment for invoice
+  recordPayment: async (id, paymentData) => {
+    const response = await api.post(`/invoices/${id}/payments`, paymentData);
+    return response.data;
+  },
+
+  // Get invoice payments
+  getPayments: async (id) => {
+    const response = await api.get(`/invoices/${id}/payments`);
+    return response.data;
+  },
+
+  // Send reminder
+  sendReminder: async (id) => {
+    const response = await api.post(`/invoices/${id}/reminder`);
+    return response.data;
+  },
+
+  // Get invoice statistics
+  getStats: async (params = {}) => {
+    const response = await api.get('/invoices/stats', { params });
+    return response.data;
+  },
+
+  // Get invoice summary
+  getSummary: async (startDate, endDate) => {
+    const response = await api.get('/invoices/summary', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Export invoices
+  export: async (format = 'csv', filters = {}) => {
+    const response = await api.get('/invoices/export', {
+      params: { format, ...filters },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Get invoice analytics
+  getAnalytics: async (period = 'month') => {
+    const response = await api.get('/invoices/analytics', {
+      params: { period },
+    });
+    return response.data;
+  },
+
+  // Duplicate invoice
+  duplicate: async (id) => {
+    const response = await api.post(`/invoices/${id}/duplicate`);
+    return response.data;
+  },
+
+  // Bulk send invoices
+  bulkSend: async (ids) => {
+    const response = await api.post('/invoices/bulk-send', { ids });
+    return response.data;
+  },
+
+  // Bulk delete invoices
+  bulkDelete: async (ids) => {
+    const response = await api.post('/invoices/bulk-delete', { ids });
+    return response.data;
+  },
+
+  // Get invoice by number
+  getByNumber: async (invoiceNumber) => {
+    const response = await api.get('/invoices/number', {
+      params: { invoiceNumber },
+    });
+    return response.data;
+  },
+
+  // Preview invoice (without saving)
+  preview: async (data) => {
+    const response = await api.post('/invoices/preview', data, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+export default invoiceService;
+import api from '../axios';
+
+const clientsService = {
+  // Get all clients with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/clients', { params });
+    return response.data;
+  },
+
+  // Get single client by ID
+  getById: async (id) => {
+    const response = await api.get(`/clients/${id}`);
+    return response.data;
+  },
+
+  // Create new client
+  create: async (data) => {
+    const response = await api.post('/clients', data);
+    return response.data;
+  },
+
+  // Update client
+  update: async (id, data) => {
+    const response = await api.put(`/clients/${id}`, data);
+    return response.data;
+  },
+
+  // Delete client
+  delete: async (id) => {
+    const response = await api.delete(`/clients/${id}`);
+    return response.data;
+  },
+
+  // Get client events
+  getEvents: async (id) => {
+    const response = await api.get(`/clients/${id}/events`);
+    return response.data;
+  },
+
+  // Get client payments
+  getPayments: async (id) => {
+    const response = await api.get(`/clients/${id}/payments`);
+    return response.data;
+  },
+
+  // Search clients
+  search: async (query) => {
+    const response = await api.get('/clients/search', { params: { q: query } });
+    return response.data;
+  },
+
+  // Get clients by status
+  getByStatus: async (status) => {
+    const response = await api.get('/clients', { params: { status } });
+    return response.data;
+  },
+
+  // Update client status
+  updateStatus: async (id, status) => {
+    const response = await api.patch(`/clients/${id}/status`, { status });
+    return response.data;
+  },
+
+  // Get client statistics
+  getStats: async (id) => {
+    const response = await api.get(`/clients/${id}/stats`);
+    return response.data;
+  },
+
+  // Export clients
+  export: async (format = 'csv', filters = {}) => {
+    const response = await api.get('/clients/export', {
+      params: { format, ...filters },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+export default clientsService;
+import api from '../axios';
+
+const paymentService = {
+  // Get all payments with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/payments', { params });
+    return response.data;
+  },
+
+  // Get single payment by ID
+  getById: async (id) => {
+    const response = await api.get(`/payments/${id}`);
+    return response.data;
+  },
+
+  // Create new payment
+  create: async (data) => {
+    const response = await api.post('/payments', data);
+    return response.data;
+  },
+
+  // Update payment
+  update: async (id, data) => {
+    const response = await api.put(`/payments/${id}`, data);
+    return response.data;
+  },
+
+  // Delete payment
+  delete: async (id) => {
+    const response = await api.delete(`/payments/${id}`);
+    return response.data;
+  },
+
+  // Get payments by type (income/expense)
+  getByType: async (type) => {
+    const response = await api.get('/payments', { params: { type } });
+    return response.data;
+  },
+
+  // Get payments by status
+  getByStatus: async (status) => {
+    const response = await api.get('/payments', { params: { status } });
+    return response.data;
+  },
+
+  // Get payments by method
+  getByMethod: async (method) => {
+    const response = await api.get('/payments', { params: { method } });
+    return response.data;
+  },
+
+  // Get payments by event
+  getByEvent: async (eventId) => {
+    const response = await api.get('/payments', { params: { event: eventId } });
+    return response.data;
+  },
+
+  // Get payments by client
+  getByClient: async (clientId) => {
+    const response = await api.get('/payments', {
+      params: { client: clientId },
+    });
+    return response.data;
+  },
+
+  // Get pending payments
+  getPending: async () => {
+    const response = await api.get('/payments', { params: { status: 'pending' } });
+    return response.data;
+  },
+
+  // Get overdue payments
+  getOverdue: async () => {
+    const response = await api.get('/payments/overdue');
+    return response.data;
+  },
+
+  // Get upcoming payments (due soon)
+  getUpcoming: async (days = 7) => {
+    const response = await api.get('/payments/upcoming', { params: { days } });
+    return response.data;
+  },
+
+  // Get payments by date range
+  getByDateRange: async (startDate, endDate) => {
+    const response = await api.get('/payments', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Process refund
+  refund: async (id, data) => {
+    const response = await api.post(`/payments/${id}/refund`, data);
+    return response.data;
+  },
+
+  // Mark payment as completed
+  markCompleted: async (id, paidDate) => {
+    const response = await api.patch(`/payments/${id}/complete`, { paidDate });
+    return response.data;
+  },
+
+  // Mark payment as failed
+  markFailed: async (id, reason) => {
+    const response = await api.patch(`/payments/${id}/failed`, { reason });
+    return response.data;
+  },
+
+  // Send payment receipt
+  sendReceipt: async (id) => {
+    const response = await api.post(`/payments/${id}/send-receipt`);
+    return response.data;
+  },
+
+  // Download payment receipt
+  downloadReceipt: async (id) => {
+    const response = await api.get(`/payments/${id}/receipt`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Send payment reminder
+  sendReminder: async (id) => {
+    const response = await api.post(`/payments/${id}/reminder`);
+    return response.data;
+  },
+
+  // Get payment statistics
+  getStats: async (params = {}) => {
+    const response = await api.get('/payments/stats', { params });
+    return response.data;
+  },
+
+  // Get payment summary
+  getSummary: async (startDate, endDate) => {
+    const response = await api.get('/payments/summary', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Export payments
+  export: async (format = 'csv', filters = {}) => {
+    const response = await api.get('/payments/export', {
+      params: { format, ...filters },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Get payment analytics
+  getAnalytics: async (period = 'month') => {
+    const response = await api.get('/payments/analytics', {
+      params: { period },
+    });
+    return response.data;
+  },
+
+  // Bulk update payments
+  bulkUpdate: async (ids, data) => {
+    const response = await api.patch('/payments/bulk-update', { ids, data });
+    return response.data;
+  },
+
+  // Bulk delete payments
+  bulkDelete: async (ids) => {
+    const response = await api.post('/payments/bulk-delete', { ids });
+    return response.data;
+  },
+
+  // Reconcile payment
+  reconcile: async (id, data) => {
+    const response = await api.post(`/payments/${id}/reconcile`, data);
+    return response.data;
+  },
+
+  // Get payment by reference
+  getByReference: async (reference) => {
+    const response = await api.get('/payments/reference', {
+      params: { reference },
+    });
+    return response.data;
+  },
+};
+
+export default paymentService;4import api from '../axios';
+
+const permissionService = {
+  // Get all permissions with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/permissions', { params });
+    return response.data;
+  },
+
+  // Get single permission by ID
+  getById: async (id) => {
+    const response = await api.get(`/permissions/${id}`);
+    return response.data;
+  },
+
+  // Get permissions by module
+  getByModule: async (module) => {
+    const response = await api.get('/permissions', { params: { module } });
+    return response.data;
+  },
+
+  // Get permissions by action
+  getByAction: async (action) => {
+    const response = await api.get('/permissions', { params: { action } });
+    return response.data;
+  },
+
+  // Get permissions by scope
+  getByScope: async (scope) => {
+    const response = await api.get('/permissions', { params: { scope } });
+    return response.data;
+  },
+
+  // Get active permissions only
+  getActive: async () => {
+    const response = await api.get('/permissions', { params: { isActive: true } });
+    return response.data;
+  },
+
+  // Create new permission (admin only)
+  create: async (data) => {
+    const response = await api.post('/permissions', data);
+    return response.data;
+  },
+
+  // Update permission (admin only)
+  update: async (id, data) => {
+    const response = await api.put(`/permissions/${id}`, data);
+    return response.data;
+  },
+
+  // Delete permission (admin only)
+  delete: async (id) => {
+    const response = await api.delete(`/permissions/${id}`);
+    return response.data;
+  },
+
+  // Toggle permission active status
+  toggleStatus: async (id) => {
+    const response = await api.patch(`/permissions/${id}/toggle-status`);
+    return response.data;
+  },
+
+  // Get permissions grouped by module
+  getGroupedByModule: async () => {
+    const response = await api.get('/permissions/grouped');
+    return response.data;
+  },
+
+  // Check if user has permission
+  checkPermission: async (permissionName) => {
+    const response = await api.get('/permissions/check', {
+      params: { permission: permissionName },
+    });
+    return response.data;
+  },
+
+  // Get permission statistics
+  getStats: async () => {
+    const response = await api.get('/permissions/stats');
+    return response.data;
+  },
+};
+
+export default permissionService;
+import api from '../axios';
+
+const remindersService = {
+  // Get all reminders with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/reminders', { params });
+    return response.data;
+  },
+
+  // Get single reminder by ID
+  getById: async (id) => {
+    const response = await api.get(`/reminders/${id}`);
+    return response.data;
+  },
+
+  // Create new reminder
+  create: async (data) => {
+    const response = await api.post('/reminders', data);
+    return response.data;
+  },
+
+  // Update reminder
+  update: async (id, data) => {
+    const response = await api.put(`/reminders/${id}`, data);
+    return response.data;
+  },
+
+  // Delete reminder
+  delete: async (id) => {
+    const response = await api.delete(`/reminders/${id}`);
+    return response.data;
+  },
+
+  // Mark reminder as completed
+  complete: async (id) => {
+    const response = await api.patch(`/reminders/${id}/complete`);
+    return response.data;
+  },
+
+  // Snooze reminder
+  snooze: async (id, data) => {
+    const response = await api.patch(`/reminders/${id}/snooze`, data);
+    return response.data;
+  },
+
+  // Cancel reminder
+  cancel: async (id) => {
+    const response = await api.patch(`/reminders/${id}/cancel`);
+    return response.data;
+  },
+
+  // Get reminders by status
+  getByStatus: async (status) => {
+    const response = await api.get('/reminders', { params: { status } });
+    return response.data;
+  },
+
+  // Get reminders by priority
+  getByPriority: async (priority) => {
+    const response = await api.get('/reminders', { params: { priority } });
+    return response.data;
+  },
+
+  // Get reminders by type
+  getByType: async (type) => {
+    const response = await api.get('/reminders', { params: { type } });
+    return response.data;
+  },
+
+  // Get upcoming reminders
+  getUpcoming: async (days = 7) => {
+    const response = await api.get('/reminders/upcoming', { params: { days } });
+    return response.data;
+  },
+
+  // Get overdue reminders
+  getOverdue: async () => {
+    const response = await api.get('/reminders/overdue');
+    return response.data;
+  },
+
+  // Get reminders by date range
+  getByDateRange: async (startDate, endDate) => {
+    const response = await api.get('/reminders', {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  },
+
+  // Get assigned reminders
+  getAssignedToUser: async (userId) => {
+    const response = await api.get('/reminders', {
+      params: { assignedTo: userId },
+    });
+    return response.data;
+  },
+
+  // Get reminders by related event
+  getByEvent: async (eventId) => {
+    const response = await api.get('/reminders', {
+      params: { relatedEvent: eventId },
+    });
+    return response.data;
+  },
+
+  // Get reminders by related client
+  getByClient: async (clientId) => {
+    const response = await api.get('/reminders', {
+      params: { relatedClient: clientId },
+    });
+    return response.data;
+  },
+
+  // Get reminders by related task
+  getByTask: async (taskId) => {
+    const response = await api.get('/reminders', {
+      params: { relatedTask: taskId },
+    });
+    return response.data;
+  },
+
+  // Get reminders by related payment
+  getByPayment: async (paymentId) => {
+    const response = await api.get('/reminders', {
+      params: { relatedPayment: paymentId },
+    });
+    return response.data;
+  },
+
+  // Get reminder statistics
+  getStats: async (params = {}) => {
+    const response = await api.get('/reminders/stats', { params });
+    return response.data;
+  },
+
+  // Export reminders
+  export: async (format = 'csv', filters = {}) => {
+    const response = await api.get('/reminders/export', {
+      params: { format, ...filters },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Test notification
+  testNotification: async (id) => {
+    const response = await api.post(`/reminders/${id}/test-notification`);
+    return response.data;
+  },
+};
+
+export default remindersService;
+import api from '../axios';
+
+const rolesService = {
+  // Get all roles
+  getAll: async () => {
+    const response = await api.get('/roles');
+    return response.data;
+  },
+
+  // Get single role by ID
+  getById: async (id) => {
+    const response = await api.get(`/roles/${id}`);
+    return response.data;
+  },
+
+  // Create new role
+  create: async (data) => {
+    const response = await api.post('/roles', data);
+    return response.data;
+  },
+
+  // Update role
+  update: async (id, data) => {
+    const response = await api.put(`/roles/${id}`, data);
+    return response.data;
+  },
+
+  // Delete role
+  delete: async (id) => {
+    const response = await api.delete(`/roles/${id}`);
+    return response.data;
+  },
+
+  // Get all permissions
+  getAllPermissions: async () => {
+    const response = await api.get('/permissions');
+    return response.data;
+  },
+
+  // Get permissions by module
+  getPermissionsByModule: async (module) => {
+    const response = await api.get('/permissions', { params: { module } });
+    return response.data;
+  },
+
+  // Add permission to role
+  addPermission: async (id, permissionId) => {
+    const response = await api.post(`/roles/${id}/permissions`, { permissionId });
+    return response.data;
+  },
+
+  // Remove permission from role
+  removePermission: async (id, permissionId) => {
+    const response = await api.delete(`/roles/${id}/permissions/${permissionId}`);
+    return response.data;
+  },
+
+  // Duplicate role
+  duplicate: async (id, newName) => {
+    const response = await api.post(`/roles/${id}/duplicate`, { name: newName });
+    return response.data;
+  },
+};
+
+export default rolesService;
+import api from '../axios';
+
+const tasksService = {
+  // Get all tasks with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/tasks', { params });
+    return response.data;
+  },
+
+  // Get single task by ID
+  getById: async (id) => {
+    const response = await api.get(`/tasks/${id}`);
+    return response.data;
+  },
+
+  // Create new task
+  create: async (data) => {
+    const response = await api.post('/tasks', data);
+    return response.data;
+  },
+
+  // Update task
+  update: async (id, data) => {
+    const response = await api.put(`/tasks/${id}`, data);
+    return response.data;
+  },
+
+  // Delete task
+  delete: async (id) => {
+    const response = await api.delete(`/tasks/${id}`);
+    return response.data;
+  },
+
+  // Get tasks by status
+  getByStatus: async (status) => {
+    const response = await api.get('/tasks', { params: { status } });
+    return response.data;
+  },
+
+  // Get tasks by priority
+  getByPriority: async (priority) => {
+    const response = await api.get('/tasks', { params: { priority } });
+    return response.data;
+  },
+
+  // Get tasks assigned to user
+  getMyTasks: async () => {
+    const response = await api.get('/tasks/my-tasks');
+    return response.data;
+  },
+
+  // Get tasks by event
+  getByEvent: async (eventId) => {
+    const response = await api.get('/tasks', { params: { eventId } });
+    return response.data;
+  },
+
+  // Update task status
+  updateStatus: async (id, status) => {
+    const response = await api.patch(`/tasks/${id}/status`, { status });
+    return response.data;
+  },
+
+  // Mark task as completed
+  markAsCompleted: async (id) => {
+    const response = await api.patch(`/tasks/${id}/complete`);
+    return response.data;
+  },
+
+  // Assign task to user
+  assignTo: async (id, userId) => {
+    const response = await api.patch(`/tasks/${id}/assign`, { userId });
+    return response.data;
+  },
+
+  // Add subtask
+  addSubtask: async (id, title) => {
+    const response = await api.post(`/tasks/${id}/subtasks`, { title });
+    return response.data;
+  },
+
+  // Complete subtask
+  completeSubtask: async (id, subtaskId) => {
+    const response = await api.patch(`/tasks/${id}/subtasks/${subtaskId}/complete`);
+    return response.data;
+  },
+
+  // Delete subtask
+  deleteSubtask: async (id, subtaskId) => {
+    const response = await api.delete(`/tasks/${id}/subtasks/${subtaskId}`);
+    return response.data;
+  },
+
+  // Add comment
+  addComment: async (id, text) => {
+    const response = await api.post(`/tasks/${id}/comments`, { text });
+    return response.data;
+  },
+
+  // Upload attachment
+  uploadAttachment: async (id, file) => {
+    const formData = new FormData();
+    formData.append('attachment', file);
+    const response = await api.post(`/tasks/${id}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Delete attachment
+  deleteAttachment: async (id, attachmentId) => {
+    const response = await api.delete(`/tasks/${id}/attachments/${attachmentId}`);
+    return response.data;
+  },
+
+  // Get task statistics
+  getStats: async () => {
+    const response = await api.get('/tasks/stats');
+    return response.data;
+  },
+};
+
+export default tasksService;
+import api from '../axios';
+
+const teamService = {
+  // Get all team members
+  getAll: async (params = {}) => {
+    const response = await api.get('/users', { params });
+    return response.data;
+  },
+
+  // Get single team member by ID
+  getById: async (id) => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  // Update team member
+  update: async (id, data) => {
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
+  },
+
+  // Delete team member
+  delete: async (id) => {
+    const response = await api.delete(`/users/${id}`);
+    return response.data;
+  },
+
+  // Invite team member
+  invite: async (data) => {
+    const response = await api.post('/team/invite', data);
+    return response.data;
+  },
+
+  // Get pending invitations
+  getInvitations: async () => {
+    const response = await api.get('/team/invitations');
+    return response.data;
+  },
+
+  // Cancel invitation
+  cancelInvitation: async (id) => {
+    const response = await api.delete(`/team/invitations/${id}`);
+    return response.data;
+  },
+
+  // Resend invitation
+  resendInvitation: async (id) => {
+    const response = await api.post(`/team/invitations/${id}/resend`);
+    return response.data;
+  },
+
+  // Accept invitation (public endpoint)
+  acceptInvitation: async (token) => {
+    const response = await api.post('/team/invitations/accept', { token });
+    return response.data;
+  },
+
+  // Update team member role
+  updateRole: async (id, roleId) => {
+    const response = await api.patch(`/users/${id}/role`, { roleId });
+    return response.data;
+  },
+
+  // Update team member status
+  updateStatus: async (id, isActive) => {
+    const response = await api.patch(`/users/${id}/status`, { isActive });
+    return response.data;
+  },
+
+  // Get team member permissions
+  getPermissions: async (id) => {
+    const response = await api.get(`/users/${id}/permissions`);
+    return response.data;
+  },
+
+  // Grant custom permission
+  grantPermission: async (id, permissionId) => {
+    const response = await api.post(`/users/${id}/permissions`, { permissionId });
+    return response.data;
+  },
+
+  // Revoke custom permission
+  revokePermission: async (id, permissionId) => {
+    const response = await api.delete(`/users/${id}/permissions/${permissionId}`);
+    return response.data;
+  },
+};
+
+export default teamService;
+import api from '../axios';
+
+const usersService = {
+  // Get all users with optional filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/users', { params });
+    return response.data;
+  },
+
+  // Get single user by ID
+  getById: async (id) => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  // Create new user
+  create: async (data) => {
+    const response = await api.post('/users', data);
+    return response.data;
+  },
+
+  // Update user
+  update: async (id, data) => {
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
+  },
+
+  // Delete user
+  delete: async (id) => {
+    const response = await api.delete(`/users/${id}`);
+    return response.data;
+  },
+
+  // Invite new user
+  invite: async (data) => {
+    const response = await api.post('/users/invite', data);
+    return response.data;
+  },
+
+  // Resend invitation
+  resendInvite: async (userId) => {
+    const response = await api.post(`/users/${userId}/resend-invite`);
+    return response.data;
+  },
+
+  // Cancel invitation
+  cancelInvite: async (userId) => {
+    const response = await api.post(`/users/${userId}/cancel-invite`);
+    return response.data;
+  },
+
+  // Update user permissions
+  updatePermissions: async (id, permissions) => {
+    const response = await api.put(`/users/${id}/permissions`, { permissions });
+    return response.data;
+  },
+
+  // Grant custom permissions
+  grantPermissions: async (id, permissions) => {
+    const response = await api.post(`/users/${id}/grant-permissions`, {
+      permissions,
+    });
+    return response.data;
+  },
+
+  // Revoke custom permissions
+  revokePermissions: async (id, permissions) => {
+    const response = await api.post(`/users/${id}/revoke-permissions`, {
+      permissions,
+    });
+    return response.data;
+  },
+
+  // Update user role
+  updateRole: async (id, roleId) => {
+    const response = await api.patch(`/users/${id}/role`, { roleId });
+    return response.data;
+  },
+
+  // Activate user
+  activate: async (id) => {
+    const response = await api.patch(`/users/${id}/activate`);
+    return response.data;
+  },
+
+  // Deactivate user
+  deactivate: async (id) => {
+    const response = await api.patch(`/users/${id}/deactivate`);
+    return response.data;
+  },
+
+  // Get users by role
+  getByRole: async (roleId) => {
+    const response = await api.get('/users', { params: { roleId } });
+    return response.data;
+  },
+
+  // Get active users
+  getActive: async () => {
+    const response = await api.get('/users', { params: { isActive: true } });
+    return response.data;
+  },
+
+  // Get inactive users
+  getInactive: async () => {
+    const response = await api.get('/users', { params: { isActive: false } });
+    return response.data;
+  },
+
+  // Search users
+  search: async (query) => {
+    const response = await api.get('/users/search', { params: { q: query } });
+    return response.data;
+  },
+
+  // Get user activity log
+  getActivityLog: async (id, params = {}) => {
+    const response = await api.get(`/users/${id}/activity`, { params });
+    return response.data;
+  },
+
+  // Get user statistics
+  getStats: async () => {
+    const response = await api.get('/users/stats');
+    return response.data;
+  },
+
+  // Upload user avatar
+  uploadAvatar: async (id, file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await api.post(`/users/${id}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Delete user avatar
+  deleteAvatar: async (id) => {
+    const response = await api.delete(`/users/${id}/avatar`);
+    return response.data;
+  },
+
+  // Bulk update users
+  bulkUpdate: async (userIds, data) => {
+    const response = await api.patch('/users/bulk-update', { userIds, data });
+    return response.data;
+  },
+
+  // Bulk delete users
+  bulkDelete: async (userIds) => {
+    const response = await api.post('/users/bulk-delete', { userIds });
+    return response.data;
+  },
+
+  // Export users
+  export: async (format = 'csv', filters = {}) => {
+    const response = await api.get('/users/export', {
+      params: { format, ...filters },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+export default usersService;
+import api from '../axios';
+
+const venueService = {
+  // Get current venue
+  getCurrent: async () => {
+    const response = await api.get('/venue/me');
+    return response.data;
+  },
+
+  // Update venue
+  update: async (data) => {
+    const response = await api.put('/venue/me', data);
+    return response.data;
+  },
+
+  // Update venue settings
+  updateSettings: async (data) => {
+    const response = await api.put('/venue/settings', data);
+    return response.data;
+  },
+
+  // Upload venue image
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await api.post('/venue/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Delete venue image
+  deleteImage: async (imageUrl) => {
+    const response = await api.delete('/venue/images', { data: { imageUrl } });
+    return response.data;
+  },
+
+  // Get venue statistics
+  getStats: async () => {
+    const response = await api.get('/venue/stats');
+    return response.data;
+  },
+
+  // Get subscription details
+  getSubscription: async () => {
+    const response = await api.get('/venue/subscription');
+    return response.data;
+  },
+
+  // Update subscription
+  updateSubscription: async (plan) => {
+    const response = await api.put('/venue/subscription', { plan });
+    return response.data;
+  },
+
+  // Cancel subscription
+  cancelSubscription: async () => {
+    const response = await api.post('/venue/subscription/cancel');
+    return response.data;
+  },
+};
+
+export default venueService;
