@@ -122,8 +122,14 @@ const eventSchema = new mongoose.Schema(
 
 // Validate that end date is after start date
 eventSchema.pre("save", function (next) {
-  if (this.endDate && this.startDate && this.endDate <= this.startDate) {
-    next(new Error("End date must be after start date"));
+  if (this.endDate && this.startDate) {
+    // Create full datetime objects including time
+    const startDateTime = new Date(`${this.startDate}T${this.startTime || '00:00'}:00`);
+    const endDateTime = new Date(`${this.endDate}T${this.endTime || '23:59'}:59`);
+    
+    if (endDateTime <= startDateTime) {
+      return next(new Error("Event end time must be after start time"));
+    }
   }
   next();
 });

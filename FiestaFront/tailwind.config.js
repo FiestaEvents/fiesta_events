@@ -17,4 +17,15 @@ export default {
     },
   },
   plugins: [],
-}
+future: {
+    hoverOnlyWhenSupported: true,
+  },
+  variants: {
+    extend: {
+      textAlign: ['rtl'],
+      float: ['rtl'],
+      margin: ['rtl'],
+      padding: ['rtl'],
+    },
+  },
+};

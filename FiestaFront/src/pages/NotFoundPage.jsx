@@ -14,7 +14,7 @@ const NotFoundPage = () => {
         <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
           Page not found
         </p>
-        <Link to="/dashboard">
+        <Link to="/">
           <Button>Go to Dashboard</Button>
         </Link>
       </div>

@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext.jsx';
 import AuthLayout from '../../components/layout/AuthLayout.jsx';
 import Input from '../../components/common/Input.jsx';
 import Button from '../../components/common/Button.jsx';
-import { iconRight } from '../../components/icons/IconComponents.js';
+//import  iconRight  from '../../components/icons/IconComponents.js';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ const Login = () => {
             value={formData.password}
             onChange={handleChange}
             placeholder="••••••••"
-            iconRight={showPassword ? EyeOff : Eye}
+     //       iconRight={showPassword ? EyeOff : Eye}
             onIconClick={() => setShowPassword(!showPassword)}
           />
           <Button type="submit" loading={loading} variant="outline" className="mt-2">Sign In</Button>

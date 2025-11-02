@@ -1,0 +1,55 @@
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "events": "Events",
+    "clients": "Clients",
+    "partners": "Partners",
+    "tasks": "Tasks",
+    "reminders": "Reminders",
+    "payments": "Payments",
+    "invoices": "Invoices",
+    "finance": "Finance",
+    "team": "Team",
+    "roles": "Roles",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "support": "Support",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "allRightsReserved": "All rights reserved",
+    "toggleTheme": "Toggle theme",
+    "notifications": "Notifications",
+    "userMenu": "User menu",
+    "user": "User",
+    "event": "Event"
+  },
+  "sidebar": {
+    "overview": "Overview",
+    "operations": "Operations",
+    "financial": "Financial",
+    "management": "Management"
+    
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "upcomingEvents": "Upcoming Events",
+    "recentPayments": "Recent Payments",
+    "totalEvents": "Total Events",
+    "revenue": "Revenue",
+    "activeClients": "Active Clients",
+    "pendingPayments": "Pending Payments"
+  },
+  "notifications": {
+    "upcomingReminders": "Upcoming Reminders",
+    "noReminders": "No upcoming reminders",
+    "untitledReminder": "Untitled Reminder",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
+  }
+}

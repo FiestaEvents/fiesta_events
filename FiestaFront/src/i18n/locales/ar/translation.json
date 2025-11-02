@@ -1,0 +1,54 @@
+{
+  "common": {
+    "dashboard": "لوحة التحكم",
+    "events": "الفعاليات",
+    "clients": "العملاء",
+    "partners": "الشركاء",
+    "tasks": "المهام",
+    "reminders": "التذكيرات",
+    "payments": "المدفوعات",
+    "invoices": "الفواتير",
+    "finance": "المالية",
+    "team": "الفريق",
+    "roles": "الأدوار",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "logout": "تسجيل الخروج",
+    "support": "الدعم",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "create": "إنشاء",
+    "search": "بحث",
+    "filter": "تصفية",
+    "allRightsReserved": "جميع الحقوق محفوظة",
+    "toggleTheme": "تبديل السمة",
+    "notifications": "الإشعارات",
+    "userMenu": "قائمة المستخدم",
+    "user": "مستخدم",
+    "event": "فعالية"
+  },
+  "sidebar": {
+    "overview": "نظرة عامة",
+    "operations": "العمليات",
+    "financial": "المالية",
+    "management": "الإدارة"
+  },
+  "dashboard": {
+    "welcome": "مرحباً بعودتك",
+    "upcomingEvents": "الفعاليات القادمة",
+    "recentPayments": "المدفوعات الأخيرة",
+    "totalEvents": "إجمالي الفعاليات",
+    "revenue": "الإيرادات",
+    "activeClients": "العملاء النشطين",
+    "pendingPayments": "المدفوعات المعلقة"
+  },
+  "notifications": {
+    "upcomingReminders": "التذكيرات القادمة",
+    "noReminders": "لا توجد تذكيرات قادمة",
+    "untitledReminder": "تذكير بدون عنوان",
+    "today": "اليوم",
+    "tomorrow": "غداً"
+  }
+}

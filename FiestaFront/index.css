@@ -6,7 +6,23 @@
 body {
   @apply bg-gray-50 dark:bg-gray-900 antialiased;
 }
+/* RTL specific styles */
+[dir="rtl"] .ltr-only {
+  display: none;
+}
 
+[dir="ltr"] .rtl-only {
+  display: none;
+}
+
+/* Ensure proper text alignment for RTL */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="ltr"] {
+  text-align: left;
+}
 .calendar-container .react-calendar {
   width: 100%;
   border: none;
