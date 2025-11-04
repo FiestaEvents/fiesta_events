@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom"; // Add this import
 import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
@@ -14,6 +15,7 @@ import ClientDetail from "./ClientDetail.jsx";
 import ClientForm from "./ClientForm.jsx";
 
 const ClientsList = () => {
+  const navigate = useNavigate(); // Add this hook
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -161,10 +163,12 @@ const ClientsList = () => {
     setIsFormOpen(true);
   }, []);
 
+  // Fixed: Now using the navigate function that's properly defined
   const handleViewClient = useCallback((client) => {
-    setSelectedClient(client);
-    setIsDetailModalOpen(true);
-  }, []);
+    navigate(`/clients/${client._id}`, { 
+      state: { client } 
+    });
+  }, [navigate]);
 
   const handleCloseDetailModal = useCallback(() => {
     setSelectedClient(null);

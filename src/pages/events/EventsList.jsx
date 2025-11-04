@@ -12,21 +12,23 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { eventService } from '../../api/index';
+import { eventService } from '../../api/index'; 
 import EventForm from './EventForm'; 
 import EventDetailModal from './EventDetailModal'; 
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
+import LoadingSpinner from '../../components/common/LoadingSpinner'; 
 
 // --- UTILITY FUNCTIONS ---
 
 const getStatusColor = (status) => {
   const colors = {
+    draft: 'gray',
     pending: 'yellow',
-    confirmed: 'blue',
-    'in-progress': 'purple',
-    completed: 'green',
+    confirmed: 'green',
+    'in-progress': 'blue',
+    completed: 'blue',
     cancelled: 'red',
   };
   return colors[status] || 'gray';
@@ -38,10 +40,28 @@ const getTypeColor = (type) => {
     corporate: 'blue',
     birthday: 'pink',
     conference: 'green',
+    party: 'orange',
     social: 'orange',
     other: 'gray',
   };
   return colors[type?.toLowerCase()] || 'gray';
+};
+
+// Fixed function to get complete Tailwind classes
+const getTypeClasses = (type) => {
+  const normalizedType = type?.toLowerCase() || 'other';
+  
+  const classes = {
+    wedding: 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-800',
+    corporate: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-200 dark:hover:bg-blue-800',
+    birthday: 'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-700 hover:bg-pink-200 dark:hover:bg-pink-800',
+    conference: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800',
+    party: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800',
+    social: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800',
+    other: 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800',
+  };
+  
+  return classes[normalizedType] || classes.other;
 };
 
 const formatTime = (dateString) => {
@@ -71,54 +91,66 @@ const formatDateLong = (dateString) => {
   });
 };
 
+// --- UPCOMING EVENTS LIST COMPONENT ---
 const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Upcoming Events</h3>
-
+    <Card
+      title="Upcoming Events"
+      className="h-full"
+    >
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+          <LoadingSpinner size="md" />
         </div>
       ) : upcomingEvents.length > 0 ? (
-        <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
           {upcomingEvents.map((event) => (
             <div
-              key={event._id}
+              key={event.id || event._id}
               onClick={() => onEventClick(event)}
               className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
             >
-              <div className="flex items-center justify-between mb-1">
-                <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate flex-1 mr-2">
                   {event.title}
                 </h4>
-                <Badge color={getStatusColor(event.status)} className="text-xs flex-shrink-0">
+                <Badge variant={getStatusColor(event.status)} className="text-xs flex-shrink-0">
                   {event.status}
                 </Badge>
               </div>
 
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                   <CalendarIcon className="w-3 h-3" />
                   {formatDateShort(event.startDate)}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                  <Tag className="w-3 h-3" />
-                  {event.type || 'Other'}
+                  <Clock className="w-3 h-3" />
+                  {formatTime(event.startDate)}
                 </div>
+                {event.type && (
+                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <Tag className="w-3 h-3" />
+                    {event.type}
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 dark:text-gray-400 text-sm py-4 text-center">No upcoming events found.</p>
+        <div className="text-center py-8">
+          <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            No upcoming events found.
+          </p>
+        </div>
       )}
     </Card>
   );
 };
 
 // --- DATE EVENTS MODAL COMPONENT ---
-
 const DateEventsModal = ({ 
   isOpen, 
   onClose, 
@@ -145,12 +177,7 @@ const DateEventsModal = ({
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {selectedDate.toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-              })}
+              {formatDateLong(selectedDate)}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {dateEvents.length} event{dateEvents.length !== 1 ? 's' : ''}
@@ -160,7 +187,7 @@ const DateEventsModal = ({
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -170,27 +197,29 @@ const DateEventsModal = ({
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
               {dateEvents.map((event) => (
                 <div
-                  key={event._id}
+                  key={event.id || event._id}
                   onClick={() => onEventClick(event)}
                   className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors border border-gray-200 dark:border-gray-600"
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-base">
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-base flex-1 mr-2">
                       {event.title}
                     </h3>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
                       <Badge
-                        color={getStatusColor(event.status)}
+                        variant={getStatusColor(event.status)}
                         className="text-xs"
                       >
                         {event.status}
                       </Badge>
-                      <Badge
-                        color={getTypeColor(event.type)}
-                        className="text-xs"
-                      >
-                        {event.type || 'Other'}
-                      </Badge>
+                      {event.type && (
+                        <Badge
+                          variant={getTypeColor(event.type)}
+                          className="text-xs"
+                        >
+                          {event.type}
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
@@ -201,10 +230,10 @@ const DateEventsModal = ({
                       {event.endDate && ` - ${formatTime(event.endDate)}`}
                     </div>
 
-                    {event.clientId && (
+                    {event.client && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Users className="w-4 h-4" />
-                        Client: {event.clientId.name || 'Unknown'}
+                        Client: {event.client.name || 'Unknown'}
                       </div>
                     )}
 
@@ -254,7 +283,6 @@ const DateEventsModal = ({
 };
 
 // --- MAIN CALENDAR COMPONENT ---
-
 const EventList = () => {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -262,7 +290,7 @@ const EventList = () => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpcomingLoading, setIsUpcomingLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
   
   // Modal State
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -275,6 +303,7 @@ const EventList = () => {
   const onEventClick = (event) => {
     setSelectedEvent(event);
     setIsDetailsModalOpen(true);
+    setIsDateEventsModalOpen(false);
   };
 
   const onDateClick = (date) => {
@@ -282,23 +311,20 @@ const EventList = () => {
     setIsDateEventsModalOpen(true);
   };
 
-  // Fetch calendar events for the current month
+  // Fetch calendar events for the current month - FIXED
   const fetchCalendarEvents = useCallback(async () => {
     try {
       setIsLoading(true);
       
+      // Use the service pattern from documentation
       const response = await eventService.getAll({
         page: 1,
         limit: 100,
       });
 
-      console.log('📅 Raw events response:', response);
-
-      // Handle different response structures
+      // Handle response according to documentation structure
       let eventsData = [];
-      if (response?.data?.data?.events) {
-        eventsData = response.data.data.events;
-      } else if (response?.data?.events) {
+      if (response?.data?.events) {
         eventsData = response.data.events;
       } else if (response?.events) {
         eventsData = response.events;
@@ -308,7 +334,7 @@ const EventList = () => {
         eventsData = response;
       }
 
-      console.log('📅 Normalized events:', eventsData);
+      console.log('📅 Calendar events loaded:', eventsData);
 
       // Filter events for current month
       const startOfMonth = new Date(
@@ -326,6 +352,7 @@ const EventList = () => {
       );
 
       const monthEvents = eventsData.filter(event => {
+        if (!event.startDate) return false;
         const eventDate = new Date(event.startDate);
         return eventDate >= startOfMonth && eventDate <= endOfMonth;
       });
@@ -340,32 +367,40 @@ const EventList = () => {
     }
   }, [currentDate]);
 
-  // Fetch upcoming events
+  // Fetch upcoming events - FIXED (removed duplicate function)
   const fetchUpcomingEvents = useCallback(async () => {
     try {
       setIsUpcomingLoading(true);
       
       const response = await eventService.getAll({
         page: 1,
-        limit: 100,
+        limit: 10, // Reduced limit for upcoming events
       });
 
-      // Handle different response structures
+      // Handle response according to documentation structure
       let eventsData = [];
-      if (response?.data?.data?.events) {
-        eventsData = response.data.data.events;
-      } else if (response?.data?.events) {
+      if (response?.data?.events) {
         eventsData = response.data.events;
       } else if (response?.events) {
         eventsData = response.events;
+      } else if (Array.isArray(response?.data)) {
+        eventsData = response.data;
+      } else if (Array.isArray(response)) {
+        eventsData = response;
       }
 
-      // Filter upcoming events
+      console.log('📅 Upcoming events loaded:', eventsData);
+
+      // Filter upcoming events (next 30 days)
       const now = new Date();
+      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
       const upcoming = eventsData
         .filter(event => {
+          if (!event.startDate) return false;
           const eventDate = new Date(event.startDate);
           return eventDate >= now && 
+                 eventDate <= thirtyDaysFromNow &&
                  event.status !== 'completed' && 
                  event.status !== 'cancelled';
         })
@@ -390,12 +425,8 @@ const EventList = () => {
 
   // Initial data loading
   useEffect(() => {
-    fetchCalendarEvents();
-  }, [fetchCalendarEvents]);
-
-  useEffect(() => {
-    fetchUpcomingEvents();
-  }, [fetchUpcomingEvents]);
+    refreshAllData();
+  }, [refreshAllData]);
 
   // Calendar grid calculations
   const { daysInMonth, startingDayOfWeek } = useMemo(() => {
@@ -413,6 +444,7 @@ const EventList = () => {
     if (!date) return [];
     
     return events.filter((event) => {
+      if (!event.startDate) return false;
       const eventDate = new Date(event.startDate);
       return (
         eventDate.getDate() === date.getDate() &&
@@ -442,7 +474,7 @@ const EventList = () => {
     setEditingEventId(null);
     setPrefilledDate(date);
     setShowEventModal(true);
-    setIsDateEventsModalOpen(false); // Close date events modal when creating new event
+    setIsDateEventsModalOpen(false);
   };
 
   const handleEditEvent = (eventId) => {
@@ -557,31 +589,6 @@ const EventList = () => {
         </Button>
       </div>
 
-      {/* Legend */}
-      <Card className="mb-6">
-        <div className="p-4">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            Status Legend
-          </h3>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {[
-              { status: 'pending', label: 'Pending' },
-              { status: 'confirmed', label: 'Confirmed' },
-              { status: 'in-progress', label: 'In Progress' },
-              { status: 'completed', label: 'Completed' },
-              { status: 'cancelled', label: 'Cancelled' },
-            ].map((item) => (
-              <div key={item.status} className="flex items-center gap-2">
-                <Badge color={getStatusColor(item.status)} className="!px-1 !py-1">
-                  <div className="w-2 h-2 rounded-full bg-current opacity-75"></div>
-                </Badge>
-                <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Calendar Grid */}
         <div className="lg:col-span-2">
@@ -600,24 +607,49 @@ const EventList = () => {
                   >
                     Today
                   </Button>
-                  <button
-                    onClick={previousMonth}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={nextMonth}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={previousMonth}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    </button>
+                    <button
+                      onClick={nextMonth}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Legend */}
+              <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  Status Legend
+                </h3>
+                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                  {[
+                    { status: 'pending', label: 'Pending' },
+                    { status: 'confirmed', label: 'Confirmed' },
+                    { status: 'in-progress', label: 'In Progress' },
+                    { status: 'completed', label: 'Completed' },
+                    { status: 'cancelled', label: 'Cancelled' },
+                  ].map((item) => (
+                    <div key={item.status} className="flex items-center gap-2">
+                      <Badge variant={getStatusColor(item.status)} className="!px-1 !py-1">
+                        <div className="w-2 h-2 rounded-full bg-current opacity-75"></div>
+                      </Badge>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                  <LoadingSpinner size="lg" />
                 </div>
               ) : (
                 <>
@@ -627,7 +659,7 @@ const EventList = () => {
                     {weekDays.map((day) => (
                       <div
                         key={day}
-                        className="text-center text-sm font-semibold text-gray-700 dark:text-gray-300 py-3 border-b border-gray-100 dark:border-gray-700"
+                        className="text-center text-sm font-semibold text-gray-700 dark:text-gray-300 py-3 border-b border-gray-200 dark:border-gray-700"
                       >
                         {day}
                       </div>
@@ -657,7 +689,7 @@ const EventList = () => {
                                 ? 'border-orange-300 bg-orange-100/50 dark:bg-orange-900/10'
                                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                             }
-                            ${date.getMonth() !== currentDate.getMonth() ? 'opacity-50' : ''}
+                            ${date.getMonth() !== currentDate.getMonth() ? 'opacity-40' : ''}
                           `}
                         >
                           <div className="absolute top-2 right-2">
@@ -679,22 +711,17 @@ const EventList = () => {
                             <div className="mt-6 space-y-1">
                               {dayEvents.slice(0, 2).map((event) => (
                                 <div
-                                  key={event._id}
+                                  key={event.id || event._id}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onEventClick(event);
                                   }}
-                                  className={`
-                                    text-xs px-1.5 py-0.5 rounded-md truncate text-left cursor-pointer
-                                    bg-${getTypeColor(event.type)}-100 dark:bg-${getTypeColor(event.type)}-900
-                                    text-${getTypeColor(event.type)}-800 dark:text-${getTypeColor(event.type)}-200
-                                    border border-${getTypeColor(event.type)}-200 dark:border-${getTypeColor(event.type)}-700
-                                    hover:bg-${getTypeColor(event.type)}-200 dark:hover:bg-${getTypeColor(event.type)}-800
-                                    font-medium
-                                  `}
+                                  className={getTypeClasses(event.type)}
                                   title={`${event.title} (${event.type || 'Other'})`}
                                 >
-                                  {event.type || 'Other'}
+                                  <span className="truncate block text-xs">
+                                    {event.type || 'Other'}
+                                  </span>
                                 </div>
                               ))}
                               {dayEvents.length > 2 && (
@@ -716,7 +743,6 @@ const EventList = () => {
 
         {/* Right Column: Upcoming Events */}
         <div className="space-y-6">
-          {/* Upcoming Events List */}
           <UpcomingEventsList
             upcomingEvents={upcomingEvents}
             onEventClick={onEventClick}

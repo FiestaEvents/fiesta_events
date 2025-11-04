@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { financeService } from '../../api/index';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
-import Badge from '../../components/common/Badge';
 import Select from '../../components/common/Select';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   DollarSign,
   TrendingUp,
@@ -13,11 +13,10 @@ import {
   CreditCard,
   PieChart,
   BarChart3,
-  Calendar,
-  Download,
   FileText,
   ArrowUpRight,
   ArrowDownRight,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -25,46 +24,99 @@ const Finance = () => {
   const navigate = useNavigate();
   const [period, setPeriod] = useState('month');
   const [isLoading, setIsLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState(null);
+  
+  // FIXED: Individual state for each data type
+  const [summary, setSummary] = useState(null);
+  const [cashflow, setCashflow] = useState(null);
+  const [expensesBreakdown, setExpensesBreakdown] = useState(null);
+  const [incomeBreakdown, setIncomeBreakdown] = useState(null);
+  const [profitLoss, setProfitLoss] = useState(null);
+  const [trends, setTrends] = useState(null);
+  const [recentTransactions, setRecentTransactions] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
   }, [period]);
 
+  // FIXED: Use actual API methods that exist
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const data = await financeService.getDashboard(period);
-      setDashboardData(data.data);
+      
+      // Calculate date range based on period
+      const dateRange = getDateRange(period);
+      
+      // Call multiple endpoints in parallel
+      const [
+        summaryRes,
+        cashflowRes,
+        expensesRes,
+        incomeRes,
+        profitLossRes,
+        trendsRes,
+        transactionsRes,
+      ] = await Promise.all([
+        financeService.getSummary(dateRange),
+        financeService.getCashflow(),
+        financeService.getExpensesBreakdown(),
+        financeService.getIncomeBreakdown(),
+        financeService.getProfitLoss(),
+        financeService.getTrends(),
+        financeService.getAll({ ...dateRange, limit: 10, sort: '-date' }),
+      ]);
+
+      // FIXED: API service handleResponse returns normalized data
+      setSummary(summaryRes?.summary || summaryRes);
+      setCashflow(cashflowRes?.cashflow || cashflowRes);
+      setExpensesBreakdown(expensesRes?.expenses || expensesRes);
+      setIncomeBreakdown(incomeRes?.income || incomeRes);
+      setProfitLoss(profitLossRes?.profitLoss || profitLossRes);
+      setTrends(trendsRes?.trends || trendsRes);
+      setRecentTransactions(transactionsRes?.finance || transactionsRes?.data || []);
+      
     } catch (error) {
-      toast.error('Failed to load finance dashboard');
+      console.error('Error fetching finance dashboard:', error);
+      toast.error(error.message || 'Failed to load finance dashboard');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleExport = async () => {
-    try {
-      const blob = await financeService.exportReport(period, 'pdf');
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `finance-report-${period}-${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success('Report exported successfully');
-    } catch (error) {
-      toast.error('Failed to export report');
+  // Helper to get date range based on period
+  const getDateRange = (period) => {
+    const now = new Date();
+    let startDate = new Date();
+
+    switch (period) {
+      case 'week':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'quarter':
+        startDate.setMonth(now.getMonth() - 3);
+        break;
+      case 'year':
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+      case 'all':
+        return {}; // No date filter
+      default:
+        startDate.setMonth(now.getMonth() - 1);
     }
+
+    return {
+      startDate: startDate.toISOString(),
+      endDate: now.toISOString(),
+    };
   };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const formatPercentage = (value) => {
@@ -72,74 +124,93 @@ const Finance = () => {
     return `${sign}${value.toFixed(1)}%`;
   };
 
+  // FIXED: Calculate stats from actual data
+  const calculateStats = () => {
+    const totalRevenue = summary?.totalIncome || 0;
+    const totalExpenses = summary?.totalExpenses || 0;
+    const netProfit = totalRevenue - totalExpenses;
+    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+
+    return [
+      {
+        label: 'Total Revenue',
+        value: formatCurrency(totalRevenue),
+        change: trends?.revenueChange || 0,
+        icon: TrendingUp,
+        color: 'green',
+      },
+      {
+        label: 'Total Expenses',
+        value: formatCurrency(totalExpenses),
+        change: trends?.expensesChange || 0,
+        icon: TrendingDown,
+        color: 'red',
+      },
+      {
+        label: 'Net Profit',
+        value: formatCurrency(netProfit),
+        change: trends?.profitChange || 0,
+        icon: DollarSign,
+        color: netProfit >= 0 ? 'green' : 'red',
+      },
+      {
+        label: 'Profit Margin',
+        value: `${profitMargin.toFixed(1)}%`,
+        change: trends?.marginChange || 0,
+        icon: PieChart,
+        color: 'blue',
+      },
+    ];
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  const stats = dashboardData
-    ? [
-        {
-          label: 'Total Revenue',
-          value: formatCurrency(dashboardData.totalRevenue),
-          change: dashboardData.revenueChange,
-          icon: TrendingUp,
-          color: 'green',
-        },
-        {
-          label: 'Total Expenses',
-          value: formatCurrency(dashboardData.totalExpenses),
-          change: dashboardData.expensesChange,
-          icon: TrendingDown,
-          color: 'red',
-        },
-        {
-          label: 'Net Profit',
-          value: formatCurrency(dashboardData.netProfit),
-          change: dashboardData.profitChange,
-          icon: DollarSign,
-          color: dashboardData.netProfit >= 0 ? 'green' : 'red',
-        },
-        {
-          label: 'Profit Margin',
-          value: `${dashboardData.profitMargin.toFixed(1)}%`,
-          change: dashboardData.marginChange,
-          icon: PieChart,
-          color: 'blue',
-        },
-      ]
-    : [];
+  const stats = calculateStats();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Finance Dashboard</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Finance Dashboard
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Overview of your financial performance
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Select value={period} onChange={(e) => setPeriod(e.target.value)}>
+          <Select 
+            value={period} 
+            onChange={(e) => setPeriod(e.target.value)}
+            className="min-w-[140px]"
+          >
             <option value="week">This Week</option>
             <option value="month">This Month</option>
             <option value="quarter">This Quarter</option>
             <option value="year">This Year</option>
             <option value="all">All Time</option>
           </Select>
-          <Button variant="outline" icon={Download} onClick={handleExport}>
-            Export Report
+          <Button 
+            variant="outline" 
+            icon={RefreshCw} 
+            onClick={fetchDashboardData}
+            loading={isLoading}
+          >
+            Refresh
           </Button>
           <Button
             variant="primary"
             icon={FileText}
             onClick={() => navigate('/finance/reports')}
           >
-            View Reports
+            Reports
           </Button>
         </div>
       </div>
@@ -155,20 +226,30 @@ const Finance = () => {
             <Card key={index}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 bg-${stat.color}-50 rounded-lg`}>
-                    <Icon className={`w-6 h-6 text-${stat.color}-600`} />
+                  <div className={`p-3 rounded-lg ${
+                    stat.color === 'green' ? 'bg-green-50 dark:bg-green-900/20' :
+                    stat.color === 'red' ? 'bg-red-50 dark:bg-red-900/20' :
+                    stat.color === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20' :
+                    'bg-gray-50 dark:bg-gray-800'
+                  }`}>
+                    <Icon className={`w-6 h-6 ${
+                      stat.color === 'green' ? 'text-green-600 dark:text-green-400' :
+                      stat.color === 'red' ? 'text-red-600 dark:text-red-400' :
+                      stat.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
+                      'text-gray-600 dark:text-gray-400'
+                    }`} />
                   </div>
                   <div
                     className={`flex items-center gap-1 text-sm font-medium ${
-                      isPositive ? 'text-green-600' : 'text-red-600'
+                      isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                     }`}
                   >
                     <ChangeIcon className="w-4 h-4" />
                     {formatPercentage(stat.change)}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                   {stat.value}
                 </p>
               </div>
@@ -179,83 +260,94 @@ const Finance = () => {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue vs Expenses Chart */}
+        {/* Profit & Loss Chart */}
         <Card>
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Revenue vs Expenses
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Profit & Loss
             </h3>
-            {dashboardData?.revenueVsExpenses ? (
+            {profitLoss && profitLoss.length > 0 ? (
               <div className="space-y-4">
-                {dashboardData.revenueVsExpenses.map((item, index) => (
-                  <div key={index}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-600">{item.month}</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {formatCurrency(item.revenue - item.expenses)}
-                      </span>
+                {profitLoss.slice(0, 6).map((item, index) => {
+                  const profit = (item.income || 0) - (item.expenses || 0);
+                  const maxValue = Math.max(...profitLoss.map(i => Math.max(i.income || 0, i.expenses || 0)));
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {item.period || item.month || 'N/A'}
+                        </span>
+                        <span className={`text-sm font-medium ${
+                          profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {formatCurrency(profit)}
+                        </span>
+                      </div>
+                      <div className="relative h-8 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
+                        <div
+                          className="absolute left-0 top-0 h-full bg-green-500 rounded-lg"
+                          style={{
+                            width: `${((item.income || 0) / maxValue) * 100}%`,
+                          }}
+                        />
+                        <div
+                          className="absolute left-0 top-0 h-full bg-red-500 opacity-50 rounded-lg"
+                          style={{
+                            width: `${((item.expenses || 0) / maxValue) * 100}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between mt-1 text-xs">
+                        <span className="text-green-600 dark:text-green-400">
+                          Income: {formatCurrency(item.income || 0)}
+                        </span>
+                        <span className="text-red-600 dark:text-red-400">
+                          Expenses: {formatCurrency(item.expenses || 0)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="relative h-8 bg-gray-100 rounded-lg overflow-hidden">
-                      <div
-                        className="absolute left-0 top-0 h-full bg-green-500 rounded-lg"
-                        style={{
-                          width: `${(item.revenue / Math.max(...dashboardData.revenueVsExpenses.map(i => Math.max(i.revenue, i.expenses)))) * 100}%`,
-                        }}
-                      />
-                      <div
-                        className="absolute left-0 top-0 h-full bg-red-500 opacity-50 rounded-lg"
-                        style={{
-                          width: `${(item.expenses / Math.max(...dashboardData.revenueVsExpenses.map(i => Math.max(i.revenue, i.expenses)))) * 100}%`,
-                        }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between mt-1 text-xs">
-                      <span className="text-green-600">
-                        Revenue: {formatCurrency(item.revenue)}
-                      </span>
-                      <span className="text-red-600">
-                        Expenses: {formatCurrency(item.expenses)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8">
                 <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">No data available</p>
+                <p className="text-gray-600 dark:text-gray-400">No data available</p>
               </div>
             )}
           </div>
         </Card>
 
-        {/* Expense Categories */}
+        {/* Expense Breakdown */}
         <Card>
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Expense Breakdown
             </h3>
-            {dashboardData?.expensesByCategory ? (
+            {expensesBreakdown && expensesBreakdown.length > 0 ? (
               <div className="space-y-3">
-                {dashboardData.expensesByCategory.map((category, index) => {
-                  const percentage = (category.amount / dashboardData.totalExpenses) * 100;
+                {expensesBreakdown.map((category, index) => {
+                  const totalExpenses = expensesBreakdown.reduce((sum, cat) => sum + (cat.total || 0), 0);
+                  const percentage = totalExpenses > 0 ? ((category.total || 0) / totalExpenses) * 100 : 0;
+                  
                   return (
                     <div key={index}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-900 capitalize">
-                          {category.category.replace('_', ' ')}
+                        <span className="text-sm text-gray-900 dark:text-white capitalize">
+                          {(category.category || category._id || 'Other').replace(/_/g, ' ')}
                         </span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {formatCurrency(category.amount)}
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {formatCurrency(category.total || 0)}
                         </span>
                       </div>
-                      <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                         <div
                           className="absolute left-0 top-0 h-full bg-blue-500 rounded-full"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {percentage.toFixed(1)}% of total expenses
                       </span>
                     </div>
@@ -265,7 +357,7 @@ const Finance = () => {
             ) : (
               <div className="text-center py-8">
                 <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">No data available</p>
+                <p className="text-gray-600 dark:text-gray-400">No data available</p>
               </div>
             )}
           </div>
@@ -279,7 +371,7 @@ const Finance = () => {
           <Card>
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Recent Transactions
                 </h3>
                 <Button
@@ -291,46 +383,46 @@ const Finance = () => {
                 </Button>
               </div>
 
-              {dashboardData?.recentTransactions && dashboardData.recentTransactions.length > 0 ? (
+              {recentTransactions && recentTransactions.length > 0 ? (
                 <div className="space-y-3">
-                  {dashboardData.recentTransactions.map((transaction, index) => {
+                  {recentTransactions.map((transaction, index) => {
                     const isIncome = transaction.type === 'income';
                     return (
                       <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        key={transaction._id || index}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           <div
                             className={`p-2 ${
-                              isIncome ? 'bg-green-100' : 'bg-red-100'
+                              isIncome ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
                             } rounded-lg`}
                           >
                             {isIncome ? (
-                              <TrendingUp className="w-5 h-5 text-green-600" />
+                              <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
                             ) : (
-                              <TrendingDown className="w-5 h-5 text-red-600" />
+                              <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
                             )}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {transaction.description}
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {transaction.description || 'Unnamed transaction'}
                             </p>
-                            <p className="text-sm text-gray-500 capitalize">
-                              {transaction.category.replace('_', ' ')}
+                            <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                              {(transaction.category || 'other').replace(/_/g, ' ')}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p
                             className={`font-semibold ${
-                              isIncome ? 'text-green-600' : 'text-red-600'
+                              isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                             }`}
                           >
                             {isIncome ? '+' : '-'}
                             {formatCurrency(transaction.amount)}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             {new Date(transaction.date).toLocaleDateString()}
                           </p>
                         </div>
@@ -341,7 +433,7 @@ const Finance = () => {
               ) : (
                 <div className="text-center py-8">
                   <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600">No recent transactions</p>
+                  <p className="text-gray-600 dark:text-gray-400">No recent transactions</p>
                 </div>
               )}
             </div>
@@ -352,42 +444,42 @@ const Finance = () => {
         <div className="space-y-6">
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Quick Stats
               </h3>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Avg. Transaction</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {formatCurrency(dashboardData?.avgTransaction || 0)}
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Avg. Transaction</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {formatCurrency(summary?.avgTransaction || 0)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Total Transactions</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {dashboardData?.totalTransactions || 0}
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Total Transactions</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {summary?.totalTransactions || recentTransactions.length || 0}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Cash Flow</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Cash Flow</span>
                   <span
                     className={`text-sm font-semibold ${
-                      (dashboardData?.cashFlow || 0) >= 0
-                        ? 'text-green-600'
-                        : 'text-red-600'
+                      (cashflow?.netCashFlow || 0) >= 0
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400'
                     }`}
                   >
-                    {formatCurrency(dashboardData?.cashFlow || 0)}
+                    {formatCurrency(cashflow?.netCashFlow || 0)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Outstanding</span>
-                  <span className="text-sm font-semibold text-yellow-600">
-                    {formatCurrency(dashboardData?.outstanding || 0)}
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Pending</span>
+                  <span className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">
+                    {formatCurrency(summary?.pending || 0)}
                   </span>
                 </div>
               </div>
@@ -396,28 +488,28 @@ const Finance = () => {
 
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Payment Methods
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Income Breakdown
               </h3>
 
-              {dashboardData?.paymentMethods ? (
+              {incomeBreakdown && incomeBreakdown.length > 0 ? (
                 <div className="space-y-3">
-                  {dashboardData.paymentMethods.map((method, index) => (
+                  {incomeBreakdown.slice(0, 5).map((item, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-700 capitalize">
-                          {method.method.replace('_', ' ')}
+                        <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                          {(item.category || item._id || 'Other').replace(/_/g, ' ')}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {formatCurrency(method.amount)}
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {formatCurrency(item.total || 0)}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">No data available</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No data available</p>
               )}
             </div>
           </Card>
@@ -426,43 +518,52 @@ const Finance = () => {
 
       {/* Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/finance/transactions')}>
+        <Card 
+          className="hover:shadow-lg transition-shadow cursor-pointer" 
+          onClick={() => navigate('/finance/transactions')}
+        >
           <div className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <Wallet className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                <Wallet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900">Transactions</h4>
-                <p className="text-sm text-gray-600">View all transactions</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Transactions</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">View all transactions</p>
               </div>
             </div>
           </div>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/finance/reports')}>
+        <Card 
+          className="hover:shadow-lg transition-shadow cursor-pointer" 
+          onClick={() => navigate('/finance/reports')}
+        >
           <div className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-50 rounded-lg">
-                <FileText className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900">Reports</h4>
-                <p className="text-sm text-gray-600">Generate financial reports</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Reports</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Generate financial reports</p>
               </div>
             </div>
           </div>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/payments')}>
+        <Card 
+          className="hover:shadow-lg transition-shadow cursor-pointer" 
+          onClick={() => navigate('/payments')}
+        >
           <div className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <CreditCard className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                <CreditCard className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900">Payments</h4>
-                <p className="text-sm text-gray-600">Manage payments</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Payments</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Manage payments</p>
               </div>
             </div>
           </div>

@@ -4,67 +4,103 @@ import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Select from '../../components/common/Select';
 import Badge from '../../components/common/Badge';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   TrendingUp,
   TrendingDown,
   DollarSign,
   PieChart,
   BarChart3,
-  Calendar,
-  Download,
+  RefreshCw,
   ArrowUpRight,
   ArrowDownRight,
   Activity,
   Target,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const Analytics = () => {
   const [period, setPeriod] = useState('month');
   const [isLoading, setIsLoading] = useState(true);
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [comparisonPeriod, setComparisonPeriod] = useState('previous');
+  
+  // FIXED: Separate state for each data type
+  const [summary, setSummary] = useState(null);
+  const [cashflow, setCashflow] = useState(null);
+  const [expensesBreakdown, setExpensesBreakdown] = useState(null);
+  const [incomeBreakdown, setIncomeBreakdown] = useState(null);
+  const [profitLoss, setProfitLoss] = useState(null);
+  const [trends, setTrends] = useState(null);
 
   useEffect(() => {
     fetchAnalytics();
   }, [period]);
 
+  // FIXED: Use actual API methods
   const fetchAnalytics = async () => {
     try {
       setIsLoading(true);
-      const [analytics, trends, forecast] = await Promise.all([
-        financeService.getAnalytics(period),
-        financeService.getTrends(period),
-        financeService.getForecast(3),
+      
+      const dateRange = getDateRange(period);
+      
+      const [
+        summaryRes,
+        cashflowRes,
+        expensesRes,
+        incomeRes,
+        profitLossRes,
+        trendsRes,
+      ] = await Promise.all([
+        financeService.getSummary(dateRange),
+        financeService.getCashflow(),
+        financeService.getExpensesBreakdown(),
+        financeService.getIncomeBreakdown(),
+        financeService.getProfitLoss(),
+        financeService.getTrends(),
       ]);
 
-      setAnalyticsData({
-        analytics: analytics.data || analytics,
-        trends: trends.data || trends,
-        forecast: forecast.data || forecast,
-      });
+      setSummary(summaryRes?.summary || summaryRes);
+      setCashflow(cashflowRes?.cashflow || cashflowRes);
+      setExpensesBreakdown(expensesRes?.expenses || expensesRes);
+      setIncomeBreakdown(incomeRes?.income || incomeRes);
+      setProfitLoss(profitLossRes?.profitLoss || profitLossRes);
+      setTrends(trendsRes?.trends || trendsRes);
+      
     } catch (error) {
-      toast.error('Failed to load analytics');
+      console.error('Error fetching analytics:', error);
+      toast.error(error.message || 'Failed to load analytics');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleExport = async () => {
-    try {
-      const blob = await financeService.export('pdf', { period });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `analytics-${period}-${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success('Analytics exported successfully');
-    } catch (error) {
-      toast.error('Failed to export analytics');
+  const getDateRange = (period) => {
+    const now = new Date();
+    let startDate = new Date();
+
+    switch (period) {
+      case 'week':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'quarter':
+        startDate.setMonth(now.getMonth() - 3);
+        break;
+      case 'year':
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+      case 'all':
+        return {};
+      default:
+        startDate.setMonth(now.getMonth() - 1);
     }
+
+    return {
+      startDate: startDate.toISOString(),
+      endDate: now.toISOString(),
+    };
   };
 
   const formatCurrency = (amount) => {
@@ -73,7 +109,7 @@ const Analytics = () => {
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const formatPercentage = (value) => {
@@ -81,128 +117,128 @@ const Analytics = () => {
     return `${sign}${value.toFixed(1)}%`;
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
+  // FIXED: Calculate metrics from real data
+  const calculateKeyMetrics = () => {
+    const totalRevenue = summary?.totalIncome || 0;
+    const totalExpenses = summary?.totalExpenses || 0;
+    const netProfit = totalRevenue - totalExpenses;
+    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+
+    return [
+      {
+        label: 'Total Revenue',
+        value: formatCurrency(totalRevenue),
+        change: trends?.revenueChange || 0,
+        icon: TrendingUp,
+        bgColor: 'bg-green-50 dark:bg-green-900/20',
+        iconColor: 'text-green-600 dark:text-green-400',
+      },
+      {
+        label: 'Total Expenses',
+        value: formatCurrency(totalExpenses),
+        change: trends?.expensesChange || 0,
+        icon: TrendingDown,
+        bgColor: 'bg-red-50 dark:bg-red-900/20',
+        iconColor: 'text-red-600 dark:text-red-400',
+      },
+      {
+        label: 'Net Profit',
+        value: formatCurrency(netProfit),
+        change: trends?.profitChange || 0,
+        icon: DollarSign,
+        bgColor: netProfit >= 0 ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-red-50 dark:bg-red-900/20',
+        iconColor: netProfit >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400',
+      },
+      {
+        label: 'Profit Margin',
+        value: `${profitMargin.toFixed(1)}%`,
+        change: trends?.marginChange || 0,
+        icon: Target,
+        bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+        iconColor: 'text-purple-600 dark:text-purple-400',
+      },
+    ];
+  };
+
+  // FIXED: Get chart color class
+  const getChartColorClass = (index) => {
+    const colors = [
+      'bg-blue-500',
+      'bg-green-500',
+      'bg-purple-500',
+      'bg-yellow-500',
+      'bg-pink-500',
+      'bg-indigo-500',
+    ];
+    return colors[index % colors.length];
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  const { analytics, trends, forecast } = analyticsData || {};
+  const keyMetrics = calculateKeyMetrics();
+  
+  // FIXED: Use real profit/loss data for trends
+  const trendData = profitLoss && profitLoss.length > 0 
+    ? profitLoss.slice(-6).map(item => ({
+        month: item.period || item.month || 'N/A',
+        revenue: item.income || 0,
+        expenses: item.expenses || 0,
+      }))
+    : [];
 
-  // Mock data for demonstration (replace with real data from analytics)
-  const keyMetrics = [
-    {
-      label: 'Total Revenue',
-      value: formatCurrency(analytics?.totalRevenue || 125000),
-      change: analytics?.revenueChange || 12.5,
-      icon: TrendingUp,
-      color: 'green',
-    },
-    {
-      label: 'Total Expenses',
-      value: formatCurrency(analytics?.totalExpenses || 75000),
-      change: analytics?.expensesChange || -5.2,
-      icon: TrendingDown,
-      color: 'red',
-    },
-    {
-      label: 'Net Profit',
-      value: formatCurrency(analytics?.netProfit || 50000),
-      change: analytics?.profitChange || 18.3,
-      icon: DollarSign,
-      color: 'blue',
-    },
-    {
-      label: 'Profit Margin',
-      value: `${analytics?.profitMargin || 40}%`,
-      change: analytics?.marginChange || 3.2,
-      icon: Target,
-      color: 'purple',
-    },
-  ];
+  const maxValue = trendData.length > 0
+    ? Math.max(...trendData.map((d) => Math.max(d.revenue, d.expenses)))
+    : 1;
 
-  // Revenue vs Expenses trend data
-  const trendData = trends?.monthly || [
-    { month: 'Jan', revenue: 95000, expenses: 65000 },
-    { month: 'Feb', revenue: 105000, expenses: 68000 },
-    { month: 'Mar', revenue: 115000, expenses: 72000 },
-    { month: 'Apr', revenue: 108000, expenses: 70000 },
-    { month: 'May', revenue: 118000, expenses: 73000 },
-    { month: 'Jun', revenue: 125000, expenses: 75000 },
-  ];
-
-  const maxValue = Math.max(
-    ...trendData.map((d) => Math.max(d.revenue, d.expenses))
-  );
-
-  // Expense categories
-  const expenseCategories = analytics?.expensesByCategory || [
-    { category: 'Staff Salary', amount: 35000, percentage: 46.7 },
-    { category: 'Utilities', amount: 15000, percentage: 20.0 },
-    { category: 'Marketing', amount: 10000, percentage: 13.3 },
-    { category: 'Maintenance', amount: 8000, percentage: 10.7 },
-    { category: 'Equipment', amount: 5000, percentage: 6.7 },
-    { category: 'Other', amount: 2000, percentage: 2.6 },
-  ];
-
-  // Revenue sources
-  const revenueSources = analytics?.revenueBySource || [
-    { source: 'Event Revenue', amount: 85000, percentage: 68 },
-    { source: 'Venue Rental', amount: 25000, percentage: 20 },
-    { source: 'Catering', amount: 10000, percentage: 8 },
-    { source: 'Other Services', amount: 5000, percentage: 4 },
-  ];
-
-  // Top performing months
-  const topMonths = analytics?.topMonths || [
-    { month: 'June', revenue: 125000, profit: 50000 },
-    { month: 'May', revenue: 118000, profit: 45000 },
-    { month: 'March', revenue: 115000, profit: 43000 },
-  ];
-
-  // Forecast data
-  const forecastData = forecast || [
-    { month: 'Jul', predicted: 130000, confidence: 85 },
-    { month: 'Aug', predicted: 135000, confidence: 78 },
-    { month: 'Sep', predicted: 128000, confidence: 72 },
-  ];
-
-  const getCategoryColor = (index) => {
-    const colors = ['blue', 'green', 'purple', 'yellow', 'pink', 'indigo'];
-    return colors[index % colors.length];
-  };
+  // FIXED: Calculate top performing periods from profit/loss data
+  const topMonths = profitLoss && profitLoss.length > 0
+    ? [...profitLoss]
+        .sort((a, b) => (b.income - b.expenses) - (a.income - a.expenses))
+        .slice(0, 3)
+        .map(item => ({
+          month: item.period || item.month || 'N/A',
+          revenue: item.income || 0,
+          profit: (item.income || 0) - (item.expenses || 0),
+        }))
+    : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Financial Analytics
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Comprehensive analysis of your financial performance
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Select value={period} onChange={(e) => setPeriod(e.target.value)}>
+          <Select 
+            value={period} 
+            onChange={(e) => setPeriod(e.target.value)}
+            className="min-w-[140px]"
+          >
             <option value="week">This Week</option>
             <option value="month">This Month</option>
             <option value="quarter">This Quarter</option>
             <option value="year">This Year</option>
             <option value="all">All Time</option>
           </Select>
-          <Button variant="outline" icon={Download} onClick={handleExport}>
-            Export
+          <Button 
+            variant="outline" 
+            icon={RefreshCw} 
+            onClick={fetchAnalytics}
+            loading={isLoading}
+          >
+            Refresh
           </Button>
         </div>
       </div>
@@ -218,20 +254,20 @@ const Analytics = () => {
             <Card key={index}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 bg-${metric.color}-50 rounded-lg`}>
-                    <Icon className={`w-6 h-6 text-${metric.color}-600`} />
+                  <div className={`p-3 rounded-lg ${metric.bgColor}`}>
+                    <Icon className={`w-6 h-6 ${metric.iconColor}`} />
                   </div>
                   <div
                     className={`flex items-center gap-1 text-sm font-medium ${
-                      isPositive ? 'text-green-600' : 'text-red-600'
+                      isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                     }`}
                   >
                     <ChangeIcon className="w-4 h-4" />
                     {formatPercentage(metric.change)}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{metric.label}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400">{metric.label}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                   {metric.value}
                 </p>
               </div>
@@ -244,59 +280,66 @@ const Analytics = () => {
       <Card>
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Revenue vs Expenses Trend
             </h3>
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-green-500" />
-                <span className="text-gray-600">Revenue</span>
+                <span className="text-gray-600 dark:text-gray-400">Revenue</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-red-500" />
-                <span className="text-gray-600">Expenses</span>
+                <span className="text-gray-600 dark:text-gray-400">Expenses</span>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {trendData.map((item, index) => {
-              const revenueWidth = (item.revenue / maxValue) * 100;
-              const expensesWidth = (item.expenses / maxValue) * 100;
-              const profit = item.revenue - item.expenses;
+          {trendData.length > 0 ? (
+            <div className="space-y-4">
+              {trendData.map((item, index) => {
+                const revenueWidth = maxValue > 0 ? (item.revenue / maxValue) * 100 : 0;
+                const expensesWidth = maxValue > 0 ? (item.expenses / maxValue) * 100 : 0;
+                const profit = item.revenue - item.expenses;
 
-              return (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {item.month}
-                    </span>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="text-green-600 font-medium">
-                        {formatCurrency(item.revenue)}
+                return (
+                  <div key={index}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {item.month}
                       </span>
-                      <span className="text-red-600 font-medium">
-                        {formatCurrency(item.expenses)}
-                      </span>
-                      <span className="text-blue-600 font-semibold">
-                        {formatCurrency(profit)}
-                      </span>
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="text-green-600 dark:text-green-400 font-medium">
+                          {formatCurrency(item.revenue)}
+                        </span>
+                        <span className="text-red-600 dark:text-red-400 font-medium">
+                          {formatCurrency(item.expenses)}
+                        </span>
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                          {formatCurrency(profit)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="relative h-10 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
+                      <div
+                        className="absolute left-0 top-0 h-full bg-green-500 opacity-70 rounded-lg transition-all"
+                        style={{ width: `${revenueWidth}%` }}
+                      />
+                      <div
+                        className="absolute left-0 top-0 h-full bg-red-500 opacity-50 rounded-lg transition-all"
+                        style={{ width: `${expensesWidth}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="relative h-10 bg-gray-100 rounded-lg overflow-hidden">
-                    <div
-                      className="absolute left-0 top-0 h-full bg-green-500 opacity-70 rounded-lg transition-all"
-                      style={{ width: `${revenueWidth}%` }}
-                    />
-                    <div
-                      className="absolute left-0 top-0 h-full bg-red-500 opacity-50 rounded-lg transition-all"
-                      style={{ width: `${expensesWidth}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 dark:text-gray-400">No trend data available</p>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -305,169 +348,191 @@ const Analytics = () => {
         {/* Revenue Sources */}
         <Card>
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
               Revenue Sources
             </h3>
 
-            <div className="space-y-4">
-              {revenueSources.map((source, index) => (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {source.source}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {formatCurrency(source.amount)}
-                    </span>
-                  </div>
-                  <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`absolute left-0 top-0 h-full bg-${getCategoryColor(
-                        index
-                      )}-500 rounded-full transition-all`}
-                      style={{ width: `${source.percentage}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-500 mt-1">
-                    {source.percentage}% of total revenue
-                  </span>
-                </div>
-              ))}
-            </div>
+            {incomeBreakdown && incomeBreakdown.length > 0 ? (
+              <div className="space-y-4">
+                {incomeBreakdown.map((source, index) => {
+                  const totalIncome = incomeBreakdown.reduce((sum, item) => sum + (item.total || 0), 0);
+                  const percentage = totalIncome > 0 ? ((source.total || 0) / totalIncome) * 100 : 0;
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                          {(source.category || source._id || 'Other').replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(source.total || 0)}
+                        </span>
+                      </div>
+                      <div className="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div
+                          className={`absolute left-0 top-0 h-full ${getChartColorClass(index)} rounded-full transition-all`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {percentage.toFixed(1)}% of total revenue
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 dark:text-gray-400">No revenue data available</p>
+              </div>
+            )}
           </div>
         </Card>
 
         {/* Expense Breakdown */}
         <Card>
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
               Expense Breakdown
             </h3>
 
-            <div className="space-y-4">
-              {expenseCategories.map((category, index) => (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {category.category}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {formatCurrency(category.amount)}
-                    </span>
-                  </div>
-                  <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`absolute left-0 top-0 h-full bg-${getCategoryColor(
-                        index
-                      )}-500 rounded-full transition-all`}
-                      style={{ width: `${category.percentage}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-500 mt-1">
-                    {category.percentage}% of total expenses
-                  </span>
-                </div>
-              ))}
-            </div>
+            {expensesBreakdown && expensesBreakdown.length > 0 ? (
+              <div className="space-y-4">
+                {expensesBreakdown.map((category, index) => {
+                  const totalExpenses = expensesBreakdown.reduce((sum, item) => sum + (item.total || 0), 0);
+                  const percentage = totalExpenses > 0 ? ((category.total || 0) / totalExpenses) * 100 : 0;
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                          {(category.category || category._id || 'Other').replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(category.total || 0)}
+                        </span>
+                      </div>
+                      <div className="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div
+                          className={`absolute left-0 top-0 h-full ${getChartColorClass(index)} rounded-full transition-all`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {percentage.toFixed(1)}% of total expenses
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 dark:text-gray-400">No expense data available</p>
+              </div>
+            )}
           </div>
         </Card>
       </div>
 
-      {/* Top Performing Months & Forecast */}
+      {/* Top Performing Periods & Cash Flow */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Performing Months */}
+        {/* Top Performing Periods */}
         <Card>
           <div className="p-6">
             <div className="flex items-center gap-2 mb-6">
-              <Activity className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Top Performing Months
+              <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Top Performing Periods
               </h3>
             </div>
 
-            <div className="space-y-3">
-              {topMonths.map((month, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-transparent rounded-lg"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold text-sm">
-                      {index + 1}
+            {topMonths.length > 0 ? (
+              <div className="space-y-3">
+                {topMonths.map((month, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-900/20 dark:to-transparent rounded-lg"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {month.month}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Revenue: {formatCurrency(month.revenue)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {month.month}
+                    <div className="text-right">
+                      <p className="font-bold text-green-600 dark:text-green-400">
+                        {formatCurrency(month.profit)}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        Revenue: {formatCurrency(month.revenue)}
-                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Profit</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-green-600">
-                      {formatCurrency(month.profit)}
-                    </p>
-                    <p className="text-xs text-gray-500">Profit</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 dark:text-gray-400">No performance data available</p>
+              </div>
+            )}
           </div>
         </Card>
 
-        {/* Revenue Forecast */}
+        {/* Cash Flow Summary */}
         <Card>
           <div className="p-6">
             <div className="flex items-center gap-2 mb-6">
-              <TrendingUp className="w-5 h-5 text-purple-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Revenue Forecast (Next 3 Months)
+              <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Cash Flow Summary
               </h3>
             </div>
 
-            <div className="space-y-4">
-              {forecastData.map((item, index) => (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {item.month}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-900">
-                        {formatCurrency(item.predicted)}
-                      </span>
-                      <Badge
-                        color={
-                          item.confidence > 80
-                            ? 'green'
-                            : item.confidence > 70
-                            ? 'blue'
-                            : 'yellow'
-                        }
-                      >
-                        {item.confidence}% confident
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="absolute left-0 top-0 h-full bg-purple-500 rounded-full transition-all"
-                      style={{
-                        width: `${(item.predicted / maxValue) * 100}%`,
-                      }}
-                    />
-                  </div>
+            {cashflow ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Inflow</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {formatCurrency(cashflow.totalInflow || 0)}
+                  </p>
                 </div>
-              ))}
-            </div>
 
-            <div className="mt-6 p-4 bg-purple-50 rounded-lg">
-              <p className="text-sm text-purple-900">
-                <strong>Note:</strong> Forecasts are based on historical trends
-                and seasonal patterns. Actual results may vary.
-              </p>
-            </div>
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Outflow</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                    {formatCurrency(cashflow.totalOutflow || 0)}
+                  </p>
+                </div>
+
+                <div className={`p-4 rounded-lg ${
+                  (cashflow.netCashFlow || 0) >= 0 
+                    ? 'bg-blue-50 dark:bg-blue-900/20' 
+                    : 'bg-orange-50 dark:bg-orange-900/20'
+                }`}>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Cash Flow</p>
+                  <p className={`text-2xl font-bold ${
+                    (cashflow.netCashFlow || 0) >= 0
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-orange-600 dark:text-orange-400'
+                  }`}>
+                    {formatCurrency(cashflow.netCashFlow || 0)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 dark:text-gray-400">No cash flow data available</p>
+              </div>
+            )}
           </div>
         </Card>
       </div>
@@ -475,78 +540,82 @@ const Analytics = () => {
       {/* Key Insights */}
       <Card>
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Key Insights & Recommendations
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Key Insights
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-green-100 rounded">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-green-900 mb-1">
-                    Strong Revenue Growth
-                  </h4>
-                  <p className="text-sm text-green-700">
-                    Revenue increased by 12.5% compared to last period. Continue
-                    focusing on your top revenue sources.
-                  </p>
+            {summary && summary.totalIncome > 0 && (
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded">
+                    <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-green-900 dark:text-green-300 mb-1">
+                      Revenue Activity
+                    </h4>
+                    <p className="text-sm text-green-700 dark:text-green-400">
+                      Total revenue: {formatCurrency(summary.totalIncome)}. Monitor trends to identify growth opportunities.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-100 rounded">
-                  <DollarSign className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-blue-900 mb-1">
-                    Improved Profit Margin
-                  </h4>
-                  <p className="text-sm text-blue-700">
-                    Profit margin improved by 3.2%. Cost optimization strategies
-                    are working well.
-                  </p>
+            {cashflow && cashflow.netCashFlow >= 0 && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded">
+                    <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                      Positive Cash Flow
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-400">
+                      Net cash flow is positive at {formatCurrency(cashflow.netCashFlow)}. Good financial health indicator.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-yellow-100 rounded">
-                  <BarChart3 className="w-5 h-5 text-yellow-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-yellow-900 mb-1">
-                    Watch Expenses
-                  </h4>
-                  <p className="text-sm text-yellow-700">
-                    Staff salary represents 46.7% of expenses. Consider
-                    reviewing staffing efficiency.
-                  </p>
+            {expensesBreakdown && expensesBreakdown.length > 0 && (
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded">
+                    <BarChart3 className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-yellow-900 dark:text-yellow-300 mb-1">
+                      Expense Management
+                    </h4>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                      {expensesBreakdown.length} expense categories tracked. Review regularly for optimization opportunities.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-purple-100 rounded">
-                  <Target className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-purple-900 mb-1">
-                    Positive Outlook
-                  </h4>
-                  <p className="text-sm text-purple-700">
-                    Forecast shows continued growth. Plan for increased capacity
-                    in upcoming months.
-                  </p>
+            {(!summary || !cashflow || !expensesBreakdown || expensesBreakdown.length === 0) && (
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                    <AlertCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-300 mb-1">
+                      Limited Data
+                    </h4>
+                    <p className="text-sm text-gray-700 dark:text-gray-400">
+                      Add more financial records to generate comprehensive insights and recommendations.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </Card>

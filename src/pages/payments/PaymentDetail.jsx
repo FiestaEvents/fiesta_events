@@ -1,522 +1,634 @@
-import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useApi, useMutation } from '../../hooks/useApi';
-import { partnerService, eventService } from '../../api/index';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import Card from '../../components/common/Card';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
-import EmptyState from '../../components/common/EmptyState';
-import { 
-  ArrowLeft, Edit, Trash2, Mail, Phone, MapPin, 
-  Building, Star, Briefcase, Calendar, DollarSign,
-  TrendingUp, CheckCircle, XCircle, Clock
-} from 'lucide-react';
+import Input from '../../components/common/Input';
+import { paymentService } from '../../api/index';
 import { toast } from 'react-hot-toast';
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  DollarSign,
+  Calendar,
+  CreditCard,
+  FileText,
+  User,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  RotateCcw,
+  Download,
+} from 'lucide-react';
 
-const PartnerDetail = () => {
-  const { id } = useParams();
+const PaymentDetail = () => {
   const navigate = useNavigate();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const { id } = useParams();
 
-  const { data: partner, loading, error, refetch } = useApi(() => partnerService.getById(id));
-  const { data: relatedEvents } = useApi(() => 
-    eventService.getAll({ partnerId: id, limit: 50 })
-  );
+  // State
+  const [payment, setPayment] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [refundData, setRefundData] = useState({
+    amount: '',
+    reason: '',
+  });
 
-  const deleteMutation = useMutation(partnerService.delete);
+  useEffect(() => {
+    fetchPayment();
+  }, [id]);
 
-  const handleDelete = async () => {
+  const fetchPayment = async () => {
     try {
-      await deleteMutation.mutate(id);
-      toast.success('Partner deleted successfully');
-      navigate('/partners');
+      setLoading(true);
+      const response = await paymentService.getById(id);
+      setPayment(response.payment || response);
     } catch (error) {
-      toast.error('Failed to delete partner');
+      console.error('Error fetching payment:', error);
+      toast.error(error.message || 'Failed to load payment');
+      navigate('/payments');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      catering: 'blue',
-      decoration: 'pink',
-      photography: 'purple',
-      music: 'indigo',
-      security: 'red',
-      cleaning: 'green',
-      audio_visual: 'yellow',
-      floral: 'pink',
-      entertainment: 'orange',
-      other: 'gray'
-    };
-    return colors[category] || 'gray';
+  const handleEdit = () => {
+    navigate(`/payments/${id}/edit`);
   };
 
-  const getStatusColor = (status) => {
-    return status === 'active' ? 'green' : 'gray';
+  const handleDelete = async () => {
+    try {
+      await paymentService.delete(id);
+      toast.success('Payment deleted successfully');
+      navigate('/payments');
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      toast.error(error.message || 'Failed to delete payment');
+    }
+  };
+
+  const handleRefund = async () => {
+    try {
+      if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
+        toast.error('Please enter a valid refund amount');
+        return;
+      }
+
+      if (parseFloat(refundData.amount) > payment.amount) {
+        toast.error('Refund amount cannot exceed payment amount');
+        return;
+      }
+
+      await paymentService.refund(id, {
+        refundAmount: parseFloat(refundData.amount),
+        refundReason: refundData.reason,
+      });
+
+      toast.success('Payment refunded successfully');
+      setIsRefundModalOpen(false);
+      setRefundData({ amount: '', reason: '' });
+      fetchPayment(); // Refresh payment data
+    } catch (error) {
+      console.error('Error refunding payment:', error);
+      toast.error(error.message || 'Failed to refund payment');
+    }
   };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount || 0);
   };
 
   const formatDate = (date) => {
+    if (!date) return '—';
     return new Date(date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const formatDateTime = (date) => {
+    if (!date) return '—';
+    return new Date(date).toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
     });
+  };
+
+  const getStatusVariant = (status) => {
+    const statusLower = (status || '').toLowerCase();
+    switch (statusLower) {
+      case 'completed':
+      case 'paid':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'failed':
+        return 'danger';
+      case 'refunded':
+        return 'info';
+      default:
+        return 'gray';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    const statusLower = (status || '').toLowerCase();
+    switch (statusLower) {
+      case 'completed':
+      case 'paid':
+        return CheckCircle;
+      case 'pending':
+        return Clock;
+      case 'failed':
+        return XCircle;
+      case 'refunded':
+        return AlertCircle;
+      default:
+        return Clock;
+    }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  if (error || !partner) {
+  if (!payment) {
     return (
-      <div className="p-6">
-        <EmptyState
-          icon={XCircle}
-          title="Partner Not Found"
-          description="The partner you're looking for doesn't exist or has been removed."
-          action={{
-            label: 'Back to Partners',
-            onClick: () => navigate('/partners')
-          }}
-        />
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-600 dark:text-gray-400">Payment not found</p>
       </div>
     );
   }
 
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: Briefcase },
-    { id: 'events', label: 'Events', icon: Calendar, count: relatedEvents?.data?.length || 0 },
-    { id: 'performance', label: 'Performance', icon: TrendingUp },
-  ];
+  const StatusIcon = getStatusIcon(payment.status);
+  const TypeIcon = payment.type === 'income' ? TrendingUp : TrendingDown;
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/partners')}
-            icon={ArrowLeft}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+        <div className="flex items-start gap-4">
+          <button
+            onClick={() => navigate('/payments')}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Back
-          </Button>
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{partner.name}</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Partner ID: {partner._id?.slice(-8).toUpperCase()}
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <DollarSign className="w-8 h-8" />
+              Payment Details
+            </h1>
+            <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
+              {payment.reference || `Payment #${id.slice(-8)}`}
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="outline"
-            icon={Edit}
-            onClick={() => navigate(`/partners/${id}/edit`)}
-          >
-            Edit Partner
+
+        <div className="flex items-center gap-3">
+          {payment.type === 'income' && 
+           ['completed', 'paid'].includes((payment.status || '').toLowerCase()) &&
+           !payment.refundAmount && (
+            <Button
+              variant="outline"
+              icon={RotateCcw}
+              onClick={() => {
+                setRefundData({ amount: payment.amount.toString(), reason: '' });
+                setIsRefundModalOpen(true);
+              }}
+            >
+              Refund
+            </Button>
+          )}
+          <Button variant="outline" icon={Edit} onClick={handleEdit}>
+            Edit
           </Button>
           <Button
             variant="danger"
             icon={Trash2}
-            onClick={() => setShowDeleteModal(true)}
+            onClick={() => setIsDeleteModalOpen(true)}
           >
             Delete
           </Button>
         </div>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Status</p>
-              <div className="mt-2">
-                <Badge color={getStatusColor(partner.status)}>
-                  {partner.status}
-                </Badge>
-              </div>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Information */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Payment Overview */}
+          <Card>
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Payment Overview
+              </h3>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Jobs</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {partner.totalJobs || 0}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Briefcase className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Rating</p>
-              <div className="flex items-center mt-1">
-                <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                <p className="text-2xl font-bold text-gray-900 ml-2">
-                  {partner.rating?.toFixed(1) || '0.0'}
-                </p>
-              </div>
-            </div>
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Star className="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Hourly Rate</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {partner.hourlyRate ? formatCurrency(partner.hourlyRate) : 'N/A'}
-              </p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  flex items-center py-4 px-1 border-b-2 font-medium text-sm
-                  ${activeTab === tab.id
-                    ? 'border-purple-600 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}
-              >
-                <Icon className="w-5 h-5 mr-2" />
-                {tab.label}
-                {tab.count !== undefined && (
-                  <span className={`
-                    ml-2 py-0.5 px-2 rounded-full text-xs
-                    ${activeTab === tab.id
-                      ? 'bg-purple-100 text-purple-600'
-                      : 'bg-gray-100 text-gray-600'
-                    }
-                  `}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Information */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Contact Information
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <div className="ml-3">
-                      <p className="text-sm text-gray-600">Email</p>
-                      <a
-                        href={`mailto:${partner.email}`}
-                        className="text-purple-600 hover:text-purple-700"
-                      >
-                        {partner.email}
-                      </a>
+              <div className="space-y-6">
+                {/* Type and Status */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-lg ${
+                      payment.type === 'income' 
+                        ? 'bg-green-50 dark:bg-green-900/20' 
+                        : 'bg-red-50 dark:bg-red-900/20'
+                    }`}>
+                      <TypeIcon className={`w-6 h-6 ${
+                        payment.type === 'income'
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`} />
                     </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <div className="ml-3">
-                      <p className="text-sm text-gray-600">Phone</p>
-                      <a
-                        href={`tel:${partner.phone}`}
-                        className="text-gray-900"
-                      >
-                        {partner.phone}
-                      </a>
-                    </div>
-                  </div>
-
-                  {partner.company && (
-                    <div className="flex items-start">
-                      <Building className="w-5 h-5 text-gray-400 mt-0.5" />
-                      <div className="ml-3">
-                        <p className="text-sm text-gray-600">Company</p>
-                        <p className="text-gray-900">{partner.company}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {partner.location && (
-                    <div className="flex items-start">
-                      <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                      <div className="ml-3">
-                        <p className="text-sm text-gray-600">Location</p>
-                        <p className="text-gray-900">{partner.location}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {partner.address && (
-              <Card>
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Address
-                  </h3>
-                  <div className="text-gray-600">
-                    {partner.address.street && <p>{partner.address.street}</p>}
-                    <p>
-                      {[
-                        partner.address.city,
-                        partner.address.state,
-                        partner.address.zipCode
-                      ].filter(Boolean).join(', ')}
-                    </p>
-                    {partner.address.country && <p>{partner.address.country}</p>}
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {partner.notes && (
-              <Card>
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Notes
-                  </h3>
-                  <p className="text-gray-600 whitespace-pre-wrap">{partner.notes}</p>
-                </div>
-              </Card>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Details
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-600">Category</p>
-                    <Badge color={getCategoryColor(partner.category)} className="mt-1">
-                      {partner.category.replace('_', ' ')}
-                    </Badge>
-                  </div>
-
-                  {partner.specialties && (
                     <div>
-                      <p className="text-sm text-gray-600">Specialties</p>
-                      <p className="text-gray-900 mt-1">{partner.specialties}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Payment Type</p>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
+                        {payment.type}
+                      </p>
                     </div>
-                  )}
-
-                  <div>
-                    <p className="text-sm text-gray-600">Member Since</p>
-                    <p className="text-gray-900 mt-1">
-                      {formatDate(partner.createdAt)}
-                    </p>
                   </div>
-
-                  <div>
-                    <p className="text-sm text-gray-600">Last Updated</p>
-                    <p className="text-gray-900 mt-1">
-                      {formatDate(partner.updatedAt)}
-                    </p>
-                  </div>
+                  <Badge variant={getStatusVariant(payment.status)}>
+                    <div className="flex items-center gap-1">
+                      <StatusIcon className="w-3 h-3" />
+                      <span className="capitalize">{payment.status}</span>
+                    </div>
+                  </Badge>
                 </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      )}
 
-      {activeTab === 'events' && (
-        <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Related Events
-            </h3>
-            {relatedEvents?.data?.length > 0 ? (
-              <div className="space-y-4">
-                {relatedEvents.data.map((event) => (
-                  <div
-                    key={event._id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-purple-300 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <Link
-                        to={`/events/${event._id}`}
-                        className="text-purple-600 hover:text-purple-700 font-medium"
-                      >
-                        {event.title}
-                      </Link>
-                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {formatDate(event.startDate)}
-                        </div>
-                        <Badge color={event.status === 'completed' ? 'green' : 'blue'}>
-                          {event.status}
-                        </Badge>
-                      </div>
+                {/* Amount */}
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Amount</p>
+                  <p className={`text-4xl font-bold ${
+                    payment.type === 'income'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {payment.type === 'income' ? '+' : '-'}{formatCurrency(payment.amount)}
+                  </p>
+                </div>
+
+                {/* Description */}
+                {payment.description && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                      Description
+                    </p>
+                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
+                      {payment.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Payment Details Grid */}
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Payment Method
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-gray-400" />
+                      <p className="text-gray-900 dark:text-white font-medium capitalize">
+                        {(payment.method || 'N/A').replace(/_/g, ' ')}
+                      </p>
                     </div>
-                    {event.partners?.find(p => p.partner === id)?.cost && (
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600">Cost</p>
-                        <p className="font-semibold text-gray-900">
-                          {formatCurrency(event.partners.find(p => p.partner === id).cost)}
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Reference Number
+                    </p>
+                    <p className="text-gray-900 dark:text-white font-medium">
+                      {payment.reference || '—'}
+                    </p>
+                  </div>
+
+                  {payment.dueDate && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Due Date
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <p className="text-gray-900 dark:text-white">
+                          {formatDate(payment.dueDate)}
                         </p>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                icon={Calendar}
-                title="No Events"
-                description="This partner hasn't been assigned to any events yet."
-              />
-            )}
-          </div>
-        </Card>
-      )}
+                    </div>
+                  )}
 
-      {activeTab === 'performance' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Performance Metrics
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Total Jobs Completed</span>
-                  <span className="font-semibold text-gray-900">
-                    {partner.totalJobs || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Average Rating</span>
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                    <span className="font-semibold text-gray-900">
-                      {partner.rating?.toFixed(1) || '0.0'}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Completion Rate</span>
-                  <span className="font-semibold text-gray-900">
-                    {partner.totalJobs > 0 
-                      ? `${((relatedEvents?.data?.filter(e => e.status === 'completed').length || 0) / partner.totalJobs * 100).toFixed(0)}%`
-                      : 'N/A'
-                    }
-                  </span>
+                  {payment.paidDate && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Paid Date
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <p className="text-gray-900 dark:text-white">
+                          {formatDate(payment.paidDate)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </Card>
 
+          {/* Fees Breakdown */}
+          {(payment.fees?.processingFee > 0 || 
+            payment.fees?.platformFee > 0 || 
+            payment.fees?.otherFees > 0) && (
+            <Card>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Fees & Charges
+                </h3>
+                <div className="space-y-3">
+                  {payment.fees.processingFee > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400">Processing Fee</span>
+                      <span className="text-gray-900 dark:text-white font-medium">
+                        {formatCurrency(payment.fees.processingFee)}
+                      </span>
+                    </div>
+                  )}
+                  {payment.fees.platformFee > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400">Platform Fee</span>
+                      <span className="text-gray-900 dark:text-white font-medium">
+                        {formatCurrency(payment.fees.platformFee)}
+                      </span>
+                    </div>
+                  )}
+                  {payment.fees.otherFees > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400">Other Fees</span>
+                      <span className="text-gray-900 dark:text-white font-medium">
+                        {formatCurrency(payment.fees.otherFees)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-900 dark:text-white font-semibold">
+                        Net Amount
+                      </span>
+                      <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                        {formatCurrency(payment.netAmount)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Refund Information */}
+          {payment.refundAmount > 0 && (
+            <Card>
+              <div className="p-6 bg-orange-50 dark:bg-orange-900/20">
+                <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-300 mb-4 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  Refund Information
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 dark:text-gray-300">Refund Amount</span>
+                    <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
+                      {formatCurrency(payment.refundAmount)}
+                    </span>
+                  </div>
+                  {payment.refundDate && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700 dark:text-gray-300">Refund Date</span>
+                      <span className="text-gray-900 dark:text-white">
+                        {formatDate(payment.refundDate)}
+                      </span>
+                    </div>
+                  )}
+                  {payment.refundReason && (
+                    <div className="pt-3 border-t border-orange-200 dark:border-orange-800">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Reason</p>
+                      <p className="text-gray-900 dark:text-white">{payment.refundReason}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Related Information */}
+          {(payment.event || payment.client) && (
+            <Card>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Related Information
+                </h3>
+                <div className="space-y-4">
+                  {payment.event && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Event</p>
+                      <button
+                        onClick={() => navigate(`/events/${payment.event._id || payment.event}`)}
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                      >
+                        {payment.event.title || 'View Event'}
+                      </button>
+                    </div>
+                  )}
+                  {payment.client && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Client</p>
+                      <button
+                        onClick={() => navigate(`/clients/${payment.client._id || payment.client}`)}
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                      >
+                        {payment.client.name || 'View Client'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Financial Summary
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Quick Actions
               </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Hourly Rate</span>
-                  <span className="font-semibold text-gray-900">
-                    {partner.hourlyRate ? formatCurrency(partner.hourlyRate) : 'Not set'}
-                  </span>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  icon={Edit}
+                  onClick={handleEdit}
+                >
+                  Edit Payment
+                </Button>
+                {payment.type === 'income' && 
+                 ['completed', 'paid'].includes((payment.status || '').toLowerCase()) &&
+                 !payment.refundAmount && (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    icon={RotateCcw}
+                    onClick={() => {
+                      setRefundData({ amount: payment.amount.toString(), reason: '' });
+                      setIsRefundModalOpen(true);
+                    }}
+                  >
+                    Process Refund
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  icon={Trash2}
+                  onClick={() => setIsDeleteModalOpen(true)}
+                >
+                  Delete Payment
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Metadata */}
+          <Card>
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Metadata
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Created</p>
+                  <p className="text-gray-900 dark:text-white">
+                    {formatDateTime(payment.createdAt)}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Total Revenue Generated</span>
-                  <span className="font-semibold text-gray-900">
-                    {formatCurrency(
-                      relatedEvents?.data?.reduce((sum, event) => {
-                        const partnerData = event.partners?.find(p => p.partner === id);
-                        return sum + (partnerData?.cost || 0);
-                      }, 0) || 0
-                    )}
-                  </span>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Last Updated</p>
+                  <p className="text-gray-900 dark:text-white">
+                    {formatDateTime(payment.updatedAt)}
+                  </p>
                 </div>
+                {payment.processedBy && (
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">Processed By</p>
+                    <p className="text-gray-900 dark:text-white">
+                      {payment.processedBy.name || 'System'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
         </div>
-      )}
+      </div>
+
+      {/* Refund Modal */}
+      <Modal
+        isOpen={isRefundModalOpen}
+        onClose={() => {
+          setIsRefundModalOpen(false);
+          setRefundData({ amount: '', reason: '' });
+        }}
+        title="Process Refund"
+        size="sm"
+      >
+        <div className="p-6">
+          <div className="space-y-4 mb-6">
+            <Input
+              label="Refund Amount"
+              type="number"
+              value={refundData.amount}
+              onChange={(e) => setRefundData(prev => ({ ...prev, amount: e.target.value }))}
+              placeholder="0.00"
+              min="0"
+              max={payment?.amount}
+              step="0.01"
+              icon={DollarSign}
+            />
+            <Input
+              label="Reason for Refund"
+              value={refundData.reason}
+              onChange={(e) => setRefundData(prev => ({ ...prev, reason: e.target.value }))}
+              placeholder="Enter refund reason (optional)"
+            />
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                This will refund {formatCurrency(parseFloat(refundData.amount) || 0)} to the client.
+                This action cannot be undone.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsRefundModalOpen(false);
+                setRefundData({ amount: '', reason: '' });
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleRefund}
+            >
+              Confirm Refund
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Partner"
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Payment"
         size="sm"
       >
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            Are you sure you want to delete <strong>{partner.name}</strong>? 
-            This action cannot be undone.
+        <div className="p-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Are you sure you want to delete this payment? This action cannot be undone.
           </p>
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end gap-3">
             <Button
               variant="outline"
-              onClick={() => setShowDeleteModal(false)}
+              onClick={() => setIsDeleteModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="danger"
               onClick={handleDelete}
-              loading={deleteMutation.loading}
             >
-              Delete Partner
+              Delete Payment
             </Button>
           </div>
         </div>
@@ -525,4 +637,4 @@ const PartnerDetail = () => {
   );
 };
 
-export default PartnerDetail;
+export default PaymentDetail;

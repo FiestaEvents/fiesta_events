@@ -1,150 +1,154 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useApi, useMutation } from '../../hooks/useApi';
-import { partnerService } from '../../api/services/api';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import Textarea from '../../components/common/Textarea';
 import Select from '../../components/common/Select';
-import Card from '../../components/common/Card';
-import { ArrowLeft, Save, X } from 'lucide-react';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { paymentService, eventService, clientService } from '../../api/index';
 import { toast } from 'react-hot-toast';
+import { 
+  ArrowLeft, 
+  Save, 
+  DollarSign,
+  Calendar,
+  CreditCard,
+  FileText,
+  Users,
+} from 'lucide-react';
 
-const PartnerEdit = () => {
-  const { id } = useParams();
+const PaymentForm = () => {
   const navigate = useNavigate();
-  const isEditMode = !!id;
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
 
-  const { data: partner, loading: fetchLoading } = useApi(
-    () => isEditMode ? partnerService.getById(id) : Promise.resolve(null),
-    [id]
-  );
-
-  const updateMutation = useMutation(partnerService.update);
-  const createMutation = useMutation(partnerService.create);
+  // State
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    category: '',
-    company: '',
-    status: 'active',
-    location: '',
-    specialties: '',
-    hourlyRate: '',
-    rating: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: ''
+    type: 'income',
+    event: '',
+    client: '',
+    amount: '',
+    method: 'cash',
+    status: 'pending',
+    reference: '',
+    description: '',
+    dueDate: '',
+    paidDate: '',
+    fees: {
+      processingFee: 0,
+      platformFee: 0,
+      otherFees: 0,
     },
-    notes: ''
   });
 
   const [errors, setErrors] = useState({});
 
+  // Fetch payment data if editing
   useEffect(() => {
-    if (partner) {
-      setFormData({
-        name: partner.name || '',
-        email: partner.email || '',
-        phone: partner.phone || '',
-        category: partner.category || '',
-        company: partner.company || '',
-        status: partner.status || 'active',
-        location: partner.location || '',
-        specialties: partner.specialties || '',
-        hourlyRate: partner.hourlyRate || '',
-        rating: partner.rating || '',
-        address: {
-          street: partner.address?.street || '',
-          city: partner.address?.city || '',
-          state: partner.address?.state || '',
-          zipCode: partner.address?.zipCode || '',
-          country: partner.address?.country || ''
-        },
-        notes: partner.notes || ''
-      });
+    if (isEditMode) {
+      fetchPayment();
     }
-  }, [partner]);
+  }, [id, isEditMode]);
 
-  const categoryOptions = [
-    { value: '', label: 'Select Category' },
-    { value: 'catering', label: 'Catering' },
-    { value: 'decoration', label: 'Decoration' },
-    { value: 'photography', label: 'Photography' },
-    { value: 'music', label: 'Music' },
-    { value: 'security', label: 'Security' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'audio_visual', label: 'Audio Visual' },
-    { value: 'floral', label: 'Floral' },
-    { value: 'entertainment', label: 'Entertainment' },
-    { value: 'other', label: 'Other' }
-  ];
+  // Fetch events and clients for dropdowns
+  useEffect(() => {
+    fetchOptions();
+  }, []);
 
-  const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' }
-  ];
+  const fetchPayment = async () => {
+    try {
+      setLoading(true);
+      const response = await paymentService.getById(id);
+      const payment = response.payment || response;
+
+      setFormData({
+        type: payment.type || 'income',
+        event: payment.event?._id || payment.event || '',
+        client: payment.client?._id || payment.client || '',
+        amount: payment.amount?.toString() || '',
+        method: payment.method || 'cash',
+        status: payment.status || 'pending',
+        reference: payment.reference || '',
+        description: payment.description || '',
+        dueDate: payment.dueDate ? new Date(payment.dueDate).toISOString().split('T')[0] : '',
+        paidDate: payment.paidDate ? new Date(payment.paidDate).toISOString().split('T')[0] : '',
+        fees: {
+          processingFee: payment.fees?.processingFee || 0,
+          platformFee: payment.fees?.platformFee || 0,
+          otherFees: payment.fees?.otherFees || 0,
+        },
+      });
+    } catch (error) {
+      console.error('Error fetching payment:', error);
+      toast.error(error.message || 'Failed to load payment');
+      navigate('/payments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOptions = async () => {
+    try {
+      setLoadingOptions(true);
+      const [eventsResponse, clientsResponse] = await Promise.all([
+        eventService.getAll({ limit: 1000 }),
+        clientService.getAll({ limit: 1000 }),
+      ]);
+
+      setEvents(eventsResponse.events || eventsResponse || []);
+      setClients(clientsResponse.clients || clientsResponse || []);
+    } catch (error) {
+      console.error('Error fetching options:', error);
+      toast.error('Failed to load form options');
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    if (name.startsWith('address.')) {
-      const addressField = name.split('.')[1];
+    if (name.startsWith('fees.')) {
+      const feeField = name.split('.')[1];
       setFormData(prev => ({
         ...prev,
-        address: {
-          ...prev.address,
-          [addressField]: value
-        }
+        fees: {
+          ...prev.fees,
+          [feeField]: parseFloat(value) || 0,
+        },
       }));
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
-    
-    // Clear error for this field
+
+    // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Partner name is required';
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      newErrors.amount = 'Please enter a valid amount';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Please provide a valid email';
+    if (!formData.method) {
+      newErrors.method = 'Please select a payment method';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    }
-
-    if (!formData.category) {
-      newErrors.category = 'Category is required';
-    }
-
-    if (formData.hourlyRate && isNaN(formData.hourlyRate)) {
-      newErrors.hourlyRate = 'Hourly rate must be a number';
-    }
-
-    if (formData.rating && (isNaN(formData.rating) || formData.rating < 0 || formData.rating > 5)) {
-      newErrors.rating = 'Rating must be between 0 and 5';
+    if (!formData.type) {
+      newErrors.type = 'Please select a payment type';
     }
 
     setErrors(newErrors);
@@ -160,292 +164,336 @@ const PartnerEdit = () => {
     }
 
     try {
-      // Prepare data
-      const submitData = {
-        ...formData,
-        hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined,
-        rating: formData.rating ? parseFloat(formData.rating) : undefined
+      setSaving(true);
+
+      const paymentData = {
+        type: formData.type,
+        amount: parseFloat(formData.amount),
+        method: formData.method,
+        status: formData.status,
+        reference: formData.reference || undefined,
+        description: formData.description || undefined,
+        dueDate: formData.dueDate || undefined,
+        paidDate: formData.paidDate || undefined,
+        event: formData.event || undefined,
+        client: formData.client || undefined,
+        fees: {
+          processingFee: parseFloat(formData.fees.processingFee) || 0,
+          platformFee: parseFloat(formData.fees.platformFee) || 0,
+          otherFees: parseFloat(formData.fees.otherFees) || 0,
+        },
       };
 
-      // Remove empty address fields
-      if (Object.values(submitData.address).every(val => !val)) {
-        delete submitData.address;
-      }
-
       if (isEditMode) {
-        await updateMutation.mutate(id, submitData);
-        toast.success('Partner updated successfully');
-        navigate(`/partners/${id}`);
+        await paymentService.update(id, paymentData);
+        toast.success('Payment updated successfully');
       } else {
-        const response = await createMutation.mutate(submitData);
-        toast.success('Partner created successfully');
-        navigate(`/partners/${response._id}`);
+        await paymentService.create(paymentData);
+        toast.success('Payment created successfully');
       }
+
+      navigate('/payments');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to save partner');
+      console.error('Error saving payment:', error);
+      toast.error(error.message || 'Failed to save payment');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleCancel = () => {
-    if (isEditMode) {
-      navigate(`/partners/${id}`);
-    } else {
-      navigate('/partners');
-    }
+  const calculateNetAmount = () => {
+    const amount = parseFloat(formData.amount) || 0;
+    const processingFee = parseFloat(formData.fees.processingFee) || 0;
+    const platformFee = parseFloat(formData.fees.platformFee) || 0;
+    const otherFees = parseFloat(formData.fees.otherFees) || 0;
+    return amount - processingFee - platformFee - otherFees;
   };
 
-  if (isEditMode && fetchLoading) {
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancel}
-              icon={ArrowLeft}
-            >
-              Back
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {isEditMode ? 'Edit Partner' : 'New Partner'}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {isEditMode 
-                  ? 'Update partner information'
-                  : 'Add a new partner to your network'
-                }
-              </p>
-            </div>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/payments')}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <DollarSign className="w-8 h-8" />
+              {isEditMode ? 'Edit Payment' : 'Add Payment'}
+            </h1>
+            <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
+              {isEditMode ? 'Update payment information' : 'Record a new payment transaction'}
+            </p>
           </div>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Basic Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  label="Partner Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  error={errors.name}
-                  required
-                  placeholder="Enter partner name"
-                />
-
-                <Input
-                  label="Email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={errors.email}
-                  required
-                  placeholder="partner@example.com"
-                />
-
-                <Input
-                  label="Phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  error={errors.phone}
-                  required
-                  placeholder="+1 (555) 000-0000"
-                />
-
-                <Select
-                  label="Category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  options={categoryOptions}
-                  error={errors.category}
-                  required
-                />
-
-                <Input
-                  label="Company"
-                  name="company"
-                  value={formData.company}
-                  onChange={handleChange}
-                  placeholder="Company name (optional)"
-                />
-
-                <Select
-                  label="Status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  options={statusOptions}
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Professional Details */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Professional Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  label="Location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="City, State"
-                />
-
-                <Input
-                  label="Hourly Rate"
-                  name="hourlyRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.hourlyRate}
-                  onChange={handleChange}
-                  error={errors.hourlyRate}
-                  placeholder="0.00"
-                />
-
-                <Input
-                  label="Rating"
-                  name="rating"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  value={formData.rating}
-                  onChange={handleChange}
-                  error={errors.rating}
-                  placeholder="0.0 - 5.0"
-                />
-
-                <div className="md:col-span-2">
-                  <Textarea
-                    label="Specialties"
-                    name="specialties"
-                    value={formData.specialties}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="List partner's specialties and expertise"
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Address */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Address
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <Input
-                    label="Street Address"
-                    name="address.street"
-                    value={formData.address.street}
-                    onChange={handleChange}
-                    placeholder="123 Main St"
-                  />
-                </div>
-
-                <Input
-                  label="City"
-                  name="address.city"
-                  value={formData.address.city}
-                  onChange={handleChange}
-                  placeholder="New York"
-                />
-
-                <Input
-                  label="State/Province"
-                  name="address.state"
-                  value={formData.address.state}
-                  onChange={handleChange}
-                  placeholder="NY"
-                />
-
-                <Input
-                  label="ZIP/Postal Code"
-                  name="address.zipCode"
-                  value={formData.address.zipCode}
-                  onChange={handleChange}
-                  placeholder="10001"
-                />
-
-                <Input
-                  label="Country"
-                  name="address.country"
-                  value={formData.address.country}
-                  onChange={handleChange}
-                  placeholder="United States"
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Additional Information */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Additional Information
-              </h3>
-              <Textarea
-                label="Notes"
-                name="notes"
-                value={formData.notes}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Basic Information
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Select
+                label="Payment Type"
+                name="type"
+                value={formData.type}
                 onChange={handleChange}
-                rows={5}
-                placeholder="Add any additional notes about this partner..."
-                maxLength={1000}
-                showCount
+                error={errors.type}
+                required
+              >
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </Select>
+
+              <Input
+                label="Amount"
+                name="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.amount}
+                onChange={handleChange}
+                error={errors.amount}
+                placeholder="0.00"
+                required
+                icon={DollarSign}
+              />
+
+              <Select
+                label="Payment Method"
+                name="method"
+                value={formData.method}
+                onChange={handleChange}
+                error={errors.method}
+                required
+                icon={CreditCard}
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="check">Check</option>
+                <option value="mobile_payment">Mobile Payment</option>
+              </Select>
+
+              <Select
+                label="Status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+              >
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="refunded">Refunded</option>
+              </Select>
+
+              <Input
+                label="Reference Number"
+                name="reference"
+                value={formData.reference}
+                onChange={handleChange}
+                placeholder="REF-001"
+              />
+
+              <div className="md:col-span-2">
+                <Input
+                  label="Description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Brief description of the payment"
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Related Information */}
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Related Information
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Select
+                label="Related Event (Optional)"
+                name="event"
+                value={formData.event}
+                onChange={handleChange}
+                disabled={loadingOptions}
+              >
+                <option value="">Select an event</option>
+                {events.map((event) => (
+                  <option key={event._id || event.id} value={event._id || event.id}>
+                    {event.title}
+                  </option>
+                ))}
+              </Select>
+
+              <Select
+                label="Client (Optional)"
+                name="client"
+                value={formData.client}
+                onChange={handleChange}
+                disabled={loadingOptions}
+              >
+                <option value="">Select a client</option>
+                {clients.map((client) => (
+                  <option key={client._id || client.id} value={client._id || client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+        </Card>
+
+        {/* Dates */}
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Payment Dates
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Due Date"
+                name="dueDate"
+                type="date"
+                value={formData.dueDate}
+                onChange={handleChange}
+              />
+
+              <Input
+                label="Paid Date"
+                name="paidDate"
+                type="date"
+                value={formData.paidDate}
+                onChange={handleChange}
               />
             </div>
-          </Card>
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              icon={X}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              icon={Save}
-              loading={updateMutation.loading || createMutation.loading}
-            >
-              {isEditMode ? 'Update Partner' : 'Create Partner'}
-            </Button>
           </div>
-        </form>
-      </div>
+        </Card>
+
+        {/* Fees (Optional) */}
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Fees & Charges
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Input
+                label="Processing Fee"
+                name="fees.processingFee"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.fees.processingFee}
+                onChange={handleChange}
+                placeholder="0.00"
+              />
+
+              <Input
+                label="Platform Fee"
+                name="fees.platformFee"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.fees.platformFee}
+                onChange={handleChange}
+                placeholder="0.00"
+              />
+
+              <Input
+                label="Other Fees"
+                name="fees.otherFees"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.fees.otherFees}
+                onChange={handleChange}
+                placeholder="0.00"
+              />
+            </div>
+
+            {/* Net Amount Display */}
+            {formData.amount && (
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {formatCurrency(parseFloat(formData.amount) || 0)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Net Amount</p>
+                    <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                      {formatCurrency(calculateNetAmount())}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Action Buttons */}
+        <Card>
+          <div className="p-6">
+            <div className="flex justify-end gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate('/payments')}
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                icon={Save}
+                loading={saving}
+              >
+                {isEditMode ? 'Update Payment' : 'Create Payment'}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </form>
     </div>
   );
 };
 
-export default PartnerEdit;
+export default PaymentForm;

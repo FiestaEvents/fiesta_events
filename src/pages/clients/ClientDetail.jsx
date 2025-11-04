@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { clientService, eventService } from '../../api/index';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -28,73 +28,101 @@ import { toast } from 'react-hot-toast';
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Get client data from route state if available (for faster loading)
+  const routeClient = location.state?.client;
   
   // State for client and events data
   const [client, setClient] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [eventsLoading, setEventsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // Fetch client details and events
+  // Fetch client events separately
+  const fetchClientEvents = async (clientId) => {
+    try {
+      setEventsLoading(true);
+      console.log('📅 Fetching events for client:', clientId);
+      
+      const eventsResponse = await eventService.getAll({ 
+        clientId: clientId, 
+        limit: 100,
+        page: 1 
+      });
+      console.log('📅 Events API response:', eventsResponse);
+      
+      let eventsData = [];
+      
+      if (eventsResponse?.data?.data?.events) {
+        eventsData = eventsResponse.data.data.events;
+      } else if (eventsResponse?.data?.events) {
+        eventsData = eventsResponse.data.events;
+      } else if (eventsResponse?.events) {
+        eventsData = eventsResponse.events;
+      } else if (Array.isArray(eventsResponse?.data)) {
+        eventsData = eventsResponse.data;
+      } else if (Array.isArray(eventsResponse)) {
+        eventsData = eventsResponse;
+      }
+      
+      console.log('📅 Extracted events:', eventsData);
+      setEvents(eventsData);
+    } catch (eventsError) {
+      console.error('❌ Error fetching events:', eventsError);
+      // Don't fail the whole page if events fail to load
+      setEvents([]);
+      toast.error('Failed to load client events');
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  // Fetch client details
   const fetchClientData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🔄 Fetching client details for ID:', id);
-      
-      // Fetch client details
-      const clientResponse = await clientService.getById(id);
-      console.log('📋 Client API response:', clientResponse);
-      
-      let clientData = null;
-      
-      // Handle different response structures
-      if (clientResponse?.data?.data) {
-        clientData = clientResponse.data.data;
-      } else if (clientResponse?.data) {
-        clientData = clientResponse.data;
-      } else if (clientResponse) {
-        clientData = clientResponse;
-      }
-      
-      if (!clientData || !clientData._id) {
-        throw new Error('Client not found');
-      }
-      
-      setClient(clientData);
-      
-      // Fetch client events
-      try {
-        const eventsResponse = await eventService.getAll({ 
-          clientId: id, 
-          limit: 100,
-          page: 1 
-        });
-        console.log('📅 Events API response:', eventsResponse);
+      // If client data was passed via route state, use it directly
+      if (routeClient && routeClient._id === id) {
+        console.log('📋 Using client data from route state:', routeClient);
+        setClient(routeClient);
         
-        let eventsData = [];
+        // Fetch events for this client
+        await fetchClientEvents(id);
+      } else {
+        // Otherwise fetch client data from API
+        console.log('🔄 Fetching client details for ID:', id);
         
-        if (eventsResponse?.data?.data?.events) {
-          eventsData = eventsResponse.data.data.events;
-        } else if (eventsResponse?.data?.events) {
-          eventsData = eventsResponse.data.events;
-        } else if (eventsResponse?.events) {
-          eventsData = eventsResponse.events;
-        } else if (Array.isArray(eventsResponse?.data)) {
-          eventsData = eventsResponse.data;
-        } else if (Array.isArray(eventsResponse)) {
-          eventsData = eventsResponse;
+        const clientResponse = await clientService.getById(id);
+        console.log('📋 Client API response:', clientResponse);
+        
+        let clientData = null;
+        
+        // Handle different response structures
+        if (clientResponse?.data?.data) {
+          clientData = clientResponse.data.data;
+        } else if (clientResponse?.data) {
+          clientData = clientResponse.data;
+        } else if (clientResponse) {
+          clientData = clientResponse;
         }
         
-        setEvents(eventsData);
-      } catch (eventsError) {
-        console.error('❌ Error fetching events:', eventsError);
-        // Don't fail the whole page if events fail to load
-        setEvents([]);
+        if (!clientData || !clientData._id) {
+          throw new Error('Client not found');
+        }
+        
+        console.log('📋 Extracted client data:', clientData);
+        setClient(clientData);
+        
+        // Fetch events for this client
+        await fetchClientEvents(id);
       }
       
     } catch (err) {
@@ -102,8 +130,10 @@ const ClientDetail = () => {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to load client details';
       setError(errorMessage);
       setClient(null);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
+      setHasInitialLoad(true);
     }
   };
 
@@ -195,10 +225,11 @@ const ClientDetail = () => {
   ];
 
   // Loading state
-  if (loading) {
+  if (loading && !hasInitialLoad) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
+        <p className="ml-3 text-gray-600 dark:text-gray-400">Loading client data...</p>
       </div>
     );
   }
@@ -221,7 +252,7 @@ const ClientDetail = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 bg-white dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -239,6 +270,7 @@ const ClientDetail = () => {
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Client ID: {client._id?.slice(-8).toUpperCase() || 'N/A'}
+              {routeClient && <span className="text-green-600 ml-2">• Loaded from cache</span>}
             </p>
           </div>
         </div>
@@ -247,7 +279,7 @@ const ClientDetail = () => {
           <Button
             variant="outline"
             icon={Edit}
-            onClick={() => navigate(`/clients/${id}/edit`)}
+            onClick={() => navigate(`/clients/${id}/edit`, { state: { client } })}
           >
             Edit Client
           </Button>
@@ -533,7 +565,7 @@ const ClientDetail = () => {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Event History
+                  Event History ({totalEvents} events)
                 </h3>
                 <Button
                   variant="primary"
@@ -544,7 +576,12 @@ const ClientDetail = () => {
                 </Button>
               </div>
               
-              {events.length > 0 ? (
+              {eventsLoading ? (
+                <div className="text-center py-8">
+                  <LoadingSpinner size="md" />
+                  <p className="mt-3 text-gray-600 dark:text-gray-400">Loading events...</p>
+                </div>
+              ) : events.length > 0 ? (
                 <div className="space-y-4">
                   {events.map((event) => (
                     <div
@@ -564,7 +601,7 @@ const ClientDetail = () => {
                             {formatDate(event.startDate)}
                           </div>
                           <Badge color={getEventStatusColor(event.status)}>
-                            {event.status}
+                            {event.status?.charAt(0).toUpperCase() + event.status?.slice(1) || 'Unknown'}
                           </Badge>
                           {event.type && (
                             <Badge color="gray">{event.type}</Badge>

@@ -26,43 +26,54 @@ const TopBar = ({ onMenuClick }) => {
   const notificationRef = useRef();
 
   // Fetch upcoming reminders as notifications
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        // Get upcoming reminders
-        const response = await reminderService.getUpcoming();
+useEffect(() => {
+  let isMounted = true;
+  
+  const fetchNotifications = async () => {
+    if (!isMounted) return;
+    
+    try {
+      const response = await reminderService.getUpcoming();
 
-        // Extract reminders from response
-        let reminders = [];
-        if (response?.data?.data?.reminders) {
-          reminders = response.data.data.reminders;
-        } else if (response?.data?.reminders) {
-          reminders = response.data.reminders;
-        } else if (response?.reminders) {
-          reminders = response.reminders;
-        } else if (Array.isArray(response?.data)) {
-          reminders = response.data;
-        } else if (Array.isArray(response)) {
-          reminders = response;
-        }
+      // Extract reminders from response
+      let reminders = [];
+      if (response?.data?.data?.reminders) {
+        reminders = response.data.data.reminders;
+      } else if (response?.data?.reminders) {
+        reminders = response.data.reminders;
+      } else if (response?.reminders) {
+        reminders = response.reminders;
+      } else if (Array.isArray(response?.data)) {
+        reminders = response.data;
+      } else if (Array.isArray(response)) {
+        reminders = response;
+      }
 
-        // Filter only active reminders
-        const activeReminders = reminders.filter(
-          (reminder) => reminder.status === "active"
-        );
+      const activeReminders = reminders.filter(
+        (reminder) => reminder.status === "active"
+      );
 
+      if (isMounted) {
         setNotifications(activeReminders);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      if (isMounted) {
         setNotifications([]);
       }
-    };
+    }
+  };
 
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // 1 minute
+  fetchNotifications();
+  
+  // Poll every 5 minutes instead of 1 minute
+  const interval = setInterval(fetchNotifications, 300000);
 
-    return () => clearInterval(interval);
-  }, []);
+  return () => {
+    isMounted = false;
+    clearInterval(interval);
+  };
+}, []);
 
   // Close user dropdown if clicked outside
   useEffect(() => {
@@ -178,7 +189,7 @@ const TopBar = ({ onMenuClick }) => {
             <img
               src="/fiesta logo-01.png"
               alt="Fiesta Logo"
-              className="h-7 w-7 object-contain"
+              className="h-24 w-30 object-contain"
               onError={(e) => {
                 // Fallback if logo doesn't exist
                 e.target.style.display = "none";

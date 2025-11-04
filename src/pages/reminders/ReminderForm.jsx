@@ -1,19 +1,82 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { reminderService, eventService, clientService, taskService, paymentService, userService } from '../../api/index';
+import { toast } from 'react-hot-toast';
+import { 
+  ArrowLeft, 
+  Save, 
+  X,
+  Bell,
+  Calendar,
+  Users,
+  Link,
+  FileText
+} from 'lucide-react';
+
+// Services
+import { 
+  reminderService, 
+  eventService, 
+  clientService, 
+  taskService, 
+  paymentService, 
+  userService 
+} from '../../api/index';
+
+// Components
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Textarea from '../../components/common/Textarea';
 import Select from '../../components/common/Select';
 import Card from '../../components/common/Card';
-import { ArrowLeft, Save, X } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
-const ReminderEdit = () => {
+// Constants from Reminder model
+const REMINDER_TYPES = {
+  EVENT: 'event',
+  PAYMENT: 'payment',
+  TASK: 'task',
+  MAINTENANCE: 'maintenance',
+  FOLLOWUP: 'followup',
+  OTHER: 'other'
+};
+
+const REMINDER_PRIORITIES = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  URGENT: 'urgent'
+};
+
+const RECURRENCE_FREQUENCIES = {
+  DAILY: 'daily',
+  WEEKLY: 'weekly',
+  MONTHLY: 'monthly',
+  YEARLY: 'yearly'
+};
+
+const NOTIFICATION_METHODS = {
+  EMAIL: 'email',
+  SMS: 'sms',
+  PUSH: 'push',
+  IN_APP: 'in_app'
+};
+
+const DAYS_OF_WEEK = [
+  { value: 0, label: 'Sun' },
+  { value: 1, label: 'Mon' },
+  { value: 2, label: 'Tue' },
+  { value: 3, label: 'Wed' },
+  { value: 4, label: 'Thu' },
+  { value: 5, label: 'Fri' },
+  { value: 6, label: 'Sat' }
+];
+
+const ReminderForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
 
+  // State
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [events, setEvents] = useState([]);
@@ -25,19 +88,19 @@ const ReminderEdit = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'other',
-    priority: 'medium',
+    type: REMINDER_TYPES.OTHER,
+    priority: REMINDER_PRIORITIES.MEDIUM,
     reminderDate: '',
     reminderTime: '',
     isRecurring: false,
     recurrence: {
-      frequency: 'daily',
+      frequency: RECURRENCE_FREQUENCIES.DAILY,
       interval: 1,
       endDate: '',
       daysOfWeek: [],
       dayOfMonth: '',
     },
-    notificationMethods: [],
+    notificationMethods: [NOTIFICATION_METHODS.IN_APP],
     relatedEvent: '',
     relatedClient: '',
     relatedTask: '',
@@ -48,71 +111,87 @@ const ReminderEdit = () => {
 
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    if (isEditMode) {
-      fetchReminder();
-    }
-    fetchRelatedData();
-  }, [id]);
+  // Fetch reminder data
+  const fetchReminder = useCallback(async () => {
+    if (!isEditMode) return;
 
-  const fetchReminder = async () => {
     try {
       setIsLoading(true);
-      const data = await reminderService.getById(id);
-      const reminder = data.data;
+      // FIXED: API service handleResponse already normalizes the response
+      const response = await reminderService.getById(id);
+      
+      // Response should be { reminder: {...} } after handleResponse
+      const reminderData = response?.reminder || response;
 
-      setFormData({
-        title: reminder.title || '',
-        description: reminder.description || '',
-        type: reminder.type || 'other',
-        priority: reminder.priority || 'medium',
-        reminderDate: reminder.reminderDate ? new Date(reminder.reminderDate).toISOString().split('T')[0] : '',
-        reminderTime: reminder.reminderTime || '',
-        isRecurring: reminder.isRecurring || false,
-        recurrence: {
-          frequency: reminder.recurrence?.frequency || 'daily',
-          interval: reminder.recurrence?.interval || 1,
-          endDate: reminder.recurrence?.endDate ? new Date(reminder.recurrence.endDate).toISOString().split('T')[0] : '',
-          daysOfWeek: reminder.recurrence?.daysOfWeek || [],
-          dayOfMonth: reminder.recurrence?.dayOfMonth || '',
-        },
-        notificationMethods: reminder.notificationMethods || [],
-        relatedEvent: reminder.relatedEvent?._id || '',
-        relatedClient: reminder.relatedClient?._id || '',
-        relatedTask: reminder.relatedTask?._id || '',
-        relatedPayment: reminder.relatedPayment?._id || '',
-        assignedTo: reminder.assignedTo?.map(u => u._id) || [],
-        notes: reminder.notes || '',
-      });
+      if (reminderData) {
+        setFormData({
+          title: reminderData.title || '',
+          description: reminderData.description || '',
+          type: reminderData.type || REMINDER_TYPES.OTHER,
+          priority: reminderData.priority || REMINDER_PRIORITIES.MEDIUM,
+          reminderDate: reminderData.reminderDate ? 
+            new Date(reminderData.reminderDate).toISOString().split('T')[0] : '',
+          reminderTime: reminderData.reminderTime || '',
+          isRecurring: reminderData.isRecurring || false,
+          recurrence: {
+            frequency: reminderData.recurrence?.frequency || RECURRENCE_FREQUENCIES.DAILY,
+            interval: reminderData.recurrence?.interval || 1,
+            endDate: reminderData.recurrence?.endDate ? 
+              new Date(reminderData.recurrence.endDate).toISOString().split('T')[0] : '',
+            daysOfWeek: reminderData.recurrence?.daysOfWeek || [],
+            dayOfMonth: reminderData.recurrence?.dayOfMonth?.toString() || '',
+          },
+          notificationMethods: reminderData.notificationMethods || [NOTIFICATION_METHODS.IN_APP],
+          relatedEvent: reminderData.relatedEvent?._id || reminderData.relatedEvent || '',
+          relatedClient: reminderData.relatedClient?._id || reminderData.relatedClient || '',
+          relatedTask: reminderData.relatedTask?._id || reminderData.relatedTask || '',
+          relatedPayment: reminderData.relatedPayment?._id || reminderData.relatedPayment || '',
+          assignedTo: reminderData.assignedTo?.map(u => u._id || u) || [],
+          notes: reminderData.notes || '',
+        });
+      }
     } catch (error) {
-      toast.error('Failed to load reminder');
+      console.error('Error fetching reminder:', error);
+      toast.error(error.message || 'Failed to load reminder');
       navigate('/reminders');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, isEditMode, navigate]);
 
-  const fetchRelatedData = async () => {
+  // Fetch related data
+  const fetchRelatedData = useCallback(async () => {
     try {
       const [eventsRes, clientsRes, tasksRes, paymentsRes, usersRes] = await Promise.all([
-        eventService.getAll({ limit: 100 }),
-        clientService.getAll({ limit: 100 }),
-        taskService.getAll({ limit: 100 }),
-        paymentService.getAll({ limit: 100 }),
-        userService.getAll({ limit: 100 }),
+        eventService.getAll({ page: 1, limit: 100 }),
+        clientService.getAll({ page: 1, limit: 100 }),
+        taskService.getAll({ page: 1, limit: 100 }),
+        paymentService.getAll({ page: 1, limit: 100 }),
+        userService.getAll({ page: 1, limit: 100 }),
       ]);
 
-      setEvents(eventsRes.data || []);
-      setClients(clientsRes.data || []);
-      setTasks(tasksRes.data || []);
-      setPayments(paymentsRes.data || []);
-      setUsers(usersRes.data || []);
+      // FIXED: API service handleResponse returns normalized data
+      // Expected response structure: { events: [], pagination: {} }
+      setEvents(eventsRes?.events || []);
+      setClients(clientsRes?.clients || []);
+      setTasks(tasksRes?.tasks || []);
+      setPayments(paymentsRes?.payments || []);
+      setUsers(usersRes?.users || []);
+
     } catch (error) {
       console.error('Failed to fetch related data:', error);
+      toast.error('Failed to load related data');
     }
-  };
+  }, []);
 
-  const handleChange = (e) => {
+  // Effects
+  useEffect(() => {
+    fetchReminder();
+    fetchRelatedData();
+  }, [fetchReminder, fetchRelatedData]);
+
+  // Event handlers
+  const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     
     if (name.startsWith('recurrence.')) {
@@ -121,23 +200,28 @@ const ReminderEdit = () => {
         ...prev,
         recurrence: {
           ...prev.recurrence,
-          [field]: value,
+          [field]: type === 'number' ? parseInt(value) || '' : value,
         },
       }));
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value,
+        [name]: type === 'checkbox' ? checked : 
+                type === 'number' ? parseInt(value) || '' : value,
       }));
     }
 
     // Clear error for this field
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
-  };
+  }, [errors]);
 
-  const handleNotificationMethodToggle = (method) => {
+  const handleNotificationMethodToggle = useCallback((method) => {
     setFormData(prev => {
       const methods = prev.notificationMethods.includes(method)
         ? prev.notificationMethods.filter(m => m !== method)
@@ -145,9 +229,9 @@ const ReminderEdit = () => {
       
       return { ...prev, notificationMethods: methods };
     });
-  };
+  }, []);
 
-  const handleDayOfWeekToggle = (day) => {
+  const handleDayOfWeekToggle = useCallback((day) => {
     setFormData(prev => {
       const days = prev.recurrence.daysOfWeek.includes(day)
         ? prev.recurrence.daysOfWeek.filter(d => d !== day)
@@ -161,9 +245,9 @@ const ReminderEdit = () => {
         },
       };
     });
-  };
+  }, []);
 
-  const handleAssignedUserToggle = (userId) => {
+  const handleAssignedUserToggle = useCallback((userId) => {
     setFormData(prev => {
       const users = prev.assignedTo.includes(userId)
         ? prev.assignedTo.filter(u => u !== userId)
@@ -171,9 +255,10 @@ const ReminderEdit = () => {
       
       return { ...prev, assignedTo: users };
     });
-  };
+  }, []);
 
-  const validate = () => {
+  // Validation
+  const validate = useCallback(() => {
     const newErrors = {};
 
     if (!formData.title.trim()) {
@@ -182,6 +267,15 @@ const ReminderEdit = () => {
 
     if (!formData.reminderDate) {
       newErrors.reminderDate = 'Date is required';
+    } else {
+      // FIXED: Proper date comparison
+      const reminderDate = new Date(formData.reminderDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (reminderDate < today) {
+        newErrors.reminderDate = 'Date must be today or in the future';
+      }
     }
 
     if (!formData.reminderTime) {
@@ -193,34 +287,92 @@ const ReminderEdit = () => {
         newErrors['recurrence.frequency'] = 'Frequency is required for recurring reminders';
       }
       
-      if (formData.recurrence.interval < 1) {
+      if (!formData.recurrence.interval || formData.recurrence.interval < 1) {
         newErrors['recurrence.interval'] = 'Interval must be at least 1';
       }
+
+      if (formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY && 
+          formData.recurrence.daysOfWeek.length === 0) {
+        newErrors['recurrence.daysOfWeek'] = 'At least one day must be selected for weekly recurrence';
+      }
+
+      if (formData.recurrence.frequency === RECURRENCE_FREQUENCIES.MONTHLY) {
+        const dayOfMonth = parseInt(formData.recurrence.dayOfMonth);
+        if (!formData.recurrence.dayOfMonth || isNaN(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) {
+          newErrors['recurrence.dayOfMonth'] = 'Day of month must be between 1 and 31';
+        }
+      }
+
+      // FIXED: Validate end date if provided
+      if (formData.recurrence.endDate) {
+        const endDate = new Date(formData.recurrence.endDate);
+        const reminderDate = new Date(formData.reminderDate);
+        
+        if (endDate <= reminderDate) {
+          newErrors['recurrence.endDate'] = 'End date must be after reminder date';
+        }
+      }
+    }
+
+    // FIXED: Validate at least one notification method
+    if (formData.notificationMethods.length === 0) {
+      newErrors.notificationMethods = 'At least one notification method is required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validate()) {
-      toast.error('Please fix the errors in the form');
+      toast.error('Please fix the form errors');
       return;
     }
 
     try {
       setIsSaving(true);
 
+      // Prepare data for API
       const submitData = {
-        ...formData,
-        recurrence: formData.isRecurring ? formData.recurrence : undefined,
-        relatedEvent: formData.relatedEvent || undefined,
-        relatedClient: formData.relatedClient || undefined,
-        relatedTask: formData.relatedTask || undefined,
-        relatedPayment: formData.relatedPayment || undefined,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        type: formData.type,
+        priority: formData.priority,
+        reminderDate: formData.reminderDate,
+        reminderTime: formData.reminderTime,
+        isRecurring: formData.isRecurring,
+        notificationMethods: formData.notificationMethods,
+        notes: formData.notes.trim(),
       };
+
+      // FIXED: Only include recurrence if isRecurring is true
+      if (formData.isRecurring) {
+        submitData.recurrence = {
+          frequency: formData.recurrence.frequency,
+          interval: parseInt(formData.recurrence.interval),
+          endDate: formData.recurrence.endDate || undefined,
+          daysOfWeek: formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY 
+            ? formData.recurrence.daysOfWeek 
+            : undefined,
+          dayOfMonth: formData.recurrence.frequency === RECURRENCE_FREQUENCIES.MONTHLY 
+            ? parseInt(formData.recurrence.dayOfMonth) 
+            : undefined,
+        };
+      }
+
+      // Only include related items if they have values
+      if (formData.relatedEvent) submitData.relatedEvent = formData.relatedEvent;
+      if (formData.relatedClient) submitData.relatedClient = formData.relatedClient;
+      if (formData.relatedTask) submitData.relatedTask = formData.relatedTask;
+      if (formData.relatedPayment) submitData.relatedPayment = formData.relatedPayment;
+      
+      // Only include assignedTo if there are users
+      if (formData.assignedTo.length > 0) {
+        submitData.assignedTo = formData.assignedTo;
+      }
 
       if (isEditMode) {
         await reminderService.update(id, submitData);
@@ -232,36 +384,82 @@ const ReminderEdit = () => {
 
       navigate('/reminders');
     } catch (error) {
-      toast.error(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} reminder`);
+      console.error('Error saving reminder:', error);
+      
+      // FIXED: Handle validation errors from API
+      if (error.status === 400 || error.status === 422) {
+        if (error.errors) {
+          setErrors(error.errors);
+        }
+        toast.error(error.message || 'Please fix the validation errors');
+      } else {
+        const errorMessage = error.message || `Failed to ${isEditMode ? 'update' : 'create'} reminder`;
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleCancel = useCallback(() => {
+    navigate('/reminders');
+  }, [navigate]);
+
+  // Select options
+  const typeOptions = [
+    { value: REMINDER_TYPES.EVENT, label: 'Event' },
+    { value: REMINDER_TYPES.PAYMENT, label: 'Payment' },
+    { value: REMINDER_TYPES.TASK, label: 'Task' },
+    { value: REMINDER_TYPES.MAINTENANCE, label: 'Maintenance' },
+    { value: REMINDER_TYPES.FOLLOWUP, label: 'Follow-up' },
+    { value: REMINDER_TYPES.OTHER, label: 'Other' }
+  ];
+
+  const priorityOptions = [
+    { value: REMINDER_PRIORITIES.LOW, label: 'Low' },
+    { value: REMINDER_PRIORITIES.MEDIUM, label: 'Medium' },
+    { value: REMINDER_PRIORITIES.HIGH, label: 'High' },
+    { value: REMINDER_PRIORITIES.URGENT, label: 'Urgent' }
+  ];
+
+  const frequencyOptions = [
+    { value: RECURRENCE_FREQUENCIES.DAILY, label: 'Daily' },
+    { value: RECURRENCE_FREQUENCIES.WEEKLY, label: 'Weekly' },
+    { value: RECURRENCE_FREQUENCIES.MONTHLY, label: 'Monthly' },
+    { value: RECURRENCE_FREQUENCIES.YEARLY, label: 'Yearly' }
+  ];
+
+  const notificationMethodOptions = [
+    { value: NOTIFICATION_METHODS.EMAIL, label: 'Email' },
+    { value: NOTIFICATION_METHODS.SMS, label: 'SMS' },
+    { value: NOTIFICATION_METHODS.PUSH, label: 'Push Notification' },
+    { value: NOTIFICATION_METHODS.IN_APP, label: 'In-App' }
+  ];
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-96">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             icon={ArrowLeft}
-            onClick={() => navigate('/reminders')}
+            onClick={handleCancel}
           />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {isEditMode ? 'Edit Reminder' : 'Create Reminder'}
             </h1>
-            <p className="text-gray-600 mt-1">
-              {isEditMode ? 'Update reminder details' : 'Set up a new reminder'}
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {isEditMode ? 'Update reminder details and settings' : 'Set up a new reminder for events, tasks, or payments'}
             </p>
           </div>
         </div>
@@ -274,19 +472,21 @@ const ReminderEdit = () => {
             {/* Basic Information */}
             <Card>
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-orange-500" />
                   Basic Information
                 </h3>
 
                 <div className="space-y-4">
                   <Input
-                    label="Title"
+                    label="Title *"
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
                     error={errors.title}
                     required
                     placeholder="Enter reminder title"
+                    maxLength={200}
                   />
 
                   <Textarea
@@ -296,51 +496,43 @@ const ReminderEdit = () => {
                     onChange={handleChange}
                     rows={3}
                     placeholder="Enter reminder description (optional)"
+                    maxLength={1000}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Select
-                      label="Type"
+                      label="Type *"
                       name="type"
                       value={formData.type}
                       onChange={handleChange}
+                      options={typeOptions}
                       required
-                    >
-                      <option value="event">Event</option>
-                      <option value="payment">Payment</option>
-                      <option value="task">Task</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="followup">Follow-up</option>
-                      <option value="other">Other</option>
-                    </Select>
+                    />
 
                     <Select
-                      label="Priority"
+                      label="Priority *"
                       name="priority"
                       value={formData.priority}
                       onChange={handleChange}
+                      options={priorityOptions}
                       required
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </Select>
+                    />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                      label="Date"
+                      label="Date *"
                       type="date"
                       name="reminderDate"
                       value={formData.reminderDate}
                       onChange={handleChange}
                       error={errors.reminderDate}
                       required
+                      min={new Date().toISOString().split('T')[0]}
                     />
 
                     <Input
-                      label="Time"
+                      label="Time *"
                       type="time"
                       name="reminderTime"
                       value={formData.reminderTime}
@@ -357,7 +549,8 @@ const ReminderEdit = () => {
             <Card>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-orange-500" />
                     Recurrence Settings
                   </h3>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -366,9 +559,9 @@ const ReminderEdit = () => {
                       name="isRecurring"
                       checked={formData.isRecurring}
                       onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
                     />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Recurring Reminder
                     </span>
                   </label>
@@ -376,22 +569,18 @@ const ReminderEdit = () => {
 
                 {formData.isRecurring && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Select
-                        label="Frequency"
+                        label="Frequency *"
                         name="recurrence.frequency"
                         value={formData.recurrence.frequency}
                         onChange={handleChange}
+                        options={frequencyOptions}
                         error={errors['recurrence.frequency']}
-                      >
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                      </Select>
+                      />
 
                       <Input
-                        label="Interval"
+                        label="Interval *"
                         type="number"
                         name="recurrence.interval"
                         value={formData.recurrence.interval}
@@ -402,37 +591,43 @@ const ReminderEdit = () => {
                       />
                     </div>
 
-                    {formData.recurrence.frequency === 'weekly' && (
+                    {formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Days of Week
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Days of Week *
                         </label>
                         <div className="flex flex-wrap gap-2">
-                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                          {DAYS_OF_WEEK.map((day) => (
                             <button
-                              key={index}
+                              key={day.value}
                               type="button"
-                              onClick={() => handleDayOfWeekToggle(index)}
+                              onClick={() => handleDayOfWeekToggle(day.value)}
                               className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                                formData.recurrence.daysOfWeek.includes(index)
-                                  ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                formData.recurrence.daysOfWeek.includes(day.value)
+                                  ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-300'
+                                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
                               }`}
                             >
-                              {day}
+                              {day.label}
                             </button>
                           ))}
                         </div>
+                        {errors['recurrence.daysOfWeek'] && (
+                          <p className="text-red-600 dark:text-red-400 text-sm mt-1">
+                            {errors['recurrence.daysOfWeek']}
+                          </p>
+                        )}
                       </div>
                     )}
 
-                    {formData.recurrence.frequency === 'monthly' && (
+                    {formData.recurrence.frequency === RECURRENCE_FREQUENCIES.MONTHLY && (
                       <Input
-                        label="Day of Month"
+                        label="Day of Month *"
                         type="number"
                         name="recurrence.dayOfMonth"
                         value={formData.recurrence.dayOfMonth}
                         onChange={handleChange}
+                        error={errors['recurrence.dayOfMonth']}
                         min="1"
                         max="31"
                         placeholder="e.g., 15"
@@ -445,6 +640,8 @@ const ReminderEdit = () => {
                       name="recurrence.endDate"
                       value={formData.recurrence.endDate}
                       onChange={handleChange}
+                      error={errors['recurrence.endDate']}
+                      min={formData.reminderDate}
                     />
                   </div>
                 )}
@@ -454,38 +651,39 @@ const ReminderEdit = () => {
             {/* Notification Methods */}
             <Card>
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Notification Methods
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Notification Methods *
                 </h3>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { value: 'email', label: 'Email' },
-                    { value: 'sms', label: 'SMS' },
-                    { value: 'push', label: 'Push' },
-                    { value: 'in_app', label: 'In-App' },
-                  ].map((method) => (
+                  {notificationMethodOptions.map((method) => (
                     <button
                       key={method.value}
                       type="button"
                       onClick={() => handleNotificationMethodToggle(method.value)}
                       className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
                         formData.notificationMethods.includes(method.value)
-                          ? 'bg-blue-50 border-blue-200 text-blue-700'
-                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                          ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-300'
+                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
                       }`}
                     >
                       {method.label}
                     </button>
                   ))}
                 </div>
+                {errors.notificationMethods && (
+                  <p className="text-red-600 dark:text-red-400 text-sm mt-2">
+                    {errors.notificationMethods}
+                  </p>
+                )}
               </div>
             </Card>
 
             {/* Related Items */}
             <Card>
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Link className="w-5 h-5 text-orange-500" />
                   Related Items (Optional)
                 </h3>
 
@@ -495,56 +693,56 @@ const ReminderEdit = () => {
                     name="relatedEvent"
                     value={formData.relatedEvent}
                     onChange={handleChange}
-                  >
-                    <option value="">None</option>
-                    {events.map((event) => (
-                      <option key={event._id} value={event._id}>
-                        {event.title}
-                      </option>
-                    ))}
-                  </Select>
+                    options={[
+                      { value: '', label: 'None' },
+                      ...events.map((event) => ({
+                        value: event._id || event.id,
+                        label: event.title
+                      }))
+                    ]}
+                  />
 
                   <Select
                     label="Related Client"
                     name="relatedClient"
                     value={formData.relatedClient}
                     onChange={handleChange}
-                  >
-                    <option value="">None</option>
-                    {clients.map((client) => (
-                      <option key={client._id} value={client._id}>
-                        {client.name}
-                      </option>
-                    ))}
-                  </Select>
+                    options={[
+                      { value: '', label: 'None' },
+                      ...clients.map((client) => ({
+                        value: client._id || client.id,
+                        label: client.name
+                      }))
+                    ]}
+                  />
 
                   <Select
                     label="Related Task"
                     name="relatedTask"
                     value={formData.relatedTask}
                     onChange={handleChange}
-                  >
-                    <option value="">None</option>
-                    {tasks.map((task) => (
-                      <option key={task._id} value={task._id}>
-                        {task.title}
-                      </option>
-                    ))}
-                  </Select>
+                    options={[
+                      { value: '', label: 'None' },
+                      ...tasks.map((task) => ({
+                        value: task._id || task.id,
+                        label: task.title
+                      }))
+                    ]}
+                  />
 
                   <Select
                     label="Related Payment"
                     name="relatedPayment"
                     value={formData.relatedPayment}
                     onChange={handleChange}
-                  >
-                    <option value="">None</option>
-                    {payments.map((payment) => (
-                      <option key={payment._id} value={payment._id}>
-                        Payment #{payment._id.slice(-6)} - ${payment.amount}
-                      </option>
-                    ))}
-                  </Select>
+                    options={[
+                      { value: '', label: 'None' },
+                      ...payments.map((payment) => ({
+                        value: payment._id || payment.id,
+                        label: `Payment #${(payment._id || payment.id).slice(-6)} - $${payment.amount}`
+                      }))
+                    ]}
+                  />
                 </div>
               </div>
             </Card>
@@ -555,30 +753,35 @@ const ReminderEdit = () => {
             {/* Assigned Users */}
             <Card>
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-orange-500" />
                   Assign Users
                 </h3>
 
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {users.map((user) => (
-                    <label
-                      key={user._id}
-                      className="flex items-center gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.assignedTo.includes(user._id)}
-                        onChange={() => handleAssignedUserToggle(user._id)}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {user.name}
-                        </p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      </div>
-                    </label>
-                  ))}
+                  {users.length > 0 ? (
+                    users.map((user) => (
+                      <label
+                        key={user._id || user.id}
+                        className="flex items-center gap-3 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.assignedTo.includes(user._id || user.id)}
+                          onChange={() => handleAssignedUserToggle(user._id || user.id)}
+                          className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {user.name}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                        </div>
+                      </label>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No users available</p>
+                  )}
                 </div>
               </div>
             </Card>
@@ -586,7 +789,8 @@ const ReminderEdit = () => {
             {/* Additional Notes */}
             <Card>
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-orange-500" />
                   Additional Notes
                 </h3>
 
@@ -596,6 +800,7 @@ const ReminderEdit = () => {
                   onChange={handleChange}
                   rows={4}
                   placeholder="Add any additional notes..."
+                  maxLength={500}
                 />
               </div>
             </Card>
@@ -608,17 +813,17 @@ const ReminderEdit = () => {
                     type="submit"
                     variant="primary"
                     icon={Save}
-                    disabled={isSaving}
+                    loading={isSaving}
                     className="w-full"
                   >
-                    {isSaving ? 'Saving...' : isEditMode ? 'Update Reminder' : 'Create Reminder'}
+                    {isEditMode ? 'Update Reminder' : 'Create Reminder'}
                   </Button>
 
                   <Button
                     type="button"
                     variant="outline"
                     icon={X}
-                    onClick={() => navigate('/reminders')}
+                    onClick={handleCancel}
                     disabled={isSaving}
                     className="w-full"
                   >
@@ -634,4 +839,4 @@ const ReminderEdit = () => {
   );
 };
 
-export default ReminderEdit;
+export default ReminderForm;

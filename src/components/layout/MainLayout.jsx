@@ -15,11 +15,11 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-y-auto scrollbar-hide">
+    <div className="min-h-screen bg-white-150 dark:bg-gray-900 scrollbar-hide">
       <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
-      <div className="lg:pl-64">
+      <div className="lg:pl-60">
         <TopBar onMenuClick={handleMenuClick} />
-        <main className="relative top-16 ">
+        <main className="relative top-10 ">
           <div className="container max-w-7xl sm:p-6 lg:p-10 ">
             <div className="w-full min-h-[calc(100vh-4rem-1.5rem)]  ">
               <Outlet />
