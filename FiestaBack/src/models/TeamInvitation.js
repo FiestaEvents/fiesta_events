@@ -3,47 +3,47 @@ import crypto from "crypto";
 
 const teamInvitationSchema = new mongoose.Schema(
   {
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-      lowercase: true,
-      trim: true,
-      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
-    },
-    venueId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Venue",
-      required: true,
-    },
-    roleId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Role",
-      required: true,
-    },
-    invitedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    // The actual unhashed token is sent in the invitation email/link.
+    // The HASHED token is stored here for secure lookup.
     token: {
       type: String,
       required: true,
       unique: true,
+      index: true, // <-- Correct, single index definition
     },
-    status: {
+    venueId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Venue",
+      required: [true, "Venue ID is required for the invitation"],
+    },
+    invitedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Inviter's ID is required"],
+    },
+    // The email address of the person being invited
+    email: {
       type: String,
-      enum: ["pending", "accepted", "expired", "cancelled"],
-      default: "pending",
+      required: [true, "Recipient email is required"],
+      lowercase: true,
+      trim: true,
     },
+    // The role to assign the user upon acceptance
+    roleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+      required: [true, "Role is required for the invitation"],
+    },
+    // Expiration date for the token
     expiresAt: {
       type: Date,
       required: true,
-      default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      index: { expires: "0s" }, // MongoDB TTL index for automatic deletion
     },
-    acceptedAt: { type: Date },
-    message: {
+    status: {
       type: String,
-      maxlength: [500, "Message cannot exceed 500 characters"],
+      enum: ["pending", "accepted", "revoked", "expired"],
+      default: "pending",
     },
   },
   {
@@ -51,15 +51,29 @@ const teamInvitationSchema = new mongoose.Schema(
   }
 );
 
-// Generate token before save
-teamInvitationSchema.pre("save", function (next) {
-  if (!this.token) {
-    this.token = crypto.randomBytes(32).toString("hex");
-  }
-  next();
-});
+/**
+ * Instance method to generate and set the invitation token and expiration.
+ * This method is called by the controller when creating a new invitation.
+ */
+teamInvitationSchema.methods.generateInvitationToken = function () {
+  // 1. Generate a raw, cryptographically secure token (for the URL)
+  const rawToken = crypto.randomBytes(32).toString("hex");
 
-teamInvitationSchema.index({ token: 1 });
-teamInvitationSchema.index({ email: 1, venueId: 1, status: 1 });
+  // 2. Hash the raw token (for secure storage in the database)
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(rawToken)
+    .digest("hex");
+
+  // 3. Set the hashed token on the document
+  this.token = hashedToken;
+
+  // 4. Set expiration time (e.g., 7 days from now)
+  // 7 days = 7 * 24 * 60 * 60 * 1000 milliseconds
+  this.expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+
+  // 5. Return the raw token (to be sent to the user)
+  return rawToken;
+};
 
 export default mongoose.model("TeamInvitation", teamInvitationSchema);
