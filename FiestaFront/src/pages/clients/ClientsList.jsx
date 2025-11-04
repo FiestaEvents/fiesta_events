@@ -9,7 +9,7 @@ import Badge from '../../components/common/Badge';
 import Pagination from '../../components/common/Pagination';
 import { clientService } from '../../api/index';
 import { UsersIcon } from '../../components/icons/IconComponents';
-import { Plus, RefreshCw, Search, Filter } from 'lucide-react';
+import { Plus, RefreshCw, Search, Filter, Eye, MoreVertical } from 'lucide-react';
 import ClientDetail from './ClientDetail.jsx';
 import ClientForm from './ClientForm.jsx';
 
@@ -18,7 +18,7 @@ const ClientsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Search & filter state
@@ -127,7 +127,7 @@ const ClientsList = () => {
       
       // Close modal if the deleted client was selected
       if (selectedClient?._id === clientId) {
-        handleCloseModal();
+        handleCloseDetailModal();
       }
 
     } catch (err) {
@@ -152,25 +152,29 @@ const ClientsList = () => {
 
   const handleEditClient = useCallback((client) => {
     setSelectedClient(client);
-    setIsModalOpen(false);
+    setIsDetailModalOpen(false);
     setIsFormOpen(true);
   }, []);
 
   const handleViewClient = useCallback((client) => {
     setSelectedClient(client);
-    setIsModalOpen(true);
+    setIsDetailModalOpen(true);
   }, []);
 
-  const handleCloseModal = useCallback(() => {
+  const handleCloseDetailModal = useCallback(() => {
     setSelectedClient(null);
-    setIsModalOpen(false);
+    setIsDetailModalOpen(false);
+  }, []);
+
+  const handleCloseForm = useCallback(() => {
+    setSelectedClient(null);
     setIsFormOpen(false);
   }, []);
 
   const handleFormSuccess = useCallback(() => {
     fetchClients();
-    handleCloseModal();
-  }, [fetchClients, handleCloseModal]);
+    handleCloseForm();
+  }, [fetchClients, handleCloseForm]);
 
   const handleRefresh = useCallback(() => {
     setPage(1);
@@ -196,59 +200,110 @@ const ClientsList = () => {
     setPage(1); // Reset to first page when changing limit
   }, []);
 
-  // Table columns configuration
+  // Table columns configuration with headline titles
   const tableColumns = [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'status', label: 'Status' },
-    { key: 'createdAt', label: 'Created' },
-    { key: 'actions', label: 'Actions' }
+    { 
+      key: 'name', 
+      label: 'CLIENT NAME',
+      renderHeader: (column) => (
+        <div className="font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs">
+          {column.label}
+        </div>
+      )
+    },
+    { 
+      key: 'email', 
+      label: 'EMAIL ADDRESS',
+      renderHeader: (column) => (
+        <div className="font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs">
+          {column.label}
+        </div>
+      )
+    },
+    { 
+      key: 'phone', 
+      label: 'PHONE NUMBER',
+      renderHeader: (column) => (
+        <div className="font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs">
+          {column.label}
+        </div>
+      )
+    },
+    { 
+      key: 'status', 
+      label: 'STATUS',
+      renderHeader: (column) => (
+        <div className="font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs">
+          {column.label}
+        </div>
+      )
+    },
+    { 
+      key: 'createdAt', 
+      label: 'DATE CREATED',
+      renderHeader: (column) => (
+        <div className="font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs">
+          {column.label}
+        </div>
+      )
+    },
+    { 
+      key: 'actions', 
+      label: 'ACTIONS',
+      renderHeader: (column) => (
+        <div className="font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs text-center">
+          {column.label}
+        </div>
+      )
+    }
   ];
 
   const tableData = clients.map((client) => ({
-    name: client.name || 'Unnamed',
-    email: client.email || 'No email',
-    phone: client.phone || '-',
+    name: (
+      <div className="font-medium text-gray-900 dark:text-white">
+        {client.name || 'Unnamed'}
+      </div>
+    ),
+    email: (
+      <div className="text-gray-600 dark:text-gray-400">
+        {client.email || 'No email'}
+      </div>
+    ),
+    phone: (
+      <div className="text-gray-600 dark:text-gray-400">
+        {client.phone || '-'}
+      </div>
+    ),
     status: (
       <Badge
         color={
           client.status === 'active'
-            ? 'green'
+            ? 'red' // Changed to red for active
             : client.status === 'inactive'
-            ? 'gray'
+            ? 'gray' // Changed to gray for inactive
             : 'yellow'
         }
       >
         {client.status || 'N/A'}
       </Badge>
     ),
-    createdAt: client.createdAt
-      ? new Date(client.createdAt).toLocaleDateString()
-      : '-',
+    createdAt: (
+      <div className="text-gray-600 dark:text-gray-400">
+        {client.createdAt
+          ? new Date(client.createdAt).toLocaleDateString()
+          : '-'}
+      </div>
+    ),
     actions: (
-      <div className="flex gap-2">
+      <div className="flex justify-center">
         <Button
           size="sm"
           variant="ghost"
           onClick={() => handleViewClient(client)}
+          className="flex items-center gap-1"
         >
+          <Eye className="h-4 w-4" />
           View
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => handleEditClient(client)}
-        >
-          Edit
-        </Button>
-        <Button
-          size="sm"
-          variant="danger"
-          onClick={() => handleDeleteClient(client._id)}
-          disabled={loading}
-        >
-          Delete
         </Button>
       </div>
     )
@@ -386,19 +441,44 @@ const ClientsList = () => {
         )}
       </Card>
 
-      {/* View Modal */}
-      {isModalOpen && selectedClient && (
+      {/* Client Detail Modal with Fixed Footer */}
+      {isDetailModalOpen && selectedClient && (
         <Modal 
-          isOpen={isModalOpen} 
-          onClose={handleCloseModal} 
+          isOpen={isDetailModalOpen} 
+          onClose={handleCloseDetailModal} 
           title="Client Details"
           size="lg"
+          footer={
+            <div className="flex justify-between w-full px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+              <div className="flex-1">
+                <Button 
+                  variant="danger" 
+                  onClick={() => handleDeleteClient(selectedClient._id)}
+                  disabled={loading}
+                >
+                  Delete Client
+                </Button>
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={handleCloseDetailModal}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="primary" 
+                  onClick={() => handleEditClient(selectedClient)}
+                >
+                  Edit Client
+                </Button>
+              </div>
+            </div>
+          }
         >
-          <ClientDetail 
-            client={selectedClient} 
-            onEdit={() => handleEditClient(selectedClient)}
-            onDelete={() => handleDeleteClient(selectedClient._id)}
-          />
+          <div className="p-6">
+            <ClientDetail client={selectedClient} />
+          </div>
         </Modal>
       )}
 
@@ -406,14 +486,14 @@ const ClientsList = () => {
       {isFormOpen && (
         <Modal
           isOpen={isFormOpen}
-          onClose={handleCloseModal}
+          onClose={handleCloseForm}
           title={selectedClient ? 'Edit Client' : 'Add New Client'}
           size="lg"
         >
           <ClientForm
             client={selectedClient}
             onSuccess={handleFormSuccess}
-            onCancel={handleCloseModal}
+            onCancel={handleCloseForm}
           />
         </Modal>
       )}

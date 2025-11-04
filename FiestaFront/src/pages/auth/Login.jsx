@@ -6,7 +6,6 @@ import { useToast } from '../../context/ToastContext.jsx';
 import AuthLayout from '../../components/layout/AuthLayout.jsx';
 import Input from '../../components/common/Input.jsx';
 import Button from '../../components/common/Button.jsx';
-//import  iconRight  from '../../components/icons/IconComponents.js';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -66,6 +65,7 @@ const Login = () => {
             value={formData.email}
             onChange={handleChange}
             placeholder="you@example.com"
+            required
           />
           <Input
             label="Password"
@@ -74,18 +74,26 @@ const Login = () => {
             value={formData.password}
             onChange={handleChange}
             placeholder="••••••••"
-     //       iconRight={showPassword ? EyeOff : Eye}
-            onIconClick={() => setShowPassword(!showPassword)}
+            iconRight={showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            onIconRightClick={() => setShowPassword(!showPassword)}
+            required
           />
-          <Button type="submit" loading={loading} variant="outline" className="mt-2">Sign In</Button>
+          <Button type="submit" loading={loading} variant="primary" className="mt-2">
+            Sign In
+          </Button>
         </form>
 
         <div className="text-sm mt-4 text-right">
-          <Link to="/forgot-password" className="text-orange-500 font-medium">Forgot your password?</Link>
+          <Link to="/forgot-password" className="text-orange-500 font-medium hover:text-orange-600 transition-colors">
+            Forgot your password?
+          </Link>
         </div>
 
         <div className="text-sm mt-4 text-center">
-          Don't have an account? <Link to="/register" className="text-orange-500 font-medium">Sign Up</Link>
+          Don't have an account?{' '}
+          <Link to="/register" className="text-orange-500 font-medium hover:text-orange-600 transition-colors">
+            Sign Up
+          </Link>
         </div>
       </div>
     </AuthLayout>
