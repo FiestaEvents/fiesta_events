@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useApi, useApiMutation } from '../../hooks/useApi';
 import { partnerService } from '../../api/index';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Textarea from '../../components/common/Textarea';
 import Select from '../../components/common/Select';
 import Card from '../../components/common/Card';
-import { ArrowLeft, Save, X } from 'lucide-react';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { ArrowLeft, Save, X, Building, User, MapPin, DollarSign, Star } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const PartnerEdit = () => {
@@ -15,23 +15,16 @@ const PartnerEdit = () => {
   const navigate = useNavigate();
   const isEditMode = !!id;
 
-  const { data: partner, loading: fetchLoading } = useApi(
-    () => isEditMode ? partnerService.getById(id) : Promise.resolve(null),
-    [id]
-  );
-
-  const updateMutation = useMutation(partnerService.update);
-  const createMutation = useMutation(partnerService.create);
-
+  // State management
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    category: '',
+    type: '',
     company: '',
     status: 'active',
     location: '',
-    specialties: '',
+    services: [],
     hourlyRate: '',
     rating: '',
     address: {
@@ -44,39 +37,79 @@ const PartnerEdit = () => {
     notes: ''
   });
 
+  const [loading, setLoading] = useState(isEditMode);
+  const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Fetch partner data for edit mode
   useEffect(() => {
-    if (partner) {
-      setFormData({
-        name: partner.name || '',
-        email: partner.email || '',
-        phone: partner.phone || '',
-        category: partner.category || '',
-        company: partner.company || '',
-        status: partner.status || 'active',
-        location: partner.location || '',
-        specialties: partner.specialties || '',
-        hourlyRate: partner.hourlyRate || '',
-        rating: partner.rating || '',
-        address: {
-          street: partner.address?.street || '',
-          city: partner.address?.city || '',
-          state: partner.address?.state || '',
-          zipCode: partner.address?.zipCode || '',
-          country: partner.address?.country || ''
-        },
-        notes: partner.notes || ''
-      });
-    }
-  }, [partner]);
+    const fetchPartner = async () => {
+      if (!isEditMode) return;
 
-  const categoryOptions = [
-    { value: '', label: 'Select Category' },
+      try {
+        setLoading(true);
+        console.log('🔄 Fetching partner for edit:', id);
+        
+        const response = await partnerService.getById(id);
+        console.log('📋 Partner edit response:', response);
+
+        let partnerData = null;
+        
+        // Handle different response structures
+        if (response?.data?.data) {
+          partnerData = response.data.data;
+        } else if (response?.data) {
+          partnerData = response.data;
+        } else if (response) {
+          partnerData = response;
+        }
+
+        if (partnerData) {
+          setFormData({
+            name: partnerData.name || '',
+            email: partnerData.email || '',
+            phone: partnerData.phone || '',
+            type: partnerData.type || partnerData.category || '',
+            company: partnerData.company || '',
+            status: partnerData.status || 'active',
+            location: partnerData.location || '',
+            services: partnerData.services || [],
+            hourlyRate: partnerData.hourlyRate || '',
+            rating: partnerData.rating || '',
+            address: {
+              street: partnerData.address?.street || '',
+              city: partnerData.address?.city || '',
+              state: partnerData.address?.state || '',
+              zipCode: partnerData.address?.zipCode || '',
+              country: partnerData.address?.country || ''
+            },
+            notes: partnerData.notes || ''
+          });
+        }
+      } catch (err) {
+        console.error('❌ Error fetching partner:', err);
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to load partner data';
+        toast.error(errorMessage);
+        navigate('/partners');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPartner();
+  }, [id, isEditMode, navigate]);
+
+  // Form options
+  const typeOptions = [
+    { value: '', label: 'Select Type' },
+    { value: 'vendor', label: 'Vendor' },
+    { value: 'supplier', label: 'Supplier' },
+    { value: 'sponsor', label: 'Sponsor' },
+    { value: 'contractor', label: 'Contractor' },
     { value: 'catering', label: 'Catering' },
-    { value: 'decoration', label: 'Decoration' },
     { value: 'photography', label: 'Photography' },
     { value: 'music', label: 'Music' },
+    { value: 'decoration', label: 'Decoration' },
     { value: 'security', label: 'Security' },
     { value: 'cleaning', label: 'Cleaning' },
     { value: 'audio_visual', label: 'Audio Visual' },
@@ -87,9 +120,30 @@ const PartnerEdit = () => {
 
   const statusOptions = [
     { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' }
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'suspended', label: 'Suspended' }
   ];
 
+  const serviceOptions = [
+    { value: 'wedding_planning', label: 'Wedding Planning' },
+    { value: 'catering', label: 'Catering' },
+    { value: 'photography', label: 'Photography' },
+    { value: 'videography', label: 'Videography' },
+    { value: 'music_dj', label: 'Music/DJ' },
+    { value: 'decoration', label: 'Decoration' },
+    { value: 'floral', label: 'Floral Arrangements' },
+    { value: 'lighting', label: 'Lighting' },
+    { value: 'audio_visual', label: 'Audio Visual' },
+    { value: 'security', label: 'Security' },
+    { value: 'transportation', label: 'Transportation' },
+    { value: 'venue', label: 'Venue' },
+    { value: 'entertainment', label: 'Entertainment' },
+    { value: 'cleaning', label: 'Cleaning' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -118,6 +172,14 @@ const PartnerEdit = () => {
     }
   };
 
+  const handleServicesChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    setFormData(prev => ({
+      ...prev,
+      services: selectedOptions
+    }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -135,8 +197,8 @@ const PartnerEdit = () => {
       newErrors.phone = 'Phone number is required';
     }
 
-    if (!formData.category) {
-      newErrors.category = 'Category is required';
+    if (!formData.type) {
+      newErrors.type = 'Type is required';
     }
 
     if (formData.hourlyRate && isNaN(formData.hourlyRate)) {
@@ -160,29 +222,54 @@ const PartnerEdit = () => {
     }
 
     try {
-      // Prepare data
+      setSaving(true);
+
+      // Prepare data for submission
       const submitData = {
         ...formData,
         hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined,
         rating: formData.rating ? parseFloat(formData.rating) : undefined
       };
 
-      // Remove empty address fields
+      // Clean up empty address fields
       if (Object.values(submitData.address).every(val => !val)) {
         delete submitData.address;
+      } else {
+        // Remove empty address fields
+        Object.keys(submitData.address).forEach(key => {
+          if (!submitData.address[key]) {
+            delete submitData.address[key];
+          }
+        });
       }
 
+      console.log('📤 Submitting partner data:', submitData);
+
+      let response;
       if (isEditMode) {
-        await updateMutation.mutate(id, submitData);
+        response = await partnerService.update(id, submitData);
         toast.success('Partner updated successfully');
-        navigate(`/partners/${id}`);
       } else {
-        const response = await createMutation.mutate(submitData);
+        response = await partnerService.create(submitData);
         toast.success('Partner created successfully');
-        navigate(`/partners/${response._id}`);
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to save partner');
+
+      console.log('✅ Partner save response:', response);
+
+      // Navigate to partner detail page
+      const partnerId = isEditMode ? id : response?.data?._id || response?._id;
+      if (partnerId) {
+        navigate(`/partners/${partnerId}`);
+      } else {
+        navigate('/partners');
+      }
+
+    } catch (err) {
+      console.error('❌ Error saving partner:', err);
+      const errorMessage = err.response?.data?.message || err.message || `Failed to ${isEditMode ? 'update' : 'create'} partner`;
+      toast.error(errorMessage);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -194,35 +281,36 @@ const PartnerEdit = () => {
     }
   };
 
-  if (isEditMode && fetchLoading) {
+  // Loading state
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleCancel}
               icon={ArrowLeft}
             >
-              Back
+              Back to Partners
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {isEditMode ? 'Edit Partner' : 'New Partner'}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {isEditMode 
-                  ? 'Update partner information'
+                  ? 'Update partner information and details'
                   : 'Add a new partner to your network'
                 }
               </p>
@@ -234,12 +322,13 @@ const PartnerEdit = () => {
           {/* Basic Information */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-purple-600" />
                 Basic Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="Partner Name"
+                  label="Partner Name *"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
@@ -249,7 +338,7 @@ const PartnerEdit = () => {
                 />
 
                 <Input
-                  label="Email"
+                  label="Email *"
                   name="email"
                   type="email"
                   value={formData.email}
@@ -260,7 +349,7 @@ const PartnerEdit = () => {
                 />
 
                 <Input
-                  label="Phone"
+                  label="Phone *"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
@@ -270,12 +359,12 @@ const PartnerEdit = () => {
                 />
 
                 <Select
-                  label="Category"
-                  name="category"
-                  value={formData.category}
+                  label="Type *"
+                  name="type"
+                  value={formData.type}
                   onChange={handleChange}
-                  options={categoryOptions}
-                  error={errors.category}
+                  options={typeOptions}
+                  error={errors.type}
                   required
                 />
 
@@ -301,7 +390,8 @@ const PartnerEdit = () => {
           {/* Professional Details */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Building className="w-5 h-5 text-purple-600" />
                 Professional Details
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -323,6 +413,7 @@ const PartnerEdit = () => {
                   onChange={handleChange}
                   error={errors.hourlyRate}
                   placeholder="0.00"
+                  prefix="$"
                 />
 
                 <Input
@@ -339,24 +430,35 @@ const PartnerEdit = () => {
                 />
 
                 <div className="md:col-span-2">
-                  <Textarea
-                    label="Specialties"
-                    name="specialties"
-                    value={formData.specialties}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="List partner's specialties and expertise"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Services
+                  </label>
+                  <select
+                    multiple
+                    value={formData.services}
+                    onChange={handleServicesChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white min-h-[100px]"
+                  >
+                    {serviceOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Hold Ctrl/Cmd to select multiple services
+                  </p>
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* Address */}
+          {/* Address Information */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Address
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-purple-600" />
+                Address Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
@@ -379,73 +481,75 @@ const PartnerEdit = () => {
 
                 <Input
                   label="State/Province"
-                  name="address.state"
-                  value={formData.address.state}
-                  onChange={handleChange}
-                  placeholder="NY"
-                />
+                    name="address.state"
+                    value={formData.address.state}
+                    onChange={handleChange}
+                    placeholder="NY"
+                  />
 
-                <Input
-                  label="ZIP/Postal Code"
-                  name="address.zipCode"
-                  value={formData.address.zipCode}
-                  onChange={handleChange}
-                  placeholder="10001"
-                />
+                  <Input
+                    label="ZIP/Postal Code"
+                    name="address.zipCode"
+                    value={formData.address.zipCode}
+                    onChange={handleChange}
+                    placeholder="10001"
+                  />
 
-                <Input
-                  label="Country"
-                  name="address.country"
-                  value={formData.address.country}
+                  <Input
+                    label="Country"
+                    name="address.country"
+                    value={formData.address.country}
+                    onChange={handleChange}
+                    placeholder="United States"
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Additional Information */}
+            <Card>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Additional Information
+                </h3>
+                <Textarea
+                  label="Notes"
+                  name="notes"
+                  value={formData.notes}
                   onChange={handleChange}
-                  placeholder="United States"
+                  rows={5}
+                  placeholder="Add any additional notes about this partner..."
+                  maxLength={1000}
+                  showCount
                 />
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          {/* Additional Information */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Additional Information
-              </h3>
-              <Textarea
-                label="Notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                rows={5}
-                placeholder="Add any additional notes about this partner..."
-                maxLength={1000}
-                showCount
-              />
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end space-x-4 pt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                icon={X}
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                icon={Save}
+                loading={saving}
+                disabled={saving}
+              >
+                {isEditMode ? 'Update Partner' : 'Create Partner'}
+              </Button>
             </div>
-          </Card>
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              icon={X}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              icon={Save}
-              loading={updateMutation.loading || createMutation.loading}
-            >
-              {isEditMode ? 'Update Partner' : 'Create Partner'}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
-export default PartnerEdit;
+  export default PartnerEdit;

@@ -27,7 +27,6 @@ const Dashboard = lazy(() => import("../pages/Dashboard.jsx"));
 const EventsList = lazy(() => import("../pages/events/EventsList.jsx")); 
 const EventDetail = lazy(() => import("../pages/events/EventDetail.jsx"));
 const EventForm = lazy(() => import("../pages/events/EventForm.jsx"));
-const EventCalendar = lazy(() => import("../pages/events/EventCalendar.jsx")); // Assuming correct path is /events
 
 // Clients 
 const ClientsList = lazy(() => import("../pages/clients/ClientsList.jsx"));
@@ -107,7 +106,6 @@ const AppRoutes = () => {
             <Route path="/events/new" element={<EventForm />} />
             <Route path="/events/:id" element={<EventDetail />} />
             <Route path="/events/:id/edit" element={<EventForm />} />
-            <Route path="/calendar" element={<EventCalendar />} />
 
             {/* Clients */}
             <Route path="/clients" element={<ClientsList />} />
