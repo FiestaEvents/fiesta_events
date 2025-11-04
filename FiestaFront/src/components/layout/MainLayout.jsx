@@ -1,28 +1,29 @@
-
-import React, { useState, useCallback } from 'react';
-import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import TopBar from './TopBar';
+import React, { useState, useCallback } from "react";
+import { Outlet } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import TopBar from "./TopBar";
 
 const MainLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const handleMenuClick = useCallback(() => {
-    setSidebarOpen(prev => !prev);
+    setSidebarOpen((prev) => !prev);
   }, []);
-  
+
   const handleCloseSidebar = useCallback(() => {
     setSidebarOpen(false);
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-y-auto scrollbar-hide">
       <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
       <div className="lg:pl-64">
         <TopBar onMenuClick={handleMenuClick} />
-        <main className="pt-10">
-          <div className="p-4 sm:p-6 lg:p-8">
-            <Outlet />
+        <main className="relative top-16 ">
+          <div className="container max-w-7xl sm:p-6 lg:p-10 ">
+            <div className="w-full min-h-[calc(100vh-4rem-1.5rem)]  ">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

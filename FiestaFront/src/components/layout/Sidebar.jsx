@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink as RouterNavLink, Link } from "react-router-dom";
-import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../../context/LanguageContext';
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../context/LanguageContext";
 import {
   LayoutDashboardIcon,
   CalendarDaysIcon,
@@ -20,7 +20,7 @@ import {
 
 const NavLink = ({ to, icon: Icon, labelKey }) => {
   const { t } = useTranslation();
-  
+
   return (
     <RouterNavLink
       to={to}
@@ -35,12 +35,12 @@ const NavLink = ({ to, icon: Icon, labelKey }) => {
     >
       {({ isActive }) => (
         <>
-          <Icon 
+          <Icon
             className={`h-5 w-5 mr-3 transition-colors ${
-              isActive 
-                ? "text-orange-500 dark:text-orange-400" 
+              isActive
+                ? "text-orange-500 dark:text-orange-400"
                 : "text-gray-500 group-hover:text-orange-500 dark:text-gray-400 dark:group-hover:text-orange-300"
-            }`} 
+            }`}
           />
           <span className="font-medium text-sm">{t(labelKey)}</span>
         </>
@@ -51,7 +51,7 @@ const NavLink = ({ to, icon: Icon, labelKey }) => {
 
 const NavSection = ({ titleKey, children }) => {
   const { t } = useTranslation();
-  
+
   return (
     <div>
       <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 dark:text-gray-400">
@@ -76,10 +76,14 @@ const Sidebar = ({ isOpen, onClose }) => {
       ></div>
 
       <aside
-        className={`fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-full w-64 bg-white border-r border-gray-200 z-40 transform transition-transform lg:transform-none dark:bg-gray-800 dark:border-gray-700 ${
-          isOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"
+        className={`fixed top-0 ${isRTL ? "right-0" : "left-0"} h-full w-64 bg-white border-r border-gray-200 z-40 transform transition-transform lg:transform-none dark:bg-gray-800 dark:border-gray-700 ${
+          isOpen
+            ? "translate-x-0"
+            : isRTL
+              ? "translate-x-full"
+              : "-translate-x-full"
         }`}
-        dir={isRTL ? 'rtl' : 'ltr'}
+        dir={isRTL ? "rtl" : "ltr"}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 shrink-0 dark:border-gray-700">
@@ -122,35 +126,79 @@ const Sidebar = ({ isOpen, onClose }) => {
             </button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+          <nav className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-hide">
             <NavSection titleKey="sidebar.overview">
-              <NavLink to="/" icon={LayoutDashboardIcon} labelKey="common.dashboard" />
+              <NavLink
+                to="/"
+                icon={LayoutDashboardIcon}
+                labelKey="common.dashboard"
+              />
             </NavSection>
 
             <NavSection titleKey="sidebar.operations">
-              <NavLink to="/events" icon={CalendarDaysIcon} labelKey="common.events" />
-              <NavLink to="/clients" icon={UserRoundIcon} labelKey="common.clients" />
-              <NavLink to="/partners" icon={HandshakeIcon} labelKey="common.partners" />
-              <NavLink to="/tasks" icon={ListChecksIcon} labelKey="common.tasks" />
-              <NavLink to="/reminders" icon={BellRingIcon} labelKey="common.reminders" />
+              <NavLink
+                to="/events"
+                icon={CalendarDaysIcon}
+                labelKey="common.events"
+              />
+              <NavLink
+                to="/clients"
+                icon={UserRoundIcon}
+                labelKey="common.clients"
+              />
+              <NavLink
+                to="/partners"
+                icon={HandshakeIcon}
+                labelKey="common.partners"
+              />
+              <NavLink
+                to="/tasks"
+                icon={ListChecksIcon}
+                labelKey="common.tasks"
+              />
+              <NavLink
+                to="/reminders"
+                icon={BellRingIcon}
+                labelKey="common.reminders"
+              />
             </NavSection>
 
             <NavSection titleKey="sidebar.financial">
-              <NavLink to="/payments" icon={CreditCardIcon} labelKey="common.payments" />
-              <NavLink to="/invoices" icon={FileTextIcon} labelKey="common.invoices" />
-              <NavLink to="/finance" icon={LineChartIcon} labelKey="common.finance" />
+              <NavLink
+                to="/payments"
+                icon={CreditCardIcon}
+                labelKey="common.payments"
+              />
+              <NavLink
+                to="/invoices"
+                icon={FileTextIcon}
+                labelKey="common.invoices"
+              />
+              <NavLink
+                to="/finance"
+                icon={LineChartIcon}
+                labelKey="common.finance"
+              />
             </NavSection>
 
             <NavSection titleKey="sidebar.management">
               <NavLink to="/team" icon={UsersIcon} labelKey="common.team" />
-              <NavLink to="/roles" icon={ShieldCheckIcon} labelKey="common.roles" />
-              <NavLink to="/settings" icon={SettingsIcon} labelKey="common.settings" />
+              <NavLink
+                to="/roles"
+                icon={ShieldCheckIcon}
+                labelKey="common.roles"
+              />
+              <NavLink
+                to="/settings"
+                icon={SettingsIcon}
+                labelKey="common.settings"
+              />
             </NavSection>
           </nav>
 
           <div className="p-4 border-t border-gray-200 mt-auto dark:border-gray-700">
             <p className="text-xs text-gray-500 text-center dark:text-gray-400">
-              &copy; 2024 Fiesta Inc. {t('common.allRightsReserved')}
+              &copy; 2024 Fiesta Inc. {t("common.allRightsReserved")}
             </p>
           </div>
         </div>

@@ -1,15 +1,19 @@
 // src/pages/team/TeamPage.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Modal from '../../components/common/Modal';
-import Table from '../../components/common/Table';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import Pagination from '../../components/common/Pagination';
-import Badge from '../../components/common/Badge';
-import { teamService } from '../../api/index';
-import { PlusIcon, RefreshCwIcon, UserIcon } from '../../components/icons/IconComponents';
+import React, { useState, useEffect, useCallback } from "react";
+import Card from "../../components/common/Card";
+import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import Table from "../../components/common/Table";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Pagination from "../../components/common/Pagination";
+import Badge from "../../components/common/Badge";
+import { teamService } from "../../api/index";
+import {
+  PlusIcon,
+  RefreshCwIcon,
+  UserIcon,
+} from "../../components/icons/IconComponents";
 
 const TeamList = () => {
   const [teamMembers, setTeamMembers] = useState([]);
@@ -20,8 +24,8 @@ const TeamList = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Search & filter
-  const [search, setSearch] = useState('');
-  const [role, setRole] = useState('all');
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
@@ -32,7 +36,7 @@ const TeamList = () => {
       setError(null);
       const params = {
         search: search.trim() || undefined,
-        role: role !== 'all' ? role : undefined,
+        role: role !== "all" ? role : undefined,
         page,
         limit,
       };
@@ -50,8 +54,8 @@ const TeamList = () => {
         setTotalPages(1);
       }
     } catch (err) {
-      console.error('Error fetching team members:', err);
-      setError('Failed to load team members.');
+      console.error("Error fetching team members:", err);
+      setError("Failed to load team members.");
       setTeamMembers([]);
     } finally {
       setLoading(false);
@@ -105,8 +109,10 @@ const TeamList = () => {
 
   // Stats
   const totalMembers = teamMembers.length;
-  const activeMembers = teamMembers.filter(m => m.status === 'active').length;
-  const pendingInvites = teamMembers.filter(m => m.status === 'pending').length;
+  const activeMembers = teamMembers.filter((m) => m.status === "active").length;
+  const pendingInvites = teamMembers.filter(
+    (m) => m.status === "pending"
+  ).length;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 bg-gray-50 min-h-screen">
@@ -122,10 +128,6 @@ const TeamList = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-            <RefreshCwIcon className={`h-5 w-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
           <Button variant="outline" onClick={handleAddMember}>
             <PlusIcon className="h-5 w-5 mr-2" />
             Add Member
@@ -136,16 +138,28 @@ const TeamList = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Members</div>
-          <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{totalMembers}</div>
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Total Members
+          </div>
+          <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+            {totalMembers}
+          </div>
         </Card>
         <Card>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Members</div>
-          <div className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">{activeMembers}</div>
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Active Members
+          </div>
+          <div className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
+            {activeMembers}
+          </div>
         </Card>
         <Card>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Invites</div>
-          <div className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">{pendingInvites}</div>
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Pending Invites
+          </div>
+          <div className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+            {pendingInvites}
+          </div>
         </Card>
       </div>
 
@@ -176,9 +190,9 @@ const TeamList = () => {
             value={role}
             onChange={handleRoleChange}
             options={[
-              { value: 'all', label: 'All Roles' },
-              { value: 'manager', label: 'Manager' },
-              { value: 'staff', label: 'Staff' },
+              { value: "all", label: "All Roles" },
+              { value: "manager", label: "Manager" },
+              { value: "staff", label: "Staff" },
             ]}
             aria-label="Filter by role"
           />
@@ -190,21 +204,33 @@ const TeamList = () => {
         {teamMembers.length > 0 ? (
           <>
             <Table
-              columns={['Name', 'Email', 'Role', 'Status', 'Actions']}
-              data={teamMembers.map(member => [
+              columns={["Name", "Email", "Role", "Status", "Actions"]}
+              data={teamMembers.map((member) => [
                 member.name,
                 member.email,
-                member.role || 'N/A',
+                member.role || "N/A",
                 <Badge
                   key={`badge-${member.id}`}
-                  color={member.status === 'active' ? 'green' : 'yellow'}
+                  color={member.status === "active" ? "green" : "yellow"}
                 >
                   {member.status}
                 </Badge>,
                 <div key={`actions-${member.id}`} className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => handleViewMember(member)}>View</Button>
-                  <Button size="sm" variant="secondary" onClick={() => handleEditMember(member)}>Edit</Button>
-                </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleViewMember(member)}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleEditMember(member)}
+                  >
+                    Edit
+                  </Button>
+                </div>,
               ])}
             />
             <div className="mt-6 flex justify-center">
@@ -220,15 +246,24 @@ const TeamList = () => {
         ) : (
           <div className="text-center py-10 text-gray-500 dark:text-gray-400">
             <UserIcon className="mx-auto h-12 w-12" />
-            <p className="mt-2">No team members found. Try adjusting your filters.</p>
+            <p className="mt-2">
+              No team members found. Try adjusting your filters.
+            </p>
           </div>
         )}
       </Card>
 
       {/* View Member Modal */}
       {isModalOpen && selectedMember && (
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Team Member Details">
-          <TeamDetails member={selectedMember} onEdit={() => handleEditMember(selectedMember)} />
+        <Modal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          title="Team Member Details"
+        >
+          <TeamDetails
+            member={selectedMember}
+            onEdit={() => handleEditMember(selectedMember)}
+          />
         </Modal>
       )}
 
@@ -237,9 +272,13 @@ const TeamList = () => {
         <Modal
           isOpen={isFormOpen}
           onClose={handleCloseModal}
-          title={selectedMember ? 'Edit Member' : 'Add Member'}
+          title={selectedMember ? "Edit Member" : "Add Member"}
         >
-          <TeamForm member={selectedMember} onSuccess={handleFormSuccess} onCancel={handleCloseModal} />
+          <TeamForm
+            member={selectedMember}
+            onSuccess={handleFormSuccess}
+            onCancel={handleCloseModal}
+          />
         </Modal>
       )}
     </div>

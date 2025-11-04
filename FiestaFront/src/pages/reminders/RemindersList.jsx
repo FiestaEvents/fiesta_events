@@ -1,17 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Modal from '../../components/common/Modal';
-import Table from '../../components/common/Table';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import Badge from '../../components/common/Badge';
-import Pagination from '../../components/common/Pagination';
-import { reminderService } from '../../api/index';
-import { PlusIcon, RefreshCwIcon, BellIcon } from '../../components/icons/IconComponents';
-import ReminderDetails from './ReminderDetails';
-import ReminderForm from './ReminderForm';
-import { format } from 'date-fns';
+import React, { useState, useEffect, useCallback } from "react";
+import Card from "../../components/common/Card";
+import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import Table from "../../components/common/Table";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Badge from "../../components/common/Badge";
+import Pagination from "../../components/common/Pagination";
+import { reminderService } from "../../api/index";
+import {
+  PlusIcon,
+  RefreshCwIcon,
+  BellIcon,
+} from "../../components/icons/IconComponents";
+import ReminderDetails from "./ReminderDetails";
+import ReminderForm from "./ReminderForm";
+import { format } from "date-fns";
 
 const RemindersPage = () => {
   const [reminders, setReminders] = useState([]);
@@ -22,9 +26,9 @@ const RemindersPage = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Filters
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
-  const [type, setType] = useState('all');
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [type, setType] = useState("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
@@ -35,8 +39,8 @@ const RemindersPage = () => {
       setError(null);
       const params = {
         search: search.trim() || undefined,
-        status: status !== 'all' ? status : undefined,
-        type: type !== 'all' ? type : undefined,
+        status: status !== "all" ? status : undefined,
+        type: type !== "all" ? type : undefined,
         page,
         limit,
       };
@@ -54,8 +58,8 @@ const RemindersPage = () => {
         setTotalPages(1);
       }
     } catch (err) {
-      console.error('Error fetching reminders:', err);
-      setError('Failed to load reminders. Please try again.');
+      console.error("Error fetching reminders:", err);
+      setError("Failed to load reminders. Please try again.");
       setReminders([]);
     } finally {
       setLoading(false);
@@ -102,16 +106,14 @@ const RemindersPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reminders</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Reminders
+          </h1>
           <p className="mt-1 text-base text-gray-600 dark:text-gray-300">
             Manage notifications, alerts, and follow-up reminders.
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-            <RefreshCwIcon className={`h-5 w-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
           <Button variant="outline" onClick={handleAddReminder}>
             <PlusIcon className="h-5 w-5 mr-2" />
             Add Reminder
@@ -143,9 +145,9 @@ const RemindersPage = () => {
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             options={[
-              { value: 'all', label: 'All Status' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'completed', label: 'Completed' },
+              { value: "all", label: "All Status" },
+              { value: "pending", label: "Pending" },
+              { value: "completed", label: "Completed" },
             ]}
           />
         </div>
@@ -154,11 +156,11 @@ const RemindersPage = () => {
             value={type}
             onChange={(e) => setType(e.target.value)}
             options={[
-              { value: 'all', label: 'All Types' },
-              { value: 'event', label: 'Event' },
-              { value: 'payment', label: 'Payment' },
-              { value: 'task', label: 'Task' },
-              { value: 'general', label: 'General' },
+              { value: "all", label: "All Types" },
+              { value: "event", label: "Event" },
+              { value: "payment", label: "Payment" },
+              { value: "task", label: "Task" },
+              { value: "general", label: "General" },
             ]}
           />
         </div>
@@ -174,35 +176,46 @@ const RemindersPage = () => {
         ) : reminders.length > 0 ? (
           <>
             <Table
-              columns={['Title', 'Date', 'Type', 'Status', 'Actions']}
+              columns={["Title", "Date", "Type", "Status", "Actions"]}
               data={reminders.map((rem) => [
-                rem.title || 'Untitled',
-                rem.date ? format(new Date(rem.date), 'PPpp') : 'No date',
+                rem.title || "Untitled",
+                rem.date ? format(new Date(rem.date), "PPpp") : "No date",
                 <Badge
                   key={`type-${rem._id || rem.id}`}
                   color={
-                    rem.type === 'event'
-                      ? 'blue'
-                      : rem.type === 'payment'
-                      ? 'yellow'
-                      : rem.type === 'task'
-                      ? 'purple'
-                      : 'gray'
+                    rem.type === "event"
+                      ? "blue"
+                      : rem.type === "payment"
+                        ? "yellow"
+                        : rem.type === "task"
+                          ? "purple"
+                          : "gray"
                   }
                 >
-                  {rem.type || 'general'}
+                  {rem.type || "general"}
                 </Badge>,
                 <Badge
                   key={`status-${rem._id || rem.id}`}
-                  color={rem.status === 'completed' ? 'green' : 'gray'}
+                  color={rem.status === "completed" ? "green" : "gray"}
                 >
-                  {rem.status || 'pending'}
+                  {rem.status || "pending"}
                 </Badge>,
-                <div key={`actions-${rem._id || rem.id}`} className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => handleViewReminder(rem)}>
+                <div
+                  key={`actions-${rem._id || rem.id}`}
+                  className="flex gap-2"
+                >
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleViewReminder(rem)}
+                  >
                     View
                   </Button>
-                  <Button size="sm" variant="secondary" onClick={() => handleEditReminder(rem)}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleEditReminder(rem)}
+                  >
                     Edit
                   </Button>
                 </div>,
@@ -221,14 +234,20 @@ const RemindersPage = () => {
         ) : (
           <div className="text-center py-10 text-gray-500 dark:text-gray-400">
             <BellIcon className="mx-auto h-12 w-12" />
-            <p className="mt-2">No reminders found. Try adjusting your filters.</p>
+            <p className="mt-2">
+              No reminders found. Try adjusting your filters.
+            </p>
           </div>
         )}
       </Card>
 
       {/* View Modal */}
       {isModalOpen && selectedReminder && (
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Reminder Details">
+        <Modal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          title="Reminder Details"
+        >
           <ReminderDetails
             reminder={selectedReminder}
             onEdit={() => handleEditReminder(selectedReminder)}
@@ -241,7 +260,7 @@ const RemindersPage = () => {
         <Modal
           isOpen={isFormOpen}
           onClose={handleCloseModal}
-          title={selectedReminder ? 'Edit Reminder' : 'Add Reminder'}
+          title={selectedReminder ? "Edit Reminder" : "Add Reminder"}
         >
           <ReminderForm
             reminder={selectedReminder}
