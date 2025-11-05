@@ -112,41 +112,36 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             {!isCollapsed && (
               <Link
                 to="/"
-                className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <div className="relative h-22 w-15">
                   <img
                     src="/fiesta logo-01.png"
                     alt="Fiesta Logo"
-                    className="h-24 w-40 dark:hidden"
+                    className="h-24 w-40 "
                     onError={(e) => {
                       e.target.style.display = "none";
                     }}
                   />
-                  <img
-                    src="/fiesta logo-01.png"
-                    alt="Fiesta Logo"
-                    className="hidden h-24 w-40 dark:block"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
-                  />
-                  <div className="hidden h-24 w-40 bg-blue-600 rounded-lg items-center justify-center text-white text-lg font-bold">
-                    F
-                  </div>
                 </div>
               </Link>
             )}
             {isCollapsed && (
               <Link to="/" className="flex items-center justify-center w-full">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">F</span>
+                <div className="relative h-25 w-20">
+                  <img
+                    src="/fiesta logo-01.png"
+                    alt="Fiesta Logo"
+                    className="h-30 w-24 "
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
                 </div>
               </Link>
             )}
             <button
               onClick={onClose}
-              className="lg:hidden text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+              className="lg:hidden text-gray-500 hover:text-ornge-600 dark:text-gray-400 dark:hover:text-orange-400 transition-colors"
             >
               <XIcon className="h-6 w-6" />
             </button>

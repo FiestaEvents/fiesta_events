@@ -557,10 +557,15 @@ export const paymentService = {
 // FINANCE SERVICE
 // ============================================
 export const financeService = {
-  getAll: async (params = {}) => {
+
+ getAll: async (params = {}) => {
     try {
       const response = await api.get('/finance', { params });
-      return handleResponse(response);
+      // Backend returns: { records, pagination }
+      return {
+        finance: response.data?.data?.records || [],
+        pagination: response.data?.data?.pagination || {}
+      };
     } catch (error) {
       return handleError(error);
     }
@@ -605,61 +610,69 @@ export const financeService = {
   getSummary: async (params = {}) => {
     try {
       const response = await api.get('/finance/summary', { params });
-      return handleResponse(response);
+      // Backend returns: { summary, categoryBreakdown, timeSeries, topExpenses, topIncome }
+      return response.data?.data || {};
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getCashflow: async () => {
+  getCashflow: async (params = {}) => {
     try {
-      const response = await api.get('/finance/cashflow');
-      return handleResponse(response);
+      const response = await api.get('/finance/cashflow', { params });
+      // Backend returns: { cashFlow: array, currentBalance }
+      return response.data?.data || {};
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getExpensesBreakdown: async () => {
+  getExpensesBreakdown: async (params = {}) => {
     try {
-      const response = await api.get('/finance/expenses/breakdown');
-      return handleResponse(response);
+      const response = await api.get('/finance/expenses/breakdown', { params });
+      // Backend returns: { breakdown, totalExpenses }
+      return response.data?.data || {};
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getIncomeBreakdown: async () => {
+
+  getIncomeBreakdown: async (params = {}) => {
     try {
-      const response = await api.get('/finance/income/breakdown');
-      return handleResponse(response);
+      const response = await api.get('/finance/income/breakdown', { params });
+      // Backend returns: { breakdown, totalIncome }
+      return response.data?.data || {};
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getProfitLoss: async () => {
+  getProfitLoss: async (params = {}) => {
     try {
-      const response = await api.get('/finance/profit-loss');
-      return handleResponse(response);
+      const response = await api.get('/finance/profit-loss', { params });
+      // Backend returns: { revenue, expenses, profitability }
+      return response.data?.data || {};
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getTrends: async () => {
+  getTrends: async (params = {}) => {
     try {
-      const response = await api.get('/finance/trends');
-      return handleResponse(response);
+      const response = await api.get('/finance/trends', { params });
+      // Backend returns: { trends: array }
+      return response.data?.data || {};
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getTaxSummary: async () => {
+  getTaxSummary: async (params = {}) => {
     try {
-      const response = await api.get('/finance/tax-summary');
-      return handleResponse(response);
+      const response = await api.get('/finance/tax-summary', { params });
+      // Backend returns: { year, totalIncome, totalExpense, taxableIncome, totalTaxPaid, taxRecords }
+      return response.data?.data || {};
     } catch (error) {
       return handleError(error);
     }

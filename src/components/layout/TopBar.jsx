@@ -165,13 +165,11 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   };
 
   return (
-    <header
-      className={`fixed top-0 ${isRTL ? "left-0" : "right-0"} h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${
-        isCollapsed
-          ? "w-full lg:w-[calc(100%-80px)]"
-          : "w-full lg:w-[calc(100%-256px)]"
-      } ${isRTL ? "lg:right-64" : "lg:left-64"} dark:bg-gray-900 dark:border-gray-700`}
-    >
+<header
+  className={`fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${
+    isCollapsed ? "lg:left-16" : "lg:left-64"
+  } dark:bg-gray-900 dark:border-gray-700`}
+>
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
         {/* Left Section */}
         <div className="flex items-center gap-4">
@@ -193,9 +191,16 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
           {/* Mobile Logo */}
           <Link to="/" className="flex items-center gap-2 lg:hidden">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">F</span>
-            </div>
+                <div className="relative h-22 w-15">
+                  <img
+                    src="/fiesta logo-01.png"
+                    alt="Fiesta Logo"
+                    className="h-20 w-30 "
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                </div>
           </Link>
         </div>
 
@@ -319,14 +324,6 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
             )}
           </div>
 
-          {/* Settings Button */}
-          <button
-            onClick={() => navigate("/settings")}
-            className="hidden sm:block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            <SettingsIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </button>
-
           {/* User Menu */}
           <div className="relative" ref={dropdownRef}>
             <button
@@ -341,7 +338,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                   {getUserRole()}
                 </p>
               </div>
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-semibold text-sm">
                   {getUserInitials()}
                 </span>
