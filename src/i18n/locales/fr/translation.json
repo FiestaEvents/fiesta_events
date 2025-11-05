@@ -27,7 +27,8 @@
     "notifications": "Notifications",
     "userMenu": "Menu utilisateur",
     "user": "Utilisateur",
-    "event": "Événement"
+    "event": "Événement",
+    "searchPlaceholder": "Rechercher des événements, des clients, des tâches..."
   },
   "sidebar": {
     "overview": "Aperçu",

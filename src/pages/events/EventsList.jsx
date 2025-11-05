@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,94 +10,98 @@ import {
   Users,
   Tag,
   X,
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { eventService } from '../../api/index'; 
-import EventForm from './EventForm'; 
-import EventDetailModal from './EventDetailModal'; 
-import Button from '../../components/common/Button';
-import Card from '../../components/common/Card';
-import Badge from '../../components/common/Badge';
-import LoadingSpinner from '../../components/common/LoadingSpinner'; 
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import { eventService } from "../../api/index";
+import EventForm from "./EventForm";
+import EventDetailModal from "./EventDetailModal";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import Badge from "../../components/common/Badge";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 // --- UTILITY FUNCTIONS ---
 
 const getStatusColor = (status) => {
   const colors = {
-    draft: 'gray',
-    pending: 'yellow',
-    confirmed: 'green',
-    'in-progress': 'blue',
-    completed: 'blue',
-    cancelled: 'red',
+    draft: "gray",
+    pending: "yellow",
+    confirmed: "green",
+    "in-progress": "blue",
+    completed: "blue",
+    cancelled: "red",
   };
-  return colors[status] || 'gray';
+  return colors[status] || "gray";
 };
 
 const getTypeColor = (type) => {
   const colors = {
-    wedding: 'purple',
-    corporate: 'blue',
-    birthday: 'pink',
-    conference: 'green',
-    party: 'orange',
-    social: 'orange',
-    other: 'gray',
+    wedding: "purple",
+    corporate: "blue",
+    birthday: "pink",
+    conference: "green",
+    party: "orange",
+    social: "orange",
+    other: "gray",
   };
-  return colors[type?.toLowerCase()] || 'gray';
+  return colors[type?.toLowerCase()] || "gray";
 };
 
 // Fixed function to get complete Tailwind classes
 const getTypeClasses = (type) => {
-  const normalizedType = type?.toLowerCase() || 'other';
-  
+  const normalizedType = type?.toLowerCase() || "other";
+
   const classes = {
-    wedding: 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-800',
-    corporate: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-200 dark:hover:bg-blue-800',
-    birthday: 'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-700 hover:bg-pink-200 dark:hover:bg-pink-800',
-    conference: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800',
-    party: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800',
-    social: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800',
-    other: 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800',
+    wedding:
+      "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-800",
+    corporate:
+      "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-200 dark:hover:bg-blue-800",
+    birthday:
+      "bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-700 hover:bg-pink-200 dark:hover:bg-pink-800",
+    conference:
+      "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800",
+    party:
+      "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800",
+    social:
+      "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800",
+    other:
+      "bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800",
   };
-  
+
   return classes[normalizedType] || classes.other;
 };
 
 const formatTime = (dateString) => {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
     hour12: true,
   });
 };
 
 const formatDateShort = (dateString) => {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
   });
 };
 
 const formatDateLong = (dateString) => {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 };
 
 // --- UPCOMING EVENTS LIST COMPONENT ---
 const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
   return (
-    <Card
-      title="Upcoming Events"
-      className="h-full"
-    >
+    <Card title="Upcoming Events" className="h-full">
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
           <LoadingSpinner size="md" />
@@ -114,7 +118,10 @@ const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
                 <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate flex-1 mr-2">
                   {event.title}
                 </h4>
-                <Badge variant={getStatusColor(event.status)} className="text-xs flex-shrink-0">
+                <Badge
+                  variant={getStatusColor(event.status)}
+                  className="text-xs flex-shrink-0"
+                >
                   {event.status}
                 </Badge>
               </div>
@@ -151,17 +158,17 @@ const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
 };
 
 // --- DATE EVENTS MODAL COMPONENT ---
-const DateEventsModal = ({ 
-  isOpen, 
-  onClose, 
-  selectedDate, 
-  events, 
-  onEventClick, 
-  onCreateEvent 
+const DateEventsModal = ({
+  isOpen,
+  onClose,
+  selectedDate,
+  events,
+  onEventClick,
+  onCreateEvent,
 }) => {
   if (!isOpen || !selectedDate) return null;
 
-  const dateEvents = events.filter(event => {
+  const dateEvents = events.filter((event) => {
     const eventDate = new Date(event.startDate);
     return (
       eventDate.getDate() === selectedDate.getDate() &&
@@ -180,7 +187,7 @@ const DateEventsModal = ({
               {formatDateLong(selectedDate)}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {dateEvents.length} event{dateEvents.length !== 1 ? 's' : ''}
+              {dateEvents.length} event{dateEvents.length !== 1 ? "s" : ""}
             </p>
           </div>
           <button
@@ -233,7 +240,7 @@ const DateEventsModal = ({
                     {event.client && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Users className="w-4 h-4" />
-                        Client: {event.client.name || 'Unknown'}
+                        Client: {event.client.name || "Unknown"}
                       </div>
                     )}
 
@@ -273,6 +280,7 @@ const DateEventsModal = ({
               onClick={() => onCreateEvent(selectedDate)}
               className="w-full"
             >
+              <Plus className="h-4 w-4" />
               Create Event on This Date
             </Button>
           </div>
@@ -291,7 +299,7 @@ const EventList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpcomingLoading, setIsUpcomingLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
-  
+
   // Modal State
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDateEventsModalOpen, setIsDateEventsModalOpen] = useState(false);
@@ -315,7 +323,7 @@ const EventList = () => {
   const fetchCalendarEvents = useCallback(async () => {
     try {
       setIsLoading(true);
-      
+
       // Use the service pattern from documentation
       const response = await eventService.getAll({
         page: 1,
@@ -334,7 +342,7 @@ const EventList = () => {
         eventsData = response;
       }
 
-      console.log('📅 Calendar events loaded:', eventsData);
+      console.log("📅 Calendar events loaded:", eventsData);
 
       // Filter events for current month
       const startOfMonth = new Date(
@@ -351,7 +359,7 @@ const EventList = () => {
         59
       );
 
-      const monthEvents = eventsData.filter(event => {
+      const monthEvents = eventsData.filter((event) => {
         if (!event.startDate) return false;
         const eventDate = new Date(event.startDate);
         return eventDate >= startOfMonth && eventDate <= endOfMonth;
@@ -359,8 +367,8 @@ const EventList = () => {
 
       setEvents(monthEvents);
     } catch (error) {
-      console.error('Failed to load calendar events:', error);
-      toast.error('Failed to load calendar events');
+      console.error("Failed to load calendar events:", error);
+      toast.error("Failed to load calendar events");
       setEvents([]);
     } finally {
       setIsLoading(false);
@@ -371,7 +379,7 @@ const EventList = () => {
   const fetchUpcomingEvents = useCallback(async () => {
     try {
       setIsUpcomingLoading(true);
-      
+
       const response = await eventService.getAll({
         page: 1,
         limit: 10, // Reduced limit for upcoming events
@@ -389,28 +397,32 @@ const EventList = () => {
         eventsData = response;
       }
 
-      console.log('📅 Upcoming events loaded:', eventsData);
+      console.log("📅 Upcoming events loaded:", eventsData);
 
       // Filter upcoming events (next 30 days)
       const now = new Date();
-      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const thirtyDaysFromNow = new Date(
+        now.getTime() + 30 * 24 * 60 * 60 * 1000
+      );
 
       const upcoming = eventsData
-        .filter(event => {
+        .filter((event) => {
           if (!event.startDate) return false;
           const eventDate = new Date(event.startDate);
-          return eventDate >= now && 
-                 eventDate <= thirtyDaysFromNow &&
-                 event.status !== 'completed' && 
-                 event.status !== 'cancelled';
+          return (
+            eventDate >= now &&
+            eventDate <= thirtyDaysFromNow &&
+            event.status !== "completed" &&
+            event.status !== "cancelled"
+          );
         })
         .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
         .slice(0, 7);
 
       setUpcomingEvents(upcoming);
     } catch (error) {
-      console.error('Failed to load upcoming events:', error);
-      toast.error('Failed to load upcoming events');
+      console.error("Failed to load upcoming events:", error);
+      toast.error("Failed to load upcoming events");
       setUpcomingEvents([]);
     } finally {
       setIsUpcomingLoading(false);
@@ -440,27 +452,36 @@ const EventList = () => {
     return { daysInMonth, startingDayOfWeek };
   }, [currentDate]);
 
-  const getEventsForDate = useCallback((date) => {
-    if (!date) return [];
-    
-    return events.filter((event) => {
-      if (!event.startDate) return false;
-      const eventDate = new Date(event.startDate);
-      return (
-        eventDate.getDate() === date.getDate() &&
-        eventDate.getMonth() === date.getMonth() &&
-        eventDate.getFullYear() === date.getFullYear()
-      );
-    }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-  }, [events]);
+  const getEventsForDate = useCallback(
+    (date) => {
+      if (!date) return [];
+
+      return events
+        .filter((event) => {
+          if (!event.startDate) return false;
+          const eventDate = new Date(event.startDate);
+          return (
+            eventDate.getDate() === date.getDate() &&
+            eventDate.getMonth() === date.getMonth() &&
+            eventDate.getFullYear() === date.getFullYear()
+          );
+        })
+        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    },
+    [events]
+  );
 
   // Navigation handlers
   const previousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    );
   };
 
   const nextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+    );
   };
 
   const goToToday = () => {
@@ -470,7 +491,7 @@ const EventList = () => {
   };
 
   const handleCreateEvent = (date = null) => {
-    console.log('Create event with date:', date);
+    console.log("Create event with date:", date);
     setEditingEventId(null);
     setPrefilledDate(date);
     setShowEventModal(true);
@@ -478,7 +499,7 @@ const EventList = () => {
   };
 
   const handleEditEvent = (eventId) => {
-    console.log('Edit event:', eventId);
+    console.log("Edit event:", eventId);
     setEditingEventId(eventId);
     setPrefilledDate(null);
     setShowEventModal(true);
@@ -490,7 +511,11 @@ const EventList = () => {
     setShowEventModal(false);
     setEditingEventId(null);
     setPrefilledDate(null);
-    toast.success(editingEventId ? 'Event updated successfully' : 'Event created successfully');
+    toast.success(
+      editingEventId
+        ? "Event updated successfully"
+        : "Event created successfully"
+    );
   };
 
   const handleFormClose = () => {
@@ -505,12 +530,12 @@ const EventList = () => {
   };
 
   const formatMonthYear = (date) => {
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
     });
   };
-  
+
   const isToday = (date) => {
     const today = new Date();
     return (
@@ -535,12 +560,14 @@ const EventList = () => {
       days.push(null);
     }
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
+      days.push(
+        new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+      );
     }
     return days;
   }, [currentDate, daysInMonth, startingDayOfWeek]);
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -573,18 +600,23 @@ const EventList = () => {
           initialDate={prefilledDate}
         />
       )}
-      
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Event Calendar</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">View and manage your venue events</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Event Calendar
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            View and manage your venue events
+          </p>
         </div>
         <Button
           variant="primary"
           icon={Plus}
           onClick={() => handleCreateEvent()}
         >
+          <Plus className="h-4 w-4" />
           Create Event
         </Button>
       </div>
@@ -600,11 +632,7 @@ const EventList = () => {
                   {formatMonthYear(currentDate)}
                 </h2>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToToday}
-                  >
+                  <Button variant="outline" size="sm" onClick={goToToday}>
                     Today
                   </Button>
                   <div className="flex items-center gap-1">
@@ -631,17 +659,22 @@ const EventList = () => {
                 </h3>
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
                   {[
-                    { status: 'pending', label: 'Pending' },
-                    { status: 'confirmed', label: 'Confirmed' },
-                    { status: 'in-progress', label: 'In Progress' },
-                    { status: 'completed', label: 'Completed' },
-                    { status: 'cancelled', label: 'Cancelled' },
+                    { status: "pending", label: "Pending" },
+                    { status: "confirmed", label: "Confirmed" },
+                    { status: "in-progress", label: "In Progress" },
+                    { status: "completed", label: "Completed" },
+                    { status: "cancelled", label: "Cancelled" },
                   ].map((item) => (
                     <div key={item.status} className="flex items-center gap-2">
-                      <Badge variant={getStatusColor(item.status)} className="!px-1 !py-1">
+                      <Badge
+                        variant={getStatusColor(item.status)}
+                        className="!px-1 !py-1"
+                      >
                         <div className="w-2 h-2 rounded-full bg-current opacity-75"></div>
                       </Badge>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {item.label}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -684,12 +717,12 @@ const EventList = () => {
                             relative p-2 min-h-[100px] rounded-lg border-2 transition-all text-left
                             ${
                               isTodayDate
-                                ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                                ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
                                 : isSelected
-                                ? 'border-orange-300 bg-orange-100/50 dark:bg-orange-900/10'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                  ? "border-orange-300 bg-orange-100/50 dark:bg-orange-900/10"
+                                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
                             }
-                            ${date.getMonth() !== currentDate.getMonth() ? 'opacity-40' : ''}
+                            ${date.getMonth() !== currentDate.getMonth() ? "opacity-40" : ""}
                           `}
                         >
                           <div className="absolute top-2 right-2">
@@ -698,8 +731,8 @@ const EventList = () => {
                               text-sm font-semibold
                               ${
                                 isTodayDate
-                                  ? 'text-orange-700 dark:text-orange-400'
-                                  : 'text-gray-700 dark:text-gray-300'
+                                  ? "text-orange-700 dark:text-orange-400"
+                                  : "text-gray-700 dark:text-gray-300"
                               }
                             `}
                             >
@@ -717,10 +750,10 @@ const EventList = () => {
                                     onEventClick(event);
                                   }}
                                   className={getTypeClasses(event.type)}
-                                  title={`${event.title} (${event.type || 'Other'})`}
+                                  title={`${event.title} (${event.type || "Other"})`}
                                 >
                                   <span className="truncate block text-xs">
-                                    {event.type || 'Other'}
+                                    {event.type || "Other"}
                                   </span>
                                 </div>
                               ))}

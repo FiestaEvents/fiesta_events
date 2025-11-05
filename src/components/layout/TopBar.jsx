@@ -3,79 +3,82 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../context/LanguageContext";
 import { MenuIcon, BellIcon, SunIcon, MoonIcon } from "../icons/IconComponents";
+import {
+  Search,
+  ChevronDown,
+  User,
+  Settings as SettingsIcon,
+  LogOut,
+} from "lucide-react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { reminderService } from "../../api/index";
 
-const TopBar = ({ onMenuClick }) => {
+const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const { theme, toggleTheme } = useTheme();
   const { logout, user } = useAuth();
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
-
-  // Add fixed positioning class to the root element
   const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] =
     useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const dropdownRef = useRef();
   const notificationRef = useRef();
 
   // Fetch upcoming reminders as notifications
-useEffect(() => {
-  let isMounted = true;
-  
-  const fetchNotifications = async () => {
-    if (!isMounted) return;
-    
-    try {
-      const response = await reminderService.getUpcoming();
+  useEffect(() => {
+    let isMounted = true;
 
-      // Extract reminders from response
-      let reminders = [];
-      if (response?.data?.data?.reminders) {
-        reminders = response.data.data.reminders;
-      } else if (response?.data?.reminders) {
-        reminders = response.data.reminders;
-      } else if (response?.reminders) {
-        reminders = response.reminders;
-      } else if (Array.isArray(response?.data)) {
-        reminders = response.data;
-      } else if (Array.isArray(response)) {
-        reminders = response;
+    const fetchNotifications = async () => {
+      if (!isMounted) return;
+
+      try {
+        const response = await reminderService.getUpcoming();
+
+        let reminders = [];
+        if (response?.data?.data?.reminders) {
+          reminders = response.data.data.reminders;
+        } else if (response?.data?.reminders) {
+          reminders = response.data.reminders;
+        } else if (response?.reminders) {
+          reminders = response.reminders;
+        } else if (Array.isArray(response?.data)) {
+          reminders = response.data;
+        } else if (Array.isArray(response)) {
+          reminders = response;
+        }
+
+        const activeReminders = reminders.filter(
+          (reminder) => reminder.status === "active"
+        );
+
+        if (isMounted) {
+          setNotifications(activeReminders);
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        if (isMounted) {
+          setNotifications([]);
+        }
       }
+    };
 
-      const activeReminders = reminders.filter(
-        (reminder) => reminder.status === "active"
-      );
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 300000);
 
-      if (isMounted) {
-        setNotifications(activeReminders);
-      }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      if (isMounted) {
-        setNotifications([]);
-      }
-    }
-  };
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
-  fetchNotifications();
-  
-  // Poll every 5 minutes instead of 1 minute
-  const interval = setInterval(fetchNotifications, 300000);
-
-  return () => {
-    isMounted = false;
-    clearInterval(interval);
-  };
-}, []);
-
-  // Close user dropdown if clicked outside
+  // Close dropdowns if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -99,7 +102,6 @@ useEffect(() => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Check if it's today or tomorrow
     if (date.toDateString() === today.toDateString()) {
       return `${t("notifications.today")} ${timeString || ""}`;
     } else if (date.toDateString() === tomorrow.toDateString()) {
@@ -124,7 +126,6 @@ useEffect(() => {
     }
   };
 
-  // Get user initials for avatar
   const getUserInitials = () => {
     if (!user?.name) return "AV";
     return user.name
@@ -135,21 +136,16 @@ useEffect(() => {
       .slice(0, 2);
   };
 
-  // Get user role display name
   const getUserRole = () => {
     if (!user?.role) return t("common.user");
-
-    // Handle both string role and role object
     if (typeof user.role === "string") {
       return user.role.charAt(0).toUpperCase() + user.role.slice(1);
     } else if (user.role?.name) {
       return user.role.name;
     }
-
     return t("common.user");
   };
 
-  // Get role badge color
   const getRoleColor = () => {
     const role = user?.role;
     const roleName = typeof role === "string" ? role : role?.name;
@@ -170,49 +166,73 @@ useEffect(() => {
 
   return (
     <header
-      className={`fixed top-0 ${isRTL ? "left-0" : "right-0"} h-16 bg-white border-b border-gray-200 z-20 w-full lg:w-[calc(100%-256px)] ${isRTL ? "lg:right-64" : "lg:left-64"} dark:bg-gray-800 dark:border-gray-700`}
+      className={`fixed top-0 ${isRTL ? "left-0" : "right-0"} h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${
+        isCollapsed
+          ? "w-full lg:w-[calc(100%-80px)]"
+          : "w-full lg:w-[calc(100%-256px)]"
+      } ${isRTL ? "lg:right-64" : "lg:left-64"} dark:bg-gray-900 dark:border-gray-700`}
     >
-      <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center">
+      <div className="flex items-center justify-between h-full px-4 sm:px-6">
+        {/* Left Section */}
+        <div className="flex items-center gap-4">
+          {/* Mobile Menu Toggle */}
           <button
             onClick={onMenuClick}
-            className="lg:hidden text-gray-600 dark:text-gray-300 mr-4"
+            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            <MenuIcon className="h-6 w-6" />
+            <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
 
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white lg:hidden"
+          {/* Desktop Collapse Toggle */}
+          <button
+            onClick={onToggleCollapse}
+            className="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            {/* Logo from public folder */}
-            <img
-              src="/fiesta logo-01.png"
-              alt="Fiesta Logo"
-              className="h-24 w-30 object-contain"
-              onError={(e) => {
-                // Fallback if logo doesn't exist
-                e.target.style.display = "none";
-                e.target.nextSibling.style.display = "flex";
-              }}
-            />
+            <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          </button>
+
+          {/* Mobile Logo */}
+          <Link to="/" className="flex items-center gap-2 lg:hidden">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">F</span>
+            </div>
           </Link>
         </div>
 
-        <div className="flex items-center space-x-4">
+        {/* Center Section - Search */}
+        <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder={
+                t("common.searchPlaceholder") ||
+                "Search events, clients, tasks..."
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+
+        {/* Right Section */}
+        <div className="flex items-center gap-2">
           {/* Language Switcher */}
-          <LanguageSwitcher />
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
 
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white p-2 rounded-full"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label={t("common.toggleTheme")}
           >
             {theme === "light" ? (
-              <MoonIcon className="h-5 w-5" />
+              <MoonIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
             ) : (
-              <SunIcon className="h-5 w-5" />
+              <SunIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
             )}
           </button>
 
@@ -222,32 +242,36 @@ useEffect(() => {
               onClick={() =>
                 setNotificationDropdownOpen(!notificationDropdownOpen)
               }
-              className="relative text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white p-2 rounded-full"
+              className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               aria-label={t("common.notifications")}
             >
-              <BellIcon className="h-6 w-6" />
+              <BellIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
               {notifications.length > 0 && (
-                <span className="absolute top-0 right-0 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                </span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               )}
             </button>
 
             {/* Notifications Dropdown */}
             {notificationDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-30">
-                <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {t("notifications.upcomingReminders")}
-                  </h3>
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-30">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {t("notifications.upcomingReminders")}
+                    </h3>
+                    {notifications.length > 0 && (
+                      <span className="text-xs font-semibold px-2 py-1 bg-red-500 text-white rounded-full">
+                        {notifications.length}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {notifications.length > 0 ? (
-                  <ul className="divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto">
+                  <div className="max-h-80 overflow-y-auto">
                     {notifications.map((reminder) => (
-                      <li
+                      <div
                         key={reminder._id}
-                        className="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                        className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                         onClick={() => {
                           navigate("/reminders");
                           setNotificationDropdownOpen(false);
@@ -273,31 +297,17 @@ useEffect(() => {
                                 {reminder.description}
                               </p>
                             )}
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {reminder.type && (
-                                <span className="capitalize">
-                                  {reminder.type}
-                                </span>
-                              )}
-                              {reminder.relatedEvent?.title && (
-                                <span>
-                                  {" "}
-                                  • {t("common.event")}:{" "}
-                                  {reminder.relatedEvent.title}
-                                </span>
-                              )}
-                            </p>
                           </div>
-                          <span className="text-xs text-orange-600 dark:text-orange-400 whitespace-nowrap flex-shrink-0">
+                          <span className="text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap flex-shrink-0">
                             {formatReminderDate(
                               reminder.reminderDate,
                               reminder.reminderTime
                             )}
                           </span>
                         </div>
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 ) : (
                   <div className="px-4 py-8 text-center">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -309,77 +319,86 @@ useEffect(() => {
             )}
           </div>
 
-          {/* User Avatar Dropdown */}
+          {/* Settings Button */}
+          <button
+            onClick={() => navigate("/settings")}
+            className="hidden sm:block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <SettingsIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          </button>
+
+          {/* User Menu */}
           <div className="relative" ref={dropdownRef}>
-            <div
+            <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center justify-center h-10 w-10 rounded-full bg-orange-500 text-white font-semibold text-sm cursor-pointer hover:bg-orange-600 transition-colors"
-              aria-label={t("common.userMenu")}
+              className="flex items-center gap-3 pl-3 pr-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              {getUserInitials()}
-            </div>
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {user?.name || t("common.user")}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {getUserRole()}
+                </p>
+              </div>
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">
+                  {getUserInitials()}
+                </span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
+            </button>
+
+            {/* User Dropdown */}
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-30">
-                <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex-shrink-0 h-9 w-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-semibold text-base">
-                    {getUserInitials()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {user?.name || t("common.user")}
-                    </p>
-                    {user?.email && (
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                          {user.email}
-                        </span>
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleColor()}`}
-                        >
-                          {getUserRole()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-30">
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {user?.name || t("common.user")}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {user?.email}
+                  </p>
+                  {user?.role && (
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${getRoleColor()}`}
+                    >
+                      {getUserRole()}
+                    </span>
+                  )}
                 </div>
-                <ul className="flex flex-col">
-                  <li
-                    className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-700 dark:text-gray-300"
-                    onClick={() => {
-                      navigate("/settings/profile");
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    {t("common.profile")}
-                  </li>
-                  <li
-                    className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-700 dark:text-gray-300"
-                    onClick={() => {
-                      navigate("/settings");
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    {t("common.settings")}
-                  </li>
-                  <li
-                    className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-700 dark:text-gray-300"
-                    onClick={() => {
-                      navigate("/support");
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    {t("common.support")}
-                  </li>
-                  <li
-                    className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-red-600 dark:text-red-400"
+                <button
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  onClick={() => {
+                    navigate("/settings/profile");
+                    setDropdownOpen(false);
+                  }}
+                >
+                  <User className="w-4 h-4" />
+                  {t("common.profile")}
+                </button>
+                <button
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  onClick={() => {
+                    navigate("/settings");
+                    setDropdownOpen(false);
+                  }}
+                >
+                  <SettingsIcon className="w-4 h-4" />
+                  {t("common.settings")}
+                </button>
+                <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
+                  <button
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                     onClick={() => {
                       logout();
                       setDropdownOpen(false);
                     }}
                   >
+                    <LogOut className="w-4 h-4" />
                     {t("common.logout")}
-                  </li>
-                </ul>
+                  </button>
+                </div>
               </div>
             )}
           </div>

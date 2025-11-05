@@ -10,7 +10,7 @@ import Badge from "../../components/common/Badge";
 import Pagination from "../../components/common/Pagination";
 import { clientService } from "../../api/index";
 import { UsersIcon } from "../../components/icons/IconComponents";
-import { Plus, RefreshCw, Search, Filter, Eye, X } from "lucide-react";
+import { Plus, Search, Filter, Eye, X } from "lucide-react";
 import ClientDetail from "./ClientDetail.jsx";
 import ClientForm from "./ClientForm.jsx";
 
@@ -164,11 +164,14 @@ const ClientsList = () => {
   }, []);
 
   // Fixed: Now using the navigate function that's properly defined
-  const handleViewClient = useCallback((client) => {
-    navigate(`/clients/${client._id}`, { 
-      state: { client } 
-    });
-  }, [navigate]);
+  const handleViewClient = useCallback(
+    (client) => {
+      navigate(`/clients/${client._id}`, {
+        state: { client },
+      });
+    },
+    [navigate]
+  );
 
   const handleCloseDetailModal = useCallback(() => {
     setSelectedClient(null);
@@ -343,6 +346,7 @@ const ClientsList = () => {
     ),
   }));
 
+  console.log("totalCount", totalCount);
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
@@ -358,16 +362,18 @@ const ClientsList = () => {
               `Showing ${clients.length} of ${totalCount} clients`}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button
-            variant="primary"
-            onClick={handleAddClient}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Client
-          </Button>
-        </div>
+        {totalCount > 0 && (
+          <div className="flex gap-3">
+            <Button
+              variant="primary"
+              onClick={handleAddClient}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Client
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Error Message */}

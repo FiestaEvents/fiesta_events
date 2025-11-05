@@ -27,14 +27,14 @@
     "notifications": "Notifications",
     "userMenu": "User menu",
     "user": "User",
-    "event": "Event"
+    "event": "Event",
+    "searchPlaceholder": "Search events, clients, tasks..."
   },
   "sidebar": {
     "overview": "Overview",
     "operations": "Operations",
     "financial": "Financial",
     "management": "Management"
-    
   },
   "dashboard": {
     "welcome": "Welcome back",
