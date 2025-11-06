@@ -1,149 +1,193 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Modal from '../../components/common/Modal';
-import Table from '../../components/common/Table';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import Badge from '../../components/common/Badge';
-import Pagination from '../../components/common/Pagination';
-import EmptyState from '../../components/common/EmptyState';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { partnerService } from '../../api/index';
-import { Plus, RefreshCw, Search, Filter, Building, Users } from 'lucide-react';
-import PartnerDetail from './PartnerDetail.jsx';
-import PartnerForm from './PartnerForm.jsx';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import Button from "../../components/common/Button";
+import Modal, { ConfirmModal } from "../../components/common/Modal";
+import Table from "../../components/common/NewTable";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Badge from "../../components/common/Badge";
+import { partnerService } from "../../api/index";
+import {
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  X,
+  Edit,
+  Trash2,
+  Users,
+  Star,
+} from "lucide-react";
+import PartnerForm from "./PartnerForm";
+import { toast } from "react-hot-toast";
 
 const PartnersList = () => {
+  const navigate = useNavigate();
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPartner, setSelectedPartner] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [deletingPartner, setDeletingPartner] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // Filters
-  const [search, setSearch] = useState('');
-  const [type, setType] = useState('all');
-  const [status, setStatus] = useState('all');
+  // Search & filter state
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [category, setCategory] = useState("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch partners with proper API integration
+  // Category options from schema
+  const categoryOptions = [
+    { value: "all", label: "All Categories" },
+    { value: "driver", label: "Driver" },
+    { value: "bakery", label: "Bakery" },
+    { value: "catering", label: "Catering" },
+    { value: "decoration", label: "Decoration" },
+    { value: "photography", label: "Photography" },
+    { value: "music", label: "Music" },
+    { value: "security", label: "Security" },
+    { value: "cleaning", label: "Cleaning" },
+    { value: "audio_visual", label: "Audio/Visual" },
+    { value: "floral", label: "Floral" },
+    { value: "entertainment", label: "Entertainment" },
+    { value: "hairstyling", label: "Hair Styling" },
+    { value: "other", label: "Other" },
+  ];
+
+  // Updated fetchPartners function with comprehensive validation
   const fetchPartners = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {
         page,
         limit,
         ...(search.trim() && { search: search.trim() }),
-        ...(type !== 'all' && { type }),
-        ...(status !== 'all' && { status }),
+        ...(status !== "all" && { status }),
+        ...(category !== "all" && { category }),
       };
 
-      console.log('🔄 Fetching partners with params:', params);
-
       const response = await partnerService.getAll(params);
-      console.log('📋 Partners API response:', response);
 
-      // Handle different response structures
       let partnersData = [];
       let totalPages = 1;
       let totalCount = 0;
 
-      if (response?.data?.data?.partners) {
-        partnersData = response.data.data.partners || [];
-        totalPages = response.data.data.totalPages || 1;
-        totalCount = response.data.data.totalCount || partnersData.length;
-      } else if (response?.data?.partners) {
-        partnersData = response.data.partners || [];
-        totalPages = response.data.totalPages || 1;
-        totalCount = response.data.totalCount || partnersData.length;
-      } else if (response?.partners) {
-        partnersData = response.partners || [];
-        totalPages = response.totalPages || 1;
-        totalCount = response.totalCount || partnersData.length;
-      } else if (Array.isArray(response?.data)) {
-        partnersData = response.data;
-        totalPages = 1;
-        totalCount = partnersData.length;
+      // Handle response structure
+      if (response?.partners && Array.isArray(response.partners)) {
+        // Validate and filter partners
+        partnersData = response.partners.filter((partner, index) => {
+          // Check for null/undefined
+          if (!partner) {
+            console.warn(`⚠️ Partner at index ${index} is ${partner}`);
+            return false;
+          }
+
+          // Check for required fields
+          if (!partner._id) {
+            console.warn(`⚠️ Partner at index ${index} missing _id:`, partner);
+            return false;
+          }
+
+          // Check if it's a valid object
+          if (typeof partner !== "object") {
+            console.warn(
+              `⚠️ Partner at index ${index} is not an object:`,
+              typeof partner
+            );
+            return false;
+          }
+
+          return true;
+        });
+
+        totalPages = response.pagination?.pages || 1;
+        totalCount = response.pagination?.total || partnersData.length;
+
+        console.log("✅ Processed partners response:", {
+          received: response.partners.length,
+          valid: partnersData.length,
+          filtered: response.partners.length - partnersData.length,
+          totalPages,
+          totalCount,
+        });
       } else if (Array.isArray(response)) {
-        partnersData = response;
-        totalPages = 1;
+        // Fallback for direct array response
+        partnersData = response.filter(
+          (partner) =>
+            partner != null && typeof partner === "object" && partner._id
+        );
         totalCount = partnersData.length;
+
+        console.log("✅ Processed array response:", {
+          received: response.length,
+          valid: partnersData.length,
+        });
       } else {
-        console.warn('⚠️ Unexpected response structure:', response);
-        partnersData = [];
+        console.error("❌ Unexpected response structure:", response);
+        throw new Error("Invalid response format from server");
       }
 
-      console.log('🤝 Extracted partners:', partnersData);
-      console.log('📊 Pagination info:', { totalPages, totalCount });
+      // Final validation
+      if (partnersData.length > 0) {
+        console.log("✅ Sample partner:", partnersData[0]);
+
+        // Check for any remaining undefined values (shouldn't happen after filtering)
+        const hasUndefined = partnersData.some((p) => !p);
+        if (hasUndefined) {
+          console.error("❌ Still have undefined partners after filtering!");
+          partnersData = partnersData.filter((p) => p != null);
+        }
+      }
 
       setPartners(partnersData);
       setTotalPages(totalPages);
       setTotalCount(totalCount);
-
+      setHasInitialLoad(true);
     } catch (err) {
-      console.error('❌ Error fetching partners:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to load partners. Please try again.';
+      console.error("❌ Error fetching partners:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to load partners. Please try again.";
       setError(errorMessage);
       setPartners([]);
-      setTotalPages(1);
-      setTotalCount(0);
+      setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [search, type, status, page, limit]);
+  }, [search, status, category, page, limit]);
 
-  // Delete partner function
-  const handleDeletePartner = useCallback(async (partnerId) => {
-    if (!partnerId) {
-      toast.error('Invalid partner ID');
-      return;
-    }
-
-    if (!window.confirm('Are you sure you want to delete this partner? This action cannot be undone.')) {
+  const handleDeletePartner = async () => {
+    if (!selectedPartner?._id) {
+      toast.error("Cannot delete partner: Partner ID not found");
       return;
     }
 
     try {
-      setDeletingPartner(partnerId);
-      console.log('🗑️ Deleting partner:', partnerId);
-
-      const response = await partnerService.delete(partnerId);
-      console.log('✅ Delete response:', response);
-
-      toast.success('Partner deleted successfully');
-      
-      // Refresh the list
+      setDeleteLoading(true);
+      await partnerService.delete(selectedPartner._id);
+      toast.success("Partner deleted successfully");
+      setIsDeleteModalOpen(false);
+      setSelectedPartner(null);
       fetchPartners();
-      
-      // Close modal if the deleted partner was selected
-      if (selectedPartner?._id === partnerId) {
-        handleCloseModal();
-      }
-
     } catch (err) {
-      console.error('❌ Error deleting partner:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete partner. Please try again.';
-      toast.error(errorMessage);
+      toast.error(err.response?.data?.message || "Failed to delete partner");
     } finally {
-      setDeletingPartner(null);
+      setDeleteLoading(false);
     }
-  }, [fetchPartners, selectedPartner]);
+  };
 
-  // Effects
   useEffect(() => {
     fetchPartners();
   }, [fetchPartners]);
 
-  // Actions
   const handleAddPartner = useCallback(() => {
     setSelectedPartner(null);
     setIsFormOpen(true);
@@ -151,316 +195,431 @@ const PartnersList = () => {
 
   const handleEditPartner = useCallback((partner) => {
     setSelectedPartner(partner);
-    setIsModalOpen(false);
     setIsFormOpen(true);
   }, []);
 
-  const handleViewPartner = useCallback((partner) => {
-    setSelectedPartner(partner);
-    setIsModalOpen(true);
-  }, []);
-
-  const handleCloseModal = useCallback(() => {
-    setSelectedPartner(null);
-    setIsModalOpen(false);
-    setIsFormOpen(false);
-  }, []);
+  const handleViewPartner = useCallback(
+    (partner) => {
+      navigate(`/partners/${partner._id}`, { state: { partner } });
+    },
+    [navigate]
+  );
 
   const handleFormSuccess = useCallback(() => {
     fetchPartners();
-    handleCloseModal();
-    toast.success(selectedPartner ? 'Partner updated successfully' : 'Partner created successfully');
-  }, [fetchPartners, handleCloseModal, selectedPartner]);
+    setSelectedPartner(null);
+    setIsFormOpen(false);
+    toast.success(
+      selectedPartner
+        ? "Partner updated successfully"
+        : "Partner added successfully"
+    );
+  }, [fetchPartners, selectedPartner]);
 
-  const handleRefresh = useCallback(() => {
-    setPage(1);
-    fetchPartners();
-  }, [fetchPartners]);
-
-  const handleSearchChange = useCallback((e) => {
-    setPage(1);
-    setSearch(e.target.value);
-  }, []);
-
-  const handleTypeChange = useCallback((e) => {
-    setPage(1);
-    setType(e.target.value);
-  }, []);
-
-  const handleStatusChange = useCallback((e) => {
-    setPage(1);
-    setStatus(e.target.value);
-  }, []);
-
-  const handlePageChange = useCallback((newPage) => {
-    setPage(newPage);
-  }, []);
-
-  const handleLimitChange = useCallback((newLimit) => {
-    setLimit(newLimit);
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("all");
+    setCategory("all");
     setPage(1);
   }, []);
 
-  // Get badge color for partner type
-  const getTypeColor = (partnerType) => {
-    const colors = {
-      vendor: 'blue',
-      supplier: 'green',
-      sponsor: 'purple',
-      contractor: 'orange',
-      other: 'gray'
-    };
-    return colors[partnerType] || 'gray';
+  const openDeleteModal = (partner) => {
+    setSelectedPartner(partner);
+    setIsDeleteModalOpen(true);
   };
 
-  // Get badge color for partner status
-  const getStatusColor = (partnerStatus) => {
-    const colors = {
-      active: 'green',
-      inactive: 'gray',
-      pending: 'yellow',
-      suspended: 'red'
-    };
-    return colors[partnerStatus] || 'gray';
+  const hasActiveFilters =
+    search.trim() !== "" || status !== "all" || category !== "all";
+  const showEmptyState =
+    !loading &&
+    !error &&
+    partners.length === 0 &&
+    !hasActiveFilters &&
+    hasInitialLoad;
+  const showNoResults =
+    !loading &&
+    !error &&
+    partners.length === 0 &&
+    hasActiveFilters &&
+    hasInitialLoad;
+
+  // Helper function to format category labels
+  const formatCategory = (cat) => {
+    return categoryOptions.find((opt) => opt.value === cat)?.label || cat;
   };
 
   // Table columns configuration
-  const tableColumns = [
-    { key: 'name', label: 'Name' },
-    { key: 'company', label: 'Company' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'type', label: 'Type' },
-    { key: 'status', label: 'Status' },
-    { key: 'hourlyRate', label: 'Hourly Rate' },
-    { key: 'actions', label: 'Actions' }
+  const columns = [
+    {
+      header: "Partner Name",
+      accessor: "name",
+      sortable: true,
+      width: "20%",
+      render: (row) => {
+        console.log("🔍 Rendering Partner Name - row:", row);
+        if (!row) {
+          console.error("❌ Row is undefined in Partner Name column!");
+          return <div>-</div>;
+        }
+        return (
+          <div>
+            <div className="font-medium text-gray-900 dark:text-white">
+              {row.name || "Unnamed"}
+            </div>
+            {row.company && (
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {row.company}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Contact",
+      accessor: "email",
+      sortable: true,
+      width: "20%",
+      render: (row) => {
+        if (!row) return <div>-</div>;
+        return (
+          <div className="text-sm">
+            <div className="text-gray-900 dark:text-white">
+              {row.email || "-"}
+            </div>
+            <div className="text-gray-600 dark:text-gray-400">
+              {row.phone || "-"}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Category",
+      accessor: "category",
+      sortable: true,
+      width: "15%",
+      render: (row) => {
+        if (!row) return <div>-</div>;
+        return <Badge color="blue">{formatCategory(row.category)}</Badge>;
+      },
+    },
+    {
+      header: "Rating",
+      accessor: "rating",
+      sortable: true,
+      width: "12%",
+      render: (row) => {
+        if (!row) return <div>-</div>;
+        return (
+          <div className="flex items-center gap-1">
+            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {row.rating?.toFixed(1) || "0.0"}
+            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              ({row.totalJobs || 0})
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Status",
+      accessor: "status",
+      sortable: true,
+      width: "12%",
+      render: (row) => {
+        if (!row) return <div>-</div>;
+        return (
+          <Badge color={row.status === "active" ? "green" : "red"}>
+            {row.status === "active" ? "Active" : "Inactive"}
+          </Badge>
+        );
+      },
+    },
+    {
+      header: "Hourly Rate",
+      accessor: "hourlyRate",
+      sortable: true,
+      width: "12%",
+      render: (row) => {
+        if (!row) return <div>-</div>;
+        return (
+          <div className="text-sm text-gray-900 dark:text-white">
+            {row.hourlyRate ? `${row.hourlyRate}/hr` : "-"}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Actions",
+      accessor: "actions",
+      width: "9%",
+      className: "text-center",
+      render: (row) => {
+        if (!row) return <div>-</div>;
+        return (
+          <div className="flex justify-center gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewPartner(row);
+              }}
+              className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
+              title="View Partner"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditPartner(row);
+              }}
+              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+              title="Edit Partner"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                openDeleteModal(row);
+              }}
+              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+              title="Delete Partner"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        );
+      },
+    },
   ];
 
-  const tableData = partners.map((partner) => ({
-    name: partner.name || 'Unnamed',
-    company: partner.company || '-',
-    email: partner.email || '-',
-    phone: partner.phone || '-',
-    type: (
-      <Badge color={getTypeColor(partner.type)} className="capitalize">
-        {partner.type || 'vendor'}
-      </Badge>
-    ),
-    status: (
-      <Badge color={getStatusColor(partner.status)} className="capitalize">
-        {partner.status || 'inactive'}
-      </Badge>
-    ),
-    hourlyRate: partner.hourlyRate ? `$${partner.hourlyRate}` : '-',
-    actions: (
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => handleViewPartner(partner)}
-        >
-          View
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => handleEditPartner(partner)}
-        >
-          Edit
-        </Button>
-        <Button
-          size="sm"
-          variant="danger"
-          onClick={() => handleDeletePartner(partner._id)}
-          disabled={deletingPartner === partner._id}
-          loading={deletingPartner === partner._id}
-        >
-          Delete
-        </Button>
-      </div>
-    )
-  }));
-
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Partners</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Partners
+          </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage your vendors, suppliers, and partner organizations. 
-            {totalCount > 0 && ` Showing ${partners.length} of ${totalCount} partners`}
+            Manage your service partners and vendors.{" "}
+            {hasInitialLoad &&
+              totalCount > 0 &&
+              `Showing ${partners.length} of ${totalCount} partners`}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button 
-            variant="outline" 
-            onClick={handleRefresh} 
-            disabled={loading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button 
-            variant="primary" 
+        {totalCount > 0 && (
+          <Button
+            variant="primary"
             onClick={handleAddPartner}
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
             Add Partner
           </Button>
-        </div>
+        )}
       </div>
 
       {/* Error Message */}
       {error && (
-        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <p className="text-red-800 dark:text-red-200 font-medium">Error Loading Partners</p>
-                <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</p>
-              </div>
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-red-800 dark:text-red-200 font-medium">
+                Error Loading Partners
+              </p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
+                {error}
+              </p>
             </div>
-            <Button onClick={handleRefresh} size="sm" variant="outline">
+            <Button onClick={fetchPartners} size="sm" variant="outline">
               Retry
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Search & Filters */}
-      <Card>
-        <div className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="sm:col-span-1">
+      {hasInitialLoad && !showEmptyState && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
               <Input
+                className="dark:bg-[#1f2937] dark:text-white"
                 icon={Search}
-                placeholder="Search partners by name or company..."
+                placeholder="Search partners by name, email, or company..."
                 value={search}
-                onChange={handleSearchChange}
-                aria-label="Search partners"
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
               />
             </div>
-            <div className="sm:col-span-1">
+            <div className="sm:w-48">
               <Select
+                className="dark:bg-[#1f2937] dark:text-white"
                 icon={Filter}
-                value={type}
-                onChange={handleTypeChange}
-                options={[
-                  { value: 'all', label: 'All Types' },
-                  { value: 'vendor', label: 'Vendor' },
-                  { value: 'supplier', label: 'Supplier' },
-                  { value: 'sponsor', label: 'Sponsor' },
-                  { value: 'contractor', label: 'Contractor' },
-                  { value: 'other', label: 'Other' },
-                ]}
-                aria-label="Filter by type"
+                value={category}
+                onChange={(e) => {
+                  setPage(1);
+                  setCategory(e.target.value);
+                }}
+                options={categoryOptions}
               />
             </div>
-            <div className="sm:col-span-1">
+            <div className="sm:w-40">
               <Select
-                icon={Filter}
+                className="dark:bg-[#1f2937] dark:text-white"
                 value={status}
-                onChange={handleStatusChange}
+                onChange={(e) => {
+                  setPage(1);
+                  setStatus(e.target.value);
+                }}
                 options={[
-                  { value: 'all', label: 'All Status' },
-                  { value: 'active', label: 'Active' },
-                  { value: 'inactive', label: 'Inactive' },
-                  { value: 'pending', label: 'Pending' },
-                  { value: 'suspended', label: 'Suspended' },
+                  { value: "all", label: "All Status" },
+                  { value: "active", label: "Active" },
+                  { value: "inactive", label: "Inactive" },
                 ]}
-                aria-label="Filter by status"
               />
             </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Table Section */}
-      <Card>
-        {loading ? (
-          <div className="text-center py-20">
-            <LoadingSpinner size="medium" />
-            <p className="mt-3 text-gray-600 dark:text-gray-400">Loading partners...</p>
-          </div>
-        ) : partners.length > 0 ? (
-          <>
-            <div className="overflow-x-auto">
-              <Table
-                columns={tableColumns}
-                data={tableData}
-                emptyMessage="No partners found"
-              />
-            </div>
-            
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-6 px-4 pb-4">
-                <Pagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  pageSize={limit}
-                  onPageSizeChange={handleLimitChange}
-                  totalItems={totalCount}
-                />
-              </div>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                onClick={handleClearFilters}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear
+              </Button>
             )}
-          </>
-        ) : (
-          <EmptyState
-            icon={Users}
-            title="No Partners Found"
-            description={
-              search || type !== 'all' || status !== 'all'
-                ? 'Try adjusting your search criteria or filters.'
-                : 'Get started by adding your first partner.'
-            }
-            action={
-              !search && type === 'all' && status === 'all'
-                ? {
-                    label: 'Add First Partner',
-                    onClick: handleAddPartner
-                  }
-                : undefined
-            }
-          />
-        )}
-      </Card>
+          </div>
 
-      {/* View Modal */}
-      {isModalOpen && selectedPartner && (
-        <Modal 
-          isOpen={isModalOpen} 
-          onClose={handleCloseModal} 
-          title="Partner Details"
-          size="lg"
-        >
-          <PartnerDetail 
-            partner={selectedPartner} 
-            onEdit={() => handleEditPartner(selectedPartner)}
-            onDelete={() => handleDeletePartner(selectedPartner._id)}
-          />
-        </Modal>
+          {hasActiveFilters && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <span>Active filters:</span>
+              {search.trim() && (
+                <Badge color="blue">Search: "{search.trim()}"</Badge>
+              )}
+              {category !== "all" && (
+                <Badge color="purple">
+                  Category: {formatCategory(category)}
+                </Badge>
+              )}
+              {status !== "all" && (
+                <Badge color="green">Status: {status}</Badge>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Add/Edit Form */}
+      {/* Loading State */}
+      {loading && !hasInitialLoad && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">
+            Loading partners...
+          </p>
+        </div>
+      )}
+
+      {/* Table Section */}
+      {!loading && hasInitialLoad && partners.length > 0 && (
+        <Table
+          columns={columns}
+          data={partners}
+          loading={loading}
+          emptyMessage="No partners found"
+          striped
+          hoverable
+          pagination={totalPages > 1}
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={limit}
+          totalItems={totalCount}
+          onPageChange={setPage}
+          onPageSizeChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          pageSizeOptions={[10, 25, 50, 100]}
+        />
+      )}
+
+      {/* No Results from Search/Filter */}
+      {showNoResults && (
+        <div className="text-center py-12">
+          <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No partners found
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            No partners match your current search or filter criteria.
+          </p>
+          <Button onClick={handleClearFilters} variant="outline">
+            Clear All Filters
+          </Button>
+        </div>
+      )}
+
+      {/* Empty State - No partners at all */}
+      {showEmptyState && (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <Users className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No partners yet
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Get started by adding your first service partner.
+          </p>
+          <Button onClick={handleAddPartner} variant="primary">
+            <Plus className="h-4 w-4 mr-2" />
+            Add First Partner
+          </Button>
+        </div>
+      )}
+
+      {/* Add/Edit Form Modal */}
       {isFormOpen && (
         <Modal
           isOpen={isFormOpen}
-          onClose={handleCloseModal}
-          title={selectedPartner ? 'Edit Partner' : 'Add New Partner'}
+          onClose={() => {
+            setSelectedPartner(null);
+            setIsFormOpen(false);
+          }}
+          title={selectedPartner ? "Edit Partner" : "Add New Partner"}
           size="lg"
         >
           <PartnerForm
             partner={selectedPartner}
             onSuccess={handleFormSuccess}
-            onCancel={handleCloseModal}
+            onCancel={() => {
+              setSelectedPartner(null);
+              setIsFormOpen(false);
+            }}
           />
         </Modal>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedPartner(null);
+        }}
+        onConfirm={handleDeletePartner}
+        title="Delete Partner"
+        message={`Are you sure you want to delete "${selectedPartner?.name}"? This action cannot be undone and will remove all associated data.`}
+        confirmText="Delete Partner"
+        cancelText="Cancel"
+        variant="danger"
+        loading={deleteLoading}
+      />
     </div>
   );
 };

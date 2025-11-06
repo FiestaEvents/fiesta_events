@@ -5,22 +5,22 @@ import Textarea from "../../components/common/Textarea";
 import Button from "../../components/common/Button";
 import { clientService } from "../../api/index";
 import { useForm, Controller } from "react-hook-form";
-import { 
-  X, 
-  User, 
-  Mail, 
-  Phone, 
-  Building2, 
-  MapPin, 
-  FileText, 
+import {
+  X,
+  User,
+  Mail,
+  Phone,
+  Building2,
+  MapPin,
+  FileText,
   Save,
-  Calendar 
+  Calendar,
 } from "lucide-react";
 
 const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const {
     register,
     handleSubmit,
@@ -138,43 +138,27 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
   // Close modal on escape key
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onCancel?.();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
     };
   }, [isOpen, onCancel]);
 
   if (!isOpen) return null;
 
-  // Loading state
-  if (loading && client?._id) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400 font-medium">
-              Loading client data...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
@@ -189,7 +173,9 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                 {client?._id ? "Edit Client" : "Add New Client"}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {client?._id ? "Update client information" : "Create a new client profile"}
+                {client?._id
+                  ? "Update client information"
+                  : "Create a new client profile"}
               </p>
             </div>
           </div>
@@ -210,15 +196,17 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <p className="text-red-800 dark:text-red-200 font-medium">
-                      {client?._id ? "Error Loading Client" : "Error Creating Client"}
+                      {client?._id
+                        ? "Error Loading Client"
+                        : "Error Creating Client"}
                     </p>
                     <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                       {error}
                     </p>
                   </div>
-                  <Button 
-                    onClick={() => setError(null)} 
-                    size="sm" 
+                  <Button
+                    onClick={() => setError(null)}
+                    size="sm"
                     variant="outline"
                     className="ml-4 flex-shrink-0"
                   >
@@ -357,7 +345,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                   <FileText className="w-5 h-5 text-orange-500" />
                   Notes & Comments
                 </h3>
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-4 ">
                   <Controller
                     name="notes"
                     control={control}
@@ -377,17 +365,17 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
               {/* Form Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Button 
-                  variant="outline" 
-                  onClick={onCancel} 
+                <Button
+                  variant="outline"
+                  onClick={onCancel}
                   type="button"
                   disabled={isSubmitting}
                   className="min-w-24"
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isSubmitting}
                   className="min-w-32 flex items-center gap-2 bg-orange-600 hover:bg-orange-700"
                 >

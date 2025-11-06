@@ -1,23 +1,23 @@
 // src/pages/settings/SettingPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Badge from '../../components/common/Badge';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { venueService, authService } from '../../api/index';
-import { 
-  Building2, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Users, 
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Card from "../../components/common/Card";
+import Button from "../../components/common/Button";
+import Badge from "../../components/common/Badge";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { venueService, authService } from "../../api/index";
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Users,
   DollarSign,
   Clock,
   Settings,
-  CreditCard
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  CreditCard,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const SettingPage = () => {
   const navigate = useNavigate();
@@ -30,19 +30,19 @@ const SettingPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // API service handleResponse returns { venue: {...} }
       const response = await venueService.getMe();
       const venueData = response?.venue || response;
-      
+
       if (venueData) {
         setVenue(venueData);
       } else {
-        setError('No venue found for your account');
+        setError("No venue found for your account");
       }
     } catch (err) {
-      console.error('Error fetching venue:', err);
-      setError(err.message || 'Failed to load venue information');
+      console.error("Error fetching venue:", err);
+      setError(err.message || "Failed to load venue information");
     } finally {
       setLoading(false);
     }
@@ -54,19 +54,19 @@ const SettingPage = () => {
 
   const handleEditVenue = () => {
     // Navigate to dedicated venue settings page
-    navigate('/settings/venue');
+    navigate("/settings/venue");
   };
 
   const handleEditProfile = () => {
-    navigate('/settings/profile');
+    navigate("/settings/profile");
   };
 
   const handleManageTeam = () => {
-    navigate('/team');
+    navigate("/team");
   };
 
   const handleManageSubscription = () => {
-    navigate('/settings/subscription');
+    navigate("/settings/subscription");
   };
 
   if (loading) {
@@ -123,7 +123,7 @@ const SettingPage = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card 
+        <Card
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={handleEditVenue}
         >
@@ -132,13 +132,17 @@ const SettingPage = () => {
               <Building2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">Venue</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Edit details</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Venue
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Edit details
+              </p>
             </div>
           </div>
         </Card>
 
-        <Card 
+        <Card
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={handleEditProfile}
         >
@@ -147,13 +151,17 @@ const SettingPage = () => {
               <Settings className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">Profile</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Your account</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Profile
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Your account
+              </p>
             </div>
           </div>
         </Card>
 
-        <Card 
+        <Card
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={handleManageTeam}
         >
@@ -162,13 +170,17 @@ const SettingPage = () => {
               <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">Team</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Manage users</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Team
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Manage users
+              </p>
             </div>
           </div>
         </Card>
 
-        <Card 
+        <Card
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={handleManageSubscription}
         >
@@ -177,8 +189,12 @@ const SettingPage = () => {
               <CreditCard className="w-6 h-6 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">Subscription</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Billing</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Subscription
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Billing
+              </p>
             </div>
           </div>
         </Card>
@@ -215,8 +231,11 @@ const SettingPage = () => {
                   <span>Address</span>
                 </div>
                 <p className="text-gray-900 dark:text-white">
-                  {venue.address?.street}<br />
-                  {venue.address?.city}, {venue.address?.state} {venue.address?.zipCode}<br />
+                  {venue.address?.street}
+                  <br />
+                  {venue.address?.city}, {venue.address?.state}{" "}
+                  {venue.address?.zipCode}
+                  <br />
                   {venue.address?.country}
                 </p>
               </div>
@@ -227,7 +246,7 @@ const SettingPage = () => {
                   <span>Time Zone</span>
                 </div>
                 <p className="text-gray-900 dark:text-white">
-                  {venue.timeZone || 'UTC'}
+                  {venue.timeZone || "UTC"}
                 </p>
               </div>
             </div>
@@ -240,7 +259,7 @@ const SettingPage = () => {
                   <span>Phone</span>
                 </div>
                 <p className="text-gray-900 dark:text-white">
-                  {venue.contact?.phone || 'Not set'}
+                  {venue.contact?.phone || "Not set"}
                 </p>
               </div>
 
@@ -250,7 +269,7 @@ const SettingPage = () => {
                   <span>Email</span>
                 </div>
                 <p className="text-gray-900 dark:text-white">
-                  {venue.contact?.email || 'Not set'}
+                  {venue.contact?.email || "Not set"}
                 </p>
               </div>
 
@@ -270,7 +289,7 @@ const SettingPage = () => {
                   <span>Base Price</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
-                  ${venue.pricing?.basePrice?.toLocaleString() || '0'}
+                  ${venue.pricing?.basePrice?.toLocaleString() || "0"}
                 </p>
               </div>
             </div>
@@ -321,19 +340,27 @@ const SettingPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Plan</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  Plan
+                </p>
                 <Badge variant="purple" size="lg">
                   {venue.subscription.plan?.toUpperCase()}
                 </Badge>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Status</p>
-                <Badge 
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  Status
+                </p>
+                <Badge
                   variant={
-                    venue.subscription.status === 'active' ? 'success' :
-                    venue.subscription.status === 'pending' ? 'warning' :
-                    venue.subscription.status === 'cancelled' ? 'danger' : 'gray'
+                    venue.subscription.status === "active"
+                      ? "success"
+                      : venue.subscription.status === "pending"
+                        ? "warning"
+                        : venue.subscription.status === "cancelled"
+                          ? "danger"
+                          : "gray"
                   }
                   size="lg"
                 >
@@ -342,12 +369,18 @@ const SettingPage = () => {
               </div>
 
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Amount</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  Amount
+                </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   ${venue.subscription.amount}
                   <span className="text-sm text-gray-500 dark:text-gray-400 font-normal">
-                    /{venue.subscription.plan === 'monthly' ? 'mo' : 
-                      venue.subscription.plan === 'annual' ? 'yr' : ''}
+                    /
+                    {venue.subscription.plan === "monthly"
+                      ? "mo"
+                      : venue.subscription.plan === "annual"
+                        ? "yr"
+                        : ""}
                   </span>
                 </p>
               </div>
@@ -357,16 +390,24 @@ const SettingPage = () => {
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">Start Date: </span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Start Date:{" "}
+                    </span>
                     <span className="text-gray-900 dark:text-white font-medium">
-                      {new Date(venue.subscription.startDate).toLocaleDateString()}
+                      {new Date(
+                        venue.subscription.startDate
+                      ).toLocaleDateString()}
                     </span>
                   </div>
                   {venue.subscription.endDate && (
                     <div>
-                      <span className="text-gray-600 dark:text-gray-400">End Date: </span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        End Date:{" "}
+                      </span>
                       <span className="text-gray-900 dark:text-white font-medium">
-                        {new Date(venue.subscription.endDate).toLocaleDateString()}
+                        {new Date(
+                          venue.subscription.endDate
+                        ).toLocaleDateString()}
                       </span>
                     </div>
                   )}
@@ -387,7 +428,7 @@ const SettingPage = () => {
 
             <div className="space-y-3">
               {Object.entries(venue.operatingHours).map(([day, hours]) => (
-                <div 
+                <div
                   key={day}
                   className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0"
                 >

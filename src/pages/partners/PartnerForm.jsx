@@ -1,223 +1,315 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { partnerService } from '../../api/index';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import Textarea from '../../components/common/Textarea';
-import Select from '../../components/common/Select';
-import Card from '../../components/common/Card';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { ArrowLeft, Save, X, Building, User, MapPin, DollarSign, Star } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { partnerService } from "../../api/index";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import Textarea from "../../components/common/Textarea";
+import Select from "../../components/common/Select";
+import {
+  Save,
+  X,
+  Building2,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  DollarSign,
+  Star,
+  Briefcase,
+  Tag,
+  FileText,
+  ChevronRight,
+  ChevronLeft,
+  Check,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
-const PartnerEdit = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const isEditMode = !!id;
+const PartnerForm = ({ partner, onSuccess, onCancel }) => {
+  const isEditMode = !!partner;
+
+  // Multi-step state
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
 
   // State management
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    type: '',
-    company: '',
-    status: 'active',
-    location: '',
-    services: [],
-    hourlyRate: '',
-    rating: '',
+    name: "",
+    email: "",
+    phone: "",
+    category: "",
+    company: "",
+    status: "active",
+    location: "",
+    specialties: "",
+    hourlyRate: "",
+    rating: "0",
     address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: ''
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
     },
-    notes: ''
+    notes: "",
   });
 
-  const [loading, setLoading] = useState(isEditMode);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Fetch partner data for edit mode
+  // Load partner data for edit mode
   useEffect(() => {
-    const fetchPartner = async () => {
-      if (!isEditMode) return;
+    if (isEditMode && partner) {
+      setFormData({
+        name: partner.name || "",
+        email: partner.email || "",
+        phone: partner.phone || "",
+        category: partner.category || "",
+        company: partner.company || "",
+        status: partner.status || "active",
+        location: partner.location || "",
+        specialties: partner.specialties || "",
+        hourlyRate: partner.hourlyRate || "",
+        rating: partner.rating || "0",
+        address: {
+          street: partner.address?.street || "",
+          city: partner.address?.city || "",
+          state: partner.address?.state || "",
+          zipCode: partner.address?.zipCode || "",
+          country: partner.address?.country || "",
+        },
+        notes: partner.notes || "",
+      });
+    }
+  }, [isEditMode, partner]);
 
-      try {
-        setLoading(true);
-        console.log('🔄 Fetching partner for edit:', id);
-        
-        const response = await partnerService.getById(id);
-        console.log('📋 Partner edit response:', response);
+  // Step configuration
+  const steps = [
+    {
+      number: 1,
+      title: "Basic Info",
+      icon: User,
+      color: "blue",
+    },
+    {
+      number: 2,
+      title: "Professional",
+      icon: Briefcase,
+      color: "purple",
+    },
+    {
+      number: 3,
+      title: "Address",
+      icon: MapPin,
+      color: "green",
+    },
+    {
+      number: 4,
+      title: "Notes",
+      icon: FileText,
+      color: "amber",
+    },
+  ];
 
-        let partnerData = null;
-        
-        // Handle different response structures
-        if (response?.data?.data) {
-          partnerData = response.data.data;
-        } else if (response?.data) {
-          partnerData = response.data;
-        } else if (response) {
-          partnerData = response;
-        }
-
-        if (partnerData) {
-          setFormData({
-            name: partnerData.name || '',
-            email: partnerData.email || '',
-            phone: partnerData.phone || '',
-            type: partnerData.type || partnerData.category || '',
-            company: partnerData.company || '',
-            status: partnerData.status || 'active',
-            location: partnerData.location || '',
-            services: partnerData.services || [],
-            hourlyRate: partnerData.hourlyRate || '',
-            rating: partnerData.rating || '',
-            address: {
-              street: partnerData.address?.street || '',
-              city: partnerData.address?.city || '',
-              state: partnerData.address?.state || '',
-              zipCode: partnerData.address?.zipCode || '',
-              country: partnerData.address?.country || ''
-            },
-            notes: partnerData.notes || ''
-          });
-        }
-      } catch (err) {
-        console.error('❌ Error fetching partner:', err);
-        const errorMessage = err.response?.data?.message || err.message || 'Failed to load partner data';
-        toast.error(errorMessage);
-        navigate('/partners');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPartner();
-  }, [id, isEditMode, navigate]);
-
-  // Form options
-  const typeOptions = [
-    { value: '', label: 'Select Type' },
-    { value: 'vendor', label: 'Vendor' },
-    { value: 'supplier', label: 'Supplier' },
-    { value: 'sponsor', label: 'Sponsor' },
-    { value: 'contractor', label: 'Contractor' },
-    { value: 'catering', label: 'Catering' },
-    { value: 'photography', label: 'Photography' },
-    { value: 'music', label: 'Music' },
-    { value: 'decoration', label: 'Decoration' },
-    { value: 'security', label: 'Security' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'audio_visual', label: 'Audio Visual' },
-    { value: 'floral', label: 'Floral' },
-    { value: 'entertainment', label: 'Entertainment' },
-    { value: 'other', label: 'Other' }
+  // Category options matching schema
+  const categoryOptions = [
+    { value: "", label: "Select Category" },
+    { value: "driver", label: "Driver" },
+    { value: "bakery", label: "Bakery" },
+    { value: "catering", label: "Catering" },
+    { value: "decoration", label: "Decoration" },
+    { value: "photography", label: "Photography" },
+    { value: "music", label: "Music" },
+    { value: "security", label: "Security" },
+    { value: "cleaning", label: "Cleaning" },
+    { value: "audio_visual", label: "Audio/Visual" },
+    { value: "floral", label: "Floral" },
+    { value: "entertainment", label: "Entertainment" },
+    { value: "hairstyling", label: "Hair Styling" },
+    { value: "other", label: "Other" },
   ];
 
   const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'suspended', label: 'Suspended' }
-  ];
-
-  const serviceOptions = [
-    { value: 'wedding_planning', label: 'Wedding Planning' },
-    { value: 'catering', label: 'Catering' },
-    { value: 'photography', label: 'Photography' },
-    { value: 'videography', label: 'Videography' },
-    { value: 'music_dj', label: 'Music/DJ' },
-    { value: 'decoration', label: 'Decoration' },
-    { value: 'floral', label: 'Floral Arrangements' },
-    { value: 'lighting', label: 'Lighting' },
-    { value: 'audio_visual', label: 'Audio Visual' },
-    { value: 'security', label: 'Security' },
-    { value: 'transportation', label: 'Transportation' },
-    { value: 'venue', label: 'Venue' },
-    { value: 'entertainment', label: 'Entertainment' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'other', label: 'Other' }
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
   ];
 
   // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name.startsWith('address.')) {
-      const addressField = name.split('.')[1];
-      setFormData(prev => ({
+
+    if (name.startsWith("address.")) {
+      const addressField = name.split(".")[1];
+      setFormData((prev) => ({
         ...prev,
         address: {
           ...prev.address,
-          [addressField]: value
-        }
+          [addressField]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
-    
+
     // Clear error for this field
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
 
-  const handleServicesChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData(prev => ({
-      ...prev,
-      services: selectedOptions
-    }));
-  };
-
-  const validateForm = () => {
+  const validateStep = (step) => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Partner name is required';
+    if (step === 1) {
+      if (!formData.name.trim()) {
+        newErrors.name = "Partner name is required";
+      }
+      if (!formData.email.trim()) {
+        newErrors.email = "Email is required";
+      } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+        newErrors.email = "Please provide a valid email";
+      }
+      if (!formData.phone.trim()) {
+        newErrors.phone = "Phone number is required";
+      }
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Please provide a valid email';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    }
-
-    if (!formData.type) {
-      newErrors.type = 'Type is required';
-    }
-
-    if (formData.hourlyRate && isNaN(formData.hourlyRate)) {
-      newErrors.hourlyRate = 'Hourly rate must be a number';
-    }
-
-    if (formData.rating && (isNaN(formData.rating) || formData.rating < 0 || formData.rating > 5)) {
-      newErrors.rating = 'Rating must be between 0 and 5';
+    if (step === 2) {
+      if (!formData.category) {
+        newErrors.category = "Category is required";
+      }
+      if (
+        formData.hourlyRate &&
+        (isNaN(formData.hourlyRate) || formData.hourlyRate < 0)
+      ) {
+        newErrors.hourlyRate = "Hourly rate must be a positive number";
+      }
+      if (
+        formData.rating &&
+        (isNaN(formData.rating) || formData.rating < 0 || formData.rating > 5)
+      ) {
+        newErrors.rating = "Rating must be between 0 and 5";
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Validate all required fields (for quick update button)
+  const validateAllRequired = () => {
+    const newErrors = {};
+
+    // Step 1 validations
+    if (!formData.name.trim()) {
+      newErrors.name = "Partner name is required";
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = "Please provide a valid email";
+    }
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    }
+
+    // Step 2 validations
+    if (!formData.category) {
+      newErrors.category = "Category is required";
+    }
+    if (
+      formData.hourlyRate &&
+      (isNaN(formData.hourlyRate) || formData.hourlyRate < 0)
+    ) {
+      newErrors.hourlyRate = "Hourly rate must be a positive number";
+    }
+    if (
+      formData.rating &&
+      (isNaN(formData.rating) || formData.rating < 0 || formData.rating > 5)
+    ) {
+      newErrors.rating = "Rating must be between 0 and 5";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    } else {
+      toast.error("Please fix the errors before proceeding");
+    }
+  };
+
+  const handlePrevious = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleStepClick = (step, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Allow navigation to previous steps or if current step is valid
+    if (step < currentStep || validateStep(currentStep)) {
+      setCurrentStep(step);
+    }
+  };
+
+  // Prevent Enter key from submitting form except on last step
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && currentStep < totalSteps) {
+      e.preventDefault();
+      handleNext(e);
+    }
+  };
+
+  // Quick update handler - validates all required fields and submits
+  const handleQuickUpdate = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!validateAllRequired()) {
+      toast.error("Please fix all required fields before updating");
+      // Jump to first step with errors
+      if (errors.name || errors.email || errors.phone) {
+        setCurrentStep(1);
+      } else if (errors.category || errors.hourlyRate || errors.rating) {
+        setCurrentStep(2);
+      }
+      return;
+    }
+
+    await handleSubmit(e);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      toast.error('Please fix the errors in the form');
+    // For create mode on non-final steps, validate current step only
+    if (!isEditMode && currentStep < totalSteps) {
+      if (!validateStep(currentStep)) {
+        toast.error("Please fix the errors in the form");
+        return;
+      }
+      handleNext(e);
+      return;
+    }
+
+    // For final step or edit mode, validate all
+    if (!validateAllRequired()) {
+      toast.error("Please fix all required fields");
       return;
     }
 
@@ -227,329 +319,441 @@ const PartnerEdit = () => {
       // Prepare data for submission
       const submitData = {
         ...formData,
-        hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined,
-        rating: formData.rating ? parseFloat(formData.rating) : undefined
+        hourlyRate: formData.hourlyRate
+          ? parseFloat(formData.hourlyRate)
+          : undefined,
+        rating: formData.rating ? parseFloat(formData.rating) : 0,
       };
 
-      // Clean up empty address fields
-      if (Object.values(submitData.address).every(val => !val)) {
+      // Clean up empty address
+      const hasAddress = Object.values(submitData.address).some((val) => val);
+      if (!hasAddress) {
         delete submitData.address;
-      } else {
-        // Remove empty address fields
-        Object.keys(submitData.address).forEach(key => {
-          if (!submitData.address[key]) {
-            delete submitData.address[key];
-          }
-        });
       }
 
-      console.log('📤 Submitting partner data:', submitData);
-
-      let response;
       if (isEditMode) {
-        response = await partnerService.update(id, submitData);
-        toast.success('Partner updated successfully');
+        await partnerService.update(partner._id, submitData);
+        toast.success("Partner updated successfully");
       } else {
-        response = await partnerService.create(submitData);
-        toast.success('Partner created successfully');
+        await partnerService.create(submitData);
+        toast.success("Partner created successfully");
       }
 
-      console.log('✅ Partner save response:', response);
-
-      // Navigate to partner detail page
-      const partnerId = isEditMode ? id : response?.data?._id || response?._id;
-      if (partnerId) {
-        navigate(`/partners/${partnerId}`);
-      } else {
-        navigate('/partners');
-      }
-
+      onSuccess?.();
     } catch (err) {
-      console.error('❌ Error saving partner:', err);
-      const errorMessage = err.response?.data?.message || err.message || `Failed to ${isEditMode ? 'update' : 'create'} partner`;
+      console.error("Error saving partner:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        `Failed to ${isEditMode ? "update" : "create"} partner`;
       toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleCancel = () => {
-    if (isEditMode) {
-      navigate(`/partners/${id}`);
-    } else {
-      navigate('/partners');
+  // Render step indicator
+  const renderStepIndicator = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between">
+        {steps.map((step, index) => {
+          const isCompleted = step.number < currentStep;
+          const isCurrent = step.number === currentStep;
+          const StepIcon = step.icon;
+
+          return (
+            <React.Fragment key={step.number}>
+              <button
+                type="button"
+                onClick={(e) => handleStepClick(step.number, e)}
+                className={`flex flex-col items-center gap-2 transition-all ${
+                  isCompleted || isCurrent
+                    ? "cursor-pointer"
+                    : "cursor-not-allowed opacity-50"
+                }`}
+                disabled={!isCompleted && !isCurrent}
+              >
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                    isCompleted
+                      ? "bg-green-600 text-white"
+                      : isCurrent
+                        ? `bg-${step.color}-600 text-white ring-4 ring-${step.color}-200 dark:ring-${step.color}-900`
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-400"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <Check className="w-6 h-6" />
+                  ) : (
+                    <StepIcon className="w-6 h-6" />
+                  )}
+                </div>
+                <div className="text-center">
+                  <div
+                    className={`text-sm font-medium ${
+                      isCompleted || isCurrent
+                        ? "text-gray-900 dark:text-white"
+                        : "text-gray-400 dark:text-gray-500"
+                    }`}
+                  >
+                    {step.title}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Step {step.number} of {totalSteps}
+                  </div>
+                </div>
+              </button>
+              {index < steps.length - 1 && (
+                <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 mx-2 mb-8">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      step.number < currentStep
+                        ? "bg-green-600"
+                        : "bg-transparent"
+                    }`}
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // Render step content
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <User className="w-5 h-5 text-white" />
+              </div>
+              Basic Information
+            </h3>
+
+            <Input
+              className="w-full"
+              label="Partner Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              error={errors.name}
+              required
+              placeholder="Enter partner name"
+              icon={User}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Email Address"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                error={errors.email}
+                required
+                placeholder="partner@example.com"
+                icon={Mail}
+                className="w-full"
+              />
+
+              <Input
+                label="Phone Number"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                error={errors.phone}
+                required
+                placeholder="+1 (555) 000-0000"
+                icon={Phone}
+                className="w-full"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Company Name"
+                name="company"
+                value={formData.company}
+                onChange={handleChange}
+                placeholder="Company name (optional)"
+                icon={Building2}
+                className="w-full"
+              />
+
+              <Select
+                label="Status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                options={statusOptions}
+                className="w-full"
+              />
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="p-2 bg-purple-600 rounded-lg">
+                <Briefcase className="w-5 h-5 text-white" />
+              </div>
+              Professional Details
+            </h3>
+
+            <Select
+              label="Category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              options={categoryOptions}
+              error={errors.category}
+              required
+              icon={Tag}
+              className="w-full"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                placeholder="City, State"
+                icon={MapPin}
+                className="w-full"
+              />
+
+              <Input
+                label="Hourly Rate"
+                name="hourlyRate"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.hourlyRate}
+                onChange={handleChange}
+                error={errors.hourlyRate}
+                placeholder="0.00"
+                icon={DollarSign}
+                className="w-full"
+              />
+            </div>
+
+            <div className="relative">
+              <Input
+                label="Rating (0-5)"
+                name="rating"
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                value={formData.rating}
+                onChange={handleChange}
+                error={errors.rating}
+                placeholder="0.0"
+                icon={Star}
+                className="w-full"
+              />
+              <div className="absolute top-9 right-3 flex items-center gap-1 pointer-events-none">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3 h-3 ${
+                      i < Math.floor(formData.rating)
+                        ? "text-yellow-500 fill-yellow-500"
+                        : "text-gray-300 dark:text-gray-600"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <Textarea
+              label="Specialties"
+              name="specialties"
+              value={formData.specialties}
+              onChange={handleChange}
+              rows={3}
+              placeholder="List partner's specialties and expertise..."
+              maxLength={500}
+              className="w-full dark:bg-gray-800"
+            />
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="p-2 bg-green-600 rounded-lg">
+                <MapPin className="w-5 h-5 text-white" />
+              </div>
+              Address Information
+              <span className="text-sm text-gray-500 dark:text-gray-400 font-normal ml-auto">
+                Optional
+              </span>
+            </h3>
+
+            <Input
+              label="Street Address"
+              name="address.street"
+              value={formData.address.street}
+              onChange={handleChange}
+              placeholder="123 Main Street"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="City"
+                name="address.city"
+                value={formData.address.city}
+                onChange={handleChange}
+                placeholder="New York"
+              />
+
+              <Input
+                label="State/Province"
+                name="address.state"
+                value={formData.address.state}
+                onChange={handleChange}
+                placeholder="NY"
+              />
+
+              <Input
+                label="ZIP/Postal Code"
+                name="address.zipCode"
+                value={formData.address.zipCode}
+                onChange={handleChange}
+                placeholder="10001"
+              />
+
+              <Input
+                label="Country"
+                name="address.country"
+                value={formData.address.country}
+                onChange={handleChange}
+                placeholder="United States"
+              />
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="p-2 bg-amber-600 rounded-lg">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              Additional Notes
+              <span className="text-sm text-gray-500 dark:text-gray-400 font-normal ml-auto">
+                Optional
+              </span>
+            </h3>
+
+            <Textarea
+              label="Notes"
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              rows={6}
+              placeholder="Add any additional notes about this partner..."
+              maxLength={1000}
+              showCount
+            />
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-4">
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={handleKeyDown}
+      className="space-y-6"
+    >
+      {/* Step Indicator */}
+      {renderStepIndicator()}
+
+      {/* Step Content */}
+      <div className="min-h-[400px]">{renderStepContent()}</div>
+
+      {/* Navigation Buttons */}
+      <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div>
+          {currentStep > 1 && (
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancel}
-              icon={ArrowLeft}
+              type="button"
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={saving}
             >
-              Back to Partners
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Previous
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {isEditMode ? 'Edit Partner' : 'New Partner'}
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {isEditMode 
-                  ? 'Update partner information and details'
-                  : 'Add a new partner to your network'
-                }
-              </p>
-            </div>
-          </div>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-purple-600" />
-                Basic Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  label="Partner Name *"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  error={errors.name}
-                  required
-                  placeholder="Enter partner name"
-                />
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={saving}
+          >
+            <X className="w-4 h-4 mr-2" />
+            Cancel
+          </Button>
 
-                <Input
-                  label="Email *"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={errors.email}
-                  required
-                  placeholder="partner@example.com"
-                />
+          {/* Quick Update button - only show in edit mode and not on last step */}
+          {isEditMode && currentStep < totalSteps && (
+            <Button
+              type="button"
+              variant="success"
+              onClick={handleQuickUpdate}
+              loading={saving}
+              disabled={saving}
+              //dark mode
+              className="bg-green-500 text-white dark:bg-green-600 dark:hover:bg-green-700"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Update Now
+            </Button>
+          )}
 
-                <Input
-                  label="Phone *"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  error={errors.phone}
-                  required
-                  placeholder="+1 (555) 000-0000"
-                />
-
-                <Select
-                  label="Type *"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  options={typeOptions}
-                  error={errors.type}
-                  required
-                />
-
-                <Input
-                  label="Company"
-                  name="company"
-                  value={formData.company}
-                  onChange={handleChange}
-                  placeholder="Company name (optional)"
-                />
-
-                <Select
-                  label="Status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  options={statusOptions}
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Professional Details */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Building className="w-5 h-5 text-purple-600" />
-                Professional Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  label="Location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="City, State"
-                />
-
-                <Input
-                  label="Hourly Rate"
-                  name="hourlyRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.hourlyRate}
-                  onChange={handleChange}
-                  error={errors.hourlyRate}
-                  placeholder="0.00"
-                  prefix="$"
-                />
-
-                <Input
-                  label="Rating"
-                  name="rating"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  value={formData.rating}
-                  onChange={handleChange}
-                  error={errors.rating}
-                  placeholder="0.0 - 5.0"
-                />
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Services
-                  </label>
-                  <select
-                    multiple
-                    value={formData.services}
-                    onChange={handleServicesChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white min-h-[100px]"
-                  >
-                    {serviceOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Hold Ctrl/Cmd to select multiple services
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Address Information */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-purple-600" />
-                Address Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <Input
-                    label="Street Address"
-                    name="address.street"
-                    value={formData.address.street}
-                    onChange={handleChange}
-                    placeholder="123 Main St"
-                  />
-                </div>
-
-                <Input
-                  label="City"
-                  name="address.city"
-                  value={formData.address.city}
-                  onChange={handleChange}
-                  placeholder="New York"
-                />
-
-                <Input
-                  label="State/Province"
-                    name="address.state"
-                    value={formData.address.state}
-                    onChange={handleChange}
-                    placeholder="NY"
-                  />
-
-                  <Input
-                    label="ZIP/Postal Code"
-                    name="address.zipCode"
-                    value={formData.address.zipCode}
-                    onChange={handleChange}
-                    placeholder="10001"
-                  />
-
-                  <Input
-                    label="Country"
-                    name="address.country"
-                    value={formData.address.country}
-                    onChange={handleChange}
-                    placeholder="United States"
-                  />
-                </div>
-              </div>
-            </Card>
-
-            {/* Additional Information */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Additional Information
-                </h3>
-                <Textarea
-                  label="Notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={5}
-                  placeholder="Add any additional notes about this partner..."
-                  maxLength={1000}
-                  showCount
-                />
-              </div>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex items-center justify-end space-x-4 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                icon={X}
-                disabled={saving}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                icon={Save}
-                loading={saving}
-                disabled={saving}
-              >
-                {isEditMode ? 'Update Partner' : 'Create Partner'}
-              </Button>
-            </div>
-          </form>
+          {currentStep < totalSteps ? (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleNext}
+              disabled={saving}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              variant="primary"
+              loading={saving}
+              disabled={saving}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isEditMode ? "Update Partner" : "Create Partner"}
+            </Button>
+          )}
         </div>
       </div>
-    );
-  };
+    </form>
+  );
+};
 
-  export default PartnerEdit;
+export default PartnerForm;

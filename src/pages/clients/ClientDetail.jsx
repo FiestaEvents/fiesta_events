@@ -17,49 +17,57 @@ import {
   AlertCircle,
   ArrowLeft,
   ExternalLink,
-  Download,
   Plus,
-  Eye,
   RefreshCw,
 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { clientService } from '../../api/index';
-import { toast } from 'react-hot-toast';
+import { clientService } from "../../api/index";
+import { toast } from "react-hot-toast";
+import Modal, { ConfirmModal } from "../../components/common/Modal";
+import ClientForm from "./ClientForm";
 
 const ClientDetail = () => {
   const navigate = useNavigate();
-  const { clientId } = useParams();
+  const { id } = useParams();
   const location = useLocation();
-  
+
   const [client, setClient] = useState(location.state?.client || null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(!location.state?.client);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("events");
 
+  // Modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   useEffect(() => {
     // If client data wasn't passed via state, fetch it from API
-    if (!client && clientId) {
+    if (!client && id) {
       fetchClientData();
     }
-  }, [clientId, client]);
+  }, [id, client]);
 
   // Add this separate useEffect for events
   useEffect(() => {
-    if (clientId && activeTab === "events") {
+    if (id && activeTab === "events") {
       fetchClientEvents();
     }
-  }, [clientId, activeTab]);
+  }, [id, activeTab]);
 
   const fetchClientData = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const clientData = await clientService.getById(clientId);
+
+      const clientData = await clientService.getById(id);
       setClient(clientData?.data || clientData);
     } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || "Failed to load client data";
+      const errorMessage =
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to load client data";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -70,7 +78,7 @@ const ClientDetail = () => {
   const fetchClientEvents = async () => {
     try {
       setLoading(true);
-      const eventsData = await clientService.getEvents(clientId);
+      const eventsData = await clientService.getEvents(id);
       setEvents(eventsData?.data || eventsData || []);
     } catch (err) {
       console.error("Failed to load client events:", err);
@@ -86,58 +94,60 @@ const ClientDetail = () => {
   };
 
   const handleEditClient = () => {
-    // Add validation to ensure clientId is available
-    if (!clientId) {
+    console.log("id", id);
+    if (!id) {
       console.error("Client ID is undefined");
       toast.error("Cannot edit client: Client ID not found");
       return;
     }
 
-    console.log("Editing client with ID:", clientId); // Debug log
-    
-    navigate(`/clients/${clientId}/edit/`, {
-      state: { 
-        client: client || { _id: clientId }, // Ensure we have at least the ID
-        modal: true 
-      }
-    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditModalOpen(false);
+    fetchClientData(); // Refresh client data after edit
+    toast.success("Client updated successfully");
   };
 
   const handleDeleteClient = async () => {
-    if (!clientId) {
+    if (!id) {
       toast.error("Cannot delete client: Client ID not found");
       return;
     }
 
-    if (window.confirm("Are you sure you want to delete this client? This action cannot be undone.")) {
-      try {
-        await clientService.delete(clientId);
-        toast.success("Client deleted successfully");
-        navigate("/clients");
-      } catch (err) {
-        const errorMessage = err.response?.data?.error || err.message || "Failed to delete client";
-        toast.error(errorMessage);
-      }
+    try {
+      setDeleteLoading(true);
+      await clientService.delete(id);
+      toast.success("Client deleted successfully");
+      setIsDeleteModalOpen(false);
+      navigate("/clients");
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.error || err.message || "Failed to delete client";
+      toast.error(errorMessage);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
   const handleCreateEvent = () => {
-    if (!clientId) {
+    if (!id) {
       toast.error("Cannot create event: Client ID not found");
       return;
     }
 
-    navigate("/events/new", { 
-      state: { 
+    navigate("/events/new", {
+      state: {
         prefillClient: {
-          _id: clientId,
+          _id: id,
           name: client?.name,
           email: client?.email,
-          phone: client?.phone
+          phone: client?.phone,
         },
-        returnUrl: `/clients/${clientId}`,
-        onEventCreated: refreshEvents
-      }
+        returnUrl: `/clients/${id}`,
+        onEventCreated: refreshEvents,
+      },
     });
   };
 
@@ -146,20 +156,20 @@ const ClientDetail = () => {
       toast.error("Please select an event first");
       return;
     }
-    
-    if (!clientId) {
+
+    if (!id) {
       toast.error("Cannot record payment: Client ID not found");
       return;
     }
 
-    navigate(`/payments/new`, { 
-      state: { 
+    navigate(`/payments/new`, {
+      state: {
         prefillEvent: {
           _id: eventId,
-          clientId: clientId,
-          clientName: client?.name
-        }
-      }
+          id: id,
+          clientName: client?.name,
+        },
+      },
     });
   };
 
@@ -201,23 +211,34 @@ const ClientDetail = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      active: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-white",
-      inactive: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-white",
-      pending: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:border-yellow-700 dark:text-white",
-      confirmed: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700 dark:text-white",
-      completed: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-white",
-      cancelled: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-white",
+      active:
+        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-white",
+      inactive:
+        "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-white",
+      pending:
+        "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:border-yellow-700 dark:text-white",
+      confirmed:
+        "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700 dark:text-white",
+      completed:
+        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-white",
+      cancelled:
+        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-white",
       paid: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-white",
-      partial: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-white",
-      overdue: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-white",
+      partial:
+        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-white",
+      overdue:
+        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-white",
     };
-    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
+    return (
+      colors[status] ||
+      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+    );
   };
 
   const calculateStats = () => {
     const totalEvents = events.length;
     const upcomingEvents = events.filter(
-      (e) => new Date(e.startDate) > new Date() && e.status !== 'cancelled'
+      (e) => new Date(e.startDate) > new Date() && e.status !== "cancelled"
     ).length;
     const totalRevenue = events.reduce(
       (sum, e) => sum + (e.pricing?.totalAmount || 0),
@@ -238,18 +259,14 @@ const ClientDetail = () => {
     };
   };
 
-  // Add debug logging to see what's happening
-  useEffect(() => {
-    console.log("ClientDetail mounted with clientId:", clientId);
-    console.log("Current client:", client);
-  }, [clientId, client]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading client details...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Loading client details...
+          </p>
         </div>
       </div>
     );
@@ -290,10 +307,10 @@ const ClientDetail = () => {
   }
 
   const stats = calculateStats();
-
+  console.log("id", id);
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
+      <div className="px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Client Details */}
           <div className="lg:col-span-1">
@@ -311,18 +328,18 @@ const ClientDetail = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={handleEditClient}
+                    onClick={() => handleEditClient()}
                     className="p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition dark:text-gray-400 dark:hover:bg-blue-900 dark:hover:text-white"
                     title="Edit Client"
-                    disabled={!clientId} // Disable if no clientId
+                    disabled={!id}
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={handleDeleteClient}
+                    onClick={() => setIsDeleteModalOpen(true)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition dark:text-red-400 dark:hover:bg-red-900"
                     title="Delete Client"
-                    disabled={!clientId} // Disable if no clientId
+                    disabled={!id}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -484,14 +501,14 @@ const ClientDetail = () => {
                         Event History ({events.length})
                       </h3>
                       <div className="flex items-center gap-2">
-                        <button 
+                        <button
                           onClick={refreshEvents}
                           className="px-3 py-2 flex items-center gap-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
                           title="Refresh Events"
                         >
                           <RefreshCw className="h-4 w-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={handleCreateEvent}
                           className="px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
                         >
@@ -538,28 +555,34 @@ const ClientDetail = () => {
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <DollarSign className="w-4 h-4" />
-                                    {formatCurrency(event.pricing?.totalAmount || 0)}
+                                    {formatCurrency(
+                                      event.pricing?.totalAmount || 0
+                                    )}
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <CreditCard className="w-4 h-4" />
                                     <span
                                       className={`inline-block px-3 py-0.5 rounded-full text-sm border ${getStatusColor(
-                                        event.paymentSummary?.status || 'pending'
+                                        event.paymentSummary?.status ||
+                                          "pending"
                                       )}`}
                                     >
-                                      {getStatusLabel(event.paymentSummary?.status || 'pending')}
+                                      {getStatusLabel(
+                                        event.paymentSummary?.status ||
+                                          "pending"
+                                      )}
                                     </span>
                                   </div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <button 
+                                <button
                                   onClick={() => handleRecordPayment(event._id)}
                                   className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition"
                                 >
                                   Record Payment
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleViewEvent(event._id)}
                                   className="ml-2 text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
                                 >
@@ -580,14 +603,16 @@ const ClientDetail = () => {
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         Payment Overview
                       </h3>
-                      <button 
+                      <button
                         onClick={() => {
                           if (events.length === 0) {
                             toast.error("No events available for payment");
                           } else if (events.length === 1) {
                             handleRecordPayment(events[0]._id);
                           } else {
-                            toast.error("Please select a specific event to record payment");
+                            toast.error(
+                              "Please select a specific event to record payment"
+                            );
                           }
                         }}
                         className="px-4 py-2 flex items-center gap-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition dark:bg-green-700 dark:hover:bg-green-600"
@@ -650,67 +675,88 @@ const ClientDetail = () => {
                       Payment History
                     </h4>
                     <div className="space-y-4">
-                      {events.map((event) => (
-                        <div
-                          key={event._id}
-                          className="border border-gray-200 rounded-lg p-4 dark:border-gray-600"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <h4 className="font-medium text-gray-900 dark:text-white">
-                                {event.title}
-                              </h4>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {formatDate(event.startDate)}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(event.paymentSummary?.status || 'pending')}`}
-                              >
-                                {getStatusLabel(event.paymentSummary?.status || 'pending')}
-                              </span>
-                              <button 
-                                onClick={() => handleRecordPayment(event._id)}
-                                className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition ml-2"
-                              >
-                                Add Payment
-                              </button>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600 dark:text-gray-400">
-                                Total Amount:
-                              </span>
-                              <div className="font-semibold text-gray-900 dark:text-white">
-                                {formatCurrency(event.paymentSummary?.totalAmount || 0)}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600 dark:text-gray-400">Paid:</span>
-                              <div className="font-semibold text-green-600 dark:text-green-400">
-                                {formatCurrency(event.paymentSummary?.paidAmount || 0)}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600 dark:text-gray-400">Balance:</span>
-                              <div className="font-semibold text-orange-600 dark:text-orange-400">
-                                {formatCurrency(
-                                  (event.paymentSummary?.totalAmount || 0) - 
-                                  (event.paymentSummary?.paidAmount || 0)
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          {event.paymentSummary?.status === "paid" && (
-                            <div className="mt-3 flex items-center gap-2 text-green-600 text-sm dark:text-green-400">
-                              <CheckCircle2 className="w-4 h-4" />
-                              Fully Paid
-                            </div>
-                          )}
+                      {events.length === 0 ? (
+                        <div className="text-center py-12">
+                          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-600 dark:text-gray-400">
+                            No payment history found for this client
+                          </p>
                         </div>
-                      ))}
+                      ) : (
+                        events.map((event) => (
+                          <div
+                            key={event._id}
+                            className="border border-gray-200 rounded-lg p-4 dark:border-gray-600"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h4 className="font-medium text-gray-900 dark:text-white">
+                                  {event.title}
+                                </h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {formatDate(event.startDate)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                                    event.paymentSummary?.status || "pending"
+                                  )}`}
+                                >
+                                  {getStatusLabel(
+                                    event.paymentSummary?.status || "pending"
+                                  )}
+                                </span>
+                                <button
+                                  onClick={() => handleRecordPayment(event._id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition ml-2"
+                                >
+                                  Add Payment
+                                </button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  Total Amount:
+                                </span>
+                                <div className="font-semibold text-gray-900 dark:text-white">
+                                  {formatCurrency(
+                                    event.paymentSummary?.totalAmount || 0
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  Paid:
+                                </span>
+                                <div className="font-semibold text-green-600 dark:text-green-400">
+                                  {formatCurrency(
+                                    event.paymentSummary?.paidAmount || 0
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  Balance:
+                                </span>
+                                <div className="font-semibold text-orange-600 dark:text-orange-400">
+                                  {formatCurrency(
+                                    (event.paymentSummary?.totalAmount || 0) -
+                                      (event.paymentSummary?.paidAmount || 0)
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {event.paymentSummary?.status === "paid" && (
+                              <div className="mt-3 flex items-center gap-2 text-green-600 text-sm dark:text-green-400">
+                                <CheckCircle2 className="w-4 h-4" />
+                                Fully Paid
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}
@@ -733,6 +779,33 @@ const ClientDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Client Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Client"
+        size="lg"
+      >
+        <ClientForm
+          client={client}
+          onSuccess={handleEditSuccess}
+          onCancel={() => setIsEditModalOpen(false)}
+        />
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteClient}
+        title="Delete Client"
+        message={`Are you sure you want to delete "${client?.name}"? This action cannot be undone and will remove all associated data.`}
+        confirmText="Delete Client"
+        cancelText="Cancel"
+        variant="danger"
+        loading={deleteLoading}
+      />
     </div>
   );
 };
