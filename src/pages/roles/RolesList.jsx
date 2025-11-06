@@ -1,23 +1,30 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { usePaginationList, useApiMutation } from '../../hooks/useApi';
-import { roleService } from '../../api/index';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import Badge from '../../components/common/Badge';
-import Table from '../../components/common/Table';
-import Modal from '../../components/common/Modal';
-import Card from '../../components/common/Card';
-import EmptyState from '../../components/common/EmptyState';
-import { 
-  Shield, Plus, Search, Eye, Edit, Trash2,
-  Users, Key, AlertCircle
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { usePaginationList, useApiMutation } from "../../hooks/useApi";
+import { roleService } from "../../api/index";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import Badge from "../../components/common/Badge";
+import Table from "../../components/common/Table";
+import Modal from "../../components/common/Modal";
+import Card from "../../components/common/Card";
+import EmptyState from "../../components/common/EmptyState";
+import {
+  Shield,
+  Plus,
+  Search,
+  Eye,
+  Edit,
+  Trash2,
+  Users,
+  Key,
+  AlertCircle,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const RolesPage = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
 
@@ -26,12 +33,13 @@ const RolesPage = () => {
     loading,
     pagination,
     setPage,
-    refetch
+    refetch,
   } = usePaginationList(
-    (params) => roleService.getAll({
-      ...params,
-      search: searchTerm
-    }),
+    (params) =>
+      roleService.getAll({
+        ...params,
+        search: searchTerm,
+      }),
     [searchTerm]
   );
 
@@ -41,51 +49,53 @@ const RolesPage = () => {
     if (!selectedRole) return;
 
     if (selectedRole.isSystemRole) {
-      toast.error('Cannot delete system roles');
+      toast.error("Cannot delete system roles");
       return;
     }
 
     try {
       await deleteMutation.mutate(selectedRole._id);
-      toast.success('Role deleted successfully');
+      toast.success("Role deleted successfully");
       setShowDeleteModal(false);
       setSelectedRole(null);
       refetch();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete role');
+      toast.error(error.response?.data?.message || "Failed to delete role");
     }
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(date).toLocaleDateString("tn-TN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const columns = [
     {
-      key: 'name',
-      label: 'Role Name',
+      key: "name",
+      label: "Role Name",
       sortable: true,
       render: (role) => (
         <div>
           <div className="flex items-center gap-2">
             <span className="font-medium text-gray-900">{role.name}</span>
             {role.isSystemRole && (
-              <Badge color="blue" size="sm">System</Badge>
+              <Badge color="blue" size="sm">
+                System
+              </Badge>
             )}
           </div>
           {role.description && (
             <p className="text-sm text-gray-500 mt-1">{role.description}</p>
           )}
         </div>
-      )
+      ),
     },
     {
-      key: 'permissions',
-      label: 'Permissions',
+      key: "permissions",
+      label: "Permissions",
       render: (role) => (
         <div className="flex items-center">
           <Key className="w-4 h-4 text-gray-400 mr-2" />
@@ -93,40 +103,36 @@ const RolesPage = () => {
             {role.permissions?.length || 0} permissions
           </span>
         </div>
-      )
+      ),
     },
     {
-      key: 'level',
-      label: 'Level',
+      key: "level",
+      label: "Level",
       sortable: true,
-      render: (role) => (
-        <Badge color="purple">
-          Level {role.level || 0}
-        </Badge>
-      )
+      render: (role) => <Badge color="purple">Level {role.level || 0}</Badge>,
     },
     {
-      key: 'isActive',
-      label: 'Status',
+      key: "isActive",
+      label: "Status",
       render: (role) => (
-        <Badge color={role.isActive ? 'green' : 'gray'}>
-          {role.isActive ? 'Active' : 'Inactive'}
+        <Badge color={role.isActive ? "green" : "gray"}>
+          {role.isActive ? "Active" : "Inactive"}
         </Badge>
-      )
+      ),
     },
     {
-      key: 'createdAt',
-      label: 'Created',
+      key: "createdAt",
+      label: "Created",
       sortable: true,
       render: (role) => (
         <span className="text-sm text-gray-600">
           {formatDate(role.createdAt)}
         </span>
-      )
+      ),
     },
     {
-      key: 'actions',
-      label: 'Actions',
+      key: "actions",
+      label: "Actions",
       render: (role) => (
         <div className="flex items-center space-x-2">
           <Button
@@ -161,8 +167,8 @@ const RolesPage = () => {
             </>
           )}
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -170,7 +176,9 @@ const RolesPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Roles & Permissions</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Roles & Permissions
+          </h1>
           <p className="text-gray-600 mt-1">
             Manage roles and their associated permissions
           </p>
@@ -178,7 +186,7 @@ const RolesPage = () => {
         <Button
           variant="primary"
           icon={Plus}
-          onClick={() => navigate('/roles/new')}
+          onClick={() => navigate("/roles/new")}
         >
           Create Role
         </Button>
@@ -191,8 +199,10 @@ const RolesPage = () => {
           <div className="text-sm text-blue-800">
             <p className="font-medium">About Roles & Permissions</p>
             <p className="mt-1">
-              Roles define what team members can do in your venue. System roles (Owner, Manager, Staff, Viewer) 
-              cannot be deleted, but you can create custom roles with specific permissions for your team's needs.
+              Roles define what team members can do in your venue. System roles
+              (Owner, Manager, Staff, Viewer) cannot be deleted, but you can
+              create custom roles with specific permissions for your team's
+              needs.
             </p>
           </div>
         </div>
@@ -219,7 +229,7 @@ const RolesPage = () => {
             <div>
               <p className="text-sm text-gray-600">System Roles</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {roles?.filter(r => r.isSystemRole).length || 0}
+                {roles?.filter((r) => r.isSystemRole).length || 0}
               </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -233,7 +243,7 @@ const RolesPage = () => {
             <div>
               <p className="text-sm text-gray-600">Custom Roles</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {roles?.filter(r => !r.isSystemRole).length || 0}
+                {roles?.filter((r) => !r.isSystemRole).length || 0}
               </p>
             </div>
             <div className="p-3 bg-green-100 rounded-lg">
@@ -259,11 +269,7 @@ const RolesPage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
         </div>
       ) : roles?.length > 0 ? (
-        <Table
-          columns={columns}
-          data={roles}
-          loading={loading}
-        />
+        <Table columns={columns} data={roles} loading={loading} />
       ) : (
         <EmptyState
           icon={Shield}
@@ -274,8 +280,8 @@ const RolesPage = () => {
               : "Create custom roles to manage team permissions."
           }
           action={{
-            label: 'Create Role',
-            onClick: () => navigate('/roles/new')
+            label: "Create Role",
+            onClick: () => navigate("/roles/new"),
           }}
         />
       )}
@@ -289,18 +295,17 @@ const RolesPage = () => {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete the role <strong>{selectedRole?.name}</strong>? 
+            Are you sure you want to delete the role{" "}
+            <strong>{selectedRole?.name}</strong>?
           </p>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-sm text-red-800">
-              This action cannot be undone. Team members assigned to this role will need to be reassigned.
+              This action cannot be undone. Team members assigned to this role
+              will need to be reassigned.
             </p>
           </div>
           <div className="flex justify-end space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteModal(false)}
-            >
+            <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
               Cancel
             </Button>
             <Button

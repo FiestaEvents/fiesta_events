@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
-import { useToast } from '../../context/ToastContext.jsx';
-import Button from '../../components/common/Button.jsx';
-import Input from '../../components/common/Input.jsx';
-import { User, Lock, Mail, Phone, Calendar, Shield } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
+import Button from "../../components/common/Button.jsx";
+import Input from "../../components/common/Input.jsx";
+import { User, Lock, Mail, Phone, Calendar, Shield } from "lucide-react";
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState("profile");
   const [profile, setProfile] = useState({
-    name: '',
-    phone: '',
-    avatar: '',
+    name: "",
+    phone: "",
+    avatar: "",
   });
   const [passwords, setPasswords] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,9 +27,9 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       setProfile({
-        name: user.name || '',
-        phone: user.phone || '',
-        avatar: user.avatar || '',
+        name: user.name || "",
+        phone: user.phone || "",
+        avatar: user.avatar || "",
       });
       setLoading(false);
     }
@@ -45,16 +45,16 @@ const Profile = () => {
 
   const handleSave = async () => {
     if (!profile.name.trim()) {
-      showToast('Name is required', 'error');
+      showToast("Name is required", "error");
       return;
     }
 
     setSaving(true);
     try {
       await updateUser(profile);
-      showToast('Profile updated successfully', 'success');
+      showToast("Profile updated successfully", "success");
     } catch (err) {
-      showToast(err.message || 'Failed to update profile', 'error');
+      showToast(err.message || "Failed to update profile", "error");
       console.error(err);
     } finally {
       setSaving(false);
@@ -63,17 +63,17 @@ const Profile = () => {
 
   const handleChangePassword = async () => {
     if (!passwords.currentPassword || !passwords.newPassword) {
-      showToast('Please fill in all password fields', 'error');
+      showToast("Please fill in all password fields", "error");
       return;
     }
 
     if (passwords.newPassword.length < 6) {
-      showToast('New password must be at least 6 characters', 'error');
+      showToast("New password must be at least 6 characters", "error");
       return;
     }
 
     if (passwords.newPassword !== passwords.confirmPassword) {
-      showToast('New passwords do not match', 'error');
+      showToast("New passwords do not match", "error");
       return;
     }
 
@@ -81,14 +81,14 @@ const Profile = () => {
     try {
       // This should call your changePassword API endpoint
       // await changePassword({ currentPassword: passwords.currentPassword, newPassword: passwords.newPassword });
-      showToast('Password changed successfully', 'success');
+      showToast("Password changed successfully", "success");
       setPasswords({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       });
     } catch (err) {
-      showToast(err.message || 'Failed to change password', 'error');
+      showToast(err.message || "Failed to change password", "error");
       console.error(err);
     } finally {
       setChangingPassword(false);
@@ -96,11 +96,11 @@ const Profile = () => {
   };
 
   const formatDate = (date) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("tn-TN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -114,28 +114,30 @@ const Profile = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Profile Settings</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+        Profile Settings
+      </h1>
 
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
         <nav className="flex space-x-8">
           <button
-            onClick={() => setActiveTab('profile')}
+            onClick={() => setActiveTab("profile")}
             className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'profile'
-                ? 'border-orange-600 text-orange-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              activeTab === "profile"
+                ? "border-orange-600 text-orange-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
             }`}
           >
             <User className="inline-block w-4 h-4 mr-2" />
             Profile Information
           </button>
           <button
-            onClick={() => setActiveTab('security')}
+            onClick={() => setActiveTab("security")}
             className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'security'
-                ? 'border-orange-600 text-orange-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              activeTab === "security"
+                ? "border-orange-600 text-orange-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
             }`}
           >
             <Lock className="inline-block w-4 h-4 mr-2" />
@@ -145,10 +147,12 @@ const Profile = () => {
       </div>
 
       {/* Profile Tab */}
-      {activeTab === 'profile' && (
+      {activeTab === "profile" && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Personal Information</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+              Personal Information
+            </h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -170,7 +174,7 @@ const Profile = () => {
                   Email (Read-only)
                 </label>
                 <Input
-                  value={user?.email || ''}
+                  value={user?.email || ""}
                   disabled
                   className="bg-gray-50 dark:bg-gray-900 cursor-not-allowed"
                 />
@@ -211,22 +215,29 @@ const Profile = () => {
                       alt="Avatar preview"
                       className="w-16 h-16 rounded-full object-cover"
                       onError={(e) => {
-                        e.target.style.display = 'none';
+                        e.target.style.display = "none";
                       }}
                     />
                   </div>
                 )}
               </div>
 
-              <Button variant="outline" onClick={handleSave} disabled={saving} className="w-full sm:w-auto ">
-                {saving ? 'Saving...' : 'Save Changes'}
+              <Button
+                variant="outline"
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full sm:w-auto "
+              >
+                {saving ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>
 
           {/* Account Info */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Account Information</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+              Account Information
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -234,7 +245,7 @@ const Profile = () => {
                   Role
                 </p>
                 <p className="text-base font-medium text-gray-900 dark:text-white capitalize">
-                  {user?.roleType || 'N/A'}
+                  {user?.roleType || "N/A"}
                 </p>
               </div>
               <div>
@@ -256,15 +267,17 @@ const Profile = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Status
+                </p>
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     user?.isActive
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                   }`}
                 >
-                  {user?.isActive ? 'Active' : 'Inactive'}
+                  {user?.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
             </div>
@@ -273,9 +286,11 @@ const Profile = () => {
       )}
 
       {/* Security Tab */}
-      {activeTab === 'security' && (
+      {activeTab === "security" && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Change Password</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+            Change Password
+          </h2>
           <div className="space-y-4 max-w-md">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -320,8 +335,13 @@ const Profile = () => {
             </div>
 
             <div className="pt-2">
-              <Button variant="outline" onClick={handleChangePassword} disabled={changingPassword} className="w-full sm:w-auto">
-                {changingPassword ? 'Changing Password...' : 'Change Password'}
+              <Button
+                variant="outline"
+                onClick={handleChangePassword}
+                disabled={changingPassword}
+                className="w-full sm:w-auto"
+              >
+                {changingPassword ? "Changing Password..." : "Change Password"}
               </Button>
             </div>
 

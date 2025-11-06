@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { financeService } from '../../api/index';
-import Button from '../../components/common/Button';
-import Card from '../../components/common/Card';
-import Select from '../../components/common/Select';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useState, useEffect } from "react";
+import { financeService } from "../../api/index";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import Select from "../../components/common/Select";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   TrendingUp,
   TrendingDown,
@@ -13,13 +13,13 @@ import {
   RefreshCw,
   Target,
   Activity,
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const Analytics = () => {
-  const [period, setPeriod] = useState('month');
+  const [period, setPeriod] = useState("month");
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [analyticsData, setAnalyticsData] = useState({
     summary: null,
     profitLoss: null,
@@ -36,9 +36,9 @@ const Analytics = () => {
   const fetchAnalytics = async () => {
     try {
       setIsLoading(true);
-      
+
       const dateRange = getDateRange(period);
-      
+
       const [
         summaryRes,
         profitLossRes,
@@ -52,7 +52,7 @@ const Analytics = () => {
         financeService.getTrends({ months: 12 }),
         financeService.getExpensesBreakdown(dateRange),
         financeService.getIncomeBreakdown(dateRange),
-        financeService.getCashflow({ ...dateRange, groupBy: 'month' }),
+        financeService.getCashflow({ ...dateRange, groupBy: "month" }),
       ]);
 
       setAnalyticsData({
@@ -63,10 +63,9 @@ const Analytics = () => {
         incomeBreakdown: incomeRes.breakdown || [],
         cashflow: cashflowRes.cashFlow || [],
       });
-      
     } catch (error) {
-      console.error('Error fetching analytics:', error);
-      toast.error('Failed to load analytics');
+      console.error("Error fetching analytics:", error);
+      toast.error("Failed to load analytics");
     } finally {
       setIsLoading(false);
     }
@@ -77,16 +76,16 @@ const Analytics = () => {
     let startDate = new Date();
 
     switch (period) {
-      case 'week':
+      case "week":
         startDate.setDate(now.getDate() - 7);
         break;
-      case 'month':
+      case "month":
         startDate.setMonth(now.getMonth() - 1);
         break;
-      case 'quarter':
+      case "quarter":
         startDate.setMonth(now.getMonth() - 3);
         break;
-      case 'year':
+      case "year":
         startDate.setFullYear(now.getFullYear() - 1);
         break;
       default:
@@ -100,9 +99,9 @@ const Analytics = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("tn-TN", {
+      style: "currency",
+      currency: "TND",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount || 0);
@@ -114,32 +113,32 @@ const Analytics = () => {
 
   const keyMetrics = [
     {
-      label: 'Total Revenue',
+      label: "Total Revenue",
       value: formatCurrency(summary.totalIncome || 0),
       icon: TrendingUp,
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      iconColor: 'text-green-600 dark:text-green-400',
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      iconColor: "text-green-600 dark:text-green-400",
     },
     {
-      label: 'Total Expenses',
+      label: "Total Expenses",
       value: formatCurrency(summary.totalExpense || 0),
       icon: TrendingDown,
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
-      iconColor: 'text-red-600 dark:text-red-400',
+      bgColor: "bg-red-50 dark:bg-red-900/20",
+      iconColor: "text-red-600 dark:text-red-400",
     },
     {
-      label: 'Net Profit',
+      label: "Net Profit",
       value: formatCurrency(summary.netProfit || 0),
       icon: DollarSign,
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      iconColor: "text-blue-600 dark:text-blue-400",
     },
     {
-      label: 'Profit Margin',
+      label: "Profit Margin",
       value: `${summary.profitMargin || 0}%`,
       icon: Target,
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      iconColor: 'text-purple-600 dark:text-purple-400',
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      iconColor: "text-purple-600 dark:text-purple-400",
     },
   ];
 
@@ -152,9 +151,10 @@ const Analytics = () => {
   }
 
   const trends = analyticsData.trends || [];
-  const maxTrendValue = trends.length > 0
-    ? Math.max(...trends.map(t => Math.max(t.income, t.expense)))
-    : 1;
+  const maxTrendValue =
+    trends.length > 0
+      ? Math.max(...trends.map((t) => Math.max(t.income, t.expense)))
+      : 1;
 
   return (
     <div className="space-y-6 p-6">
@@ -169,8 +169,8 @@ const Analytics = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Select 
-            value={period} 
+          <Select
+            value={period}
             onChange={(e) => setPeriod(e.target.value)}
             className="min-w-[140px]"
           >
@@ -179,11 +179,7 @@ const Analytics = () => {
             <option value="quarter">This Quarter</option>
             <option value="year">This Year</option>
           </Select>
-          <Button 
-            variant="outline" 
-            icon={RefreshCw} 
-            onClick={fetchAnalytics}
-          >
+          <Button variant="outline" icon={RefreshCw} onClick={fetchAnalytics}>
             Refresh
           </Button>
         </div>
@@ -202,7 +198,9 @@ const Analytics = () => {
                     <Icon className={`w-6 h-6 ${metric.iconColor}`} />
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{metric.label}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {metric.label}
+                </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                   {metric.value}
                 </p>
@@ -222,11 +220,15 @@ const Analytics = () => {
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-green-500" />
-                <span className="text-gray-600 dark:text-gray-400">Revenue</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Revenue
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-red-500" />
-                <span className="text-gray-600 dark:text-gray-400">Expenses</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Expenses
+                </span>
               </div>
             </div>
           </div>
@@ -234,8 +236,10 @@ const Analytics = () => {
           {trends.length > 0 ? (
             <div className="space-y-4">
               {trends.slice(-6).map((item, index) => {
-                const revenueWidth = maxTrendValue > 0 ? (item.income / maxTrendValue) * 100 : 0;
-                const expensesWidth = maxTrendValue > 0 ? (item.expense / maxTrendValue) * 100 : 0;
+                const revenueWidth =
+                  maxTrendValue > 0 ? (item.income / maxTrendValue) * 100 : 0;
+                const expensesWidth =
+                  maxTrendValue > 0 ? (item.expense / maxTrendValue) * 100 : 0;
 
                 return (
                   <div key={index}>
@@ -272,7 +276,9 @@ const Analytics = () => {
           ) : (
             <div className="text-center py-8">
               <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400">No trend data available</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                No trend data available
+              </p>
             </div>
           )}
         </div>
@@ -287,13 +293,14 @@ const Analytics = () => {
               Revenue Sources
             </h3>
 
-            {analyticsData.incomeBreakdown && analyticsData.incomeBreakdown.length > 0 ? (
+            {analyticsData.incomeBreakdown &&
+            analyticsData.incomeBreakdown.length > 0 ? (
               <div className="space-y-4">
                 {analyticsData.incomeBreakdown.map((source, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
-                        {source.category.replace(/_/g, ' ')}
+                        {source.category.replace(/_/g, " ")}
                       </span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
                         {formatCurrency(source.totalAmount || 0)}
@@ -314,7 +321,9 @@ const Analytics = () => {
             ) : (
               <div className="text-center py-8">
                 <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 dark:text-gray-400">No revenue data</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  No revenue data
+                </p>
               </div>
             )}
           </div>
@@ -327,13 +336,14 @@ const Analytics = () => {
               Expense Breakdown
             </h3>
 
-            {analyticsData.expensesBreakdown && analyticsData.expensesBreakdown.length > 0 ? (
+            {analyticsData.expensesBreakdown &&
+            analyticsData.expensesBreakdown.length > 0 ? (
               <div className="space-y-4">
                 {analyticsData.expensesBreakdown.map((category, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
-                        {category.category.replace(/_/g, ' ')}
+                        {category.category.replace(/_/g, " ")}
                       </span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
                         {formatCurrency(category.totalAmount || 0)}
@@ -354,7 +364,9 @@ const Analytics = () => {
             ) : (
               <div className="text-center py-8">
                 <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 dark:text-gray-400">No expense data</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  No expense data
+                </p>
               </div>
             )}
           </div>
@@ -370,7 +382,9 @@ const Analytics = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Gross Profit</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Gross Profit
+              </p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {formatCurrency(profitLoss.profitability?.grossProfit || 0)}
               </p>
@@ -380,7 +394,9 @@ const Analytics = () => {
             </div>
 
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Operating Income</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Operating Income
+              </p>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {formatCurrency(profitLoss.profitability?.operatingIncome || 0)}
               </p>
@@ -390,7 +406,9 @@ const Analytics = () => {
             </div>
 
             <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Income</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Net Income
+              </p>
               <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {formatCurrency(profitLoss.profitability?.netIncome || 0)}
               </p>
@@ -415,7 +433,10 @@ const Analytics = () => {
           {analyticsData.cashflow && analyticsData.cashflow.length > 0 ? (
             <div className="space-y-3">
               {analyticsData.cashflow.slice(-6).map((period, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                >
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {period.period}
@@ -430,16 +451,25 @@ const Analytics = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-lg font-bold ${
-                      period.net >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'
-                    }`}>
+                    <p
+                      className={`text-lg font-bold ${
+                        period.net >= 0
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
                       {formatCurrency(period.net)}
                     </p>
                     {period.growthRate && (
-                      <p className={`text-xs ${
-                        period.growthRate >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {period.growthRate >= 0 ? '+' : ''}{period.growthRate}%
+                      <p
+                        className={`text-xs ${
+                          period.growthRate >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {period.growthRate >= 0 ? "+" : ""}
+                        {period.growthRate}%
                       </p>
                     )}
                   </div>
@@ -449,7 +479,9 @@ const Analytics = () => {
           ) : (
             <div className="text-center py-8">
               <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400">No cash flow data</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                No cash flow data
+              </p>
             </div>
           )}
         </div>

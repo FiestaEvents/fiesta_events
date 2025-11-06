@@ -24,11 +24,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 // ============================================================
 export const useApi = (apiFunction, options = {}) => {
   const {
-    manual = false,           // Don't fetch on mount if true
-    initialParams = [],       // Default params for auto-fetch
-    onSuccess = null,         // Optional success callback
-    onError = null,           // Optional error callback
-    deps = [],                // Dependencies that trigger refetch
+    manual = false, // Don't fetch on mount if true
+    initialParams = [], // Default params for auto-fetch
+    onSuccess = null, // Optional success callback
+    onError = null, // Optional error callback
+    deps = [], // Dependencies that trigger refetch
   } = options;
 
   const [data, setData] = useState(null);
@@ -72,9 +72,9 @@ export const useApi = (apiFunction, options = {}) => {
         if (!mountedRef.current) return;
 
         // Check if the error is an AbortError (e.g., component unmounted)
-        if (err.name === 'AbortError') {
-            console.info("API request was cancelled.");
-            return;
+        if (err.name === "AbortError") {
+          console.info("API request was cancelled.");
+          return;
         }
 
         setError(err);
@@ -84,7 +84,7 @@ export const useApi = (apiFunction, options = {}) => {
           onError(err);
         } else {
           // Log errors only if no specific handler is provided
-          console.error("API Error:", err); 
+          console.error("API Error:", err);
         }
 
         throw err;
@@ -117,16 +117,25 @@ export const usePaginationList = (apiFunction, options = {}) => {
     ...options,
     onSuccess: (result) => {
       // Extract arrays based on response structure
-      if (result?.events) setItems(result.events);
+      // Handle nested structure: { data: { tasks: [...], pagination: {...} } }
+      if (result?.data?.tasks && Array.isArray(result.data.tasks)) {
+        setItems(result.data.tasks);
+        setPagination(result.data.pagination || null);
+      }
+      // Handle direct structure: { tasks: [...], pagination: {...} }
+      else if (result?.events) setItems(result.events);
       else if (result?.clients) setItems(result.clients);
       else if (result?.partners) setItems(result.partners);
       else if (result?.payments) setItems(result.payments);
       else if (result?.tasks) setItems(result.tasks);
-      else if (Array.isArray(result.data)) setItems(result.data); // Handle standard { data: [], pagination: {} }
+      else if (Array.isArray(result.data))
+        setItems(result.data); // Handle standard { data: [], pagination: {} }
       else if (Array.isArray(result)) setItems(result);
 
-      // Handle pagination
-      setPagination(result?.pagination || null);
+      // Handle pagination (if not already set above)
+      if (!result?.data?.pagination) {
+        setPagination(result?.pagination || null);
+      }
 
       if (options.onSuccess) options.onSuccess(result);
     },
@@ -184,9 +193,9 @@ export const useApiMutation = (apiFunction, options = {}) => {
     async (...params) => {
       try {
         const result = await execute(...params);
-        // Mutation hooks usually return { success: true } on resolve, 
+        // Mutation hooks usually return { success: true } on resolve,
         // but it's often more useful to return the result itself.
-        return result; 
+        return result;
       } catch (err) {
         // Since useApi throws the error, we re-throw it here for standard error handling in components.
         throw err;

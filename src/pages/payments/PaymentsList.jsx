@@ -1,20 +1,20 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Card from '../../components/common/Card';
-import Table from '../../components/common/Table';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import Badge from '../../components/common/Badge';
-import Modal from '../../components/common/Modal';
-import Pagination from '../../components/common/Pagination';
-import { paymentService } from '../../api/index';
-import { toast } from 'react-hot-toast';
-import { 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown, 
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import Card from "../../components/common/Card";
+import Table from "../../components/common/Table";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Badge from "../../components/common/Badge";
+import Modal from "../../components/common/Modal";
+import Pagination from "../../components/common/Pagination";
+import { paymentService } from "../../api/index";
+import { toast } from "react-hot-toast";
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
   Clock,
   Plus,
   Search,
@@ -25,36 +25,36 @@ import {
   RefreshCw,
   Download,
   RotateCcw,
-} from 'lucide-react';
+} from "lucide-react";
 
 const PaymentsList = () => {
   const navigate = useNavigate();
-  
+
   // State
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Refund state
   const [refundData, setRefundData] = useState({
-    amount: '',
-    reason: '',
+    amount: "",
+    reason: "",
   });
 
   // Filters
   const [filters, setFilters] = useState({
-    type: '',
-    status: '',
-    method: '',
-    startDate: '',
-    endDate: '',
+    type: "",
+    status: "",
+    method: "",
+    startDate: "",
+    endDate: "",
   });
 
   // Pagination
@@ -68,7 +68,7 @@ const PaymentsList = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {
         search: searchTerm || undefined,
         type: filters.type || undefined,
@@ -81,17 +81,17 @@ const PaymentsList = () => {
       };
 
       const response = await paymentService.getAll(params);
-      
+
       // API service handleResponse returns { payments: [], pagination: {} }
       const paymentsData = response?.payments || [];
       const paginationData = response?.pagination || {};
-      
+
       setPayments(paymentsData);
       setTotalPages(paginationData.totalPages || 1);
       setTotalItems(paginationData.total || paymentsData.length);
     } catch (err) {
-      console.error('Error fetching payments:', err);
-      setError(err.message || 'Failed to load payments. Please try again.');
+      console.error("Error fetching payments:", err);
+      setError(err.message || "Failed to load payments. Please try again.");
       setPayments([]);
     } finally {
       setLoading(false);
@@ -104,7 +104,7 @@ const PaymentsList = () => {
 
   // Handlers
   const handleCreatePayment = () => {
-    navigate('/payments/new');
+    navigate("/payments/new");
   };
 
   const handleEditPayment = (payment) => {
@@ -125,13 +125,13 @@ const PaymentsList = () => {
   const handleDeleteConfirm = async () => {
     try {
       await paymentService.delete(deleteId);
-      toast.success('Payment deleted successfully');
+      toast.success("Payment deleted successfully");
       setIsDeleteModalOpen(false);
       setDeleteId(null);
       fetchPayments();
     } catch (error) {
-      console.error('Error deleting payment:', error);
-      toast.error(error.message || 'Failed to delete payment');
+      console.error("Error deleting payment:", error);
+      toast.error(error.message || "Failed to delete payment");
     }
   };
 
@@ -140,7 +140,7 @@ const PaymentsList = () => {
     setSelectedPayment(payment);
     setRefundData({
       amount: payment.amount.toString(),
-      reason: '',
+      reason: "",
     });
     setIsRefundModalOpen(true);
   };
@@ -148,7 +148,7 @@ const PaymentsList = () => {
   const handleRefundConfirm = async () => {
     try {
       if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
-        toast.error('Please enter a valid refund amount');
+        toast.error("Please enter a valid refund amount");
         return;
       }
 
@@ -156,127 +156,128 @@ const PaymentsList = () => {
         refundAmount: parseFloat(refundData.amount),
         refundReason: refundData.reason,
       });
-      
-      toast.success('Payment refunded successfully');
+
+      toast.success("Payment refunded successfully");
       setIsRefundModalOpen(false);
       setSelectedPayment(null);
-      setRefundData({ amount: '', reason: '' });
+      setRefundData({ amount: "", reason: "" });
       fetchPayments();
     } catch (error) {
-      console.error('Error refunding payment:', error);
-      toast.error(error.message || 'Failed to refund payment');
+      console.error("Error refunding payment:", error);
+      toast.error(error.message || "Failed to refund payment");
     }
   };
 
   const handleExportCSV = () => {
     if (!payments || payments.length === 0) {
-      toast.error('No payments to export');
+      toast.error("No payments to export");
       return;
     }
 
     try {
-      let csvContent = 'Date,Type,Description,Client,Method,Amount,Status,Reference\n';
-      
-      payments.forEach(payment => {
-        const date = payment.paidDate || payment.createdAt || '';
-        const type = payment.type || '';
-        const description = (payment.description || '').replace(/,/g, ' ');
-        const client = getClientName(payment).replace(/,/g, ' ');
-        const method = (payment.method || '').replace(/_/g, ' ');
+      let csvContent =
+        "Date,Type,Description,Client,Method,Amount,Status,Reference\n";
+
+      payments.forEach((payment) => {
+        const date = payment.paidDate || payment.createdAt || "";
+        const type = payment.type || "";
+        const description = (payment.description || "").replace(/,/g, " ");
+        const client = getClientName(payment).replace(/,/g, " ");
+        const method = (payment.method || "").replace(/_/g, " ");
         const amount = payment.amount || 0;
-        const status = payment.status || '';
-        const reference = (payment.reference || '').replace(/,/g, ' ');
-        
+        const status = payment.status || "";
+        const reference = (payment.reference || "").replace(/,/g, " ");
+
         csvContent += `${date},${type},"${description}","${client}","${method}",${amount},${status},"${reference}"\n`;
       });
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `payments-${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `payments-${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
-      toast.success('Payments exported successfully');
+
+      toast.success("Payments exported successfully");
     } catch (error) {
-      console.error('Error exporting payments:', error);
-      toast.error('Failed to export payments');
+      console.error("Error exporting payments:", error);
+      toast.error("Failed to export payments");
     }
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
     setFilters({
-      type: '',
-      status: '',
-      method: '',
-      startDate: '',
-      endDate: '',
+      type: "",
+      status: "",
+      method: "",
+      startDate: "",
+      endDate: "",
     });
-    setSearchTerm('');
+    setSearchTerm("");
     setCurrentPage(1);
   };
 
   // Utility functions
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("tn-TN", {
+      style: "currency",
+      currency: "TND",
     }).format(amount || 0);
   };
 
   const formatDate = (date) => {
-    if (!date) return '—';
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    if (!date) return "—";
+    return new Date(date).toLocaleDateString("tn-TN", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
   const getClientName = (payment) => {
     if (payment.client?.name) return payment.client.name;
     if (payment.event?.clientId?.name) return payment.event.clientId.name;
-    return 'N/A';
+    return "N/A";
   };
 
   const getStatusVariant = (status) => {
-    const statusLower = (status || '').toLowerCase();
+    const statusLower = (status || "").toLowerCase();
     switch (statusLower) {
-      case 'completed':
-      case 'paid':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'failed':
-        return 'danger';
-      case 'refunded':
-        return 'info';
+      case "completed":
+      case "paid":
+        return "success";
+      case "pending":
+        return "warning";
+      case "failed":
+        return "danger";
+      case "refunded":
+        return "info";
       default:
-        return 'gray';
+        return "gray";
     }
   };
 
   // Calculate statistics
   const stats = {
     totalIncome: payments
-      .filter(p => p.type === 'income')
+      .filter((p) => p.type === "income")
       .reduce((sum, p) => sum + (p.amount || 0), 0),
     totalExpenses: payments
-      .filter(p => p.type === 'expense')
+      .filter((p) => p.type === "expense")
       .reduce((sum, p) => sum + (p.amount || 0), 0),
-    completedPayments: payments.filter(p => 
-      ['completed', 'paid'].includes((p.status || '').toLowerCase())
+    completedPayments: payments.filter((p) =>
+      ["completed", "paid"].includes((p.status || "").toLowerCase())
     ).length,
-    pendingPayments: payments.filter(p => 
-      (p.status || '').toLowerCase() === 'pending'
+    pendingPayments: payments.filter(
+      (p) => (p.status || "").toLowerCase() === "pending"
     ).length,
   };
 
@@ -284,22 +285,22 @@ const PaymentsList = () => {
 
   // Table columns
   const columns = [
-    { key: 'type', label: 'Type' },
-    { key: 'description', label: 'Description' },
-    { key: 'client', label: 'Client' },
-    { key: 'date', label: 'Date' },
-    { key: 'method', label: 'Method' },
-    { key: 'amount', label: 'Amount', sortable: true },
-    { key: 'status', label: 'Status' },
-    { key: 'actions', label: 'Actions' },
+    { key: "type", label: "Type" },
+    { key: "description", label: "Description" },
+    { key: "client", label: "Client" },
+    { key: "date", label: "Date" },
+    { key: "method", label: "Method" },
+    { key: "amount", label: "Amount", sortable: true },
+    { key: "status", label: "Status" },
+    { key: "actions", label: "Actions" },
   ];
 
   const tableData = payments.map((payment) => ({
     id: payment._id || payment.id,
     type: (
-      <Badge variant={payment.type === 'income' ? 'success' : 'danger'}>
+      <Badge variant={payment.type === "income" ? "success" : "danger"}>
         <div className="flex items-center gap-1">
-          {payment.type === 'income' ? (
+          {payment.type === "income" ? (
             <TrendingUp className="w-3 h-3" />
           ) : (
             <TrendingDown className="w-3 h-3" />
@@ -311,7 +312,7 @@ const PaymentsList = () => {
     description: (
       <div>
         <div className="font-medium text-gray-900 dark:text-white">
-          {payment.description || 'N/A'}
+          {payment.description || "N/A"}
         </div>
         {payment.reference && (
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -332,21 +333,24 @@ const PaymentsList = () => {
     ),
     method: (
       <span className="text-gray-700 dark:text-gray-300 capitalize">
-        {(payment.method || 'N/A').replace(/_/g, ' ')}
+        {(payment.method || "N/A").replace(/_/g, " ")}
       </span>
     ),
     amount: (
-      <span className={`font-semibold ${
-        payment.type === 'income'
-          ? 'text-green-600 dark:text-green-400'
-          : 'text-red-600 dark:text-red-400'
-      }`}>
-        {payment.type === 'income' ? '+' : '-'}{formatCurrency(payment.amount)}
+      <span
+        className={`font-semibold ${
+          payment.type === "income"
+            ? "text-green-600 dark:text-green-400"
+            : "text-red-600 dark:text-red-400"
+        }`}
+      >
+        {payment.type === "income" ? "+" : "-"}
+        {formatCurrency(payment.amount)}
       </span>
     ),
     status: (
       <Badge variant={getStatusVariant(payment.status)}>
-        {payment.status || 'Unknown'}
+        {payment.status || "Unknown"}
       </Badge>
     ),
     actions: (
@@ -365,16 +369,18 @@ const PaymentsList = () => {
         >
           <Edit className="w-4 h-4" />
         </button>
-        {payment.type === 'income' && 
-         ['completed', 'paid'].includes((payment.status || '').toLowerCase()) && (
-          <button
-            onClick={(e) => handleRefundClick(e, payment)}
-            className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
-            title="Refund Payment"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-        )}
+        {payment.type === "income" &&
+          ["completed", "paid"].includes(
+            (payment.status || "").toLowerCase()
+          ) && (
+            <button
+              onClick={(e) => handleRefundClick(e, payment)}
+              className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+              title="Refund Payment"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          )}
         <button
           onClick={(e) => handleDeleteClick(e, payment)}
           className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -408,26 +414,18 @@ const PaymentsList = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             icon={RefreshCw}
             onClick={fetchPayments}
             loading={loading}
           >
             Refresh
           </Button>
-          <Button 
-            variant="outline"
-            icon={Download}
-            onClick={handleExportCSV}
-          >
+          <Button variant="outline" icon={Download} onClick={handleExportCSV}>
             Export
           </Button>
-          <Button 
-            variant="primary" 
-            icon={Plus}
-            onClick={handleCreatePayment}
-          >
+          <Button variant="primary" icon={Plus} onClick={handleCreatePayment}>
             Add Payment
           </Button>
         </div>
@@ -464,7 +462,7 @@ const PaymentsList = () => {
             </div>
           </div>
         </Card>
-        
+
         <Card>
           <div className="p-6">
             <div className="flex items-center justify-between">
@@ -482,7 +480,7 @@ const PaymentsList = () => {
             </div>
           </div>
         </Card>
-        
+
         <Card>
           <div className="p-6">
             <div className="flex items-center justify-between">
@@ -490,11 +488,13 @@ const PaymentsList = () => {
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Net Amount
                 </div>
-                <div className={`mt-2 text-3xl font-bold ${
-                  stats.netAmount >= 0 
-                    ? 'text-blue-600 dark:text-blue-400' 
-                    : 'text-red-600 dark:text-red-400'
-                }`}>
+                <div
+                  className={`mt-2 text-3xl font-bold ${
+                    stats.netAmount >= 0
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
                   {formatCurrency(stats.netAmount)}
                 </div>
               </div>
@@ -504,7 +504,7 @@ const PaymentsList = () => {
             </div>
           </div>
         </Card>
-        
+
         <Card>
           <div className="p-6">
             <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
@@ -512,13 +512,17 @@ const PaymentsList = () => {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700 dark:text-gray-300">Completed</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Completed
+                </span>
                 <span className="text-xl font-bold text-green-600 dark:text-green-400">
                   {stats.completedPayments}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700 dark:text-gray-300">Pending</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Pending
+                </span>
                 <span className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
                   {stats.pendingPayments}
                 </span>
@@ -555,7 +559,7 @@ const PaymentsList = () => {
               <Select
                 label="Type"
                 value={filters.type}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
+                onChange={(e) => handleFilterChange("type", e.target.value)}
               >
                 <option value="">All Types</option>
                 <option value="income">Income</option>
@@ -565,7 +569,7 @@ const PaymentsList = () => {
               <Select
                 label="Status"
                 value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
+                onChange={(e) => handleFilterChange("status", e.target.value)}
               >
                 <option value="">All Status</option>
                 <option value="pending">Pending</option>
@@ -577,7 +581,7 @@ const PaymentsList = () => {
               <Select
                 label="Method"
                 value={filters.method}
-                onChange={(e) => handleFilterChange('method', e.target.value)}
+                onChange={(e) => handleFilterChange("method", e.target.value)}
               >
                 <option value="">All Methods</option>
                 <option value="cash">Cash</option>
@@ -592,14 +596,16 @@ const PaymentsList = () => {
                 label="Start Date"
                 type="date"
                 value={filters.startDate}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("startDate", e.target.value)
+                }
               />
 
               <Input
                 label="End Date"
                 type="date"
                 value={filters.endDate}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                onChange={(e) => handleFilterChange("endDate", e.target.value)}
                 min={filters.startDate}
               />
 
@@ -643,9 +649,9 @@ const PaymentsList = () => {
             <div className="text-center py-12">
               <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 dark:text-gray-400">
-                {searchTerm || Object.values(filters).some(v => v)
-                  ? 'No payments found matching your search.'
-                  : 'No payments found. Create your first payment to get started.'}
+                {searchTerm || Object.values(filters).some((v) => v)
+                  ? "No payments found matching your search."
+                  : "No payments found. Create your first payment to get started."}
               </p>
             </div>
           )}
@@ -667,45 +673,63 @@ const PaymentsList = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Type</p>
-                <Badge variant={selectedPayment.type === 'income' ? 'success' : 'danger'}>
+                <Badge
+                  variant={
+                    selectedPayment.type === "income" ? "success" : "danger"
+                  }
+                >
                   {selectedPayment.type}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Status
+                </p>
                 <Badge variant={getStatusVariant(selectedPayment.status)}>
                   {selectedPayment.status}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Amount</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Amount
+                </p>
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {formatCurrency(selectedPayment.amount)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Method</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Method
+                </p>
                 <p className="text-gray-900 dark:text-white capitalize">
-                  {(selectedPayment.method || 'N/A').replace(/_/g, ' ')}
+                  {(selectedPayment.method || "N/A").replace(/_/g, " ")}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
                 <p className="text-gray-900 dark:text-white">
-                  {formatDate(selectedPayment.paidDate || selectedPayment.createdAt)}
+                  {formatDate(
+                    selectedPayment.paidDate || selectedPayment.createdAt
+                  )}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Reference</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Reference
+                </p>
                 <p className="text-gray-900 dark:text-white">
-                  {selectedPayment.reference || '—'}
+                  {selectedPayment.reference || "—"}
                 </p>
               </div>
             </div>
             {selectedPayment.description && (
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Description</p>
-                <p className="text-gray-900 dark:text-white">{selectedPayment.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  Description
+                </p>
+                <p className="text-gray-900 dark:text-white">
+                  {selectedPayment.description}
+                </p>
               </div>
             )}
             {selectedPayment.refundAmount > 0 && (
@@ -715,20 +739,26 @@ const PaymentsList = () => {
                 </p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">Amount: </span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Amount:{" "}
+                    </span>
                     <span className="text-gray-900 dark:text-white font-medium">
                       {formatCurrency(selectedPayment.refundAmount)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">Date: </span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Date:{" "}
+                    </span>
                     <span className="text-gray-900 dark:text-white">
                       {formatDate(selectedPayment.refundDate)}
                     </span>
                   </div>
                   {selectedPayment.refundReason && (
                     <div className="col-span-2">
-                      <span className="text-gray-600 dark:text-gray-400">Reason: </span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Reason:{" "}
+                      </span>
                       <span className="text-gray-900 dark:text-white">
                         {selectedPayment.refundReason}
                       </span>
@@ -767,7 +797,7 @@ const PaymentsList = () => {
         onClose={() => {
           setIsRefundModalOpen(false);
           setSelectedPayment(null);
-          setRefundData({ amount: '', reason: '' });
+          setRefundData({ amount: "", reason: "" });
         }}
         title="Refund Payment"
         size="sm"
@@ -778,7 +808,9 @@ const PaymentsList = () => {
               label="Refund Amount"
               type="number"
               value={refundData.amount}
-              onChange={(e) => setRefundData(prev => ({ ...prev, amount: e.target.value }))}
+              onChange={(e) =>
+                setRefundData((prev) => ({ ...prev, amount: e.target.value }))
+              }
               placeholder="0.00"
               min="0"
               max={selectedPayment?.amount}
@@ -787,7 +819,9 @@ const PaymentsList = () => {
             <Input
               label="Reason (Optional)"
               value={refundData.reason}
-              onChange={(e) => setRefundData(prev => ({ ...prev, reason: e.target.value }))}
+              onChange={(e) =>
+                setRefundData((prev) => ({ ...prev, reason: e.target.value }))
+              }
               placeholder="Enter refund reason"
             />
           </div>
@@ -797,15 +831,12 @@ const PaymentsList = () => {
               onClick={() => {
                 setIsRefundModalOpen(false);
                 setSelectedPayment(null);
-                setRefundData({ amount: '', reason: '' });
+                setRefundData({ amount: "", reason: "" });
               }}
             >
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleRefundConfirm}
-            >
+            <Button variant="primary" onClick={handleRefundConfirm}>
               Confirm Refund
             </Button>
           </div>
@@ -824,7 +855,8 @@ const PaymentsList = () => {
       >
         <div className="p-6">
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this payment? This action cannot be undone.
+            Are you sure you want to delete this payment? This action cannot be
+            undone.
           </p>
           <div className="flex justify-end gap-3">
             <Button

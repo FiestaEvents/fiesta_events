@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { paymentService, eventService, clientService } from '../../api/index';
-import { toast } from 'react-hot-toast';
-import { 
-  ArrowLeft, 
-  Save, 
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Card from "../../components/common/Card";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { paymentService, eventService, clientService } from "../../api/index";
+import { toast } from "react-hot-toast";
+import {
+  ArrowLeft,
+  Save,
   DollarSign,
   Calendar,
   CreditCard,
   FileText,
   Users,
-} from 'lucide-react';
+} from "lucide-react";
 
 const PaymentForm = () => {
   const navigate = useNavigate();
@@ -30,16 +30,16 @@ const PaymentForm = () => {
   const [loadingOptions, setLoadingOptions] = useState(true);
 
   const [formData, setFormData] = useState({
-    type: 'income',
-    event: '',
-    client: '',
-    amount: '',
-    method: 'cash',
-    status: 'pending',
-    reference: '',
-    description: '',
-    dueDate: '',
-    paidDate: '',
+    type: "income",
+    event: "",
+    client: "",
+    amount: "",
+    method: "cash",
+    status: "pending",
+    reference: "",
+    description: "",
+    dueDate: "",
+    paidDate: "",
     fees: {
       processingFee: 0,
       platformFee: 0,
@@ -68,16 +68,20 @@ const PaymentForm = () => {
       const payment = response.payment || response;
 
       setFormData({
-        type: payment.type || 'income',
-        event: payment.event?._id || payment.event || '',
-        client: payment.client?._id || payment.client || '',
-        amount: payment.amount?.toString() || '',
-        method: payment.method || 'cash',
-        status: payment.status || 'pending',
-        reference: payment.reference || '',
-        description: payment.description || '',
-        dueDate: payment.dueDate ? new Date(payment.dueDate).toISOString().split('T')[0] : '',
-        paidDate: payment.paidDate ? new Date(payment.paidDate).toISOString().split('T')[0] : '',
+        type: payment.type || "income",
+        event: payment.event?._id || payment.event || "",
+        client: payment.client?._id || payment.client || "",
+        amount: payment.amount?.toString() || "",
+        method: payment.method || "cash",
+        status: payment.status || "pending",
+        reference: payment.reference || "",
+        description: payment.description || "",
+        dueDate: payment.dueDate
+          ? new Date(payment.dueDate).toISOString().split("T")[0]
+          : "",
+        paidDate: payment.paidDate
+          ? new Date(payment.paidDate).toISOString().split("T")[0]
+          : "",
         fees: {
           processingFee: payment.fees?.processingFee || 0,
           platformFee: payment.fees?.platformFee || 0,
@@ -85,9 +89,9 @@ const PaymentForm = () => {
         },
       });
     } catch (error) {
-      console.error('Error fetching payment:', error);
-      toast.error(error.message || 'Failed to load payment');
-      navigate('/payments');
+      console.error("Error fetching payment:", error);
+      toast.error(error.message || "Failed to load payment");
+      navigate("/payments");
     } finally {
       setLoading(false);
     }
@@ -99,14 +103,14 @@ const PaymentForm = () => {
       const [eventsResponse, clientsResponse] = await Promise.all([
         eventService.getAll(),
         clientService.getAll(),
-        console.log('dataaaaa',eventsResponse,clientsResponse)
+        console.log("dataaaaa", eventsResponse, clientsResponse),
       ]);
 
       setEvents(eventsResponse.events || eventsResponse || []);
       setClients(clientsResponse.clients || clientsResponse || []);
     } catch (error) {
-      console.error('Error fetching options:', error);
-      toast.error('Failed to load form options');
+      console.error("Error fetching options:", error);
+      toast.error("Failed to load form options");
     } finally {
       setLoadingOptions(false);
     }
@@ -114,10 +118,10 @@ const PaymentForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name.startsWith('fees.')) {
-      const feeField = name.split('.')[1];
-      setFormData(prev => ({
+
+    if (name.startsWith("fees.")) {
+      const feeField = name.split(".")[1];
+      setFormData((prev) => ({
         ...prev,
         fees: {
           ...prev.fees,
@@ -125,7 +129,7 @@ const PaymentForm = () => {
         },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
       }));
@@ -133,7 +137,7 @@ const PaymentForm = () => {
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -141,15 +145,15 @@ const PaymentForm = () => {
     const newErrors = {};
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Please enter a valid amount';
+      newErrors.amount = "Please enter a valid amount";
     }
 
     if (!formData.method) {
-      newErrors.method = 'Please select a payment method';
+      newErrors.method = "Please select a payment method";
     }
 
     if (!formData.type) {
-      newErrors.type = 'Please select a payment type';
+      newErrors.type = "Please select a payment type";
     }
 
     setErrors(newErrors);
@@ -160,7 +164,7 @@ const PaymentForm = () => {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error('Please fix the errors in the form');
+      toast.error("Please fix the errors in the form");
       return;
     }
 
@@ -187,16 +191,16 @@ const PaymentForm = () => {
 
       if (isEditMode) {
         await paymentService.update(id, paymentData);
-        toast.success('Payment updated successfully');
+        toast.success("Payment updated successfully");
       } else {
         await paymentService.create(paymentData);
-        toast.success('Payment created successfully');
+        toast.success("Payment created successfully");
       }
 
-      navigate('/payments');
+      navigate("/payments");
     } catch (error) {
-      console.error('Error saving payment:', error);
-      toast.error(error.message || 'Failed to save payment');
+      console.error("Error saving payment:", error);
+      toast.error(error.message || "Failed to save payment");
     } finally {
       setSaving(false);
     }
@@ -211,9 +215,9 @@ const PaymentForm = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("tn-TN", {
+      style: "currency",
+      currency: "TND",
     }).format(amount);
   };
 
@@ -231,7 +235,7 @@ const PaymentForm = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/payments')}
+            onClick={() => navigate("/payments")}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -239,10 +243,12 @@ const PaymentForm = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <DollarSign className="w-8 h-8" />
-              {isEditMode ? 'Edit Payment' : 'Add Payment'}
+              {isEditMode ? "Edit Payment" : "Add Payment"}
             </h1>
             <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-              {isEditMode ? 'Update payment information' : 'Record a new payment transaction'}
+              {isEditMode
+                ? "Update payment information"
+                : "Record a new payment transaction"}
             </p>
           </div>
         </div>
@@ -256,7 +262,7 @@ const PaymentForm = () => {
               <FileText className="w-5 h-5" />
               Basic Information
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Select
                 label="Payment Type"
@@ -342,7 +348,7 @@ const PaymentForm = () => {
               <Users className="w-5 h-5" />
               Related Information
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Select
                 label="Related Event (Optional)"
@@ -353,7 +359,10 @@ const PaymentForm = () => {
               >
                 <option value="">Select an event</option>
                 {events.map((event) => (
-                  <option key={event._id || event.id} value={event._id || event.id}>
+                  <option
+                    key={event._id || event.id}
+                    value={event._id || event.id}
+                  >
                     {event.title}
                   </option>
                 ))}
@@ -368,7 +377,10 @@ const PaymentForm = () => {
               >
                 <option value="">Select a client</option>
                 {clients.map((client) => (
-                  <option key={client._id || client.id} value={client._id || client.id}>
+                  <option
+                    key={client._id || client.id}
+                    value={client._id || client.id}
+                  >
                     {client.name}
                   </option>
                 ))}
@@ -384,7 +396,7 @@ const PaymentForm = () => {
               <Calendar className="w-5 h-5" />
               Payment Dates
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label="Due Date"
@@ -411,7 +423,7 @@ const PaymentForm = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Fees & Charges
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Input
                 label="Processing Fee"
@@ -452,13 +464,17 @@ const PaymentForm = () => {
               <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Total Amount
+                    </p>
                     <p className="text-lg font-semibold text-gray-900 dark:text-white">
                       {formatCurrency(parseFloat(formData.amount) || 0)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Net Amount</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Net Amount
+                    </p>
                     <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                       {formatCurrency(calculateNetAmount())}
                     </p>
@@ -476,7 +492,7 @@ const PaymentForm = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/payments')}
+                onClick={() => navigate("/payments")}
                 disabled={saving}
               >
                 Cancel
@@ -487,7 +503,7 @@ const PaymentForm = () => {
                 icon={Save}
                 loading={saving}
               >
-                {isEditMode ? 'Update Payment' : 'Create Payment'}
+                {isEditMode ? "Update Payment" : "Create Payment"}
               </Button>
             </div>
           </div>

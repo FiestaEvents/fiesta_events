@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import {
@@ -17,11 +17,10 @@ import {
 
 // Hooks and Services
 import { useApi, useApiMutation } from "../../hooks/useApi";
-import { taskService, teamService } from "../../api/index";
+import { taskService } from "../../api/index";
 
 // Components
 import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import Card from "../../components/common/Card";
@@ -30,7 +29,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Pagination from "../../components/common/Pagination";
 import SearchBar from "../../components/common/SearchBar";
 
-// Constants following documentation patterns
+// Constants
 const TASK_PRIORITIES = {
   LOW: "low",
   MEDIUM: "medium",
@@ -39,6 +38,7 @@ const TASK_PRIORITIES = {
 };
 
 const TASK_STATUSES = {
+  PENDING: "pending",
   TODO: "todo",
   IN_PROGRESS: "in_progress",
   COMPLETED: "completed",
@@ -69,56 +69,75 @@ const Tasks = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Data fetching with proper hook usage
+  // Memoize the API function
+  const fetchTasks = useCallback(() => {
+    return taskService.getAll({
+      search: searchTerm,
+      ...filters,
+      page: currentPage,
+      limit: 50,
+    });
+  }, [searchTerm, filters, currentPage]);
+
+  // Fetch tasks
   const {
-    data: tasksData,
+    data: tasksResponse,
     loading,
+    error,
     refetch,
-  } = useApi(
-    () =>
-      taskService.getAll({
-        search: searchTerm,
-        ...filters,
-        page: currentPage,
-        limit: 50,
-      }),
-    {
-      deps: [searchTerm, filters, currentPage],
-    }
-  );
+  } = useApi(fetchTasks, {
+    deps: [searchTerm, filters, currentPage],
+  });
 
-  // DEBUG: Log the actual task data structure
-  React.useEffect(() => {
-    if (tasksData?.tasks) {
-      console.log("🔍 ACTUAL TASK DATA STRUCTURE:", tasksData.tasks);
-      console.log("🔍 First task sample:", tasksData.tasks[0]);
-      console.log(
-        "🔍 All tasks statuses:",
-        tasksData.tasks.map((t) => ({
-          id: t._id || t.id,
-          title: t.title,
-          status: t.status,
-          priority: t.priority,
-        }))
-      );
-    } else {
-      console.log("📋 No tasks data available");
-    }
-  }, [tasksData]);
-
-  // FIXED: Extract tasks from the correct nested structure
+  // Extract tasks and pagination from API response
+  // API returns: { success, data: { tasks: [...], pagination: {...} } }
   const tasks = useMemo(() => {
-    if (!tasksData) return [];
-    if (Array.isArray(tasksData.tasks)) return tasksData.tasks;
-    if (Array.isArray(tasksData.data)) return tasksData.data;
-    return [];
-  }, [tasksData]);
+    if (!tasksResponse) return [];
 
-  // FIXED: Extract pagination from the correct structure
-  const extractedPagination = useMemo(() => {
-    if (!tasksData) return null;
-    return tasksData?.pagination || null;
-  }, [tasksData]);
+    // Handle nested structure: { success, data: { tasks: [...] } }
+    if (Array.isArray(tasksResponse?.data?.tasks)) {
+      return tasksResponse.data.tasks;
+    }
+    // Handle direct tasks array: { tasks: [...] }
+    if (Array.isArray(tasksResponse?.tasks)) {
+      return tasksResponse.tasks;
+    }
+    // Handle data as array: { data: [...] }
+    if (Array.isArray(tasksResponse?.data)) {
+      return tasksResponse.data;
+    }
+    // Handle direct array
+    if (Array.isArray(tasksResponse)) {
+      return tasksResponse;
+    }
+
+    return [];
+  }, [tasksResponse]);
+
+  const pagination = useMemo(() => {
+    if (!tasksResponse) return null;
+
+    // Extract pagination from response
+    if (tasksResponse?.data?.pagination) {
+      return tasksResponse.data.pagination;
+    }
+    if (tasksResponse?.pagination) {
+      return tasksResponse.pagination;
+    }
+
+    return null;
+  }, [tasksResponse]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("📊 Tasks data:", {
+      tasksCount: tasks.length,
+      loading,
+      error,
+      pagination,
+      rawResponse: tasksResponse,
+    });
+  }, [tasks, loading, error, pagination, tasksResponse]);
 
   // Mutations
   const updateMutation = useApiMutation(taskService.update);
@@ -138,6 +157,7 @@ const Tasks = () => {
   const statusOptions = useMemo(
     () => [
       { value: "", label: "All Status" },
+      { value: TASK_STATUSES.PENDING, label: "Pending" },
       { value: TASK_STATUSES.TODO, label: "To Do" },
       { value: TASK_STATUSES.IN_PROGRESS, label: "In Progress" },
       { value: TASK_STATUSES.COMPLETED, label: "Completed" },
@@ -176,6 +196,7 @@ const Tasks = () => {
 
   const getStatusColor = useCallback((status) => {
     const colors = {
+      [TASK_STATUSES.PENDING]: "yellow",
       [TASK_STATUSES.TODO]: "blue",
       [TASK_STATUSES.IN_PROGRESS]: "purple",
       [TASK_STATUSES.COMPLETED]: "green",
@@ -261,13 +282,14 @@ const Tasks = () => {
     [tasks]
   );
 
-  // Statistics - FIXED: Proper status counting
+  // Statistics
   const stats = useMemo(() => {
-    console.log("📊 Calculating stats for tasks:", tasks.length);
-
     const totalTasks = tasks.length;
+    const pendingTasks = tasks.filter(
+      (t) => t.status === TASK_STATUSES.PENDING
+    ).length;
     const todoTasks = tasks.filter(
-      (t) => t.status === TASK_STATUSES.TODO || !t.status
+      (t) => t.status === TASK_STATUSES.TODO
     ).length;
     const inProgressTasks = tasks.filter(
       (t) => t.status === TASK_STATUSES.IN_PROGRESS
@@ -276,78 +298,30 @@ const Tasks = () => {
       (t) => t.status === TASK_STATUSES.COMPLETED
     ).length;
 
-    console.log("📊 Stats calculated:", {
+    return {
       totalTasks,
+      pendingTasks,
       todoTasks,
       inProgressTasks,
       completedTasks,
-    });
-
-    return { totalTasks, todoTasks, inProgressTasks, completedTasks };
+    };
   }, [tasks]);
 
   const hasActiveFilters = useMemo(() => {
     return searchTerm || filters.priority || filters.status || filters.category;
   }, [searchTerm, filters]);
 
-  // Kanban Board Component
-  const KanbanBoard = useCallback(() => {
-    console.log("🎯 Rendering Kanban with tasks:", tasks.length);
-
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {kanbanColumns.map((column) => {
-          const columnTasks = getTasksByStatus(column.status);
-          console.log(`🎯 Column ${column.label}:`, columnTasks.length);
-
-          return (
-            <div
-              key={column.id}
-              className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {column.label}
-                </h3>
-                <Badge variant="default">{columnTasks.length}</Badge>
-              </div>
-
-              <div className="space-y-3 min-h-[200px]">
-                {columnTasks.length > 0 ? (
-                  columnTasks.map((task) => (
-                    <TaskCard
-                      key={task._id || task.id}
-                      task={task}
-                      onStatusChange={handleStatusChange}
-                      onView={() => navigate(`/tasks/${task._id || task.id}`)}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
-                    No tasks in {column.label.toLowerCase()}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }, [kanbanColumns, getTasksByStatus, handleStatusChange, navigate, tasks]);
-
   // Task Card Component
   const TaskCard = useCallback(
     ({ task, onStatusChange, onView }) => {
-      console.log("🎯 Rendering task card:", task.title);
-
       return (
         <Card
           className="p-4 hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-700"
           onClick={onView}
         >
           <div className="space-y-3">
-            <div className="flex items-start justify-between">
-              <h4 className="font-medium text-gray-900 dark:text-white flex-1 pr-2">
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="font-medium text-gray-900 dark:text-white flex-1 line-clamp-2">
                 {task.title || "Untitled Task"}
               </h4>
               <Badge variant={getPriorityColor(task.priority)} size="sm">
@@ -361,23 +335,45 @@ const Tasks = () => {
               </p>
             )}
 
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center text-gray-500 dark:text-gray-400">
-                <Calendar className="w-4 h-4 mr-1" />
-                {formatDate(task.dueDate)}
+            <div className="space-y-2">
+              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                <Calendar className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                <span className="truncate">{formatDate(task.dueDate)}</span>
               </div>
+
               {task.assignedTo && (
-                <div className="flex items-center text-gray-500 dark:text-gray-400">
-                  <User className="w-4 h-4 mr-1" />
-                  {task.assignedTo.name || "Unassigned"}
+                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                  <User className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                  <span className="truncate">
+                    {task.assignedTo.name || "Unassigned"}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Related entities */}
+            <div className="space-y-1">
+              {task.relatedEvent && (
+                <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
+                  📅 {task.relatedEvent.title}
+                </div>
+              )}
+              {task.relatedClient && (
+                <div className="text-xs text-green-600 dark:text-green-400 truncate">
+                  👤 {task.relatedClient.name}
+                </div>
+              )}
+              {task.relatedPartner && (
+                <div className="text-xs text-purple-600 dark:text-purple-400 truncate">
+                  🤝 {task.relatedPartner.name}
                 </div>
               )}
             </div>
 
             {task.subtasks && task.subtasks.length > 0 && (
               <div className="text-xs text-gray-500 dark:text-gray-400">
-                {task.subtasks.filter((st) => st.completed).length}/
-                {task.subtasks.length} subtasks completed
+                ✓ {task.subtasks.filter((st) => st.completed).length}/
+                {task.subtasks.length} subtasks
               </div>
             )}
 
@@ -387,7 +383,7 @@ const Tasks = () => {
                 value={task.status || TASK_STATUSES.TODO}
                 onChange={(e) => {
                   e.stopPropagation();
-                  onStatusChange(task._id || task.id, e.target.value);
+                  onStatusChange(task._id, e.target.value);
                 }}
                 options={statusOptions.filter((opt) => opt.value !== "")}
               />
@@ -409,23 +405,60 @@ const Tasks = () => {
     [getPriorityColor, formatDate, statusOptions]
   );
 
+  // Kanban Board Component
+  const KanbanBoard = useCallback(() => {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {kanbanColumns.map((column) => {
+          const columnTasks = getTasksByStatus(column.status);
+
+          return (
+            <div
+              key={column.id}
+              className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  {column.label}
+                </h3>
+                <Badge variant="default">{columnTasks.length}</Badge>
+              </div>
+
+              <div className="space-y-3 min-h-[200px]">
+                {columnTasks.length > 0 ? (
+                  columnTasks.map((task) => (
+                    <TaskCard
+                      key={task._id}
+                      task={task}
+                      onStatusChange={handleStatusChange}
+                      onView={() => navigate(`/tasks/${task._id}`)}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+                    No tasks in {column.label.toLowerCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }, [kanbanColumns, getTasksByStatus, handleStatusChange, navigate, TaskCard]);
+
   // List View Component
   const ListView = useCallback(() => {
-    console.log("📝 Rendering List view with tasks:", tasks.length);
-
     return (
       <div className="space-y-3">
         {tasks.map((task) => (
-          <Card
-            key={task._id || task.id}
-            className="p-4 bg-white dark:bg-gray-700"
-          >
+          <Card key={task._id} className="p-4 bg-white dark:bg-gray-700">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
                   <h4
                     className="font-medium text-gray-900 dark:text-white cursor-pointer hover:text-orange-600 dark:hover:text-orange-400"
-                    onClick={() => navigate(`/tasks/${task._id || task.id}`)}
+                    onClick={() => navigate(`/tasks/${task._id}`)}
                   >
                     {task.title || "Untitled Task"}
                   </h4>
@@ -435,15 +468,20 @@ const Tasks = () => {
                   <Badge variant={getStatusColor(task.status)} size="sm">
                     {(task.status || TASK_STATUSES.TODO).replace("_", " ")}
                   </Badge>
+                  {task.category && (
+                    <Badge variant="default" size="sm">
+                      {task.category.replace("_", " ")}
+                    </Badge>
+                  )}
                 </div>
 
                 {task.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                     {task.description}
                   </p>
                 )}
 
-                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
+                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 flex-wrap mb-2">
                   <div className="flex items-center">
                     <Calendar className="w-4 h-4 mr-1" />
                     Due: {formatDate(task.dueDate)}
@@ -454,12 +492,40 @@ const Tasks = () => {
                       {task.assignedTo.name || "Unassigned"}
                     </div>
                   )}
-                  {task.category && (
-                    <Badge variant="default" size="sm">
-                      {task.category.replace("_", " ")}
-                    </Badge>
+                  {task.estimatedHours && (
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {task.estimatedHours}h estimated
+                    </div>
                   )}
                 </div>
+
+                {/* Related entities */}
+                <div className="flex items-center gap-3 text-xs flex-wrap">
+                  {task.relatedEvent && (
+                    <span className="text-blue-600 dark:text-blue-400">
+                      📅 Event: {task.relatedEvent.title}
+                    </span>
+                  )}
+                  {task.relatedClient && (
+                    <span className="text-green-600 dark:text-green-400">
+                      👤 Client: {task.relatedClient.name}
+                    </span>
+                  )}
+                  {task.relatedPartner && (
+                    <span className="text-purple-600 dark:text-purple-400">
+                      🤝 Partner: {task.relatedPartner.name}
+                    </span>
+                  )}
+                </div>
+
+                {task.subtasks && task.subtasks.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    Subtasks:{" "}
+                    {task.subtasks.filter((st) => st.completed).length}/
+                    {task.subtasks.length} completed
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center space-x-2 ml-4">
@@ -467,7 +533,7 @@ const Tasks = () => {
                   variant="ghost"
                   size="sm"
                   icon={Eye}
-                  onClick={() => navigate(`/tasks/${task._id || task.id}`)}
+                  onClick={() => navigate(`/tasks/${task._id}`)}
                 >
                   View
                 </Button>
@@ -475,7 +541,7 @@ const Tasks = () => {
                   variant="ghost"
                   size="sm"
                   icon={Edit}
-                  onClick={() => navigate(`/tasks/${task._id || task.id}/edit`)}
+                  onClick={() => navigate(`/tasks/${task._id}/edit`)}
                 >
                   Edit
                 </Button>
@@ -486,13 +552,6 @@ const Tasks = () => {
       </div>
     );
   }, [tasks, getPriorityColor, getStatusColor, formatDate, navigate]);
-
-  console.log("🎯 FINAL - Tasks component rendering with:", {
-    tasksCount: tasks.length,
-    loading,
-    stats,
-    viewMode,
-  });
 
   return (
     <div className="space-y-6 p-6">
@@ -616,12 +675,12 @@ const Tasks = () => {
           {viewMode === "kanban" ? <KanbanBoard /> : <ListView />}
 
           {/* Pagination */}
-          {extractedPagination && extractedPagination.totalPages > 1 && (
+          {pagination && pagination.pages > 1 && (
             <div className="flex justify-center">
               <Pagination
                 currentPage={currentPage}
-                totalPages={extractedPagination.totalPages}
-                totalItems={extractedPagination.total}
+                totalPages={pagination.pages}
+                totalItems={pagination.total}
                 onPageChange={handlePageChange}
               />
             </div>

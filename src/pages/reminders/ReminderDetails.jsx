@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { reminderService } from '../../api/index';
-import Button from '../../components/common/Button';
-import Card from '../../components/common/Card';
-import Badge from '../../components/common/Badge';
-import { ConfirmModal } from '../../components/common/Modal';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { reminderService } from "../../api/index";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import Badge from "../../components/common/Badge";
+import { ConfirmModal } from "../../components/common/Modal";
 import {
   ArrowLeft,
   Edit,
@@ -21,8 +21,8 @@ import {
   Link as LinkIcon,
   AlertCircle,
   FileText,
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const ReminderDetails = () => {
   const { id } = useParams();
@@ -30,7 +30,7 @@ const ReminderDetails = () => {
   const [reminder, setReminder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
     fetchReminder();
@@ -42,8 +42,8 @@ const ReminderDetails = () => {
       const data = await reminderService.getById(id);
       setReminder(data.data);
     } catch (error) {
-      toast.error('Failed to load reminder');
-      navigate('/reminders');
+      toast.error("Failed to load reminder");
+      navigate("/reminders");
     } finally {
       setIsLoading(false);
     }
@@ -52,88 +52,88 @@ const ReminderDetails = () => {
   const handleDelete = async () => {
     try {
       await reminderService.delete(id);
-      toast.success('Reminder deleted successfully');
-      navigate('/reminders');
+      toast.success("Reminder deleted successfully");
+      navigate("/reminders");
     } catch (error) {
-      toast.error('Failed to delete reminder');
+      toast.error("Failed to delete reminder");
     }
   };
 
   const handleComplete = async () => {
     try {
       await reminderService.complete(id);
-      toast.success('Reminder marked as completed');
+      toast.success("Reminder marked as completed");
       fetchReminder();
     } catch (error) {
-      toast.error('Failed to complete reminder');
+      toast.error("Failed to complete reminder");
     }
   };
 
   const handleSnooze = async () => {
     try {
       await reminderService.snooze(id, { hours: 1 });
-      toast.success('Reminder snoozed for 1 hour');
+      toast.success("Reminder snoozed for 1 hour");
       fetchReminder();
     } catch (error) {
-      toast.error('Failed to snooze reminder');
+      toast.error("Failed to snooze reminder");
     }
   };
 
   const handleCancel = async () => {
     try {
       await reminderService.cancel(id);
-      toast.success('Reminder cancelled');
+      toast.success("Reminder cancelled");
       fetchReminder();
     } catch (error) {
-      toast.error('Failed to cancel reminder');
+      toast.error("Failed to cancel reminder");
     }
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      active: 'blue',
-      completed: 'green',
-      snoozed: 'yellow',
-      cancelled: 'gray',
+      active: "blue",
+      completed: "green",
+      snoozed: "yellow",
+      cancelled: "gray",
     };
-    return colors[status] || 'gray';
+    return colors[status] || "gray";
   };
 
   const getPriorityColor = (priority) => {
     const colors = {
-      low: 'gray',
-      medium: 'blue',
-      high: 'orange',
-      urgent: 'red',
+      low: "gray",
+      medium: "blue",
+      high: "orange",
+      urgent: "red",
     };
-    return colors[priority] || 'gray';
+    return colors[priority] || "gray";
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(date).toLocaleDateString("tn-TN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatTime = (time) => {
-    if (!time) return '';
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
+    if (!time) return "";
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString("tn-TN", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
   };
 
   const formatDateTime = (date) => {
-    return new Date(date).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+    return new Date(date).toLocaleString("tn-TN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
   };
@@ -159,9 +159,9 @@ const ReminderDetails = () => {
   if (!reminder) return null;
 
   const tabs = [
-    { id: 'details', label: 'Details', icon: FileText },
-    { id: 'recurrence', label: 'Recurrence', icon: Repeat },
-    { id: 'history', label: 'History', icon: Clock },
+    { id: "details", label: "Details", icon: FileText },
+    { id: "recurrence", label: "Recurrence", icon: Repeat },
+    { id: "history", label: "History", icon: Clock },
   ];
 
   return (
@@ -172,7 +172,7 @@ const ReminderDetails = () => {
           <Button
             variant="ghost"
             icon={ArrowLeft}
-            onClick={() => navigate('/reminders')}
+            onClick={() => navigate("/reminders")}
           />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -186,20 +186,16 @@ const ReminderDetails = () => {
                 {reminder.priority} priority
               </Badge>
               <span className="text-sm text-gray-500 capitalize">
-                {reminder.type.replace('_', ' ')}
+                {reminder.type.replace("_", " ")}
               </span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {reminder.status === 'active' && (
+          {reminder.status === "active" && (
             <>
-              <Button
-                variant="outline"
-                icon={Clock}
-                onClick={handleSnooze}
-              >
+              <Button variant="outline" icon={Clock} onClick={handleSnooze}>
                 Snooze
               </Button>
               <Button
@@ -211,12 +207,8 @@ const ReminderDetails = () => {
               </Button>
             </>
           )}
-          {reminder.status === 'active' && (
-            <Button
-              variant="outline"
-              icon={XCircle}
-              onClick={handleCancel}
-            >
+          {reminder.status === "active" && (
+            <Button variant="outline" icon={XCircle} onClick={handleCancel}>
               Cancel
             </Button>
           )}
@@ -248,8 +240,8 @@ const ReminderDetails = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -261,7 +253,7 @@ const ReminderDetails = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'details' && (
+      {activeTab === "details" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Info */}
           <div className="lg:col-span-2 space-y-6">
@@ -318,7 +310,7 @@ const ReminderDetails = () => {
                         Type
                       </label>
                       <p className="text-gray-900 mt-1 capitalize">
-                        {reminder.type.replace('_', ' ')}
+                        {reminder.type.replace("_", " ")}
                       </p>
                     </div>
 
@@ -363,14 +355,15 @@ const ReminderDetails = () => {
                       >
                         <Icon className="w-5 h-5 text-blue-600" />
                         <span className="text-sm font-medium text-blue-900 capitalize">
-                          {method.replace('_', ' ')}
+                          {method.replace("_", " ")}
                         </span>
                       </div>
                     );
                   })}
                 </div>
 
-                {(!reminder.notificationMethods || reminder.notificationMethods.length === 0) && (
+                {(!reminder.notificationMethods ||
+                  reminder.notificationMethods.length === 0) && (
                   <p className="text-gray-500 text-sm">
                     No notification methods configured
                   </p>
@@ -379,7 +372,10 @@ const ReminderDetails = () => {
             </Card>
 
             {/* Related Items */}
-            {(reminder.relatedEvent || reminder.relatedClient || reminder.relatedTask || reminder.relatedPayment) && (
+            {(reminder.relatedEvent ||
+              reminder.relatedClient ||
+              reminder.relatedTask ||
+              reminder.relatedPayment) && (
               <Card>
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -402,7 +398,9 @@ const ReminderDetails = () => {
                           variant="ghost"
                           size="sm"
                           icon={LinkIcon}
-                          onClick={() => navigate(`/events/${reminder.relatedEvent._id}`)}
+                          onClick={() =>
+                            navigate(`/events/${reminder.relatedEvent._id}`)
+                          }
                         />
                       </div>
                     )}
@@ -422,7 +420,9 @@ const ReminderDetails = () => {
                           variant="ghost"
                           size="sm"
                           icon={LinkIcon}
-                          onClick={() => navigate(`/clients/${reminder.relatedClient._id}`)}
+                          onClick={() =>
+                            navigate(`/clients/${reminder.relatedClient._id}`)
+                          }
                         />
                       </div>
                     )}
@@ -442,7 +442,9 @@ const ReminderDetails = () => {
                           variant="ghost"
                           size="sm"
                           icon={LinkIcon}
-                          onClick={() => navigate(`/tasks/${reminder.relatedTask._id}`)}
+                          onClick={() =>
+                            navigate(`/tasks/${reminder.relatedTask._id}`)
+                          }
                         />
                       </div>
                     )}
@@ -462,7 +464,9 @@ const ReminderDetails = () => {
                           variant="ghost"
                           size="sm"
                           icon={LinkIcon}
-                          onClick={() => navigate(`/payments/${reminder.relatedPayment._id}`)}
+                          onClick={() =>
+                            navigate(`/payments/${reminder.relatedPayment._id}`)
+                          }
                         />
                       </div>
                     )}
@@ -483,15 +487,19 @@ const ReminderDetails = () => {
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Current Status</span>
+                    <span className="text-sm text-gray-600">
+                      Current Status
+                    </span>
                     <Badge color={getStatusColor(reminder.status)}>
                       {reminder.status}
                     </Badge>
                   </div>
 
-                  {reminder.status === 'snoozed' && reminder.snoozeUntil && (
+                  {reminder.status === "snoozed" && reminder.snoozeUntil && (
                     <div>
-                      <span className="text-sm text-gray-600">Snoozed Until</span>
+                      <span className="text-sm text-gray-600">
+                        Snoozed Until
+                      </span>
                       <p className="text-sm font-medium text-gray-900 mt-1">
                         {formatDateTime(reminder.snoozeUntil)}
                       </p>
@@ -500,7 +508,9 @@ const ReminderDetails = () => {
 
                   {reminder.completedAt && (
                     <div>
-                      <span className="text-sm text-gray-600">Completed At</span>
+                      <span className="text-sm text-gray-600">
+                        Completed At
+                      </span>
                       <p className="text-sm font-medium text-gray-900 mt-1">
                         {formatDateTime(reminder.completedAt)}
                       </p>
@@ -509,7 +519,9 @@ const ReminderDetails = () => {
 
                   {reminder.completedBy && (
                     <div>
-                      <span className="text-sm text-gray-600">Completed By</span>
+                      <span className="text-sm text-gray-600">
+                        Completed By
+                      </span>
                       <p className="text-sm font-medium text-gray-900 mt-1">
                         {reminder.completedBy.name}
                       </p>
@@ -529,10 +541,7 @@ const ReminderDetails = () => {
 
                   <div className="space-y-3">
                     {reminder.assignedTo.map((user) => (
-                      <div
-                        key={user._id}
-                        className="flex items-center gap-3"
-                      >
+                      <div key={user._id} className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                           <User className="w-4 h-4 text-blue-600" />
                         </div>
@@ -586,7 +595,7 @@ const ReminderDetails = () => {
         </div>
       )}
 
-      {activeTab === 'recurrence' && (
+      {activeTab === "recurrence" && (
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -610,7 +619,7 @@ const ReminderDetails = () => {
                       Interval
                     </label>
                     <p className="text-gray-900 mt-1">
-                      Every {reminder.recurrence.interval}{' '}
+                      Every {reminder.recurrence.interval}{" "}
                       {reminder.recurrence.frequency}
                     </p>
                   </div>
@@ -627,20 +636,25 @@ const ReminderDetails = () => {
                   </div>
                 )}
 
-                {reminder.recurrence.daysOfWeek && reminder.recurrence.daysOfWeek.length > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Days of Week
-                    </label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {reminder.recurrence.daysOfWeek.map((day) => (
-                        <Badge key={day} color="blue">
-                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]}
-                        </Badge>
-                      ))}
+                {reminder.recurrence.daysOfWeek &&
+                  reminder.recurrence.daysOfWeek.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Days of Week
+                      </label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {reminder.recurrence.daysOfWeek.map((day) => (
+                          <Badge key={day} color="blue">
+                            {
+                              ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+                                day
+                              ]
+                            }
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {reminder.recurrence.dayOfMonth && (
                   <div>
@@ -665,7 +679,7 @@ const ReminderDetails = () => {
         </Card>
       )}
 
-      {activeTab === 'history' && (
+      {activeTab === "history" && (
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">

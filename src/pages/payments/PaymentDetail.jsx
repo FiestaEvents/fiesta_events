@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Badge from '../../components/common/Badge';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import Modal from '../../components/common/Modal';
-import Input from '../../components/common/Input';
-import { paymentService } from '../../api/index';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Card from "../../components/common/Card";
+import Button from "../../components/common/Button";
+import Badge from "../../components/common/Badge";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import Modal from "../../components/common/Modal";
+import Input from "../../components/common/Input";
+import { paymentService } from "../../api/index";
+import { toast } from "react-hot-toast";
 import {
   ArrowLeft,
   Edit,
@@ -25,7 +25,7 @@ import {
   TrendingDown,
   RotateCcw,
   Download,
-} from 'lucide-react';
+} from "lucide-react";
 
 const PaymentDetail = () => {
   const navigate = useNavigate();
@@ -37,8 +37,8 @@ const PaymentDetail = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [refundData, setRefundData] = useState({
-    amount: '',
-    reason: '',
+    amount: "",
+    reason: "",
   });
 
   useEffect(() => {
@@ -51,9 +51,9 @@ const PaymentDetail = () => {
       const response = await paymentService.getById(id);
       setPayment(response.payment || response);
     } catch (error) {
-      console.error('Error fetching payment:', error);
-      toast.error(error.message || 'Failed to load payment');
-      navigate('/payments');
+      console.error("Error fetching payment:", error);
+      toast.error(error.message || "Failed to load payment");
+      navigate("/payments");
     } finally {
       setLoading(false);
     }
@@ -66,23 +66,23 @@ const PaymentDetail = () => {
   const handleDelete = async () => {
     try {
       await paymentService.delete(id);
-      toast.success('Payment deleted successfully');
-      navigate('/payments');
+      toast.success("Payment deleted successfully");
+      navigate("/payments");
     } catch (error) {
-      console.error('Error deleting payment:', error);
-      toast.error(error.message || 'Failed to delete payment');
+      console.error("Error deleting payment:", error);
+      toast.error(error.message || "Failed to delete payment");
     }
   };
 
   const handleRefund = async () => {
     try {
       if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
-        toast.error('Please enter a valid refund amount');
+        toast.error("Please enter a valid refund amount");
         return;
       }
 
       if (parseFloat(refundData.amount) > payment.amount) {
-        toast.error('Refund amount cannot exceed payment amount');
+        toast.error("Refund amount cannot exceed payment amount");
         return;
       }
 
@@ -91,73 +91,73 @@ const PaymentDetail = () => {
         refundReason: refundData.reason,
       });
 
-      toast.success('Payment refunded successfully');
+      toast.success("Payment refunded successfully");
       setIsRefundModalOpen(false);
-      setRefundData({ amount: '', reason: '' });
+      setRefundData({ amount: "", reason: "" });
       fetchPayment(); // Refresh payment data
     } catch (error) {
-      console.error('Error refunding payment:', error);
-      toast.error(error.message || 'Failed to refund payment');
+      console.error("Error refunding payment:", error);
+      toast.error(error.message || "Failed to refund payment");
     }
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("tn-TN", {
+      style: "currency",
+      currency: "TND",
     }).format(amount || 0);
   };
 
   const formatDate = (date) => {
-    if (!date) return '—';
-    return new Date(date).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    if (!date) return "—";
+    return new Date(date).toLocaleDateString("tn-TN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatDateTime = (date) => {
-    if (!date) return '—';
-    return new Date(date).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+    if (!date) return "—";
+    return new Date(date).toLocaleString("tn-TN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
   };
 
   const getStatusVariant = (status) => {
-    const statusLower = (status || '').toLowerCase();
+    const statusLower = (status || "").toLowerCase();
     switch (statusLower) {
-      case 'completed':
-      case 'paid':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'failed':
-        return 'danger';
-      case 'refunded':
-        return 'info';
+      case "completed":
+      case "paid":
+        return "success";
+      case "pending":
+        return "warning";
+      case "failed":
+        return "danger";
+      case "refunded":
+        return "info";
       default:
-        return 'gray';
+        return "gray";
     }
   };
 
   const getStatusIcon = (status) => {
-    const statusLower = (status || '').toLowerCase();
+    const statusLower = (status || "").toLowerCase();
     switch (statusLower) {
-      case 'completed':
-      case 'paid':
+      case "completed":
+      case "paid":
         return CheckCircle;
-      case 'pending':
+      case "pending":
         return Clock;
-      case 'failed':
+      case "failed":
         return XCircle;
-      case 'refunded':
+      case "refunded":
         return AlertCircle;
       default:
         return Clock;
@@ -181,7 +181,7 @@ const PaymentDetail = () => {
   }
 
   const StatusIcon = getStatusIcon(payment.status);
-  const TypeIcon = payment.type === 'income' ? TrendingUp : TrendingDown;
+  const TypeIcon = payment.type === "income" ? TrendingUp : TrendingDown;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -189,7 +189,7 @@ const PaymentDetail = () => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
         <div className="flex items-start gap-4">
           <button
-            onClick={() => navigate('/payments')}
+            onClick={() => navigate("/payments")}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -206,20 +206,25 @@ const PaymentDetail = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {payment.type === 'income' && 
-           ['completed', 'paid'].includes((payment.status || '').toLowerCase()) &&
-           !payment.refundAmount && (
-            <Button
-              variant="outline"
-              icon={RotateCcw}
-              onClick={() => {
-                setRefundData({ amount: payment.amount.toString(), reason: '' });
-                setIsRefundModalOpen(true);
-              }}
-            >
-              Refund
-            </Button>
-          )}
+          {payment.type === "income" &&
+            ["completed", "paid"].includes(
+              (payment.status || "").toLowerCase()
+            ) &&
+            !payment.refundAmount && (
+              <Button
+                variant="outline"
+                icon={RotateCcw}
+                onClick={() => {
+                  setRefundData({
+                    amount: payment.amount.toString(),
+                    reason: "",
+                  });
+                  setIsRefundModalOpen(true);
+                }}
+              >
+                Refund
+              </Button>
+            )}
           <Button variant="outline" icon={Edit} onClick={handleEdit}>
             Edit
           </Button>
@@ -248,19 +253,25 @@ const PaymentDetail = () => {
                 {/* Type and Status */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-lg ${
-                      payment.type === 'income' 
-                        ? 'bg-green-50 dark:bg-green-900/20' 
-                        : 'bg-red-50 dark:bg-red-900/20'
-                    }`}>
-                      <TypeIcon className={`w-6 h-6 ${
-                        payment.type === 'income'
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-red-600 dark:text-red-400'
-                      }`} />
+                    <div
+                      className={`p-3 rounded-lg ${
+                        payment.type === "income"
+                          ? "bg-green-50 dark:bg-green-900/20"
+                          : "bg-red-50 dark:bg-red-900/20"
+                      }`}
+                    >
+                      <TypeIcon
+                        className={`w-6 h-6 ${
+                          payment.type === "income"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Payment Type</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Payment Type
+                      </p>
                       <p className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
                         {payment.type}
                       </p>
@@ -276,13 +287,18 @@ const PaymentDetail = () => {
 
                 {/* Amount */}
                 <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Amount</p>
-                  <p className={`text-4xl font-bold ${
-                    payment.type === 'income'
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-red-600 dark:text-red-400'
-                  }`}>
-                    {payment.type === 'income' ? '+' : '-'}{formatCurrency(payment.amount)}
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    Total Amount
+                  </p>
+                  <p
+                    className={`text-4xl font-bold ${
+                      payment.type === "income"
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {payment.type === "income" ? "+" : "-"}
+                    {formatCurrency(payment.amount)}
                   </p>
                 </div>
 
@@ -307,7 +323,7 @@ const PaymentDetail = () => {
                     <div className="flex items-center gap-2">
                       <CreditCard className="w-4 h-4 text-gray-400" />
                       <p className="text-gray-900 dark:text-white font-medium capitalize">
-                        {(payment.method || 'N/A').replace(/_/g, ' ')}
+                        {(payment.method || "N/A").replace(/_/g, " ")}
                       </p>
                     </div>
                   </div>
@@ -317,7 +333,7 @@ const PaymentDetail = () => {
                       Reference Number
                     </p>
                     <p className="text-gray-900 dark:text-white font-medium">
-                      {payment.reference || '—'}
+                      {payment.reference || "—"}
                     </p>
                   </div>
 
@@ -354,8 +370,8 @@ const PaymentDetail = () => {
           </Card>
 
           {/* Fees Breakdown */}
-          {(payment.fees?.processingFee > 0 || 
-            payment.fees?.platformFee > 0 || 
+          {(payment.fees?.processingFee > 0 ||
+            payment.fees?.platformFee > 0 ||
             payment.fees?.otherFees > 0) && (
             <Card>
               <div className="p-6">
@@ -365,7 +381,9 @@ const PaymentDetail = () => {
                 <div className="space-y-3">
                   {payment.fees.processingFee > 0 && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">Processing Fee</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Processing Fee
+                      </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {formatCurrency(payment.fees.processingFee)}
                       </span>
@@ -373,7 +391,9 @@ const PaymentDetail = () => {
                   )}
                   {payment.fees.platformFee > 0 && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">Platform Fee</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Platform Fee
+                      </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {formatCurrency(payment.fees.platformFee)}
                       </span>
@@ -381,7 +401,9 @@ const PaymentDetail = () => {
                   )}
                   {payment.fees.otherFees > 0 && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">Other Fees</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Other Fees
+                      </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {formatCurrency(payment.fees.otherFees)}
                       </span>
@@ -412,14 +434,18 @@ const PaymentDetail = () => {
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-700 dark:text-gray-300">Refund Amount</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      Refund Amount
+                    </span>
                     <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
                       {formatCurrency(payment.refundAmount)}
                     </span>
                   </div>
                   {payment.refundDate && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700 dark:text-gray-300">Refund Date</span>
+                      <span className="text-gray-700 dark:text-gray-300">
+                        Refund Date
+                      </span>
                       <span className="text-gray-900 dark:text-white">
                         {formatDate(payment.refundDate)}
                       </span>
@@ -427,8 +453,12 @@ const PaymentDetail = () => {
                   )}
                   {payment.refundReason && (
                     <div className="pt-3 border-t border-orange-200 dark:border-orange-800">
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Reason</p>
-                      <p className="text-gray-900 dark:text-white">{payment.refundReason}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                        Reason
+                      </p>
+                      <p className="text-gray-900 dark:text-white">
+                        {payment.refundReason}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -447,23 +477,35 @@ const PaymentDetail = () => {
                 <div className="space-y-4">
                   {payment.event && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Event</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Event
+                      </p>
                       <button
-                        onClick={() => navigate(`/events/${payment.event._id || payment.event}`)}
+                        onClick={() =>
+                          navigate(
+                            `/events/${payment.event._id || payment.event}`
+                          )
+                        }
                         className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                       >
-                        {payment.event.title || 'View Event'}
+                        {payment.event.title || "View Event"}
                       </button>
                     </div>
                   )}
                   {payment.client && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Client</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Client
+                      </p>
                       <button
-                        onClick={() => navigate(`/clients/${payment.client._id || payment.client}`)}
+                        onClick={() =>
+                          navigate(
+                            `/clients/${payment.client._id || payment.client}`
+                          )
+                        }
                         className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                       >
-                        {payment.client.name || 'View Client'}
+                        {payment.client.name || "View Client"}
                       </button>
                     </div>
                   )}
@@ -490,21 +532,26 @@ const PaymentDetail = () => {
                 >
                   Edit Payment
                 </Button>
-                {payment.type === 'income' && 
-                 ['completed', 'paid'].includes((payment.status || '').toLowerCase()) &&
-                 !payment.refundAmount && (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    icon={RotateCcw}
-                    onClick={() => {
-                      setRefundData({ amount: payment.amount.toString(), reason: '' });
-                      setIsRefundModalOpen(true);
-                    }}
-                  >
-                    Process Refund
-                  </Button>
-                )}
+                {payment.type === "income" &&
+                  ["completed", "paid"].includes(
+                    (payment.status || "").toLowerCase()
+                  ) &&
+                  !payment.refundAmount && (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      icon={RotateCcw}
+                      onClick={() => {
+                        setRefundData({
+                          amount: payment.amount.toString(),
+                          reason: "",
+                        });
+                        setIsRefundModalOpen(true);
+                      }}
+                    >
+                      Process Refund
+                    </Button>
+                  )}
                 <Button
                   variant="outline"
                   className="w-full justify-start text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -531,16 +578,20 @@ const PaymentDetail = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-600 dark:text-gray-400">Last Updated</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Last Updated
+                  </p>
                   <p className="text-gray-900 dark:text-white">
                     {formatDateTime(payment.updatedAt)}
                   </p>
                 </div>
                 {payment.processedBy && (
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400">Processed By</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Processed By
+                    </p>
                     <p className="text-gray-900 dark:text-white">
-                      {payment.processedBy.name || 'System'}
+                      {payment.processedBy.name || "System"}
                     </p>
                   </div>
                 )}
@@ -555,7 +606,7 @@ const PaymentDetail = () => {
         isOpen={isRefundModalOpen}
         onClose={() => {
           setIsRefundModalOpen(false);
-          setRefundData({ amount: '', reason: '' });
+          setRefundData({ amount: "", reason: "" });
         }}
         title="Process Refund"
         size="sm"
@@ -566,7 +617,9 @@ const PaymentDetail = () => {
               label="Refund Amount"
               type="number"
               value={refundData.amount}
-              onChange={(e) => setRefundData(prev => ({ ...prev, amount: e.target.value }))}
+              onChange={(e) =>
+                setRefundData((prev) => ({ ...prev, amount: e.target.value }))
+              }
               placeholder="0.00"
               min="0"
               max={payment?.amount}
@@ -576,13 +629,16 @@ const PaymentDetail = () => {
             <Input
               label="Reason for Refund"
               value={refundData.reason}
-              onChange={(e) => setRefundData(prev => ({ ...prev, reason: e.target.value }))}
+              onChange={(e) =>
+                setRefundData((prev) => ({ ...prev, reason: e.target.value }))
+              }
               placeholder="Enter refund reason (optional)"
             />
             <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                This will refund {formatCurrency(parseFloat(refundData.amount) || 0)} to the client.
-                This action cannot be undone.
+                This will refund{" "}
+                {formatCurrency(parseFloat(refundData.amount) || 0)} to the
+                client. This action cannot be undone.
               </p>
             </div>
           </div>
@@ -591,15 +647,12 @@ const PaymentDetail = () => {
               variant="outline"
               onClick={() => {
                 setIsRefundModalOpen(false);
-                setRefundData({ amount: '', reason: '' });
+                setRefundData({ amount: "", reason: "" });
               }}
             >
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleRefund}
-            >
+            <Button variant="primary" onClick={handleRefund}>
               Confirm Refund
             </Button>
           </div>
@@ -615,7 +668,8 @@ const PaymentDetail = () => {
       >
         <div className="p-6">
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this payment? This action cannot be undone.
+            Are you sure you want to delete this payment? This action cannot be
+            undone.
           </p>
           <div className="flex justify-end gap-3">
             <Button
@@ -624,10 +678,7 @@ const PaymentDetail = () => {
             >
               Cancel
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleDelete}
-            >
+            <Button variant="danger" onClick={handleDelete}>
               Delete Payment
             </Button>
           </div>

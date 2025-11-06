@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   User,
   Mail,
@@ -21,20 +21,49 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { clientService } from "../../api/index";
+import { clientService, eventService } from "../../api/index";
+import { useApiDetail, useApi } from "../../hooks/useApi";
 import { toast } from "react-hot-toast";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
 import ClientForm from "./ClientForm";
+import EventDetailModal from "../events/EventDetailModal.jsx";
 
 const ClientDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
 
-  const [client, setClient] = useState(location.state?.client || null);
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(!location.state?.client);
-  const [error, setError] = useState(null);
+  // Initialize client from location state if available
+  const [initialClient, setInitialClient] = useState(
+    location.state?.client || null
+  );
+
+  // Use useApiDetail for client data - always fetch, don't rely on initialClient
+  const {
+    item: fetchedClientRaw,
+    loading: clientLoading,
+    error: clientError,
+    refetch: refetchClient,
+  } = useApiDetail(clientService.getById, id, {
+    manual: false, // Always auto-fetch on mount
+  });
+
+  // Extract client from nested structure if needed
+  // API returns: { success, data: { client: {...} } } or { client: {...} }
+  const fetchedClient = useMemo(() => {
+    if (!fetchedClientRaw) return null;
+    // If the response has a nested client property, extract it
+    if (fetchedClientRaw.client) {
+      return fetchedClientRaw.client;
+    }
+    // Otherwise return as-is
+    return fetchedClientRaw;
+  }, [fetchedClientRaw]);
+
+  // Use fetched client (always most up-to-date), fallback to initial client during first load
+  const client = fetchedClient || initialClient;
+
+  // Tab state
   const [activeTab, setActiveTab] = useState("events");
 
   // Modal states
@@ -42,71 +71,146 @@ const ClientDetail = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Event modal states
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+
+  // Memoize the events fetch function
+  const fetchEvents = useCallback(
+    () => eventService.getAll({ clientId: id, limit: 100 }),
+    [id]
+  );
+
+  // Track last fetched client/tab to prevent duplicate fetches
+  const lastFetchedRef = React.useRef({ clientId: null, tab: null });
+
+  // Use useApi for events
+  const {
+    data: eventsData,
+    loading: eventsLoading,
+    error: eventsError,
+    refetch: refetchEvents,
+  } = useApi(fetchEvents, {
+    manual: true,
+  });
+
+  // Store refetch in ref to avoid dependency issues
+  const refetchEventsRef = React.useRef(refetchEvents);
+  refetchEventsRef.current = refetchEvents;
+
+  // FIXED: Fetch events when events tab becomes active (removed eventsLoading from deps)
   useEffect(() => {
-    // If client data wasn't passed via state, fetch it from API
-    if (!client && id) {
-      fetchClientData();
+    // Only fetch events if we have a client ID and client data is loaded (or we have initial client)
+    if (
+      id &&
+      client && // Wait for client to load
+      activeTab === "events" &&
+      !eventsLoading &&
+      (lastFetchedRef.current.clientId !== id ||
+        lastFetchedRef.current.tab !== activeTab)
+    ) {
+      console.log("Fetching events for client:", id);
+      lastFetchedRef.current = { clientId: id, tab: activeTab };
+      refetchEventsRef.current();
     }
-  }, [id, client]);
+  }, [id, activeTab, client]); // Added client as dependency
 
-  // Add this separate useEffect for events
+  // Debug logging for client fetch status
   useEffect(() => {
-    if (id && activeTab === "events") {
-      fetchClientEvents();
-    }
-  }, [id, activeTab]);
+    console.log("Client fetch status:", {
+      id,
+      clientLoading,
+      hasClient: !!client,
+      hasFetchedClient: !!fetchedClient,
+      hasFetchedClientRaw: !!fetchedClientRaw,
+      hasInitialClient: !!initialClient,
+      clientError,
+    });
+  }, [
+    id,
+    clientLoading,
+    client,
+    fetchedClient,
+    fetchedClientRaw,
+    initialClient,
+    clientError,
+  ]); // ✅ eventsLoading removed!
 
-  const fetchClientData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const clientData = await clientService.getById(id);
-      setClient(clientData?.data || clientData);
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.error ||
-        err.message ||
-        "Failed to load client data";
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+  // Extract events from response structure
+  const events = useMemo(() => {
+    // If we have eventsData from the API call, use that
+    if (eventsData) {
+      // Handle nested data structure: { success, data: { events: [...] } }
+      if (Array.isArray(eventsData?.data?.events)) {
+        return eventsData.data.events;
+      }
+      // Handle direct events array: { events: [...] }
+      if (Array.isArray(eventsData?.events)) {
+        return eventsData.events;
+      }
+      // Handle data as array: { data: [...] }
+      if (Array.isArray(eventsData?.data)) {
+        return eventsData.data;
+      }
+      // Handle direct array
+      if (Array.isArray(eventsData)) {
+        return eventsData;
+      }
     }
+    // Fallback to recentEvents from client data
+    if (client?.recentEvents && Array.isArray(client.recentEvents)) {
+      return client.recentEvents;
+    }
+    return [];
+  }, [eventsData, client?.recentEvents]);
+
+  // Combined loading state - show loading only when actively loading and no data
+  const loading = clientLoading && !client;
+
+  const error = clientError || (activeTab === "events" && eventsError);
+
+  // Refresh events function
+  const refreshEvents = useCallback(() => {
+    lastFetchedRef.current = { clientId: null, tab: null };
+    refetchEventsRef.current();
+  }, []);
+
+  // Handle viewing event in modal
+  const handleViewEvent = (event) => {
+    setSelectedEvent(event);
+    setIsEventModalOpen(true);
   };
 
-  const fetchClientEvents = async () => {
-    try {
-      setLoading(true);
-      const eventsData = await clientService.getEvents(id);
-      setEvents(eventsData?.data || eventsData || []);
-    } catch (err) {
-      console.error("Failed to load client events:", err);
-      toast.error("Failed to load client events");
-    } finally {
-      setLoading(false);
-    }
+  // Handle editing event from modal
+  const handleEditEvent = (eventId) => {
+    setIsEventModalOpen(false);
+    navigate(`/events/${eventId}/edit`, {
+      state: {
+        returnUrl: `/clients/${id}`,
+        onEventUpdated: refreshEvents,
+      },
+    });
   };
 
-  // Add this function to manually refresh events
-  const refreshEvents = () => {
-    fetchClientEvents();
+  // Handle navigating to event detail page
+  const handleNavigateToEvent = (eventId) => {
+    navigate(`/events/${eventId}`, {
+      state: { fromClient: id },
+    });
   };
 
   const handleEditClient = () => {
-    console.log("id", id);
     if (!id) {
       console.error("Client ID is undefined");
       toast.error("Cannot edit client: Client ID not found");
       return;
     }
-
     setIsEditModalOpen(true);
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = async () => {
     setIsEditModalOpen(false);
-    fetchClientData(); // Refresh client data after edit
+    await refetchClient();
     toast.success("Client updated successfully");
   };
 
@@ -166,15 +270,11 @@ const ClientDetail = () => {
       state: {
         prefillEvent: {
           _id: eventId,
-          id: id,
+          clientId: id,
           clientName: client?.name,
         },
       },
     });
-  };
-
-  const handleViewEvent = (eventId) => {
-    navigate(`/events/${eventId}`);
   };
 
   const formatDate = (date) => {
@@ -188,9 +288,9 @@ const ClientDetail = () => {
 
   const formatCurrency = (amount) => {
     if (!amount) return "$0.00";
-    return new Intl.NumberFormat("tn-TN", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "TND",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -244,6 +344,7 @@ const ClientDetail = () => {
       (sum, e) => sum + (e.pricing?.totalAmount || 0),
       0
     );
+    // Use paymentSummary.paidAmount if available, otherwise default to 0
     const totalPaid = events.reduce(
       (sum, e) => sum + (e.paymentSummary?.paidAmount || 0),
       0
@@ -294,7 +395,7 @@ const ClientDetail = () => {
             </button>
             {error && (
               <button
-                onClick={fetchClientData}
+                onClick={refetchClient}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
                 Try Again
@@ -307,7 +408,7 @@ const ClientDetail = () => {
   }
 
   const stats = calculateStats();
-  console.log("id", id);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-4 py-8">
@@ -328,7 +429,7 @@ const ClientDetail = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleEditClient()}
+                    onClick={handleEditClient}
                     className="p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition dark:text-gray-400 dark:hover:bg-blue-900 dark:hover:text-white"
                     title="Edit Client"
                     disabled={!id}
@@ -497,16 +598,26 @@ const ClientDetail = () => {
                 {activeTab === "events" && (
                   <div>
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Event History ({events.length})
-                      </h3>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Event History ({events.length})
+                        </h3>
+                        {eventsLoading && !events.length && (
+                          <p className="text-sm text-gray-500 mt-1">
+                            Loading events...
+                          </p>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={refreshEvents}
-                          className="px-3 py-2 flex items-center gap-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                          disabled={eventsLoading}
+                          className="px-3 py-2 flex items-center gap-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition disabled:opacity-50"
                           title="Refresh Events"
                         >
-                          <RefreshCw className="h-4 w-4" />
+                          <RefreshCw
+                            className={`h-4 w-4 ${eventsLoading ? "animate-spin" : ""}`}
+                          />
                         </button>
                         <button
                           onClick={handleCreateEvent}
@@ -530,7 +641,8 @@ const ClientDetail = () => {
                         {events.map((event) => (
                           <div
                             key={event._id}
-                            className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition dark:border-gray-600 dark:hover:shadow-lg"
+                            onClick={() => handleViewEvent(event)}
+                            className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer dark:border-gray-600 dark:hover:shadow-lg"
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
@@ -549,46 +661,46 @@ const ClientDetail = () => {
                                     <Calendar className="w-4 h-4" />
                                     {formatDate(event.startDate)}
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <User className="w-4 h-4" />
-                                    {event.guestCount} guests
-                                  </div>
+                                  {event.guestCount && (
+                                    <div className="flex items-center gap-2">
+                                      <User className="w-4 h-4" />
+                                      {event.guestCount} guests
+                                    </div>
+                                  )}
                                   <div className="flex items-center gap-2">
                                     <DollarSign className="w-4 h-4" />
                                     {formatCurrency(
                                       event.pricing?.totalAmount || 0
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <CreditCard className="w-4 h-4" />
-                                    <span
-                                      className={`inline-block px-3 py-0.5 rounded-full text-sm border ${getStatusColor(
-                                        event.paymentSummary?.status ||
-                                          "pending"
-                                      )}`}
-                                    >
-                                      {getStatusLabel(
-                                        event.paymentSummary?.status ||
-                                          "pending"
-                                      )}
-                                    </span>
-                                  </div>
+                                  {event.paymentSummary && (
+                                    <div className="flex items-center gap-2">
+                                      <CreditCard className="w-4 h-4" />
+                                      <span
+                                        className={`inline-block px-3 py-0.5 rounded-full text-sm border ${getStatusColor(
+                                          event.paymentSummary?.status ||
+                                            "pending"
+                                        )}`}
+                                      >
+                                        {getStatusLabel(
+                                          event.paymentSummary?.status ||
+                                            "pending"
+                                        )}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleRecordPayment(event._id)}
-                                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition"
-                                >
-                                  Record Payment
-                                </button>
-                                <button
-                                  onClick={() => handleViewEvent(event._id)}
-                                  className="ml-2 text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
-                                >
-                                  <ExternalLink className="w-5 h-5" />
-                                </button>
-                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleNavigateToEvent(event._id);
+                                }}
+                                className="ml-2 p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition dark:text-orange-400 dark:hover:bg-orange-900"
+                                title="View Full Event Page"
+                              >
+                                <ExternalLink className="w-5 h-5" />
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -722,7 +834,9 @@ const ClientDetail = () => {
                                 </span>
                                 <div className="font-semibold text-gray-900 dark:text-white">
                                   {formatCurrency(
-                                    event.paymentSummary?.totalAmount || 0
+                                    event.paymentSummary?.totalAmount ||
+                                      event.pricing?.totalAmount ||
+                                      0
                                   )}
                                 </div>
                               </div>
@@ -742,7 +856,9 @@ const ClientDetail = () => {
                                 </span>
                                 <div className="font-semibold text-orange-600 dark:text-orange-400">
                                   {formatCurrency(
-                                    (event.paymentSummary?.totalAmount || 0) -
+                                    (event.paymentSummary?.totalAmount ||
+                                      event.pricing?.totalAmount ||
+                                      0) -
                                       (event.paymentSummary?.paidAmount || 0)
                                   )}
                                 </div>
@@ -805,6 +921,18 @@ const ClientDetail = () => {
         cancelText="Cancel"
         variant="danger"
         loading={deleteLoading}
+      />
+
+      {/* Event Detail Modal */}
+      <EventDetailModal
+        isOpen={isEventModalOpen}
+        onClose={() => {
+          setIsEventModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+        onEdit={handleEditEvent}
+        refreshData={refreshEvents}
       />
     </div>
   );

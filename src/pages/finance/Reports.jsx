@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { financeService } from '../../api/index';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import Card from '../../components/common/Card';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useState } from "react";
+import { financeService } from "../../api/index";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Card from "../../components/common/Card";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 import {
   FileText,
@@ -16,15 +16,15 @@ import {
   DollarSign,
   Eye,
   AlertCircle,
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const Reports = () => {
-  const [reportType, setReportType] = useState('profit-loss');
-  const [period, setPeriod] = useState('month');
+  const [reportType, setReportType] = useState("profit-loss");
+  const [period, setPeriod] = useState("month");
   const [customRange, setCustomRange] = useState({
-    startDate: '',
-    endDate: '',
+    startDate: "",
+    endDate: "",
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportData, setReportData] = useState(null);
@@ -36,33 +36,33 @@ const Reports = () => {
     let startDate = new Date();
 
     switch (period) {
-      case 'week':
+      case "week":
         startDate.setDate(now.getDate() - 7);
         break;
-      case 'month':
+      case "month":
         startDate.setMonth(now.getMonth() - 1);
         break;
-      case 'quarter':
+      case "quarter":
         startDate.setMonth(now.getMonth() - 3);
         break;
-      case 'year':
+      case "year":
         startDate.setFullYear(now.getFullYear() - 1);
         break;
-      case 'last-month':
+      case "last-month":
         startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         now.setDate(0); // Last day of previous month
         break;
-      case 'last-quarter':
+      case "last-quarter":
         startDate.setMonth(now.getMonth() - 6);
         now.setMonth(now.getMonth() - 3);
         break;
-      case 'last-year':
+      case "last-year":
         startDate = new Date(now.getFullYear() - 1, 0, 1);
         now.setFullYear(now.getFullYear() - 1);
         now.setMonth(11);
         now.setDate(31);
         break;
-      case 'custom':
+      case "custom":
         return {
           startDate: customRange.startDate,
           endDate: customRange.endDate,
@@ -87,34 +87,34 @@ const Reports = () => {
 
       // Call appropriate API based on report type
       switch (reportType) {
-        case 'profit-loss':
+        case "profit-loss":
           data = await financeService.getProfitLoss();
           break;
-        case 'cash-flow':
+        case "cash-flow":
           data = await financeService.getCashflow();
           break;
-        case 'expense-breakdown':
+        case "expense-breakdown":
           data = await financeService.getExpensesBreakdown();
           break;
-        case 'revenue-analysis':
+        case "revenue-analysis":
           data = await financeService.getIncomeBreakdown();
           break;
-        case 'tax-summary':
+        case "tax-summary":
           data = await financeService.getTaxSummary();
           break;
-        case 'summary':
+        case "summary":
           data = await financeService.getSummary(dateRange);
           break;
         default:
-          throw new Error('Invalid report type');
+          throw new Error("Invalid report type");
       }
 
       setReportData(data);
       setShowPreview(true);
-      toast.success('Report generated successfully');
+      toast.success("Report generated successfully");
     } catch (error) {
-      console.error('Error generating report:', error);
-      toast.error(error.message || 'Failed to generate report');
+      console.error("Error generating report:", error);
+      toast.error(error.message || "Failed to generate report");
     } finally {
       setIsGenerating(false);
     }
@@ -123,42 +123,42 @@ const Reports = () => {
   // FIXED: Client-side CSV export
   const handleExportCSV = () => {
     if (!reportData) {
-      toast.error('Please generate a report first');
+      toast.error("Please generate a report first");
       return;
     }
 
     try {
-      let csvContent = '';
-      const timestamp = new Date().toISOString().split('T')[0];
+      let csvContent = "";
+      const timestamp = new Date().toISOString().split("T")[0];
 
       // Generate CSV based on report type
       switch (reportType) {
-        case 'profit-loss':
+        case "profit-loss":
           csvContent = generateProfitLossCSV(reportData);
           break;
-        case 'cash-flow':
+        case "cash-flow":
           csvContent = generateCashFlowCSV(reportData);
           break;
-        case 'expense-breakdown':
+        case "expense-breakdown":
           csvContent = generateExpenseBreakdownCSV(reportData);
           break;
-        case 'revenue-analysis':
+        case "revenue-analysis":
           csvContent = generateRevenueAnalysisCSV(reportData);
           break;
-        case 'tax-summary':
+        case "tax-summary":
           csvContent = generateTaxSummaryCSV(reportData);
           break;
-        case 'summary':
+        case "summary":
           csvContent = generateSummaryCSV(reportData);
           break;
         default:
-          throw new Error('Invalid report type');
+          throw new Error("Invalid report type");
       }
 
       // Create and download CSV file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${reportType}-report-${timestamp}.csv`;
       document.body.appendChild(a);
@@ -166,19 +166,19 @@ const Reports = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success('CSV exported successfully');
+      toast.success("CSV exported successfully");
     } catch (error) {
-      console.error('Error exporting CSV:', error);
-      toast.error('Failed to export CSV');
+      console.error("Error exporting CSV:", error);
+      toast.error("Failed to export CSV");
     }
   };
 
   // CSV generation helpers
   const generateProfitLossCSV = (data) => {
     const rows = data?.profitLoss || data || [];
-    let csv = 'Period,Income,Expenses,Net Profit\n';
-    rows.forEach(row => {
-      const period = row.period || row.month || 'N/A';
+    let csv = "Period,Income,Expenses,Net Profit\n";
+    rows.forEach((row) => {
+      const period = row.period || row.month || "N/A";
       const income = row.income || 0;
       const expenses = row.expenses || 0;
       const profit = income - expenses;
@@ -189,7 +189,7 @@ const Reports = () => {
 
   const generateCashFlowCSV = (data) => {
     const cashflow = data?.cashflow || data || {};
-    let csv = 'Category,Amount\n';
+    let csv = "Category,Amount\n";
     csv += `Total Inflow,${cashflow.totalInflow || 0}\n`;
     csv += `Total Outflow,${cashflow.totalOutflow || 0}\n`;
     csv += `Net Cash Flow,${cashflow.netCashFlow || 0}\n`;
@@ -198,9 +198,9 @@ const Reports = () => {
 
   const generateExpenseBreakdownCSV = (data) => {
     const expenses = data?.expenses || data || [];
-    let csv = 'Category,Total Amount\n';
-    expenses.forEach(exp => {
-      const category = (exp.category || exp._id || 'Other').replace(/,/g, ' ');
+    let csv = "Category,Total Amount\n";
+    expenses.forEach((exp) => {
+      const category = (exp.category || exp._id || "Other").replace(/,/g, " ");
       csv += `${category},${exp.total || 0}\n`;
     });
     return csv;
@@ -208,9 +208,9 @@ const Reports = () => {
 
   const generateRevenueAnalysisCSV = (data) => {
     const income = data?.income || data || [];
-    let csv = 'Category,Total Amount\n';
-    income.forEach(inc => {
-      const category = (inc.category || inc._id || 'Other').replace(/,/g, ' ');
+    let csv = "Category,Total Amount\n";
+    income.forEach((inc) => {
+      const category = (inc.category || inc._id || "Other").replace(/,/g, " ");
       csv += `${category},${inc.total || 0}\n`;
     });
     return csv;
@@ -218,7 +218,7 @@ const Reports = () => {
 
   const generateTaxSummaryCSV = (data) => {
     const taxData = data?.taxSummary || data || {};
-    let csv = 'Category,Amount\n';
+    let csv = "Category,Amount\n";
     csv += `Total Revenue,${taxData.totalRevenue || 0}\n`;
     csv += `Total Deductions,${taxData.totalDeductions || 0}\n`;
     csv += `Taxable Income,${taxData.taxableIncome || 0}\n`;
@@ -228,7 +228,7 @@ const Reports = () => {
 
   const generateSummaryCSV = (data) => {
     const summary = data?.summary || data || {};
-    let csv = 'Metric,Value\n';
+    let csv = "Metric,Value\n";
     csv += `Total Income,${summary.totalIncome || 0}\n`;
     csv += `Total Expenses,${summary.totalExpenses || 0}\n`;
     csv += `Net Profit,${(summary.totalIncome || 0) - (summary.totalExpenses || 0)}\n`;
@@ -238,61 +238,61 @@ const Reports = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("tn-TN", {
+      style: "currency",
+      currency: "TND",
     }).format(amount || 0);
   };
 
   // FIXED: Report types that map to actual API methods
   const reportTypes = [
     {
-      id: 'profit-loss',
-      name: 'Profit & Loss Statement',
-      description: 'Revenue, expenses, and net profit overview',
+      id: "profit-loss",
+      name: "Profit & Loss Statement",
+      description: "Revenue, expenses, and net profit overview",
       icon: TrendingUp,
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      iconColor: "text-blue-600 dark:text-blue-400",
     },
     {
-      id: 'cash-flow',
-      name: 'Cash Flow Statement',
-      description: 'Cash inflows and outflows analysis',
+      id: "cash-flow",
+      name: "Cash Flow Statement",
+      description: "Cash inflows and outflows analysis",
       icon: DollarSign,
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      iconColor: 'text-purple-600 dark:text-purple-400',
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      iconColor: "text-purple-600 dark:text-purple-400",
     },
     {
-      id: 'expense-breakdown',
-      name: 'Expense Breakdown',
-      description: 'Detailed categorization of all expenses',
+      id: "expense-breakdown",
+      name: "Expense Breakdown",
+      description: "Detailed categorization of all expenses",
       icon: PieChart,
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
-      iconColor: 'text-red-600 dark:text-red-400',
+      bgColor: "bg-red-50 dark:bg-red-900/20",
+      iconColor: "text-red-600 dark:text-red-400",
     },
     {
-      id: 'revenue-analysis',
-      name: 'Revenue Analysis',
-      description: 'Income sources and trends',
+      id: "revenue-analysis",
+      name: "Revenue Analysis",
+      description: "Income sources and trends",
       icon: TrendingUp,
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      iconColor: 'text-green-600 dark:text-green-400',
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      iconColor: "text-green-600 dark:text-green-400",
     },
     {
-      id: 'tax-summary',
-      name: 'Tax Summary',
-      description: 'Tax obligations and deductions',
+      id: "tax-summary",
+      name: "Tax Summary",
+      description: "Tax obligations and deductions",
       icon: FileText,
-      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-      iconColor: 'text-yellow-600 dark:text-yellow-400',
+      bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+      iconColor: "text-yellow-600 dark:text-yellow-400",
     },
     {
-      id: 'summary',
-      name: 'Financial Summary',
-      description: 'Overall financial overview',
+      id: "summary",
+      name: "Financial Summary",
+      description: "Overall financial overview",
       icon: BarChart3,
-      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
-      iconColor: 'text-indigo-600 dark:text-indigo-400',
+      bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
     },
   ];
 
@@ -300,7 +300,9 @@ const Reports = () => {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Financial Reports</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Financial Reports
+        </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           Generate comprehensive financial reports for your business
         </p>
@@ -315,8 +317,9 @@ const Reports = () => {
               Report Generation
             </h4>
             <p className="text-sm text-blue-700 dark:text-blue-400">
-              Reports are generated from your financial data and can be previewed on-screen or exported as CSV. 
-              PDF and Excel formats require backend support and are not currently available.
+              Reports are generated from your financial data and can be
+              previewed on-screen or exported as CSV. PDF and Excel formats
+              require backend support and are not currently available.
             </p>
           </div>
         </div>
@@ -357,7 +360,7 @@ const Reports = () => {
               <option value="custom">Custom Range</option>
             </Select>
 
-            {period === 'custom' && (
+            {period === "custom" && (
               <>
                 <Input
                   label="Start Date"
@@ -394,7 +397,7 @@ const Reports = () => {
               onClick={handleGenerateReport}
               loading={isGenerating}
             >
-              {isGenerating ? 'Generating...' : 'Generate Report'}
+              {isGenerating ? "Generating..." : "Generate Report"}
             </Button>
             {reportData && (
               <Button
@@ -427,75 +430,118 @@ const Reports = () => {
             </div>
 
             <div className="overflow-x-auto">
-              {reportType === 'profit-loss' && (
+              {reportType === "profit-loss" && (
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Period</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Income</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Expenses</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Net Profit</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        Period
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        Income
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        Expenses
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        Net Profit
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    {(reportData?.profitLoss || reportData || []).map((row, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                          {row.period || row.month || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 dark:text-green-400">
-                          {formatCurrency(row.income || 0)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
-                          {formatCurrency(row.expenses || 0)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency((row.income || 0) - (row.expenses || 0))}
-                        </td>
-                      </tr>
-                    ))}
+                    {(reportData?.profitLoss || reportData || []).map(
+                      (row, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {row.period || row.month || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 dark:text-green-400">
+                            {formatCurrency(row.income || 0)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
+                            {formatCurrency(row.expenses || 0)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
+                            {formatCurrency(
+                              (row.income || 0) - (row.expenses || 0)
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    )}
                   </tbody>
                 </table>
               )}
 
-              {reportType === 'cash-flow' && (
+              {reportType === "cash-flow" && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Inflow</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Total Inflow
+                      </p>
                       <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(reportData?.cashflow?.totalInflow || reportData?.totalInflow || 0)}
+                        {formatCurrency(
+                          reportData?.cashflow?.totalInflow ||
+                            reportData?.totalInflow ||
+                            0
+                        )}
                       </p>
                     </div>
                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Outflow</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Total Outflow
+                      </p>
                       <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {formatCurrency(reportData?.cashflow?.totalOutflow || reportData?.totalOutflow || 0)}
+                        {formatCurrency(
+                          reportData?.cashflow?.totalOutflow ||
+                            reportData?.totalOutflow ||
+                            0
+                        )}
                       </p>
                     </div>
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Cash Flow</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Net Cash Flow
+                      </p>
                       <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {formatCurrency(reportData?.cashflow?.netCashFlow || reportData?.netCashFlow || 0)}
+                        {formatCurrency(
+                          reportData?.cashflow?.netCashFlow ||
+                            reportData?.netCashFlow ||
+                            0
+                        )}
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {(reportType === 'expense-breakdown' || reportType === 'revenue-analysis') && (
+              {(reportType === "expense-breakdown" ||
+                reportType === "revenue-analysis") && (
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Category</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        Amount
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    {(reportData?.expenses || reportData?.income || reportData || []).map((item, index) => (
+                    {(
+                      reportData?.expenses ||
+                      reportData?.income ||
+                      reportData ||
+                      []
+                    ).map((item, index) => (
                       <tr key={index}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize">
-                          {(item.category || item._id || 'Other').replace(/_/g, ' ')}
+                          {(item.category || item._id || "Other").replace(
+                            /_/g,
+                            " "
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
                           {formatCurrency(item.total || 0)}
@@ -524,7 +570,7 @@ const Reports = () => {
               <Card
                 key={type.id}
                 className={`cursor-pointer transition-all hover:shadow-lg ${
-                  isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''
+                  isSelected ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
                 }`}
                 onClick={() => setReportType(type.id)}
               >
@@ -535,7 +581,9 @@ const Reports = () => {
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
                     {type.name}
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{type.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {type.description}
+                  </p>
                 </div>
               </Card>
             );
@@ -557,8 +605,8 @@ const Reports = () => {
             <Button
               variant="outline"
               onClick={() => {
-                setReportType('profit-loss');
-                setPeriod('month');
+                setReportType("profit-loss");
+                setPeriod("month");
                 handleGenerateReport();
               }}
               className="h-auto py-4 flex-col gap-2"
@@ -570,8 +618,8 @@ const Reports = () => {
             <Button
               variant="outline"
               onClick={() => {
-                setReportType('cash-flow');
-                setPeriod('quarter');
+                setReportType("cash-flow");
+                setPeriod("quarter");
                 handleGenerateReport();
               }}
               className="h-auto py-4 flex-col gap-2"
@@ -583,8 +631,8 @@ const Reports = () => {
             <Button
               variant="outline"
               onClick={() => {
-                setReportType('expense-breakdown');
-                setPeriod('year');
+                setReportType("expense-breakdown");
+                setPeriod("year");
                 handleGenerateReport();
               }}
               className="h-auto py-4 flex-col gap-2"
@@ -596,8 +644,8 @@ const Reports = () => {
             <Button
               variant="outline"
               onClick={() => {
-                setReportType('tax-summary');
-                setPeriod('year');
+                setReportType("tax-summary");
+                setPeriod("year");
                 handleGenerateReport();
               }}
               className="h-auto py-4 flex-col gap-2"

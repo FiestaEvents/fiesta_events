@@ -30,7 +30,7 @@ import { toast } from "react-hot-toast";
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
-  
+
   // State
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ const InvoicesPage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Filters
   const [filters, setFilters] = useState({
     status: "",
@@ -60,7 +60,7 @@ const InvoicesPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {
         search: searchTerm || undefined,
         status: filters.status || undefined,
@@ -71,11 +71,11 @@ const InvoicesPage = () => {
       };
 
       const response = await invoiceService.getAll(params);
-      
+
       // Handle response structure
       const invoicesData = response?.invoices || response?.data || [];
       const paginationData = response?.pagination || {};
-      
+
       setInvoices(invoicesData);
       setTotalPages(paginationData.totalPages || 1);
       setTotalItems(paginationData.total || invoicesData.length);
@@ -149,7 +149,7 @@ const InvoicesPage = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `invoice-${invoice.invoiceNumber || invoice.number || 'document'}.pdf`;
+      a.download = `invoice-${invoice.invoiceNumber || invoice.number || "document"}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -162,7 +162,7 @@ const InvoicesPage = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
 
@@ -176,7 +176,7 @@ const InvoicesPage = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "TND",
     }).format(amount || 0);
   };
 
@@ -208,10 +208,19 @@ const InvoicesPage = () => {
 
   // Calculate statistics
   const stats = {
-    totalRevenue: invoices.reduce((sum, inv) => sum + (inv.totalAmount || inv.amount || 0), 0),
-    paidInvoices: invoices.filter(inv => (inv.status || "").toLowerCase() === "paid").length,
-    pendingInvoices: invoices.filter(inv => ["pending", "sent"].includes((inv.status || "").toLowerCase())).length,
-    overdueInvoices: invoices.filter(inv => (inv.status || "").toLowerCase() === "overdue").length,
+    totalRevenue: invoices.reduce(
+      (sum, inv) => sum + (inv.totalAmount || inv.amount || 0),
+      0
+    ),
+    paidInvoices: invoices.filter(
+      (inv) => (inv.status || "").toLowerCase() === "paid"
+    ).length,
+    pendingInvoices: invoices.filter((inv) =>
+      ["pending", "sent"].includes((inv.status || "").toLowerCase())
+    ).length,
+    overdueInvoices: invoices.filter(
+      (inv) => (inv.status || "").toLowerCase() === "overdue"
+    ).length,
   };
 
   if (loading && invoices.length === 0) {
@@ -236,19 +245,15 @@ const InvoicesPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             icon={RefreshCw}
             onClick={fetchInvoices}
             loading={loading}
           >
             Refresh
           </Button>
-          <Button 
-            variant="primary" 
-            icon={Plus}
-            onClick={handleCreateInvoice}
-          >
+          <Button variant="primary" icon={Plus} onClick={handleCreateInvoice}>
             Create Invoice
           </Button>
         </div>
@@ -382,7 +387,9 @@ const InvoicesPage = () => {
                 label="Start Date"
                 type="date"
                 value={filters.startDate}
-                onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("startDate", e.target.value)
+                }
               />
 
               <Input
@@ -473,10 +480,14 @@ const InvoicesPage = () => {
                             : "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {invoice.dueDate ? formatDate(invoice.dueDate) : "N/A"}
+                          {invoice.dueDate
+                            ? formatDate(invoice.dueDate)
+                            : "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                          {formatCurrency(invoice.totalAmount || invoice.amount || 0)}
+                          {formatCurrency(
+                            invoice.totalAmount || invoice.amount || 0
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Badge variant={getStatusVariant(invoice.status)}>
@@ -564,15 +575,21 @@ const InvoicesPage = () => {
             <div className="flex items-start justify-between pb-6 border-b border-gray-200 dark:border-gray-700">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Invoice #{selectedInvoice.invoiceNumber || selectedInvoice.number}
+                  Invoice #
+                  {selectedInvoice.invoiceNumber || selectedInvoice.number}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {selectedInvoice.issueDate || selectedInvoice.date
-                    ? formatDate(selectedInvoice.issueDate || selectedInvoice.date)
+                    ? formatDate(
+                        selectedInvoice.issueDate || selectedInvoice.date
+                      )
                     : ""}
                 </p>
               </div>
-              <Badge variant={getStatusVariant(selectedInvoice.status)} size="lg">
+              <Badge
+                variant={getStatusVariant(selectedInvoice.status)}
+                size="lg"
+              >
                 {selectedInvoice.status || "Draft"}
               </Badge>
             </div>
@@ -583,7 +600,9 @@ const InvoicesPage = () => {
                 Bill To:
               </h4>
               <p className="text-gray-700 dark:text-gray-300">
-                {selectedInvoice.clientName || selectedInvoice.client?.name || "N/A"}
+                {selectedInvoice.clientName ||
+                  selectedInvoice.client?.name ||
+                  "N/A"}
               </p>
               {selectedInvoice.clientEmail && (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -595,17 +614,25 @@ const InvoicesPage = () => {
             {/* Invoice Details */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Issue Date</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Issue Date
+                </p>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {selectedInvoice.issueDate || selectedInvoice.date
-                    ? formatDate(selectedInvoice.issueDate || selectedInvoice.date)
+                    ? formatDate(
+                        selectedInvoice.issueDate || selectedInvoice.date
+                      )
                     : "N/A"}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Due Date</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Due Date
+                </p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {selectedInvoice.dueDate ? formatDate(selectedInvoice.dueDate) : "N/A"}
+                  {selectedInvoice.dueDate
+                    ? formatDate(selectedInvoice.dueDate)
+                    : "N/A"}
                 </p>
               </div>
             </div>
@@ -647,7 +674,10 @@ const InvoicesPage = () => {
                             {formatCurrency(item.rate || item.price || 0)}
                           </td>
                           <td className="px-4 py-2 text-right font-medium text-gray-900 dark:text-white">
-                            {formatCurrency((item.quantity || 0) * (item.rate || item.price || 0))}
+                            {formatCurrency(
+                              (item.quantity || 0) *
+                                (item.rate || item.price || 0)
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -662,14 +692,22 @@ const InvoicesPage = () => {
               <div className="flex justify-end">
                 <div className="w-64 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Subtotal:
+                    </span>
                     <span className="text-gray-900 dark:text-white">
-                      {formatCurrency(selectedInvoice.subtotal || selectedInvoice.totalAmount || 0)}
+                      {formatCurrency(
+                        selectedInvoice.subtotal ||
+                          selectedInvoice.totalAmount ||
+                          0
+                      )}
                     </span>
                   </div>
                   {selectedInvoice.tax > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Tax:
+                      </span>
                       <span className="text-gray-900 dark:text-white">
                         {formatCurrency(selectedInvoice.tax)}
                       </span>
@@ -677,16 +715,24 @@ const InvoicesPage = () => {
                   )}
                   {selectedInvoice.discount > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Discount:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Discount:
+                      </span>
                       <span className="text-gray-900 dark:text-white">
                         -{formatCurrency(selectedInvoice.discount)}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-900 dark:text-white">Total:</span>
                     <span className="text-gray-900 dark:text-white">
-                      {formatCurrency(selectedInvoice.totalAmount || selectedInvoice.amount || 0)}
+                      Total:
+                    </span>
+                    <span className="text-gray-900 dark:text-white">
+                      {formatCurrency(
+                        selectedInvoice.totalAmount ||
+                          selectedInvoice.amount ||
+                          0
+                      )}
                     </span>
                   </div>
                 </div>
@@ -707,10 +753,7 @@ const InvoicesPage = () => {
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <Button
-                variant="outline"
-                onClick={handleCloseModal}
-              >
+              <Button variant="outline" onClick={handleCloseModal}>
                 Close
               </Button>
               <Button
@@ -744,7 +787,8 @@ const InvoicesPage = () => {
       >
         <div className="p-6">
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this invoice? This action cannot be undone.
+            Are you sure you want to delete this invoice? This action cannot be
+            undone.
           </p>
           <div className="flex justify-end gap-3">
             <Button
