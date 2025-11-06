@@ -97,8 +97,9 @@ const PaymentForm = () => {
     try {
       setLoadingOptions(true);
       const [eventsResponse, clientsResponse] = await Promise.all([
-        eventService.getAll({ limit: 1000 }),
-        clientService.getAll({ limit: 1000 }),
+        eventService.getAll(),
+        clientService.getAll(),
+        console.log('dataaaaa',eventsResponse,clientsResponse)
       ]);
 
       setEvents(eventsResponse.events || eventsResponse || []);
