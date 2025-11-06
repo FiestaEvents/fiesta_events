@@ -683,6 +683,11 @@ export const financeService = {
 // TASK SERVICE
 // ============================================
 export const taskService = {
+  /**
+   * Get all tasks with advanced filtering and pagination
+   * @param {Object} params - Filter parameters
+   * @returns {Promise<{ tasks: Array, pagination: Object, stats: Object }>}
+   */
   getAll: async (params = {}) => {
     try {
       const response = await api.get('/tasks', { params });
@@ -692,15 +697,28 @@ export const taskService = {
     }
   },
 
-  getById: async (id) => {
+  /**
+   * Get single task by ID with full details
+   * @param {string} id - Task ID
+   * @param {boolean} trackView - Whether to track this as a view
+   * @returns {Promise<{ task: Object }>}
+   */
+  getById: async (id, trackView = true) => {
     try {
-      const response = await api.get(`/tasks/${id}`);
+      const response = await api.get(`/tasks/${id}`, {
+        params: { trackView },
+      });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
+  /**
+   * Create new task
+   * @param {Object} data - Task data
+   * @returns {Promise<{ task: Object }>}
+   */
   create: async (data) => {
     try {
       const response = await api.post('/tasks', data);
@@ -710,6 +728,12 @@ export const taskService = {
     }
   },
 
+  /**
+   * Update task
+   * @param {string} id - Task ID
+   * @param {Object} data - Fields to update
+   * @returns {Promise<{ task: Object }>}
+   */
   update: async (id, data) => {
     try {
       const response = await api.put(`/tasks/${id}`, data);
@@ -719,6 +743,26 @@ export const taskService = {
     }
   },
 
+  /**
+   * Partially update task (PATCH)
+   * @param {string} id - Task ID
+   * @param {Object} data - Fields to update
+   * @returns {Promise<{ task: Object }>}
+   */
+  patch: async (id, data) => {
+    try {
+      const response = await api.patch(`/tasks/${id}`, data);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete task
+   * @param {string} id - Task ID
+   * @returns {Promise<{ success: boolean }>}
+   */
   delete: async (id) => {
     try {
       const response = await api.delete(`/tasks/${id}`);
@@ -728,33 +772,230 @@ export const taskService = {
     }
   },
 
-  getBoard: async () => {
+  /**
+   * Bulk delete tasks
+   * @param {Array<string>} ids - Array of task IDs
+   * @returns {Promise<{ success: boolean, deleted: number }>}
+   */
+  bulkDelete: async (ids) => {
     try {
-      const response = await api.get('/tasks/board');
+      const response = await api.post('/tasks/bulk-delete', { ids });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getMyTasks: async () => {
+  // ============================================
+  // STATUS MANAGEMENT
+  // ============================================
+
+  /**
+   * Update task status
+   * @param {string} id - Task ID
+   * @param {string} status - New status
+   * @param {Object} metadata - Additional data (e.g., reason for blocking/cancellation)
+   * @returns {Promise<{ task: Object }>}
+   */
+  updateStatus: async (id, status, metadata = {}) => {
     try {
-      const response = await api.get('/tasks/my');
+      const response = await api.patch(`/tasks/${id}/status`, {
+        status,
+        ...metadata,
+      });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  addComment: async (id, comment) => {
+  /**
+   * Complete a task
+   * @param {string} id - Task ID
+   * @returns {Promise<{ task: Object }>}
+   */
+  complete: async (id) => {
     try {
-      const response = await api.post(`/tasks/${id}/comments`, { comment });
+      const response = await api.post(`/tasks/${id}/complete`);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
+  /**
+   * Cancel a task
+   * @param {string} id - Task ID
+   * @param {string} reason - Cancellation reason
+   * @returns {Promise<{ task: Object }>}
+   */
+  cancel: async (id, reason) => {
+    try {
+      const response = await api.post(`/tasks/${id}/cancel`, { reason });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Block a task
+   * @param {string} id - Task ID
+   * @param {string} reason - Reason for blocking
+   * @returns {Promise<{ task: Object }>}
+   */
+  block: async (id, reason) => {
+    try {
+      const response = await api.post(`/tasks/${id}/block`, { reason });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Unblock a task
+   * @param {string} id - Task ID
+   * @returns {Promise<{ task: Object }>}
+   */
+  unblock: async (id) => {
+    try {
+      const response = await api.post(`/tasks/${id}/unblock`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // ASSIGNMENT & COLLABORATION
+  // ============================================
+
+  /**
+   * Assign task to a user
+   * @param {string} id - Task ID
+   * @param {string} userId - User ID to assign to
+   * @returns {Promise<{ task: Object }>}
+   */
+  assign: async (id, userId) => {
+    try {
+      const response = await api.patch(`/tasks/${id}/assign`, { userId });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Unassign task
+   * @param {string} id - Task ID
+   * @returns {Promise<{ task: Object }>}
+   */
+  unassign: async (id) => {
+    try {
+      const response = await api.patch(`/tasks/${id}/unassign`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Add watcher to task
+   * @param {string} id - Task ID
+   * @param {string} userId - User ID to add as watcher
+   * @returns {Promise<{ task: Object }>}
+   */
+  addWatcher: async (id, userId) => {
+    try {
+      const response = await api.post(`/tasks/${id}/watchers`, { userId });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Remove watcher from task
+   * @param {string} id - Task ID
+   * @param {string} userId - User ID to remove
+   * @returns {Promise<{ task: Object }>}
+   */
+  removeWatcher: async (id, userId) => {
+    try {
+      const response = await api.delete(`/tasks/${id}/watchers/${userId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // COMMENTS
+  // ============================================
+
+  /**
+   * Add comment to task
+   * @param {string} id - Task ID
+   * @param {string} text - Comment text
+   * @param {Array<string>} mentions - Array of user IDs mentioned
+   * @returns {Promise<{ task: Object, comment: Object }>}
+   */
+  addComment: async (id, text, mentions = []) => {
+    try {
+      const response = await api.post(`/tasks/${id}/comments`, {
+        text,
+        mentions,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Edit comment
+   * @param {string} id - Task ID
+   * @param {string} commentId - Comment ID
+   * @param {string} text - Updated comment text
+   * @returns {Promise<{ task: Object }>}
+   */
+  editComment: async (id, commentId, text) => {
+    try {
+      const response = await api.put(`/tasks/${id}/comments/${commentId}`, {
+        text,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete comment
+   * @param {string} id - Task ID
+   * @param {string} commentId - Comment ID
+   * @returns {Promise<{ task: Object }>}
+   */
+  deleteComment: async (id, commentId) => {
+    try {
+      const response = await api.delete(`/tasks/${id}/comments/${commentId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // SUBTASKS
+  // ============================================
+
+  /**
+   * Add subtask
+   * @param {string} id - Task ID
+   * @param {Object} subtask - Subtask data { title, description }
+   * @returns {Promise<{ task: Object, subtask: Object }>}
+   */
   addSubtask: async (id, subtask) => {
     try {
       const response = await api.post(`/tasks/${id}/subtasks`, subtask);
@@ -764,6 +1005,13 @@ export const taskService = {
     }
   },
 
+  /**
+   * Update subtask
+   * @param {string} id - Task ID
+   * @param {string} subtaskId - Subtask ID
+   * @param {Object} data - Updated subtask data
+   * @returns {Promise<{ task: Object }>}
+   */
   updateSubtask: async (id, subtaskId, data) => {
     try {
       const response = await api.put(`/tasks/${id}/subtasks/${subtaskId}`, data);
@@ -773,6 +1021,27 @@ export const taskService = {
     }
   },
 
+  /**
+   * Toggle subtask completion
+   * @param {string} id - Task ID
+   * @param {string} subtaskId - Subtask ID
+   * @returns {Promise<{ task: Object }>}
+   */
+  toggleSubtask: async (id, subtaskId) => {
+    try {
+      const response = await api.patch(`/tasks/${id}/subtasks/${subtaskId}/toggle`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete subtask
+   * @param {string} id - Task ID
+   * @param {string} subtaskId - Subtask ID
+   * @returns {Promise<{ task: Object }>}
+   */
   deleteSubtask: async (id, subtaskId) => {
     try {
       const response = await api.delete(`/tasks/${id}/subtasks/${subtaskId}`);
@@ -782,6 +1051,33 @@ export const taskService = {
     }
   },
 
+  /**
+   * Reorder subtasks
+   * @param {string} id - Task ID
+   * @param {Array<{id: string, order: number}>} subtasks - Array of subtask IDs with new order
+   * @returns {Promise<{ task: Object }>}
+   */
+  reorderSubtasks: async (id, subtasks) => {
+    try {
+      const response = await api.patch(`/tasks/${id}/subtasks/reorder`, {
+        subtasks,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // ATTACHMENTS
+  // ============================================
+
+  /**
+   * Add attachment to task
+   * @param {string} id - Task ID
+   * @param {File} file - File to attach
+   * @returns {Promise<{ task: Object, attachment: Object }>}
+   */
   addAttachment: async (id, file) => {
     try {
       const formData = new FormData();
@@ -795,6 +1091,12 @@ export const taskService = {
     }
   },
 
+  /**
+   * Delete attachment
+   * @param {string} id - Task ID
+   * @param {string} attachmentId - Attachment ID
+   * @returns {Promise<{ task: Object }>}
+   */
   deleteAttachment: async (id, attachmentId) => {
     try {
       const response = await api.delete(`/tasks/${id}/attachments/${attachmentId}`);
@@ -804,9 +1106,504 @@ export const taskService = {
     }
   },
 
-  getStats: async () => {
+  /**
+   * Download attachment
+   * @param {string} id - Task ID
+   * @param {string} attachmentId - Attachment ID
+   * @returns {Promise<Blob>}
+   */
+  downloadAttachment: async (id, attachmentId) => {
     try {
-      const response = await api.get('/tasks/stats');
+      const response = await api.get(
+        `/tasks/${id}/attachments/${attachmentId}/download`,
+        { responseType: 'blob' }
+      );
+      return response.data;
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // TAGS
+  // ============================================
+
+  /**
+   * Add tags to task
+   * @param {string} id - Task ID
+   * @param {Array<string>} tags - Tags to add
+   * @returns {Promise<{ task: Object }>}
+   */
+  addTags: async (id, tags) => {
+    try {
+      const response = await api.post(`/tasks/${id}/tags`, { tags });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Remove tags from task
+   * @param {string} id - Task ID
+   * @param {Array<string>} tags - Tags to remove
+   * @returns {Promise<{ task: Object }>}
+   */
+  removeTags: async (id, tags) => {
+    try {
+      const response = await api.delete(`/tasks/${id}/tags`, { data: { tags } });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // DEPENDENCIES
+  // ============================================
+
+  /**
+   * Add dependency to task
+   * @param {string} id - Task ID
+   * @param {string} dependencyTaskId - ID of task to create dependency with
+   * @param {string} type - Dependency type: 'blocks', 'blocked_by', 'relates_to'
+   * @returns {Promise<{ task: Object }>}
+   */
+  addDependency: async (id, dependencyTaskId, type = 'relates_to') => {
+    try {
+      const response = await api.post(`/tasks/${id}/dependencies`, {
+        dependencyTaskId,
+        type,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Remove dependency from task
+   * @param {string} id - Task ID
+   * @param {string} dependencyId - Dependency ID
+   * @returns {Promise<{ task: Object }>}
+   */
+  removeDependency: async (id, dependencyId) => {
+    try {
+      const response = await api.delete(`/tasks/${id}/dependencies/${dependencyId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // PROGRESS TRACKING
+  // ============================================
+
+  /**
+   * Update task progress
+   * @param {string} id - Task ID
+   * @param {number} progress - Progress percentage (0-100)
+   * @returns {Promise<{ task: Object }>}
+   */
+  updateProgress: async (id, progress) => {
+    try {
+      const response = await api.patch(`/tasks/${id}/progress`, { progress });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Log time spent on task
+   * @param {string} id - Task ID
+   * @param {number} hours - Hours spent
+   * @param {string} description - Description of work done
+   * @returns {Promise<{ task: Object }>}
+   */
+  logTime: async (id, hours, description = '') => {
+    try {
+      const response = await api.post(`/tasks/${id}/time-log`, {
+        hours,
+        description,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // ARCHIVE & RESTORE
+  // ============================================
+
+  /**
+   * Archive task
+   * @param {string} id - Task ID
+   * @returns {Promise<{ task: Object }>}
+   */
+  archive: async (id) => {
+    try {
+      const response = await api.post(`/tasks/${id}/archive`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Unarchive/restore task
+   * @param {string} id - Task ID
+   * @returns {Promise<{ task: Object }>}
+   */
+  unarchive: async (id) => {
+    try {
+      const response = await api.post(`/tasks/${id}/unarchive`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get archived tasks
+   * @param {Object} params - Filter parameters
+   * @returns {Promise<{ tasks: Array, pagination: Object }>}
+   */
+  getArchived: async (params = {}) => {
+    try {
+      const response = await api.get('/tasks/archived', { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // VIEWS & FILTERS
+  // ============================================
+
+  /**
+   * Get task board view (Kanban style)
+   * @param {Object} filters - Additional filters
+   * @returns {Promise<{ columns: Object }>}
+   */
+  getBoard: async (filters = {}) => {
+    try {
+      const response = await api.get('/tasks/board', { params: filters });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get my tasks (assigned to current user)
+   * @param {Object} params - Filter parameters
+   * @returns {Promise<{ tasks: Array }>}
+   */
+  getMyTasks: async (params = {}) => {
+    try {
+      const response = await api.get('/tasks/my', { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get overdue tasks
+   * @param {Object} params - Filter parameters
+   * @returns {Promise<{ tasks: Array }>}
+   */
+  getOverdue: async (params = {}) => {
+    try {
+      const response = await api.get('/tasks/overdue', { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get tasks due today
+   * @returns {Promise<{ tasks: Array }>}
+   */
+  getDueToday: async () => {
+    try {
+      const response = await api.get('/tasks/due-today');
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get upcoming tasks (due within specified days)
+   * @param {number} days - Number of days to look ahead
+   * @returns {Promise<{ tasks: Array }>}
+   */
+  getUpcoming: async (days = 7) => {
+    try {
+      const response = await api.get('/tasks/upcoming', { params: { days } });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get tasks by event
+   * @param {string} eventId - Event ID
+   * @returns {Promise<{ tasks: Array }>}
+   */
+  getByEvent: async (eventId) => {
+    try {
+      const response = await api.get(`/tasks/event/${eventId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get tasks by client
+   * @param {string} clientId - Client ID
+   * @returns {Promise<{ tasks: Array }>}
+   */
+  getByClient: async (clientId) => {
+    try {
+      const response = await api.get(`/tasks/client/${clientId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get tasks by partner
+   * @param {string} partnerId - Partner ID
+   * @returns {Promise<{ tasks: Array }>}
+   */
+  getByPartner: async (partnerId) => {
+    try {
+      const response = await api.get(`/tasks/partner/${partnerId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Search tasks
+   * @param {string} query - Search query
+   * @param {Object} filters - Additional filters
+   * @returns {Promise<{ tasks: Array }>}
+   */
+  search: async (query, filters = {}) => {
+    try {
+      const response = await api.get('/tasks/search', {
+        params: { q: query, ...filters },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // STATISTICS & ANALYTICS
+  // ============================================
+
+  /**
+   * Get task statistics
+   * @param {Object} params - Filter parameters (dateRange, userId, etc.)
+   * @returns {Promise<{ stats: Object }>}
+   */
+  getStats: async (params = {}) => {
+    try {
+      const response = await api.get('/tasks/stats', { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get task completion rate over time
+   * @param {Object} params - { startDate, endDate, groupBy }
+   * @returns {Promise<{ data: Array }>}
+   */
+  getCompletionRate: async (params = {}) => {
+    try {
+      const response = await api.get('/tasks/analytics/completion-rate', {
+        params,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get task distribution by category/priority/status
+   * @param {string} groupBy - Field to group by
+   * @returns {Promise<{ distribution: Object }>}
+   */
+  getDistribution: async (groupBy = 'status') => {
+    try {
+      const response = await api.get('/tasks/analytics/distribution', {
+        params: { groupBy },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get user productivity metrics
+   * @param {string} userId - User ID (optional, defaults to current user)
+   * @param {Object} params - Date range parameters
+   * @returns {Promise<{ metrics: Object }>}
+   */
+  getUserProductivity: async (userId = null, params = {}) => {
+    try {
+      const url = userId ? `/tasks/analytics/user/${userId}` : '/tasks/analytics/me';
+      const response = await api.get(url, { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // BULK OPERATIONS
+  // ============================================
+
+  /**
+   * Bulk update tasks
+   * @param {Array<string>} ids - Array of task IDs
+   * @param {Object} data - Fields to update
+   * @returns {Promise<{ updated: number, tasks: Array }>}
+   */
+  bulkUpdate: async (ids, data) => {
+    try {
+      const response = await api.patch('/tasks/bulk-update', { ids, data });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk assign tasks
+   * @param {Array<string>} ids - Array of task IDs
+   * @param {string} userId - User ID to assign to
+   * @returns {Promise<{ updated: number }>}
+   */
+  bulkAssign: async (ids, userId) => {
+    try {
+      const response = await api.patch('/tasks/bulk-assign', { ids, userId });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk complete tasks
+   * @param {Array<string>} ids - Array of task IDs
+   * @returns {Promise<{ completed: number }>}
+   */
+  bulkComplete: async (ids) => {
+    try {
+      const response = await api.post('/tasks/bulk-complete', { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk archive tasks
+   * @param {Array<string>} ids - Array of task IDs
+   * @returns {Promise<{ archived: number }>}
+   */
+  bulkArchive: async (ids) => {
+    try {
+      const response = await api.post('/tasks/bulk-archive', { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // TEMPLATES & DUPLICATION
+  // ============================================
+
+  /**
+   * Duplicate/clone a task
+   * @param {string} id - Task ID to duplicate
+   * @param {Object} overrides - Fields to override in the duplicate
+   * @returns {Promise<{ task: Object }>}
+   */
+  duplicate: async (id, overrides = {}) => {
+    try {
+      const response = await api.post(`/tasks/${id}/duplicate`, overrides);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Create task from template
+   * @param {string} templateId - Template ID
+   * @param {Object} data - Task-specific data
+   * @returns {Promise<{ task: Object }>}
+   */
+  createFromTemplate: async (templateId, data = {}) => {
+    try {
+      const response = await api.post(`/tasks/templates/${templateId}/create`, data);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // ============================================
+  // EXPORT & REPORTING
+  // ============================================
+
+  /**
+   * Export tasks to CSV/Excel
+   * @param {Object} filters - Filter parameters
+   * @param {string} format - Export format: 'csv' or 'excel'
+   * @returns {Promise<Blob>}
+   */
+  export: async (filters = {}, format = 'csv') => {
+    try {
+      const response = await api.get('/tasks/export', {
+        params: { ...filters, format },
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Generate task report
+   * @param {Object} params - Report parameters
+   * @returns {Promise<{ report: Object }>}
+   */
+  generateReport: async (params = {}) => {
+    try {
+      const response = await api.post('/tasks/reports/generate', params);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);

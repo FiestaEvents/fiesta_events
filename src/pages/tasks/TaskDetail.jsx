@@ -1,13 +1,6 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useApiDetail, useApiMutation } from "../../hooks/useApi";
-import { taskService } from "../../api/index";
-import { useAuth } from "../../context/AuthContext";
-import Button from "../../components/common/Button";
-import Badge from "../../components/common/Badge";
-import Card from "../../components/common/Card";
-import Modal from "../../components/common/Modal";
-import EmptyState from "../../components/common/EmptyState";
+import { toast } from "react-hot-toast";
 import {
   ArrowLeft,
   Edit,
@@ -16,91 +9,118 @@ import {
   User,
   Clock,
   CheckSquare,
-  XCircle,
   AlertCircle,
-  FileText,
-  Paperclip,
+  Tag,
+  Eye,
+  Link as LinkIcon,
+  Flag,
+  TrendingUp,
+  Archive,
   MessageSquare,
+  Paperclip,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { taskService } from "../../api/index";
+import Button from "../../components/common/Button";
+import Badge from "../../components/common/Badge";
+import Card from "../../components/common/Card";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import EmptyState from "../../components/common/EmptyState";
+import Modal from "../../components/common/Modal";
 
 const TaskDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  
+  const [task, setTask] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [newComment, setNewComment] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const {
-    item: task,
-    loading,
-    error,
-    refetch,
-  } = useApiDetail(taskService.getById, id);
-  const deleteMutation = useApiMutation(taskService.delete);
-  const updateMutation = useApiMutation(taskService.update);
+  useEffect(() => {
+    fetchTask();
+  }, [id]);
+
+  const fetchTask = async () => {
+    try {
+      setLoading(true);
+      const response = await taskService.getById(id);
+      
+      let fetchedTask = null;
+      if (response?.task) {
+        fetchedTask = response.task;
+      } else if (response?.data?.task) {
+        fetchedTask = response.data.task;
+      } else if (response?.data) {
+        fetchedTask = response.data;
+      } else {
+        fetchedTask = response;
+      }
+      
+      setTask(fetchedTask);
+    } catch (error) {
+      console.error("Error fetching task:", error);
+      toast.error("Failed to load task");
+      navigate("/tasks");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async () => {
     try {
-      await deleteMutation.mutate(id);
+      setDeleting(true);
+      await taskService.delete(id);
       toast.success("Task deleted successfully");
       navigate("/tasks");
     } catch (error) {
       toast.error("Failed to delete task");
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const handleToggleSubtask = async (subtaskIndex) => {
-    if (!task) return;
-
-    const updatedSubtasks = [...task.subtasks];
-    updatedSubtasks[subtaskIndex].completed =
-      !updatedSubtasks[subtaskIndex].completed;
-    if (updatedSubtasks[subtaskIndex].completed) {
-      updatedSubtasks[subtaskIndex].completedAt = new Date();
-      updatedSubtasks[subtaskIndex].completedBy = user._id;
-    } else {
-      updatedSubtasks[subtaskIndex].completedAt = null;
-      updatedSubtasks[subtaskIndex].completedBy = null;
-    }
-
+  const handleStatusChange = async (newStatus) => {
     try {
-      await updateMutation.mutate(id, { subtasks: updatedSubtasks });
-      refetch();
+      setActionLoading(true);
+      await taskService.updateStatus(id, newStatus);
+      toast.success("Status updated successfully");
+      fetchTask();
     } catch (error) {
-      toast.error("Failed to update subtask");
+      toast.error("Failed to update status");
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleAddComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    const newCommentObj = {
-      text: newComment,
-      author: user._id,
-      createdAt: new Date(),
-    };
-
+  const handleComplete = async () => {
     try {
-      await updateMutation.mutate(id, {
-        comments: [...(task.comments || []), newCommentObj],
-      });
-      setNewComment("");
-      toast.success("Comment added");
-      refetch();
+      setActionLoading(true);
+      await taskService.complete(id);
+      toast.success("Task marked as completed");
+      fetchTask();
     } catch (error) {
-      toast.error("Failed to add comment");
+      toast.error("Failed to complete task");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    try {
+      setActionLoading(true);
+      await taskService.archive(id);
+      toast.success("Task archived successfully");
+      navigate("/tasks");
+    } catch (error) {
+      toast.error("Failed to archive task");
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const getPriorityColor = (priority) => {
-    const colors = {
-      low: "gray",
-      medium: "blue",
-      high: "orange",
-      urgent: "red",
-    };
+    const colors = { low: "gray", medium: "blue", high: "orange", urgent: "red" };
     return colors[priority] || "gray";
   };
 
@@ -111,85 +131,105 @@ const TaskDetail = () => {
       in_progress: "purple",
       completed: "green",
       cancelled: "gray",
+      blocked: "red",
     };
     return colors[status] || "gray";
   };
 
   const formatDate = (date) => {
+    if (!date) return "-";
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatDateTime = (date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
+  const formatShortDate = (date) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const isOverdue = (date, status) => {
+    return new Date(date) < new Date() && !["completed", "cancelled"].includes(status);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  if (error || !task) {
+  if (!task) {
     return (
       <div className="p-6">
         <EmptyState
-          icon={XCircle}
+          icon={AlertCircle}
           title="Task Not Found"
-          description="The task you're looking for doesn't exist or has been removed."
-          action={{
-            label: "Back to Tasks",
-            onClick: () => navigate("/tasks"),
-          }}
+          description="This task doesn't exist or has been deleted"
+          action={{ label: "Back to Tasks", onClick: () => navigate("/tasks") }}
         />
       </div>
     );
   }
 
-  const completedSubtasks =
-    task.subtasks?.filter((st) => st.completed).length || 0;
+  const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
-  const progress =
-    totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+  const progress = task.progress || (totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0);
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/tasks")}
             icon={ArrowLeft}
+            onClick={() => navigate("/tasks")}
           >
             Back
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{task.title}</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Task ID: {task._id?.slice(-8).toUpperCase()}
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{task.title}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Created {formatShortDate(task.createdAt)} • Updated {formatShortDate(task.updatedAt)}
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
+          {task.status !== "completed" && (
+            <Button
+              variant="success"
+              icon={CheckSquare}
+              onClick={handleComplete}
+              loading={actionLoading}
+            >
+              Complete
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            icon={Archive}
+            onClick={handleArchive}
+            loading={actionLoading}
+          >
+            Archive
+          </Button>
           <Button
             variant="outline"
             icon={Edit}
             onClick={() => navigate(`/tasks/${id}/edit`)}
           >
-            Edit Task
+            Edit
           </Button>
           <Button
             variant="danger"
@@ -201,63 +241,94 @@ const TaskDetail = () => {
         </div>
       </div>
 
-      {/* Status Cards */}
+      {/* Status & Priority Badges */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <Badge variant={getStatusColor(task.status)} size="lg">
+          {task.status.replace("_", " ")}
+        </Badge>
+        <Badge variant={getPriorityColor(task.priority)} size="lg">
+          <Flag className="w-4 h-4 mr-1" />
+          {task.priority} priority
+        </Badge>
+        <Badge variant="purple" size="lg">
+          <TrendingUp className="w-4 h-4 mr-1" />
+          {Math.round(progress)}% complete
+        </Badge>
+        {isOverdue(task.dueDate, task.status) && (
+          <Badge variant="red" size="lg">
+            <AlertCircle className="w-4 h-4 mr-1" />
+            Overdue
+          </Badge>
+        )}
+      </div>
+
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Status</p>
-              <Badge color={getStatusColor(task.status)} className="mt-2">
-                {task.status.replace("_", " ")}
-              </Badge>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <CheckSquare className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Priority</p>
-              <Badge color={getPriorityColor(task.priority)} className="mt-2">
-                {task.priority}
-              </Badge>
-            </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <AlertCircle className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Due Date</p>
-              <p className="text-sm font-medium text-gray-900 mt-2">
-                {formatDate(task.dueDate)}
+              <p className="text-sm text-gray-600 dark:text-gray-400">Due Date</p>
+              <p className={`text-sm font-medium mt-2 ${isOverdue(task.dueDate, task.status) ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"}`}>
+                {formatShortDate(task.dueDate)}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-600" />
-            </div>
+            <Calendar className="w-8 h-8 text-gray-400" />
           </div>
         </Card>
 
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Progress</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400">Progress</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {Math.round(progress)}%
               </p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CheckSquare className="w-6 h-6 text-green-600" />
-            </div>
+            <TrendingUp className="w-8 h-8 text-gray-400" />
           </div>
         </Card>
+
+        {task.estimatedHours && (
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Estimated</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                  {task.estimatedHours}h
+                </p>
+              </div>
+              <Clock className="w-8 h-8 text-gray-400" />
+            </div>
+          </Card>
+        )}
+
+        {task.actualHours && (
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Actual</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                  {task.actualHours}h
+                </p>
+              </div>
+              <Clock className="w-8 h-8 text-gray-400" />
+            </div>
+          </Card>
+        )}
+
+        {task.subtasks && task.subtasks.length > 0 && (
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Subtasks</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                  {completedSubtasks}/{totalSubtasks}
+                </p>
+              </div>
+              <CheckSquare className="w-8 h-8 text-gray-400" />
+            </div>
+          </Card>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -266,63 +337,82 @@ const TaskDetail = () => {
           {/* Description */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Description
               </h3>
               {task.description ? (
-                <p className="text-gray-600 whitespace-pre-wrap">
+                <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
                   {task.description}
                 </p>
               ) : (
-                <p className="text-gray-500 italic">No description provided</p>
+                <p className="text-gray-500 dark:text-gray-400 italic">No description provided</p>
               )}
             </div>
           </Card>
+
+          {/* Blocked Status */}
+          {task.status === "blocked" && task.blockedReason && (
+            <Card className="border-red-200 dark:border-red-800">
+              <div className="p-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 mt-0.5" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+                      Task Blocked
+                    </h3>
+                    <p className="text-red-700 dark:text-red-300">{task.blockedReason}</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Subtasks */}
           {task.subtasks && task.subtasks.length > 0 && (
             <Card>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <CheckSquare className="w-5 h-5" />
                     Subtasks
                   </h3>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {completedSubtasks} of {totalSubtasks} completed
                   </span>
                 </div>
-
-                {/* Progress Bar */}
                 <div className="mb-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
                       className="bg-purple-600 h-2 rounded-full transition-all"
-                      style={{ width: `${progress}%` }}
+                      style={{ width: `${(completedSubtasks / totalSubtasks) * 100}%` }}
                     />
                   </div>
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {task.subtasks.map((subtask, index) => (
                     <div
                       key={index}
-                      className="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-start p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                     >
                       <input
                         type="checkbox"
                         checked={subtask.completed}
-                        onChange={() => handleToggleSubtask(index)}
-                        className="mt-1 w-4 h-4 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
+                        readOnly
+                        className="w-5 h-5 text-purple-600 rounded mt-0.5"
                       />
                       <div className="ml-3 flex-1">
-                        <p
-                          className={`text-sm ${subtask.completed ? "line-through text-gray-500" : "text-gray-900"}`}
-                        >
+                        <p className={`font-medium ${subtask.completed ? "line-through text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}`}>
                           {subtask.title}
                         </p>
-                        {subtask.completed && subtask.completedAt && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Completed on {formatDate(subtask.completedAt)}
+                        {subtask.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                            {subtask.description}
+                          </p>
+                        )}
+                        {subtask.completedAt && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Completed {formatShortDate(subtask.completedAt)}
+                            {subtask.completedBy && ` by ${subtask.completedBy.name}`}
                           </p>
                         )}
                       </div>
@@ -334,82 +424,64 @@ const TaskDetail = () => {
           )}
 
           {/* Comments */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Comments
-              </h3>
-
-              {/* Add Comment Form */}
-              <form onSubmit={handleAddComment} className="mb-6">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Add a comment..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                  <Button type="submit" variant="primary">
-                    Post
-                  </Button>
-                </div>
-              </form>
-
-              {/* Comments List */}
-              {task.comments && task.comments.length > 0 ? (
+          {task.comments && task.comments.length > 0 && (
+            <Card>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Comments ({task.comments.length})
+                </h3>
                 <div className="space-y-4">
                   {task.comments.map((comment, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                        <User className="w-4 h-4 text-purple-600" />
+                    <div key={index} className="flex gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                        </div>
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm text-gray-900">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-gray-900 dark:text-white">
                             {comment.author?.name || "Unknown"}
                           </span>
-                          <span className="text-xs text-gray-500">
-                            {formatDateTime(comment.createdAt)}
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatShortDate(comment.createdAt)}
                           </span>
+                          {comment.isEdited && (
+                            <Badge variant="gray" size="sm">edited</Badge>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-700 mt-1">
-                          {comment.text}
-                        </p>
+                        <p className="text-gray-700 dark:text-gray-300">{comment.text}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-center text-gray-500 text-sm py-4">
-                  No comments yet. Be the first to comment!
-                </p>
-              )}
-            </div>
-          </Card>
+              </div>
+            </Card>
+          )}
 
           {/* Attachments */}
           {task.attachments && task.attachments.length > 0 && (
             <Card>
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Attachments
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Paperclip className="w-5 h-5" />
+                  Attachments ({task.attachments.length})
                 </h3>
                 <div className="space-y-2">
                   {task.attachments.map((attachment, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center">
-                        <Paperclip className="w-4 h-4 text-gray-400 mr-2" />
-                        <span className="text-sm text-gray-900">
-                          {attachment.fileName}
-                        </span>
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Paperclip className="w-4 h-4 text-gray-400" />
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{attachment.fileName}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {attachment.fileSize && `${(attachment.fileSize / 1024).toFixed(2)} KB • `}
+                            Uploaded {formatShortDate(attachment.uploadDate)}
+                          </p>
+                        </div>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        Download
-                      </Button>
+                      <Button variant="ghost" size="sm">Download</Button>
                     </div>
                   ))}
                 </div>
@@ -420,136 +492,251 @@ const TaskDetail = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Details */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Details
               </h3>
               <div className="space-y-4">
                 {task.assignedTo && (
                   <div>
-                    <p className="text-sm text-gray-600">Assigned To</p>
-                    <div className="flex items-center mt-1">
-                      <User className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Assigned To</p>
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900 dark:text-white">
                         {task.assignedTo.name}
                       </span>
                     </div>
                   </div>
                 )}
 
+                {task.assignedBy && (
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Assigned By</p>
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900 dark:text-white">
+                        {task.assignedBy.name}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {task.watchers && task.watchers.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Watchers</p>
+                    <div className="flex flex-wrap gap-2">
+                      {task.watchers.map((watcher, index) => (
+                        <Badge key={index} variant="blue" size="sm">
+                          <Eye className="w-3 h-3 mr-1" />
+                          {watcher.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {task.category && (
                   <div>
-                    <p className="text-sm text-gray-600">Category</p>
-                    <Badge color="blue" className="mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Category</p>
+                    <Badge variant="purple">
                       {task.category.replace("_", " ")}
                     </Badge>
                   </div>
                 )}
 
-                {task.estimatedHours && (
+                {task.tags && task.tags.length > 0 && (
                   <div>
-                    <p className="text-sm text-gray-600">Estimated Hours</p>
-                    <div className="flex items-center mt-1">
-                      <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">
-                        {task.estimatedHours}h
-                      </span>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Tags</p>
+                    <div className="flex flex-wrap gap-2">
+                      {task.tags.map((tag, index) => (
+                        <Badge key={index} variant="gray" size="sm">
+                          <Tag className="w-3 h-3 mr-1" />
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {task.actualHours && (
+                {task.startDate && (
                   <div>
-                    <p className="text-sm text-gray-600">Actual Hours</p>
-                    <div className="flex items-center mt-1">
-                      <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">
-                        {task.actualHours}h
-                      </span>
-                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Start Date</p>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {formatShortDate(task.startDate)}
+                    </p>
                   </div>
                 )}
 
-                {task.relatedEvent && (
+                {task.reminderDate && (
                   <div>
-                    <p className="text-sm text-gray-600">Related Event</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        navigate(`/events/${task.relatedEvent._id}`)
-                      }
-                      className="mt-1"
-                    >
-                      View Event
-                    </Button>
-                  </div>
-                )}
-
-                {task.relatedClient && (
-                  <div>
-                    <p className="text-sm text-gray-600">Related Client</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        navigate(`/clients/${task.relatedClient._id}`)
-                      }
-                      className="mt-1"
-                    >
-                      View Client
-                    </Button>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Reminder Date</p>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {formatShortDate(task.reminderDate)}
+                    </p>
                   </div>
                 )}
               </div>
             </div>
           </Card>
 
+          {/* Related Entities */}
+          {(task.relatedEvent || task.relatedClient || task.relatedPartner) && (
+            <Card>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <LinkIcon className="w-5 h-5" />
+                  Related
+                </h3>
+                <div className="space-y-3">
+                  {task.relatedEvent && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Event</p>
+                      <p 
+                        className="text-sm text-blue-600 dark:text-blue-400 cursor-pointer hover:underline"
+                        onClick={() => navigate(`/events/${task.relatedEvent._id}`)}
+                      >
+                        {task.relatedEvent.title}
+                      </p>
+                    </div>
+                  )}
+
+                  {task.relatedClient && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Client</p>
+                      <p 
+                        className="text-sm text-green-600 dark:text-green-400 cursor-pointer hover:underline"
+                        onClick={() => navigate(`/clients/${task.relatedClient._id}`)}
+                      >
+                        {task.relatedClient.name}
+                      </p>
+                    </div>
+                  )}
+
+                  {task.relatedPartner && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Partner</p>
+                      <p className="text-sm text-purple-600 dark:text-purple-400">
+                        {task.relatedPartner.name}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Timeline */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Timeline
               </h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600">Created</p>
-                  <p className="text-sm text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Created</p>
+                  <p className="text-sm text-gray-900 dark:text-white mt-1">
                     {formatDate(task.createdAt)}
                   </p>
+                  {task.createdBy && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      by {task.createdBy.name}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-600">Last Updated</p>
-                  <p className="text-sm text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Last Updated</p>
+                  <p className="text-sm text-gray-900 dark:text-white mt-1">
                     {formatDate(task.updatedAt)}
                   </p>
                 </div>
 
-                {task.completedAt && (
+                {task.assignedAt && (
                   <div>
-                    <p className="text-sm text-gray-600">Completed</p>
-                    <p className="text-sm text-gray-900 mt-1">
-                      {formatDate(task.completedAt)}
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Assigned</p>
+                    <p className="text-sm text-gray-900 dark:text-white mt-1">
+                      {formatDate(task.assignedAt)}
                     </p>
                   </div>
                 )}
 
-                {task.createdBy && (
+                {task.completedAt && (
                   <div>
-                    <p className="text-sm text-gray-600">Created By</p>
-                    <p className="text-sm text-gray-900 mt-1">
-                      {task.createdBy.name}
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                    <p className="text-sm text-gray-900 dark:text-white mt-1">
+                      {formatDate(task.completedAt)}
                     </p>
+                    {task.completedBy && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        by {task.completedBy.name}
+                      </p>
+                    )}
                   </div>
                 )}
+
+                {task.cancelledAt && (
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Cancelled</p>
+                    <p className="text-sm text-gray-900 dark:text-white mt-1">
+                      {formatDate(task.cancelledAt)}
+                    </p>
+                    {task.cancelledBy && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        by {task.cancelledBy.name}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Quick Actions
+              </h3>
+              <div className="space-y-2">
+                {task.status !== "completed" && (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    icon={CheckSquare}
+                    onClick={handleComplete}
+                    loading={actionLoading}
+                  >
+                    Mark as Complete
+                  </Button>
+                )}
+                {task.status !== "in_progress" && task.status !== "completed" && (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => handleStatusChange("in_progress")}
+                    loading={actionLoading}
+                  >
+                    Start Working
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  icon={Archive}
+                  onClick={handleArchive}
+                  loading={actionLoading}
+                >
+                  Archive Task
+                </Button>
               </div>
             </div>
           </Card>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Modal */}
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -557,20 +744,16 @@ const TaskDetail = () => {
         size="sm"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
-            Are you sure you want to delete <strong>{task.title}</strong>? This
-            action cannot be undone.
+          <p className="text-gray-600 dark:text-gray-300">
+            Are you sure you want to delete <strong>{task.title}</strong>?
+            This action cannot be undone.
           </p>
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
               Cancel
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleDelete}
-              loading={deleteMutation.loading}
-            >
-              Delete Task
+            <Button variant="danger" onClick={handleDelete} loading={deleting}>
+              Delete
             </Button>
           </div>
         </div>

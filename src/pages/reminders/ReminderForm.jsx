@@ -2,35 +2,36 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { 
-  ArrowLeft, 
   Save, 
   X,
   Bell,
   Calendar,
-  Users,
-  Link,
-  FileText
+  Link2,
+  AlertCircle,
+  Repeat,
+  Mail,
+  MessageSquare,
+  Smartphone,
+  BellRing,
+  CheckCircle2,
+  ChevronRight,
+  ChevronLeft,
+  Check
 } from 'lucide-react';
 
-// Services
 import { 
   reminderService, 
   eventService, 
   clientService, 
   taskService, 
-  paymentService, 
-  userService 
+  paymentService
 } from '../../api/index';
-
-// Components
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Textarea from '../../components/common/Textarea';
 import Select from '../../components/common/Select';
-import Card from '../../components/common/Card';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
 
-// Constants from Reminder model
+// Constants
 const REMINDER_TYPES = {
   EVENT: 'event',
   PAYMENT: 'payment',
@@ -62,19 +63,29 @@ const NOTIFICATION_METHODS = {
 };
 
 const DAYS_OF_WEEK = [
-  { value: 0, label: 'Sun' },
-  { value: 1, label: 'Mon' },
-  { value: 2, label: 'Tue' },
-  { value: 3, label: 'Wed' },
-  { value: 4, label: 'Thu' },
-  { value: 5, label: 'Fri' },
-  { value: 6, label: 'Sat' }
+  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' }
 ];
 
-const ReminderForm = () => {
+const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const isEditMode = Boolean(id);
+  
+  // Determine if we're in edit mode
+  const isEditMode = Boolean(id || reminderProp?._id || reminderProp?.id);
+  const reminderId = id || reminderProp?._id || reminderProp?.id;
+  
+  // Determine if we're in modal mode (has callbacks)
+  const isModalMode = Boolean(onSuccess && onCancel);
+
+  // Multi-step state
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
 
   // State
   const [isLoading, setIsLoading] = useState(false);
@@ -83,12 +94,11 @@ const ReminderForm = () => {
   const [clients, setClients] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [payments, setPayments] = useState([]);
-  const [users, setUsers] = useState([]);
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: REMINDER_TYPES.OTHER,
+    type: REMINDER_TYPES.TASK,
     priority: REMINDER_PRIORITIES.MEDIUM,
     reminderDate: '',
     reminderTime: '',
@@ -105,92 +115,126 @@ const ReminderForm = () => {
     relatedClient: '',
     relatedTask: '',
     relatedPayment: '',
-    assignedTo: [],
     notes: '',
   });
 
   const [errors, setErrors] = useState({});
 
-  // Fetch reminder data
+  // Step configuration
+  const steps = [
+    {
+      number: 1,
+      title: "Basic Info",
+      icon: Bell,
+      color: "orange",
+    },
+    {
+      number: 2,
+      title: "Related Items",
+      icon: Link2,
+      color: "orange",
+    },
+    {
+      number: 3,
+      title: "Notifications",
+      icon: BellRing,
+      color: "orange",
+    },
+    {
+      number: 4,
+      title: "Recurrence",
+      icon: Repeat,
+      color: "orange",
+    },
+  ];
+
+  // Load reminder data into form
+  const loadReminderData = useCallback((reminderData) => {
+    if (!reminderData) return;
+
+    setFormData({
+      title: reminderData.title || '',
+      description: reminderData.description || '',
+      type: reminderData.type || REMINDER_TYPES.TASK,
+      priority: reminderData.priority || REMINDER_PRIORITIES.MEDIUM,
+      reminderDate: reminderData.reminderDate ? 
+        new Date(reminderData.reminderDate).toISOString().split('T')[0] : '',
+      reminderTime: reminderData.reminderTime || '',
+      isRecurring: reminderData.isRecurring || false,
+      recurrence: {
+        frequency: reminderData.recurrence?.frequency || RECURRENCE_FREQUENCIES.DAILY,
+        interval: reminderData.recurrence?.interval || 1,
+        endDate: reminderData.recurrence?.endDate ? 
+          new Date(reminderData.recurrence.endDate).toISOString().split('T')[0] : '',
+        daysOfWeek: reminderData.recurrence?.daysOfWeek || [],
+        dayOfMonth: reminderData.recurrence?.dayOfMonth?.toString() || '',
+      },
+      notificationMethods: reminderData.notificationMethods || [NOTIFICATION_METHODS.IN_APP],
+      relatedEvent: reminderData.relatedEvent?._id || reminderData.relatedEvent || '',
+      relatedClient: reminderData.relatedClient?._id || reminderData.relatedClient || '',
+      relatedTask: reminderData.relatedTask?._id || reminderData.relatedTask || '',
+      relatedPayment: reminderData.relatedPayment?._id || reminderData.relatedPayment || '',
+      notes: reminderData.notes || '',
+    });
+  }, []);
+
+  // Fetch reminder data (for edit mode via route)
   const fetchReminder = useCallback(async () => {
-    if (!isEditMode) return;
+    if (!isEditMode || reminderProp) return;
 
     try {
       setIsLoading(true);
-      // FIXED: API service handleResponse already normalizes the response
-      const response = await reminderService.getById(id);
-      
-      // Response should be { reminder: {...} } after handleResponse
+      const response = await reminderService.getById(reminderId);
       const reminderData = response?.reminder || response;
-
-      if (reminderData) {
-        setFormData({
-          title: reminderData.title || '',
-          description: reminderData.description || '',
-          type: reminderData.type || REMINDER_TYPES.OTHER,
-          priority: reminderData.priority || REMINDER_PRIORITIES.MEDIUM,
-          reminderDate: reminderData.reminderDate ? 
-            new Date(reminderData.reminderDate).toISOString().split('T')[0] : '',
-          reminderTime: reminderData.reminderTime || '',
-          isRecurring: reminderData.isRecurring || false,
-          recurrence: {
-            frequency: reminderData.recurrence?.frequency || RECURRENCE_FREQUENCIES.DAILY,
-            interval: reminderData.recurrence?.interval || 1,
-            endDate: reminderData.recurrence?.endDate ? 
-              new Date(reminderData.recurrence.endDate).toISOString().split('T')[0] : '',
-            daysOfWeek: reminderData.recurrence?.daysOfWeek || [],
-            dayOfMonth: reminderData.recurrence?.dayOfMonth?.toString() || '',
-          },
-          notificationMethods: reminderData.notificationMethods || [NOTIFICATION_METHODS.IN_APP],
-          relatedEvent: reminderData.relatedEvent?._id || reminderData.relatedEvent || '',
-          relatedClient: reminderData.relatedClient?._id || reminderData.relatedClient || '',
-          relatedTask: reminderData.relatedTask?._id || reminderData.relatedTask || '',
-          relatedPayment: reminderData.relatedPayment?._id || reminderData.relatedPayment || '',
-          assignedTo: reminderData.assignedTo?.map(u => u._id || u) || [],
-          notes: reminderData.notes || '',
-        });
-      }
+      loadReminderData(reminderData);
     } catch (error) {
       console.error('Error fetching reminder:', error);
       toast.error(error.message || 'Failed to load reminder');
-      navigate('/reminders');
+      if (!isModalMode) {
+        navigate('/reminders');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [id, isEditMode, navigate]);
+  }, [reminderId, isEditMode, reminderProp, loadReminderData, isModalMode, navigate]);
 
   // Fetch related data
   const fetchRelatedData = useCallback(async () => {
     try {
-      const [eventsRes, clientsRes, tasksRes, paymentsRes, usersRes] = await Promise.all([
+      setIsLoading(true);
+      
+      const [eventsRes, clientsRes, tasksRes, paymentsRes] = await Promise.all([
         eventService.getAll({ page: 1, limit: 100 }),
         clientService.getAll({ page: 1, limit: 100 }),
         taskService.getAll({ page: 1, limit: 100 }),
         paymentService.getAll({ page: 1, limit: 100 }),
-        userService.getAll({ page: 1, limit: 100 }),
       ]);
 
-      // FIXED: API service handleResponse returns normalized data
-      // Expected response structure: { events: [], pagination: {} }
       setEvents(eventsRes?.events || []);
       setClients(clientsRes?.clients || []);
       setTasks(tasksRes?.tasks || []);
       setPayments(paymentsRes?.payments || []);
-      setUsers(usersRes?.users || []);
 
     } catch (error) {
       console.error('Failed to fetch related data:', error);
-      toast.error('Failed to load related data');
+      toast.error('Failed to load form data');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   // Effects
   useEffect(() => {
-    fetchReminder();
+    if (reminderProp) {
+      loadReminderData(reminderProp);
+    } else {
+      fetchReminder();
+    }
+    
     fetchRelatedData();
-  }, [fetchReminder, fetchRelatedData]);
+  }, [reminderProp, fetchReminder, fetchRelatedData, loadReminderData]);
 
-  // Event handlers
+  // Form handlers
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     
@@ -211,7 +255,6 @@ const ReminderForm = () => {
       }));
     }
 
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -247,42 +290,43 @@ const ReminderForm = () => {
     });
   }, []);
 
-  const handleAssignedUserToggle = useCallback((userId) => {
-    setFormData(prev => {
-      const users = prev.assignedTo.includes(userId)
-        ? prev.assignedTo.filter(u => u !== userId)
-        : [...prev.assignedTo, userId];
-      
-      return { ...prev, assignedTo: users };
-    });
-  }, []);
-
-  // Validation
-  const validate = useCallback(() => {
+  // Step validation
+  const validateStep = (step) => {
     const newErrors = {};
 
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-
-    if (!formData.reminderDate) {
-      newErrors.reminderDate = 'Date is required';
-    } else {
-      // FIXED: Proper date comparison
-      const reminderDate = new Date(formData.reminderDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      if (reminderDate < today) {
-        newErrors.reminderDate = 'Date must be today or in the future';
+    if (step === 1) {
+      if (!formData.title.trim()) {
+        newErrors.title = 'Title is required';
+      }
+      if (!formData.reminderDate) {
+        newErrors.reminderDate = 'Date is required';
+      } else {
+        const reminderDate = new Date(formData.reminderDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (reminderDate < today) {
+          newErrors.reminderDate = 'Date must be today or in the future';
+        }
+      }
+      if (!formData.reminderTime) {
+        newErrors.reminderTime = 'Time is required';
       }
     }
 
-    if (!formData.reminderTime) {
-      newErrors.reminderTime = 'Time is required';
+    if (step === 2) {
+      if (!formData.relatedTask) {
+        newErrors.relatedTask = 'Task is required';
+      }
     }
 
-    if (formData.isRecurring) {
+    if (step === 3) {
+      if (formData.notificationMethods.length === 0) {
+        newErrors.notificationMethods = 'At least one notification method is required';
+      }
+    }
+
+    if (step === 4 && formData.isRecurring) {
       if (!formData.recurrence.frequency) {
         newErrors['recurrence.frequency'] = 'Frequency is required for recurring reminders';
       }
@@ -295,40 +339,108 @@ const ReminderForm = () => {
           formData.recurrence.daysOfWeek.length === 0) {
         newErrors['recurrence.daysOfWeek'] = 'At least one day must be selected for weekly recurrence';
       }
-
-      if (formData.recurrence.frequency === RECURRENCE_FREQUENCIES.MONTHLY) {
-        const dayOfMonth = parseInt(formData.recurrence.dayOfMonth);
-        if (!formData.recurrence.dayOfMonth || isNaN(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) {
-          newErrors['recurrence.dayOfMonth'] = 'Day of month must be between 1 and 31';
-        }
-      }
-
-      // FIXED: Validate end date if provided
-      if (formData.recurrence.endDate) {
-        const endDate = new Date(formData.recurrence.endDate);
-        const reminderDate = new Date(formData.reminderDate);
-        
-        if (endDate <= reminderDate) {
-          newErrors['recurrence.endDate'] = 'End date must be after reminder date';
-        }
-      }
     }
 
-    // FIXED: Validate at least one notification method
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Validate all required fields
+  const validateAllRequired = () => {
+    const newErrors = {};
+
+    // Step 1 validations
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+    if (!formData.reminderDate) {
+      newErrors.reminderDate = 'Date is required';
+    }
+    if (!formData.reminderTime) {
+      newErrors.reminderTime = 'Time is required';
+    }
+
+    // Step 2 validations
+    if (!formData.relatedTask) {
+      newErrors.relatedTask = 'Task is required';
+    }
+
+    // Step 3 validations
     if (formData.notificationMethods.length === 0) {
       newErrors.notificationMethods = 'At least one notification method is required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData]);
+  };
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    } else {
+      toast.error('Please fix the errors before proceeding');
+    }
+  };
+
+  const handlePrevious = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleStepClick = (step, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (step < currentStep || validateStep(currentStep)) {
+      setCurrentStep(step);
+    }
+  };
+
+  // Prevent Enter key from submitting form except on last step
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && currentStep < totalSteps) {
+      e.preventDefault();
+      handleNext(e);
+    }
+  };
+
+  // Quick update handler
+  const handleQuickUpdate = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!validateAllRequired()) {
+      toast.error('Please fix all required fields before updating');
+      setCurrentStep(1);
+      return;
+    }
+
+    await handleSubmit(e);
+  };
 
   // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validate()) {
-      toast.error('Please fix the form errors');
+    // For create mode on non-final steps, validate current step only
+    if (!isEditMode && currentStep < totalSteps) {
+      if (!validateStep(currentStep)) {
+        toast.error('Please fix the errors in the form');
+        return;
+      }
+      handleNext(e);
+      return;
+    }
+
+    // For final step or edit mode, validate all
+    if (!validateAllRequired()) {
+      toast.error('Please fix all required fields');
       return;
     }
 
@@ -346,9 +458,10 @@ const ReminderForm = () => {
         isRecurring: formData.isRecurring,
         notificationMethods: formData.notificationMethods,
         notes: formData.notes.trim(),
+        relatedTask: formData.relatedTask,
       };
 
-      // FIXED: Only include recurrence if isRecurring is true
+      // Only include recurrence if isRecurring is true
       if (formData.isRecurring) {
         submitData.recurrence = {
           frequency: formData.recurrence.frequency,
@@ -363,30 +476,28 @@ const ReminderForm = () => {
         };
       }
 
-      // Only include related items if they have values
+      // Only include optional related items if they have values
       if (formData.relatedEvent) submitData.relatedEvent = formData.relatedEvent;
       if (formData.relatedClient) submitData.relatedClient = formData.relatedClient;
-      if (formData.relatedTask) submitData.relatedTask = formData.relatedTask;
       if (formData.relatedPayment) submitData.relatedPayment = formData.relatedPayment;
-      
-      // Only include assignedTo if there are users
-      if (formData.assignedTo.length > 0) {
-        submitData.assignedTo = formData.assignedTo;
-      }
 
       if (isEditMode) {
-        await reminderService.update(id, submitData);
+        await reminderService.update(reminderId, submitData);
         toast.success('Reminder updated successfully');
       } else {
         await reminderService.create(submitData);
         toast.success('Reminder created successfully');
       }
 
-      navigate('/reminders');
+      // Handle success based on mode
+      if (isModalMode && onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/reminders');
+      }
     } catch (error) {
       console.error('Error saving reminder:', error);
       
-      // FIXED: Handle validation errors from API
       if (error.status === 400 || error.status === 422) {
         if (error.errors) {
           setErrors(error.errors);
@@ -401,437 +512,499 @@ const ReminderForm = () => {
     }
   };
 
-  const handleCancel = useCallback(() => {
-    navigate('/reminders');
-  }, [navigate]);
+  const handleCancelClick = useCallback(() => {
+    if (isModalMode && onCancel) {
+      onCancel();
+    } else {
+      navigate('/reminders');
+    }
+  }, [isModalMode, onCancel, navigate]);
 
-  // Select options
-  const typeOptions = [
-    { value: REMINDER_TYPES.EVENT, label: 'Event' },
-    { value: REMINDER_TYPES.PAYMENT, label: 'Payment' },
-    { value: REMINDER_TYPES.TASK, label: 'Task' },
-    { value: REMINDER_TYPES.MAINTENANCE, label: 'Maintenance' },
-    { value: REMINDER_TYPES.FOLLOWUP, label: 'Follow-up' },
-    { value: REMINDER_TYPES.OTHER, label: 'Other' }
-  ];
+  // Render step indicator
+  const renderStepIndicator = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between">
+        {steps.map((step, index) => {
+          const isCompleted = step.number < currentStep;
+          const isCurrent = step.number === currentStep;
+          const StepIcon = step.icon;
 
-  const priorityOptions = [
-    { value: REMINDER_PRIORITIES.LOW, label: 'Low' },
-    { value: REMINDER_PRIORITIES.MEDIUM, label: 'Medium' },
-    { value: REMINDER_PRIORITIES.HIGH, label: 'High' },
-    { value: REMINDER_PRIORITIES.URGENT, label: 'Urgent' }
-  ];
+          return (
+            <React.Fragment key={step.number}>
+              <button
+                type="button"
+                onClick={(e) => handleStepClick(step.number, e)}
+                className={`flex flex-col items-center gap-2 transition-all ${
+                  isCompleted || isCurrent
+                    ? "cursor-pointer"
+                    : "cursor-not-allowed opacity-50"
+                }`}
+                disabled={!isCompleted && !isCurrent}
+              >
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                    isCompleted
+                      ? "bg-orange-600 text-white"
+                      : isCurrent
+                        ? "bg-orange-600 text-white ring-4 ring-orange-200 dark:ring-orange-900"
+                        : "bg-orange-200 dark:bg-orange-700 text-orange-400"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <Check className="w-6 h-6" />
+                  ) : (
+                    <StepIcon className="w-6 h-6" />
+                  )}
+                </div>
+                <div className="text-center">
+                  <div
+                    className={`text-sm font-medium ${
+                      isCompleted || isCurrent
+                        ? "text-gray-900 dark:text-white"
+                        : "text-gray-400 dark:text-gray-500"
+                    }`}
+                  >
+                    {step.title}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Step {step.number} of {totalSteps}
+                  </div>
+                </div>
+              </button>
+              {index < steps.length - 1 && (
+                <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 mx-2 mb-8">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      step.number < currentStep
+                        ? "bg-orange-600"
+                        : "bg-transparent"
+                    }`}
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
 
-  const frequencyOptions = [
-    { value: RECURRENCE_FREQUENCIES.DAILY, label: 'Daily' },
-    { value: RECURRENCE_FREQUENCIES.WEEKLY, label: 'Weekly' },
-    { value: RECURRENCE_FREQUENCIES.MONTHLY, label: 'Monthly' },
-    { value: RECURRENCE_FREQUENCIES.YEARLY, label: 'Yearly' }
-  ];
+  // Render step content
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="p-2 bg-orange-600 rounded-lg">
+                <Bell className="w-5 h-5 text-white" />
+              </div>
+              Basic Information
+            </h3>
 
-  const notificationMethodOptions = [
-    { value: NOTIFICATION_METHODS.EMAIL, label: 'Email' },
-    { value: NOTIFICATION_METHODS.SMS, label: 'SMS' },
-    { value: NOTIFICATION_METHODS.PUSH, label: 'Push Notification' },
-    { value: NOTIFICATION_METHODS.IN_APP, label: 'In-App' }
-  ];
+            <Input
+              label="Title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              error={errors.title}
+              required
+              placeholder="Enter reminder title..."
+              className="w-full"
+            />
+
+            <Textarea
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Add a description for this reminder..."
+              className="w-full dark:bg-gray-800"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select
+                label="Type"
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                className="w-full"
+              >
+                <option value={REMINDER_TYPES.EVENT}>Event</option>
+                <option value={REMINDER_TYPES.PAYMENT}>Payment</option>
+                <option value={REMINDER_TYPES.TASK}>Task</option>
+                <option value={REMINDER_TYPES.MAINTENANCE}>Maintenance</option>
+                <option value={REMINDER_TYPES.FOLLOWUP}>Follow-up</option>
+                <option value={REMINDER_TYPES.OTHER}>Other</option>
+              </Select>
+
+              <Select
+                label="Priority"
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+                className="w-full"
+              >
+                <option value={REMINDER_PRIORITIES.LOW}>Low</option>
+                <option value={REMINDER_PRIORITIES.MEDIUM}>Medium</option>
+                <option value={REMINDER_PRIORITIES.HIGH}>High</option>
+                <option value={REMINDER_PRIORITIES.URGENT}>Urgent</option>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Date"
+                name="reminderDate"
+                type="date"
+                value={formData.reminderDate}
+                onChange={handleChange}
+                error={errors.reminderDate}
+                required
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full"
+              />
+
+              <Input
+                label="Time"
+                name="reminderTime"
+                type="time"
+                value={formData.reminderTime}
+                onChange={handleChange}
+                error={errors.reminderTime}
+                required
+                className="w-full"
+              />
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="p-2 bg-orange-600 rounded-lg">
+                <Link2 className="w-5 h-5 text-white" />
+              </div>
+              Related Items
+            </h3>
+
+            <Select
+              label="Related Event"
+              name="relatedEvent"
+              value={formData.relatedEvent}
+              onChange={handleChange}
+              className="w-full"
+            >
+              <option value="">Select an event...</option>
+              {events.map((event) => (
+                <option key={event._id} value={event._id}>
+                  {event.title} - {new Date(event.startDate).toLocaleDateString()}
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              label="Related Client"
+              name="relatedClient"
+              value={formData.relatedClient}
+              onChange={handleChange}
+              className="w-full"
+            >
+              <option value="">Select a client...</option>
+              {clients.map((client) => (
+                <option key={client._id} value={client._id}>
+                  {client.name} {client.company ? `(${client.company})` : ''}
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              label="Related Task"
+              name="relatedTask"
+              value={formData.relatedTask}
+              onChange={handleChange}
+              error={errors.relatedTask}
+              required
+              className="w-full"
+            >
+              <option value="">Select a task...</option>
+              {tasks.map((task) => (
+                <option key={task._id} value={task._id}>
+                  {task.title} - {task.status} ({task.priority})
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              label="Related Payment"
+              name="relatedPayment"
+              value={formData.relatedPayment}
+              onChange={handleChange}
+              className="w-full"
+            >
+              <option value="">Select a payment...</option>
+              {payments.map((payment) => (
+                <option key={payment._id} value={payment._id}>
+                  Payment #{payment._id?.slice(-6)} - ${payment.amount} ({payment.status})
+                </option>
+              ))}
+            </Select>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="p-2 bg-orange-600 rounded-lg">
+                <BellRing className="w-5 h-5 text-white" />
+              </div>
+              Notification Methods
+            </h3>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Notification Methods <span className="text-red-500">*</span>
+              </label>
+              
+              {[
+                { value: NOTIFICATION_METHODS.EMAIL, label: 'Email', icon: Mail },
+                { value: NOTIFICATION_METHODS.SMS, label: 'SMS', icon: MessageSquare },
+                { value: NOTIFICATION_METHODS.PUSH, label: 'Push', icon: Smartphone },
+                { value: NOTIFICATION_METHODS.IN_APP, label: 'In-App', icon: BellRing }
+              ].map((method) => {
+                const Icon = method.icon;
+                const isSelected = formData.notificationMethods.includes(method.value);
+                return (
+                  <label key={method.value} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleNotificationMethodToggle(method.value)}
+                      className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                    />
+                    <Icon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{method.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {errors.notificationMethods && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-2 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.notificationMethods}
+              </p>
+            )}
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="p-2 bg-orange-600 rounded-lg">
+                <Repeat className="w-5 h-5 text-white" />
+              </div>
+              Recurrence Settings
+            </h3>
+
+            <div className="flex items-center gap-3 mb-6">
+              <input
+                type="checkbox"
+                name="isRecurring"
+                checked={formData.isRecurring}
+                onChange={handleChange}
+                className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Recurrence</span>
+            </div>
+            
+            {formData.isRecurring && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Select
+                    label="Frequency"
+                    name="recurrence.frequency"
+                    value={formData.recurrence.frequency}
+                    onChange={handleChange}
+                    error={errors['recurrence.frequency']}
+                    className="w-full"
+                  >
+                    <option value={RECURRENCE_FREQUENCIES.DAILY}>Daily</option>
+                    <option value={RECURRENCE_FREQUENCIES.WEEKLY}>Weekly</option>
+                    <option value={RECURRENCE_FREQUENCIES.MONTHLY}>Monthly</option>
+                    <option value={RECURRENCE_FREQUENCIES.YEARLY}>Yearly</option>
+                  </Select>
+
+                  <Input
+                    label="Interval"
+                    name="recurrence.interval"
+                    type="number"
+                    value={formData.recurrence.interval}
+                    onChange={handleChange}
+                    error={errors['recurrence.interval']}
+                    min="1"
+                    placeholder="e.g., 1"
+                    className="w-full"
+                  />
+                </div>
+
+                {formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                      Days of Week <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {DAYS_OF_WEEK.map((day) => (
+                        <label
+                          key={day.value}
+                          className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            formData.recurrence.daysOfWeek.includes(day.value)
+                              ? 'bg-orange-500 border-orange-500 text-white'
+                              : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-orange-300'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.recurrence.daysOfWeek.includes(day.value)}
+                            onChange={() => handleDayOfWeekToggle(day.value)}
+                            className="sr-only"
+                          />
+                          <span className="text-sm font-medium">{day.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {errors['recurrence.daysOfWeek'] && (
+                      <p className="text-sm text-red-600 dark:text-red-400 mt-2 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors['recurrence.daysOfWeek']}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <Textarea
+                  label="Notes"
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Add any additional notes about this reminder..."
+                  className="w-full dark:bg-gray-800"
+                />
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <LoadingSpinner size="lg" />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="text-gray-600 dark:text-gray-400 font-medium mt-4">Loading reminder form...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            icon={ArrowLeft}
-            onClick={handleCancel}
-          />
+      {!isModalMode && (
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isEditMode ? 'Edit Reminder' : 'Create Reminder'}
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {isEditMode ? 'Edit Reminder' : 'Create New Reminder'}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {isEditMode ? 'Update reminder details and settings' : 'Set up a new reminder for events, tasks, or payments'}
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              {isEditMode ? 'Update reminder details' : 'Set up notifications for important deadlines'}
             </p>
           </div>
         </div>
-      </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-orange-500" />
-                  Basic Information
-                </h3>
+      <form
+        onSubmit={handleSubmit}
+        onKeyDown={handleKeyDown}
+        className="space-y-6"
+      >
+        {/* Step Indicator */}
+        {renderStepIndicator()}
 
-                <div className="space-y-4">
-                  <Input
-                    label="Title *"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    error={errors.title}
-                    required
-                    placeholder="Enter reminder title"
-                    maxLength={200}
-                  />
+        {/* Step Content */}
+        <div className="min-h-[400px]">{renderStepContent()}</div>
 
-                  <Textarea
-                    label="Description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Enter reminder description (optional)"
-                    maxLength={1000}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Select
-                      label="Type *"
-                      name="type"
-                      value={formData.type}
-                      onChange={handleChange}
-                      options={typeOptions}
-                      required
-                    />
-
-                    <Select
-                      label="Priority *"
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleChange}
-                      options={priorityOptions}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      label="Date *"
-                      type="date"
-                      name="reminderDate"
-                      value={formData.reminderDate}
-                      onChange={handleChange}
-                      error={errors.reminderDate}
-                      required
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-
-                    <Input
-                      label="Time *"
-                      type="time"
-                      name="reminderTime"
-                      value={formData.reminderTime}
-                      onChange={handleChange}
-                      error={errors.reminderTime}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Recurrence Settings */}
-            <Card>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-orange-500" />
-                    Recurrence Settings
-                  </h3>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="isRecurring"
-                      checked={formData.isRecurring}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Recurring Reminder
-                    </span>
-                  </label>
-                </div>
-
-                {formData.isRecurring && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Select
-                        label="Frequency *"
-                        name="recurrence.frequency"
-                        value={formData.recurrence.frequency}
-                        onChange={handleChange}
-                        options={frequencyOptions}
-                        error={errors['recurrence.frequency']}
-                      />
-
-                      <Input
-                        label="Interval *"
-                        type="number"
-                        name="recurrence.interval"
-                        value={formData.recurrence.interval}
-                        onChange={handleChange}
-                        error={errors['recurrence.interval']}
-                        min="1"
-                        placeholder="e.g., 1"
-                      />
-                    </div>
-
-                    {formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Days of Week *
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {DAYS_OF_WEEK.map((day) => (
-                            <button
-                              key={day.value}
-                              type="button"
-                              onClick={() => handleDayOfWeekToggle(day.value)}
-                              className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                                formData.recurrence.daysOfWeek.includes(day.value)
-                                  ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-300'
-                                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
-                              }`}
-                            >
-                              {day.label}
-                            </button>
-                          ))}
-                        </div>
-                        {errors['recurrence.daysOfWeek'] && (
-                          <p className="text-red-600 dark:text-red-400 text-sm mt-1">
-                            {errors['recurrence.daysOfWeek']}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {formData.recurrence.frequency === RECURRENCE_FREQUENCIES.MONTHLY && (
-                      <Input
-                        label="Day of Month *"
-                        type="number"
-                        name="recurrence.dayOfMonth"
-                        value={formData.recurrence.dayOfMonth}
-                        onChange={handleChange}
-                        error={errors['recurrence.dayOfMonth']}
-                        min="1"
-                        max="31"
-                        placeholder="e.g., 15"
-                      />
-                    )}
-
-                    <Input
-                      label="End Date (Optional)"
-                      type="date"
-                      name="recurrence.endDate"
-                      value={formData.recurrence.endDate}
-                      onChange={handleChange}
-                      error={errors['recurrence.endDate']}
-                      min={formData.reminderDate}
-                    />
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {/* Notification Methods */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Notification Methods *
-                </h3>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {notificationMethodOptions.map((method) => (
-                    <button
-                      key={method.value}
-                      type="button"
-                      onClick={() => handleNotificationMethodToggle(method.value)}
-                      className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
-                        formData.notificationMethods.includes(method.value)
-                          ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-300'
-                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
-                      }`}
-                    >
-                      {method.label}
-                    </button>
-                  ))}
-                </div>
-                {errors.notificationMethods && (
-                  <p className="text-red-600 dark:text-red-400 text-sm mt-2">
-                    {errors.notificationMethods}
-                  </p>
-                )}
-              </div>
-            </Card>
-
-            {/* Related Items */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Link className="w-5 h-5 text-orange-500" />
-                  Related Items (Optional)
-                </h3>
-
-                <div className="space-y-4">
-                  <Select
-                    label="Related Event"
-                    name="relatedEvent"
-                    value={formData.relatedEvent}
-                    onChange={handleChange}
-                    options={[
-                      { value: '', label: 'None' },
-                      ...events.map((event) => ({
-                        value: event._id || event.id,
-                        label: event.title
-                      }))
-                    ]}
-                  />
-
-                  <Select
-                    label="Related Client"
-                    name="relatedClient"
-                    value={formData.relatedClient}
-                    onChange={handleChange}
-                    options={[
-                      { value: '', label: 'None' },
-                      ...clients.map((client) => ({
-                        value: client._id || client.id,
-                        label: client.name
-                      }))
-                    ]}
-                  />
-
-                  <Select
-                    label="Related Task"
-                    name="relatedTask"
-                    value={formData.relatedTask}
-                    onChange={handleChange}
-                    options={[
-                      { value: '', label: 'None' },
-                      ...tasks.map((task) => ({
-                        value: task._id || task.id,
-                        label: task.title
-                      }))
-                    ]}
-                  />
-
-                  <Select
-                    label="Related Payment"
-                    name="relatedPayment"
-                    value={formData.relatedPayment}
-                    onChange={handleChange}
-                    options={[
-                      { value: '', label: 'None' },
-                      ...payments.map((payment) => ({
-                        value: payment._id || payment.id,
-                        label: `Payment #${(payment._id || payment.id).slice(-6)} - $${payment.amount}`
-                      }))
-                    ]}
-                  />
-                </div>
-              </div>
-            </Card>
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div>
+            {currentStep > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrevious}
+                disabled={isSaving}
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Previous
+              </Button>
+            )}
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Assigned Users */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-orange-500" />
-                  Assign Users
-                </h3>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancelClick}
+              disabled={isSaving}
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
 
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {users.length > 0 ? (
-                    users.map((user) => (
-                      <label
-                        key={user._id || user.id}
-                        className="flex items-center gap-3 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.assignedTo.includes(user._id || user.id)}
-                          onChange={() => handleAssignedUserToggle(user._id || user.id)}
-                          className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {user.name}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                        </div>
-                      </label>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">No users available</p>
-                  )}
-                </div>
-              </div>
-            </Card>
+            {/* Quick Update button - only show in edit mode and not on last step */}
+            {isEditMode && currentStep < totalSteps && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleQuickUpdate}
+                loading={isSaving}
+                disabled={isSaving}
+                className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Update Now
+              </Button>
+            )}
 
-            {/* Additional Notes */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-orange-500" />
-                  Additional Notes
-                </h3>
-
-                <Textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={4}
-                  placeholder="Add any additional notes..."
-                  maxLength={500}
-                />
-              </div>
-            </Card>
-
-            {/* Action Buttons */}
-            <Card>
-              <div className="p-6">
-                <div className="space-y-3">
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    icon={Save}
-                    loading={isSaving}
-                    className="w-full"
-                  >
-                    {isEditMode ? 'Update Reminder' : 'Create Reminder'}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    icon={X}
-                    onClick={handleCancel}
-                    disabled={isSaving}
-                    className="w-full"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </Card>
+            {currentStep < totalSteps ? (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleNext}
+                disabled={isSaving}
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="primary"
+                loading={isSaving}
+                disabled={isSaving}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isEditMode ? 'Update Reminder' : 'Create Reminder'}
+              </Button>
+            )}
           </div>
         </div>
       </form>

@@ -1,725 +1,791 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
-import {
-  Plus,
-  Search,
-  Filter,
-  CheckSquare,
-  Eye,
-  Edit,
-  Clock,
-  User,
-  Calendar,
-  List,
-  Kanban,
-} from "lucide-react";
-
-// Hooks and Services
-import { useApi, useApiMutation } from "../../hooks/useApi";
-import { taskService } from "../../api/index";
-
-// Components
 import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import Table from "../../components/common/NewTable";
+import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Badge from "../../components/common/Badge";
-import Card from "../../components/common/Card";
-import EmptyState from "../../components/common/EmptyState";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Pagination from "../../components/common/Pagination";
-import SearchBar from "../../components/common/SearchBar";
+import Badge from "../../components/common/Badge";
+import { taskService } from "../../api/index";
+import { CheckSquare } from "../../components/icons/IconComponents";
+import { Plus, Search, Filter, Eye, X, Edit, Trash2, RefreshCw, Download, Archive, Kanban as KanbanIcon, List as ListIcon, Clock, AlertCircle, User, Calendar, Tag } from "lucide-react";
+import TaskDetails from "./TaskDetail";
+import TaskForm from "./TaskForm";
+import { toast } from "react-hot-toast";
 
-// Constants
-const TASK_PRIORITIES = {
-  LOW: "low",
-  MEDIUM: "medium",
-  HIGH: "high",
-  URGENT: "urgent",
-};
-
-const TASK_STATUSES = {
-  PENDING: "pending",
-  TODO: "todo",
-  IN_PROGRESS: "in_progress",
-  COMPLETED: "completed",
-  CANCELLED: "cancelled",
-};
-
-const TASK_CATEGORIES = {
-  EVENT_PREPARATION: "event_preparation",
-  MARKETING: "marketing",
-  MAINTENANCE: "maintenance",
-  CLIENT_FOLLOWUP: "client_followup",
-  PARTNER_COORDINATION: "partner_coordination",
-  ADMINISTRATIVE: "administrative",
-  OTHER: "other",
-};
-
-const Tasks = () => {
+const TasksList = () => {
   const navigate = useNavigate();
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [viewMode, setViewMode] = useState(() => 
+    localStorage.getItem("tasksViewMode") || "list"
+  );
 
-  // State
-  const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState("kanban");
-  const [filters, setFilters] = useState({
-    priority: "",
-    status: "",
-    category: "",
-    sortBy: "-createdAt",
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Memoize the API function
-  const fetchTasks = useCallback(() => {
-    return taskService.getAll({
-      search: searchTerm,
-      ...filters,
-      page: currentPage,
-      limit: 50,
-    });
-  }, [searchTerm, filters, currentPage]);
+  // Search & filter state
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [priority, setPriority] = useState("all");
+  const [category, setCategory] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Fetch tasks
-  const {
-    data: tasksResponse,
-    loading,
-    error,
-    refetch,
-  } = useApi(fetchTasks, {
-    deps: [searchTerm, filters, currentPage],
-  });
-
-  // Extract tasks and pagination from API response
-  // API returns: { success, data: { tasks: [...], pagination: {...} } }
-  const tasks = useMemo(() => {
-    if (!tasksResponse) return [];
-
-    // Handle nested structure: { success, data: { tasks: [...] } }
-    if (Array.isArray(tasksResponse?.data?.tasks)) {
-      return tasksResponse.data.tasks;
-    }
-    // Handle direct tasks array: { tasks: [...] }
-    if (Array.isArray(tasksResponse?.tasks)) {
-      return tasksResponse.tasks;
-    }
-    // Handle data as array: { data: [...] }
-    if (Array.isArray(tasksResponse?.data)) {
-      return tasksResponse.data;
-    }
-    // Handle direct array
-    if (Array.isArray(tasksResponse)) {
-      return tasksResponse;
-    }
-
-    return [];
-  }, [tasksResponse]);
-
-  const pagination = useMemo(() => {
-    if (!tasksResponse) return null;
-
-    // Extract pagination from response
-    if (tasksResponse?.data?.pagination) {
-      return tasksResponse.data.pagination;
-    }
-    if (tasksResponse?.pagination) {
-      return tasksResponse.pagination;
-    }
-
-    return null;
-  }, [tasksResponse]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log("📊 Tasks data:", {
-      tasksCount: tasks.length,
-      loading,
-      error,
-      pagination,
-      rawResponse: tasksResponse,
-    });
-  }, [tasks, loading, error, pagination, tasksResponse]);
-
-  // Mutations
-  const updateMutation = useApiMutation(taskService.update);
-
-  // Filter options
-  const priorityOptions = useMemo(
-    () => [
-      { value: "", label: "All Priorities" },
-      { value: TASK_PRIORITIES.LOW, label: "Low" },
-      { value: TASK_PRIORITIES.MEDIUM, label: "Medium" },
-      { value: TASK_PRIORITIES.HIGH, label: "High" },
-      { value: TASK_PRIORITIES.URGENT, label: "Urgent" },
-    ],
-    []
-  );
-
-  const statusOptions = useMemo(
-    () => [
-      { value: "", label: "All Status" },
-      { value: TASK_STATUSES.PENDING, label: "Pending" },
-      { value: TASK_STATUSES.TODO, label: "To Do" },
-      { value: TASK_STATUSES.IN_PROGRESS, label: "In Progress" },
-      { value: TASK_STATUSES.COMPLETED, label: "Completed" },
-      { value: TASK_STATUSES.CANCELLED, label: "Cancelled" },
-    ],
-    []
-  );
-
-  const categoryOptions = useMemo(
-    () => [
-      { value: "", label: "All Categories" },
-      { value: TASK_CATEGORIES.EVENT_PREPARATION, label: "Event Preparation" },
-      { value: TASK_CATEGORIES.MARKETING, label: "Marketing" },
-      { value: TASK_CATEGORIES.MAINTENANCE, label: "Maintenance" },
-      { value: TASK_CATEGORIES.CLIENT_FOLLOWUP, label: "Client Follow-up" },
-      {
-        value: TASK_CATEGORIES.PARTNER_COORDINATION,
-        label: "Partner Coordination",
-      },
-      { value: TASK_CATEGORIES.ADMINISTRATIVE, label: "Administrative" },
-      { value: TASK_CATEGORIES.OTHER, label: "Other" },
-    ],
-    []
-  );
-
-  // Utility functions
-  const getPriorityColor = useCallback((priority) => {
-    const colors = {
-      [TASK_PRIORITIES.LOW]: "gray",
-      [TASK_PRIORITIES.MEDIUM]: "blue",
-      [TASK_PRIORITIES.HIGH]: "orange",
-      [TASK_PRIORITIES.URGENT]: "red",
-    };
-    return colors[priority] || "gray";
-  }, []);
-
-  const getStatusColor = useCallback((status) => {
-    const colors = {
-      [TASK_STATUSES.PENDING]: "yellow",
-      [TASK_STATUSES.TODO]: "blue",
-      [TASK_STATUSES.IN_PROGRESS]: "purple",
-      [TASK_STATUSES.COMPLETED]: "green",
-      [TASK_STATUSES.CANCELLED]: "gray",
-    };
-    return colors[status] || "gray";
-  }, []);
-
-  const formatDate = useCallback((date) => {
-    if (!date) return "No date";
+  const fetchTasks = useCallback(async () => {
     try {
-      return new Date(date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch (error) {
-      return "Invalid date";
+      setLoading(true);
+      setError(null);
+
+      const params = {
+        page,
+        limit,
+        ...(search.trim() && { search: search.trim() }),
+        ...(status !== "all" && { status }),
+        ...(priority !== "all" && { priority }),
+        ...(category !== "all" && { category }),
+        isArchived: showArchived,
+      };
+
+      const response = await taskService.getAll(params);
+
+      let tasksData = [];
+      let totalPages = 1;
+      let totalCount = 0;
+
+      if (response?.data?.data?.tasks) {
+        tasksData = response.data.data.tasks || [];
+        totalPages = response.data.data.totalPages || 1;
+        totalCount = response.data.data.totalCount || tasksData.length;
+      } else if (response?.data?.tasks) {
+        tasksData = response.data.tasks || [];
+        totalPages = response.data.totalPages || 1;
+        totalCount = response.data.totalCount || tasksData.length;
+      } else if (response?.tasks) {
+        tasksData = response.tasks || [];
+        totalPages = response.totalPages || 1;
+        totalCount = response.totalCount || tasksData.length;
+      } else if (Array.isArray(response?.data)) {
+        tasksData = response.data;
+      } else if (Array.isArray(response)) {
+        tasksData = response;
+      }
+
+      setTasks(tasksData);
+      setTotalPages(totalPages);
+      setTotalCount(totalCount);
+      setHasInitialLoad(true);
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to load tasks. Please try again.";
+      setError(errorMessage);
+      setTasks([]);
+      setHasInitialLoad(true);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [search, status, priority, category, page, limit, showArchived]);
 
-  // Event handlers
-  const handleSearch = useCallback((value) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  }, []);
+  const handleDeleteTask = useCallback(
+    async (taskId) => {
+      if (
+        !taskId ||
+        !window.confirm("Are you sure you want to delete this task?")
+      ) {
+        return;
+      }
 
-  const handleFilterChange = useCallback((name, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setCurrentPage(1);
-  }, []);
-
-  const handleStatusChange = useCallback(
-    async (taskId, newStatus) => {
       try {
-        await updateMutation.mutate(taskId, { status: newStatus });
-        toast.success("Task status updated successfully");
-        refetch();
-      } catch (error) {
-        console.error("Error updating task status:", error);
-        toast.error("Failed to update task status");
+        await taskService.delete(taskId);
+        toast.success("Task deleted successfully");
+        fetchTasks();
+        if (selectedTask?._id === taskId) {
+          setSelectedTask(null);
+          setIsDetailModalOpen(false);
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to delete task");
       }
     },
-    [updateMutation, refetch]
+    [fetchTasks, selectedTask]
   );
 
-  const clearFilters = useCallback(() => {
-    setSearchTerm("");
-    setFilters({
-      priority: "",
-      status: "",
-      category: "",
-      sortBy: "-createdAt",
-    });
-    setCurrentPage(1);
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  // Save view mode preference
+  useEffect(() => {
+    localStorage.setItem("tasksViewMode", viewMode);
+  }, [viewMode]);
+
+  const handleAddTask = useCallback(() => {
+    setSelectedTask(null);
+    setIsFormOpen(true);
   }, []);
 
-  const handlePageChange = useCallback((page) => {
-    setCurrentPage(page);
+  const handleEditTask = useCallback((task) => {
+    setSelectedTask(task);
+    setIsDetailModalOpen(false);
+    setIsFormOpen(true);
   }, []);
 
-  // Computed values
-  const kanbanColumns = useMemo(
-    () => [
-      { id: "todo", label: "To Do", status: TASK_STATUSES.TODO },
-      {
-        id: "in_progress",
-        label: "In Progress",
-        status: TASK_STATUSES.IN_PROGRESS,
-      },
-      { id: "completed", label: "Completed", status: TASK_STATUSES.COMPLETED },
-    ],
-    []
-  );
+  const handleViewTask = useCallback((task) => {
+    setSelectedTask(task);
+    setIsDetailModalOpen(true);
+  }, []);
 
-  const getTasksByStatus = useCallback(
-    (status) => {
-      return tasks.filter((task) => task.status === status);
-    },
-    [tasks]
-  );
+  const handleFormSuccess = useCallback(() => {
+    fetchTasks();
+    setSelectedTask(null);
+    setIsFormOpen(false);
+  }, [fetchTasks]);
 
-  // Statistics
-  const stats = useMemo(() => {
-    const totalTasks = tasks.length;
-    const pendingTasks = tasks.filter(
-      (t) => t.status === TASK_STATUSES.PENDING
-    ).length;
-    const todoTasks = tasks.filter(
-      (t) => t.status === TASK_STATUSES.TODO
-    ).length;
-    const inProgressTasks = tasks.filter(
-      (t) => t.status === TASK_STATUSES.IN_PROGRESS
-    ).length;
-    const completedTasks = tasks.filter(
-      (t) => t.status === TASK_STATUSES.COMPLETED
-    ).length;
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("all");
+    setPriority("all");
+    setCategory("all");
+    setPage(1);
+  }, []);
 
-    return {
-      totalTasks,
-      pendingTasks,
-      todoTasks,
-      inProgressTasks,
-      completedTasks,
+  const handleExport = async () => {
+    try {
+      toast.loading("Exporting tasks...");
+      await taskService.export({
+        search: search.trim() || undefined,
+        status: status !== "all" ? status : undefined,
+        priority: priority !== "all" ? priority : undefined,
+        category: category !== "all" ? category : undefined,
+      }, "csv");
+      toast.dismiss();
+      toast.success("Tasks exported successfully");
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Failed to export tasks");
+    }
+  };
+
+  // Helper functions
+  const getPriorityColor = (priority) => {
+    const colors = { 
+      low: "gray", 
+      medium: "blue", 
+      high: "orange", 
+      urgent: "red" 
     };
-  }, [tasks]);
+    return colors[priority] || "gray";
+  };
 
-  const hasActiveFilters = useMemo(() => {
-    return searchTerm || filters.priority || filters.status || filters.category;
-  }, [searchTerm, filters]);
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: "yellow",
+      todo: "blue",
+      in_progress: "purple",
+      completed: "green",
+      cancelled: "gray",
+      blocked: "red",
+    };
+    return colors[status] || "gray";
+  };
 
-  // Task Card Component
-  const TaskCard = useCallback(
-    ({ task, onStatusChange, onView }) => {
-      return (
-        <Card
-          className="p-4 hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-700"
-          onClick={onView}
-        >
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <h4 className="font-medium text-gray-900 dark:text-white flex-1 line-clamp-2">
-                {task.title || "Untitled Task"}
-              </h4>
-              <Badge variant={getPriorityColor(task.priority)} size="sm">
-                {task.priority || "medium"}
-              </Badge>
-            </div>
+  const formatDate = (date) => {
+    if (!date) return "No date";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
-            {task.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                {task.description}
-              </p>
-            )}
+  const isOverdue = (date, status) => {
+    return new Date(date) < new Date() && !["completed", "cancelled"].includes(status);
+  };
 
-            <div className="space-y-2">
-              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                <Calendar className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-                <span className="truncate">{formatDate(task.dueDate)}</span>
-              </div>
+  // Calculate statistics
+  const stats = {
+    total: tasks.length,
+    pending: tasks.filter(t => t.status === "pending").length,
+    todo: tasks.filter(t => t.status === "todo").length,
+    inProgress: tasks.filter(t => t.status === "in_progress").length,
+    completed: tasks.filter(t => t.status === "completed").length,
+    blocked: tasks.filter(t => t.status === "blocked").length,
+    overdue: tasks.filter(t => 
+      new Date(t.dueDate) < new Date() && 
+      !["completed", "cancelled"].includes(t.status)
+    ).length,
+  };
 
-              {task.assignedTo && (
-                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                  <User className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-                  <span className="truncate">
-                    {task.assignedTo.name || "Unassigned"}
-                  </span>
-                </div>
-              )}
-            </div>
+  const hasActiveFilters = search.trim() !== "" || status !== "all" || priority !== "all" || category !== "all";
+  const showEmptyState =
+    !loading &&
+    !error &&
+    tasks.length === 0 &&
+    !hasActiveFilters &&
+    hasInitialLoad;
+  const showNoResults =
+    !loading &&
+    !error &&
+    tasks.length === 0 &&
+    hasActiveFilters &&
+    hasInitialLoad;
 
-            {/* Related entities */}
-            <div className="space-y-1">
-              {task.relatedEvent && (
-                <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
-                  📅 {task.relatedEvent.title}
-                </div>
-              )}
-              {task.relatedClient && (
-                <div className="text-xs text-green-600 dark:text-green-400 truncate">
-                  👤 {task.relatedClient.name}
-                </div>
-              )}
-              {task.relatedPartner && (
-                <div className="text-xs text-purple-600 dark:text-purple-400 truncate">
-                  🤝 {task.relatedPartner.name}
-                </div>
-              )}
-            </div>
-
-            {task.subtasks && task.subtasks.length > 0 && (
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                ✓ {task.subtasks.filter((st) => st.completed).length}/
-                {task.subtasks.length} subtasks
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
-              <Select
-                size="sm"
-                value={task.status || TASK_STATUSES.TODO}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  onStatusChange(task._id, e.target.value);
-                }}
-                options={statusOptions.filter((opt) => opt.value !== "")}
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onView();
-                }}
-              >
-                View
-              </Button>
-            </div>
-          </div>
-        </Card>
-      );
+  // Table columns configuration for the new Table component
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+      sortable: true,
+      width: "25%",
+      render: (row) => (
+        <div className="font-medium text-gray-900 dark:text-white">
+          {row.title || "Untitled Task"}
+        </div>
+      ),
     },
-    [getPriorityColor, formatDate, statusOptions]
-  );
-
-  // Kanban Board Component
-  const KanbanBoard = useCallback(() => {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {kanbanColumns.map((column) => {
-          const columnTasks = getTasksByStatus(column.status);
-
-          return (
+    {
+      header: "Status",
+      accessor: "status",
+      sortable: true,
+      width: "12%",
+      render: (row) => (
+        <Badge color={getStatusColor(row.status)}>
+          {row.status ? row.status.replace("_", " ") : "Unknown"}
+        </Badge>
+      ),
+    },
+    {
+      header: "Priority",
+      accessor: "priority",
+      sortable: true,
+      width: "12%",
+      render: (row) => (
+        <Badge color={getPriorityColor(row.priority)}>
+          {row.priority || "Medium"}
+        </Badge>
+      ),
+    },
+    {
+      header: "Due Date",
+      accessor: "dueDate",
+      sortable: true,
+      width: "12%",
+      render: (row) => (
+        <div className={`${isOverdue(row.dueDate, row.status) ? "text-red-600 dark:text-red-400 font-medium" : "text-gray-600 dark:text-gray-400"}`}>
+          {formatDate(row.dueDate)}
+        </div>
+      ),
+    },
+    {
+      header: "Assigned To",
+      accessor: "assignedTo",
+      sortable: true,
+      width: "15%",
+      render: (row) => (
+        <div className="text-gray-600 dark:text-gray-400">
+          {row.assignedTo?.name || "Unassigned"}
+        </div>
+      ),
+    },
+    {
+      header: "Progress",
+      accessor: "progress",
+      sortable: true,
+      width: "12%",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div
-              key={column.id}
-              className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {column.label}
-                </h3>
-                <Badge variant="default">{columnTasks.length}</Badge>
-              </div>
-
-              <div className="space-y-3 min-h-[200px]">
-                {columnTasks.length > 0 ? (
-                  columnTasks.map((task) => (
-                    <TaskCard
-                      key={task._id}
-                      task={task}
-                      onStatusChange={handleStatusChange}
-                      onView={() => navigate(`/tasks/${task._id}`)}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
-                    No tasks in {column.label.toLowerCase()}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }, [kanbanColumns, getTasksByStatus, handleStatusChange, navigate, TaskCard]);
-
-  // List View Component
-  const ListView = useCallback(() => {
-    return (
-      <div className="space-y-3">
-        {tasks.map((task) => (
-          <Card key={task._id} className="p-4 bg-white dark:bg-gray-700">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <h4
-                    className="font-medium text-gray-900 dark:text-white cursor-pointer hover:text-orange-600 dark:hover:text-orange-400"
-                    onClick={() => navigate(`/tasks/${task._id}`)}
-                  >
-                    {task.title || "Untitled Task"}
-                  </h4>
-                  <Badge variant={getPriorityColor(task.priority)} size="sm">
-                    {task.priority || "medium"}
-                  </Badge>
-                  <Badge variant={getStatusColor(task.status)} size="sm">
-                    {(task.status || TASK_STATUSES.TODO).replace("_", " ")}
-                  </Badge>
-                  {task.category && (
-                    <Badge variant="default" size="sm">
-                      {task.category.replace("_", " ")}
-                    </Badge>
-                  )}
-                </div>
-
-                {task.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                    {task.description}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 flex-wrap mb-2">
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    Due: {formatDate(task.dueDate)}
-                  </div>
-                  {task.assignedTo && (
-                    <div className="flex items-center">
-                      <User className="w-4 h-4 mr-1" />
-                      {task.assignedTo.name || "Unassigned"}
-                    </div>
-                  )}
-                  {task.estimatedHours && (
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {task.estimatedHours}h estimated
-                    </div>
-                  )}
-                </div>
-
-                {/* Related entities */}
-                <div className="flex items-center gap-3 text-xs flex-wrap">
-                  {task.relatedEvent && (
-                    <span className="text-blue-600 dark:text-blue-400">
-                      📅 Event: {task.relatedEvent.title}
-                    </span>
-                  )}
-                  {task.relatedClient && (
-                    <span className="text-green-600 dark:text-green-400">
-                      👤 Client: {task.relatedClient.name}
-                    </span>
-                  )}
-                  {task.relatedPartner && (
-                    <span className="text-purple-600 dark:text-purple-400">
-                      🤝 Partner: {task.relatedPartner.name}
-                    </span>
-                  )}
-                </div>
-
-                {task.subtasks && task.subtasks.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    Subtasks:{" "}
-                    {task.subtasks.filter((st) => st.completed).length}/
-                    {task.subtasks.length} completed
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center space-x-2 ml-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={Eye}
-                  onClick={() => navigate(`/tasks/${task._id}`)}
-                >
-                  View
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={Edit}
-                  onClick={() => navigate(`/tasks/${task._id}/edit`)}
-                >
-                  Edit
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
-  }, [tasks, getPriorityColor, getStatusColor, formatDate, navigate]);
+              className="bg-orange-600 h-2 rounded-full transition-all"
+              style={{ width: `${row.progress || 0}%` }}
+            />
+          </div>
+          <span className="text-sm text-gray-600 dark:text-gray-400 w-8">
+            {row.progress || 0}%
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: "Actions",
+      accessor: "actions",
+      width: "12%",
+      className: "text-center",
+      render: (row) => (
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewTask(row);
+            }}
+            className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
+            title="View Task"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditTask(row);
+            }}
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+            title="Edit Task"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteTask(row._id);
+            }}
+            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+            title="Delete Task"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Task Management
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {showArchived ? "Archived Tasks" : "Tasks"}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage and track team tasks and assignments
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            {showArchived ? "View and restore archived tasks" : "Manage team tasks and assignments"}{" "}
+            {hasInitialLoad &&
+              totalCount > 0 &&
+              `Showing ${tasks.length} of ${totalCount} tasks`}
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={Plus}
-          onClick={() => navigate("/tasks/new")}
-        >
-          Create Task
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={fetchTasks}
+            loading={loading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          {!showArchived && totalCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => setShowArchived(!showArchived)}
+            className="flex items-center gap-2"
+          >
+            <Archive className="h-4 w-4" />
+            {showArchived ? "Active Tasks" : "Archived"}
+          </Button>
+          {!showArchived && totalCount > 0 && (
+            <Button
+              variant="primary"
+              onClick={handleAddTask}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Task
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Tasks"
-          value={stats.totalTasks}
-          icon={CheckSquare}
-          color="purple"
-        />
-        <StatCard
-          title="To Do"
-          value={stats.todoTasks}
-          icon={List}
-          color="blue"
-        />
-        <StatCard
-          title="In Progress"
-          value={stats.inProgressTasks}
-          icon={Clock}
-          color="orange"
-        />
-        <StatCard
-          title="Completed"
-          value={stats.completedTasks}
-          icon={CheckSquare}
-          color="green"
-        />
-      </div>
+      {!showArchived && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          {[
+            { label: "Total", value: stats.total, color: "purple", icon: CheckSquare },
+            { label: "Pending", value: stats.pending, color: "yellow", icon: Clock },
+            { label: "To Do", value: stats.todo, color: "blue", icon: ListIcon },
+            { label: "In Progress", value: stats.inProgress, color: "orange", icon: Clock },
+            { label: "Blocked", value: stats.blocked, color: "red", icon: AlertCircle },
+            { label: "Completed", value: stats.completed, color: "green", icon: CheckSquare },
+            { label: "Overdue", value: stats.overdue, color: "red", icon: AlertCircle },
+          ].map((stat) => (
+            <div key={stat.label} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                    {stat.value}
+                  </p>
+                </div>
+                <div className={`p-2 bg-${stat.color}-100 dark:bg-${stat.color}-900 rounded-lg`}>
+                  <stat.icon className={`w-5 h-5 text-${stat.color}-600 dark:text-${stat.color}-400`} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* View Mode Toggle */}
-      <Card className="p-2 w-fit">
-        <div className="flex items-center space-x-1">
-          <Button
-            variant={viewMode === "kanban" ? "primary" : "ghost"}
-            size="sm"
-            icon={Kanban}
-            onClick={() => setViewMode("kanban")}
-          >
-            Kanban
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "primary" : "ghost"}
-            size="sm"
-            icon={List}
-            onClick={() => setViewMode("list")}
-          >
-            List
-          </Button>
+      {!showArchived && totalCount > 0 && (
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <Button
+              variant={viewMode === "list" ? "primary" : "ghost"}
+              size="sm"
+              icon={ListIcon}
+              onClick={() => setViewMode("list")}
+            >
+              List
+            </Button>
+            <Button
+              variant={viewMode === "kanban" ? "primary" : "ghost"}
+              size="sm"
+              icon={KanbanIcon}
+              onClick={() => setViewMode("kanban")}
+            >
+              Kanban
+            </Button>
+          </div>
         </div>
-      </Card>
+      )}
 
-      {/* Filters */}
-      <Card>
-        <div className="p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            <SearchBar
-              value={searchTerm}
-              onChange={handleSearch}
-              placeholder="Search tasks..."
-              className="lg:col-span-2"
-            />
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-red-800 dark:text-red-200 font-medium">
+                Error Loading Tasks
+              </p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
+                {error}
+              </p>
+            </div>
+            <Button onClick={fetchTasks} size="sm" variant="outline">
+              Retry
+            </Button>
+          </div>
+        </div>
+      )}
 
-            <Select
-              value={filters.priority}
-              onChange={(e) => handleFilterChange("priority", e.target.value)}
-              options={priorityOptions}
-              icon={Filter}
-            />
-
-            <Select
-              value={filters.status}
-              onChange={(e) => handleFilterChange("status", e.target.value)}
-              options={statusOptions}
-            />
-
-            <Select
-              value={filters.category}
-              onChange={(e) => handleFilterChange("category", e.target.value)}
-              options={categoryOptions}
-            />
+      {/* Search & Filters */}
+      {hasInitialLoad && !showEmptyState && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                className="dark:bg-[#1f2937] dark:text-white"
+                icon={Search}
+                placeholder="Search tasks by title or description..."
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
+              />
+            </div>
+            <div className="sm:w-40">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                icon={Filter}
+                value={status}
+                onChange={(e) => {
+                  setPage(1);
+                  setStatus(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Status" },
+                  { value: "pending", label: "Pending" },
+                  { value: "todo", label: "To Do" },
+                  { value: "in_progress", label: "In Progress" },
+                  { value: "blocked", label: "Blocked" },
+                  { value: "completed", label: "Completed" },
+                ]}
+              />
+            </div>
+            <div className="sm:w-40">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                value={priority}
+                onChange={(e) => {
+                  setPage(1);
+                  setPriority(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Priorities" },
+                  { value: "low", label: "Low" },
+                  { value: "medium", label: "Medium" },
+                  { value: "high", label: "High" },
+                  { value: "urgent", label: "Urgent" },
+                ]}
+              />
+            </div>
+            <div className="sm:w-40">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                value={category}
+                onChange={(e) => {
+                  setPage(1);
+                  setCategory(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Categories" },
+                  { value: "event_preparation", label: "Event Preparation" },
+                  { value: "marketing", label: "Marketing" },
+                  { value: "maintenance", label: "Maintenance" },
+                  { value: "client_followup", label: "Client Follow-up" },
+                  { value: "partner_coordination", label: "Partner Coordination" },
+                  { value: "administrative", label: "Administrative" },
+                ]}
+              />
+            </div>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                onClick={handleClearFilters}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear
+              </Button>
+            )}
           </div>
 
           {hasActiveFilters && (
-            <div className="mt-4 flex justify-end">
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                Clear All Filters
-              </Button>
+            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <span>Active filters:</span>
+              {search.trim() && (
+                <Badge color="blue">Search: "{search.trim()}"</Badge>
+              )}
+              {status !== "all" && (
+                <Badge color="purple">Status: {status}</Badge>
+              )}
+              {priority !== "all" && (
+                <Badge color="orange">Priority: {priority}</Badge>
+              )}
+              {category !== "all" && (
+                <Badge color="green">Category: {category}</Badge>
+              )}
             </div>
           )}
         </div>
-      </Card>
+      )}
 
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner size="lg" />
+      {/* Loading State */}
+      {loading && !hasInitialLoad && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">
+            Loading tasks...
+          </p>
         </div>
-      ) : tasks.length > 0 ? (
+      )}
+
+      {/* Table Section */}
+      {!loading && hasInitialLoad && tasks.length > 0 && viewMode === "list" && (
         <>
-          {viewMode === "kanban" ? <KanbanBoard /> : <ListView />}
+          <div className="overflow-x-auto">
+            <Table
+              columns={columns}
+              data={tasks}
+              loading={loading}
+              pagination={true}
+              currentPage={page}
+              totalPages={totalPages}
+              pageSize={limit}
+              totalItems={totalCount}
+              onPageChange={setPage}
+              onPageSizeChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
+          </div>
 
           {/* Pagination */}
-          {pagination && pagination.pages > 1 && (
-            <div className="flex justify-center">
+          {totalPages > 1 && (
+            <div className="mt-6">
               <Pagination
-                currentPage={currentPage}
-                totalPages={pagination.pages}
-                totalItems={pagination.total}
-                onPageChange={handlePageChange}
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                pageSize={limit}
+                onPageSizeChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
+                totalItems={totalCount}
               />
             </div>
           )}
         </>
-      ) : (
-        <EmptyState
-          icon={CheckSquare}
-          title={hasActiveFilters ? "No Tasks Found" : "No Tasks Yet"}
-          description={
-            hasActiveFilters
-              ? "No tasks match your search criteria. Try adjusting your filters."
-              : "Get started by creating your first task to organize your team's work."
-          }
-          action={{
-            label: "Create Task",
-            onClick: () => navigate("/tasks/new"),
+      )}
+
+      {/* Kanban View */}
+      {!loading && hasInitialLoad && tasks.length > 0 && viewMode === "kanban" && (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          {[
+            { id: "pending", label: "Pending", status: "pending", icon: Clock },
+            { id: "todo", label: "To Do", status: "todo", icon: ListIcon },
+            { id: "in_progress", label: "In Progress", status: "in_progress", icon: Clock },
+            { id: "blocked", label: "Blocked", status: "blocked", icon: AlertCircle },
+            { id: "completed", label: "Completed", status: "completed", icon: CheckSquare },
+          ].map((column) => {
+            const columnTasks = tasks.filter(task => task.status === column.status);
+            return (
+              <div key={column.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <column.icon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                      {column.label}
+                    </h3>
+                  </div>
+                  <Badge color="gray" size="sm">{columnTasks.length}</Badge>
+                </div>
+                <div className="space-y-3">
+                  {columnTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-md transition-all group"
+                      onClick={() => handleViewTask(task)}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition">
+                            {task.title}
+                          </h4>
+                          <Badge color={getPriorityColor(task.priority)} size="sm">
+                            {task.priority}
+                          </Badge>
+                        </div>
+
+                        {task.progress > 0 && (
+                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
+                            <div
+                              className="bg-orange-600 h-1.5 rounded-full transition-all"
+                              style={{ width: `${task.progress}%` }}
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span className={isOverdue(task.dueDate, task.status) ? "text-red-600 dark:text-red-400 font-medium" : ""}>
+                              {formatDate(task.dueDate)}
+                            </span>
+                          </div>
+                          {task.assignedTo && (
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              <span>{task.assignedTo.name}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* No Results from Search/Filter */}
+      {showNoResults && (
+        <div className="text-center py-12">
+          <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No tasks found
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            No tasks match your current search or filter criteria.
+          </p>
+          <Button onClick={handleClearFilters} variant="outline">
+            Clear All Filters
+          </Button>
+        </div>
+      )}
+
+      {/* Empty State - No tasks at all */}
+      {showEmptyState && (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <CheckSquare className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            {showArchived ? "No archived tasks" : "No tasks yet"}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {showArchived ? "Archived tasks will appear here" : "Get started by creating your first task."}
+          </p>
+          {!showArchived && (
+            <Button onClick={handleAddTask} variant="primary">
+              <Plus className="h-4 w-4 mr-2" />
+              Create First Task
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Task Detail Modal */}
+      {isDetailModalOpen && selectedTask && (
+        <Modal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setSelectedTask(null);
+            setIsDetailModalOpen(false);
           }}
-        />
+          title="Task Details"
+          size="lg"
+        >
+          <div className="p-6">
+            <TaskDetails task={selectedTask} />
+          </div>
+        </Modal>
+      )}
+
+      {/* Add/Edit Form */}
+      {isFormOpen && (
+        <Modal
+          isOpen={isFormOpen}
+          onClose={() => {
+            setSelectedTask(null);
+            setIsFormOpen(false);
+          }}
+          title={selectedTask ? "Edit Task" : "Create New Task"}
+          size="lg"
+        >
+          <TaskForm
+            task={selectedTask}
+            onSuccess={handleFormSuccess}
+            onCancel={() => {
+              setSelectedTask(null);
+              setIsFormOpen(false);
+            }}
+          />
+        </Modal>
       )}
     </div>
   );
 };
 
-// Stat Card Component
-const StatCard = ({ title, value, icon: Icon, color }) => (
-  <Card className="p-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-          {value}
-        </p>
-      </div>
-      <div className={`p-3 bg-${color}-100 dark:bg-${color}-900 rounded-lg`}>
-        <Icon className={`w-6 h-6 text-${color}-600 dark:text-${color}-400`} />
-      </div>
-    </div>
-  </Card>
-);
-
-export default Tasks;
+export default TasksList;

@@ -87,25 +87,25 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       number: 1,
       title: "Basic Info",
       icon: User,
-      color: "blue",
+      color: "orange",
     },
     {
       number: 2,
       title: "Professional",
       icon: Briefcase,
-      color: "purple",
+      color: "orange",
     },
     {
       number: 3,
       title: "Address",
       icon: MapPin,
-      color: "green",
+      color: "orange",
     },
     {
       number: 4,
       title: "Notes",
       icon: FileText,
-      color: "amber",
+      color: "orange",
     },
   ];
 
@@ -376,10 +376,10 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
                     isCompleted
-                      ? "bg-green-600 text-white"
+                      ? "bg-orange-600 text-white"
                       : isCurrent
                         ? `bg-${step.color}-600 text-white ring-4 ring-${step.color}-200 dark:ring-${step.color}-900`
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-400"
+                        : "bg-orange-200 dark:bg-orange-700 text-orange-400"
                   }`}
                 >
                   {isCompleted ? (
@@ -408,7 +408,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                   <div
                     className={`h-full transition-all duration-300 ${
                       step.number < currentStep
-                        ? "bg-green-600"
+                        ? "bg-orange-600"
                         : "bg-transparent"
                     }`}
                   />
@@ -428,7 +428,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         return (
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-blue-600 rounded-lg">
+              <div className="p-2 bg-orange-600 rounded-lg">
                 <User className="w-5 h-5 text-white" />
               </div>
               Basic Information
@@ -500,7 +500,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         return (
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-purple-600 rounded-lg">
+              <div className="p-2 bg-orange-600 rounded-lg">
                 <Briefcase className="w-5 h-5 text-white" />
               </div>
               Professional Details
@@ -590,7 +590,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         return (
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-green-600 rounded-lg">
+              <div className="p-2 bg-orange-600 rounded-lg">
                 <MapPin className="w-5 h-5 text-white" />
               </div>
               Address Information
@@ -647,7 +647,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         return (
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-amber-600 rounded-lg">
+              <div className="p-2 bg-orange-600 rounded-lg">
                 <FileText className="w-5 h-5 text-white" />
               </div>
               Additional Notes
@@ -717,12 +717,12 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
           {isEditMode && currentStep < totalSteps && (
             <Button
               type="button"
-              variant="success"
+              variant="outline"
               onClick={handleQuickUpdate}
               loading={saving}
               disabled={saving}
               //dark mode
-              className="bg-green-500 text-white dark:bg-green-600 dark:hover:bg-green-700"
+              className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
             >
               <Save className="w-4 h-4 mr-2" />
               Update Now

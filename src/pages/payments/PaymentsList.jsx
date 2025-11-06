@@ -1,67 +1,47 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Card from "../../components/common/Card";
-import Table from "../../components/common/Table";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Badge from "../../components/common/Badge";
-import Modal from "../../components/common/Modal";
 import Pagination from "../../components/common/Pagination";
 import { paymentService } from "../../api/index";
+import { DollarSign } from "../../components/icons/IconComponents";
+import { Plus, Search, Filter, Eye, X, Edit, Trash2, RefreshCw, Download, RotateCcw, TrendingUp, TrendingDown } from "lucide-react";
+import PaymentDetails from "./PaymentDetail";
+import PaymentForm from "./PaymentForm";
+import Badge from "../../components/common/Badge";
 import { toast } from "react-hot-toast";
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  Edit,
-  Trash2,
-  RefreshCw,
-  Download,
-  RotateCcw,
-} from "lucide-react";
 
 const PaymentsList = () => {
   const navigate = useNavigate();
-
-  // State
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // Search & filter state
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [method, setMethod] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Refund state
   const [refundData, setRefundData] = useState({
     amount: "",
     reason: "",
   });
-
-  // Filters
-  const [filters, setFilters] = useState({
-    type: "",
-    status: "",
-    method: "",
-    startDate: "",
-    endDate: "",
-  });
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const limit = 10;
 
   // Fetch payments
   const fetchPayments = useCallback(async () => {
@@ -70,105 +50,148 @@ const PaymentsList = () => {
       setError(null);
 
       const params = {
-        search: searchTerm || undefined,
-        type: filters.type || undefined,
-        status: filters.status || undefined,
-        method: filters.method || undefined,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
-        page: currentPage,
+        page,
         limit,
+        ...(search.trim() && { search: search.trim() }),
+        ...(type !== "all" && { type }),
+        ...(status !== "all" && { status }),
+        ...(method !== "all" && { method }),
       };
 
       const response = await paymentService.getAll(params);
 
-      // API service handleResponse returns { payments: [], pagination: {} }
-      const paymentsData = response?.payments || [];
-      const paginationData = response?.pagination || {};
+      let paymentsData = [];
+      let totalPages = 1;
+      let totalCount = 0;
+
+      if (response?.data?.data?.payments) {
+        paymentsData = response.data.data.payments || [];
+        totalPages = response.data.data.totalPages || 1;
+        totalCount = response.data.data.totalCount || paymentsData.length;
+      } else if (response?.data?.payments) {
+        paymentsData = response.data.payments || [];
+        totalPages = response.data.totalPages || 1;
+        totalCount = response.data.totalCount || paymentsData.length;
+      } else if (response?.payments) {
+        paymentsData = response.payments || [];
+        totalPages = response.totalPages || 1;
+        totalCount = response.totalCount || paymentsData.length;
+      } else if (Array.isArray(response?.data)) {
+        paymentsData = response.data;
+      } else if (Array.isArray(response)) {
+        paymentsData = response;
+      }
 
       setPayments(paymentsData);
-      setTotalPages(paginationData.totalPages || 1);
-      setTotalItems(paginationData.total || paymentsData.length);
+      setTotalPages(totalPages);
+      setTotalCount(totalCount);
+      setHasInitialLoad(true);
     } catch (err) {
-      console.error("Error fetching payments:", err);
-      setError(err.message || "Failed to load payments. Please try again.");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to load payments. Please try again.";
+      setError(errorMessage);
       setPayments([]);
+      setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters, currentPage]);
+  }, [search, type, status, method, page, limit]);
+
+  const handleDeletePayment = useCallback(
+    async (paymentId) => {
+      if (
+        !paymentId ||
+        !window.confirm("Are you sure you want to delete this payment?")
+      ) {
+        return;
+      }
+
+      try {
+        await paymentService.delete(paymentId);
+        toast.success("Payment deleted successfully");
+        fetchPayments();
+        if (selectedPayment?._id === paymentId) {
+          setSelectedPayment(null);
+          setIsDetailModalOpen(false);
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to delete payment");
+      }
+    },
+    [fetchPayments, selectedPayment]
+  );
+
+  const handleRefundPayment = useCallback(
+    async (paymentId, refundData) => {
+      try {
+        if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
+          toast.error("Please enter a valid refund amount");
+          return;
+        }
+
+        await paymentService.refund(paymentId, {
+          refundAmount: parseFloat(refundData.amount),
+          refundReason: refundData.reason,
+        });
+
+        toast.success("Payment refunded successfully");
+        setIsRefundModalOpen(false);
+        setSelectedPayment(null);
+        setRefundData({ amount: "", reason: "" });
+        fetchPayments();
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to refund payment");
+      }
+    },
+    [fetchPayments]
+  );
 
   useEffect(() => {
     fetchPayments();
   }, [fetchPayments]);
 
-  // Handlers
-  const handleCreatePayment = () => {
-    navigate("/payments/new");
-  };
+  const handleAddPayment = useCallback(() => {
+    setSelectedPayment(null);
+    setIsFormOpen(true);
+  }, []);
 
-  const handleEditPayment = (payment) => {
-    navigate(`/payments/${payment._id || payment.id}/edit`);
-  };
+  const handleEditPayment = useCallback((payment) => {
+    setSelectedPayment(payment);
+    setIsDetailModalOpen(false);
+    setIsFormOpen(true);
+  }, []);
 
-  const handleViewPayment = (payment) => {
+  const handleViewPayment = useCallback((payment) => {
     setSelectedPayment(payment);
     setIsDetailModalOpen(true);
-  };
+  }, []);
 
-  const handleDeleteClick = (e, payment) => {
-    e.stopPropagation();
-    setDeleteId(payment._id || payment.id);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      await paymentService.delete(deleteId);
-      toast.success("Payment deleted successfully");
-      setIsDeleteModalOpen(false);
-      setDeleteId(null);
-      fetchPayments();
-    } catch (error) {
-      console.error("Error deleting payment:", error);
-      toast.error(error.message || "Failed to delete payment");
-    }
-  };
-
-  const handleRefundClick = (e, payment) => {
-    e.stopPropagation();
+  const handleRefundClick = useCallback((payment) => {
     setSelectedPayment(payment);
     setRefundData({
       amount: payment.amount.toString(),
       reason: "",
     });
     setIsRefundModalOpen(true);
-  };
+  }, []);
 
-  const handleRefundConfirm = async () => {
-    try {
-      if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
-        toast.error("Please enter a valid refund amount");
-        return;
-      }
+  const handleFormSuccess = useCallback(() => {
+    fetchPayments();
+    setSelectedPayment(null);
+    setIsFormOpen(false);
+  }, [fetchPayments]);
 
-      await paymentService.refund(selectedPayment._id || selectedPayment.id, {
-        refundAmount: parseFloat(refundData.amount),
-        refundReason: refundData.reason,
-      });
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setType("all");
+    setStatus("all");
+    setMethod("all");
+    setPage(1);
+  }, []);
 
-      toast.success("Payment refunded successfully");
-      setIsRefundModalOpen(false);
-      setSelectedPayment(null);
-      setRefundData({ amount: "", reason: "" });
-      fetchPayments();
-    } catch (error) {
-      console.error("Error refunding payment:", error);
-      toast.error(error.message || "Failed to refund payment");
-    }
-  };
-
-  const handleExportCSV = () => {
+  const handleExportCSV = useCallback(() => {
     if (!payments || payments.length === 0) {
       toast.error("No payments to export");
       return;
@@ -206,24 +229,7 @@ const PaymentsList = () => {
       console.error("Error exporting payments:", error);
       toast.error("Failed to export payments");
     }
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setCurrentPage(1);
-  };
-
-  const handleClearFilters = () => {
-    setFilters({
-      type: "",
-      status: "",
-      method: "",
-      startDate: "",
-      endDate: "",
-    });
-    setSearchTerm("");
-    setCurrentPage(1);
-  };
+  }, [payments]);
 
   // Utility functions
   const formatCurrency = (amount) => {
@@ -248,21 +254,25 @@ const PaymentsList = () => {
     return "N/A";
   };
 
-  const getStatusVariant = (status) => {
+  const getStatusBadgeColor = (status) => {
     const statusLower = (status || "").toLowerCase();
     switch (statusLower) {
       case "completed":
       case "paid":
-        return "success";
+        return "green";
       case "pending":
-        return "warning";
+        return "yellow";
       case "failed":
-        return "danger";
+        return "red";
       case "refunded":
-        return "info";
+        return "blue";
       default:
         return "gray";
     }
+  };
+
+  const getTypeBadgeColor = (type) => {
+    return type === "income" ? "green" : "red";
   };
 
   // Calculate statistics
@@ -280,600 +290,602 @@ const PaymentsList = () => {
       (p) => (p.status || "").toLowerCase() === "pending"
     ).length,
   };
-
   stats.netAmount = stats.totalIncome - stats.totalExpenses;
 
-  // Table columns
+  const hasActiveFilters = search.trim() !== "" || type !== "all" || status !== "all" || method !== "all";
+  const showEmptyState =
+    !loading &&
+    !error &&
+    payments.length === 0 &&
+    !hasActiveFilters &&
+    hasInitialLoad;
+  const showNoResults =
+    !loading &&
+    !error &&
+    payments.length === 0 &&
+    hasActiveFilters &&
+    hasInitialLoad;
+
+  // Table columns configuration for the new Table component
   const columns = [
-    { key: "type", label: "Type" },
-    { key: "description", label: "Description" },
-    { key: "client", label: "Client" },
-    { key: "date", label: "Date" },
-    { key: "method", label: "Method" },
-    { key: "amount", label: "Amount", sortable: true },
-    { key: "status", label: "Status" },
-    { key: "actions", label: "Actions" },
+    {
+      header: "Type",
+      accessor: "type",
+      sortable: true,
+      width: "10%",
+      render: (row) => (
+        <Badge color={getTypeBadgeColor(row.type)}>
+          <div className="flex items-center gap-1">
+            {row.type === "income" ? (
+              <TrendingUp className="w-3 h-3" />
+            ) : (
+              <TrendingDown className="w-3 h-3" />
+            )}
+            <span className="capitalize">{row.type}</span>
+          </div>
+        </Badge>
+      ),
+    },
+    {
+      header: "Description",
+      accessor: "description",
+      sortable: true,
+      width: "25%",
+      render: (row) => (
+        <div>
+          <div className="font-medium text-gray-900 dark:text-white">
+            {row.description || "N/A"}
+          </div>
+          {row.reference && (
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Ref: {row.reference}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: "Client",
+      accessor: "client",
+      sortable: true,
+      width: "15%",
+      render: (row) => (
+        <div className="text-gray-600 dark:text-gray-400">
+          {getClientName(row)}
+        </div>
+      ),
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      sortable: true,
+      width: "12%",
+      render: (row) => (
+        <div className="text-gray-600 dark:text-gray-400">
+          {formatDate(row.paidDate || row.createdAt)}
+        </div>
+      ),
+    },
+    {
+      header: "Method",
+      accessor: "method",
+      sortable: true,
+      width: "12%",
+      render: (row) => (
+        <div className="text-gray-600 dark:text-gray-400 capitalize">
+          {(row.method || "N/A").replace(/_/g, " ")}
+        </div>
+      ),
+    },
+    {
+      header: "Amount",
+      accessor: "amount",
+      sortable: true,
+      width: "13%",
+      render: (row) => (
+        <div
+          className={`font-semibold ${
+            row.type === "income"
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
+          }`}
+        >
+          {row.type === "income" ? "+" : "-"}
+          {formatCurrency(row.amount)}
+        </div>
+      ),
+    },
+    {
+      header: "Status",
+      accessor: "status",
+      sortable: true,
+      width: "10%",
+      render: (row) => (
+        <Badge color={getStatusBadgeColor(row.status)}>
+          {row.status || "Unknown"}
+        </Badge>
+      ),
+    },
+    {
+      header: "Actions",
+      accessor: "actions",
+      width: "3%",
+      className: "text-center",
+      render: (row) => (
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewPayment(row);
+            }}
+            className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
+            title="View Payment"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditPayment(row);
+            }}
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+            title="Edit Payment"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          {row.type === "income" &&
+            ["completed", "paid"].includes((row.status || "").toLowerCase()) && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRefundClick(row);
+                }}
+                className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 p-1 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition"
+                title="Refund Payment"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+            )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeletePayment(row._id);
+            }}
+            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+            title="Delete Payment"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
-  const tableData = payments.map((payment) => ({
-    id: payment._id || payment.id,
-    type: (
-      <Badge variant={payment.type === "income" ? "success" : "danger"}>
-        <div className="flex items-center gap-1">
-          {payment.type === "income" ? (
-            <TrendingUp className="w-3 h-3" />
-          ) : (
-            <TrendingDown className="w-3 h-3" />
-          )}
-          <span className="capitalize">{payment.type}</span>
-        </div>
-      </Badge>
-    ),
-    description: (
-      <div>
-        <div className="font-medium text-gray-900 dark:text-white">
-          {payment.description || "N/A"}
-        </div>
-        {payment.reference && (
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Ref: {payment.reference}
-          </div>
-        )}
-      </div>
-    ),
-    client: (
-      <span className="text-gray-700 dark:text-gray-300">
-        {getClientName(payment)}
-      </span>
-    ),
-    date: (
-      <span className="text-gray-700 dark:text-gray-300">
-        {formatDate(payment.paidDate || payment.createdAt)}
-      </span>
-    ),
-    method: (
-      <span className="text-gray-700 dark:text-gray-300 capitalize">
-        {(payment.method || "N/A").replace(/_/g, " ")}
-      </span>
-    ),
-    amount: (
-      <span
-        className={`font-semibold ${
-          payment.type === "income"
-            ? "text-green-600 dark:text-green-400"
-            : "text-red-600 dark:text-red-400"
-        }`}
-      >
-        {payment.type === "income" ? "+" : "-"}
-        {formatCurrency(payment.amount)}
-      </span>
-    ),
-    status: (
-      <Badge variant={getStatusVariant(payment.status)}>
-        {payment.status || "Unknown"}
-      </Badge>
-    ),
-    actions: (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => handleViewPayment(payment)}
-          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-          title="View Payment"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => handleEditPayment(payment)}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          title="Edit Payment"
-        >
-          <Edit className="w-4 h-4" />
-        </button>
-        {payment.type === "income" &&
-          ["completed", "paid"].includes(
-            (payment.status || "").toLowerCase()
-          ) && (
-            <button
-              onClick={(e) => handleRefundClick(e, payment)}
-              className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
-              title="Refund Payment"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-          )}
-        <button
-          onClick={(e) => handleDeleteClick(e, payment)}
-          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-          title="Delete Payment"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-    ),
-  }));
-
-  if (loading && payments.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <DollarSign className="w-8 h-8" />
             Payments
           </h1>
-          <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-            Track all income and expense payments
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            Track all income and expense payments.{" "}
+            {hasInitialLoad &&
+              totalCount > 0 &&
+              `Showing ${payments.length} of ${totalCount} payments`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex gap-2">
           <Button
             variant="outline"
-            icon={RefreshCw}
             onClick={fetchPayments}
             loading={loading}
+            className="flex items-center gap-2"
           >
+            <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
-          <Button variant="outline" icon={Download} onClick={handleExportCSV}>
-            Export
-          </Button>
-          <Button variant="primary" icon={Plus} onClick={handleCreatePayment}>
-            Add Payment
-          </Button>
+          {totalCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleExportCSV}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          )}
+          {totalCount > 0 && (
+            <Button
+              variant="primary"
+              onClick={handleAddPayment}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Payment
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-green-800 dark:text-green-300">
+                Total Income
+              </div>
+              <div className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
+                {formatCurrency(stats.totalIncome)}
+              </div>
+            </div>
+            <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-red-800 dark:text-red-300">
+                Total Expenses
+              </div>
+              <div className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">
+                {formatCurrency(stats.totalExpenses)}
+              </div>
+            </div>
+            <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg">
+              <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                Net Amount
+              </div>
+              <div className={`mt-1 text-2xl font-bold ${
+                stats.netAmount >= 0
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-red-600 dark:text-red-400"
+              }`}>
+                {formatCurrency(stats.netAmount)}
+              </div>
+            </div>
+            <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">
+            Payment Status
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Completed
+              </span>
+              <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                {stats.completedPayments}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Pending
+              </span>
+              <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                {stats.pendingPayments}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
-          <div className="p-4 flex items-center justify-between">
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-red-800 dark:text-red-200 font-medium">
+                Error Loading Payments
+              </p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
+                {error}
+              </p>
+            </div>
             <Button onClick={fetchPayments} size="sm" variant="outline">
               Retry
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Income
-                </div>
-                <div className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(stats.totalIncome)}
-                </div>
-              </div>
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Expenses
-                </div>
-                <div className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
-                  {formatCurrency(stats.totalExpenses)}
-                </div>
-              </div>
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Net Amount
-                </div>
-                <div
-                  className={`mt-2 text-3xl font-bold ${
-                    stats.netAmount >= 0
-                      ? "text-blue-600 dark:text-blue-400"
-                      : "text-red-600 dark:text-red-400"
-                  }`}
-                >
-                  {formatCurrency(stats.netAmount)}
-                </div>
-              </div>
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="p-6">
-            <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
-              Payment Status
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Completed
-                </span>
-                <span className="text-xl font-bold text-green-600 dark:text-green-400">
-                  {stats.completedPayments}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Pending
-                </span>
-                <span className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-                  {stats.pendingPayments}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Search and Filters */}
-      <Card>
-        <div className="p-6">
-          <div className="flex flex-col lg:flex-row gap-4">
+      {/* Search & Filters */}
+      {hasInitialLoad && !showEmptyState && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
+                className="dark:bg-[#1f2937] dark:text-white"
                 icon={Search}
                 placeholder="Search by description, reference, or client..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
               />
             </div>
-            <Button
-              variant="outline"
-              icon={Filter}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              Filters
-            </Button>
+            <div className="sm:w-40">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                icon={Filter}
+                value={type}
+                onChange={(e) => {
+                  setPage(1);
+                  setType(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Types" },
+                  { value: "income", label: "Income" },
+                  { value: "expense", label: "Expense" },
+                ]}
+              />
+            </div>
+            <div className="sm:w-40">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                value={status}
+                onChange={(e) => {
+                  setPage(1);
+                  setStatus(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Status" },
+                  { value: "pending", label: "Pending" },
+                  { value: "completed", label: "Completed" },
+                  { value: "failed", label: "Failed" },
+                  { value: "refunded", label: "Refunded" },
+                ]}
+              />
+            </div>
+            <div className="sm:w-40">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                value={method}
+                onChange={(e) => {
+                  setPage(1);
+                  setMethod(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Methods" },
+                  { value: "cash", label: "Cash" },
+                  { value: "card", label: "Card" },
+                  { value: "credit_card", label: "Credit Card" },
+                  { value: "bank_transfer", label: "Bank Transfer" },
+                  { value: "check", label: "Check" },
+                  { value: "mobile_payment", label: "Mobile Payment" },
+                ]}
+              />
+            </div>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                onClick={handleClearFilters}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear
+              </Button>
+            )}
           </div>
 
-          {/* Filter Panel */}
-          {showFilters && (
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Select
-                label="Type"
-                value={filters.type}
-                onChange={(e) => handleFilterChange("type", e.target.value)}
-              >
-                <option value="">All Types</option>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-              </Select>
-
-              <Select
-                label="Status"
-                value={filters.status}
-                onChange={(e) => handleFilterChange("status", e.target.value)}
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-                <option value="refunded">Refunded</option>
-              </Select>
-
-              <Select
-                label="Method"
-                value={filters.method}
-                onChange={(e) => handleFilterChange("method", e.target.value)}
-              >
-                <option value="">All Methods</option>
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="credit_card">Credit Card</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="check">Check</option>
-                <option value="mobile_payment">Mobile Payment</option>
-              </Select>
-
-              <Input
-                label="Start Date"
-                type="date"
-                value={filters.startDate}
-                onChange={(e) =>
-                  handleFilterChange("startDate", e.target.value)
-                }
-              />
-
-              <Input
-                label="End Date"
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => handleFilterChange("endDate", e.target.value)}
-                min={filters.startDate}
-              />
-
-              <div className="flex items-end">
-                <Button
-                  variant="outline"
-                  onClick={handleClearFilters}
-                  className="w-full"
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Payments Table */}
-      <Card>
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <LoadingSpinner size="md" />
-            </div>
-          ) : payments.length > 0 ? (
-            <>
-              <Table columns={columns} data={tableData} />
-              {totalPages > 1 && (
-                <div className="p-6 border-t border-gray-200 dark:border-gray-700">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalItems={totalItems}
-                    pageSize={limit}
-                    onPageChange={setCurrentPage}
-                  />
-                </div>
+          {hasActiveFilters && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <span>Active filters:</span>
+              {search.trim() && (
+                <Badge color="blue">Search: "{search.trim()}"</Badge>
               )}
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400">
-                {searchTerm || Object.values(filters).some((v) => v)
-                  ? "No payments found matching your search."
-                  : "No payments found. Create your first payment to get started."}
-              </p>
+              {type !== "all" && (
+                <Badge color="green">Type: {type}</Badge>
+              )}
+              {status !== "all" && (
+                <Badge color="purple">Status: {status}</Badge>
+              )}
+              {method !== "all" && (
+                <Badge color="orange">Method: {method}</Badge>
+              )}
             </div>
           )}
         </div>
-      </Card>
+      )}
+
+      {/* Loading State */}
+      {loading && !hasInitialLoad && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">
+            Loading payments...
+          </p>
+        </div>
+      )}
+
+      {/* Table Section */}
+      {!loading && hasInitialLoad && payments.length > 0 && (
+        <>
+          <div className="overflow-x-auto">
+            <Table
+              columns={columns}
+              data={payments}
+              loading={loading}
+              // Enable pagination
+              pagination={true}
+              currentPage={page}
+              totalPages={totalPages}
+              pageSize={limit}
+              totalItems={totalCount}
+              onPageChange={setPage}
+              onPageSizeChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                pageSize={limit}
+                onPageSizeChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
+                totalItems={totalCount}
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {/* No Results from Search/Filter */}
+      {showNoResults && (
+        <div className="text-center py-12">
+          <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No payments found
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            No payments match your current search or filter criteria.
+          </p>
+          <Button onClick={handleClearFilters} variant="outline">
+            Clear All Filters
+          </Button>
+        </div>
+      )}
+
+      {/* Empty State - No payments at all */}
+      {showEmptyState && (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <DollarSign className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No payments yet
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Get started by recording your first payment.
+          </p>
+          <Button onClick={handleAddPayment} variant="primary">
+            <Plus className="h-4 w-4 mr-2" />
+            Record First Payment
+          </Button>
+        </div>
+      )}
 
       {/* Payment Detail Modal */}
       {isDetailModalOpen && selectedPayment && (
         <Modal
           isOpen={isDetailModalOpen}
           onClose={() => {
-            setIsDetailModalOpen(false);
             setSelectedPayment(null);
+            setIsDetailModalOpen(false);
           }}
           title="Payment Details"
           size="lg"
         >
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Type</p>
-                <Badge
-                  variant={
-                    selectedPayment.type === "income" ? "success" : "danger"
-                  }
-                >
-                  {selectedPayment.type}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Status
-                </p>
-                <Badge variant={getStatusVariant(selectedPayment.status)}>
-                  {selectedPayment.status}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Amount
-                </p>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {formatCurrency(selectedPayment.amount)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Method
-                </p>
-                <p className="text-gray-900 dark:text-white capitalize">
-                  {(selectedPayment.method || "N/A").replace(/_/g, " ")}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
-                <p className="text-gray-900 dark:text-white">
-                  {formatDate(
-                    selectedPayment.paidDate || selectedPayment.createdAt
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Reference
-                </p>
-                <p className="text-gray-900 dark:text-white">
-                  {selectedPayment.reference || "—"}
-                </p>
-              </div>
+          <div className="p-6">
+            <PaymentDetails payment={selectedPayment} />
+          </div>
+        </Modal>
+      )}
+
+      {/* Add/Edit Form */}
+      {isFormOpen && (
+        <Modal
+          isOpen={isFormOpen}
+          onClose={() => {
+            setSelectedPayment(null);
+            setIsFormOpen(false);
+          }}
+          title={selectedPayment ? "Edit Payment" : "Record New Payment"}
+          size="lg"
+        >
+          <PaymentForm
+            payment={selectedPayment}
+            onSuccess={handleFormSuccess}
+            onCancel={() => {
+              setSelectedPayment(null);
+              setIsFormOpen(false);
+            }}
+          />
+        </Modal>
+      )}
+
+      {/* Refund Modal */}
+      {isRefundModalOpen && selectedPayment && (
+        <Modal
+          isOpen={isRefundModalOpen}
+          onClose={() => {
+            setSelectedPayment(null);
+            setIsRefundModalOpen(false);
+            setRefundData({ amount: "", reason: "" });
+          }}
+          title="Refund Payment"
+          size="sm"
+        >
+          <div className="p-6">
+            <div className="space-y-4 mb-6">
+              <Input
+                label="Refund Amount"
+                type="number"
+                value={refundData.amount}
+                onChange={(e) =>
+                  setRefundData((prev) => ({ ...prev, amount: e.target.value }))
+                }
+                placeholder="0.00"
+                min="0"
+                max={selectedPayment?.amount}
+                step="0.01"
+              />
+              <Input
+                label="Reason (Optional)"
+                value={refundData.reason}
+                onChange={(e) =>
+                  setRefundData((prev) => ({ ...prev, reason: e.target.value }))
+                }
+                placeholder="Enter refund reason"
+              />
             </div>
-            {selectedPayment.description && (
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                  Description
-                </p>
-                <p className="text-gray-900 dark:text-white">
-                  {selectedPayment.description}
-                </p>
-              </div>
-            )}
-            {selectedPayment.refundAmount > 0 && (
-              <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                <p className="text-sm font-semibold text-orange-900 dark:text-orange-300 mb-2">
-                  Refund Information
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Amount:{" "}
-                    </span>
-                    <span className="text-gray-900 dark:text-white font-medium">
-                      {formatCurrency(selectedPayment.refundAmount)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Date:{" "}
-                    </span>
-                    <span className="text-gray-900 dark:text-white">
-                      {formatDate(selectedPayment.refundDate)}
-                    </span>
-                  </div>
-                  {selectedPayment.refundReason && (
-                    <div className="col-span-2">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Reason:{" "}
-                      </span>
-                      <span className="text-gray-900 dark:text-white">
-                        {selectedPayment.refundReason}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex justify-end gap-3">
               <Button
                 variant="outline"
                 onClick={() => {
-                  setIsDetailModalOpen(false);
+                  setIsRefundModalOpen(false);
                   setSelectedPayment(null);
+                  setRefundData({ amount: "", reason: "" });
                 }}
               >
-                Close
+                Cancel
               </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setIsDetailModalOpen(false);
-                  handleEditPayment(selectedPayment);
-                }}
+              <Button 
+                variant="primary" 
+                onClick={() => handleRefundPayment(selectedPayment._id, refundData)}
               >
-                Edit Payment
+                Confirm Refund
               </Button>
             </div>
           </div>
         </Modal>
       )}
-
-      {/* Refund Modal */}
-      <Modal
-        isOpen={isRefundModalOpen}
-        onClose={() => {
-          setIsRefundModalOpen(false);
-          setSelectedPayment(null);
-          setRefundData({ amount: "", reason: "" });
-        }}
-        title="Refund Payment"
-        size="sm"
-      >
-        <div className="p-6">
-          <div className="space-y-4 mb-6">
-            <Input
-              label="Refund Amount"
-              type="number"
-              value={refundData.amount}
-              onChange={(e) =>
-                setRefundData((prev) => ({ ...prev, amount: e.target.value }))
-              }
-              placeholder="0.00"
-              min="0"
-              max={selectedPayment?.amount}
-              step="0.01"
-            />
-            <Input
-              label="Reason (Optional)"
-              value={refundData.reason}
-              onChange={(e) =>
-                setRefundData((prev) => ({ ...prev, reason: e.target.value }))
-              }
-              placeholder="Enter refund reason"
-            />
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsRefundModalOpen(false);
-                setSelectedPayment(null);
-                setRefundData({ amount: "", reason: "" });
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleRefundConfirm}>
-              Confirm Refund
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setDeleteId(null);
-        }}
-        title="Delete Payment"
-        size="sm"
-      >
-        <div className="p-6">
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this payment? This action cannot be
-            undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsDeleteModalOpen(false);
-                setDeleteId(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="danger" onClick={handleDeleteConfirm}>
-              Delete
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 };
