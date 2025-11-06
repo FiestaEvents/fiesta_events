@@ -95,6 +95,39 @@ const EventForm = ({
   const [clientSearch, setClientSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
   const [prefilledClientData, setPrefilledClientData] = useState(null);
+  const [clientMode, setClientMode] = useState("existing");
+
+  // Helpers
+  const calculateEventHours = () => {
+    try {
+      if (!formData.startDate || !formData.endDate) return 1;
+      const startTime = formData.startTime || "00:00";
+      const endTime = formData.endTime || "00:00";
+      const start = new Date(`${formData.startDate}T${startTime}:00`);
+      const end = new Date(`${formData.endDate}T${endTime}:00`);
+      const diffMs = end.getTime() - start.getTime();
+      if (!isFinite(diffMs) || diffMs <= 0) return 1;
+      const hours = Math.ceil(diffMs / (1000 * 60 * 60));
+      return Math.max(1, hours);
+    } catch (_) {
+      return 1;
+    }
+  };
+
+  const getPartnerHourlyRate = (partnerItem) => {
+    if (partnerItem?.hourlyRate != null)
+      return Number(partnerItem.hourlyRate) || 0;
+    const found = partners.find(
+      (p) => p._id === (partnerItem.partner || partnerItem._id)
+    );
+    if (found?.hourlyRate != null) return Number(found.hourlyRate) || 0;
+    return Number(partnerItem?.cost) || 0; // fallback for legacy saved events
+  };
+
+  const getPartnerCostForHours = (partnerItem, hours) => {
+    const rate = getPartnerHourlyRate(partnerItem);
+    return Math.max(0, rate * hours);
+  };
 
   // Options
   const eventTypeOptions = [
@@ -127,16 +160,18 @@ const EventForm = ({
     { value: "pending", label: "Pending" },
     { value: "completed", label: "Completed" },
     { value: "failed", label: "Failed" },
+    { value: "refunded", label: "Refunded" },
+    { value: "partial", label: "Partial" },
   ];
 
   // Calculations
   const calculateTotalPrice = () => {
     const basePrice = parseFloat(formData.pricing.basePrice) || 0;
     const discount = parseFloat(formData.pricing.discount) || 0;
-    const partnersCost = formData.partners.reduce(
-      (total, partner) => total + (parseFloat(partner.cost) || 0),
-      0
-    );
+    const hours = calculateEventHours();
+    const partnersCost = formData.partners.reduce((total, partner) => {
+      return total + getPartnerCostForHours(partner, hours);
+    }, 0);
     return Math.max(0, basePrice + partnersCost - discount);
   };
 
@@ -189,6 +224,7 @@ const EventForm = ({
         setPrefilledClientData(prefillClient);
         setSelectedClient(prefillClient._id);
         setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
+        setClientMode("existing");
 
         // Clear error if exists
         setErrors((prev) => {
@@ -418,7 +454,8 @@ const EventForm = ({
   const handleSelectClient = (clientId) => {
     setSelectedClient(clientId);
     setFormData((prev) => ({ ...prev, clientId }));
-    setPrefilledClientData(null); // Clear prefill indicator
+    setPrefilledClientData(null);
+    setClientMode("existing");
 
     setErrors((prev) => {
       const newErrors = { ...prev };
@@ -445,8 +482,14 @@ const EventForm = ({
     }
 
     if (step === 2) {
-      if (!formData.clientId && !selectedClient) {
-        newErrors.clientId = "Please select or create a client";
+      if (clientMode === "existing") {
+        if (!formData.clientId && !selectedClient) {
+          newErrors.clientId = "Please select a client";
+        }
+      } else if (clientMode === "new") {
+        if (!newClient.name.trim()) {
+          newErrors["newClient.name"] = "Client name is required";
+        }
       }
     }
 
@@ -497,8 +540,15 @@ const EventForm = ({
       return;
     }
 
-    // If not on the last step, continue to next step
+    // If not on the last step, continue to next step with special handling for Step 2 (new client)
     if (currentStep < totalSteps) {
+      if (currentStep === 2 && clientMode === "new") {
+        // Just validate new client fields and proceed; creation happens on final submit
+        if (!newClient.name.trim()) {
+          toast.error("Client name is required");
+          return;
+        }
+      }
       nextStep();
       return;
     }
@@ -523,11 +573,44 @@ const EventForm = ({
       // Remove payment data from event submission
       delete submitData.payment;
 
+      // If creating a new client, create it first to obtain clientId
+      let ensuredClientId = formData.clientId;
+      if (!isEditMode && clientMode === "new" && !ensuredClientId) {
+        try {
+          setIsCreatingClient(true);
+          const createdRes = await clientService.create(newClient);
+          const createdClient =
+            createdRes?.client ||
+            createdRes?.data?.client ||
+            createdRes?.data ||
+            createdRes;
+          if (createdClient?._id) {
+            ensuredClientId = createdClient._id;
+            setClients((prev) => [...prev, createdClient]);
+            setSelectedClient(createdClient._id);
+          } else {
+            throw new Error("Failed to create client");
+          }
+        } catch (err) {
+          console.error("Error creating client during submit:", err);
+          toast.error("Failed to create client");
+          setIsCreatingClient(false);
+          setLoading(false);
+          return;
+        } finally {
+          setIsCreatingClient(false);
+        }
+      }
+
       let response;
       if (isEditMode) {
         response = await eventService.update(eventId, submitData);
         toast.success("Event updated successfully");
       } else {
+        // ensure clientId for submitData if a new client was created now
+        if (ensuredClientId && !submitData.clientId) {
+          submitData.clientId = ensuredClientId;
+        }
         response = await eventService.create(submitData);
         toast.success("Event created successfully");
       }
@@ -797,7 +880,7 @@ const EventForm = ({
           <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Updated gradients to match your color system */}
-              <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+              <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <Calendar className="w-5 h-5 text-blue-500" />
@@ -837,7 +920,7 @@ const EventForm = ({
                 </div>
               </Card>
 
-              <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+              <Card className="border-l-4 hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <Clock className="w-5 h-5 text-blue-500" />
@@ -887,7 +970,7 @@ const EventForm = ({
               </Card>
             </div>
 
-            <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+            <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
               <div className="p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Users className="w-5 h-5 text-blue-500" />
@@ -921,162 +1004,190 @@ const EventForm = ({
 
         {/* Step 2: Client Selection */}
         {currentStep === 2 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-              <div className="p-5">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-green-500" />
-                  Create New Client
-                </h4>
-                <div className="space-y-4">
-                  <Input
-                    label="Client Name "
-                    value={newClient.name}
-                    onChange={(e) =>
-                      setNewClient((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Email"
-                    type="email"
-                    value={newClient.email}
-                    onChange={(e) =>
-                      setNewClient((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Phone"
-                    value={newClient.phone}
-                    onChange={(e) =>
-                      setNewClient((prev) => ({
-                        ...prev,
-                        phone: e.target.value,
-                      }))
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="primary"
-                    icon={Plus}
-                    onClick={handleCreateClient}
-                    loading={isCreatingClient}
-                    className="w-full"
-                  >
-                    Create Client
-                  </Button>
-                </div>
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300 scrollbar-hide">
+            <div className="flex items-center justify-center">
+              <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 p-1">
+                <button
+                  type="button"
+                  onClick={() => setClientMode("existing")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    clientMode === "existing"
+                      ? "bg-orange-500 text-white"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  Choose Existing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClientMode("new")}
+                  className={`ml-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    clientMode === "new"
+                      ? "bg-orange-500 text-white"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  Create New
+                </button>
               </div>
-            </Card>
+            </div>
 
-            <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-              <div className="p-5">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <UserPlus className="w-5 h-5 text-blue-500" />
-                  Select Existing Client
-                </h4>
+            {clientMode === "new" ? (
+              <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+                <div className="p-5">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-green-500" />
+                    Create New Client
+                  </h4>
+                  <div className="space-y-4">
+                    <Input
+                      label="Client Name "
+                      value={newClient.name}
+                      onChange={(e) =>
+                        setNewClient((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                    />
+                    <Input
+                      label="Email"
+                      type="email"
+                      value={newClient.email}
+                      onChange={(e) =>
+                        setNewClient((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
+                    />
+                    <Input
+                      label="Phone"
+                      value={newClient.phone}
+                      onChange={(e) =>
+                        setNewClient((prev) => ({
+                          ...prev,
+                          phone: e.target.value,
+                        }))
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="primary"
+                      icon={Plus}
+                      onClick={handleCreateClient}
+                      loading={isCreatingClient}
+                      className="w-full"
+                    >
+                      Create Client
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+                <div className="p-5">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <UserPlus className="w-5 h-5 text-blue-500" />
+                    Select Existing Client
+                  </h4>
 
-                {/* ✅ Enhanced Prefill Indicator */}
-                {prefilledClientData && (
-                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900 dark:border-green-700 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                          <Check className="w-6 h-6 text-white" />
+                  {prefilledClientData && (
+                    <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900 dark:border-green-700 animate-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                            <Check className="w-6 h-6 text-white" />
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 text-green-800 dark:text-green-300 font-semibold mb-1">
-                          <span>Client Pre-selected</span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-green-800 dark:text-green-300 font-semibold mb-1">
+                            <span>Client Pre-selected</span>
+                          </div>
+                          <p className="text-sm text-green-700 dark:text-green-400">
+                            <strong>{prefilledClientData.name}</strong>
+                          </p>
+                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                            {prefilledClientData.email} •{" "}
+                            {prefilledClientData.phone}
+                          </p>
                         </div>
-                        <p className="text-sm text-green-700 dark:text-green-400">
-                          <strong>{prefilledClientData.name}</strong>
-                        </p>
-                        <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                          {prefilledClientData.email} •{" "}
-                          {prefilledClientData.phone}
-                        </p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <Input
-                  icon={Search}
-                  placeholder="Search clients..."
-                  value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)}
-                  className="mb-4"
-                />
+                  <Input
+                    icon={Search}
+                    placeholder="Search clients..."
+                    value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)}
+                    className="mb-4"
+                  />
 
-                <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
-                  {filteredClients.length > 0 ? (
-                    filteredClients.map((client) => (
-                      <div
-                        key={client._id}
-                        onClick={() => handleSelectClient(client._id)}
-                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${
-                          selectedClient === client._id
-                            ? "bg-orange-50 border-orange-400 shadow-md dark:bg-orange-900 dark:border-orange-500"
-                            : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                                selectedClient === client._id
-                                  ? "bg-orange-500"
-                                  : "bg-gray-400"
-                              }`}
-                            >
-                              {client.name?.charAt(0).toUpperCase() || "C"}
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-white">
-                                {client.name}
+                  <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                    {filteredClients.length > 0 ? (
+                      filteredClients.map((client) => (
+                        <div
+                          key={client._id}
+                          onClick={() => handleSelectClient(client._id)}
+                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${
+                            selectedClient === client._id
+                              ? "bg-orange-50 border-orange-400 shadow-md dark:bg-orange-900 dark:border-orange-500"
+                              : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                                  selectedClient === client._id
+                                    ? "bg-orange-500"
+                                    : "bg-gray-400"
+                                }`}
+                              >
+                                {client.name?.charAt(0).toUpperCase() || "C"}
                               </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
-                                {client.email} • {client.phone}
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  {client.name}
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                  {client.email} • {client.phone}
+                                </div>
                               </div>
                             </div>
+                            {selectedClient === client._id && (
+                              <div className="flex items-center gap-2">
+                                <Check className="w-5 h-5 text-green-500" />
+                                <span className="text-xs text-green-600 font-semibold">
+                                  Selected
+                                </span>
+                              </div>
+                            )}
                           </div>
-                          {selectedClient === client._id && (
-                            <div className="flex items-center gap-2">
-                              <Check className="w-5 h-5 text-green-500" />
-                              <span className="text-xs text-green-600 font-semibold">
-                                Selected
-                              </span>
-                            </div>
-                          )}
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12 text-gray-500">
+                        <User className="w-16 h-16 mx-auto mb-3 opacity-30" />
+                        <p className="font-medium">No clients found</p>
+                        <p className="text-sm mt-1">
+                          Try a different search or create a new client
+                        </p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-gray-500">
-                      <User className="w-16 h-16 mx-auto mb-3 opacity-30" />
-                      <p className="font-medium">No clients found</p>
-                      <p className="text-sm mt-1">
-                        Try a different search or create a new client
-                      </p>
+                    )}
+                  </div>
+                  {errors.clientId && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 dark:bg-red-900/20 dark:border-red-800">
+                      <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-red-600 dark:text-red-400">
+                        {errors.clientId}
+                      </span>
                     </div>
                   )}
                 </div>
-                {errors.clientId && (
-                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 dark:bg-red-900/20 dark:border-red-800">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-red-600 dark:text-red-400">
-                      {errors.clientId}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </Card>
+              </Card>
+            )}
           </div>
         )}
 
@@ -1084,7 +1195,7 @@ const EventForm = ({
         {currentStep === 3 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+              <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <DollarSign className="w-5 h-5 text-green-500" />
@@ -1117,7 +1228,7 @@ const EventForm = ({
                 </div>
               </Card>
 
-              <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+              <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <Users className="w-5 h-5 text-blue-500" />
@@ -1134,12 +1245,24 @@ const EventForm = ({
                         const selectedPartner = partners.find(
                           (p) => p._id === partnerId
                         );
-                        if (selectedPartner) {
-                          setNewPartner({
-                            partner: partnerId,
-                            cost: selectedPartner.hourlyRate || 0,
-                          });
-                        }
+                        if (!selectedPartner) return;
+                        // Immediately add partner, confirmed by selection
+                        setFormData((prev) => ({
+                          ...prev,
+                          partners: [
+                            ...prev.partners,
+                            {
+                              partner: partnerId,
+                              partnerName: selectedPartner.name,
+                              service:
+                                selectedPartner.category || "General Service",
+                              hourlyRate: selectedPartner.hourlyRate || 0,
+                              status: "confirmed",
+                            },
+                          ],
+                        }));
+                        setNewPartner({ partner: "", cost: "" });
+                        toast.success(`${selectedPartner.name} added`);
                       }}
                       options={[
                         { value: "", label: "Select Partner" },
@@ -1149,17 +1272,6 @@ const EventForm = ({
                         })),
                       ]}
                     />
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      icon={Plus}
-                      onClick={handleAddPartner}
-                      className="w-full"
-                      disabled={!newPartner.partner}
-                    >
-                      Add Partner
-                    </Button>
 
                     {formData.partners.length > 0 && (
                       <div className="space-y-2 mt-4">
@@ -1180,8 +1292,9 @@ const EventForm = ({
                                 <div className="font-medium text-gray-900 dark:text-white">
                                   {partner.partnerName}
                                 </div>
-                                <div className="text-sm text-orange-600 font-semibold">
-                                  ${partner.cost}
+                                <div className="text-xs text-gray-600 dark:text-gray-300">
+                                  ${getPartnerHourlyRate(partner).toFixed(2)} /
+                                  hr
                                 </div>
                               </div>
                             </div>
@@ -1202,7 +1315,7 @@ const EventForm = ({
               </Card>
             </div>
 
-            <Card className="border-l-4 border-l-orange-500 shadow-lg bg-orange-50 dark:bg-gray-700">
+            <Card className="border-l-4 shadow-lg bg-orange-50 dark:bg-gray-700">
               <div className="p-6">
                 <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
                   <DollarSign className="w-6 h-6 text-orange-600" />
@@ -1224,9 +1337,14 @@ const EventForm = ({
                     </div>
                     <div className="font-bold text-lg text-gray-900 dark:text-white">
                       $
-                      {formData.partners
-                        .reduce((t, p) => t + (parseFloat(p.cost) || 0), 0)
-                        .toFixed(2)}
+                      {(() => {
+                        const hours = calculateEventHours();
+                        const total = formData.partners.reduce(
+                          (t, p) => t + getPartnerCostForHours(p, hours),
+                          0
+                        );
+                        return total.toFixed(2);
+                      })()}
                     </div>
                   </div>
                   <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
@@ -1255,12 +1373,12 @@ const EventForm = ({
         {/* Step 4: Payment Information */}
         {currentStep === 4 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+            <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
               <div className="p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <CreditCard className="w-5 h-5 text-blue-500" />
                   <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Record Initial Payment (Optional)
+                    Record Initial Payment
                   </h4>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1365,7 +1483,7 @@ const EventForm = ({
         {currentStep === 5 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+              <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
                 <div className="p-5">
                   <h4 className="font-semibold mb-4 flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-blue-500" />
@@ -1436,7 +1554,7 @@ const EventForm = ({
                 </div>
               </Card>
 
-              <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+              <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
                 <div className="p-5">
                   <h4 className="font-semibold mb-4 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-green-500" />
@@ -1465,7 +1583,13 @@ const EventForm = ({
                             className="flex justify-between py-1 text-xs text-gray-600 dark:text-gray-400 pl-4"
                           >
                             <span>• {p.partnerName}:</span>
-                            <span>${p.cost?.toFixed(2)}</span>
+                            <span>
+                              $
+                              {getPartnerCostForHours(
+                                p,
+                                calculateEventHours()
+                              ).toFixed(2)}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -1519,7 +1643,7 @@ const EventForm = ({
               </Card>
             </div>
 
-            <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+            <Card className="border-l-4 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
               <div className="p-5">
                 <h4 className="font-semibold mb-4 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-500" />

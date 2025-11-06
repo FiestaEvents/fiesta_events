@@ -1,37 +1,52 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useApi, useApiMutation } from '../../hooks/useApi';
-import { taskService } from '../../api/index';
-import { useAuth } from '../../context/AuthContext';
-import Button from '../../components/common/Button';
-import Badge from '../../components/common/Badge';
-import Card from '../../components/common/Card';
-import Modal from '../../components/common/Modal';
-import EmptyState from '../../components/common/EmptyState';
-import { 
-  ArrowLeft, Edit, Trash2, Calendar, User, Clock,
-  CheckSquare, XCircle, AlertCircle, FileText, Paperclip, MessageSquare
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useApiDetail, useApiMutation } from "../../hooks/useApi";
+import { taskService } from "../../api/index";
+import { useAuth } from "../../context/AuthContext";
+import Button from "../../components/common/Button";
+import Badge from "../../components/common/Badge";
+import Card from "../../components/common/Card";
+import Modal from "../../components/common/Modal";
+import EmptyState from "../../components/common/EmptyState";
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Calendar,
+  User,
+  Clock,
+  CheckSquare,
+  XCircle,
+  AlertCircle,
+  FileText,
+  Paperclip,
+  MessageSquare,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const TaskDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
 
-  const { data: task, loading, error, refetch } = useApi(() => taskService.getById(id));
+  const {
+    item: task,
+    loading,
+    error,
+    refetch,
+  } = useApiDetail(taskService.getById, id);
   const deleteMutation = useApiMutation(taskService.delete);
   const updateMutation = useApiMutation(taskService.update);
 
   const handleDelete = async () => {
     try {
       await deleteMutation.mutate(id);
-      toast.success('Task deleted successfully');
-      navigate('/tasks');
+      toast.success("Task deleted successfully");
+      navigate("/tasks");
     } catch (error) {
-      toast.error('Failed to delete task');
+      toast.error("Failed to delete task");
     }
   };
 
@@ -39,7 +54,8 @@ const TaskDetail = () => {
     if (!task) return;
 
     const updatedSubtasks = [...task.subtasks];
-    updatedSubtasks[subtaskIndex].completed = !updatedSubtasks[subtaskIndex].completed;
+    updatedSubtasks[subtaskIndex].completed =
+      !updatedSubtasks[subtaskIndex].completed;
     if (updatedSubtasks[subtaskIndex].completed) {
       updatedSubtasks[subtaskIndex].completedAt = new Date();
       updatedSubtasks[subtaskIndex].completedBy = user._id;
@@ -52,7 +68,7 @@ const TaskDetail = () => {
       await updateMutation.mutate(id, { subtasks: updatedSubtasks });
       refetch();
     } catch (error) {
-      toast.error('Failed to update subtask');
+      toast.error("Failed to update subtask");
     }
   };
 
@@ -63,57 +79,57 @@ const TaskDetail = () => {
     const newCommentObj = {
       text: newComment,
       author: user._id,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     try {
-      await updateMutation.mutate(id, { 
-        comments: [...(task.comments || []), newCommentObj] 
+      await updateMutation.mutate(id, {
+        comments: [...(task.comments || []), newCommentObj],
       });
-      setNewComment('');
-      toast.success('Comment added');
+      setNewComment("");
+      toast.success("Comment added");
       refetch();
     } catch (error) {
-      toast.error('Failed to add comment');
+      toast.error("Failed to add comment");
     }
   };
 
   const getPriorityColor = (priority) => {
     const colors = {
-      low: 'gray',
-      medium: 'blue',
-      high: 'orange',
-      urgent: 'red'
+      low: "gray",
+      medium: "blue",
+      high: "orange",
+      urgent: "red",
     };
-    return colors[priority] || 'gray';
+    return colors[priority] || "gray";
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'yellow',
-      todo: 'blue',
-      in_progress: 'purple',
-      completed: 'green',
-      cancelled: 'gray'
+      pending: "yellow",
+      todo: "blue",
+      in_progress: "purple",
+      completed: "green",
+      cancelled: "gray",
     };
-    return colors[status] || 'gray';
+    return colors[status] || "gray";
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatDateTime = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -133,17 +149,19 @@ const TaskDetail = () => {
           title="Task Not Found"
           description="The task you're looking for doesn't exist or has been removed."
           action={{
-            label: 'Back to Tasks',
-            onClick: () => navigate('/tasks')
+            label: "Back to Tasks",
+            onClick: () => navigate("/tasks"),
           }}
         />
       </div>
     );
   }
 
-  const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
+  const completedSubtasks =
+    task.subtasks?.filter((st) => st.completed).length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
-  const progress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+  const progress =
+    totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -153,7 +171,7 @@ const TaskDetail = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/tasks')}
+            onClick={() => navigate("/tasks")}
             icon={ArrowLeft}
           >
             Back
@@ -190,7 +208,7 @@ const TaskDetail = () => {
             <div>
               <p className="text-sm text-gray-600">Status</p>
               <Badge color={getStatusColor(task.status)} className="mt-2">
-                {task.status.replace('_', ' ')}
+                {task.status.replace("_", " ")}
               </Badge>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
@@ -252,7 +270,9 @@ const TaskDetail = () => {
                 Description
               </h3>
               {task.description ? (
-                <p className="text-gray-600 whitespace-pre-wrap">{task.description}</p>
+                <p className="text-gray-600 whitespace-pre-wrap">
+                  {task.description}
+                </p>
               ) : (
                 <p className="text-gray-500 italic">No description provided</p>
               )}
@@ -295,7 +315,9 @@ const TaskDetail = () => {
                         className="mt-1 w-4 h-4 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
                       />
                       <div className="ml-3 flex-1">
-                        <p className={`text-sm ${subtask.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                        <p
+                          className={`text-sm ${subtask.completed ? "line-through text-gray-500" : "text-gray-900"}`}
+                        >
                           {subtask.title}
                         </p>
                         {subtask.completed && subtask.completedAt && (
@@ -345,13 +367,15 @@ const TaskDetail = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm text-gray-900">
-                            {comment.author?.name || 'Unknown'}
+                            {comment.author?.name || "Unknown"}
                           </span>
                           <span className="text-xs text-gray-500">
                             {formatDateTime(comment.createdAt)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-700 mt-1">{comment.text}</p>
+                        <p className="text-sm text-gray-700 mt-1">
+                          {comment.text}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -379,7 +403,9 @@ const TaskDetail = () => {
                     >
                       <div className="flex items-center">
                         <Paperclip className="w-4 h-4 text-gray-400 mr-2" />
-                        <span className="text-sm text-gray-900">{attachment.fileName}</span>
+                        <span className="text-sm text-gray-900">
+                          {attachment.fileName}
+                        </span>
                       </div>
                       <Button variant="ghost" size="sm">
                         Download
@@ -405,7 +431,9 @@ const TaskDetail = () => {
                     <p className="text-sm text-gray-600">Assigned To</p>
                     <div className="flex items-center mt-1">
                       <User className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">{task.assignedTo.name}</span>
+                      <span className="text-sm text-gray-900">
+                        {task.assignedTo.name}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -414,7 +442,7 @@ const TaskDetail = () => {
                   <div>
                     <p className="text-sm text-gray-600">Category</p>
                     <Badge color="blue" className="mt-1">
-                      {task.category.replace('_', ' ')}
+                      {task.category.replace("_", " ")}
                     </Badge>
                   </div>
                 )}
@@ -424,7 +452,9 @@ const TaskDetail = () => {
                     <p className="text-sm text-gray-600">Estimated Hours</p>
                     <div className="flex items-center mt-1">
                       <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">{task.estimatedHours}h</span>
+                      <span className="text-sm text-gray-900">
+                        {task.estimatedHours}h
+                      </span>
                     </div>
                   </div>
                 )}
@@ -434,7 +464,9 @@ const TaskDetail = () => {
                     <p className="text-sm text-gray-600">Actual Hours</p>
                     <div className="flex items-center mt-1">
                       <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">{task.actualHours}h</span>
+                      <span className="text-sm text-gray-900">
+                        {task.actualHours}h
+                      </span>
                     </div>
                   </div>
                 )}
@@ -445,7 +477,9 @@ const TaskDetail = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/events/${task.relatedEvent._id}`)}
+                      onClick={() =>
+                        navigate(`/events/${task.relatedEvent._id}`)
+                      }
                       className="mt-1"
                     >
                       View Event
@@ -459,7 +493,9 @@ const TaskDetail = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/clients/${task.relatedClient._id}`)}
+                      onClick={() =>
+                        navigate(`/clients/${task.relatedClient._id}`)
+                      }
                       className="mt-1"
                     >
                       View Client
@@ -478,25 +514,33 @@ const TaskDetail = () => {
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-600">Created</p>
-                  <p className="text-sm text-gray-900 mt-1">{formatDate(task.createdAt)}</p>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {formatDate(task.createdAt)}
+                  </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-600">Last Updated</p>
-                  <p className="text-sm text-gray-900 mt-1">{formatDate(task.updatedAt)}</p>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {formatDate(task.updatedAt)}
+                  </p>
                 </div>
 
                 {task.completedAt && (
                   <div>
                     <p className="text-sm text-gray-600">Completed</p>
-                    <p className="text-sm text-gray-900 mt-1">{formatDate(task.completedAt)}</p>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {formatDate(task.completedAt)}
+                    </p>
                   </div>
                 )}
 
                 {task.createdBy && (
                   <div>
                     <p className="text-sm text-gray-600">Created By</p>
-                    <p className="text-sm text-gray-900 mt-1">{task.createdBy.name}</p>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {task.createdBy.name}
+                    </p>
                   </div>
                 )}
               </div>
@@ -514,14 +558,11 @@ const TaskDetail = () => {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete <strong>{task.title}</strong>? 
-            This action cannot be undone.
+            Are you sure you want to delete <strong>{task.title}</strong>? This
+            action cannot be undone.
           </p>
           <div className="flex justify-end space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteModal(false)}
-            >
+            <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
               Cancel
             </Button>
             <Button
