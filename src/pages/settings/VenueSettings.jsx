@@ -230,7 +230,7 @@ const ImageGrid = ({ images, onRemove, onReorder, editable = true }) => {
   if (images.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
       {images.map((image, index) => (
         <div
           key={image.id || image.url}
@@ -986,7 +986,7 @@ const VenueSettings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-white rounded-lg dark:bg-gray-900">
       <div className="mx-auto p-6">
         {/* Header */}
         <div className="mb-8">

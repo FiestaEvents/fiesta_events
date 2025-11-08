@@ -458,59 +458,73 @@ const EventForm = ({
   // ============================================
   // DATA FETCHING
   // ============================================
-  const fetchDropdownData = async () => {
-    try {
-      const [clientsRes, partnersRes, venuesRes, eventsRes] = await Promise.all(
-        [
-          clientService.getAll({ limit: 100 }),
-          partnerService.getAll({ limit: 100 }),
-          venueService.getAll({ limit: 100 }),
-          eventService.getAll({ limit: 100 }), // NEW: Fetch existing events
-        ]
-      );
-      const extractArrayData = (response, possibleKeys = ["data"]) => {
-        if (!response) return [];
-        if (Array.isArray(response)) return response;
-        for (const key of possibleKeys) {
-          if (response[key] && Array.isArray(response[key]))
-            return response[key];
-          if (response?.data?.[key] && Array.isArray(response.data[key]))
-            return response.data[key];
-        }
-        if (Array.isArray(response.data)) return response.data;
-        for (const key in response) {
-          if (Array.isArray(response[key])) return response[key];
-        }
+const fetchDropdownData = async () => {
+  try {
+    // Use Promise.allSettled to handle potential failures gracefully
+    const [clientsRes, partnersRes, venuesRes, eventsRes] = await Promise.allSettled([
+      clientService.getAll ? clientService.getAll({ limit: 100 }) : clientService.getClients ? clientService.getClients({ limit: 100 }) : Promise.resolve({ data: [] }),
+      partnerService.getAll ? partnerService.getAll({ limit: 100 }) : partnerService.getPartners ? partnerService.getPartners({ limit: 100 }) : Promise.resolve({ data: [] }),
+      venueService.getAll ? venueService.getAll({ limit: 100 }) : venueService.getVenues ? venueService.getVenues({ limit: 100 }) : Promise.resolve({ data: [] }),
+      eventService.getAll ? eventService.getAll({ limit: 100 }) : eventService.getEvents ? eventService.getEvents({ limit: 100 }) : Promise.resolve({ data: [] }),
+    ]);
+
+    // Helper function to extract data from different response formats
+    const extractArrayData = (response, serviceName) => {
+      if (response.status === 'rejected') {
+        console.warn(`Failed to fetch ${serviceName}:`, response.reason);
         return [];
-      };
-
-      const clientsList = extractArrayData(clientsRes, ["clients", "data"]);
-      const partnersList = extractArrayData(partnersRes, ["partners", "data"]);
-      const venuesList = extractArrayData(venuesRes, ["venues", "data"]);
-      const eventsList = extractArrayData(eventsRes, ["events", "data"]);
-
-      setClients(clientsList);
-      setPartners(partnersList);
-      setVenues(venuesList);
-      setExistingEvents(eventsList);
-
-      // Handle prefilled client
-      const prefillClient = location.state?.prefillClient;
-      if (prefillClient && prefillClient._id && !isEditMode) {
-        setPrefilledClientData(prefillClient);
-        setSelectedClient(prefillClient._id);
-        setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
-        toast.success(`Client "${prefillClient.name}" pre-selected`);
       }
-    } catch (error) {
-      console.error("Error fetching dropdown data:", error);
-      toast.error("Failed to load data");
-      setClients([]);
-      setPartners([]);
-      setVenues([]);
-      setExistingEvents([]);
+      
+      const data = response.value;
+      if (!data) return [];
+      
+      // Handle different response structures
+      if (Array.isArray(data)) return data;
+      if (data.data && Array.isArray(data.data)) return data.data;
+      if (data.clients && Array.isArray(data.clients)) return data.clients;
+      if (data.partners && Array.isArray(data.partners)) return data.partners;
+      if (data.venues && Array.isArray(data.venues)) return data.venues;
+      if (data.events && Array.isArray(data.events)) return data.events;
+      
+      // If no array found, return empty array
+      return [];
+    };
+
+    const clientsList = extractArrayData(clientsRes, 'clients');
+    const partnersList = extractArrayData(partnersRes, 'partners');
+    const venuesList = extractArrayData(venuesRes, 'venues');
+    const eventsList = extractArrayData(eventsRes, 'events');
+
+    console.log('Fetched data:', {
+      clients: clientsList.length,
+      partners: partnersList.length,
+      venues: venuesList.length,
+      events: eventsList.length
+    });
+
+    setClients(clientsList);
+    setPartners(partnersList);
+    setVenues(venuesList);
+    setExistingEvents(eventsList);
+
+    // Handle prefilled client
+    const prefillClient = location.state?.prefillClient;
+    if (prefillClient && prefillClient._id && !isEditMode) {
+      setPrefilledClientData(prefillClient);
+      setSelectedClient(prefillClient._id);
+      setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
+      toast.success(`Client "${prefillClient.name}" pre-selected`);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching dropdown data:", error);
+    toast.error("Failed to load data");
+    // Set empty arrays to prevent further errors
+    setClients([]);
+    setPartners([]);
+    setVenues([]);
+    setExistingEvents([]);
+  }
+};
   useEffect(() => {
     if (isModal ? isOpen : true) {
       fetchDropdownData();

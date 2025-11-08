@@ -101,21 +101,44 @@ const InvoiceFormPage = () => {
     totalAmount: 0,
   });
 
-  const categoryOptions = [
-    { value: "venue_rental", label: "Venue Rental" },
-    { value: "catering", label: "Catering" },
-    { value: "decoration", label: "Decoration" },
-    { value: "photography", label: "Photography" },
-    { value: "music", label: "Music & Entertainment" },
-    { value: "security", label: "Security" },
-    { value: "cleaning", label: "Cleaning" },
-    { value: "audio_visual", label: "Audio Visual" },
-    { value: "floral", label: "Floral" },
-    { value: "entertainment", label: "Entertainment" },
-    { value: "transportation", label: "Transportation" },
-    { value: "equipment", label: "Equipment" },
-    { value: "other", label: "Other" },
-  ];
+  // FIXED: Dynamic category options based on invoice type
+  const getCategoryOptions = () => {
+    if (invoiceType === 'client') {
+      return [
+        { value: "venue_rental", label: "Venue Rental" },
+        { value: "catering", label: "Catering" },
+        { value: "decoration", label: "Decoration" },
+        { value: "photography", label: "Photography" },
+        { value: "music", label: "Music & Entertainment" },
+        { value: "security", label: "Security" },
+        { value: "cleaning", label: "Cleaning" },
+        { value: "audio_visual", label: "Audio Visual" },
+        { value: "floral", label: "Floral" },
+        { value: "entertainment", label: "Entertainment" },
+        { value: "transportation", label: "Transportation" },
+        { value: "equipment", label: "Equipment" },
+        { value: "other", label: "Other" },
+      ];
+    } else {
+      // For partner invoices, get unique categories from partners
+      const partnerCategories = [...new Set(partners
+        .filter(partner => partner.category)
+        .map(partner => partner.category)
+      )].sort();
+      
+      const categoryOptions = partnerCategories.map(category => ({
+        value: category.toLowerCase().replace(/\s+/g, '_'),
+        label: category
+      }));
+      
+      // Add "other" as fallback
+      categoryOptions.push({ value: "other", label: "Other" });
+      
+      return categoryOptions;
+    }
+  };
+
+  const categoryOptions = getCategoryOptions();
 
   const config = {
     client: {
@@ -206,6 +229,21 @@ const InvoiceFormPage = () => {
     fetchData();
   }, []);
 
+  // FIXED: Update category options when partners data changes
+  useEffect(() => {
+    // This will ensure category options are updated when partners are loaded
+    if (invoiceType === 'partner' && partners.length > 0) {
+      // Force re-render of items with updated categories
+      setFormData(prev => ({
+        ...prev,
+        items: prev.items.map(item => ({
+          ...item,
+          category: item.category || getCategoryOptions()[0]?.value || "other"
+        }))
+      }));
+    }
+  }, [partners, invoiceType]);
+
   // Load invoice in edit mode
   useEffect(() => {
     if (isEditMode) {
@@ -234,13 +272,13 @@ const InvoiceFormPage = () => {
                 quantity: Number(item.quantity) || 1,
                 rate: Number(item.rate) || 0,
                 amount: Number(item.amount) || 0,
-                category: item.category || "other",
+                category: item.category || (invoice.invoiceType === 'partner' ? "other" : "venue_rental"),
               })) : [{
                 description: "",
                 quantity: 1,
                 rate: 0,
                 amount: 0,
-                category: "venue_rental",
+                category: invoice.invoiceType === 'partner' ? "other" : "venue_rental",
               }],
               taxRate: Number(invoice.taxRate) || 19,
               discount: Number(invoice.discount) || 0,
@@ -292,11 +330,10 @@ const InvoiceFormPage = () => {
     }
   }, [formData.client, formData.partner, events, invoiceType]);
 
-  // Calculate totals - FIXED: Properly handle item amount updates
+  // Calculate totals
   useEffect(() => {
     let subtotal = 0;
 
-    // Calculate subtotal from all items
     formData.items.forEach((item) => {
       const amount = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
       subtotal += amount;
@@ -336,7 +373,7 @@ const InvoiceFormPage = () => {
       [field]: value,
     };
     
-    // FIXED: Always recalculate amount when quantity or rate changes
+    // Always recalculate amount when quantity or rate changes
     const quantity = Number(updatedItems[index].quantity) || 0;
     const rate = Number(updatedItems[index].rate) || 0;
     updatedItems[index].amount = quantity * rate;
@@ -357,6 +394,10 @@ const InvoiceFormPage = () => {
   };
 
   const handleAddItem = () => {
+    const defaultCategory = invoiceType === 'partner' 
+      ? (getCategoryOptions()[0]?.value || "other")
+      : "venue_rental";
+
     setFormData((prev) => ({
       ...prev,
       items: [
@@ -366,7 +407,7 @@ const InvoiceFormPage = () => {
           quantity: 1,
           rate: 0,
           amount: 0,
-          category: "other",
+          category: defaultCategory,
         },
       ],
     }));
@@ -428,12 +469,17 @@ const InvoiceFormPage = () => {
             .filter(p => (p.partner?._id || p.partner) === partnerId)
             .forEach(partner => {
               if (partner.cost > 0) {
+                // FIXED: Use partner's category or service type
+                const partnerCategory = partner.service?.toLowerCase().replace(/\s+/g, '_') || 
+                                      partner.partner?.category?.toLowerCase().replace(/\s+/g, '_') || 
+                                      "other";
+                
                 eventItems.push({
                   description: `${partner.service || 'Service'} - ${event.title}`,
                   quantity: 1,
                   rate: Number(partner.cost),
                   amount: Number(partner.cost),
-                  category: partner.service?.toLowerCase().replace(/\s+/g, '_') || "other",
+                  category: partnerCategory,
                 });
               }
             });
@@ -545,7 +591,10 @@ const InvoiceFormPage = () => {
   };
 
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    // FIXED: Proper previous step navigation
+    if (currentStep > 1) {
+      setCurrentStep((prev) => prev - 1);
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -638,7 +687,7 @@ const InvoiceFormPage = () => {
   if (loadingData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="medium" />
       </div>
     );
   }
@@ -650,14 +699,14 @@ const InvoiceFormPage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6 bg-white p-6 rounded-md shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <div className={`p-3 rounded-xl ${
-                invoiceType === 'client' ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
+                invoiceType === 'client' ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-orange-100 dark:bg-orange-900/30'
               }`}>
                 <RecipientIcon className={`w-8 h-8 ${
-                  invoiceType === 'client' ? 'text-orange-600 dark:text-orange-400' : 'text-purple-600 dark:text-purple-400'
+                  invoiceType === 'client' ? 'text-orange-600 dark:text-orange-400' : 'text-orange-600 dark:text-orange-400'
                 }`} />
               </div>
               <div>
@@ -701,10 +750,10 @@ const InvoiceFormPage = () => {
                       className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                         isActive
                           ? invoiceType === 'client'
-                            ? 'bg-blue-500 border-blue-500 text-white'
-                            : 'bg-purple-500 border-purple-500 text-white'
+                            ? 'bg-orange-500 border-orange-500 text-white'
+                            : 'bg-orange-500 border-orange-500 text-white'
                           : isComplete
-                            ? 'bg-green-500 border-green-500 text-white'
+                            ? 'bg-orange-500 border-orange-500 text-white'
                             : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'
                       }`}
                     >
@@ -718,10 +767,10 @@ const InvoiceFormPage = () => {
                       className={`text-xs mt-2 font-medium ${
                         isActive
                           ? invoiceType === 'client'
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-purple-600 dark:text-purple-400'
+                            ? 'text-gray-600 dark:text-blue-400'
+                            : 'text-gray-600 dark:text-purple-400'
                           : isComplete
-                            ? 'text-green-600 dark:text-green-400'
+                            ? 'text-gray-600 dark:text-green-400'
                             : 'text-gray-500'
                       }`}
                     >
@@ -741,10 +790,10 @@ const InvoiceFormPage = () => {
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className={`p-2 rounded-lg ${
-                    invoiceType === 'client' ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
+                    invoiceType === 'client' ? 'bg-orange-100 dark:bg-blue-900/30' : 'bg-orange-100 dark:bg-orange-900/30'
                   }`}>
                     <RecipientIcon className={`w-6 h-6 ${
-                      invoiceType === 'client' ? 'text-blue-600' : 'text-purple-600'
+                      invoiceType === 'client' ? 'text-gray-600' : 'text-orange-600'
                     }`} />
                   </div>
                   <div>
@@ -775,8 +824,8 @@ const InvoiceFormPage = () => {
                         className={`p-4 rounded-lg border-2 text-left transition-all ${
                           selectedRecipient === recipient._id
                             ? invoiceType === 'client'
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                              : 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                              ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                              : 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
                             : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:shadow-sm'
                         }`}
                       >
@@ -884,7 +933,7 @@ const InvoiceFormPage = () => {
                 {relatedEvents.length === 0 && selectedRecipient && (
                   <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <div className="flex items-start gap-3">
-                      <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <Info className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-blue-900 dark:text-blue-300">
                           No events found
@@ -930,7 +979,7 @@ const InvoiceFormPage = () => {
             </Card>
           )}
 
-          {/* Step 3: Items & Pricing - FIXED */}
+          {/* Step 3: Items & Pricing - FIXED: Dynamic categories */}
           {currentStep === 3 && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Items List */}
@@ -1040,7 +1089,7 @@ const InvoiceFormPage = () => {
                 </Card>
               </div>
 
-              {/* Price Summary - FIXED: Made sticky and always visible */}
+              {/* Price Summary */}
               <div className="lg:col-span-1">
                 <div className="sticky top-6">
                   <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
@@ -1142,7 +1191,7 @@ const InvoiceFormPage = () => {
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                      <Calendar className="w-6 h-6 text-blue-600" />
+                      <Calendar className="w-6 h-6 text-gray-600" />
                     </div>
                     <div>
                       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1349,7 +1398,7 @@ const InvoiceFormPage = () => {
             </Card>
           )}
 
-          {/* Footer Navigation */}
+          {/* Footer Navigation - FIXED: Previous button now works properly */}
           <Card className="border-0 shadow-lg">
             <div className="p-6">
               <div className="flex items-center justify-between">

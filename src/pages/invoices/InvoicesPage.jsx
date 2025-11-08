@@ -15,7 +15,6 @@ import {
   Edit,
   Trash2,
   Filter,
-  RefreshCw,
   Mail,
   AlertCircle,
   TrendingUp,
@@ -33,7 +32,8 @@ import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-import Table from "../../components/common/Table";
+import Table from "../../components/common/NewTable";
+import Pagination from "../../components/common/Pagination";
 import { invoiceService } from "../../api/index";
 import { toast } from "react-hot-toast";
 
@@ -55,6 +55,7 @@ const InvoicesPage = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
   
   // Invoice Type Toggle
   const [invoiceType, setInvoiceType] = useState("client"); 
@@ -218,10 +219,12 @@ const InvoicesPage = () => {
       setInvoices(invoicesData);
       setTotalPages(paginationData.pages || paginationData.totalPages || 1);
       setTotalItems(paginationData.total || invoicesData.length);
+      setHasInitialLoad(true);
     } catch (error) {
       console.error("Error fetching invoices:", error);
       setError(error.message || "Failed to load invoices. Please try again.");
       setInvoices([]);
+      setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
@@ -480,63 +483,16 @@ const InvoicesPage = () => {
     });
   };
 
-  const getStatusVariant = (status) => {
-    const statusLower = (status || "").toLowerCase();
-    switch (statusLower) {
-      case "paid":
-        return "success";
-      case "partial":
-        return "info";
-      case "sent":
-        return "warning";
-      case "overdue":
-        return "danger";
-      case "cancelled":
-        return "gray";
-      case "draft":
-        return "secondary";
-      default:
-        return "info";
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    const statusLower = (status || "").toLowerCase();
-    switch (statusLower) {
-      case "paid":
-        return <Check className="w-4 h-4" />;
-      case "partial":
-        return <TrendingUp className="w-4 h-4" />;
-      case "sent":
-        return <Mail className="w-4 h-4" />;
-      case "overdue":
-        return <AlertCircle className="w-4 h-4" />;
-      case "cancelled":
-        return <XCircle className="w-4 h-4" />;
-      case "draft":
-        return <FileText className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
-    }
-  };
-
-  // Enhanced table columns configuration
+  // Enhanced table columns configuration with action buttons
   const columns = [
     {
       accessor: "invoiceNumber",
       header: "Invoice #",
       sortable: true,
-      width: "140px",
+      width: "15%",
       render: (row) => safeRender((row) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-900 dark:text-white">
-            {row.invoiceNumber}
-          </span>
-          {row.event && row.event.title && (
-            <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {row.event.title}
-            </span>
-          )}
+        <div className="font-medium text-gray-900 dark:text-white">
+          {row.invoiceNumber || `INV-${(row._id || '').substring(0, 8)}`}
         </div>
       ), row, 'No Number')
     },
@@ -544,18 +500,19 @@ const InvoicesPage = () => {
       accessor: "recipientName",
       header: invoiceType === "client" ? "Client" : "Partner",
       sortable: true,
+      width: "25%",
       render: (row) => safeRender((row) => (
         <div className="min-w-0">
-          <p className="text-gray-900 dark:text-white font-medium truncate">
-            {row.recipientName}
+          <p className="text-gray-900 dark:text-white font-medium">
+            {row.recipientName || 'No Recipient'}
           </p>
           {row.recipientEmail && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
               {row.recipientEmail}
             </p>
           )}
           {row.recipientCompany && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {row.recipientCompany}
             </p>
           )}
@@ -566,28 +523,21 @@ const InvoicesPage = () => {
       accessor: "issueDate",
       header: "Issue Date",
       sortable: true,
-      width: "120px",
+      width: "12%",
       render: (row) => safeRender((row) => (
-        <span className="text-gray-700 dark:text-gray-300 whitespace-nowrap">
-          {formatDate(row.issueDate)}
-        </span>
+        <div className="text-gray-600 dark:text-gray-400">
+          {row.issueDate ? new Date(row.issueDate).toLocaleDateString() : "-"}
+        </div>
       ), row)
     },
     {
       accessor: "dueDate",
       header: "Due Date",
       sortable: true,
-      width: "120px",
+      width: "12%",
       render: (row) => safeRender((row) => (
-        <div className="flex flex-col">
-          <span className="text-gray-700 dark:text-gray-300 whitespace-nowrap">
-            {formatDate(row.dueDate)}
-          </span>
-          {row.isOverdue && (
-            <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-              Overdue
-            </span>
-          )}
+        <div className="text-gray-600 dark:text-gray-400">
+          {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "-"}
         </div>
       ), row)
     },
@@ -595,17 +545,10 @@ const InvoicesPage = () => {
       accessor: "totalAmount",
       header: "Amount",
       sortable: true,
-      width: "140px",
+      width: "12%",
       render: (row) => safeRender((row) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-900 dark:text-white">
-            {formatCurrency(row.totalAmount)}
-          </span>
-          {row.paymentStatus?.amountPaid > 0 && (
-            <span className="text-xs text-green-600 dark:text-green-400">
-              Paid: {formatCurrency(row.paymentStatus.amountPaid)}
-            </span>
-          )}
+        <div className="font-medium text-gray-900 dark:text-white">
+          {formatCurrency(row.totalAmount)}
         </div>
       ), row)
     },
@@ -613,32 +556,40 @@ const InvoicesPage = () => {
       accessor: "status",
       header: "Status",
       sortable: true,
-      width: "120px",
+      width: "12%",
       render: (row) => safeRender((row) => (
-        <Badge variant={getStatusVariant(row.status)} className="flex items-center gap-1 whitespace-nowrap">
-          {getStatusIcon(row.status)}
+        <Badge
+          color={
+            row.status === "paid" ? "green" :
+            row.status === "sent" ? "blue" :
+            row.status === "partial" ? "yellow" :
+            row.status === "overdue" ? "red" :
+            row.status === "cancelled" ? "gray" : "orange"
+          }
+        >
           {row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : 'Draft'}
         </Badge>
       ), row)
     },
     {
-      accessor: "actions",
       header: "Actions",
-      width: "220px",
+      accessor: "actions",
+      width: "12%",
+      className: "text-center",
       render: (row) => {
         if (!row || !row._id) return <span className="text-gray-400">-</span>;
         
         return (
-          <div className="flex items-center gap-1">
+          <div className="flex justify-center gap-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleViewInvoice(row);
               }}
-              className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+              className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
               title="View Invoice"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="h-4 w-4" />
             </button>
             {row.status !== "paid" && row.status !== "cancelled" && (
               <button
@@ -646,34 +597,10 @@ const InvoicesPage = () => {
                   e.stopPropagation();
                   handleEditInvoice(row);
                 }}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
                 title="Edit Invoice"
               >
-                <Edit className="w-4 h-4" />
-              </button>
-            )}
-            {row.status === "draft" && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSendInvoice(row);
-                }}
-                className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                title="Send Invoice"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            )}
-            {(row.status === "sent" || row.status === "partial" || row.status === "overdue") && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleMarkAsPaid(row);
-                }}
-                className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                title="Mark as Paid"
-              >
-                <Check className="w-4 h-4" />
+                <Edit className="h-4 w-4" />
               </button>
             )}
             <button
@@ -681,33 +608,21 @@ const InvoicesPage = () => {
                 e.stopPropagation();
                 handleDownloadInvoice(row);
               }}
-              className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-1 rounded hover:bg-green-50 dark:hover:bg-green-900/20 transition"
               title="Download PDF"
             >
-              <Download className="w-4 h-4" />
+              <Download className="h-4 w-4" />
             </button>
-            {row.status !== "paid" && row.status !== "cancelled" && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCancelClick(row);
-                }}
-                className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
-                title="Cancel Invoice"
-              >
-                <XCircle className="w-4 h-4" />
-              </button>
-            )}
             {(row.status === "draft" || (row.status === "sent" && row.paymentStatus?.amountPaid === 0)) && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteClick(row);
                 }}
-                className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                 title="Delete Invoice"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -716,10 +631,15 @@ const InvoicesPage = () => {
     },
   ];
 
-  if (loading && invoices.length === 0) {
+  // Helper variables for empty states
+  const hasActiveFilters = searchTerm.trim() !== "" || Object.values(filters).some(value => value !== "");
+  const showEmptyState = !loading && !error && invoices.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !loading && !error && invoices.length === 0 && hasActiveFilters && hasInitialLoad;
+
+  if (loading && !hasInitialLoad) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="medium" />
       </div>
     );
   }
@@ -727,7 +647,7 @@ const InvoicesPage = () => {
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="p-4 bg-white sm:p-6 lg:p-8 space-y-6  dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -995,33 +915,97 @@ const InvoicesPage = () => {
         </div>
       </Card>
 
-      {/* Invoices Table */}
-      <Card className="overflow-hidden">
-        <Table
-          columns={columns}
-          data={invoices}
-          loading={loading}
-          emptyMessage={
-            searchTerm || filters.status
-              ? "No invoices found matching your search."
-              : `No ${invoiceType} invoices found. Create your first ${invoiceType === "client" ? "invoice" : "bill"} to get started.`
-          }
-          onRowClick={handleViewInvoice}
-          selectable={true}
-          onSelectionChange={setSelectedRows}
-          selectedRows={selectedRows}
-          striped={true}
-          hoverable={true}
-          pagination={true}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
-          pageSizeOptions={[10, 25, 50, 100]}
-        />
-      </Card>
+      {/* Loading State */}
+      {loading && !hasInitialLoad && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">
+            Loading invoices...
+          </p>
+        </div>
+      )}
+
+      {/* Table Section */}
+      {!loading && hasInitialLoad && invoices.length > 0 && (
+        <>
+          <div className="overflow-x-auto">
+            <Table
+              columns={columns}
+              data={invoices}
+              loading={loading}
+              emptyMessage={
+                searchTerm || filters.status
+                  ? "No invoices found matching your search."
+                  : `No ${invoiceType} invoices found. Create your first ${invoiceType === "client" ? "invoice" : "bill"} to get started.`
+              }
+              onRowClick={handleViewInvoice}
+              selectable={true}
+              onSelectionChange={setSelectedRows}
+              selectedRows={selectedRows}
+              striped={true}
+              hoverable={true}
+              pagination={true}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={totalItems}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                pageSize={pageSize}
+                onPageSizeChange={(newLimit) => {
+                  setPageSize(newLimit);
+                  setCurrentPage(1);
+                }}
+                totalItems={totalItems}
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {/* No Results from Search/Filter */}
+      {showNoResults && (
+        <div className="text-center py-12">
+          <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No invoices found
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            No invoices match your current search or filter criteria.
+          </p>
+          <Button onClick={handleClearFilters} variant="outline">
+            Clear All Filters
+          </Button>
+        </div>
+      )}
+
+      {/* Empty State - No invoices at all */}
+      {showEmptyState && (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No invoices yet
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Get started by creating your first {invoiceType === "client" ? "invoice" : "bill"}.
+          </p>
+          <Button onClick={handleCreateInvoice} variant="primary">
+            <Plus className="h-4 w-4 mr-2" />
+            Create First {invoiceType === "client" ? "Invoice" : "Bill"}
+          </Button>
+        </div>
+      )}
 
       {/* Rest of the modals remain the same */}
       {/* Invoice Detail Modal */}
@@ -1060,8 +1044,16 @@ const InvoicesPage = () => {
                   </p>
                 )}
               </div>
-              <Badge variant={getStatusVariant(selectedInvoice.status)} size="lg" className="flex items-center gap-1">
-                {getStatusIcon(selectedInvoice.status)}
+              <Badge 
+                color={
+                  selectedInvoice.status === "paid" ? "green" :
+                  selectedInvoice.status === "sent" ? "blue" :
+                  selectedInvoice.status === "partial" ? "yellow" :
+                  selectedInvoice.status === "overdue" ? "red" :
+                  selectedInvoice.status === "cancelled" ? "gray" : "orange"
+                } 
+                size="lg"
+              >
                 {selectedInvoice.status || "Draft"}
               </Badge>
             </div>

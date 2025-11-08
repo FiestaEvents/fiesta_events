@@ -8,7 +8,7 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { reminderService } from "../../api/index";
 import { BellIcon } from "../../components/icons/IconComponents";
-import { Plus, Search, Filter, Eye, X, Edit, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Search, Filter, Eye, X, Edit, Trash2 } from "lucide-react";
 import ReminderDetails from "./ReminderDetails";
 import ReminderForm from "./ReminderForm";
 import Badge from "../../components/common/Badge";
@@ -340,15 +340,6 @@ const RemindersList = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={fetchReminders}
-            loading={loading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
           {totalCount > 0 && (
             <Button
               variant="primary"

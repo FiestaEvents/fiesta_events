@@ -9,7 +9,7 @@ import Pagination from "../../components/common/Pagination";
 import Badge from "../../components/common/Badge";
 import { taskService } from "../../api/index";
 import { CheckSquare } from "../../components/icons/IconComponents";
-import { Plus, Search, Filter, Eye, X, Edit, Trash2, RefreshCw, Download, Archive, Kanban as KanbanIcon, List as ListIcon, Clock, AlertCircle, User, Calendar, Tag } from "lucide-react";
+import { Plus, Search, Filter, Eye, X, Edit, Trash2, Download, Archive, Kanban as KanbanIcon, List as ListIcon, Clock, AlertCircle, User, Calendar, Tag } from "lucide-react";
 import TaskDetails from "./TaskDetail";
 import TaskForm from "./TaskForm";
 import { toast } from "react-hot-toast";
@@ -373,15 +373,6 @@ const TasksList = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={fetchTasks}
-            loading={loading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
           {!showArchived && totalCount > 0 && (
             <Button
               variant="outline"

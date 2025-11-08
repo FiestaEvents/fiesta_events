@@ -8,7 +8,7 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { paymentService } from "../../api/index";
 import { DollarSign } from "../../components/icons/IconComponents";
-import { Plus, Search, Filter, Eye, X, Edit, Trash2, RefreshCw, Download, RotateCcw, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Search, Filter, Eye, X, Edit, Trash2, Download, RotateCcw, TrendingUp, TrendingDown } from "lucide-react";
 import PaymentDetails from "./PaymentDetail";
 import PaymentForm from "./PaymentForm";
 import Badge from "../../components/common/Badge";
@@ -477,15 +477,6 @@ const PaymentsList = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={fetchPayments}
-            loading={loading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
           {totalCount > 0 && (
             <Button
               variant="outline"

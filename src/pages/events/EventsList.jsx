@@ -12,6 +12,13 @@ import {
   X,
   List,
   ArrowRight,
+  Grid,
+  Table,
+  Eye,
+  Edit,
+  Trash2,
+  Search,
+  Filter,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { eventService } from "../../api/index";
@@ -21,6 +28,10 @@ import Button from "../../components/common/Button";
 import TitleCard from "../../components/common/TitleCard";
 import Badge from "../../components/common/Badge";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import TableComponent from "../../components/common/NewTable";
+import Pagination from "../../components/common/Pagination";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
 
 // --- UTILITY FUNCTIONS ---
 
@@ -112,80 +123,24 @@ const formatDateTime = (dateString) => {
   });
 };
 
-// --- UPCOMING EVENTS LIST COMPONENT ---
-const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
-  return (
-    <TitleCard title="Upcoming Events" className="h-full">
-      {isLoading ? (
-        <div className="flex items-center justify-center py-6">
-          <LoadingSpinner size="md" />
-        </div>
-      ) : upcomingEvents.length > 0 ? (
-        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-          {upcomingEvents.map((event) => (
-            <div
-              key={event.id || event._id}
-              onClick={() => onEventClick(event)}
-              className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate flex-1 mr-2">
-                  {event.title}
-                </h4>
-                <Badge
-                  variant={getStatusColor(event.status)}
-                  className="text-xs flex-shrink-0"
-                >
-                  {event.status}
-                </Badge>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                  <CalendarIcon className="w-3 h-3" />
-                  {formatDateShort(event.startDate)}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                  <Clock className="w-3 h-3" />
-                  {formatTime(event.startDate)}
-                </div>
-                {event.type && (
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <Tag className="w-3 h-3" />
-                    {event.type}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            No upcoming events found.
-          </p>
-        </div>
-      )}
-    </TitleCard>
-  );
-};
-
-// --- ALL FUTURE EVENTS LIST COMPONENT ---
-const AllFutureEventsList = ({
-  futureEvents,
+// --- EVENT LIST COMPONENT ---
+const EventListComponent = ({
+  events,
   onEventClick,
   isLoading,
   onViewAll,
+  title = "Upcoming Events",
+  showViewAll = false,
 }) => {
-  const displayedEvents = futureEvents.slice(0, 10); // Show first 10 events
+  const displayedEvents = events.slice(0, 100);
 
   return (
     <TitleCard
+      padding="none"
       title={
-        <div className="flex items-center justify-between">
-          <span>All Future Events</span>
-          {futureEvents.length > 10 && (
+        <div className="flex items-center justify-between p-5">
+          <span>{title}</span>
+          {showViewAll && events.length > 10 && (
             <Button
               variant="ghost"
               size="sm"
@@ -198,14 +153,13 @@ const AllFutureEventsList = ({
           )}
         </div>
       }
-      className="h-full"
     >
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
           <LoadingSpinner size="md" />
         </div>
       ) : displayedEvents.length > 0 ? (
-        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+        <div className="space-y-3 p-5 overflow-y-auto max-h-[885px]">
           {displayedEvents.map((event) => (
             <div
               key={event.id || event._id}
@@ -269,10 +223,10 @@ const AllFutureEventsList = ({
             </div>
           ))}
 
-          {futureEvents.length > 10 && (
+          {events.length > 10 && (
             <div className="text-center pt-2 border-t border-gray-200 dark:border-gray-700">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Showing 10 of {futureEvents.length} events
+                Showing 10 of {events.length} events
               </p>
             </div>
           )}
@@ -281,10 +235,10 @@ const AllFutureEventsList = ({
         <div className="text-center py-8">
           <List className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            No Future Events
+            No Events
           </h3>
           <p className="text-gray-500 dark:text-gray-400 text-xs">
-            There are no events scheduled for the future.
+            There are no upcoming events scheduled.
           </p>
         </div>
       )}
@@ -314,7 +268,7 @@ const DateEventsModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full max-h-[80vh] overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
@@ -431,11 +385,16 @@ const EventList = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [futureEvents, setFutureEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpcomingLoading, setIsUpcomingLoading] = useState(true);
-  const [isFutureLoading, setIsFutureLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [viewMode, setViewMode] = useState("calendar"); // "calendar" or "list"
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  
+  // Pagination for list view
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Modal State
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -444,6 +403,12 @@ const EventList = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
   const [prefilledDate, setPrefilledDate] = useState(null);
+
+  // Filter state
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [eventType, setEventType] = useState("all");
+  const [dateRange, setDateRange] = useState("all");
 
   const onEventClick = (event) => {
     setSelectedEvent(event);
@@ -457,176 +422,205 @@ const EventList = () => {
   };
 
   const onViewAllEvents = () => {
-    navigate("/events"); // Navigate to the main events list page
+    navigate("/events");
   };
 
-  // Fetch calendar events for the current month
-  const fetchCalendarEvents = useCallback(async () => {
+  // Fetch all events with filters
+  const fetchAllEvents = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      const response = await eventService.getAll({
-        page: 1,
-        limit: 100,
-      });
+      const params = {
+        page: currentPage,
+        limit: pageSize,
+        sort: "startDate",
+        ...(search.trim() && { search: search.trim() }),
+        ...(status !== "all" && { status }),
+        ...(eventType !== "all" && { type: eventType }),
+        ...(dateRange !== "all" && { dateRange }),
+      };
+
+      const response = await eventService.getAll(params);
 
       let eventsData = [];
+      let paginationData = {};
+
       if (response?.data?.events) {
         eventsData = response.data.events;
+        paginationData = response.data.pagination || {};
       } else if (response?.events) {
         eventsData = response.events;
+        paginationData = response.pagination || {};
       } else if (Array.isArray(response?.data)) {
         eventsData = response.data;
       } else if (Array.isArray(response)) {
         eventsData = response;
       }
 
-      console.log("📅 Calendar events loaded:", eventsData);
+      console.log("📅 All events loaded:", eventsData);
 
-      // Filter events for current month
-      const startOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-      const endOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0,
-        23,
-        59,
-        59
+      // Sort events by start date
+      const sortedEvents = eventsData.sort((a, b) => 
+        new Date(a.startDate) - new Date(b.startDate)
       );
 
-      const monthEvents = eventsData.filter((event) => {
-        if (!event.startDate) return false;
-        const eventDate = new Date(event.startDate);
-        return eventDate >= startOfMonth && eventDate <= endOfMonth;
-      });
+      setEvents(sortedEvents);
 
-      setEvents(monthEvents);
+      // Filter upcoming events (from today onwards)
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      const upcoming = sortedEvents
+        .filter((event) => {
+          if (!event.startDate) return false;
+          const eventDate = new Date(event.startDate);
+          return (
+            eventDate >= now &&
+            event.status !== "completed" &&
+            event.status !== "cancelled"
+          );
+        })
+        .slice(0, 100);
+
+      setUpcomingEvents(upcoming);
+
+      // Set pagination data
+      setTotalPages(paginationData.pages || paginationData.totalPages || 1);
+      setTotalItems(paginationData.total || eventsData.length);
+      setHasInitialLoad(true);
     } catch (error) {
-      console.error("Failed to load calendar events:", error);
-      toast.error("Failed to load calendar events");
+      console.error("Failed to load events:", error);
+      toast.error("Failed to load events");
       setEvents([]);
+      setUpcomingEvents([]);
+      setHasInitialLoad(true);
     } finally {
       setIsLoading(false);
     }
-  }, [currentDate]);
-
-  // Fetch upcoming events (next 30 days)
-  const fetchUpcomingEvents = useCallback(async () => {
-    try {
-      setIsUpcomingLoading(true);
-
-      const response = await eventService.getAll({
-        page: 1,
-        limit: 10,
-      });
-
-      let eventsData = [];
-      if (response?.data?.events) {
-        eventsData = response.data.events;
-      } else if (response?.events) {
-        eventsData = response.events;
-      } else if (Array.isArray(response?.data)) {
-        eventsData = response.data;
-      } else if (Array.isArray(response)) {
-        eventsData = response;
-      }
-
-      console.log("📅 Upcoming events loaded:", eventsData);
-
-      // Filter upcoming events (next 30 days)
-      const now = new Date();
-      const thirtyDaysFromNow = new Date(
-        now.getTime() + 30 * 24 * 60 * 60 * 1000
-      );
-
-      const upcoming = eventsData
-        .filter((event) => {
-          if (!event.startDate) return false;
-          const eventDate = new Date(event.startDate);
-          return (
-            eventDate >= now &&
-            eventDate <= thirtyDaysFromNow &&
-            event.status !== "completed" &&
-            event.status !== "cancelled"
-          );
-        })
-        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-        .slice(0, 7);
-
-      setUpcomingEvents(upcoming);
-    } catch (error) {
-      console.error("Failed to load upcoming events:", error);
-      toast.error("Failed to load upcoming events");
-      setUpcomingEvents([]);
-    } finally {
-      setIsUpcomingLoading(false);
-    }
-  }, []);
-
-  // Fetch all future events (after today)
-  const fetchFutureEvents = useCallback(async () => {
-    try {
-      setIsFutureLoading(true);
-
-      const response = await eventService.getAll({
-        page: 1,
-        limit: 50, // Increased limit for future events
-      });
-
-      let eventsData = [];
-      if (response?.data?.events) {
-        eventsData = response.data.events;
-      } else if (response?.events) {
-        eventsData = response.events;
-      } else if (Array.isArray(response?.data)) {
-        eventsData = response.data;
-      } else if (Array.isArray(response)) {
-        eventsData = response;
-      }
-
-      console.log("📅 Future events loaded:", eventsData);
-
-      // Filter all future events (after today)
-      const now = new Date();
-      now.setHours(0, 0, 0, 0); // Start of today
-
-      const future = eventsData
-        .filter((event) => {
-          if (!event.startDate) return false;
-          const eventDate = new Date(event.startDate);
-          return (
-            eventDate >= now &&
-            event.status !== "completed" &&
-            event.status !== "cancelled"
-          );
-        })
-        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-
-      setFutureEvents(future);
-    } catch (error) {
-      console.error("Failed to load future events:", error);
-      toast.error("Failed to load future events");
-      setFutureEvents([]);
-    } finally {
-      setIsFutureLoading(false);
-    }
-  }, []);
+  }, [currentPage, pageSize, search, status, eventType, dateRange]);
 
   // Combined refresh function
   const refreshAllData = useCallback(() => {
-    fetchCalendarEvents();
-    fetchUpcomingEvents();
-    fetchFutureEvents();
-  }, [fetchCalendarEvents, fetchUpcomingEvents, fetchFutureEvents]);
+    fetchAllEvents();
+  }, [fetchAllEvents]);
 
   // Initial data loading
   useEffect(() => {
     refreshAllData();
   }, [refreshAllData]);
+
+  // Filter handlers
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("all");
+    setEventType("all");
+    setDateRange("all");
+    setCurrentPage(1);
+  }, []);
+
+  const hasActiveFilters = search.trim() !== "" || status !== "all" || eventType !== "all" || dateRange !== "all";
+  const showEmptyState = !isLoading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !isLoading && events.length === 0 && hasActiveFilters && hasInitialLoad;
+
+  // Table columns for list view
+  const tableColumns = [
+    {
+      header: "Event Title",
+      accessor: "title",
+      sortable: true,
+      width: "25%",
+      render: (row) => (
+        <div className="font-medium text-gray-900 dark:text-white">
+          {row.title}
+        </div>
+      ),
+    },
+    {
+      header: "Client",
+      accessor: "client",
+      sortable: true,
+      width: "20%",
+      render: (row) => (
+        <div className="text-gray-600 dark:text-gray-400">
+          {row.client?.name || "Unknown Client"}
+        </div>
+      ),
+    },
+    {
+      header: "Date & Time",
+      accessor: "startDate",
+      sortable: true,
+      width: "15%",
+      render: (row) => (
+        <div className="text-gray-600 dark:text-gray-400">
+          {formatDateTime(row.startDate)}
+        </div>
+      ),
+    },
+    {
+      header: "Type",
+      accessor: "type",
+      sortable: true,
+      width: "12%",
+      render: (row) => (
+        <Badge variant={getTypeColor(row.type)}>
+          {row.type || "Other"}
+        </Badge>
+      ),
+    },
+    {
+      header: "Status",
+      accessor: "status",
+      sortable: true,
+      width: "12%",
+      render: (row) => (
+        <Badge variant={getStatusColor(row.status)}>
+          {row.status}
+        </Badge>
+      ),
+    },
+    {
+      header: "Guests",
+      accessor: "guestCount",
+      sortable: true,
+      width: "8%",
+      render: (row) => (
+        <div className="text-gray-600 dark:text-gray-400">
+          {row.guestCount || "-"}
+        </div>
+      ),
+    },
+    {
+      header: "Actions",
+      accessor: "actions",
+      width: "8%",
+      className: "text-center",
+      render: (row) => (
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEventClick(row);
+            }}
+            className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
+            title="View Event"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditEvent(row._id);
+            }}
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+            title="Edit Event"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   // Calendar grid calculations
   const { daysInMonth, startingDayOfWeek } = useMemo(() => {
@@ -679,7 +673,6 @@ const EventList = () => {
   };
 
   const handleCreateEvent = (date = null) => {
-    console.log("Create event with date:", date);
     setEditingEventId(null);
     setPrefilledDate(date);
     setShowEventModal(true);
@@ -687,7 +680,6 @@ const EventList = () => {
   };
 
   const handleEditEvent = (eventId) => {
-    console.log("Edit event:", eventId);
     setEditingEventId(eventId);
     setPrefilledDate(null);
     setShowEventModal(true);
@@ -757,8 +749,18 @@ const EventList = () => {
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  // Event type colors for legend
+  const eventTypeColors = [
+    { type: "Wedding", color: "bg-purple-500" },
+    { type: "Corporate", color: "bg-blue-500" },
+    { type: "Birthday", color: "bg-pink-500" },
+    { type: "Conference", color: "bg-green-500" },
+    { type: "Party/Social", color: "bg-orange-500" },
+    { type: "Other", color: "bg-gray-500" },
+  ];
+
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-white dark:bg-gray-900 min-h-screen">
       {/* Event Detail Modal */}
       <EventDetailModal
         isOpen={isDetailsModalOpen}
@@ -796,188 +798,374 @@ const EventList = () => {
             Event Calendar
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            View and manage your venue events
+            View and manage your venue events{" "}
+            {hasInitialLoad && totalItems > 0 && `- Showing ${events.length} of ${totalItems} events`}
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={Plus}
-          onClick={() => handleCreateEvent()}
-        >
-          <Plus className="h-4 w-4" />
-          Create Event
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === "calendar"
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              <Grid className="w-4 h-4" />
+              Calendar
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === "list"
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              <Table className="w-4 h-4" />
+              List
+            </button>
+          </div>
+
+          <Button
+            variant="primary"
+            icon={Plus}
+            onClick={() => handleCreateEvent()}
+          >
+            <Plus className="h-4 w-4" />
+            Create Event
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Calendar Grid */}
-        <div className="lg:col-span-3">
-          <TitleCard className="dark:bg-gray-800">
-            <div className="p-6">
-              {/* Calendar Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {formatMonthYear(currentDate)}
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={goToToday}>
-                    Today
-                  </Button>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={previousMonth}
-                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                    </button>
-                    <button
-                      onClick={nextMonth}
-                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                    >
-                      <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                    </button>
-                  </div>
+      {/* Search & Filters */}
+      {hasInitialLoad && !showEmptyState && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                className="dark:bg-[#1f2937] dark:text-white"
+                icon={Search}
+                placeholder="Search events by title, description, or location..."
+                value={search}
+                onChange={(e) => {
+                  setCurrentPage(1);
+                  setSearch(e.target.value);
+                }}
+              />
+            </div>
+            
+            <div className="sm:w-48">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                icon={Filter}
+                value={status}
+                onChange={(e) => {
+                  setCurrentPage(1);
+                  setStatus(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Status" },
+                  { value: "draft", label: "Draft" },
+                  { value: "pending", label: "Pending" },
+                  { value: "confirmed", label: "Confirmed" },
+                  { value: "in-progress", label: "In Progress" },
+                  { value: "completed", label: "Completed" },
+                  { value: "cancelled", label: "Cancelled" },
+                ]}
+              />
+            </div>
+
+            <div className="sm:w-48">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                value={eventType}
+                onChange={(e) => {
+                  setCurrentPage(1);
+                  setEventType(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Types" },
+                  { value: "wedding", label: "Wedding" },
+                  { value: "corporate", label: "Corporate" },
+                  { value: "birthday", label: "Birthday" },
+                  { value: "conference", label: "Conference" },
+                  { value: "party", label: "Party" },
+                  { value: "social", label: "Social" },
+                  { value: "other", label: "Other" },
+                ]}
+              />
+            </div>
+
+            <div className="sm:w-48">
+              <Select
+                className="dark:bg-[#1f2937] dark:text-white"
+                value={dateRange}
+                onChange={(e) => {
+                  setCurrentPage(1);
+                  setDateRange(e.target.value);
+                }}
+                options={[
+                  { value: "all", label: "All Dates" },
+                  { value: "today", label: "Today" },
+                  { value: "tomorrow", label: "Tomorrow" },
+                  { value: "thisWeek", label: "This Week" },
+                  { value: "nextWeek", label: "Next Week" },
+                  { value: "thisMonth", label: "This Month" },
+                  { value: "past", label: "Past Events" },
+                  { value: "upcoming", label: "Upcoming" },
+                ]}
+              />
+            </div>
+
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                onClick={handleClearFilters}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear
+              </Button>
+            )}
+          </div>
+
+          {hasActiveFilters && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <span>Active filters:</span>
+              {search.trim() && (
+                <Badge color="blue">Search: "{search.trim()}"</Badge>
+              )}
+              {status !== "all" && (
+                <Badge color="purple">Status: {status}</Badge>
+              )}
+              {eventType !== "all" && (
+                <Badge color="green">Type: {eventType}</Badge>
+              )}
+              {dateRange !== "all" && (
+                <Badge color="orange">Date: {dateRange}</Badge>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && !hasInitialLoad && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">
+            Loading events...
+          </p>
+        </div>
+      )}
+
+      {viewMode === "calendar" ? (
+        /* CALENDAR VIEW */
+        <TitleCard className="dark:bg-gray-800">
+          <div className="py-20">
+            {/* Calendar Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                {formatMonthYear(currentDate)}
+              </h2>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={goToToday}>
+                  Today
+                </Button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={previousMonth}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
+                  <button
+                    onClick={nextMonth}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
                 </div>
               </div>
+            </div>
 
-              {/* Status Legend */}
-              {/* <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                  Status Legend
-                </h3>
-                <div className="flex flex-wrap gap-x-6 gap-y-2">
-                  {[
-                    { status: "pending", label: "Pending" },
-                    { status: "confirmed", label: "Confirmed" },
-                    { status: "in-progress", label: "In Progress" },
-                    { status: "completed", label: "Completed" },
-                    { status: "cancelled", label: "Cancelled" },
-                  ].map((item) => (
-                    <div key={item.status} className="flex items-center gap-2">
-                      <Badge
-                        variant={getStatusColor(item.status)}
-                        className="!px-1 !py-1"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-current opacity-75"></div>
-                      </Badge>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {item.label}
-                      </span>
+            {/* Event Type Legend */}
+            <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                Event Type Legend
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {eventTypeColors.map((item) => (
+                  <div key={item.type} className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded ${item.color}`}></div>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                      {item.type}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <LoadingSpinner size="md" />
+              </div>
+            ) : (
+              <>
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-8 gap-1 border border-gray-200 rounded-md p-4 max-w-[70%] ml-auto mr-auto">
+                  {/* Week day headers */}
+                  {weekDays.map((day) => (
+                    <div
+                      key={day}
+                      className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 py-2 border-b border-gray-200 dark:border-gray-700"
+                    >
+                      {day}
                     </div>
                   ))}
-                </div>
-              </div> */}
 
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <LoadingSpinner size="lg" />
-                </div>
-              ) : (
-                <>
-                  {/* Calendar Grid */}
-                  <div className="grid grid-cols-7 gap-1.5">
-                    {/* Week day headers */}
-                    {weekDays.map((day) => (
-                      <div
-                        key={day}
-                        className="text-center text-sm font-semibold text-gray-700 dark:text-gray-300 py-3 border-b border-gray-200 dark:border-gray-700"
+                  {/* Calendar days */}
+                  {calendarDays.map((date, index) => {
+                    if (!date) {
+                      return <div key={`empty-${index}`} className="p-1" />;
+                    }
+
+                    const dayEvents = getEventsForDate(date);
+                    const hasEvents = dayEvents.length > 0;
+                    const isTodayDate = isToday(date);
+                    const isSelected = isSelectedDate(date);
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => onDateClick(date)}
+                        className={`
+                          relative p-1 min-h-[60px] rounded-lg border transition-all text-left
+                          ${
+                            isTodayDate
+                              ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
+                              : isSelected
+                                ? "border-orange-300 bg-orange-100/50 dark:bg-orange-900/10"
+                                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                          }
+                          ${date.getMonth() !== currentDate.getMonth() ? "opacity-40" : ""}
+                        `}
                       >
-                        {day}
-                      </div>
-                    ))}
-
-                    {/* Calendar days */}
-                    {calendarDays.map((date, index) => {
-                      if (!date) {
-                        return <div key={`empty-${index}`} className="p-2" />;
-                      }
-
-                      const dayEvents = getEventsForDate(date);
-                      const hasEvents = dayEvents.length > 0;
-                      const isTodayDate = isToday(date);
-                      const isSelected = isSelectedDate(date);
-
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => onDateClick(date)}
-                          className={`
-                            relative p-2 min-h-[100px] rounded-lg border-2 transition-all text-left
+                        <div className="absolute top-1 right-1">
+                          <span
+                            className={`
+                            text-xs font-semibold
                             ${
                               isTodayDate
-                                ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
-                                : isSelected
-                                  ? "border-orange-300 bg-orange-100/50 dark:bg-orange-900/10"
-                                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                ? "text-orange-700 dark:text-orange-400"
+                                : "text-gray-700 dark:text-gray-300"
                             }
-                            ${date.getMonth() !== currentDate.getMonth() ? "opacity-40" : ""}
                           `}
-                        >
-                          <div className="absolute top-2 right-2">
-                            <span
-                              className={`
-                              text-sm font-semibold
-                              ${
-                                isTodayDate
-                                  ? "text-orange-700 dark:text-orange-400"
-                                  : "text-gray-700 dark:text-gray-300"
-                              }
-                            `}
-                            >
-                              {date.getDate()}
-                            </span>
-                          </div>
+                          >
+                            {date.getDate()}
+                          </span>
+                        </div>
 
-                          {hasEvents && (
-                            <div className="mt-6 space-y-1">
-                              {dayEvents.slice(0, 2).map((event) => (
-                                <div
-                                  key={event.id || event._id}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEventClick(event);
-                                  }}
-                                  className={getTypeClasses(event.type)}
-                                  title={`${event.title} (${event.type || "Other"})`}
-                                >
-                                  <span className="truncate block text-xs">
-                                    {event.type || "Other"}
-                                  </span>
-                                </div>
-                              ))}
-                              {dayEvents.length > 2 && (
-                                <div className="text-xs text-gray-500 dark:text-gray-400 px-1.5 pt-1 font-medium">
-                                  +{dayEvents.length - 2} more
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
+                        {hasEvents && (
+                          <div className="mt-4 space-y-0.5">
+                            {dayEvents.slice(0, 2).map((event) => (
+                              <div
+                                key={event.id || event._id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEventClick(event);
+                                }}
+                                className={getTypeClasses(event.type)}
+                                title={`${event.title} (${event.type || "Other"})`}
+                              >
+                                <span className="truncate block text-[10px]">
+                                  {event.type || "Other"}
+                                </span>
+                              </div>
+                            ))}
+                            {dayEvents.length > 2 && (
+                              <div className="text-[10px] text-gray-500 dark:text-gray-400 px-1 font-medium">
+                                +{dayEvents.length - 2}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </TitleCard>
+      ) : (
+        /* LIST VIEW */
+        <div className="space-y-6">
+          <TitleCard className="dark:bg-gray-800">
+            <div className="p-6">
+              {/* No Results from Search/Filter */}
+              {showNoResults && (
+                <div className="text-center py-12">
+                  <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No events found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    No events match your current search or filter criteria.
+                  </p>
+                  <Button onClick={handleClearFilters} variant="outline">
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
+
+              {/* Empty State - No events at all */}
+              {showEmptyState && (
+                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No events yet
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Get started by creating your first event.
+                  </p>
+                  <Button onClick={() => handleCreateEvent()} variant="primary">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Event
+                  </Button>
+                </div>
+              )}
+
+              {/* Events Table */}
+              {!showEmptyState && !showNoResults && (
+                <TableComponent
+                  columns={tableColumns}
+                  data={events}
+                  loading={isLoading}
+                  emptyMessage="No events found"
+                  onRowClick={onEventClick}
+                  striped={true}
+                  hoverable={true}
+                  pagination={true}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setCurrentPage(1);
+                  }}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                />
               )}
             </div>
           </TitleCard>
         </div>
-
-        {/* Right Column: Upcoming Events & All Future Events */}
-        <div className="space-y-6">
-          <UpcomingEventsList
-            upcomingEvents={upcomingEvents}
-            onEventClick={onEventClick}
-            isLoading={isUpcomingLoading}
-          />
-
-          <AllFutureEventsList
-            futureEvents={futureEvents}
-            onEventClick={onEventClick}
-            isLoading={isFutureLoading}
-            onViewAll={onViewAllEvents}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 };

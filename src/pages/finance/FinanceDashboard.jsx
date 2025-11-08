@@ -11,7 +11,6 @@ import {
   FileText,
   ArrowUpRight,
   ArrowDownRight,
-  RefreshCw,
   Calendar,
   AlertTriangle,
   CheckCircle,
@@ -264,15 +263,6 @@ const FinanceDashboard = () => {
               <option value="quarter">This Quarter</option>
               <option value="year">This Year</option>
             </select>
-            <button
-              className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-              onClick={() => setIsLoading(!isLoading)}
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </button>
             <button
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
               onClick={() => navigate("/finance/reports")}

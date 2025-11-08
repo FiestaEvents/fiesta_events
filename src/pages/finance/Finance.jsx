@@ -11,7 +11,6 @@ import {
   TrendingDown,
   Wallet,
   Calendar,
-  RefreshCw,
   FileText,
   ArrowUpRight,
   ArrowDownRight,
@@ -194,7 +193,7 @@ const Finance = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 bg-white rounded-lg">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -216,13 +215,6 @@ const Finance = () => {
             <option value="quarter">This Quarter</option>
             <option value="year">This Year</option>
           </Select>
-          <Button 
-            variant="outline" 
-            icon={RefreshCw} 
-            onClick={fetchAllFinancialData}
-          >
-            Refresh
-          </Button>
           <Button
             variant="primary"
             icon={FileText}
