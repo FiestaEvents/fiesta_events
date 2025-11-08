@@ -111,9 +111,6 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                   <Badge color={getStatusColor(event.status)}>
                     {event.status}
                   </Badge>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-semibold">ID:</span> {event._id}
-                  </p>
                 </div>
 
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">

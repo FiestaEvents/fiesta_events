@@ -1,4 +1,3 @@
-//axios.js
 import axios from 'axios';
 
 // Create axios instance with default config
@@ -54,69 +53,32 @@ api.interceptors.response.use(
         data: response.data,
       });
     }
-
     return response;
   },
   (error) => {
-    // Log error in development
-    if (import.meta.env.DEV) {
-      console.error('❌ API Error:', {
-        url: error.config?.url,
-        status: error.response?.status,
-        message: error.response?.data?.message || error.message,
-      });
-    }
+    // ENHANCED ERROR LOGGING
+    console.error('❌ API Error Details:', {
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      responseData: error.response?.data, // This is the key!
+      message: error.message,
+      requestData: error.config?.data, // See what we sent
+    });
 
     // Handle specific error cases
     if (error.response) {
       const { status, data } = error.response;
-
-      switch (status) {
-        case 401:
-          // Unauthorized - Clear auth data and redirect to login
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('venueId');
-          
-          // Only redirect if not already on login page
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
-          break;
-
-        case 403:
-          // Forbidden - User doesn't have permission
-          console.error('Access forbidden:', data.message);
-          break;
-
-        case 404:
-          // Not found
-          console.error('Resource not found:', data.message);
-          break;
-
-        case 422:
-          // Validation error
-          console.error('Validation error:', data.errors);
-          break;
-
-        case 500:
-          // Server error
-          console.error('Server error:', data.message);
-          break;
-
-        default:
-          console.error('API Error:', data.message || 'Unknown error occurred');
-      }
-
-      // Return a consistent error object
+      
+      // Return a consistent error object with FULL error details
       return Promise.reject({
         status,
-        message: data.message || 'An error occurred',
+        message: data.message || data.error || 'An error occurred',
         errors: data.errors || {},
-        data: data,
+        data: data, // Include full error response
       });
     } else if (error.request) {
-      // Request was made but no response received
       console.error('No response received:', error.message);
       return Promise.reject({
         status: 0,
@@ -125,7 +87,6 @@ api.interceptors.response.use(
         data: {},
       });
     } else {
-      // Something happened in setting up the request
       console.error('Request setup error:', error.message);
       return Promise.reject({
         status: 0,
@@ -136,5 +97,4 @@ api.interceptors.response.use(
     }
   }
 );
-
 export default api;

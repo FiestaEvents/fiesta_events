@@ -20,6 +20,10 @@ import {
   ArrowRight,
   PieChart,
   BarChart3,
+  Star,
+  Target,
+  Activity,
+  Zap,
 } from "lucide-react";
 
 const DashboardPage = () => {
@@ -43,6 +47,18 @@ const DashboardPage = () => {
       cancelled: 0,
     },
   });
+
+  const [enhancedStats, setEnhancedStats] = useState({
+    occupancyRate: 0,
+    averageRating: 0,
+    taskCompletion: 0,
+    paymentCollection: 0,
+    revenueTrend: [],
+    eventTypeDistribution: [],
+    performanceMetrics: {},
+    recentActivity: [],
+    teamPerformance: [],
+  });
   
   const [tasks, setTasks] = useState([]);
   const [reminders, setReminders] = useState([]);
@@ -57,15 +73,20 @@ const DashboardPage = () => {
       setLoading(true);
       
       // Fetch all data
-      const [dashboardResponse, tasksResponse, remindersResponse] = await Promise.all([
+      const [
+        dashboardResponse, 
+        tasksResponse, 
+        remindersResponse,
+        enhancedData
+      ] = await Promise.all([
         dashboardService.getStats(),
         taskService.getMyTasks().catch(() => ({ tasks: [] })),
         reminderService.getUpcoming().catch(() => ({ reminders: [] })),
+        fetchEnhancedData(),
       ]);
 
       console.log("📊 Dashboard Response:", dashboardResponse);
-      console.log("📋 Tasks Response:", tasksResponse);
-      console.log("🔔 Reminders Response:", remindersResponse);
+      console.log("🚀 Enhanced Data:", enhancedData);
 
       const dashboardData = dashboardResponse?.data || dashboardResponse || {};
 
@@ -136,13 +157,16 @@ const DashboardPage = () => {
         eventsByStatus,
       });
 
-      // Safely handle tasks response - could be array directly or nested in object
+      // Set enhanced stats
+      setEnhancedStats(enhancedData);
+
+      // Safely handle tasks response
       const tasksArray = Array.isArray(tasksResponse) 
         ? tasksResponse 
         : (tasksResponse?.tasks || []);
       setTasks(Array.isArray(tasksArray) ? tasksArray.slice(0, 5) : []);
 
-      // Safely handle reminders response - could be array directly or nested in object
+      // Safely handle reminders response
       const remindersArray = Array.isArray(remindersResponse)
         ? remindersResponse
         : (remindersResponse?.reminders || []);
@@ -154,12 +178,60 @@ const DashboardPage = () => {
     }
   };
 
+  const fetchEnhancedData = async () => {
+    // Mock data - replace with actual API calls
+    return {
+      occupancyRate: 75,
+      averageRating: 4.8,
+      taskCompletion: 90,
+      paymentCollection: 88,
+      revenueTrend: [
+        { month: 'Jan', revenue: 45000 },
+        { month: 'Feb', revenue: 52000 },
+        { month: 'Mar', revenue: 48000 },
+        { month: 'Apr', revenue: 61000 },
+        { month: 'May', revenue: 58000 },
+        { month: 'Jun', revenue: 72000 },
+      ],
+      eventTypeDistribution: [
+        { type: 'Wedding', count: 8, color: 'bg-purple-500' },
+        { type: 'Corporate', count: 5, color: 'bg-blue-500' },
+        { type: 'Birthday', count: 3, color: 'bg-pink-500' },
+        { type: 'Other', count: 2, color: 'bg-gray-500' },
+      ],
+      performanceMetrics: {
+        venueUtilization: 75,
+        taskCompletion: 90,
+        paymentCollection: 88,
+        clientSatisfaction: 92,
+      },
+      recentActivity: [
+        { action: 'Payment received', details: 'Wedding Client - $2,500', time: '2 hours ago', type: 'payment' },
+        { action: 'Event confirmed', details: 'Corporate Gala - Dec 15', time: '5 hours ago', type: 'event' },
+        { action: 'Task completed', details: 'Finalize venue setup', time: '1 day ago', type: 'task' },
+        { action: 'New client registered', details: 'Sarah Johnson - Birthday', time: '1 day ago', type: 'client' },
+      ],
+      teamPerformance: [
+        { name: 'John Doe', tasksCompleted: 12, eventsManaged: 8, rating: 4.8 },
+        { name: 'Jane Smith', tasksCompleted: 15, eventsManaged: 10, rating: 4.9 },
+        { name: 'Mike Johnson', tasksCompleted: 8, eventsManaged: 6, rating: 4.6 },
+      ],
+    };
+  };
+
   const quickActions = [
     { label: "New Event", icon: Calendar, path: "/events/new", variant: "primary" },
     { label: "Add Client", icon: Users, path: "/clients/new", variant: "outline" },
     { label: "Record Payment", icon: DollarSign, path: "/payments/new", variant: "outline" },
     { label: "Create Task", icon: CheckCircle, path: "/tasks/new", variant: "outline" },
   ];
+
+  const getProgressBarColor = (percentage) => {
+    if (percentage >= 80) return 'bg-green-500';
+    if (percentage >= 60) return 'bg-blue-500';
+    if (percentage >= 40) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
 
   if (loading) {
     return (
@@ -192,6 +264,26 @@ const DashboardPage = () => {
             month: "long",
             day: "numeric",
           })}
+        </div>
+      </div>
+
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{enhancedStats.occupancyRate}%</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Occupancy Rate</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{enhancedStats.averageRating}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Avg. Rating</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{enhancedStats.taskCompletion}%</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Task Completion</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
+          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{enhancedStats.paymentCollection}%</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Payment Collection</div>
         </div>
       </div>
 
@@ -307,6 +399,138 @@ const DashboardPage = () => {
               <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                 <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Charts & Metrics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue Trend Chart */}
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Revenue Trend (Last 6 Months)
+            </h3>
+            <div className="h-64">
+              <div className="flex items-end justify-between h-48 gap-2 px-4">
+                {enhancedStats.revenueTrend.map((item, index) => {
+                  const maxRevenue = Math.max(...enhancedStats.revenueTrend.map(d => d.revenue));
+                  const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
+                  return (
+                    <div key={index} className="flex flex-col items-center flex-1">
+                      <div 
+                        className="w-full bg-gradient-to-t from-green-500 to-green-400 rounded-t transition-all hover:opacity-80 cursor-pointer"
+                        style={{ height: `${height}%` }}
+                        title={`${item.month}: ${formatCurrency(item.revenue)}`}
+                      />
+                      <span className="text-xs mt-2 text-gray-600 dark:text-gray-400">{item.month}</span>
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                        {formatCurrency(item.revenue / 1000)}K
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Performance Metrics */}
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              Performance Metrics
+            </h3>
+            <div className="space-y-4">
+              {[
+                { label: 'Venue Utilization', value: enhancedStats.performanceMetrics.venueUtilization || 75 },
+                { label: 'Task Completion', value: enhancedStats.performanceMetrics.taskCompletion || 90 },
+                { label: 'Payment Collection', value: enhancedStats.performanceMetrics.paymentCollection || 88 },
+                { label: 'Client Satisfaction', value: enhancedStats.performanceMetrics.clientSatisfaction || 92 },
+              ].map((metric, index) => (
+                <div key={index}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600 dark:text-gray-400">{metric.label}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{metric.value}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full ${getProgressBarColor(metric.value)}`}
+                      style={{ width: `${metric.value}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* Event Type Distribution */}
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <PieChart className="w-5 h-5" />
+              Event Type Distribution
+            </h3>
+            <div className="space-y-3">
+              {enhancedStats.eventTypeDistribution.map((eventType, index) => {
+                const total = enhancedStats.eventTypeDistribution.reduce((sum, item) => sum + item.count, 0);
+                const percentage = total > 0 ? Math.round((eventType.count / total) * 100) : 0;
+                return (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${eventType.color}`}></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{eventType.type}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {eventType.count} events
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right">
+                        ({percentage}%)
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                Recent Activity
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/activity")}
+              >
+                View All
+              </Button>
+            </div>
+            <div className="space-y-4">
+              {enhancedStats.recentActivity.map((activity, index) => (
+                <div key={index} className="flex gap-3">
+                  <div className={`w-2 h-2 mt-2 rounded-full ${
+                    activity.type === 'payment' ? 'bg-green-500' :
+                    activity.type === 'event' ? 'bg-blue-500' : 
+                    activity.type === 'task' ? 'bg-orange-500' : 'bg-purple-500'
+                  }`}></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.action}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{activity.details}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </Card>

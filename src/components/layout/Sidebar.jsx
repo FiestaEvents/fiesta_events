@@ -10,6 +10,7 @@ import {
   ListChecksIcon,
   BellRingIcon,
   CreditCardIcon,
+  FileText,
   FileTextIcon,
   LineChartIcon,
   UsersIcon,

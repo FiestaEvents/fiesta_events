@@ -45,6 +45,7 @@ const PaymentForm = lazy(() => import("../pages/payments/PaymentForm.jsx"));
 
 // Invoices (Working)
 const Invoices = lazy(() => import("../pages/invoices/InvoicesPage.jsx"));
+const InvoiceFormPage = lazy(() => import("../pages/invoices/InvoiceFormPage.jsx"));
 
 // Finance (Working)
 const Finance = lazy(() => import("../pages/finance/Finance.jsx"));
@@ -141,7 +142,8 @@ const AppRoutes = () => {
 
             {/* Invoices */}
             <Route path="/invoices" element={<Invoices />} />
-
+            <Route path="/invoices/new" element={<InvoiceFormPage />} />
+            <Route path="/invoices/:id/edit" element={<InvoiceFormPage />} />
             {/* Finance */}
             <Route path="/finance" element={<Finance />} />
             <Route path="/finance/transactions" element={<Transactions />} />

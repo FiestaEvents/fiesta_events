@@ -58,7 +58,6 @@ const PartnersList = () => {
     { value: "hairstyling", label: "Hair Styling" },
     { value: "other", label: "Other" },
   ];
-
   // Updated fetchPartners function with comprehensive validation
   const fetchPartners = useCallback(async () => {
     try {

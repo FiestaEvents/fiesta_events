@@ -10,6 +10,8 @@ import {
   Users,
   Tag,
   X,
+  List,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { eventService } from "../../api/index";
@@ -98,6 +100,18 @@ const formatDateLong = (dateString) => {
   });
 };
 
+const formatDateTime = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
 // --- UPCOMING EVENTS LIST COMPONENT ---
 const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
   return (
@@ -150,6 +164,123 @@ const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
           <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-500 dark:text-gray-400 text-sm">
             No upcoming events found.
+          </p>
+        </div>
+      )}
+    </Card>
+  );
+};
+
+// --- ALL FUTURE EVENTS LIST COMPONENT ---
+const AllFutureEventsList = ({ futureEvents, onEventClick, isLoading, onViewAll }) => {
+  const displayedEvents = futureEvents.slice(0, 10); // Show first 10 events
+
+  return (
+    <Card 
+      title={
+        <div className="flex items-center justify-between">
+          <span>All Future Events</span>
+          {futureEvents.length > 10 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onViewAll}
+              className="text-xs"
+            >
+              View All
+              <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+          )}
+        </div>
+      } 
+      className="h-full"
+    >
+      {isLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <LoadingSpinner size="md" />
+        </div>
+      ) : displayedEvents.length > 0 ? (
+        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+          {displayedEvents.map((event) => (
+            <div
+              key={event.id || event._id}
+              onClick={() => onEventClick(event)}
+              className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h4 className="font-semibold text-gray-900 dark:text-white text-sm flex-1 mr-2 line-clamp-2">
+                  {event.title}
+                </h4>
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                  <Badge
+                    variant={getStatusColor(event.status)}
+                    className="text-xs"
+                  >
+                    {event.status}
+                  </Badge>
+                  {event.type && (
+                    <Badge
+                      variant={getTypeColor(event.type)}
+                      className="text-xs"
+                    >
+                      {event.type}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                  <CalendarIcon className="w-3 h-3" />
+                  {formatDateTime(event.startDate)}
+                </div>
+                
+                {event.client && (
+                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <Users className="w-3 h-3" />
+                    {event.client.name || "Unknown Client"}
+                  </div>
+                )}
+
+                {event.guestCount && (
+                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <MapPin className="w-3 h-3" />
+                    {event.guestCount} guests
+                  </div>
+                )}
+
+                {event.venueFee && (
+                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <Tag className="w-3 h-3" />
+                    ${event.venueFee}
+                  </div>
+                )}
+              </div>
+
+              {event.description && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
+                  {event.description}
+                </p>
+              )}
+            </div>
+          ))}
+          
+          {futureEvents.length > 10 && (
+            <div className="text-center pt-2 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Showing 10 of {futureEvents.length} events
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <List className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+            No Future Events
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 text-xs">
+            There are no events scheduled for the future.
           </p>
         </div>
       )}
@@ -296,8 +427,10 @@ const EventList = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [futureEvents, setFutureEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpcomingLoading, setIsUpcomingLoading] = useState(true);
+  const [isFutureLoading, setIsFutureLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
 
   // Modal State
@@ -319,18 +452,20 @@ const EventList = () => {
     setIsDateEventsModalOpen(true);
   };
 
-  // Fetch calendar events for the current month - FIXED
+  const onViewAllEvents = () => {
+    navigate('/events'); // Navigate to the main events list page
+  };
+
+  // Fetch calendar events for the current month
   const fetchCalendarEvents = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      // Use the service pattern from documentation
       const response = await eventService.getAll({
         page: 1,
         limit: 100,
       });
 
-      // Handle response according to documentation structure
       let eventsData = [];
       if (response?.data?.events) {
         eventsData = response.data.events;
@@ -375,17 +510,16 @@ const EventList = () => {
     }
   }, [currentDate]);
 
-  // Fetch upcoming events - FIXED (removed duplicate function)
+  // Fetch upcoming events (next 30 days)
   const fetchUpcomingEvents = useCallback(async () => {
     try {
       setIsUpcomingLoading(true);
 
       const response = await eventService.getAll({
         page: 1,
-        limit: 10, // Reduced limit for upcoming events
+        limit: 10,
       });
 
-      // Handle response according to documentation structure
       let eventsData = [];
       if (response?.data?.events) {
         eventsData = response.data.events;
@@ -429,11 +563,61 @@ const EventList = () => {
     }
   }, []);
 
+  // Fetch all future events (after today)
+  const fetchFutureEvents = useCallback(async () => {
+    try {
+      setIsFutureLoading(true);
+
+      const response = await eventService.getAll({
+        page: 1,
+        limit: 50, // Increased limit for future events
+      });
+
+      let eventsData = [];
+      if (response?.data?.events) {
+        eventsData = response.data.events;
+      } else if (response?.events) {
+        eventsData = response.events;
+      } else if (Array.isArray(response?.data)) {
+        eventsData = response.data;
+      } else if (Array.isArray(response)) {
+        eventsData = response;
+      }
+
+      console.log("📅 Future events loaded:", eventsData);
+
+      // Filter all future events (after today)
+      const now = new Date();
+      now.setHours(0, 0, 0, 0); // Start of today
+
+      const future = eventsData
+        .filter((event) => {
+          if (!event.startDate) return false;
+          const eventDate = new Date(event.startDate);
+          return (
+            eventDate >= now &&
+            event.status !== "completed" &&
+            event.status !== "cancelled"
+          );
+        })
+        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+      setFutureEvents(future);
+    } catch (error) {
+      console.error("Failed to load future events:", error);
+      toast.error("Failed to load future events");
+      setFutureEvents([]);
+    } finally {
+      setIsFutureLoading(false);
+    }
+  }, []);
+
   // Combined refresh function
   const refreshAllData = useCallback(() => {
     fetchCalendarEvents();
     fetchUpcomingEvents();
-  }, [fetchCalendarEvents, fetchUpcomingEvents]);
+    fetchFutureEvents();
+  }, [fetchCalendarEvents, fetchUpcomingEvents, fetchFutureEvents]);
 
   // Initial data loading
   useEffect(() => {
@@ -621,9 +805,9 @@ const EventList = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left Column: Calendar Grid */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           <Card>
             <div className="p-6">
               {/* Calendar Header */}
@@ -774,12 +958,19 @@ const EventList = () => {
           </Card>
         </div>
 
-        {/* Right Column: Upcoming Events */}
+        {/* Right Column: Upcoming Events & All Future Events */}
         <div className="space-y-6">
           <UpcomingEventsList
             upcomingEvents={upcomingEvents}
             onEventClick={onEventClick}
             isLoading={isUpcomingLoading}
+          />
+          
+          <AllFutureEventsList
+            futureEvents={futureEvents}
+            onEventClick={onEventClick}
+            isLoading={isFutureLoading}
+            onViewAll={onViewAllEvents}
           />
         </div>
       </div>
