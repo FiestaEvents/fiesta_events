@@ -165,11 +165,11 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   };
 
   return (
-<header
-  className={`fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${
-    isCollapsed ? "lg:left-16" : "lg:left-64"
-  } dark:bg-gray-900 dark:border-gray-700`}
->
+    <header
+      className={`fixed top-0 left-0 right-0 h-16 bg-white z-20 transition-all duration-300 ${
+        isCollapsed ? "lg:left-16" : "lg:left-64"
+      } dark:bg-gray-900 dark:border-gray-700`}
+    >
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
         {/* Left Section */}
         <div className="flex items-center gap-4">
@@ -191,16 +191,16 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
           {/* Mobile Logo */}
           <Link to="/" className="flex items-center gap-2 lg:hidden">
-                <div className="relative h-22 w-15">
-                  <img
-                    src="/fiesta logo-01.png"
-                    alt="Fiesta Logo"
-                    className="h-20 w-30 "
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
-                  />
-                </div>
+            <div className="relative h-22 w-15">
+              <img
+                src="/fiesta logo-01.png"
+                alt="Fiesta Logo"
+                className="h-20 w-30 "
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            </div>
           </Link>
         </div>
 

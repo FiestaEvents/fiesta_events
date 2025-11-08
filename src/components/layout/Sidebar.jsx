@@ -96,7 +96,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 ${isRTL ? "right-0" : "left-0"} bottom-0 bg-white border-r border-gray-200 z-40 transition-all duration-300 dark:bg-gray-900 dark:border-gray-700 ${
+        className={`fixed top-0 ${isRTL ? "right-0" : "left-0"} bottom-0 bg-white z-40 transition-all duration-300 dark:bg-gray-900 dark:border-gray-700 ${
           isCollapsed ? "w-20" : "w-64"
         } ${
           isOpen
@@ -111,9 +111,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
           {/* Header */}
           <div className="flex items-center justify-between h-16 px-4  border-gray-200 shrink-0 dark:border-gray-700">
             {!isCollapsed && (
-              <Link
-                to="/"
-              >
+              <Link to="/">
                 <div className="relative h-22 w-15">
                   <img
                     src="/fiesta logo-01.png"
@@ -149,7 +147,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-hide">
+          <nav className="flex-1 overflow-y-auto p-4 space-y-6 hide-scrollbar">
             <NavSection titleKey="sidebar.overview" isCollapsed={isCollapsed}>
               <NavLink
                 to="/"

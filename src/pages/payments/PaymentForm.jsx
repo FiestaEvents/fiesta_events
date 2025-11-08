@@ -692,7 +692,9 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             </div>
 
             {errors.fees && (
-              <p className="text-red-600 dark:text-red-400 text-sm">{errors.fees}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm">
+                {errors.fees}
+              </p>
             )}
 
             {/* Summary */}
@@ -703,25 +705,52 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                 </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Amount:</span>
-                    <span className="font-medium">{formatCurrency(parseFloat(formData.amount) || 0)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Amount:
+                    </span>
+                    <span className="font-medium">
+                      {formatCurrency(parseFloat(formData.amount) || 0)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Processing Fee:</span>
-                    <span className="text-red-600 dark:text-red-400">-{formatCurrency(parseFloat(formData.fees.processingFee) || 0)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Processing Fee:
+                    </span>
+                    <span className="text-red-600 dark:text-red-400">
+                      -
+                      {formatCurrency(
+                        parseFloat(formData.fees.processingFee) || 0
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Platform Fee:</span>
-                    <span className="text-red-600 dark:text-red-400">-{formatCurrency(parseFloat(formData.fees.platformFee) || 0)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Platform Fee:
+                    </span>
+                    <span className="text-red-600 dark:text-red-400">
+                      -
+                      {formatCurrency(
+                        parseFloat(formData.fees.platformFee) || 0
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Other Fees:</span>
-                    <span className="text-red-600 dark:text-red-400">-{formatCurrency(parseFloat(formData.fees.otherFees) || 0)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Other Fees:
+                    </span>
+                    <span className="text-red-600 dark:text-red-400">
+                      -
+                      {formatCurrency(parseFloat(formData.fees.otherFees) || 0)}
+                    </span>
                   </div>
                   <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
                     <div className="flex justify-between font-semibold">
-                      <span className="text-blue-900 dark:text-blue-300">Net Amount:</span>
-                      <span className="text-blue-600 dark:text-blue-400">{formatCurrency(calculateNetAmount())}</span>
+                      <span className="text-blue-900 dark:text-blue-300">
+                        Net Amount:
+                      </span>
+                      <span className="text-blue-600 dark:text-blue-400">
+                        {formatCurrency(calculateNetAmount())}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -754,7 +783,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
         {renderStepIndicator()}
 
         {/* Step Content */}
-        <div className="min-h-[400px]">{renderStepContent()}</div>
+        <div>{renderStepContent()}</div>
 
         {/* Navigation Buttons */}
         <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">

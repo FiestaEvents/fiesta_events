@@ -427,13 +427,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       case 1:
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              Basic Information
-            </h3>
-
             <Input
               className="w-full"
               label="Partner Name"
@@ -499,13 +492,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       case 2:
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <Briefcase className="w-5 h-5 text-white" />
-              </div>
-              Professional Details
-            </h3>
-
             <Select
               label="Category"
               name="category"
@@ -589,16 +575,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       case 3:
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <MapPin className="w-5 h-5 text-white" />
-              </div>
-              Address Information
-              <span className="text-sm text-gray-500 dark:text-gray-400 font-normal ml-auto">
-                Optional
-              </span>
-            </h3>
-
             <Input
               label="Street Address"
               name="address.street"
@@ -646,16 +622,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       case 4:
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              Additional Notes
-              <span className="text-sm text-gray-500 dark:text-gray-400 font-normal ml-auto">
-                Optional
-              </span>
-            </h3>
-
             <Textarea
               label="Notes"
               name="notes"
@@ -678,16 +644,16 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     <form
       onSubmit={handleSubmit}
       onKeyDown={handleKeyDown}
-      className="space-y-6"
+      className="space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar"
     >
       {/* Step Indicator */}
       {renderStepIndicator()}
 
       {/* Step Content */}
-      <div className="min-h-[400px]">{renderStepContent()}</div>
+      <div className="">{renderStepContent()}</div>
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex items-center sticky bottom-0 bg-white justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
         <div>
           {currentStep > 1 && (
             <Button
