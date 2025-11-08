@@ -18,7 +18,7 @@ import { eventService } from "../../api/index";
 import EventForm from "./EventForm";
 import EventDetailModal from "./EventDetailModal";
 import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
+import TitleCard from "../../components/common/TitleCard";
 import Badge from "../../components/common/Badge";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 
@@ -115,7 +115,7 @@ const formatDateTime = (dateString) => {
 // --- UPCOMING EVENTS LIST COMPONENT ---
 const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
   return (
-    <Card title="Upcoming Events" className="h-full">
+    <TitleCard title="Upcoming Events" className="h-full">
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
           <LoadingSpinner size="md" />
@@ -167,16 +167,21 @@ const UpcomingEventsList = ({ upcomingEvents, onEventClick, isLoading }) => {
           </p>
         </div>
       )}
-    </Card>
+    </TitleCard>
   );
 };
 
 // --- ALL FUTURE EVENTS LIST COMPONENT ---
-const AllFutureEventsList = ({ futureEvents, onEventClick, isLoading, onViewAll }) => {
+const AllFutureEventsList = ({
+  futureEvents,
+  onEventClick,
+  isLoading,
+  onViewAll,
+}) => {
   const displayedEvents = futureEvents.slice(0, 10); // Show first 10 events
 
   return (
-    <Card 
+    <TitleCard
       title={
         <div className="flex items-center justify-between">
           <span>All Future Events</span>
@@ -192,7 +197,7 @@ const AllFutureEventsList = ({ futureEvents, onEventClick, isLoading, onViewAll 
             </Button>
           )}
         </div>
-      } 
+      }
       className="h-full"
     >
       {isLoading ? (
@@ -234,7 +239,7 @@ const AllFutureEventsList = ({ futureEvents, onEventClick, isLoading, onViewAll 
                   <CalendarIcon className="w-3 h-3" />
                   {formatDateTime(event.startDate)}
                 </div>
-                
+
                 {event.client && (
                   <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                     <Users className="w-3 h-3" />
@@ -251,8 +256,7 @@ const AllFutureEventsList = ({ futureEvents, onEventClick, isLoading, onViewAll 
 
                 {event.venueFee && (
                   <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <Tag className="w-3 h-3" />
-                    ${event.venueFee}
+                    <Tag className="w-3 h-3" />${event.venueFee}
                   </div>
                 )}
               </div>
@@ -264,7 +268,7 @@ const AllFutureEventsList = ({ futureEvents, onEventClick, isLoading, onViewAll 
               )}
             </div>
           ))}
-          
+
           {futureEvents.length > 10 && (
             <div className="text-center pt-2 border-t border-gray-200 dark:border-gray-700">
               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -284,7 +288,7 @@ const AllFutureEventsList = ({ futureEvents, onEventClick, isLoading, onViewAll 
           </p>
         </div>
       )}
-    </Card>
+    </TitleCard>
   );
 };
 
@@ -453,7 +457,7 @@ const EventList = () => {
   };
 
   const onViewAllEvents = () => {
-    navigate('/events'); // Navigate to the main events list page
+    navigate("/events"); // Navigate to the main events list page
   };
 
   // Fetch calendar events for the current month
@@ -808,7 +812,7 @@ const EventList = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left Column: Calendar Grid */}
         <div className="lg:col-span-3">
-          <Card>
+          <TitleCard className="dark:bg-gray-800">
             <div className="p-6">
               {/* Calendar Header */}
               <div className="flex items-center justify-between mb-6">
@@ -837,7 +841,7 @@ const EventList = () => {
               </div>
 
               {/* Status Legend */}
-              <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              {/* <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                   Status Legend
                 </h3>
@@ -862,7 +866,7 @@ const EventList = () => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -955,7 +959,7 @@ const EventList = () => {
                 </>
               )}
             </div>
-          </Card>
+          </TitleCard>
         </div>
 
         {/* Right Column: Upcoming Events & All Future Events */}
@@ -965,7 +969,7 @@ const EventList = () => {
             onEventClick={onEventClick}
             isLoading={isUpcomingLoading}
           />
-          
+
           <AllFutureEventsList
             futureEvents={futureEvents}
             onEventClick={onEventClick}
