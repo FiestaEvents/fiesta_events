@@ -203,7 +203,6 @@ const ClientsList = () => {
         const statusLabels = {
           active: t("Active"),
           inactive: t("Inactive"),
-          prospect: t("Prospect"),
         };
 
         return (
@@ -349,7 +348,6 @@ const ClientsList = () => {
                   { value: "all", label: "All Status" },
                   { value: "active", label: "Active" },
                   { value: "inactive", label: "Inactive" },
-                  { value: "prospect", label: "Prospect" },
                 ]}
               />
             </div>

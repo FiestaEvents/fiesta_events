@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { authService } from "../api/index";
-import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
@@ -15,7 +14,6 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const initAuth = async () => {
@@ -37,6 +35,18 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
+  const verifyEmail = async (email) => {
+    const response = await authService.verifyEmail({ email });
+    console.log("✅ Verify email response:", response);
+
+    // Make sure user is set from the response
+    if (response.user) {
+      setUser(response.user);
+    }
+
+    return response;
+  };
+
   const login = async (email, password) => {
     const response = await authService.login(email, password);
     console.log("✅ Login response:", response);
@@ -57,8 +67,7 @@ export const AuthProvider = ({ children }) => {
     if (response.user) {
       setUser(response.user);
     }
-
-    navi;
+    return response;
   };
 
   const logout = async () => {
@@ -72,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    verifyEmail,
     isAuthenticated: !!user,
   };
 

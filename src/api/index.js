@@ -6,7 +6,7 @@
  * *
  */
 
-import api from './axios';
+import api from "./axios";
 
 // ============================================
 // RESPONSE HANDLER UTILITY
@@ -28,20 +28,35 @@ export const authService = {
    * @param {Object} data - { email, password, venueName, ... }
    * @returns {Promise<{ user, token, venue }>}
    */
+  verifyEmail: async (data) => {
+    try {
+      const response = await api.post("/auth/verify-email", data);
+      const result = handleResponse(response);
+      return result;
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Register new user and venue
+   * @param {Object} data - { email, password, venueName, ... }
+   * @returns {Promise<{ user, token, venue }>}
+   */
   register: async (data) => {
     try {
-      const response = await api.post('/auth/register', data);
+      const response = await api.post("/auth/register", data);
       const result = handleResponse(response);
-      
+
       // Store auth data
       if (result.token) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem("token", result.token);
+        localStorage.setItem("user", JSON.stringify(result.user));
         if (result.user?.venue?.id) {
-          localStorage.setItem('venueId', result.user.venue.id);
+          localStorage.setItem("venueId", result.user.venue.id);
         }
       }
-      
+
       return result;
     } catch (error) {
       return handleError(error);
@@ -56,18 +71,18 @@ export const authService = {
    */
   login: async (email, password) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post("/auth/login", { email, password });
       const result = handleResponse(response);
-      
+
       // Store auth data
       if (result.token) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem("token", result.token);
+        localStorage.setItem("user", JSON.stringify(result.user));
         if (result.user?.venue?.id) {
-          localStorage.setItem('venueId', result.user.venue.id);
+          localStorage.setItem("venueId", result.user.venue.id);
         }
       }
-      
+
       return result;
     } catch (error) {
       return handleError(error);
@@ -79,14 +94,14 @@ export const authService = {
    */
   logout: async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post("/auth/logout");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       // Always clear local storage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('venueId');
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("venueId");
     }
   },
 
@@ -96,13 +111,13 @@ export const authService = {
    */
   getMe: async () => {
     try {
-      const response = await api.get('/auth/me');
+      const response = await api.get("/auth/me");
       const result = handleResponse(response);
-      
+
       if (result.user) {
-        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem("user", JSON.stringify(result.user));
       }
-      
+
       return result;
     } catch (error) {
       return handleError(error);
@@ -116,13 +131,13 @@ export const authService = {
    */
   updateProfile: async (data) => {
     try {
-      const response = await api.put('/auth/profile', data);
+      const response = await api.put("/auth/profile", data);
       const result = handleResponse(response);
-      
+
       if (result.user) {
-        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem("user", JSON.stringify(result.user));
       }
-      
+
       return result;
     } catch (error) {
       return handleError(error);
@@ -136,7 +151,7 @@ export const authService = {
    */
   changePassword: async (currentPassword, newPassword) => {
     try {
-      const response = await api.put('/auth/change-password', {
+      const response = await api.put("/auth/change-password", {
         currentPassword,
         newPassword,
       });
@@ -152,7 +167,7 @@ export const authService = {
    */
   forgotPassword: async (email) => {
     try {
-      const response = await api.post('/auth/forgot-password', { email });
+      const response = await api.post("/auth/forgot-password", { email });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -166,7 +181,10 @@ export const authService = {
    */
   resetPassword: async (token, password) => {
     try {
-      const response = await api.post('/auth/reset-password', { token, password });
+      const response = await api.post("/auth/reset-password", {
+        token,
+        password,
+      });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -174,17 +192,17 @@ export const authService = {
   },
 
   // Helper methods
-  isAuthenticated: () => !!localStorage.getItem('token'),
-  getToken: () => localStorage.getItem('token'),
+  isAuthenticated: () => !!localStorage.getItem("token"),
+  getToken: () => localStorage.getItem("token"),
   getUser: () => {
     try {
-      const userStr = localStorage.getItem('user');
+      const userStr = localStorage.getItem("user");
       return userStr ? JSON.parse(userStr) : null;
     } catch {
       return null;
     }
   },
-  getVenueId: () => localStorage.getItem('venueId'),
+  getVenueId: () => localStorage.getItem("venueId"),
 };
 
 // ============================================
@@ -198,7 +216,7 @@ export const eventService = {
    */
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/events', { params });
+      const response = await api.get("/events", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -226,7 +244,7 @@ export const eventService = {
    */
   create: async (data) => {
     try {
-      const response = await api.post('/events', data);
+      const response = await api.post("/events", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -283,7 +301,7 @@ export const eventService = {
    */
   getCalendar: async (params = {}) => {
     try {
-      const response = await api.get('/events/calendar', { params });
+      const response = await api.get("/events/calendar", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -296,7 +314,7 @@ export const eventService = {
    */
   getStats: async () => {
     try {
-      const response = await api.get('/events/stats');
+      const response = await api.get("/events/stats");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -315,7 +333,7 @@ export const clientService = {
    */
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/clients', { params });
+      const response = await api.get("/clients", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -343,7 +361,7 @@ export const clientService = {
    */
   create: async (data) => {
     try {
-      const response = await api.post('/clients', data);
+      const response = await api.post("/clients", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -399,7 +417,7 @@ export const clientService = {
    */
   getStats: async () => {
     try {
-      const response = await api.get('/clients/stats');
+      const response = await api.get("/clients/stats");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -413,7 +431,7 @@ export const clientService = {
 export const partnerService = {
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/partners', { params });
+      const response = await api.get("/partners", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -431,7 +449,7 @@ export const partnerService = {
 
   create: async (data) => {
     try {
-      const response = await api.post('/partners', data);
+      const response = await api.post("/partners", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -467,7 +485,7 @@ export const partnerService = {
 
   getStats: async () => {
     try {
-      const response = await api.get('/partners/stats');
+      const response = await api.get("/partners/stats");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -481,7 +499,7 @@ export const partnerService = {
 export const paymentService = {
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/payments', { params });
+      const response = await api.get("/payments", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -499,7 +517,7 @@ export const paymentService = {
 
   create: async (data) => {
     try {
-      const response = await api.post('/payments', data);
+      const response = await api.post("/payments", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -535,7 +553,7 @@ export const paymentService = {
 
   getStats: async () => {
     try {
-      const response = await api.get('/payments/stats');
+      const response = await api.get("/payments/stats");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -547,14 +565,13 @@ export const paymentService = {
 // FINANCE SERVICE
 // ============================================
 export const financeService = {
-
- getAll: async (params = {}) => {
+  getAll: async (params = {}) => {
     try {
-      const response = await api.get('/finance', { params });
+      const response = await api.get("/finance", { params });
       // Backend returns: { records, pagination }
       return {
         finance: response.data?.data?.records || [],
-        pagination: response.data?.data?.pagination || {}
+        pagination: response.data?.data?.pagination || {},
       };
     } catch (error) {
       return handleError(error);
@@ -572,7 +589,7 @@ export const financeService = {
 
   create: async (data) => {
     try {
-      const response = await api.post('/finance', data);
+      const response = await api.post("/finance", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -599,7 +616,7 @@ export const financeService = {
 
   getSummary: async (params = {}) => {
     try {
-      const response = await api.get('/finance/summary', { params });
+      const response = await api.get("/finance/summary", { params });
       // Backend returns: { summary, categoryBreakdown, timeSeries, topExpenses, topIncome }
       return response.data?.data || {};
     } catch (error) {
@@ -609,7 +626,7 @@ export const financeService = {
 
   getCashflow: async (params = {}) => {
     try {
-      const response = await api.get('/finance/cashflow', { params });
+      const response = await api.get("/finance/cashflow", { params });
       // Backend returns: { cashFlow: array, currentBalance }
       return response.data?.data || {};
     } catch (error) {
@@ -619,7 +636,7 @@ export const financeService = {
 
   getExpensesBreakdown: async (params = {}) => {
     try {
-      const response = await api.get('/finance/expenses/breakdown', { params });
+      const response = await api.get("/finance/expenses/breakdown", { params });
       // Backend returns: { breakdown, totalExpenses }
       return response.data?.data || {};
     } catch (error) {
@@ -627,10 +644,9 @@ export const financeService = {
     }
   },
 
-
   getIncomeBreakdown: async (params = {}) => {
     try {
-      const response = await api.get('/finance/income/breakdown', { params });
+      const response = await api.get("/finance/income/breakdown", { params });
       // Backend returns: { breakdown, totalIncome }
       return response.data?.data || {};
     } catch (error) {
@@ -640,7 +656,7 @@ export const financeService = {
 
   getProfitLoss: async (params = {}) => {
     try {
-      const response = await api.get('/finance/profit-loss', { params });
+      const response = await api.get("/finance/profit-loss", { params });
       // Backend returns: { revenue, expenses, profitability }
       return response.data?.data || {};
     } catch (error) {
@@ -650,7 +666,7 @@ export const financeService = {
 
   getTrends: async (params = {}) => {
     try {
-      const response = await api.get('/finance/trends', { params });
+      const response = await api.get("/finance/trends", { params });
       // Backend returns: { trends: array }
       return response.data?.data || {};
     } catch (error) {
@@ -660,7 +676,7 @@ export const financeService = {
 
   getTaxSummary: async (params = {}) => {
     try {
-      const response = await api.get('/finance/tax-summary', { params });
+      const response = await api.get("/finance/tax-summary", { params });
       // Backend returns: { year, totalIncome, totalExpense, taxableIncome, totalTaxPaid, taxRecords }
       return response.data?.data || {};
     } catch (error) {
@@ -680,7 +696,7 @@ export const taskService = {
    */
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/tasks', { params });
+      const response = await api.get("/tasks", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -711,7 +727,7 @@ export const taskService = {
    */
   create: async (data) => {
     try {
-      const response = await api.post('/tasks', data);
+      const response = await api.post("/tasks", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -769,7 +785,7 @@ export const taskService = {
    */
   bulkDelete: async (ids) => {
     try {
-      const response = await api.post('/tasks/bulk-delete', { ids });
+      const response = await api.post("/tasks/bulk-delete", { ids });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1004,7 +1020,10 @@ export const taskService = {
    */
   updateSubtask: async (id, subtaskId, data) => {
     try {
-      const response = await api.put(`/tasks/${id}/subtasks/${subtaskId}`, data);
+      const response = await api.put(
+        `/tasks/${id}/subtasks/${subtaskId}`,
+        data
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1019,7 +1038,9 @@ export const taskService = {
    */
   toggleSubtask: async (id, subtaskId) => {
     try {
-      const response = await api.patch(`/tasks/${id}/subtasks/${subtaskId}/toggle`);
+      const response = await api.patch(
+        `/tasks/${id}/subtasks/${subtaskId}/toggle`
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1071,9 +1092,9 @@ export const taskService = {
   addAttachment: async (id, file) => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
       const response = await api.post(`/tasks/${id}/attachments`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { "Content-Type": "multipart/form-data" },
       });
       return handleResponse(response);
     } catch (error) {
@@ -1089,7 +1110,9 @@ export const taskService = {
    */
   deleteAttachment: async (id, attachmentId) => {
     try {
-      const response = await api.delete(`/tasks/${id}/attachments/${attachmentId}`);
+      const response = await api.delete(
+        `/tasks/${id}/attachments/${attachmentId}`
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1106,7 +1129,7 @@ export const taskService = {
     try {
       const response = await api.get(
         `/tasks/${id}/attachments/${attachmentId}/download`,
-        { responseType: 'blob' }
+        { responseType: "blob" }
       );
       return response.data;
     } catch (error) {
@@ -1141,7 +1164,9 @@ export const taskService = {
    */
   removeTags: async (id, tags) => {
     try {
-      const response = await api.delete(`/tasks/${id}/tags`, { data: { tags } });
+      const response = await api.delete(`/tasks/${id}/tags`, {
+        data: { tags },
+      });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1159,7 +1184,7 @@ export const taskService = {
    * @param {string} type - Dependency type: 'blocks', 'blocked_by', 'relates_to'
    * @returns {Promise<{ task: Object }>}
    */
-  addDependency: async (id, dependencyTaskId, type = 'relates_to') => {
+  addDependency: async (id, dependencyTaskId, type = "relates_to") => {
     try {
       const response = await api.post(`/tasks/${id}/dependencies`, {
         dependencyTaskId,
@@ -1179,7 +1204,9 @@ export const taskService = {
    */
   removeDependency: async (id, dependencyId) => {
     try {
-      const response = await api.delete(`/tasks/${id}/dependencies/${dependencyId}`);
+      const response = await api.delete(
+        `/tasks/${id}/dependencies/${dependencyId}`
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1212,7 +1239,7 @@ export const taskService = {
    * @param {string} description - Description of work done
    * @returns {Promise<{ task: Object }>}
    */
-  logTime: async (id, hours, description = '') => {
+  logTime: async (id, hours, description = "") => {
     try {
       const response = await api.post(`/tasks/${id}/time-log`, {
         hours,
@@ -1263,7 +1290,7 @@ export const taskService = {
    */
   getArchived: async (params = {}) => {
     try {
-      const response = await api.get('/tasks/archived', { params });
+      const response = await api.get("/tasks/archived", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1281,7 +1308,7 @@ export const taskService = {
    */
   getBoard: async (filters = {}) => {
     try {
-      const response = await api.get('/tasks/board', { params: filters });
+      const response = await api.get("/tasks/board", { params: filters });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1295,7 +1322,7 @@ export const taskService = {
    */
   getMyTasks: async (params = {}) => {
     try {
-      const response = await api.get('/tasks/my', { params });
+      const response = await api.get("/tasks/my", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1309,7 +1336,7 @@ export const taskService = {
    */
   getOverdue: async (params = {}) => {
     try {
-      const response = await api.get('/tasks/overdue', { params });
+      const response = await api.get("/tasks/overdue", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1322,7 +1349,7 @@ export const taskService = {
    */
   getDueToday: async () => {
     try {
-      const response = await api.get('/tasks/due-today');
+      const response = await api.get("/tasks/due-today");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1336,7 +1363,7 @@ export const taskService = {
    */
   getUpcoming: async (days = 7) => {
     try {
-      const response = await api.get('/tasks/upcoming', { params: { days } });
+      const response = await api.get("/tasks/upcoming", { params: { days } });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1393,7 +1420,7 @@ export const taskService = {
    */
   search: async (query, filters = {}) => {
     try {
-      const response = await api.get('/tasks/search', {
+      const response = await api.get("/tasks/search", {
         params: { q: query, ...filters },
       });
       return handleResponse(response);
@@ -1413,7 +1440,7 @@ export const taskService = {
    */
   getStats: async (params = {}) => {
     try {
-      const response = await api.get('/tasks/stats', { params });
+      const response = await api.get("/tasks/stats", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1427,7 +1454,7 @@ export const taskService = {
    */
   getCompletionRate: async (params = {}) => {
     try {
-      const response = await api.get('/tasks/analytics/completion-rate', {
+      const response = await api.get("/tasks/analytics/completion-rate", {
         params,
       });
       return handleResponse(response);
@@ -1441,9 +1468,9 @@ export const taskService = {
    * @param {string} groupBy - Field to group by
    * @returns {Promise<{ distribution: Object }>}
    */
-  getDistribution: async (groupBy = 'status') => {
+  getDistribution: async (groupBy = "status") => {
     try {
-      const response = await api.get('/tasks/analytics/distribution', {
+      const response = await api.get("/tasks/analytics/distribution", {
         params: { groupBy },
       });
       return handleResponse(response);
@@ -1460,7 +1487,9 @@ export const taskService = {
    */
   getUserProductivity: async (userId = null, params = {}) => {
     try {
-      const url = userId ? `/tasks/analytics/user/${userId}` : '/tasks/analytics/me';
+      const url = userId
+        ? `/tasks/analytics/user/${userId}`
+        : "/tasks/analytics/me";
       const response = await api.get(url, { params });
       return handleResponse(response);
     } catch (error) {
@@ -1480,7 +1509,7 @@ export const taskService = {
    */
   bulkUpdate: async (ids, data) => {
     try {
-      const response = await api.patch('/tasks/bulk-update', { ids, data });
+      const response = await api.patch("/tasks/bulk-update", { ids, data });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1495,7 +1524,7 @@ export const taskService = {
    */
   bulkAssign: async (ids, userId) => {
     try {
-      const response = await api.patch('/tasks/bulk-assign', { ids, userId });
+      const response = await api.patch("/tasks/bulk-assign", { ids, userId });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1509,7 +1538,7 @@ export const taskService = {
    */
   bulkComplete: async (ids) => {
     try {
-      const response = await api.post('/tasks/bulk-complete', { ids });
+      const response = await api.post("/tasks/bulk-complete", { ids });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1523,7 +1552,7 @@ export const taskService = {
    */
   bulkArchive: async (ids) => {
     try {
-      const response = await api.post('/tasks/bulk-archive', { ids });
+      const response = await api.post("/tasks/bulk-archive", { ids });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1557,7 +1586,10 @@ export const taskService = {
    */
   createFromTemplate: async (templateId, data = {}) => {
     try {
-      const response = await api.post(`/tasks/templates/${templateId}/create`, data);
+      const response = await api.post(
+        `/tasks/templates/${templateId}/create`,
+        data
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1574,11 +1606,11 @@ export const taskService = {
    * @param {string} format - Export format: 'csv' or 'excel'
    * @returns {Promise<Blob>}
    */
-  export: async (filters = {}, format = 'csv') => {
+  export: async (filters = {}, format = "csv") => {
     try {
-      const response = await api.get('/tasks/export', {
+      const response = await api.get("/tasks/export", {
         params: { ...filters, format },
-        responseType: 'blob',
+        responseType: "blob",
       });
       return response.data;
     } catch (error) {
@@ -1593,7 +1625,7 @@ export const taskService = {
    */
   generateReport: async (params = {}) => {
     try {
-      const response = await api.post('/tasks/reports/generate', params);
+      const response = await api.post("/tasks/reports/generate", params);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1607,7 +1639,7 @@ export const taskService = {
 export const reminderService = {
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/reminders', { params });
+      const response = await api.get("/reminders", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1625,7 +1657,7 @@ export const reminderService = {
 
   create: async (data) => {
     try {
-      const response = await api.post('/reminders', data);
+      const response = await api.post("/reminders", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1661,7 +1693,7 @@ export const reminderService = {
 
   getUpcoming: async () => {
     try {
-      const response = await api.get('/reminders/upcoming');
+      const response = await api.get("/reminders/upcoming");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1675,7 +1707,7 @@ export const reminderService = {
 export const teamService = {
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/team', { params });
+      const response = await api.get("/team", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1711,7 +1743,7 @@ export const teamService = {
 
   invite: async (data) => {
     try {
-      const response = await api.post('/team/invite', data);
+      const response = await api.post("/team/invite", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1720,7 +1752,7 @@ export const teamService = {
 
   getInvitations: async () => {
     try {
-      const response = await api.get('/team/invitations');
+      const response = await api.get("/team/invitations");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1729,7 +1761,7 @@ export const teamService = {
 
   acceptInvitation: async (token) => {
     try {
-      const response = await api.post('/team/accept-invitation', { token });
+      const response = await api.post("/team/accept-invitation", { token });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1756,7 +1788,7 @@ export const teamService = {
 
   getStats: async () => {
     try {
-      const response = await api.get('/team/stats');
+      const response = await api.get("/team/stats");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1770,7 +1802,7 @@ export const teamService = {
 export const roleService = {
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/roles', { params });
+      const response = await api.get("/roles", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1788,7 +1820,7 @@ export const roleService = {
 
   create: async (data) => {
     try {
-      const response = await api.post('/roles', data);
+      const response = await api.post("/roles", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1815,7 +1847,7 @@ export const roleService = {
 
   getPermissions: async () => {
     try {
-      const response = await api.get('/roles/permissions');
+      const response = await api.get("/roles/permissions");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1829,7 +1861,7 @@ export const roleService = {
 export const venueService = {
   getMe: async () => {
     try {
-      const response = await api.get('/venues/me');
+      const response = await api.get("/venues/me");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1838,7 +1870,7 @@ export const venueService = {
 
   update: async (data) => {
     try {
-      const response = await api.put('/venues/me', data);
+      const response = await api.put("/venues/me", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1847,7 +1879,7 @@ export const venueService = {
 
   getStats: async () => {
     try {
-      const response = await api.get('/venues/stats');
+      const response = await api.get("/venues/stats");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1856,7 +1888,7 @@ export const venueService = {
 
   getDashboard: async () => {
     try {
-      const response = await api.get('/venues/dashboard');
+      const response = await api.get("/venues/dashboard");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1865,7 +1897,7 @@ export const venueService = {
 
   updateSubscription: async (data) => {
     try {
-      const response = await api.put('/venues/subscription', data);
+      const response = await api.put("/venues/subscription", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1883,7 +1915,7 @@ export const dashboardService = {
    */
   getStats: async () => {
     try {
-      const response = await api.get('/venues/dashboard');
+      const response = await api.get("/venues/dashboard");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1897,8 +1929,8 @@ export const dashboardService = {
    */
   getUpcomingEvents: async (params = { limit: 5 }) => {
     try {
-      const response = await api.get('/events', { 
-        params: { ...params, upcoming: true } 
+      const response = await api.get("/events", {
+        params: { ...params, upcoming: true },
       });
       return handleResponse(response);
     } catch (error) {
@@ -1913,8 +1945,8 @@ export const dashboardService = {
    */
   getRecentPayments: async (params = { limit: 5 }) => {
     try {
-      const response = await api.get('/payments', { 
-        params: { ...params, recent: true } 
+      const response = await api.get("/payments", {
+        params: { ...params, recent: true },
       });
       return handleResponse(response);
     } catch (error) {
@@ -1928,7 +1960,7 @@ export const dashboardService = {
    */
   getTasks: async () => {
     try {
-      const response = await api.get('/tasks/my');
+      const response = await api.get("/tasks/my");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1947,7 +1979,7 @@ export const invoiceService = {
    */
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/invoices', { params });
+      const response = await api.get("/invoices", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1975,7 +2007,7 @@ export const invoiceService = {
    */
   create: async (data) => {
     try {
-      const response = await api.post('/invoices', data);
+      const response = await api.post("/invoices", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1989,9 +2021,9 @@ export const invoiceService = {
    */
   createClientInvoice: async (data) => {
     try {
-      const response = await api.post('/invoices', {
+      const response = await api.post("/invoices", {
         ...data,
-        invoiceType: 'client',
+        invoiceType: "client",
       });
       return handleResponse(response);
     } catch (error) {
@@ -2006,9 +2038,9 @@ export const invoiceService = {
    */
   createPartnerInvoice: async (data) => {
     try {
-      const response = await api.post('/invoices', {
+      const response = await api.post("/invoices", {
         ...data,
-        invoiceType: 'partner',
+        invoiceType: "partner",
       });
       return handleResponse(response);
     } catch (error) {
@@ -2068,7 +2100,7 @@ export const invoiceService = {
   download: async (id) => {
     try {
       const response = await api.get(`/invoices/${id}/download`, {
-        responseType: 'blob',
+        responseType: "blob",
       });
       return response.data;
     } catch (error) {
@@ -2097,7 +2129,7 @@ export const invoiceService = {
    * @param {string} reason - Cancellation reason
    * @returns {Promise<{ invoice }>}
    */
-  cancel: async (id, reason = '') => {
+  cancel: async (id, reason = "") => {
     try {
       const response = await api.patch(`/invoices/${id}/cancel`, { reason });
       return handleResponse(response);
@@ -2113,7 +2145,7 @@ export const invoiceService = {
    */
   getStats: async (params = {}) => {
     try {
-      const response = await api.get('/invoices/stats', { params });
+      const response = await api.get("/invoices/stats", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2169,8 +2201,8 @@ export const invoiceService = {
    */
   getClientInvoices: async (params = {}) => {
     try {
-      const response = await api.get('/invoices', {
-        params: { ...params, invoiceType: 'client' },
+      const response = await api.get("/invoices", {
+        params: { ...params, invoiceType: "client" },
       });
       return handleResponse(response);
     } catch (error) {
@@ -2185,8 +2217,8 @@ export const invoiceService = {
    */
   getPartnerInvoices: async (params = {}) => {
     try {
-      const response = await api.get('/invoices', {
-        params: { ...params, invoiceType: 'partner' },
+      const response = await api.get("/invoices", {
+        params: { ...params, invoiceType: "partner" },
       });
       return handleResponse(response);
     } catch (error) {
@@ -2201,11 +2233,11 @@ export const invoiceService = {
    */
   getOverdue: async (invoiceType = null) => {
     try {
-      const params = { status: 'overdue' };
+      const params = { status: "overdue" };
       if (invoiceType) {
         params.invoiceType = invoiceType;
       }
-      const response = await api.get('/invoices', { params });
+      const response = await api.get("/invoices", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2219,11 +2251,11 @@ export const invoiceService = {
    */
   getUnpaid: async (invoiceType = null) => {
     try {
-      const params = { status: 'unpaid' };
+      const params = { status: "unpaid" };
       if (invoiceType) {
         params.invoiceType = invoiceType;
       }
-      const response = await api.get('/invoices', { params });
+      const response = await api.get("/invoices", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2241,7 +2273,7 @@ export const userService = {
    */
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/users', { params });
+      const response = await api.get("/users", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2269,7 +2301,7 @@ export const userService = {
    */
   create: async (data) => {
     try {
-      const response = await api.post('/users', data);
+      const response = await api.post("/users", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2339,7 +2371,7 @@ export const userService = {
    */
   getStats: async () => {
     try {
-      const response = await api.get('/users/stats');
+      const response = await api.get("/users/stats");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2369,8 +2401,8 @@ export const userService = {
    */
   search: async (query, params = {}) => {
     try {
-      const response = await api.get('/users/search', { 
-        params: { q: query, ...params } 
+      const response = await api.get("/users/search", {
+        params: { q: query, ...params },
       });
       return handleResponse(response);
     } catch (error) {
@@ -2385,7 +2417,7 @@ export const userService = {
    */
   bulkUpdate: async (userIds, data) => {
     try {
-      const response = await api.patch('/users/bulk-update', { userIds, data });
+      const response = await api.patch("/users/bulk-update", { userIds, data });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2399,7 +2431,7 @@ export const userService = {
    */
   getByRole: async (role) => {
     try {
-      const response = await api.get('/users', { params: { role } });
+      const response = await api.get("/users", { params: { role } });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2412,7 +2444,7 @@ export const userService = {
    */
   getProfile: async () => {
     try {
-      const response = await api.get('/auth/me');
+      const response = await api.get("/auth/me");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2427,9 +2459,9 @@ export const userService = {
   uploadAvatar: async (id, file) => {
     try {
       const formData = new FormData();
-      formData.append('avatar', file);
+      formData.append("avatar", file);
       const response = await api.post(`/users/${id}/avatar`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { "Content-Type": "multipart/form-data" },
       });
       return handleResponse(response);
     } catch (error) {

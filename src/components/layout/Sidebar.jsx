@@ -109,14 +109,14 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between h-16 px-4  border-gray-200 shrink-0 dark:border-gray-700">
+          <div className="flex items-center justify-between h-16 m-4 shrink-0 dark:border-gray-700">
             {!isCollapsed && (
               <Link to="/">
-                <div className="relative h-22 w-15">
+                <div className="size-full">
                   <img
                     src="/fiesta logo-01.png"
                     alt="Fiesta Logo"
-                    className="h-24 w-40 "
+                    className="w-full object-cover"
                     onError={(e) => {
                       e.target.style.display = "none";
                     }}

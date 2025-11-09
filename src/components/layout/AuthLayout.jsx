@@ -6,8 +6,8 @@ const AuthLayout = () => {
   return (
     <div className="min-h-screen flex flex-row w-full">
       {/* Left Side - Auth Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 flex-shrink-0">
-        <div className="w-full max-w-lg">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 flex-shrink-0">
+        <div className="size-full">
           {/* Content - Outlet renders nested routes */}
           <Outlet />
         </div>

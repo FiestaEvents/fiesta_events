@@ -45,7 +45,9 @@ const PaymentForm = lazy(() => import("../pages/payments/PaymentForm.jsx"));
 
 // Invoices (Working)
 const Invoices = lazy(() => import("../pages/invoices/InvoicesPage.jsx"));
-const InvoiceFormPage = lazy(() => import("../pages/invoices/InvoiceFormPage.jsx"));
+const InvoiceFormPage = lazy(
+  () => import("../pages/invoices/InvoiceFormPage.jsx")
+);
 
 // Finance (Working)
 const Finance = lazy(() => import("../pages/finance/Finance.jsx"));
@@ -101,9 +103,10 @@ const AppRoutes = () => {
       }
     >
       <Routes>
+        <Route path="/login" element={<Login />} />
+
         {/* PUBLIC ROUTES (Auth Layout) */}
         <Route element={<AuthLayout />}>
-          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
