@@ -9,7 +9,7 @@ import Button from "../../components/common/Button.jsx";
 const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
+  const { success, error: showError } = useToast();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -39,10 +39,10 @@ const Login = () => {
     setSubmitting(true);
     try {
       await login(formData.email, formData.password);
-      toast.success("Login successful!");
+      success("Login successful!");
     } catch (err) {
       setError(err.message || "Invalid credentials");
-      toast.error(err.message || "Login failed");
+      showError(err.message || "Login failed");
     } finally {
       setSubmitting(false);
     }

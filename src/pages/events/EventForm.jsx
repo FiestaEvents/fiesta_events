@@ -458,73 +458,83 @@ const EventForm = ({
   // ============================================
   // DATA FETCHING
   // ============================================
-const fetchDropdownData = async () => {
-  try {
-    // Use Promise.allSettled to handle potential failures gracefully
-    const [clientsRes, partnersRes, venuesRes, eventsRes] = await Promise.allSettled([
-      clientService.getAll ? clientService.getAll({ limit: 100 }) : clientService.getClients ? clientService.getClients({ limit: 100 }) : Promise.resolve({ data: [] }),
-      partnerService.getAll ? partnerService.getAll({ limit: 100 }) : partnerService.getPartners ? partnerService.getPartners({ limit: 100 }) : Promise.resolve({ data: [] }),
-      venueService.getAll ? venueService.getAll({ limit: 100 }) : venueService.getVenues ? venueService.getVenues({ limit: 100 }) : Promise.resolve({ data: [] }),
-      eventService.getAll ? eventService.getAll({ limit: 100 }) : eventService.getEvents ? eventService.getEvents({ limit: 100 }) : Promise.resolve({ data: [] }),
-    ]);
+  const fetchDropdownData = async () => {
+    try {
+      // Use Promise.allSettled to handle potential failures gracefully
+      const [clientsRes, partnersRes, venuesRes, eventsRes] =
+        await Promise.allSettled([
+          clientService.getAll
+            ? clientService.getAll({ limit: 100 })
+            : clientService.getClients
+              ? clientService.getClients({ limit: 100 })
+              : Promise.resolve({ data: [] }),
+          partnerService.getAll
+            ? partnerService.getAll({ limit: 100 })
+            : partnerService.getPartners
+              ? partnerService.getPartners({ limit: 100 })
+              : Promise.resolve({ data: [] }),
+          venueService.getAll
+            ? venueService.getAll({ limit: 100 })
+            : venueService.getVenues
+              ? venueService.getVenues({ limit: 100 })
+              : Promise.resolve({ data: [] }),
+          eventService.getAll
+            ? eventService.getAll({ limit: 100 })
+            : eventService.getEvents
+              ? eventService.getEvents({ limit: 100 })
+              : Promise.resolve({ data: [] }),
+        ]);
 
-    // Helper function to extract data from different response formats
-    const extractArrayData = (response, serviceName) => {
-      if (response.status === 'rejected') {
-        console.warn(`Failed to fetch ${serviceName}:`, response.reason);
+      // Helper function to extract data from different response formats
+      const extractArrayData = (response, serviceName) => {
+        if (response.status === "rejected") {
+          console.warn(`Failed to fetch ${serviceName}:`, response.reason);
+          return [];
+        }
+
+        const data = response.value;
+        if (!data) return [];
+
+        // Handle different response structures
+        if (Array.isArray(data)) return data;
+        if (data.data && Array.isArray(data.data)) return data.data;
+        if (data.clients && Array.isArray(data.clients)) return data.clients;
+        if (data.partners && Array.isArray(data.partners)) return data.partners;
+        if (data.venues && Array.isArray(data.venues)) return data.venues;
+        if (data.events && Array.isArray(data.events)) return data.events;
+
+        // If no array found, return empty array
         return [];
+      };
+
+      const clientsList = extractArrayData(clientsRes, "clients");
+      const partnersList = extractArrayData(partnersRes, "partners");
+      const venuesList = extractArrayData(venuesRes, "venues");
+      const eventsList = extractArrayData(eventsRes, "events");
+
+      setClients(clientsList);
+      setPartners(partnersList);
+      setVenues(venuesList);
+      setExistingEvents(eventsList);
+
+      // Handle prefilled client
+      const prefillClient = location.state?.prefillClient;
+      if (prefillClient && prefillClient._id && !isEditMode) {
+        setPrefilledClientData(prefillClient);
+        setSelectedClient(prefillClient._id);
+        setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
+        toast.success(`Client "${prefillClient.name}" pre-selected`);
       }
-      
-      const data = response.value;
-      if (!data) return [];
-      
-      // Handle different response structures
-      if (Array.isArray(data)) return data;
-      if (data.data && Array.isArray(data.data)) return data.data;
-      if (data.clients && Array.isArray(data.clients)) return data.clients;
-      if (data.partners && Array.isArray(data.partners)) return data.partners;
-      if (data.venues && Array.isArray(data.venues)) return data.venues;
-      if (data.events && Array.isArray(data.events)) return data.events;
-      
-      // If no array found, return empty array
-      return [];
-    };
-
-    const clientsList = extractArrayData(clientsRes, 'clients');
-    const partnersList = extractArrayData(partnersRes, 'partners');
-    const venuesList = extractArrayData(venuesRes, 'venues');
-    const eventsList = extractArrayData(eventsRes, 'events');
-
-    console.log('Fetched data:', {
-      clients: clientsList.length,
-      partners: partnersList.length,
-      venues: venuesList.length,
-      events: eventsList.length
-    });
-
-    setClients(clientsList);
-    setPartners(partnersList);
-    setVenues(venuesList);
-    setExistingEvents(eventsList);
-
-    // Handle prefilled client
-    const prefillClient = location.state?.prefillClient;
-    if (prefillClient && prefillClient._id && !isEditMode) {
-      setPrefilledClientData(prefillClient);
-      setSelectedClient(prefillClient._id);
-      setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
-      toast.success(`Client "${prefillClient.name}" pre-selected`);
+    } catch (error) {
+      console.error("Error fetching dropdown data:", error);
+      toast.error("Failed to load data");
+      // Set empty arrays to prevent further errors
+      setClients([]);
+      setPartners([]);
+      setVenues([]);
+      setExistingEvents([]);
     }
-  } catch (error) {
-    console.error("Error fetching dropdown data:", error);
-    toast.error("Failed to load data");
-    // Set empty arrays to prevent further errors
-    setClients([]);
-    setPartners([]);
-    setVenues([]);
-    setExistingEvents([]);
-  }
-};
+  };
   useEffect(() => {
     if (isModal ? isOpen : true) {
       fetchDropdownData();
@@ -1271,7 +1281,7 @@ const fetchDropdownData = async () => {
                   </div>
                   <div className="space-y-4 w-full">
                     <Input
-                      label="Event Title *"
+                      label="Event Title"
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
@@ -1281,7 +1291,7 @@ const fetchDropdownData = async () => {
                     />
 
                     <Select
-                      label="Event Type *"
+                      label="Event Type"
                       name="type"
                       value={formData.type}
                       onChange={handleChange}
@@ -1329,7 +1339,7 @@ const fetchDropdownData = async () => {
                     {/* Conditional Date Fields */}
                     {formData.sameDayEvent ? (
                       <Input
-                        label="Event Date *"
+                        label="Event Date"
                         name="startDate"
                         type="date"
                         value={formData.startDate}
@@ -1341,7 +1351,7 @@ const fetchDropdownData = async () => {
                     ) : (
                       <div className="grid grid-cols-2 gap-3">
                         <Input
-                          label="Start Date *"
+                          label="Start Date"
                           name="startDate"
                           type="date"
                           value={formData.startDate}
@@ -1351,7 +1361,7 @@ const fetchDropdownData = async () => {
                           className="w-full"
                         />
                         <Input
-                          label="End Date *"
+                          label="End Date"
                           name="endDate"
                           type="date"
                           value={formData.endDate}
@@ -1457,7 +1467,7 @@ const fetchDropdownData = async () => {
                     </h5>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                       <Input
-                        placeholder="Client Name *"
+                        placeholder="Client Name"
                         value={newClient.name}
                         onChange={(e) =>
                           setNewClient((prev) => ({

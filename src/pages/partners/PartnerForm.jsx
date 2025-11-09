@@ -644,7 +644,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     <form
       onSubmit={handleSubmit}
       onKeyDown={handleKeyDown}
-      className="space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar"
+      className="space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar p-6"
     >
       {/* Step Indicator */}
       {renderStepIndicator()}
@@ -653,7 +653,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       <div className="">{renderStepContent()}</div>
 
       {/* Navigation Buttons */}
-      <div className="flex items-center sticky bottom-0 bg-white justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex items-center sticky bottom-0 bg-white justify-between pt-6 border-t border-gray-200 dark:border-gray-700 dark:bg-gray-800">
         <div>
           {currentStep > 1 && (
             <Button

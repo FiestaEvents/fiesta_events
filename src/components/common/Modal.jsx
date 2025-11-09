@@ -84,7 +84,7 @@ const Modal = ({
           )}
 
           {/* Body */}
-          <div className="p-6">{children}</div>
+          <div>{children}</div>
 
           {/* Footer */}
           {footer && (
