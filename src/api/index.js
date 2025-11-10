@@ -1894,6 +1894,20 @@ export const venueService = {
   },
 
   /**
+   * Get venue spaces
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{ spaces: Array, pagination: Object }>}
+   */
+  getSpaces: async (params = {}) => {
+    try {
+      const response = await api.get("/venues/spaces", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
    * Upload venue images
    * @param {FormData} formData - Image files
    * @returns {Promise<{ images: Array }>}
@@ -1931,9 +1945,13 @@ export const venueService = {
    */
   uploadSpaceImages: async (spaceId, formData) => {
     try {
-      const response = await api.post(`/venues/spaces/${spaceId}/images`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await api.post(
+        `/venues/spaces/${spaceId}/images`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1948,7 +1966,9 @@ export const venueService = {
    */
   deleteSpaceImage: async (spaceId, imageId) => {
     try {
-      const response = await api.delete(`/venues/spaces/${spaceId}/images/${imageId}`);
+      const response = await api.delete(
+        `/venues/spaces/${spaceId}/images/${imageId}`
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1993,7 +2013,7 @@ export const venueService = {
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // ============================================

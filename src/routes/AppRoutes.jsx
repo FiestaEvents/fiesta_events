@@ -178,8 +178,6 @@ const AppRoutes = () => {
 
             {/* Settings  */}
             <Route path="/settings" element={<VenueSettings />} />
-            <Route path="/settings/profile" element={<ProfileSettings />} />
-            <Route path="/settings/security" element={<SecuritySettings />} />
           </Route>
         </Route>
 

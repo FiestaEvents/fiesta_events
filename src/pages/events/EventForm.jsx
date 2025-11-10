@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   X,
   Save,
@@ -37,6 +37,7 @@ import {
   partnerService,
   venueService,
   invoiceService,
+  paymentService,
 } from "../../api/index";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
@@ -44,6 +45,7 @@ import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
+
 // ============================================
 // TOGGLE COMPONENT
 // ============================================
@@ -70,6 +72,7 @@ const Toggle = ({ enabled, onChange, label, disabled = false }) => (
     )}
   </div>
 );
+
 // ============================================
 // STICKY PRICE SUMMARY COMPONENT
 // ============================================
@@ -95,7 +98,7 @@ const StickyPriceSummary = ({
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">Venue:</span>
             <span className="font-semibold text-gray-900 dark:text-white">
-              ${venuePrice.toFixed(2)}
+              {venuePrice.toFixed(2)} TND
             </span>
           </div>
 
@@ -105,7 +108,7 @@ const StickyPriceSummary = ({
                 Partners:
               </span>
               <span className="font-semibold text-gray-900 dark:text-white">
-                ${partnersTotal.toFixed(2)}
+                {partnersTotal.toFixed(2)} TND
               </span>
             </div>
           )}
@@ -117,7 +120,7 @@ const StickyPriceSummary = ({
                 -
                 {discountType === "percentage"
                   ? `${discount}%`
-                  : `$${discount.toFixed(2)}`}
+                  : `${discount.toFixed(2)} TND`}
               </span>
             </div>
           )}
@@ -127,7 +130,7 @@ const StickyPriceSummary = ({
               Total:
             </span>
             <span className="font-bold text-2xl text-orange-600">
-              ${totalPrice.toFixed(2)}
+              {totalPrice.toFixed(2)} TND
             </span>
           </div>
         </div>
@@ -143,8 +146,9 @@ const StickyPriceSummary = ({
     </div>
   );
 };
+
 // ============================================
-// MAIN EVENT FORM COMPONENT
+// MAIN EVENT FORM COMPONENT - FIXED
 // ============================================
 const EventForm = ({
   isOpen,
@@ -161,14 +165,15 @@ const EventForm = ({
   const isEditMode = !!eventId;
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
+
   // ============================================
-  // FORM STATE - ENHANCED
+  // FORM STATE - UPDATED: Remove venueId, keep venueSpaceId
   // ============================================
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     type: "",
-    venueId: "",
+    venueSpaceId: "", // Only venue space selection now
     clientId: "",
     sameDayEvent: true,
     startDate: "",
@@ -191,19 +196,20 @@ const EventForm = ({
       status: "pending",
       notes: "",
     },
-    createInvoice: false, // NEW: Auto-generate invoice
+    createInvoice: false,
   });
+
   // ============================================
-  // UI STATE
+  // UI STATE - UPDATED: Remove venues, keep venueSpaces
   // ============================================
-  const [venues, setVenues] = useState([]);
+  const [venueSpaces, setVenueSpaces] = useState([]);
   const [clients, setClients] = useState([]);
   const [partners, setPartners] = useState([]);
-  const [existingEvents, setExistingEvents] = useState([]); // NEW: For availability check
+  const [existingEvents, setExistingEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [warnings, setWarnings] = useState({}); // NEW: Non-blocking warnings
+  const [warnings, setWarnings] = useState({});
   const [selectedPartner, setSelectedPartner] = useState("");
   const [newClient, setNewClient] = useState({
     name: "",
@@ -215,7 +221,8 @@ const EventForm = ({
   const [clientSearch, setClientSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
   const [prefilledClientData, setPrefilledClientData] = useState(null);
-  const [hasDraft, setHasDraft] = useState(false); // NEW: Draft detection
+  const [hasDraft, setHasDraft] = useState(false);
+
   // ============================================
   // AUTO-SAVE DRAFT FUNCTIONALITY
   // ============================================
@@ -229,6 +236,7 @@ const EventForm = ({
       localStorage.setItem("eventFormDraft", JSON.stringify(draftData));
     }
   }, [formData, currentStep, isEditMode]);
+
   // Load draft on mount
   useEffect(() => {
     if (!isEditMode && !eventId) {
@@ -253,83 +261,145 @@ const EventForm = ({
       }
     }
   }, []);
+
   // Clear draft on successful submission
   const clearDraft = () => {
     localStorage.removeItem("eventFormDraft");
     setHasDraft(false);
   };
+
   // ============================================
-  // SYNC EFFECTS
+  // SYNC EFFECTS - UPDATED: Remove venue-related effects
   // ============================================
+
   // Sync endDate with startDate when same day event
   useEffect(() => {
     if (formData.sameDayEvent && formData.startDate) {
       setFormData((prev) => ({ ...prev, endDate: prev.startDate }));
     }
   }, [formData.sameDayEvent, formData.startDate]);
-  // Update base price when venue changes
-  useEffect(() => {
-    if (formData.venueId) {
-      const venue = venues.find((v) => v._id === formData.venueId);
-      if (venue?.pricing?.basePrice) {
-        setFormData((prev) => ({
-          ...prev,
-          pricing: { ...prev.pricing, basePrice: venue.pricing.basePrice },
-        }));
-      }
-    }
-  }, [formData.venueId, venues]);
-  // ============================================
-  // VALIDATION CHECKS
-  // ============================================
-  // Check venue capacity
-  useEffect(() => {
-    if (formData.venueId && formData.guestCount) {
-      const venue = venues.find((v) => v._id === formData.venueId);
-      if (venue) {
-        const guestCount = parseInt(formData.guestCount);
-        const newWarnings = { ...warnings };
-        if (guestCount > venue.capacity.max) {
-          newWarnings.guestCount = {
-            type: "error",
-            message: `Guest count exceeds venue capacity (max: ${venue.capacity.max})`,
-          };
-        } else if (guestCount < venue.capacity.min) {
-          newWarnings.guestCount = {
-            type: "warning",
-            message: `Guest count below venue minimum (min: ${venue.capacity.min})`,
-          };
-        } else {
-          delete newWarnings.guestCount;
-        }
 
-        setWarnings(newWarnings);
-      }
-    }
-  }, [formData.venueId, formData.guestCount, venues]);
-  // Check client-venue relationship
+  // Update base price when venue space changes
   useEffect(() => {
-    if (formData.clientId && formData.venueId) {
-      const client = clients.find((c) => c._id === formData.clientId);
-      const newWarnings = { ...warnings };
-      if (client && client.venueId && client.venueId !== formData.venueId) {
-        newWarnings.clientVenue = {
+    if (!formData.venueSpaceId) {
+      setFormData((prev) => {
+        if (!prev.pricing.basePrice) return prev;
+        return {
+          ...prev,
+          pricing: { ...prev.pricing, basePrice: "" },
+        };
+      });
+      return;
+    }
+
+    const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
+
+    if (!space || !space.basePrice) {
+      return;
+    }
+
+    const numericBasePrice = Number(space.basePrice) || 0;
+
+    setFormData((prev) => {
+      if (prev.pricing.basePrice === numericBasePrice) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        pricing: { ...prev.pricing, basePrice: numericBasePrice },
+      };
+    });
+  }, [formData.venueSpaceId, venueSpaces]);
+
+  // ============================================
+  // VALIDATION CHECKS - FIXED
+  // ============================================
+
+  // FIXED: Guest count validation with proper dependencies
+  useEffect(() => {
+    if (!formData.venueSpaceId || !formData.guestCount) {
+      // Clear warning if no venue space or guest count
+      setWarnings((prev) => {
+        const newWarnings = { ...prev };
+        delete newWarnings.guestCount;
+        return newWarnings;
+      });
+      return;
+    }
+
+    const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
+    if (!space || !space.capacity) {
+      setWarnings((prev) => {
+        const newWarnings = { ...prev };
+        delete newWarnings.guestCount;
+        return newWarnings;
+      });
+      return;
+    }
+
+    const capacityMin = space.capacity.min || 0;
+    const capacityMax = space.capacity.max || 0;
+
+    // If no capacity limits defined, clear warning
+    if (!capacityMin && !capacityMax) {
+      setWarnings((prev) => {
+        const newWarnings = { ...prev };
+        delete newWarnings.guestCount;
+        return newWarnings;
+      });
+      return;
+    }
+
+    const guestCount = parseInt(formData.guestCount);
+    if (Number.isNaN(guestCount)) {
+      setWarnings((prev) => {
+        const newWarnings = { ...prev };
+        delete newWarnings.guestCount;
+        return newWarnings;
+      });
+      return;
+    }
+
+    setWarnings((prev) => {
+      const newWarnings = { ...prev };
+
+      if (capacityMax && guestCount > capacityMax) {
+        newWarnings.guestCount = {
+          type: "error",
+          message: `Guest count (${guestCount}) exceeds venue capacity (max: ${capacityMax})`,
+        };
+      } else if (capacityMin && guestCount < capacityMin) {
+        newWarnings.guestCount = {
           type: "warning",
-          message: `This client is registered for a different venue. Continue anyway?`,
+          message: `Guest count (${guestCount}) is below venue minimum (min: ${capacityMin})`,
         };
       } else {
-        delete newWarnings.clientVenue;
+        delete newWarnings.guestCount;
       }
 
-      setWarnings(newWarnings);
-    }
-  }, [formData.clientId, formData.venueId, clients]);
-  // Check venue availability (date/time conflicts)
+      return newWarnings;
+    });
+  }, [formData.venueSpaceId, formData.guestCount, venueSpaces]);
+
+  // FIXED: Venue space availability check
   useEffect(() => {
-    if (formData.venueId && formData.startDate && formData.startTime) {
-      const conflictingEvents = existingEvents.filter((event) => {
-        if (event._id === eventId) return false; // Ignore current event in edit mode
-        if (event.venueId !== formData.venueId) return false;
+    if (!formData.venueSpaceId || !formData.startDate || !formData.startTime) {
+      setWarnings((prev) => {
+        const newWarnings = { ...prev };
+        delete newWarnings.dateConflict;
+        return newWarnings;
+      });
+      return;
+    }
+
+    const conflictingEvents = existingEvents.filter((event) => {
+      if (event._id === eventId) return false;
+
+      const eventVenueSpaceId = event.venueSpaceId?._id || event.venueSpaceId;
+      if (eventVenueSpaceId !== formData.venueSpaceId) return false;
+
+      try {
         const eventStart = new Date(
           `${formData.startDate}T${formData.startTime || "00:00"}`
         );
@@ -343,31 +413,38 @@ const EventForm = ({
           `${event.endDate}T${event.endTime || "23:59"}`
         );
 
-        // Check for overlap
         return eventStart < existingEnd && eventEnd > existingStart;
-      });
+      } catch (error) {
+        console.error("Error comparing dates:", error);
+        return false;
+      }
+    });
 
-      const newWarnings = { ...warnings };
+    setWarnings((prev) => {
+      const newWarnings = { ...prev };
+
       if (conflictingEvents.length > 0) {
         newWarnings.dateConflict = {
           type: "error",
-          message: `Venue has ${conflictingEvents.length} conflicting event(s) at this time`,
+          message: `Venue space has ${conflictingEvents.length} conflicting event(s) at this time`,
           conflicts: conflictingEvents,
         };
       } else {
         delete newWarnings.dateConflict;
       }
 
-      setWarnings(newWarnings);
-    }
+      return newWarnings;
+    });
   }, [
-    formData.venueId,
+    formData.venueSpaceId,
     formData.startDate,
     formData.endDate,
     formData.startTime,
     formData.endTime,
     existingEvents,
+    eventId,
   ]);
+
   // ============================================
   // CALCULATION HELPERS
   // ============================================
@@ -386,12 +463,23 @@ const EventForm = ({
       return 1;
     }
   };
+
   const getPartnerCostForHours = (partner, hours) => {
     const rate = partner.hourlyRate || 0;
     return Math.max(0, rate * hours);
   };
+
+  const rawBasePrice = formData.pricing.basePrice;
+  const basePrice =
+    rawBasePrice === "" || rawBasePrice === null || rawBasePrice === undefined
+      ? 0
+      : parseFloat(rawBasePrice) || 0;
+  const displayBasePrice =
+    rawBasePrice === "" || rawBasePrice === null || rawBasePrice === undefined
+      ? ""
+      : basePrice;
+
   const calculateTotalPrice = () => {
-    const basePrice = parseFloat(formData.pricing.basePrice) || 0;
     const hours = calculateEventHours();
     const partnersCost = formData.partners.reduce((total, partner) => {
       return total + getPartnerCostForHours(partner, hours);
@@ -408,12 +496,14 @@ const EventForm = ({
 
     return Math.max(0, basePrice + partnersCost - discountAmount);
   };
+
   const totalPrice = calculateTotalPrice();
-  const venuePrice = parseFloat(formData.pricing.basePrice) || 0;
+  const venuePrice = basePrice;
   const partnersTotal = formData.partners.reduce(
     (t, p) => t + getPartnerCostForHours(p, calculateEventHours()),
     0
   );
+
   // ============================================
   // OPTIONS
   // ============================================
@@ -426,6 +516,7 @@ const EventForm = ({
     { value: "party", label: "Party" },
     { value: "other", label: "Other" },
   ];
+
   const statusOptions = [
     { value: "pending", label: "Pending" },
     { value: "confirmed", label: "Confirmed" },
@@ -433,6 +524,7 @@ const EventForm = ({
     { value: "completed", label: "Completed" },
     { value: "cancelled", label: "Cancelled" },
   ];
+
   const paymentMethodOptions = [
     { value: "cash", label: "Cash" },
     { value: "credit_card", label: "Credit Card" },
@@ -440,12 +532,14 @@ const EventForm = ({
     { value: "check", label: "Check" },
     { value: "mobile_payment", label: "Mobile Payment" },
   ];
+
   const paymentStatusOptions = [
     { value: "pending", label: "Pending" },
     { value: "completed", label: "Completed" },
     { value: "failed", label: "Failed" },
     { value: "refunded", label: "Refunded" },
   ];
+
   // ============================================
   // FILTERED DATA
   // ============================================
@@ -455,13 +549,13 @@ const EventForm = ({
       client.email?.toLowerCase().includes(clientSearch.toLowerCase()) ||
       client.phone?.includes(clientSearch)
   );
+
   // ============================================
-  // DATA FETCHING
+  // DATA FETCHING - UPDATED: Remove venue fetching
   // ============================================
   const fetchDropdownData = async () => {
     try {
-      // Use Promise.allSettled to handle potential failures gracefully
-      const [clientsRes, partnersRes, venuesRes, eventsRes] =
+      const [clientsRes, partnersRes, venueSpacesRes, eventsRes] =
         await Promise.allSettled([
           clientService.getAll
             ? clientService.getAll({ limit: 100 })
@@ -473,11 +567,13 @@ const EventForm = ({
             : partnerService.getPartners
               ? partnerService.getPartners({ limit: 100 })
               : Promise.resolve({ data: [] }),
-          venueService.getAll
-            ? venueService.getAll({ limit: 100 })
-            : venueService.getVenues
-              ? venueService.getVenues({ limit: 100 })
-              : Promise.resolve({ data: [] }),
+          venueService.getSpaces
+            ? venueService.getSpaces({
+                limit: 100,
+                includeArchived: "false",
+                isActive: "true",
+              })
+            : Promise.resolve({ data: { spaces: [] } }),
           eventService.getAll
             ? eventService.getAll({ limit: 100 })
             : eventService.getEvents
@@ -485,7 +581,6 @@ const EventForm = ({
               : Promise.resolve({ data: [] }),
         ]);
 
-      // Helper function to extract data from different response formats
       const extractArrayData = (response, serviceName) => {
         if (response.status === "rejected") {
           console.warn(`Failed to fetch ${serviceName}:`, response.reason);
@@ -495,26 +590,40 @@ const EventForm = ({
         const data = response.value;
         if (!data) return [];
 
-        // Handle different response structures
         if (Array.isArray(data)) return data;
         if (data.data && Array.isArray(data.data)) return data.data;
         if (data.clients && Array.isArray(data.clients)) return data.clients;
         if (data.partners && Array.isArray(data.partners)) return data.partners;
-        if (data.venues && Array.isArray(data.venues)) return data.venues;
         if (data.events && Array.isArray(data.events)) return data.events;
 
-        // If no array found, return empty array
         return [];
       };
 
       const clientsList = extractArrayData(clientsRes, "clients");
       const partnersList = extractArrayData(partnersRes, "partners");
-      const venuesList = extractArrayData(venuesRes, "venues");
       const eventsList = extractArrayData(eventsRes, "events");
+
+      const venueSpacesPayload =
+        venueSpacesRes.status === "fulfilled"
+          ? venueSpacesRes.value?.spaces ||
+            venueSpacesRes.value?.data?.spaces ||
+            venueSpacesRes.value?.data ||
+            []
+          : [];
 
       setClients(clientsList);
       setPartners(partnersList);
-      setVenues(venuesList);
+      setVenueSpaces(
+        Array.isArray(venueSpacesPayload)
+          ? venueSpacesPayload.map((space) => ({
+              ...space,
+              _id: space._id || space.id,
+              capacity: space.capacity || {},
+              amenities: Array.isArray(space.amenities) ? space.amenities : [],
+              basePrice: space.basePrice || 0,
+            }))
+          : []
+      );
       setExistingEvents(eventsList);
 
       // Handle prefilled client
@@ -528,19 +637,20 @@ const EventForm = ({
     } catch (error) {
       console.error("Error fetching dropdown data:", error);
       toast.error("Failed to load data");
-      // Set empty arrays to prevent further errors
       setClients([]);
       setPartners([]);
-      setVenues([]);
+      setVenueSpaces([]);
       setExistingEvents([]);
     }
   };
+
   useEffect(() => {
     if (isModal ? isOpen : true) {
       fetchDropdownData();
     }
   }, [isModal ? isOpen : true]);
-  // Fetch event data in edit mode
+
+  // Fetch event data in edit mode - FIXED
   useEffect(() => {
     const fetchEvent = async () => {
       if (!isEditMode || !eventId) return;
@@ -553,11 +663,50 @@ const EventForm = ({
 
         const clientIdValue = event.clientId?._id || event.clientId || "";
 
+        // FIXED: Get venue space data first
+        const eventSpaceRaw = event.venueSpace || event.venueSpaceId;
+        const eventSpaceId =
+          (eventSpaceRaw && typeof eventSpaceRaw === "object"
+            ? eventSpaceRaw._id
+            : eventSpaceRaw) || "";
+
+        // FIXED: Wait for venue spaces to load before setting form data
+        let venueSpaceData = null;
+
+        if (eventSpaceId) {
+          // Check if we already have this venue space in our list
+          const existingSpace = venueSpaces.find((s) => s._id === eventSpaceId);
+
+          if (
+            !existingSpace &&
+            eventSpaceRaw &&
+            typeof eventSpaceRaw === "object"
+          ) {
+            // Add the venue space to our list if it's not already there
+            const normalizedSpace = {
+              ...eventSpaceRaw,
+              _id: eventSpaceRaw._id || eventSpaceId,
+              capacity: eventSpaceRaw.capacity || {},
+              amenities: Array.isArray(eventSpaceRaw.amenities)
+                ? eventSpaceRaw.amenities
+                : [],
+              basePrice:
+                eventSpaceRaw.basePrice || event.pricing?.basePrice || 0,
+            };
+
+            setVenueSpaces((prev) => [...prev, normalizedSpace]);
+            venueSpaceData = normalizedSpace;
+          } else if (existingSpace) {
+            venueSpaceData = existingSpace;
+          }
+        }
+
+        // FIXED: Set form data after ensuring venue space is available
         setFormData({
           title: event.title || "",
           description: event.description || "",
           type: event.type || "",
-          venueId: event.venueId?._id || event.venueId || "",
+          venueSpaceId: eventSpaceId, // This should now match an existing venue space
           clientId: clientIdValue,
           sameDayEvent: event.startDate === event.endDate,
           startDate: event.startDate
@@ -571,7 +720,9 @@ const EventForm = ({
           guestCount: event.guestCount || "",
           status: event.status || "pending",
           pricing: {
-            basePrice: event.pricing?.basePrice || "",
+            basePrice:
+              event.pricing?.basePrice ||
+              (venueSpaceData ? venueSpaceData.basePrice : ""),
             discount: event.pricing?.discount || "",
             discountType: event.pricing?.discountType || "fixed",
           },
@@ -608,8 +759,12 @@ const EventForm = ({
       }
     };
 
-    fetchEvent();
-  }, [eventId, isEditMode]);
+    // Only fetch event data after venue spaces have been loaded
+    if (venueSpaces.length > 0 || isEditMode) {
+      fetchEvent();
+    }
+  }, [eventId, isEditMode, venueSpaces.length]); // Added venueSpaces.length as dependency
+
   useEffect(() => {
     if (initialDate && !isEditMode) {
       const dateString = initialDate.toISOString().split("T")[0];
@@ -620,11 +775,26 @@ const EventForm = ({
       }));
     }
   }, [initialDate, isEditMode]);
+
   // ============================================
-  // EVENT HANDLERS
+  // EVENT HANDLERS - UPDATED
   // ============================================
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "venueSpaceId") {
+      setFormData((prev) => ({
+        ...prev,
+        venueSpaceId: value,
+        pricing: { ...prev.pricing, basePrice: "" },
+      }));
+
+      if (errors[name]) {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
+      return;
+    }
+
     if (name.startsWith("pricing.")) {
       const field = name.split(".")[1];
       setFormData((prev) => ({
@@ -645,20 +815,22 @@ const EventForm = ({
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
-  const handleAddPartner = () => {
-    if (!selectedPartner) {
+
+  const handleAddPartner = (partnerId) => {
+    if (!partnerId) {
       toast.error("Please select a partner first");
-      return;
+      return false;
     }
-    const partner = partners.find((p) => p._id === selectedPartner);
-    if (!partner) return;
+
+    const partner = partners.find((p) => p._id === partnerId);
+    if (!partner) return false;
 
     const isAlreadyAdded = formData.partners.some(
-      (p) => p.partner === selectedPartner
+      (p) => p.partner === partnerId
     );
     if (isAlreadyAdded) {
       toast.error(`${partner.name} is already added`);
-      return;
+      return false;
     }
 
     setFormData((prev) => ({
@@ -666,18 +838,32 @@ const EventForm = ({
       partners: [
         ...prev.partners,
         {
-          partner: selectedPartner,
+          partner: partnerId,
           partnerName: partner.name,
           service: partner.category || "General Service",
-          hourlyRate: partner.hourlyRate || 0,
+          hourlyRate: partner.hourlyRate ?? partner.pricing?.hourlyRate ?? 0,
           status: "confirmed",
         },
       ],
     }));
 
-    setSelectedPartner("");
     toast.success(`${partner.name} added`);
+    return true;
   };
+
+  const handlePartnerSelect = (partnerId) => {
+    if (!partnerId) {
+      setSelectedPartner("");
+      return;
+    }
+
+    setSelectedPartner(partnerId);
+    const added = handleAddPartner(partnerId);
+    if (added) {
+      setSelectedPartner("");
+    }
+  };
+
   const handleRemovePartner = (index) => {
     const partner = formData.partners[index];
     setFormData((prev) => ({
@@ -686,6 +872,7 @@ const EventForm = ({
     }));
     toast.success(`${partner.partnerName} removed`);
   };
+
   const handleCreateClient = async () => {
     if (!newClient.name.trim()) {
       toast.error("Client name is required");
@@ -744,21 +931,50 @@ const EventForm = ({
       setIsCreatingClient(false);
     }
   };
+
   const handleSelectClient = (clientId) => {
-    setSelectedClient(clientId);
-    setFormData((prev) => ({ ...prev, clientId }));
-    setPrefilledClientData(null);
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.clientId;
-      return newErrors;
+    setSelectedClient((prevSelected) => {
+      const isDeselection = prevSelected === clientId;
+
+      setFormData((prev) => ({
+        ...prev,
+        clientId: isDeselection ? "" : clientId,
+      }));
+
+      setPrefilledClientData(null);
+
+      if (!isDeselection) {
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.clientId;
+          return newErrors;
+        });
+      }
+
+      return isDeselection ? null : clientId;
     });
   };
+
+  const handleClearVenueSpace = () => {
+    setFormData((prev) => ({
+      ...prev,
+      venueSpaceId: "",
+      pricing: { ...prev.pricing, basePrice: "" },
+    }));
+    setWarnings((prev) => {
+      const updated = { ...prev };
+      delete updated.guestCount;
+      delete updated.dateConflict;
+      return updated;
+    });
+  };
+
   // ============================================
-  // VALIDATION
+  // VALIDATION - FIXED for Step 3
   // ============================================
   const validateStep = (step) => {
     const newErrors = {};
+
     if (step === 1) {
       if (!formData.title.trim()) newErrors.title = "Event title is required";
       if (!formData.type) newErrors.type = "Event type is required";
@@ -780,17 +996,18 @@ const EventForm = ({
     }
 
     if (step === 3) {
-      if (!formData.venueId) {
-        newErrors.venueId = "Please select a venue";
+      // FIXED: Proper venue space validation
+      if (!formData.venueSpaceId) {
+        newErrors.venueSpaceId = "Please select a venue space";
       }
-      if (
-        !formData.pricing.basePrice ||
-        parseFloat(formData.pricing.basePrice) < 0
-      ) {
+
+      // FIXED: Base price validation
+      const basePriceValue = parseFloat(formData.pricing.basePrice);
+      if (isNaN(basePriceValue) || basePriceValue < 0) {
         newErrors["pricing.basePrice"] = "Valid base price is required";
       }
 
-      // Check for blocking warnings
+      // FIXED: Check for blocking warnings - use the actual warning objects
       if (warnings.guestCount?.type === "error") {
         newErrors.guestCount = warnings.guestCount.message;
       }
@@ -800,23 +1017,24 @@ const EventForm = ({
     }
 
     if (step === 4) {
-      if (
-        formData.payment.amount &&
-        parseFloat(formData.payment.amount) > totalPrice
-      ) {
-        newErrors["payment.amount"] =
-          "Payment amount cannot exceed total price";
-      }
-      if (formData.payment.amount && parseFloat(formData.payment.amount) < 0) {
-        newErrors["payment.amount"] = "Payment amount cannot be negative";
+      if (formData.payment.amount) {
+        const paymentAmount = parseFloat(formData.payment.amount);
+        if (paymentAmount > totalPrice) {
+          newErrors["payment.amount"] =
+            "Payment amount cannot exceed total price";
+        }
+        if (paymentAmount < 0) {
+          newErrors["payment.amount"] = "Payment amount cannot be negative";
+        }
       }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
   // ============================================
-  // NAVIGATION
+  // NAVIGATION - FIXED
   // ============================================
   const nextStep = () => {
     if (validateStep(currentStep)) {
@@ -825,29 +1043,38 @@ const EventForm = ({
       toast.error("Please fix the errors before continuing");
     }
   };
+
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
-  // NEW: Enhanced step navigation - click on completed steps
+
+  // FIXED: Enhanced step navigation
   const jumpToStep = (step) => {
+    // Allow jumping to any completed step (steps before current step)
     if (step < currentStep) {
       setCurrentStep(step);
-    } else if (step === currentStep + 1) {
+    }
+    // For the next step, validate current step first
+    else if (step === currentStep + 1) {
       nextStep();
     }
+    // For steps beyond next, don't allow jumping
   };
+
   // ============================================
   // FORM SUBMISSION
   // ============================================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep(currentStep)) {
-      toast.error("Please fix the form errors");
+
+    // FIXED: Only validate and submit on the final step
+    if (currentStep < totalSteps) {
+      nextStep();
       return;
     }
 
-    if (currentStep < totalSteps) {
-      nextStep();
+    if (!validateStep(currentStep)) {
+      toast.error("Please fix the form errors");
       return;
     }
 
@@ -859,7 +1086,7 @@ const EventForm = ({
           ? parseInt(formData.guestCount)
           : undefined,
         pricing: {
-          basePrice: parseFloat(formData.pricing.basePrice) || 0,
+          basePrice,
           discount: formData.pricing.discount
             ? parseFloat(formData.pricing.discount)
             : 0,
@@ -870,7 +1097,6 @@ const EventForm = ({
 
       delete submitData.payment;
       delete submitData.createInvoice;
-      delete submitData.sameDayEvent;
 
       let response;
       if (isEditMode) {
@@ -906,14 +1132,16 @@ const EventForm = ({
         }
       }
 
-      // NEW: Auto-generate invoice if requested
+      // Auto-generate invoice if requested
       if (formData.createInvoice && !isEditMode) {
         try {
           const client = clients.find((c) => c._id === formData.clientId);
-          const venue = venues.find((v) => v._id === formData.venueId);
+          const space = venueSpaces.find(
+            (s) => s._id === formData.venueSpaceId
+          );
 
           const invoiceData = {
-            venue: formData.venueId,
+            venue: space?.venueId,
             client: formData.clientId,
             clientName: client?.name || "",
             clientEmail: client?.email || "",
@@ -923,7 +1151,7 @@ const EventForm = ({
             dueDate: new Date(formData.startDate),
             items: [
               {
-                description: `${venue?.name || "Venue"} Rental - ${formData.title}`,
+                description: `${space?.name || "Venue Space"} Rental - ${formData.title}`,
                 quantity: 1,
                 rate: venuePrice,
                 amount: venuePrice,
@@ -977,12 +1205,13 @@ const EventForm = ({
       setLoading(false);
     }
   };
+
   const handleClose = () => {
     setFormData({
       title: "",
       description: "",
       type: "",
-      venueId: "",
+      venueSpaceId: "",
       clientId: "",
       sameDayEvent: true,
       startDate: "",
@@ -1023,6 +1252,7 @@ const EventForm = ({
       }
     }
   };
+
   // ============================================
   // LOADING STATE
   // ============================================
@@ -1057,6 +1287,7 @@ const EventForm = ({
       </div>
     );
   }
+
   // ============================================
   // STEP CONFIGURATIONS
   // ============================================
@@ -1074,9 +1305,9 @@ const EventForm = ({
       color: "green",
     },
     3: {
-      title: "Venue & Pricing",
+      title: "Venue Space & Pricing",
       icon: Building,
-      description: "Select venue and configure pricing",
+      description: "Select venue space and configure pricing",
       color: "purple",
     },
     4: {
@@ -1092,266 +1323,249 @@ const EventForm = ({
       color: "orange",
     },
   };
+
   const currentStepConfig = stepConfigs[currentStep];
+
   // ============================================
   // FORM CONTENT
   // ============================================
   const formContent = (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden"
-    >
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
-              <currentStepConfig.icon className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {isEditMode ? "Edit Event" : "Create New Event"}
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
-                <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-                {currentStepConfig.description}
-              </p>
-            </div>
-          </div>
-          {isModal ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={X}
-              onClick={handleClose}
-              className="hover:bg-red-50 hover:text-red-600"
-            />
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              icon={ArrowLeft}
-              onClick={handleClose}
-            >
-              Back
-            </Button>
-          )}
-        </div>
-        {/* Draft indicator - IMPROVED: Banner instead of just indicator */}
-        {hasDraft && !isEditMode && window.__eventFormDraft && (
-          <div className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg shadow-lg animate-in slide-in-from-top-3 duration-500">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
-                  <History className="w-6 h-6 text-white" />
+    <div>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white dark:bg-gray-800 rounded-t-lg shadow-xl overflow-hidden"
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 ">
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                  <currentStepConfig.icon className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {isEditMode ? "Edit Event" : "Create New Event"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                    {currentStepConfig.description}
+                  </p>
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Draft Found!
-                  </h3>
-                  <Badge variant="warning" className="text-xs">
-                    Unsaved Changes
-                  </Badge>
+              <div className="w-full xl:flex-1">
+                <div className="flex items-center justify-center xl:justify-start pl-20">
+                  {[1, 2, 3, 4, 5].map((step) => {
+                    const config = stepConfigs[step];
+                    const isActive = step === currentStep;
+                    const isComplete = step < currentStep;
+                    const isClickable = step <= currentStep;
+
+                    return (
+                      <div key={step} className="flex items-center flex-1">
+                        <div className="flex flex-col items-center">
+                          <div
+                            onClick={() => isClickable && jumpToStep(step)}
+                            className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+                              isActive
+                                ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110 cursor-default"
+                                : isComplete
+                                  ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
+                                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed"
+                            }`}
+                          >
+                            {isComplete ? (
+                              <Check className="w-5 h-5" />
+                            ) : (
+                              <span className="font-bold">{step}</span>
+                            )}
+                            {isActive && (
+                              <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
+                            )}
+                          </div>
+                          <span
+                            className={`text-xs mt-2 font-medium text-center transition-colors ${
+                              isActive
+                                ? "text-orange-600 dark:text-orange-400"
+                                : isComplete
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500"
+                            }`}
+                          >
+                            {config.title}
+                          </span>
+                        </div>
+                        {step < totalSteps && (
+                          <div
+                            className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${
+                              isComplete
+                                ? "bg-gradient-to-r from-green-500 to-green-600"
+                                : "bg-gray-200 dark:bg-gray-600"
+                            }`}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                  You have an unsaved draft from{" "}
-                  <strong className="text-orange-600 dark:text-orange-400">
-                    {new Date(
-                      window.__eventFormDraft.timestamp
-                    ).toLocaleString()}
-                  </strong>
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Your progress has been automatically saved. Restore it to
-                  continue where you left off.
-                </p>
-              </div>
-              <div className="flex-shrink-0 flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  icon={Check}
-                  onClick={() => {
-                    const { savedData, savedStep } = window.__eventFormDraft;
-                    setFormData(savedData);
-                    setCurrentStep(savedStep);
-                    setHasDraft(false);
-                    delete window.__eventFormDraft;
-                    toast.success("Draft restored successfully!");
-                  }}
-                  className="whitespace-nowrap"
-                >
-                  Restore Draft
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  icon={Trash2}
-                  onClick={() => {
-                    localStorage.removeItem("eventFormDraft");
-                    setHasDraft(false);
-                    delete window.__eventFormDraft;
-                    toast.success("Draft discarded");
-                  }}
-                  className="whitespace-nowrap hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                >
-                  Discard
-                </Button>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Enhanced Progress Steps */}
-        <div className="mt-6 pl-20">
-          <div className="flex items-center justify-center">
-            {[1, 2, 3, 4, 5].map((step) => {
-              const config = stepConfigs[step];
-              const isActive = step === currentStep;
-              const isComplete = step < currentStep;
-              const isClickable = step <= currentStep; // Can click on current or completed steps
-
-              return (
-                <div key={step} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center">
-                    <div
-                      onClick={() => isClickable && jumpToStep(step)}
-                      className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
-                        isActive
-                          ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110"
-                          : isComplete
-                            ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
-                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400"
-                      }`}
-                    >
-                      {isComplete ? (
-                        <Check className="w-5 h-5" />
-                      ) : (
-                        <span className="font-bold">{step}</span>
-                      )}
-                      {isActive && (
-                        <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
-                      )}
+            {/* Draft indicator */}
+            {hasDraft && !isEditMode && window.__eventFormDraft && (
+              <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg shadow-lg animate-in slide-in-from-top-3 duration-500">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                      <History className="w-6 h-6 text-white" />
                     </div>
-                    <span
-                      className={`text-xs mt-2 font-medium text-center transition-colors ${
-                        isActive
-                          ? "text-orange-600 dark:text-orange-400"
-                          : isComplete
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-gray-500"
-                      }`}
-                    >
-                      {config.title}
-                    </span>
                   </div>
-                  {step < totalSteps && (
-                    <div
-                      className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${
-                        isComplete
-                          ? "bg-gradient-to-r from-green-500 to-green-600"
-                          : "bg-gray-200 dark:bg-gray-600"
-                      }`}
-                    />
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        Draft Found!
+                      </h3>
+                      <Badge variant="warning" className="text-xs">
+                        Unsaved Changes
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                      You have an unsaved draft from{" "}
+                      <strong className="text-orange-600 dark:text-orange-400">
+                        {new Date(
+                          window.__eventFormDraft.timestamp
+                        ).toLocaleString()}
+                      </strong>
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Your progress has been automatically saved. Restore it to
+                      continue where you left off.
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 flex flex-col gap-2">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      icon={Check}
+                      onClick={() => {
+                        const { savedData, savedStep } =
+                          window.__eventFormDraft;
+                        setFormData(savedData);
+                        setCurrentStep(savedStep);
+                        setHasDraft(false);
+                        delete window.__eventFormDraft;
+                        toast.success("Draft restored successfully!");
+                      }}
+                      className="whitespace-nowrap"
+                    >
+                      Restore Draft
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      icon={Trash2}
+                      onClick={() => {
+                        localStorage.removeItem("eventFormDraft");
+                        setHasDraft(false);
+                        delete window.__eventFormDraft;
+                        toast.success("Draft discarded");
+                      }}
+                      className="whitespace-nowrap hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                    >
+                      Discard
+                    </Button>
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Form Content */}
-      <div className="px-6 py-6 space-y-6 max-h-[60vh] overflow-y-auto">
-        {/* Step 1: Event Details */}
-        {currentStep === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-white dark:bg-gray-800/50">
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-5 h-5 text-blue-500" />
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      Event Details
-                    </h4>
-                  </div>
-                  <div className="space-y-4 w-full">
-                    <Input
-                      label="Event Title"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      error={errors.title}
-                      required
-                      className="w-full"
-                    />
-
-                    <Select
-                      label="Event Type"
-                      name="type"
-                      value={formData.type}
-                      onChange={handleChange}
-                      options={eventTypeOptions}
-                      error={errors.type}
-                      required
-                    />
-
-                    <Select
-                      label="Status"
-                      name="status"
-                      value={formData.status}
-                      onChange={handleChange}
-                      options={statusOptions}
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="bg-white dark:bg-gray-800/50">
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Clock className="w-5 h-5 text-blue-500" />
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      Date & Time
-                    </h4>
-                  </div>
-                  <div className="space-y-3">
-                    {/* Same Day Event Toggle */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Same Day Event
-                      </span>
-                      <Toggle
-                        enabled={formData.sameDayEvent}
-                        onChange={(val) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            sameDayEvent: val,
-                          }))
-                        }
-                      />
+        {/* Form Content */}
+        <div className="p-6 space-y-6 max-h-[55vh] overflow-y-auto hide-scrollbar">
+          {/* Step 1: Event Details */}
+          {currentStep === 1 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white dark:bg-gray-800/50 border rounded-lg">
+                  <div className="px-10 py-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Calendar className="w-5 h-5 text-blue-500" />
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        Event Details
+                      </h4>
                     </div>
-
-                    {/* Conditional Date Fields */}
-                    {formData.sameDayEvent ? (
+                    <div className="space-y-4 w-full">
                       <Input
-                        label="Event Date"
-                        name="startDate"
-                        type="date"
-                        value={formData.startDate}
+                        label="Event Title"
+                        name="title"
+                        value={formData.title}
                         onChange={handleChange}
-                        error={errors.startDate}
+                        error={errors.title}
                         required
                         className="w-full"
                       />
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3">
+
+                      <Select
+                        label="Event Type"
+                        name="type"
+                        value={formData.type}
+                        onChange={handleChange}
+                        options={eventTypeOptions}
+                        error={errors.type}
+                        required
+                      />
+
+                      <Select
+                        label="Status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleChange}
+                        options={statusOptions}
+                      />
+                      <Textarea
+                        label="Event Description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        rows={4}
+                        placeholder="Event description..."
+                        className="w-full dark:bg-gray-800/50 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800/50 border rounded-lg">
+                  <div className="px-10 py-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Clock className="w-5 h-5 text-blue-500" />
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        Date & Time
+                      </h4>
+                    </div>
+                    <div className="space-y-3">
+                      {/* Same Day Event Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Same Day Event
+                        </span>
+                        <Toggle
+                          enabled={formData.sameDayEvent}
+                          onChange={(val) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              sameDayEvent: val,
+                            }))
+                          }
+                        />
+                      </div>
+
+                      {/* Conditional Date Fields */}
+                      {formData.sameDayEvent ? (
                         <Input
-                          label="Start Date"
+                          label="Event Date"
                           name="startDate"
                           type="date"
                           value={formData.startDate}
@@ -1360,958 +1574,959 @@ const EventForm = ({
                           required
                           className="w-full"
                         />
+                      ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                          <Input
+                            label="Start Date"
+                            name="startDate"
+                            type="date"
+                            value={formData.startDate}
+                            onChange={handleChange}
+                            error={errors.startDate}
+                            required
+                            className="w-full"
+                          />
+                          <Input
+                            label="End Date"
+                            name="endDate"
+                            type="date"
+                            value={formData.endDate}
+                            onChange={handleChange}
+                            error={errors.endDate}
+                            required
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3">
                         <Input
-                          label="End Date"
-                          name="endDate"
-                          type="date"
-                          value={formData.endDate}
+                          label="Start Time"
+                          name="startTime"
+                          type="time"
+                          value={formData.startTime}
                           onChange={handleChange}
-                          error={errors.endDate}
-                          required
+                          className="w-full"
+                        />
+                        <Input
+                          label="End Time"
+                          name="endTime"
+                          type="time"
+                          value={formData.endTime}
+                          onChange={handleChange}
+                          error={errors.endTime}
                           className="w-full"
                         />
                       </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-3">
                       <Input
-                        label="Start Time"
-                        name="startTime"
-                        type="time"
-                        value={formData.startTime}
+                        label="Guest Count"
+                        name="guestCount"
+                        type="number"
+                        min="1"
+                        value={formData.guestCount}
                         onChange={handleChange}
+                        icon={Users}
                         className="w-full"
-                      />
-                      <Input
-                        label="End Time"
-                        name="endTime"
-                        type="time"
-                        value={formData.endTime}
-                        onChange={handleChange}
-                        error={errors.endTime}
-                        className="w-full"
+                        error={errors.guestCount} // FIXED: Added error display
                       />
                     </div>
-                    <Input
-                      label="Guest Count"
-                      name="guestCount"
-                      type="number"
-                      min="1"
-                      value={formData.guestCount}
-                      onChange={handleChange}
-                      icon={Users}
-                      className="w-full"
-                    />
                   </div>
                 </div>
-              </Card>
+              </div>
             </div>
-            <div className="p-5">
-              <Textarea
-                label="Event Description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={4}
-                placeholder="Event description..."
-                className="w-full dark:bg-gray-800/50 dark:text-white"
-              />
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Step 2: Client Selection */}
-        {currentStep === 2 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <Card className="border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <UserPlus className="w-5 h-5 text-blue-500" />
-                    Client Selection
-                  </h4>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    icon={showClientForm ? X : Plus}
-                    onClick={() => setShowClientForm(!showClientForm)}
-                  >
-                    {showClientForm ? (
-                      <XIcon className="w-4 h-4" />
-                    ) : (
-                      <Plus className="w-4 h-4" />
-                    )}
-                    {showClientForm ? "Cancel" : "New Client"}
-                  </Button>
-                </div>
-
-                {/* Client-Venue Warning */}
-                {warnings.clientVenue && (
-                  <div className="mb-4 p-3 bg-yellow-50 border-2 border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-800 flex items-start gap-2">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
-                        {warnings.clientVenue.message}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Slide-in Client Creation Form */}
-                {showClientForm && (
-                  <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg animate-in slide-in-from-top-2 duration-300">
-                    <h5 className="font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      Create New Client
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                      <Input
-                        placeholder="Client Name"
-                        value={newClient.name}
-                        onChange={(e) =>
-                          setNewClient((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                      />
-                      <Input
-                        placeholder="Email"
-                        type="email"
-                        value={newClient.email}
-                        onChange={(e) =>
-                          setNewClient((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                      />
-                      <Input
-                        placeholder="Phone"
-                        value={newClient.phone}
-                        onChange={(e) =>
-                          setNewClient((prev) => ({
-                            ...prev,
-                            phone: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
+          {/* Step 2: Client Selection */}
+          {currentStep === 2 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <div className="bg-white dark:bg-gray-700">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <UserPlus className="w-5 h-5 text-blue-500" />
+                      Client Selection
+                    </h4>
                     <Button
                       type="button"
                       variant="primary"
-                      icon={Check}
-                      onClick={handleCreateClient}
-                      loading={isCreatingClient}
-                      className="w-full"
+                      size="sm"
+                      icon={showClientForm ? X : Plus}
+                      onClick={() => setShowClientForm(!showClientForm)}
                     >
-                      Create & Select Client
+                      {showClientForm ? (
+                        <XIcon className="w-4 h-4" />
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
+                      {showClientForm ? "Cancel" : "New Client"}
                     </Button>
                   </div>
-                )}
 
-                {/* Prefilled Client Info */}
-                {prefilledClientData && (
-                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900 dark:border-green-700 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                          <Check className="w-6 h-6 text-white" />
-                        </div>
+                  {/* Slide-in Client Creation Form */}
+                  {showClientForm && (
+                    <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg animate-in slide-in-from-top-2 duration-300">
+                      <h5 className="font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        Create New Client
+                      </h5>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                        <Input
+                          className="w-full"
+                          placeholder="Client Name"
+                          value={newClient.name}
+                          onChange={(e) =>
+                            setNewClient((prev) => ({
+                              ...prev,
+                              name: e.target.value,
+                            }))
+                          }
+                        />
+                        <Input
+                          className="w-full"
+                          placeholder="Email"
+                          type="email"
+                          value={newClient.email}
+                          onChange={(e) =>
+                            setNewClient((prev) => ({
+                              ...prev,
+                              email: e.target.value,
+                            }))
+                          }
+                        />
+                        <Input
+                          className="w-full"
+                          placeholder="Phone"
+                          value={newClient.phone}
+                          onChange={(e) =>
+                            setNewClient((prev) => ({
+                              ...prev,
+                              phone: e.target.value,
+                            }))
+                          }
+                        />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 text-green-800 dark:text-green-300 font-semibold mb-1">
-                          <span>Client Pre-selected</span>
-                        </div>
-                        <p className="text-sm text-green-700 dark:text-green-400">
-                          <strong>{prefilledClientData.name}</strong>
-                        </p>
-                        <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                          {prefilledClientData.email} •{" "}
-                          {prefilledClientData.phone}
-                        </p>
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          icon={Check}
+                          onClick={handleCreateClient}
+                          loading={isCreatingClient}
+                          className="whitespace-nowrap"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Create & Select Client
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Search & Select Existing Client */}
-                <Input
-                  icon={Search}
-                  placeholder="Search clients by name, email, or phone..."
-                  value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)}
-                  className="mb-4 w-full"
-                />
-
-                <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
-                  {filteredClients.length > 0 ? (
-                    filteredClients.map((client) => (
-                      <div
-                        key={client._id}
-                        onClick={() => handleSelectClient(client._id)}
-                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 transform ${
-                          selectedClient === client._id
-                            ? "bg-orange-50 border-orange-400 shadow-md dark:bg-orange-900 dark:border-orange-500"
-                            : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                                selectedClient === client._id
-                                  ? "bg-orange-500"
-                                  : "bg-gray-400"
-                              }`}
-                            >
-                              {client.name?.charAt(0).toUpperCase() || "C"}
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-white">
-                                {client.name}
-                              </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
-                                {client.email} • {client.phone}
-                              </div>
-                            </div>
+                  {/* Prefilled Client Info */}
+                  {prefilledClientData && (
+                    <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900 dark:border-green-700 animate-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                            <Check className="w-6 h-6 text-white" />
                           </div>
-                          {selectedClient === client._id && (
-                            <div className="flex items-center gap-2">
-                              <Check className="w-5 h-5 text-green-500" />
-                              <span className="text-xs text-green-600 font-semibold">
-                                Selected
-                              </span>
-                            </div>
-                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-green-800 dark:text-green-300 font-semibold mb-1">
+                            <span>Client Pre-selected</span>
+                          </div>
+                          <p className="text-sm text-green-700 dark:text-green-400">
+                            <strong>{prefilledClientData.name}</strong>
+                          </p>
+                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                            {prefilledClientData.email} •{" "}
+                            {prefilledClientData.phone}
+                          </p>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-gray-500">
-                      <User className="w-16 h-16 mx-auto mb-3 opacity-30" />
-                      <p className="font-medium">No clients found</p>
-                      <p className="text-sm mt-1">
-                        Try a different search or create a new client
-                      </p>
+                    </div>
+                  )}
+
+                  {/* Search & Select Existing Client */}
+                  {!showClientForm && (
+                    <>
+                      {" "}
+                      <Input
+                        icon={Search}
+                        placeholder="Search clients by name, email, or phone..."
+                        value={clientSearch}
+                        onChange={(e) => setClientSearch(e.target.value)}
+                        className="mb-4 w-full"
+                      />
+                      <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                        {filteredClients.length > 0 ? (
+                          filteredClients.map((client) => (
+                            <div
+                              key={client._id}
+                              onClick={() => handleSelectClient(client._id)}
+                              className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 transform ${
+                                selectedClient === client._id
+                                  ? "bg-orange-50 border-orange-400 shadow-md dark:bg-orange-900 dark:border-orange-500"
+                                  : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                                      selectedClient === client._id
+                                        ? "bg-orange-500"
+                                        : "bg-gray-400"
+                                    }`}
+                                  >
+                                    {client.name?.charAt(0).toUpperCase() ||
+                                      "C"}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900 dark:text-white">
+                                      {client.name}
+                                    </div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                                      {client.email} • {client.phone}
+                                    </div>
+                                  </div>
+                                </div>
+                                {selectedClient === client._id && (
+                                  <div className="flex items-center gap-2 text-green-600">
+                                    <Check className="w-5 h-5 text-green-500" />
+                                    <span className="text-xs font-semibold">
+                                      Selected (click to unselect)
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-12 text-gray-500">
+                            <User className="w-16 h-16 mx-auto mb-3 opacity-30" />
+                            <p className="font-medium">No clients found</p>
+                            <p className="text-sm mt-1">
+                              Try a different search or create a new client
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {!showClientForm && errors.clientId && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 dark:bg-red-900/20 dark:border-red-800">
+                      <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-red-600 dark:text-red-400">
+                        {errors.clientId}
+                      </span>
                     </div>
                   )}
                 </div>
-                {errors.clientId && (
-                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 dark:bg-red-900/20 dark:border-red-800">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-red-600 dark:text-red-400">
-                      {errors.clientId}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Venue Space & Pricing - UPDATED */}
+          {currentStep === 3 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              {/* Venue Space Selection */}
+              <div className="bg-white dark:bg-gray-700">
+                <div className="flex items-center gap-2 mb-4">
+                  <Building className="w-5 h-5 text-purple-500" />
+                  <h4 className="font-semibold text-gray-900 dark:text-white">
+                    Venue Space Selection
+                  </h4>
+                </div>
+
+                {/* Date Conflict Warning */}
+                {warnings.dateConflict && (
+                  <div className="mb-4 p-3 bg-red-50 border-2 border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800 flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-red-800 dark:text-red-300">
+                        {warnings.dateConflict.message}
+                      </p>
+                      {warnings.dateConflict.conflicts &&
+                        warnings.dateConflict.conflicts.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {warnings.dateConflict.conflicts.map(
+                              (event, idx) => (
+                                <p
+                                  key={idx}
+                                  className="text-xs text-red-700 dark:text-red-400"
+                                >
+                                  • {event.title} (
+                                  {new Date(
+                                    event.startDate
+                                  ).toLocaleDateString()}
+                                  )
+                                </p>
+                              )
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Venue Space Selection Dropdown */}
+                <Select
+                  name="venueSpaceId"
+                  label="Select Venue Space"
+                  value={formData.venueSpaceId}
+                  onChange={handleChange}
+                  error={errors.venueSpaceId}
+                  required
+                  options={[
+                    { value: "", label: "Select a Venue Space" },
+                    ...venueSpaces
+                      .filter((space) => space.isActive && !space.isArchived)
+                      .map((space) => {
+                        const capacityMin = space.capacity?.min || 0;
+                        const capacityMax = space.capacity?.max || 0;
+
+                        return {
+                          value: space._id,
+                          label: `${space.name} - ${space.basePrice} TND (${capacityMin}-${capacityMax} guests)`,
+                        };
+                      }),
+                  ]}
+                />
+
+                {/* Display selected venue space details */}
+                {formData.venueSpaceId && (
+                  <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                    <div className="flex justify-between items-start gap-3 mb-3">
+                      <h5 className="font-semibold text-purple-700 dark:text-purple-300">
+                        Selected Venue Space
+                      </h5>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleClearVenueSpace}
+                      >
+                        Change Space
+                      </Button>
+                    </div>
+                    {(() => {
+                      const space = venueSpaces.find(
+                        (s) => s._id === formData.venueSpaceId
+                      );
+                      if (!space) return null;
+
+                      const capacityMin = space.capacity?.min || 0;
+                      const capacityMax = space.capacity?.max || 0;
+                      const amenities = Array.isArray(space.amenities)
+                        ? space.amenities
+                        : [];
+
+                      return (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-purple-600" />
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {space.name}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600 dark:text-gray-400">
+                                Base Price:
+                              </span>
+                              <p className="font-bold text-purple-600">
+                                {space.basePrice} TND
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600 dark:text-gray-400">
+                                Capacity:
+                              </span>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {capacityMin}-{capacityMax}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600 dark:text-gray-400">
+                                Status:
+                              </span>
+                              <p className="font-semibold text-gray-900 dark:text-white capitalize">
+                                {space.isReserved ? "Reserved" : "Available"}
+                              </p>
+                            </div>
+                          </div>
+                          {space.description && (
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                              {space.description}
+                            </div>
+                          )}
+                          {amenities.length > 0 && (
+                            <div className="mt-2">
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                Amenities:
+                              </span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {amenities.map((amenity, idx) => (
+                                  <Badge key={idx} className="text-xs">
+                                    {amenity}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Guest Count Warning */}
+                {warnings.guestCount && (
+                  <div
+                    className={`mt-4 p-3 border-2 rounded-lg flex items-start gap-2 ${
+                      warnings.guestCount.type === "error"
+                        ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
+                        : "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800"
+                    }`}
+                  >
+                    <AlertTriangle
+                      className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                        warnings.guestCount.type === "error"
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                      }`}
+                    />
+                    <span
+                      className={`text-sm ${
+                        warnings.guestCount.type === "error"
+                          ? "text-red-800 dark:text-red-300"
+                          : "text-yellow-800 dark:text-yellow-300"
+                      }`}
+                    >
+                      {warnings.guestCount.message}
                     </span>
                   </div>
                 )}
               </div>
-            </Card>
-          </div>
-        )}
 
-        {/* Step 3: Venue & Pricing */}
-        {currentStep === 3 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            {/* Venue Selection */}
-            <Card className="p-5 border-l-4 border-purple-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-              <div className="flex items-center gap-2 mb-4">
-                <Building className="w-5 h-5 text-purple-500" />
-                <h4 className="font-semibold text-gray-900 dark:text-white">
-                  Venue Selection *
-                </h4>
-              </div>
-
-              {/* Date Conflict Warning */}
-              {warnings.dateConflict && (
-                <div className="mb-4 p-3 bg-red-50 border-2 border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800 flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-red-800 dark:text-red-300">
-                      {warnings.dateConflict.message}
-                    </p>
-                    {warnings.dateConflict.conflicts &&
-                      warnings.dateConflict.conflicts.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {warnings.dateConflict.conflicts.map((event, idx) => (
-                            <p
-                              key={idx}
-                              className="text-xs text-red-700 dark:text-red-400"
-                            >
-                              • {event.title} (
-                              {new Date(event.startDate).toLocaleDateString()})
-                            </p>
-                          ))}
-                        </div>
-                      )}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Pricing with Discount Type */}
+                <div className="bg-white dark:bg-gray-700">
+                  <div className="flex items-center gap-2 mb-4">
+                    <DollarSign className="w-5 h-5 text-green-500" />
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                      Pricing
+                    </h4>
                   </div>
-                </div>
-              )}
+                  <div className="space-y-4">
+                    <Input
+                      className="w-full"
+                      label="Base Price (from venue space)"
+                      name="pricing.basePrice"
+                      type="number"
+                      step="0.01"
+                      value={displayBasePrice}
+                      onChange={handleChange}
+                      error={errors["pricing.basePrice"]}
+                      leftElement={
+                        <span className="text-sm font-semibold text-gray-500 dark:text-gray-300 pointer-events-none">
+                          TND
+                        </span>
+                      }
+                      disabled
+                    />
 
-              <Select
-                name="venueId"
-                value={formData.venueId}
-                onChange={handleChange}
-                error={errors.venueId}
-                required
-                options={[
-                  { value: "", label: "Select a Venue" },
-                  ...venues.map((v) => ({
-                    value: v._id,
-                    label: `${v.name} - $${v.pricing.basePrice} (${v.capacity.min}-${v.capacity.max} guests)`,
-                  })),
-                ]}
-              />
+                    {/* Discount with Type Selection */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        Discount
+                      </label>
 
-              {/* Display selected venue details */}
-              {formData.venueId && (
-                <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                  {(() => {
-                    const venue = venues.find(
-                      (v) => v._id === formData.venueId
-                    );
-                    return venue ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-purple-600" />
-                          <span className="font-semibold text-gray-900 dark:text-white">
-                            {venue.name}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Base Price:
-                            </span>
-                            <p className="font-bold text-purple-600">
-                              ${venue.pricing.basePrice}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Capacity:
-                            </span>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {venue.capacity.min}-{venue.capacity.max}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Amenities:
-                            </span>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {venue.amenities.length}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {venue.amenities.map((amenity, idx) => (
-                            <Badge key={idx} className="text-xs">
-                              {amenity}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-              )}
-
-              {/* Guest Count Warning */}
-              {warnings.guestCount && (
-                <div
-                  className={`mt-4 p-3 border-2 rounded-lg flex items-start gap-2 ${
-                    warnings.guestCount.type === "error"
-                      ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
-                      : "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800"
-                  }`}
-                >
-                  <AlertTriangle
-                    className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                      warnings.guestCount.type === "error"
-                        ? "text-red-600"
-                        : "text-yellow-600"
-                    }`}
-                  />
-                  <span
-                    className={`text-sm ${
-                      warnings.guestCount.type === "error"
-                        ? "text-red-800 dark:text-red-300"
-                        : "text-yellow-800 dark:text-yellow-300"
-                    }`}
-                  >
-                    {warnings.guestCount.message}
-                  </span>
-                </div>
-              )}
-            </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Pricing with Discount Type */}
-              <Card className="p-5 border-l-4 border-green-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-                <div className="flex items-center gap-2 mb-4">
-                  <DollarSign className="w-5 h-5 text-green-500" />
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Pricing
-                  </h4>
-                </div>
-                <div className="space-y-4">
-                  <Input
-                    label="Base Price (from venue)"
-                    name="pricing.basePrice"
-                    type="number"
-                    step="0.01"
-                    value={formData.pricing.basePrice}
-                    onChange={handleChange}
-                    error={errors["pricing.basePrice"]}
-                    prefix="$"
-                    disabled
-                  />
-
-                  {/* Discount with Type Selection */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-                      Discount
-                    </label>
-                    <div className="flex gap-2">
                       <Input
+                        className="w-full"
                         name="pricing.discount"
                         type="number"
                         step="0.01"
                         min="0"
                         value={formData.pricing.discount}
                         onChange={handleChange}
-                        prefix={
-                          formData.pricing.discountType === "percentage"
-                            ? "%"
-                            : "$"
+                        leftElement={
+                          <span className="text-sm font-semibold text-gray-500 dark:text-gray-300 pointer-events-none">
+                            {formData.pricing.discountType === "percentage"
+                              ? "%"
+                              : "TND"}
+                          </span>
                         }
-                        className="flex-1"
+                        rightElement={
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                pricing: {
+                                  ...prev.pricing,
+                                  discountType:
+                                    prev.pricing.discountType === "fixed"
+                                      ? "percentage"
+                                      : "fixed",
+                                },
+                              }))
+                            }
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-md border-2 text-xs font-semibold uppercase tracking-wide transition-all ${
+                              formData.pricing.discountType === "percentage"
+                                ? "bg-orange-50 border-orange-500 text-orange-700"
+                                : "bg-gray-50 border-gray-300 text-gray-700 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
+                            }`}
+                          >
+                            {formData.pricing.discountType === "percentage" ? (
+                              <>
+                                <Percent className="w-4 h-4" />
+                              </>
+                            ) : (
+                              <>TND</>
+                            )}
+                          </button>
+                        }
                       />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            pricing: {
-                              ...prev.pricing,
-                              discountType:
-                                prev.pricing.discountType === "fixed"
-                                  ? "percentage"
-                                  : "fixed",
-                            },
-                          }))
-                        }
-                        className={`px-4 py-2 rounded-lg border-2 font-medium transition-all flex items-center justify-center min-w-[60px] ${
-                          formData.pricing.discountType === "percentage"
-                            ? "bg-orange-50 border-orange-500 text-orange-700"
-                            : "bg-gray-50 border-gray-300 text-gray-700 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
-                        }`}
-                      >
-                        {formData.pricing.discountType === "percentage" ? (
-                          <Percent className="w-5 h-5" />
-                        ) : (
-                          "$"
-                        )}
-                      </button>
+
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formData.pricing.discountType === "percentage"
+                          ? "Percentage discount"
+                          : "Fixed amount discount"}
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formData.pricing.discountType === "percentage"
-                        ? "Percentage discount"
-                        : "Fixed amount discount"}
-                    </p>
                   </div>
                 </div>
-              </Card>
 
-              {/* Partners with Preview */}
-              <Card className="p-5 border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-                <div className="flex items-center gap-2 mb-4">
-                  <Users className="w-5 h-5 text-blue-500" />
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Service Partners
-                  </h4>
-                </div>
-                <div className="space-y-3">
-                  {/* Partner Selection with Preview */}
-                  <div className="flex gap-2">
+                {/* Partners with Preview */}
+                <div className="bg-white dark:bg-gray-700">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="w-5 h-5 text-blue-500" />
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                      Service Partners
+                    </h4>
+                  </div>
+                  <div className="space-y-3 w-full">
+                    {/* Partner Selection with Preview */}
                     <Select
+                      label="Select Partner"
+                      className="w-full"
                       value={selectedPartner}
-                      onChange={(e) => setSelectedPartner(e.target.value)}
+                      onChange={(e) => handlePartnerSelect(e.target.value)}
                       options={[
                         { value: "", label: "Select Partner" },
-                        ...partners.map((p) => ({
-                          value: p._id,
-                          label: `${p.name} - $${p.hourlyRate}/hr`,
-                        })),
+                        ...partners.map((p) => {
+                          const rate =
+                            p?.hourlyRate ?? p?.pricing?.hourlyRate ?? 0;
+                          return {
+                            value: p?._id || "",
+                            label: `${p?.name || "Partner"} - ${rate} TND/hr`,
+                          };
+                        }),
                       ]}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="primary"
-                      icon={Plus}
-                      onClick={handleAddPartner}
-                      disabled={!selectedPartner}
-                    >
-                      Add
-                    </Button>
-                  </div>
-
-                  {/* Partner Preview */}
-                  {selectedPartner && (
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      {(() => {
-                        const partner = partners.find(
-                          (p) => p._id === selectedPartner
-                        );
-                        const hours = calculateEventHours();
-                        const cost = partner
-                          ? getPartnerCostForHours(partner, hours)
-                          : 0;
-                        return partner ? (
-                          <div className="flex items-center justify-between text-sm">
-                            <div>
-                              <p className="font-semibold text-gray-900 dark:text-white">
-                                {partner.name}
-                              </p>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">
-                                ${partner.hourlyRate}/hr × {hours}h = $
-                                {cost.toFixed(2)}
-                              </p>
-                            </div>
-                            <Info className="w-4 h-4 text-blue-500" />
-                          </div>
-                        ) : null;
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Added Partners List */}
-                  {formData.partners.length > 0 && (
-                    <div className="space-y-2 mt-4">
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Added Partners ({formData.partners.length})
-                      </p>
-                      {formData.partners.map((partner, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-500 hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              {partner.partnerName?.charAt(0).toUpperCase() ||
-                                "P"}
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-white">
-                                {partner.partnerName}
-                              </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">
-                                ${partner.hourlyRate}/hr ×{" "}
-                                {calculateEventHours()}h = $
-                                {getPartnerCostForHours(
-                                  partner,
-                                  calculateEventHours()
-                                ).toFixed(2)}
-                              </div>
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            icon={Trash2}
-                            onClick={() => handleRemovePartner(idx)}
-                            className="hover:bg-red-50 hover:text-red-600"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </div>
-
-            {/* Price Summary */}
-            <Card className="p-6 border-l-4 border-orange-500 bg-orange-50 dark:bg-gray-700 shadow-lg">
-              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <DollarSign className="w-6 h-6 text-orange-600" />
-                <span className="dark:text-white">Price Summary</span>
-              </h4>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    Venue Price
-                  </div>
-                  <div className="font-bold text-lg text-gray-900 dark:text-white">
-                    ${venuePrice.toFixed(2)}
-                  </div>
-                </div>
-                <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    Partners
-                  </div>
-                  <div className="font-bold text-lg text-gray-900 dark:text-white">
-                    ${partnersTotal.toFixed(2)}
-                  </div>
-                </div>
-                <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    Discount
-                  </div>
-                  <div className="font-bold text-lg text-red-600">
-                    -
-                    {formData.pricing.discountType === "percentage"
-                      ? `${formData.pricing.discount || 0}%`
-                      : `$${(parseFloat(formData.pricing.discount) || 0).toFixed(2)}`}
-                  </div>
-                </div>
-                <div className="p-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg text-center transform hover:scale-110 transition-transform">
-                  <div className="text-xs text-orange-100 mb-1 font-semibold">
-                    Total Price
-                  </div>
-                  <div className="font-bold text-2xl text-white">
-                    ${totalPrice.toFixed(2)}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {/* Step 4: Payment Information */}
-        {currentStep === 4 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <Card className="border-l-4 border-indigo-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-              <div className="p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <CreditCard className="w-5 h-5 text-indigo-500" />
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Record Initial Payment (Optional)
-                  </h4>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <Input
-                      label="Payment Amount"
-                      name="payment.amount"
-                      type="number"
-                      step="0.01"
-                      value={formData.payment.amount}
-                      onChange={handleChange}
-                      error={errors["payment.amount"]}
-                      prefix="$"
-                      placeholder="0.00"
                     />
 
-                    <Select
-                      label="Payment Method"
-                      name="payment.paymentMethod"
-                      value={formData.payment.paymentMethod}
-                      onChange={handleChange}
-                      options={paymentMethodOptions}
-                    />
-
-                    <Input
-                      label="Payment Date"
-                      name="payment.paymentDate"
-                      type="date"
-                      value={formData.payment.paymentDate}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <Select
-                      label="Payment Status"
-                      name="payment.status"
-                      value={formData.payment.status}
-                      onChange={handleChange}
-                      options={paymentStatusOptions}
-                    />
-
-                    <Textarea
-                      label="Payment Notes"
-                      name="payment.notes"
-                      value={formData.payment.notes}
-                      onChange={handleChange}
-                      rows={3}
-                      placeholder="Any notes about this payment..."
-                    />
-
-                    <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg dark:bg-blue-900/30 dark:border-blue-700">
-                      <div className="text-sm text-blue-800 dark:text-blue-300 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <strong>Total Event Price:</strong>
-                          <span className="text-lg font-bold">
-                            ${totalPrice.toFixed(2)}
-                          </span>
-                        </div>
-                        {formData.payment.amount &&
-                          parseFloat(formData.payment.amount) > 0 && (
-                            <>
-                              <div className="flex justify-between items-center border-t pt-2 border-blue-300 dark:border-blue-700">
-                                <strong>Initial Payment:</strong>
-                                <span className="text-lg font-bold text-green-600">
-                                  $
-                                  {parseFloat(formData.payment.amount).toFixed(
-                                    2
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center border-t pt-2 border-blue-300 dark:border-blue-700">
-                                <strong>Remaining Balance:</strong>
-                                <span className="text-lg font-bold text-orange-600">
-                                  $
-                                  {(
-                                    totalPrice -
-                                    parseFloat(formData.payment.amount || 0)
-                                  ).toFixed(2)}
-                                </span>
-                              </div>
-                            </>
-                          )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <div className="flex items-center justify-center gap-2 text-gray-500 text-sm p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
-              <AlertCircle className="w-5 h-5" />
-              <p>
-                This step is optional. You can record payments later from the
-                payments section.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Review & Notes */}
-        {currentStep === 5 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-                <div className="p-5">
-                  <h4 className="font-semibold mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-blue-500" />
-                    Event Summary
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Title:
-                      </span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {formData.title || "N/A"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Type:
-                      </span>
-                      <Badge className="capitalize">
-                        {formData.type || "N/A"}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Status:
-                      </span>
-                      <Badge
-                        variant={
-                          formData.status === "confirmed"
-                            ? "success"
-                            : "warning"
-                        }
-                        className="capitalize"
-                      >
-                        {formData.status}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Date:
-                      </span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {formData.startDate || "N/A"}{" "}
-                        {formData.startDate !== formData.endDate &&
-                          `to ${formData.endDate}`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Venue:
-                      </span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {venues.find((v) => v._id === formData.venueId)?.name ||
-                          "N/A"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-2 dark:border-gray-600">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Client:
-                      </span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {clients.find((c) => c._id === formData.clientId)
-                          ?.name || "N/A"}
-                      </span>
-                    </div>
-                    {formData.guestCount && (
-                      <div className="flex justify-between py-2 border-t dark:border-gray-600">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Guests:
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {formData.guestCount}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="border-l-4 border-green-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-                <div className="p-5">
-                  <h4 className="font-semibold mb-4 flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-green-500" />
-                    Financial Summary
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between py-2">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Venue Price:
-                      </span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        ${venuePrice.toFixed(2)}
-                      </span>
-                    </div>
+                    {/* Added Partners List */}
                     {formData.partners.length > 0 && (
-                      <div className="border-t pt-2 dark:border-gray-600">
-                        <p className="text-gray-600 dark:text-gray-400 mb-1 font-medium">
-                          Partners:
+                      <div className="space-y-2 mt-4">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Added Partners ({formData.partners.length})
                         </p>
-                        {formData.partners.map((p, idx) => (
+                        {formData.partners.map((partner, idx) => (
                           <div
                             key={idx}
-                            className="flex justify-between py-1 text-xs text-gray-600 dark:text-gray-400 pl-4"
+                            className="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-500 hover:shadow-md transition-shadow"
                           >
-                            <span>• {p.partnerName}:</span>
-                            <span>
-                              $
-                              {getPartnerCostForHours(
-                                p,
-                                calculateEventHours()
-                              ).toFixed(2)}
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                {partner.partnerName?.charAt(0).toUpperCase() ||
+                                  "P"}
+                              </div>
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  {partner.partnerName}
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-300">
+                                  {partner.hourlyRate ?? 0} TND/hr ×{" "}
+                                  {calculateEventHours()}h ={" "}
+                                  {getPartnerCostForHours(
+                                    partner,
+                                    calculateEventHours()
+                                  ).toFixed(2)}{" "}
+                                  TND
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              icon={Trash2}
+                              onClick={() => handleRemovePartner(idx)}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            />
                           </div>
                         ))}
                       </div>
                     )}
-                    {formData.pricing.discount &&
-                      parseFloat(formData.pricing.discount) > 0 && (
+                  </div>
+                </div>
+              </div>
+
+              {/* Price Summary */}
+              <div className="dark:bg-gray-700">
+                <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <DollarSign className="w-6 h-6 text-orange-600" />
+                  <span className="dark:text-white">Price Summary</span>
+                </h4>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Venue Price
+                    </div>
+                    <div className="font-bold text-lg text-gray-900 dark:text-white">
+                      {venuePrice.toFixed(2)} TND
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Partners
+                    </div>
+                    <div className="font-bold text-lg text-gray-900 dark:text-white">
+                      {partnersTotal.toFixed(2)} TND
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Discount
+                    </div>
+                    <div className="font-bold text-lg text-red-600">
+                      -
+                      {formData.pricing.discountType === "percentage"
+                        ? `${formData.pricing.discount || 0}%`
+                        : `${(parseFloat(formData.pricing.discount) || 0).toFixed(2)} TND`}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg text-center transform hover:scale-110 transition-transform">
+                    <div className="text-xs text-orange-100 mb-1 font-semibold">
+                      Total Price
+                    </div>
+                    <div className="font-bold text-2xl text-white">
+                      {totalPrice.toFixed(2)} TND
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Payment Information */}
+          {currentStep === 4 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <div className="flex items-center justify-center gap-2 text-gray-500 text-sm p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
+                <AlertCircle className="w-5 h-5" />
+                <p>
+                  This step is optional. You can record payments later from the
+                  payments section.
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-700">
+                <div className="p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CreditCard className="w-5 h-5 text-indigo-500" />
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                      Record Initial Payment (Optional)
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <Input
+                        className="w-full"
+                        label="Payment Amount"
+                        name="payment.amount"
+                        type="number"
+                        step="0.01"
+                        value={formData.payment.amount}
+                        onChange={handleChange}
+                        error={errors["payment.amount"]}
+                        leftElement={
+                          <span className="text-sm font-semibold text-gray-500 dark:text-gray-300 pointer-events-none">
+                            TND
+                          </span>
+                        }
+                        placeholder="0.00"
+                      />
+
+                      <Select
+                        label="Payment Method"
+                        name="payment.paymentMethod"
+                        value={formData.payment.paymentMethod}
+                        onChange={handleChange}
+                        options={paymentMethodOptions}
+                      />
+
+                      <Input
+                        className="w-full"
+                        label="Payment Date"
+                        name="payment.paymentDate"
+                        type="date"
+                        value={formData.payment.paymentDate}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <Select
+                        label="Payment Status"
+                        name="payment.status"
+                        value={formData.payment.status}
+                        onChange={handleChange}
+                        options={paymentStatusOptions}
+                      />
+
+                      <Textarea
+                        className="w-full"
+                        label="Payment Notes"
+                        name="payment.notes"
+                        value={formData.payment.notes}
+                        onChange={handleChange}
+                        rows={3}
+                        placeholder="Any notes about this payment..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: Review & Notes */}
+          {currentStep === 5 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+                  <div className="p-5">
+                    <h4 className="font-semibold mb-4 flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-blue-500" />
+                      Event Summary
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Title:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {formData.title || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Type:
+                        </span>
+                        <Badge className="capitalize">
+                          {formData.type || "N/A"}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Status:
+                        </span>
+                        <Badge
+                          variant={
+                            formData.status === "confirmed"
+                              ? "success"
+                              : "warning"
+                          }
+                          className="capitalize"
+                        >
+                          {formData.status}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Date:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {formData.startDate || "N/A"}{" "}
+                          {formData.startDate !== formData.endDate &&
+                            `to ${formData.endDate}`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Venue Space:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {venueSpaces.find(
+                            (s) => s._id === formData.venueSpaceId
+                          )?.name || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-2 dark:border-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Client:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {clients.find((c) => c._id === formData.clientId)
+                            ?.name || "N/A"}
+                        </span>
+                      </div>
+                      {formData.guestCount && (
                         <div className="flex justify-between py-2 border-t dark:border-gray-600">
                           <span className="text-gray-600 dark:text-gray-400">
-                            Discount:
+                            Guests:
                           </span>
-                          <span className="font-medium text-red-600">
-                            -
-                            {formData.pricing.discountType === "percentage"
-                              ? `${formData.pricing.discount}%`
-                              : `$${parseFloat(formData.pricing.discount).toFixed(2)}`}
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {formData.guestCount}
                           </span>
                         </div>
                       )}
-                    <div className="flex justify-between pt-3 border-t-2 border-orange-200 dark:border-orange-700 font-bold text-lg">
-                      <span className="text-gray-900 dark:text-white">
-                        Total:
-                      </span>
-                      <span className="text-orange-600">
-                        ${totalPrice.toFixed(2)}
-                      </span>
                     </div>
-                    {formData.payment.amount &&
-                      parseFloat(formData.payment.amount) > 0 && (
-                        <>
+                  </div>
+                </Card>
+
+                <Card className="bg-white dark:bg-gray-700">
+                  <div className="p-5">
+                    <h4 className="font-semibold mb-4 flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-green-500" />
+                      Financial Summary
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Venue Price:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {venuePrice.toFixed(2)} TND
+                        </span>
+                      </div>
+                      {formData.partners.length > 0 && (
+                        <div className="border-t pt-2 dark:border-gray-600">
+                          <p className="text-gray-600 dark:text-gray-400 mb-1 font-medium">
+                            Partners:
+                          </p>
+                          {formData.partners.map((p, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between py-1 text-xs text-gray-600 dark:text-gray-400 pl-4"
+                            >
+                              <span>• {p.partnerName}:</span>
+                              <span>
+                                {getPartnerCostForHours(
+                                  p,
+                                  calculateEventHours()
+                                ).toFixed(2)}{" "}
+                                TND
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {formData.pricing.discount &&
+                        parseFloat(formData.pricing.discount) > 0 && (
                           <div className="flex justify-between py-2 border-t dark:border-gray-600">
                             <span className="text-gray-600 dark:text-gray-400">
-                              Initial Payment:
+                              Discount:
                             </span>
-                            <span className="font-medium text-green-600">
-                              ${parseFloat(formData.payment.amount).toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-2 border-t-2 border-gray-300 dark:border-gray-600 font-bold">
-                            <span className="text-gray-900 dark:text-white">
-                              Remaining:
-                            </span>
-                            <span className="text-orange-600">
-                              $
-                              {(
-                                totalPrice -
-                                parseFloat(formData.payment.amount || 0)
-                              ).toFixed(2)}
+                            <span className="font-medium text-red-600">
+                              -
+                              {formData.pricing.discountType === "percentage"
+                                ? `${formData.pricing.discount}%`
+                                : `${parseFloat(formData.pricing.discount).toFixed(2)} TND`}
                             </span>
                           </div>
-                        </>
-                      )}
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <Card className="border-l-4 border-purple-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-              <div className="p-5">
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-500" />
-                  Additional Notes
-                </h4>
-                <Textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={4}
-                  placeholder="Add any additional notes about this event..."
-                  maxLength={1000}
-                  showCount
-                />
-              </div>
-            </Card>
-
-            {/* NEW: Auto-generate Invoice Option */}
-            {!isEditMode && (
-              <Card className="border-l-4 border-indigo-500 shadow-md hover:shadow-lg transition-shadow bg-indigo-50 dark:bg-gray-700">
-                <div className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <FileCheck className="w-6 h-6 text-indigo-600" />
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          Auto-Generate Invoice
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          Create a draft invoice for this event automatically
-                        </p>
+                        )}
+                      <div className="flex justify-between pt-3 border-t-2 border-orange-200 dark:border-orange-700 font-bold text-lg">
+                        <span className="text-gray-900 dark:text-white">
+                          Total:
+                        </span>
+                        <span className="text-orange-600">
+                          {totalPrice.toFixed(2)} TND
+                        </span>
                       </div>
+                      {formData.payment.amount &&
+                        parseFloat(formData.payment.amount) > 0 && (
+                          <>
+                            <div className="flex justify-between py-2 border-t dark:border-gray-600">
+                              <span className="text-gray-600 dark:text-gray-400">
+                                Initial Payment:
+                              </span>
+                              <span className="font-medium text-green-600">
+                                {parseFloat(formData.payment.amount).toFixed(2)}{" "}
+                                TND
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-2 border-t-2 border-gray-300 dark:border-gray-600 font-bold">
+                              <span className="text-gray-900 dark:text-white">
+                                Remaining:
+                              </span>
+                              <span className="text-orange-600">
+                                {(
+                                  totalPrice -
+                                  parseFloat(formData.payment.amount || 0)
+                                ).toFixed(2)}{" "}
+                                TND
+                              </span>
+                            </div>
+                          </>
+                        )}
                     </div>
-                    <Toggle
-                      enabled={formData.createInvoice}
-                      onChange={(val) =>
-                        setFormData((prev) => ({ ...prev, createInvoice: val }))
-                      }
-                    />
                   </div>
+                </Card>
+              </div>
+
+              <Card className="border-l-4 border-purple-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+                <div className="p-5">
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-purple-500" />
+                    Additional Notes
+                  </h4>
+                  <Textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    rows={4}
+                    placeholder="Add any additional notes about this event..."
+                    maxLength={1000}
+                    showCount
+                  />
                 </div>
               </Card>
-            )}
-          </div>
-        )}
-      </div>
 
-      {/* Footer */}
+              {/* Auto-generate Invoice Option */}
+              {!isEditMode && (
+                <Card className="border-l-4 border-indigo-500 shadow-md hover:shadow-lg transition-shadow bg-indigo-50 dark:bg-gray-700">
+                  <div className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <FileCheck className="w-6 h-6 text-indigo-600" />
+                        <div>
+                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                            Auto-Generate Invoice
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            Create a draft invoice for this event automatically
+                          </p>
+                        </div>
+                      </div>
+                      <Toggle
+                        enabled={formData.createInvoice}
+                        onChange={(val) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            createInvoice: val,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          )}
+        </div>
+      </form>
+      {/* Footer - FIXED */}
       <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t-2 border-gray-200 dark:border-gray-600">
         <div className="flex items-center justify-between">
           <div>
@@ -2321,7 +2536,7 @@ const EventForm = ({
                 variant="outline"
                 icon={ChevronLeft}
                 onClick={prevStep}
-                className="hover:scale-105 transition-transform"
+                className="hover:scale-105 transition-transform min-w-[100px]"
               >
                 Previous
               </Button>
@@ -2334,16 +2549,20 @@ const EventForm = ({
                   Total Amount
                 </div>
                 <div className="text-2xl font-bold text-orange-600">
-                  ${totalPrice.toFixed(2)}
+                  {totalPrice.toFixed(2)} TND
                 </div>
               </div>
             )}
             {currentStep < totalSteps ? (
               <Button
-                type="submit"
+                type="button"
                 variant="primary"
                 icon={ChevronRight}
-                className="hover:scale-105 transition-transform"
+                onClick={(e) => {
+                  e.preventDefault();
+                  nextStep();
+                }}
+                className="hover:scale-105 transition-transform min-w-[100px]"
               >
                 Continue
               </Button>
@@ -2353,7 +2572,8 @@ const EventForm = ({
                 variant="primary"
                 icon={Save}
                 loading={loading}
-                className="hover:scale-105 transition-transform"
+                onClick={handleSubmit}
+                className="hover:scale-105 transition-transform min-w-[140px]"
               >
                 {isEditMode ? "Update Event" : "Create Event"}
               </Button>
@@ -2361,18 +2581,20 @@ const EventForm = ({
           </div>
         </div>
       </div>
-    </form>
+    </div>
   );
+
   // Sticky Price Summary (visible from step 3 onwards)
-  const showStickySummary = currentStep >= 3 && formData.venueId;
+  const showStickySummary = currentStep >= 3 && formData.venueSpaceId;
+
   // Return modal or page layout
   if (isModal) {
     return (
       <>
         <div className="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20">
+          <div className="flex items-center justify-center min-h-auto pt-4 px-4">
             <div
-              className="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity"
+              className="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity h-screen"
               onClick={handleClose}
             ></div>
             <div className="relative inline-block align-middle w-full max-w-6xl">
@@ -2382,18 +2604,10 @@ const EventForm = ({
             </div>
           </div>
         </div>
-        {/* Sticky Price Summary */}
-        <StickyPriceSummary
-          venuePrice={venuePrice}
-          partnersTotal={partnersTotal}
-          discount={parseFloat(formData.pricing.discount) || 0}
-          discountType={formData.pricing.discountType}
-          totalPrice={totalPrice}
-          visible={showStickySummary}
-        />
       </>
     );
   }
+
   // Page layout
   return (
     <>
@@ -2414,4 +2628,5 @@ const EventForm = ({
     </>
   );
 };
+
 export default EventForm;

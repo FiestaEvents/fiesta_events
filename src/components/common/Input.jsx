@@ -16,6 +16,8 @@ const Input = forwardRef(
       disabled = false,
       className = "",
       containerClassName = "",
+      leftElement,
+      rightElement,
       ...props
     },
     ref
@@ -27,8 +29,24 @@ const Input = forwardRef(
       ? "border-red-300 focus:ring-red-500 dark:border-red-500"
       : "border-gray-300 dark:border-gray-600";
     const widthClass = fullWidth ? "w-full" : "";
-    const paddingLeft = Icon && iconPosition === "left" ? "pl-10" : "pl-3";
-    const paddingRight = Icon && iconPosition === "right" ? "pr-10" : "pr-3";
+    const hasLeftIcon = Icon && iconPosition === "left";
+    const hasRightIcon = Icon && iconPosition === "right";
+    const hasLeftElement = !!leftElement;
+    const hasRightElement = !!rightElement;
+
+    let paddingLeft = "pl-3";
+    if (hasLeftIcon || hasLeftElement) {
+      paddingLeft = "pl-10";
+    }
+
+    let paddingRight = "pr-3";
+    if (hasRightIcon && hasRightElement) {
+      paddingRight = "pr-20";
+    } else if (hasRightElement) {
+      paddingRight = "pr-16";
+    } else if (hasRightIcon) {
+      paddingRight = "pr-10";
+    }
 
     return (
       <div className={containerClassName}>
@@ -44,7 +62,16 @@ const Input = forwardRef(
           {/* Left Icon */}
           {Icon && iconPosition === "left" && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Icon className={`h-4 w-4 text-gray-400 dark:text-gray-500 ${iconClassName}`} />
+              <Icon
+                className={`h-4 w-4 text-gray-400 dark:text-gray-500 ${iconClassName}`}
+              />
+            </div>
+          )}
+
+          {/* Custom Left Element */}
+          {leftElement && (
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+              {leftElement}
             </div>
           )}
 
@@ -66,6 +93,13 @@ const Input = forwardRef(
               <Icon className={`h-4 w-4 ${iconClassName}`} />
             </button>
           )}
+
+          {/* Custom Right Element */}
+          {rightElement && (
+            <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
+              {rightElement}
+            </div>
+          )}
         </div>
 
         {/* Error Message */}
@@ -78,7 +112,9 @@ const Input = forwardRef(
 
         {/* Helper Text */}
         {helperText && !error && (
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {helperText}
+          </p>
         )}
       </div>
     );
