@@ -250,7 +250,14 @@ export const eventService = {
       return handleError(error);
     }
   },
-
+  getByClientId: async (clientId, params = {}) => {
+    try {
+      const response = await api.get(`/events/client/${clientId}`, { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
   /**
    * Update event
    * @param {string} id - Event ID
@@ -1859,6 +1866,10 @@ export const roleService = {
 // VENUE SERVICE
 // ============================================
 export const venueService = {
+  /**
+   * Get current venue details
+   * @returns {Promise<{ venue }>}
+   */
   getMe: async () => {
     try {
       const response = await api.get("/venues/me");
@@ -1868,6 +1879,11 @@ export const venueService = {
     }
   },
 
+  /**
+   * Update venue details
+   * @param {Object} data - Venue fields to update
+   * @returns {Promise<{ venue }>}
+   */
   update: async (data) => {
     try {
       const response = await api.put("/venues/me", data);
@@ -1877,6 +1893,72 @@ export const venueService = {
     }
   },
 
+  /**
+   * Upload venue images
+   * @param {FormData} formData - Image files
+   * @returns {Promise<{ images: Array }>}
+   */
+  uploadImages: async (formData) => {
+    try {
+      const response = await api.post("/venues/images", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete venue image
+   * @param {string} imageId - Image ID
+   * @returns {Promise<{ success: boolean }>}
+   */
+  deleteImage: async (imageId) => {
+    try {
+      const response = await api.delete(`/venues/images/${imageId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Upload space images
+   * @param {string} spaceId - Space ID
+   * @param {FormData} formData - Image files
+   * @returns {Promise<{ images: Array }>}
+   */
+  uploadSpaceImages: async (spaceId, formData) => {
+    try {
+      const response = await api.post(`/venues/spaces/${spaceId}/images`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete space image
+   * @param {string} spaceId - Space ID
+   * @param {string} imageId - Image ID
+   * @returns {Promise<{ success: boolean }>}
+   */
+  deleteSpaceImage: async (spaceId, imageId) => {
+    try {
+      const response = await api.delete(`/venues/spaces/${spaceId}/images/${imageId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get venue statistics
+   * @returns {Promise<{ totalEvents, upcomingEvents, totalClients, totalPartners, totalRevenue, teamSize }>}
+   */
   getStats: async () => {
     try {
       const response = await api.get("/venues/stats");
@@ -1886,6 +1968,10 @@ export const venueService = {
     }
   },
 
+  /**
+   * Get venue dashboard data
+   * @returns {Promise<{ upcomingEvents, recentPayments, pendingTasks, upcomingReminders, summary }>}
+   */
   getDashboard: async () => {
     try {
       const response = await api.get("/venues/dashboard");
@@ -1895,6 +1981,11 @@ export const venueService = {
     }
   },
 
+  /**
+   * Update venue subscription
+   * @param {Object} data - { plan, status, endDate, amount }
+   * @returns {Promise<{ venue }>}
+   */
   updateSubscription: async (data) => {
     try {
       const response = await api.put("/venues/subscription", data);
@@ -1902,7 +1993,7 @@ export const venueService = {
     } catch (error) {
       return handleError(error);
     }
-  },
+  }
 };
 
 // ============================================
