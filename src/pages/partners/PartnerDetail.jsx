@@ -7,6 +7,7 @@ import Card from "../../components/common/Card";
 import Modal from "../../components/common/Modal";
 import EmptyState from "../../components/common/EmptyState";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import formatCurrency from "../../utils/formatCurrency";
 import {
   ArrowLeft,
   Edit,
@@ -26,6 +27,10 @@ import {
   Users,
   FileText,
   AlertCircle,
+  ExternalLink,
+  Award,
+  Target,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -57,7 +62,11 @@ const PartnerDetail = () => {
       let partnerData = null;
 
       // Handle different response structures
-      if (partnerResponse?.data?.data) {
+      if (partnerResponse?.data?.partner) {
+        partnerData = partnerResponse.data.partner;
+      } else if (partnerResponse?.partner) {
+        partnerData = partnerResponse.partner;
+      } else if (partnerResponse?.data?.data) {
         partnerData = partnerResponse.data.data;
       } else if (partnerResponse?.data) {
         partnerData = partnerResponse.data;
@@ -65,7 +74,15 @@ const PartnerDetail = () => {
         partnerData = partnerResponse;
       }
 
+      console.log("✅ Extracted partner data:", partnerData);
+
+      // Handle MongoDB $oid format
+      if (partnerData?._id?.$oid) {
+        partnerData._id = partnerData._id.$oid;
+      }
+
       if (!partnerData || !partnerData._id) {
+        console.error("❌ Partner data structure invalid:", partnerData);
         throw new Error("Partner not found");
       }
 
@@ -93,10 +110,28 @@ const PartnerDetail = () => {
           eventsData = eventsResponse;
         }
 
-        // Filter events that include this partner
-        const partnerEvents = eventsData.filter((event) =>
-          event.partners?.some((p) => p.partner === id)
-        );
+        console.log("📊 All events loaded:", eventsData.length);
+
+        // Filter events that include this partner - IMPROVED FILTERING
+        const partnerEvents = eventsData.filter((event) => {
+          if (!event.partners || !Array.isArray(event.partners)) return false;
+
+          return event.partners.some((p) => {
+            // Handle different partner reference formats
+            const partnerId =
+              p.partner?._id?.$oid ||
+              p.partner?._id ||
+              p.partner ||
+              p.partnerId?._id?.$oid ||
+              p.partnerId?._id ||
+              p.partnerId;
+
+            return partnerId === id || partnerId === partnerData._id;
+          });
+        });
+
+        console.log("🎯 Partner events found:", partnerEvents.length);
+        console.log("🔍 Sample partner event:", partnerEvents[0]);
 
         setEvents(partnerEvents);
       } catch (eventsError) {
@@ -155,7 +190,7 @@ const PartnerDetail = () => {
       music: "indigo",
       security: "red",
       cleaning: "green",
-      audio_visual: "yellow",
+      audio_visual: "orange",
       floral: "pink",
       entertainment: "orange",
       vendor: "blue",
@@ -170,38 +205,40 @@ const PartnerDetail = () => {
   const getStatusColor = (status) => {
     const colors = {
       active: "green",
-      inactive: "gray",
-      pending: "yellow",
-      suspended: "red",
+      inactive: "red",
     };
-    return colors[status] || "gray";
+    return colors[status] || "green";
   };
 
   const getEventStatusColor = (status) => {
     const colors = {
       pending: "yellow",
       confirmed: "blue",
-      "in-progress": "purple",
+      "in-progress": "orange",
       completed: "green",
       cancelled: "red",
     };
     return colors[status] || "gray";
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("tn-TN", {
-      style: "currency",
-      currency: "TND",
-    }).format(amount || 0);
+  const formatDate = (date) => {
+    if (!date) return "-";
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("tn-TN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const day = d.getDate();
+    const month = d.toLocaleString("en-GB", { month: "short" });
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    return `${day} ${month} ${year}, ${hours}:${minutes}`;
   };
 
   // Calculate statistics
@@ -212,13 +249,20 @@ const PartnerDetail = () => {
   ).length;
 
   const totalRevenue = events.reduce((sum, event) => {
-    const partnerData = event.partners?.find((p) => p.partner === id);
-    return sum + (partnerData?.cost || 0);
+    const partnerData = event.partners?.find((p) => {
+      const partnerId = p.partner?._id?.$oid || p.partner?._id || p.partner;
+      return partnerId === id || partnerId === partner?._id;
+    });
+    return sum + (partnerData?.cost || partnerData?.hourlyRate || 0);
   }, 0);
 
   const averageRevenue = totalEvents > 0 ? totalRevenue / totalEvents : 0;
   const completionRate =
     totalEvents > 0 ? (completedEvents / totalEvents) * 100 : 0;
+
+  // Performance metrics
+  const performanceScore = partner?.rating ? (partner.rating / 5) * 100 : 0;
+  const responseRate = partner?.responseRate || "N/A";
 
   // Tabs configuration
   const tabs = [
@@ -236,7 +280,12 @@ const PartnerDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">
+            Loading partner details...
+          </p>
+        </div>
       </div>
     );
   }
@@ -262,562 +311,580 @@ const PartnerDetail = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/partners")}
-            icon={ArrowLeft}
-          >
-            Back to Partners
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {partner.name}
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Partner ID: {partner._id?.slice(-8).toUpperCase() || "N/A"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            icon={Edit}
-            onClick={() => navigate(`/partners/${id}/edit`)}
-          >
-            Edit Partner
-          </Button>
-          <Button
-            variant="danger"
-            icon={Trash2}
-            onClick={() => setShowDeleteModal(true)}
-            disabled={deleting}
-          >
-            {deleting ? "Deleting..." : "Delete"}
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
+        <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Status
-              </p>
-              <div className="mt-2">
-                <Badge color={getStatusColor(partner.status)}>
-                  {partner.status?.charAt(0).toUpperCase() +
-                    partner.status?.slice(1) || "Unknown"}
-                </Badge>
-              </div>
-            </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Jobs
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {totalEvents}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <Briefcase className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Rating
-              </p>
-              <div className="flex items-center mt-1">
-                <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                <p className="text-2xl font-bold text-gray-900 dark:text-white ml-2">
-                  {partner.rating?.toFixed(1) || "0.0"}
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/partners")}
+                icon={ArrowLeft}
+                className="text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400"
+              >
+                Back to Partners
+              </Button>
+              <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {partner.name}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  {partner.company} •{" "}
+                  {partner.category?.replace("_", " ").toUpperCase()}
                 </p>
               </div>
             </div>
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-              <Star className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                icon={Edit}
+                onClick={() => navigate(`/partners/${id}/edit`)}
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-orange-600 hover:text-orange-600"
+              >
+                Edit Partner
+              </Button>
+              <Button
+                variant="danger"
+                icon={Trash2}
+                onClick={() => setShowDeleteModal(true)}
+                disabled={deleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </Button>
             </div>
           </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Hourly Rate
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {partner.hourlyRate
-                  ? formatCurrency(partner.hourlyRate)
-                  : "N/A"}
-              </p>
-            </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Tabs Navigation */}
-      <Card>
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-8 px-6">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                    ${
-                      activeTab === tab.id
-                        ? "border-purple-600 text-purple-600 dark:text-purple-400"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-                    }
-                  `}
-                >
-                  <Icon className="w-5 h-5 mr-2" />
-                  {tab.label}
-                  {tab.count !== undefined && (
-                    <span
-                      className={`
-                      ml-2 py-0.5 px-2 rounded-full text-xs font-medium
-                      ${
-                        activeTab === tab.id
-                          ? "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300"
-                          : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                      }
-                    `}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
         </div>
 
-        {/* Tab Content */}
-        <div className="p-6">
-          {activeTab === "overview" && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Information */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Contact Information */}
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Contact Information
-                  </h3>
-                  <div className="space-y-4">
-                    {partner.email && (
-                      <div className="flex items-start">
-                        <Mail className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <div className="ml-3">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Email
-                          </p>
-                          <a
-                            href={`mailto:${partner.email}`}
-                            className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300"
-                          >
-                            {partner.email}
-                          </a>
-                        </div>
-                      </div>
-                    )}
-
-                    {partner.phone && (
-                      <div className="flex items-start">
-                        <Phone className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <div className="ml-3">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Phone
-                          </p>
-                          <a
-                            href={`tel:${partner.phone}`}
-                            className="text-gray-900 dark:text-white"
-                          >
-                            {partner.phone}
-                          </a>
-                        </div>
-                      </div>
-                    )}
-
-                    {partner.company && (
-                      <div className="flex items-start">
-                        <Building className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <div className="ml-3">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Company
-                          </p>
-                          <p className="text-gray-900 dark:text-white">
-                            {partner.company}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {partner.location && (
-                      <div className="flex items-start">
-                        <MapPin className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <div className="ml-3">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Location
-                          </p>
-                          <p className="text-gray-900 dark:text-white">
-                            {partner.location}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                    Partner Status
+                  </p>
+                  <Badge
+                    color={getStatusColor(partner.status)}
+                    className="text-sm font-semibold"
+                  >
+                    {partner.status?.charAt(0).toUpperCase() +
+                      partner.status?.slice(1)}
+                  </Badge>
                 </div>
-
-                {/* Address */}
-                {partner.address && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Address
-                    </h3>
-                    <div className="text-gray-600 dark:text-gray-400">
-                      {partner.address.street && (
-                        <p>{partner.address.street}</p>
-                      )}
-                      <p>
-                        {[
-                          partner.address.city,
-                          partner.address.state,
-                          partner.address.zipCode,
-                        ]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-                      {partner.address.country && (
-                        <p>{partner.address.country}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Notes */}
-                {partner.notes && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Notes
-                    </h3>
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                        {partner.notes}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Services/Specialties */}
-                {partner.services && partner.services.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Services
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {partner.services.map((service, index) => (
-                        <Badge key={index} color="blue">
-                          {service}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Partner Details */}
-                <Card>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Partner Details
-                    </h3>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Category
-                        </p>
-                        <div className="mt-1">
-                          <Badge
-                            color={getCategoryColor(
-                              partner.type || partner.category
-                            )}
-                            className="capitalize"
-                          >
-                            {(partner.type || partner.category)?.replace(
-                              "_",
-                              " "
-                            ) || "Other"}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {partner.specialties && (
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Specialties
-                          </p>
-                          <p className="text-gray-900 dark:text-white mt-1">
-                            {partner.specialties}
-                          </p>
-                        </div>
-                      )}
-
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Member Since
-                        </p>
-                        <p className="text-gray-900 dark:text-white mt-1">
-                          {formatDate(partner.createdAt)}
-                        </p>
-                      </div>
-
-                      {partner.updatedAt && (
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Last Updated
-                          </p>
-                          <p className="text-gray-900 dark:text-white mt-1">
-                            {formatDate(partner.updatedAt)}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Quick Stats */}
-                <Card>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Quick Stats
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Total Events
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {totalEvents}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Completed
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {completedEvents}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Upcoming
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {upcomingEvents}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          Total Revenue
-                        </span>
-                        <span className="font-bold text-gray-900 dark:text-white">
-                          {formatCurrency(totalRevenue)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                <div className="p-3 bg-orange-100 dark:bg-orange-800 rounded-xl">
+                  <CheckCircle className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
               </div>
             </div>
-          )}
+          </Card>
 
-          {activeTab === "events" && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                Event History ({totalEvents} events)
-              </h3>
+          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Total Events
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {totalEvents}
+                  </p>
+                </div>
+                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-xl">
+                  <Calendar className="w-6 h-6 text-orange-600 dark:text-gray-400" />
+                </div>
+              </div>
+            </div>
+          </Card>
 
-              {events.length > 0 ? (
+          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Performance Rating
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <Star className="w-5 h-5 text-orange-400 fill-current" />
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {partner.rating?.toFixed(1) || "0.0"}
+                    </p>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      /5.0
+                    </span>
+                  </div>
+                </div>
+                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-xl">
+                  <Award className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Hourly Rate
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {partner.hourlyRate
+                      ? formatCurrency(partner.hourlyRate)
+                      : "N/A"}
+                  </p>
+                </div>
+                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-xl">
+                  <DollarSign className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Partner Quick Info */}
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <Briefcase className="w-5 h-5 mr-2 text-orange-600" />
+                  Partner Details
+                </h3>
                 <div className="space-y-4">
-                  {events.map((event) => {
-                    const partnerData = event.partners?.find(
-                      (p) => p.partner === id
-                    );
-                    return (
-                      <div
-                        key={event._id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Category
+                    </p>
+                    <Badge
+                      color={getCategoryColor(partner.type || partner.category)}
+                      className="capitalize"
+                    >
+                      {(partner.type || partner.category)?.replace("_", " ") ||
+                        "Other"}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Member Since
+                    </p>
+                    <p className="text-gray-900 dark:text-white">
+                      {formatDate(partner.createdAt)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Last Updated
+                    </p>
+                    <p className="text-gray-900 dark:text-white">
+                      {formatDate(partner.updatedAt)}
+                    </p>
+                  </div>
+
+                  {partner.specialties && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Specialties
+                      </p>
+                      <p className="text-gray-900 dark:text-white text-sm">
+                        {partner.specialties}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Contact Information */}
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <Mail className="w-5 h-5 mr-2 text-orange-600" />
+                  Contact Info
+                </h3>
+                <div className="space-y-3">
+                  {partner.email && (
+                    <div className="flex items-start">
+                      <Mail className="w-4 h-4 text-gray-400 mt-0.5 mr-3 flex-shrink-0" />
+                      <a
+                        href={`mailto:${partner.email}`}
+                        className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 text-sm"
                       >
-                        <div className="flex-1 mb-3 sm:mb-0">
-                          <Link
-                            to={`/events/${event._id}`}
-                            className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium block"
+                        {partner.email}
+                      </a>
+                    </div>
+                  )}
+
+                  {partner.phone && (
+                    <div className="flex items-start">
+                      <Phone className="w-4 h-4 text-gray-400 mt-0.5 mr-3 flex-shrink-0" />
+                      <a
+                        href={`tel:${partner.phone}`}
+                        className="text-gray-900 dark:text-white text-sm"
+                      >
+                        {partner.phone}
+                      </a>
+                    </div>
+                  )}
+
+                  {partner.location && (
+                    <div className="flex items-start">
+                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5 mr-3 flex-shrink-0" />
+                      <span className="text-gray-900 dark:text-white text-sm">
+                        {partner.location}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="lg:col-span-3">
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              {/* Tabs Navigation */}
+              <div className="border-b border-gray-200 dark:border-gray-700">
+                <nav className="flex space-x-8 px-6">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`
+                          flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                          ${
+                            activeTab === tab.id
+                              ? "border-orange-600 text-orange-600 dark:text-orange-400"
+                              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                          }
+                        `}
+                      >
+                        <Icon className="w-5 h-5 mr-2" />
+                        {tab.label}
+                        {tab.count !== undefined && (
+                          <span
+                            className={`
+                              ml-2 py-0.5 px-2 rounded-full text-xs font-medium
+                              ${
+                                activeTab === tab.id
+                                  ? "bg-orange-100 text-orange-600 dark:bg-orange-600 dark:text-orange-300"
+                                  : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                              }
+                            `}
                           >
-                            {event.title}
-                          </Link>
-                          <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              {formatDate(event.startDate)}
+                            {tab.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-6">
+                {activeTab === "overview" && (
+                  <div className="space-y-6">
+                    {/* Company & Services */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {partner.company && (
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                            Company Information
+                          </h4>
+                          <div className="bg-white dark:bg-gray-700 rounded-lg p-4">
+                            <div className="flex items-center mb-2">
+                              <Building className="w-5 h-5 text-gray-400 mr-2" />
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {partner.company}
+                              </span>
                             </div>
-                            <Badge color={getEventStatusColor(event.status)}>
-                              {event.status}
-                            </Badge>
-                            {event.type && (
-                              <Badge color="gray">{event.type}</Badge>
+                            {partner.specialties && (
+                              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                {partner.specialties}
+                              </p>
                             )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Partner Cost
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-white">
-                            {formatCurrency(partnerData?.cost)}
+                      )}
+
+                      {/* Services */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                          Services & Expertise
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {partner.services && partner.services.length > 0 ? (
+                            partner.services.map((service, index) => (
+                              <Badge
+                                key={index}
+                                color="orange"
+                                className="text-sm"
+                              >
+                                {service}
+                              </Badge>
+                            ))
+                          ) : (
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">
+                              No specific services listed
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    {partner.notes && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                          Additional Notes
+                        </h4>
+                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                            {partner.notes}
                           </p>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <EmptyState
-                  icon={Calendar}
-                  title="No Events Found"
-                  description="This partner hasn't been assigned to any events yet."
-                  size="sm"
-                />
-              )}
-            </div>
-          )}
+                    )}
 
-          {activeTab === "performance" && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Performance Metrics */}
-              <Card>
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Performance Metrics
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Total Jobs Completed
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {totalEvents}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Average Rating
-                      </span>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          {partner.rating?.toFixed(1) || "0.0"}
-                        </span>
+                    {/* Address */}
+                    {partner.address && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                          Address
+                        </h4>
+                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                          <div className="flex items-start">
+                            <MapPin className="w-5 h-5 text-gray-400 mr-3 mt-0.5 flex-shrink-0" />
+                            <div className="text-gray-600 dark:text-gray-400">
+                              {partner.address.street && (
+                                <p className="font-medium">
+                                  {partner.address.street}
+                                </p>
+                              )}
+                              <p>
+                                {[
+                                  partner.address.city,
+                                  partner.address.state,
+                                  partner.address.zipCode,
+                                ]
+                                  .filter(Boolean)
+                                  .join(", ")}
+                              </p>
+                              {partner.address.country && (
+                                <p>{partner.address.country}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Completion Rate
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {completionRate.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        On-Time Delivery
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {partner.onTimeRate ? `${partner.onTimeRate}%` : "N/A"}
-                      </span>
-                    </div>
+                    )}
                   </div>
-                </div>
-              </Card>
+                )}
 
-              {/* Financial Summary */}
-              <Card>
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Financial Summary
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Hourly Rate
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {partner.hourlyRate
-                          ? formatCurrency(partner.hourlyRate)
-                          : "Not set"}
-                      </span>
+                {activeTab === "events" && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Event History
+                      </h3>
+                      <Badge color="orange" className="text-sm">
+                        {totalEvents} Total Events
+                      </Badge>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Total Revenue Generated
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(totalRevenue)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Average per Event
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(averageRevenue)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        Performance Score
-                      </span>
-                      <span className="font-bold text-gray-900 dark:text-white">
-                        {partner.rating
-                          ? `${(partner.rating * 20).toFixed(0)}%`
-                          : "N/A"}
-                      </span>
-                    </div>
+
+                    {events.length > 0 ? (
+                      <div className="space-y-4">
+                        {events.map((event) => {
+                          const partnerData = event.partners?.find((p) => {
+                            const partnerId =
+                              p.partner?._id?.$oid ||
+                              p.partner?._id ||
+                              p.partner;
+                            return (
+                              partnerId === id || partnerId === partner._id
+                            );
+                          });
+                          const cost =
+                            partnerData?.cost || partnerData?.hourlyRate || 0;
+
+                          return (
+                            <div
+                              key={event._id}
+                              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-orange-300 dark:hover:border-orange-600 transition-all duration-200"
+                            >
+                              <div className="flex-1 mb-3 sm:mb-0">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <Link
+                                      to={`/events/${event._id}`}
+                                      className="text-lg font-semibold text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                                    >
+                                      {event.title}
+                                    </Link>
+                                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                        <Calendar className="w-4 h-4 mr-1" />
+                                        {formatDateTime(event.startDate)}
+                                      </div>
+                                      <Badge
+                                        color={getEventStatusColor(
+                                          event.status
+                                        )}
+                                      >
+                                        {event.status}
+                                      </Badge>
+                                      {event.type && (
+                                        <Badge color="gray">{event.type}</Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <ExternalLink className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" />
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  Partner Revenue
+                                </p>
+                                <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
+                                  {formatCurrency(cost)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <EmptyState
+                        icon={Calendar}
+                        title="No Events Found"
+                        description="This partner hasn't been assigned to any events yet."
+                        size="sm"
+                      />
+                    )}
                   </div>
-                </div>
-              </Card>
-            </div>
-          )}
+                )}
+
+                {activeTab === "performance" && (
+                  <div className="space-y-6">
+                    {/* Performance Overview */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Card className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800">
+                        <div className="p-6">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                            <Target className="w-5 h-5 mr-2 text-orange-600" />
+                            Performance Score
+                          </h4>
+                          <div className="text-center">
+                            <div className="inline-flex items-baseline">
+                              <span className="text-4xl font-bold text-orange-600 dark:text-orange-400">
+                                {performanceScore.toFixed(0)}%
+                              </span>
+                              <span className="text-lg text-gray-500 dark:text-gray-400 ml-1">
+                                /100%
+                              </span>
+                            </div>
+                            <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div
+                                className="bg-orange-600 h-2 rounded-full transition-all duration-500"
+                                style={{ width: `${performanceScore}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+
+                      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <div className="p-6">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                            <BarChart3 className="w-5 h-5 mr-2 text-orange-600" />
+                            Event Statistics
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600 dark:text-gray-400">
+                                Completed Events
+                              </span>
+                              <span className="font-semibold text-gray-900 dark:text-white">
+                                {completedEvents}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600 dark:text-gray-400">
+                                Upcoming Events
+                              </span>
+                              <span className="font-semibold text-orange-600 dark:text-orange-400">
+                                {upcomingEvents}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600 dark:text-gray-400">
+                                Completion Rate
+                              </span>
+                              <span className="font-semibold text-gray-900 dark:text-white">
+                                {completionRate.toFixed(0)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+
+                    {/* Financial Summary */}
+                    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                      <div className="p-6">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                          <DollarSign className="w-5 h-5 mr-2 text-orange-600" />
+                          Financial Summary
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                              Total Revenue
+                            </p>
+                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                              {formatCurrency(totalRevenue)}
+                            </p>
+                          </div>
+                          <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                              Average per Event
+                            </p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                              {formatCurrency(averageRevenue)}
+                            </p>
+                          </div>
+                          <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                              Hourly Rate
+                            </p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                              {partner.hourlyRate
+                                ? formatCurrency(partner.hourlyRate)
+                                : "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
         </div>
-      </Card>
+      </div>
 
       {/* Delete Confirmation Modal */}
       <Modal

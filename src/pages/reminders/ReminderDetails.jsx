@@ -33,16 +33,27 @@ const ReminderDetails = () => {
   const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
-    fetchReminder();
+    if (id) {
+      fetchReminder();
+    }
   }, [id]);
 
   const fetchReminder = async () => {
     try {
       setIsLoading(true);
-      const data = await reminderService.getById(id);
-      setReminder(data.data);
+      const response = await reminderService.getById(id);
+      
+      // Handle different response structures
+      const reminderData = response?.reminder || response?.data?.reminder || response?.data || response;
+      
+      if (!reminderData) {
+        throw new Error("Reminder not found");
+      }
+      
+      setReminder(reminderData);
     } catch (error) {
-      toast.error("Failed to load reminder");
+      console.error("Error fetching reminder:", error);
+      toast.error(error.message || "Failed to load reminder");
       navigate("/reminders");
     } finally {
       setIsLoading(false);
@@ -61,7 +72,12 @@ const ReminderDetails = () => {
 
   const handleComplete = async () => {
     try {
-      await reminderService.complete(id);
+      // If complete method doesn't exist in service, use update
+      if (reminderService.complete) {
+        await reminderService.complete(id);
+      } else {
+        await reminderService.update(id, { status: "completed" });
+      }
       toast.success("Reminder marked as completed");
       fetchReminder();
     } catch (error) {
@@ -81,7 +97,12 @@ const ReminderDetails = () => {
 
   const handleCancel = async () => {
     try {
-      await reminderService.cancel(id);
+      // If cancel method doesn't exist in service, use update
+      if (reminderService.cancel) {
+        await reminderService.cancel(id);
+      } else {
+        await reminderService.update(id, { status: "cancelled" });
+      }
       toast.success("Reminder cancelled");
       fetchReminder();
     } catch (error) {
@@ -110,12 +131,12 @@ const ReminderDetails = () => {
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("tn-TN", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    if (!date) return '-';
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const formatTime = (time) => {
@@ -127,15 +148,15 @@ const ReminderDetails = () => {
     });
   };
 
-  const formatDateTime = (date) => {
-    return new Date(date).toLocaleString("tn-TN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const day = d.getDate();
+    const month = d.toLocaleString("en-GB", { month: "short" });
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    return `${day} ${month} ${year}, ${hours}:${minutes}`;
   };
 
   const getNotificationIcon = (method) => {
@@ -156,7 +177,18 @@ const ReminderDetails = () => {
     );
   }
 
-  if (!reminder) return null;
+  if (!reminder) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <AlertCircle className="w-12 h-12 text-gray-400 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Reminder Not Found</h3>
+        <p className="text-gray-500 mb-4">The reminder you're looking for doesn't exist.</p>
+        <Button onClick={() => navigate("/reminders")}>
+          Back to Reminders
+        </Button>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: "details", label: "Details", icon: FileText },
@@ -186,7 +218,7 @@ const ReminderDetails = () => {
                 {reminder.priority} priority
               </Badge>
               <span className="text-sm text-gray-500 capitalize">
-                {reminder.type.replace("_", " ")}
+                {reminder.type?.replace("_", " ") || 'reminder'}
               </span>
             </div>
           </div>
@@ -289,7 +321,7 @@ const ReminderDetails = () => {
                         Date
                       </label>
                       <p className="text-gray-900 mt-1">
-                        {formatDate(reminder.reminderDate)}
+                        {formatDate(reminder.reminderDate || reminder.dueDate)}
                       </p>
                     </div>
 
@@ -310,7 +342,7 @@ const ReminderDetails = () => {
                         Type
                       </label>
                       <p className="text-gray-900 mt-1 capitalize">
-                        {reminder.type.replace("_", " ")}
+                        {reminder.type?.replace("_", " ") || 'general'}
                       </p>
                     </div>
 
@@ -455,7 +487,7 @@ const ReminderDetails = () => {
                           <Bell className="w-5 h-5 text-gray-400" />
                           <div>
                             <p className="text-sm font-medium text-gray-900">
-                              Payment #{reminder.relatedPayment._id.slice(-6)}
+                              Payment #{reminder.relatedPayment._id?.slice(-6)}
                             </p>
                             <p className="text-xs text-gray-500">Payment</p>
                           </div>
@@ -610,7 +642,7 @@ const ReminderDetails = () => {
                       Frequency
                     </label>
                     <p className="text-gray-900 mt-1 capitalize">
-                      {reminder.recurrence.frequency}
+                      {reminder.recurrence?.frequency}
                     </p>
                   </div>
 
@@ -619,13 +651,13 @@ const ReminderDetails = () => {
                       Interval
                     </label>
                     <p className="text-gray-900 mt-1">
-                      Every {reminder.recurrence.interval}{" "}
-                      {reminder.recurrence.frequency}
+                      Every {reminder.recurrence?.interval}{" "}
+                      {reminder.recurrence?.frequency}
                     </p>
                   </div>
                 </div>
 
-                {reminder.recurrence.endDate && (
+                {reminder.recurrence?.endDate && (
                   <div>
                     <label className="text-sm font-medium text-gray-700">
                       End Date
@@ -636,7 +668,7 @@ const ReminderDetails = () => {
                   </div>
                 )}
 
-                {reminder.recurrence.daysOfWeek &&
+                {reminder.recurrence?.daysOfWeek &&
                   reminder.recurrence.daysOfWeek.length > 0 && (
                     <div>
                       <label className="text-sm font-medium text-gray-700">
@@ -656,7 +688,7 @@ const ReminderDetails = () => {
                     </div>
                   )}
 
-                {reminder.recurrence.dayOfMonth && (
+                {reminder.recurrence?.dayOfMonth && (
                   <div>
                     <label className="text-sm font-medium text-gray-700">
                       Day of Month

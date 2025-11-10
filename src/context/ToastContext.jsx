@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Info, X, Loader2 } from 'lucide-react';
 
 // Toast Component
 const Toast = ({ toast, onClose }) => {
@@ -27,6 +27,7 @@ const Toast = ({ toast, onClose }) => {
     error: <XCircle className="w-5 h-5" />,
     warning: <AlertTriangle className="w-5 h-5" />,
     info: <Info className="w-5 h-5" />,
+    loading: <Loader2 className="w-5 h-5 animate-spin" />,
   };
 
   const styles = {
@@ -34,6 +35,7 @@ const Toast = ({ toast, onClose }) => {
     error: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300',
     warning: 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300',
     info: 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300',
+    loading: 'bg-gray-50 border-gray-200 text-gray-800 dark:bg-gray-900/20 dark:border-gray-800 dark:text-gray-300',
   };
 
   return (
@@ -52,13 +54,15 @@ const Toast = ({ toast, onClose }) => {
       <div className="flex-1">
         <p className="text-sm font-medium">{toast.message}</p>
       </div>
-      <button
-        onClick={handleClose}
-        className="flex-shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-        aria-label="Close notification"
-      >
-        <X className="w-4 h-4" />
-      </button>
+      {toast.type !== 'loading' && (
+        <button
+          onClick={handleClose}
+          className="flex-shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          aria-label="Close notification"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 };
@@ -108,7 +112,7 @@ export const ToastProvider = ({ children }) => {
     return id;
   }, []);
 
-  // Convenience methods
+  // Basic methods
   const success = useCallback((message, duration = 5000) => {
     return showToast(message, 'success', duration);
   }, [showToast]);
@@ -126,7 +130,7 @@ export const ToastProvider = ({ children }) => {
   }, [showToast]);
 
   const loading = useCallback((message) => {
-    return showToast(message, 'info', Infinity);
+    return showToast(message, 'loading', Infinity);
   }, [showToast]);
 
   const dismiss = useCallback((id) => {
@@ -144,7 +148,7 @@ export const ToastProvider = ({ children }) => {
       error: errorMsg = 'Something went wrong!' 
     } = messages || {};
 
-    const loadingId = showToast(loadingMsg, 'info', Infinity);
+    const loadingId = showToast(loadingMsg, 'loading', Infinity);
 
     try {
       const result = await promise;

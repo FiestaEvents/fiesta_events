@@ -230,7 +230,7 @@ const ImageGrid = ({ images, onRemove, onReorder, editable = true }) => {
   if (images.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {images.map((image, index) => (
         <div
           key={image.id || image.url}
@@ -328,7 +328,7 @@ const VenueSettings = () => {
   const [venueImages, setVenueImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
-  const [spaceImages, setSpaceImages] = useState({}); // { spaceId: [images] }
+  const [spaceImages, setSpaceImages] = useState({});
 
   // User state
   const [user, setUser] = useState(null);
@@ -372,88 +372,124 @@ const VenueSettings = () => {
 
   const [errors, setErrors] = useState({});
 
-  // Fetch data
+  // Fetch data - IMPROVED VERSION
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setFetchError(null);
 
+        console.log("🔄 Fetching venue and user data...");
+
         const [userData, venueData] = await Promise.all([
           authService.getMe(),
           venueService.getMe(),
         ]);
 
+        console.log("✅ User data:", userData);
+        console.log("✅ Venue data:", venueData);
+
+        // Handle user data
         const userInfo = userData?.user || userData;
-        const venueInfo = venueData?.venue || venueData;
-
-        setUser(userInfo);
-        setUserForm({
-          name: userInfo?.name || "",
-          phone: userInfo?.phone || "",
-          avatar: userInfo?.avatar || "",
-        });
-
-        setVenue(venueInfo);
-        setVenueForm({
-          name: venueInfo?.name || "",
-          description: venueInfo?.description || "",
-          address: venueInfo?.address || {
-            street: "",
-            city: "",
-            state: "",
-            zipCode: "",
-            country: "",
-          },
-          contact: venueInfo?.contact || { phone: "", email: "" },
-          capacity: venueInfo?.capacity || { min: "", max: "" },
-          pricing: venueInfo?.pricing || { basePrice: "" },
-        });
-
-        setAmenities(venueInfo?.amenities || []);
-
-        // Load venue images
-        if (venueInfo?.images) {
-          setVenueImages(
-            venueInfo.images.map((img, index) => ({
-              id: img.id || `venue-img-${index}`,
-              url: img.url,
-              alt: img.alt || `Venue image ${index + 1}`,
-            }))
-          );
-        }
-
-        // Load space images
-        if (venueInfo?.spaces) {
-          const spaceImagesMap = {};
-          venueInfo.spaces.forEach((space) => {
-            if (space.images) {
-              spaceImagesMap[space._id] = space.images.map((img, index) => ({
-                id: img.id || `space-${space._id}-img-${index}`,
-                url: img.url,
-                alt: img.alt || `${space.name} image ${index + 1}`,
-              }));
-            }
+        if (userInfo) {
+          setUser(userInfo);
+          setUserForm({
+            name: userInfo?.name || "",
+            phone: userInfo?.phone || "",
+            avatar: userInfo?.avatar || "",
           });
-          setSpaceImages(spaceImagesMap);
         }
 
-        // Initialize operating hours with defaults if not present
-        const defaultHours = {
-          monday: { open: "09:00", close: "17:00", closed: false },
-          tuesday: { open: "09:00", close: "17:00", closed: false },
-          wednesday: { open: "09:00", close: "17:00", closed: false },
-          thursday: { open: "09:00", close: "17:00", closed: false },
-          friday: { open: "09:00", close: "17:00", closed: false },
-          saturday: { open: "09:00", close: "17:00", closed: false },
-          sunday: { open: "09:00", close: "17:00", closed: true },
-        };
-        setOperatingHours(venueInfo?.operatingHours || defaultHours);
-        setSpaces(venueInfo?.spaces || []);
+        // Handle venue data - FIXED
+        let venueInfo = null;
+        
+        // Your API service returns response.data?.data || response.data
+        if (venueData?.data?.venue) {
+          venueInfo = venueData.data.venue;
+        } else if (venueData?.venue) {
+          venueInfo = venueData.venue;
+        } else if (venueData?.data) {
+          venueInfo = venueData.data;
+        } else {
+          venueInfo = venueData;
+        }
+
+        console.log("🏢 Extracted venue info:", venueInfo);
+
+        if (venueInfo) {
+          setVenue(venueInfo);
+          setVenueForm({
+            name: venueInfo?.name || "",
+            description: venueInfo?.description || "",
+            address: venueInfo?.address || {
+              street: "",
+              city: "",
+              state: "",
+              zipCode: "",
+              country: "",
+            },
+            contact: venueInfo?.contact || { phone: "", email: "" },
+            capacity: venueInfo?.capacity || { min: "", max: "" },
+            pricing: venueInfo?.pricing || { basePrice: "" },
+          });
+
+          setAmenities(venueInfo?.amenities || []);
+
+          // Load venue images
+          if (venueInfo?.images) {
+            setVenueImages(
+              venueInfo.images.map((img, index) => ({
+                id: img.id || img._id || `venue-img-${index}`,
+                url: img.url || img.path || img,
+                alt: img.alt || `Venue image ${index + 1}`,
+              }))
+            );
+          }
+
+          // Load space images
+          if (venueInfo?.spaces) {
+            const spaceImagesMap = {};
+            venueInfo.spaces.forEach((space) => {
+              if (space.images) {
+                spaceImagesMap[space._id] = space.images.map((img, index) => ({
+                  id: img.id || img._id || `space-${space._id}-img-${index}`,
+                  url: img.url || img.path || img,
+                  alt: img.alt || `${space.name} image ${index + 1}`,
+                }));
+              }
+            });
+            setSpaceImages(spaceImagesMap);
+            setSpaces(venueInfo.spaces);
+          }
+
+          // Initialize operating hours
+          const defaultHours = {
+            monday: { open: "09:00", close: "17:00", closed: false },
+            tuesday: { open: "09:00", close: "17:00", closed: false },
+            wednesday: { open: "09:00", close: "17:00", closed: false },
+            thursday: { open: "09:00", close: "17:00", closed: false },
+            friday: { open: "09:00", close: "17:00", closed: false },
+            saturday: { open: "09:00", close: "17:00", closed: false },
+            sunday: { open: "09:00", close: "17:00", closed: true },
+          };
+          setOperatingHours(venueInfo?.operatingHours || defaultHours);
+        } else {
+          console.warn("⚠️ No venue data found, might be first time setup");
+          // Initialize with empty venue for first-time setup
+          setVenueForm({
+            name: "",
+            description: "",
+            address: { street: "", city: "", state: "", zipCode: "", country: "" },
+            contact: { phone: "", email: "" },
+            capacity: { min: "", max: "" },
+            pricing: { basePrice: "" },
+          });
+        }
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setFetchError(error.message || "Failed to load settings");
-        toast.error(error.message || "Failed to load settings");
+        console.error("❌ Error fetching data:", error);
+        const errorMessage = error.message || "Failed to load settings";
+        setFetchError(errorMessage);
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -684,17 +720,15 @@ const VenueSettings = () => {
     }
   };
 
+  // FIXED: Save venue with complete data
   const handleSaveVenue = async () => {
     // Validation
     const newErrors = {};
 
     if (!venueForm.name.trim()) newErrors.name = "Venue name is required";
-    if (!venueForm.description.trim())
-      newErrors.description = "Description is required";
-    if (!venueForm.address.city.trim())
-      newErrors["address.city"] = "City is required";
-    if (!venueForm.contact.phone.trim())
-      newErrors["contact.phone"] = "Phone is required";
+    if (!venueForm.description.trim()) newErrors.description = "Description is required";
+    if (!venueForm.address.city.trim()) newErrors["address.city"] = "City is required";
+    if (!venueForm.contact.phone.trim()) newErrors["contact.phone"] = "Phone is required";
     if (!venueForm.contact.email.trim()) {
       newErrors["contact.email"] = "Email is required";
     } else if (!/^\S+@\S+\.\S+$/.test(venueForm.contact.email)) {
@@ -715,10 +749,7 @@ const VenueSettings = () => {
       }
     }
 
-    if (
-      !venueForm.pricing.basePrice ||
-      Number(venueForm.pricing.basePrice) < 0
-    ) {
+    if (!venueForm.pricing.basePrice || Number(venueForm.pricing.basePrice) < 0) {
       newErrors["pricing.basePrice"] = "Base price must be 0 or greater";
     }
 
@@ -730,22 +761,10 @@ const VenueSettings = () => {
 
     setSaving(true);
     try {
+      console.log("💾 Saving venue data...", venueForm);
+
       const submitData = {
-        images: venueImages
-          .filter((img) => !img.uploading)
-          .map((img) => ({
-            url: img.url,
-            alt: img.alt,
-          })),
-        spaces: spaces.map((space) => ({
-          ...space,
-          images: (spaceImages[space._id] || [])
-            .filter((img) => !img.uploading)
-            .map((img) => ({
-              url: img.url,
-              alt: img.alt,
-            })),
-        })),
+        // Basic venue info
         name: venueForm.name.trim(),
         description: venueForm.description.trim(),
         address: {
@@ -766,36 +785,81 @@ const VenueSettings = () => {
         pricing: {
           basePrice: Number(venueForm.pricing.basePrice),
         },
-        amenities,
-        operatingHours,
+        amenities: amenities,
+        operatingHours: operatingHours,
+        
+        // Images and spaces
+        images: venueImages
+          .filter((img) => !img.uploading && !img.id.startsWith("temp-"))
+          .map((img) => ({
+            id: img.id,
+            url: img.url,
+            alt: img.alt,
+          })),
+        spaces: spaces.map((space) => ({
+          _id: space._id,
+          name: space.name,
+          description: space.description,
+          capacity: space.capacity,
+          price: space.price,
+          isActive: space.isActive,
+          images: (spaceImages[space._id] || [])
+            .filter((img) => !img.uploading && !img.id.startsWith("temp-"))
+            .map((img) => ({
+              id: img.id,
+              url: img.url,
+              alt: img.alt,
+            })),
+        })),
       };
 
-      await venueService.update(submitData);
-      toast.success("Venue settings updated successfully!");
-      setErrors({});
-    } catch (error) {
-      console.error("Error updating venue:", error);
+      console.log("🚀 Sending venue data to API:", submitData);
 
-      if (error.status === 400 || error.status === 422) {
-        if (error.errors) {
-          setErrors(error.errors);
-        }
-        toast.error(error.message || "Please fix the validation errors");
+      const response = await venueService.update(submitData);
+      console.log("✅ Venue update response:", response);
+
+      // Handle different response structures
+      let updatedVenue = null;
+      if (response?.data?.venue) {
+        updatedVenue = response.data.venue;
+      } else if (response?.venue) {
+        updatedVenue = response.venue;
+      } else if (response?.data) {
+        updatedVenue = response.data;
       } else {
-        toast.error(error.message || "Failed to update venue settings");
+        updatedVenue = response;
+      }
+
+      if (updatedVenue) {
+        setVenue(updatedVenue);
+        toast.success("Venue settings updated successfully!");
+        setErrors({});
+      } else {
+        throw new Error("No venue data in response");
+      }
+
+    } catch (error) {
+      console.error("❌ Error updating venue:", error);
+      
+      // Enhanced error handling
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors);
+        toast.error("Please fix the validation errors");
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to update venue settings");
       }
     } finally {
       setSaving(false);
     }
   };
 
-  // Add these handlers inside the VenueSettings component
-
-  // Handle venue image upload
+  // FIXED: Handle venue image upload
   const handleVenueImageUpload = async (files) => {
     setUploading(true);
-
-    const newImages = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -812,39 +876,47 @@ const VenueSettings = () => {
         alt: file.name,
       };
 
-      newImages.push(tempImage);
+      // Add to venue images immediately
       setVenueImages((prev) => [...prev, tempImage]);
 
       try {
         // Simulate upload progress
         for (let progress = 0; progress <= 100; progress += 10) {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          setUploadProgress((prev) => ({ ...prev, [imageId]: progress }));
           setVenueImages((prev) =>
             prev.map((img) => (img.id === imageId ? { ...img, progress } : img))
           );
         }
 
-        // In real implementation, upload to your server
+        // Upload to server using venue service
         const formData = new FormData();
-        formData.append("image", file);
+        formData.append("images", file);
 
-        // const response = await venueService.uploadImage(formData);
-        // const imageUrl = response.imageUrl;
+        console.log("📤 Uploading venue image...");
+        const response = await venueService.uploadImages(formData);
+        console.log("✅ Venue image upload response:", response);
 
-        // For demo, we'll use the temporary URL
-        const imageUrl = tempUrl;
+        const uploadedImage = response.images?.[0] || response.image || response;
 
-        // Update with final URL
-        setVenueImages((prev) =>
-          prev.map((img) =>
-            img.id === imageId
-              ? { ...img, url: imageUrl, uploading: false, progress: 100 }
-              : img
-          )
-        );
+        if (uploadedImage) {
+          // Update with final URL from server
+          setVenueImages((prev) =>
+            prev.map((img) =>
+              img.id === imageId
+                ? {
+                    id: uploadedImage.id || uploadedImage._id || imageId,
+                    url: uploadedImage.url || uploadedImage.path || tempUrl,
+                    alt: uploadedImage.alt || file.name,
+                    uploading: false,
+                    progress: 100,
+                  }
+                : img
+            )
+          );
+          toast.success("Image uploaded successfully");
+        }
       } catch (error) {
-        console.error("Error uploading image:", error);
+        console.error("❌ Error uploading image:", error);
         toast.error(`Failed to upload ${file.name}`);
         // Remove failed upload
         setVenueImages((prev) => prev.filter((img) => img.id !== imageId));
@@ -857,9 +929,6 @@ const VenueSettings = () => {
   // Handle space image upload
   const handleSpaceImageUpload = async (files, spaceId) => {
     setUploading(true);
-
-    const currentSpaceImages = spaceImages[spaceId] || [];
-    const newImages = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -875,7 +944,11 @@ const VenueSettings = () => {
         alt: file.name,
       };
 
-      newImages.push(tempImage);
+      // Add to current space images immediately for preview
+      setSpaceImages((prev) => ({
+        ...prev,
+        [spaceId]: [...(prev[spaceId] || []), tempImage],
+      }));
 
       try {
         // Simulate upload progress
@@ -889,19 +962,32 @@ const VenueSettings = () => {
           }));
         }
 
-        // Upload to server (commented for demo)
-        // const response = await venueService.uploadSpaceImage(spaceId, formData);
+        // Upload to server using venue service
+        const formData = new FormData();
+        formData.append("images", file);
 
-        const imageUrl = tempUrl; // Use actual URL from response in production
+        const response = await venueService.uploadSpaceImages(
+          spaceId,
+          formData
+        );
+        const uploadedImage = response.images?.[0];
 
-        setSpaceImages((prev) => ({
-          ...prev,
-          [spaceId]: (prev[spaceId] || []).map((img) =>
-            img.id === imageId
-              ? { ...img, url: imageUrl, uploading: false, progress: 100 }
-              : img
-          ),
-        }));
+        if (uploadedImage) {
+          setSpaceImages((prev) => ({
+            ...prev,
+            [spaceId]: (prev[spaceId] || []).map((img) =>
+              img.id === imageId
+                ? {
+                    id: uploadedImage.id,
+                    url: uploadedImage.url,
+                    alt: uploadedImage.alt || file.name,
+                    uploading: false,
+                    progress: 100,
+                  }
+                : img
+            ),
+          }));
+        }
       } catch (error) {
         console.error("Error uploading space image:", error);
         toast.error(`Failed to upload ${file.name}`);
@@ -915,17 +1001,48 @@ const VenueSettings = () => {
     setUploading(false);
   };
 
-  // Remove venue image
-  const handleRemoveVenueImage = (imageId) => {
-    setVenueImages((prev) => prev.filter((img) => img.id !== imageId));
+  // Remove venue image with API call
+  const handleRemoveVenueImage = async (imageId) => {
+    try {
+      // If it's a temporary image (starts with 'temp-'), just remove from state
+      if (imageId.startsWith("temp-")) {
+        setVenueImages((prev) => prev.filter((img) => img.id !== imageId));
+        return;
+      }
+
+      // For uploaded images, call the API to delete
+      await venueService.deleteImage(imageId);
+      setVenueImages((prev) => prev.filter((img) => img.id !== imageId));
+      toast.success("Image removed successfully");
+    } catch (error) {
+      console.error("Error removing image:", error);
+      toast.error("Failed to remove image");
+    }
   };
 
-  // Remove space image
-  const handleRemoveSpaceImage = (spaceId, imageId) => {
-    setSpaceImages((prev) => ({
-      ...prev,
-      [spaceId]: (prev[spaceId] || []).filter((img) => img.id !== imageId),
-    }));
+  // Remove space image with API call
+  const handleRemoveSpaceImage = async (spaceId, imageId) => {
+    try {
+      // If it's a temporary image, just remove from state
+      if (imageId.startsWith("temp-")) {
+        setSpaceImages((prev) => ({
+          ...prev,
+          [spaceId]: (prev[spaceId] || []).filter((img) => img.id !== imageId),
+        }));
+        return;
+      }
+
+      // For uploaded images, call the API to delete
+      await venueService.deleteSpaceImage(spaceId, imageId);
+      setSpaceImages((prev) => ({
+        ...prev,
+        [spaceId]: (prev[spaceId] || []).filter((img) => img.id !== imageId),
+      }));
+      toast.success("Space image removed successfully");
+    } catch (error) {
+      console.error("Error removing space image:", error);
+      toast.error("Failed to remove space image");
+    }
   };
 
   // Reorder venue images
@@ -1318,14 +1435,13 @@ const VenueSettings = () => {
                   </div>
                 </div>
 
-                {/* Venue Images Section */}
+                {/* Venue Images Section - FIXED */}
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Venue Images
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    Upload high-quality images of your venue. The first image
-                    will be used as the main photo.
+                    Upload high-quality images of your venue. The first image will be used as the main photo.
                   </p>
 
                   <ImageUpload
@@ -1345,8 +1461,7 @@ const VenueSettings = () => {
                     <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
                       <ImageIcon className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
                       <p className="text-gray-500 dark:text-gray-400">
-                        No images uploaded yet. Add some photos to showcase your
-                        venue.
+                        No images uploaded yet. Add some photos to showcase your venue.
                       </p>
                     </div>
                   )}
@@ -1573,6 +1688,7 @@ const VenueSettings = () => {
                         placeholder="150"
                       />
                     </div>
+
                     {/* Space Images */}
                     <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                       <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">
@@ -1581,23 +1697,24 @@ const VenueSettings = () => {
 
                       <ImageUpload
                         onUpload={(files) =>
-                          handleSpaceImageUpload(files, spaceForm)
+                          handleSpaceImageUpload(editingSpace?._id || "new-space", files)
                         }
                         multiple={true}
                         className="mb-4"
                       />
 
                       <ImageGrid
-                        images={spaceImages[spaceForm] || []}
+                        images={spaceImages[editingSpace?._id] || []}
                         onRemove={(imageId) =>
-                          handleRemoveSpaceImage(spaceForm, imageId)
+                          handleRemoveSpaceImage(editingSpace?._id, imageId)
                         }
                         onReorder={(from, to) =>
-                          handleReorderSpaceImages(spaceForm, from, to)
+                          handleReorderSpaceImages(editingSpace?._id, from, to)
                         }
                         editable={true}
                       />
                     </div>
+
                     <div className="flex gap-2 w-full justify-end">
                       <Button
                         onClick={handleAddSpace}
@@ -1665,8 +1782,7 @@ const VenueSettings = () => {
                                 Capacity
                               </span>
                               <p className="font-medium text-gray-900 dark:text-white">
-                                {space.capacity.min} - {space.capacity.max}{" "}
-                                guests
+                                {space.capacity.min} - {space.capacity.max} guests
                               </p>
                             </div>
                             <div>

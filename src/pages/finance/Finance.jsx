@@ -5,6 +5,7 @@ import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Select from '../../components/common/Select';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import formatCurrency from '../../utils/formatCurrency';
 import {
   DollarSign,
   TrendingUp,
@@ -107,15 +108,6 @@ const Finance = () => {
       startDate: startDate.toISOString(),
       endDate: now.toISOString(),
     };
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('tn-TN', {
-      style: 'currency',
-      currency: 'TND',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount || 0);
   };
 
   const getDaysUntil = (date) => {

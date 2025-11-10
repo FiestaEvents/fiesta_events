@@ -40,15 +40,15 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
     });
   };
 
-  const formatDateLong = (dateString) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("tn-TN", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+const formatDateLong = (dateString) => {
+  if (!dateString) return "";
+  const d = new Date(dateString);
+  const weekday = d.toLocaleString("en-GB", { weekday: "long" });
+  const day = d.getDate();
+  const month = d.toLocaleString("en-GB", { month: "long" });
+  const year = d.getFullYear();
+  return `${weekday}, ${day} ${month} ${year}`;
+};
 
   const handleDelete = async () => {
     if (

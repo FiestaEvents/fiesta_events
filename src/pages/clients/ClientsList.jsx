@@ -8,15 +8,17 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { clientService } from "../../api/index";
 import { UsersIcon } from "../../components/icons/IconComponents";
-import { Plus, Search, Filter, Eye, X, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Eye, X, Edit, Trash2, AlertTriangle } from "lucide-react";
 import ClientDetail from "./ClientDetail.jsx";
 import ClientForm from "./ClientForm.jsx";
-import Badge from "../../components/common/Badge.js";
+import Badge from "../../components/common/Badge";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../../context/ToastContext";
 
 const ClientsList = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo, promise } = useToast();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +26,14 @@ const ClientsList = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    clientId: null,
+    clientName: "",
+    onConfirm: null
+  });
 
   // Search & filter state
   const [search, setSearch] = useState("");
@@ -33,7 +43,7 @@ const ClientsList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch clients
+  // Fetch clients with toast notifications
   const fetchClients = useCallback(async () => {
     try {
       setLoading(true);
@@ -80,36 +90,74 @@ const ClientsList = () => {
         err.message ||
         "Failed to load clients. Please try again.";
       setError(errorMessage);
+      showError(errorMessage);
       setClients([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [search, status, page, limit]);
+  }, [search, status, page, limit, showError]);
 
-  const handleDeleteClient = useCallback(
-    async (clientId) => {
-      if (
-        !clientId ||
-        !window.confirm("Are you sure you want to delete this client?")
-      ) {
-        return;
-      }
+  // Show confirmation modal
+  const showDeleteConfirmation = useCallback((clientId, clientName = "Client") => {
+    setConfirmationModal({
+      isOpen: true,
+      clientId,
+      clientName,
+      onConfirm: () => handleDeleteConfirm(clientId, clientName)
+    });
+  }, []);
 
-      try {
-        await clientService.delete(clientId);
-        alert("Client deleted successfully");
-        fetchClients();
-        if (selectedClient?._id === clientId) {
-          setSelectedClient(null);
-          setIsDetailModalOpen(false);
+  // Close confirmation modal
+  const closeConfirmationModal = useCallback(() => {
+    setConfirmationModal({
+      isOpen: false,
+      clientId: null,
+      clientName: "",
+      onConfirm: null
+    });
+  }, []);
+
+  // Handle confirmed deletion
+  const handleDeleteConfirm = useCallback(async (clientId, clientName = "Client") => {
+    if (!clientId) {
+      showError("Invalid client ID");
+      return;
+    }
+
+    try {
+      // Use the promise toast for loading state
+      await promise(
+        clientService.delete(clientId),
+        {
+          loading: `Deleting ${clientName}...`,
+          success: `${clientName} deleted successfully`,
+          error: `Failed to delete ${clientName}`
         }
-      } catch (err) {
-        alert(err.response?.data?.message || "Failed to delete client");
+      );
+
+      // Refresh the clients list
+      fetchClients();
+      
+      // Close detail modal if the deleted client is currently selected
+      if (selectedClient?._id === clientId) {
+        setSelectedClient(null);
+        setIsDetailModalOpen(false);
       }
-    },
-    [fetchClients, selectedClient]
-  );
+      
+      // Close confirmation modal
+      closeConfirmationModal();
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Delete client error:", err);
+      closeConfirmationModal();
+    }
+  }, [fetchClients, selectedClient, promise, showError, closeConfirmationModal]);
+
+  // Updated client deletion handler
+  const handleDeleteClient = useCallback((clientId, clientName = "Client") => {
+    showDeleteConfirmation(clientId, clientName);
+  }, [showDeleteConfirmation]);
 
   useEffect(() => {
     fetchClients();
@@ -137,13 +185,24 @@ const ClientsList = () => {
     fetchClients();
     setSelectedClient(null);
     setIsFormOpen(false);
-  }, [fetchClients]);
+    showSuccess(
+      selectedClient 
+        ? "Client updated successfully" 
+        : "Client created successfully"
+    );
+  }, [fetchClients, selectedClient, showSuccess]);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
     setStatus("all");
     setPage(1);
-  }, []);
+    showInfo("Filters cleared");
+  }, [showInfo]);
+
+  const handleRetry = useCallback(() => {
+    fetchClients();
+    showInfo("Retrying to load clients...");
+  }, [fetchClients, showInfo]);
 
   const hasActiveFilters = search.trim() !== "" || status !== "all";
   const showEmptyState =
@@ -261,7 +320,7 @@ const ClientsList = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleDeleteClient(row._id);
+              handleDeleteClient(row._id, row.name || "Client");
             }}
             className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
             title="Delete Client"
@@ -312,7 +371,7 @@ const ClientsList = () => {
                 {error}
               </p>
             </div>
-            <Button onClick={fetchClients} size="sm" variant="outline">
+            <Button onClick={handleRetry} size="sm" variant="outline">
               Retry
             </Button>
           </div>
@@ -321,7 +380,7 @@ const ClientsList = () => {
 
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -431,7 +490,7 @@ const ClientsList = () => {
 
       {/* No Results from Search/Filter */}
       {showNoResults && (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             No clients found
@@ -500,6 +559,50 @@ const ClientsList = () => {
           />
         </Modal>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        title="Confirm Deletion"
+        size="md"
+      >
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Delete Client
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to delete <strong>"{confirmationModal.clientName}"</strong>? 
+                This action cannot be undone and all associated data will be permanently removed.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmationModal}
+                  className="px-4 py-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmationModal.onConfirm}
+                  className="px-4 py-2 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Client
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

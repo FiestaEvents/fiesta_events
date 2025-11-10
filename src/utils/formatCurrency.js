@@ -4,7 +4,7 @@
  * Formats a number as currency with the currency symbol after the amount.
  * Automatically uses compact format for large numbers (>= 100,000).
  * @param {number} amount - The numeric amount to format
- * @param {string} [locale='tn-TN'] - Optional locale string
+ * @param {string} [locale='en-US'] - Optional locale string
  * @param {string} [currency='TND'] - Optional currency code
  * @param {Object} [options] - Additional options
  * @param {number} [options.compactThreshold=100000] - Threshold for compact format
@@ -14,7 +14,7 @@
  */
 export const formatCurrency = (
   amount,
-  locale = "tn-TN",
+  locale = "en-US",
   currency = "TND",
   options = {}
 ) => {
@@ -65,7 +65,7 @@ export const formatCurrency = (
  * Alternative: Format currency with custom options
  * @param {number} amount - The numeric amount to format
  * @param {Object} options - Formatting options
- * @param {string} [options.locale='tn-TN'] - Locale string
+ * @param {string} [options.locale='en-US'] - Locale string
  * @param {string} [options.currency='TND'] - Currency code
  * @param {number} [options.decimals=2] - Number of decimal places
  * @param {boolean} [options.showSymbol=true] - Whether to show currency symbol
@@ -74,7 +74,7 @@ export const formatCurrency = (
  */
 export const formatCurrencyAdvanced = (amount, options = {}) => {
   const {
-    locale = "tn-TN",
+    locale = "en-US",
     currency = "TND",
     decimals = 2,
     showSymbol = true,
@@ -108,13 +108,13 @@ export const formatCurrencyAdvanced = (amount, options = {}) => {
 /**
  * Format currency compactly (e.g., 1.5K TND, 2.3M TND)
  * @param {number} amount - The numeric amount to format
- * @param {string} [locale='tn-TN'] - Optional locale string
+ * @param {string} [locale='en-US'] - Optional locale string
  * @param {string} [currency='TND'] - Optional currency code
  * @returns {string} - Compact formatted currency string
  */
 export const formatCurrencyCompact = (
   amount,
-  locale = "tn-TN",
+  locale = "en-US",
   currency = "TND"
 ) => {
   if (typeof amount !== "number") return "";

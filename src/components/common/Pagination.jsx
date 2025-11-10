@@ -20,7 +20,7 @@ const Pagination = ({
     }
     
     for (let i = start; i <= end; i++) {
-      pages.push(i);
+      pages.push(i);d
     }
     
     return pages;

@@ -8,12 +8,13 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { reminderService } from "../../api/index";
 import { BellIcon } from "../../components/icons/IconComponents";
-import { Plus, Search, Filter, Eye, X, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Eye, X, Edit, Trash2, Clock, BellOff } from "lucide-react";
 import ReminderDetails from "./ReminderDetails";
 import ReminderForm from "./ReminderForm";
 import Badge from "../../components/common/Badge";
-import { format } from "date-fns";
+import { format, addHours, addDays, formatISO } from "date-fns";
 import { toast } from "react-hot-toast";
+import { ConfirmModal } from "../../components/common/Modal";
 
 const RemindersList = () => {
   const navigate = useNavigate();
@@ -24,6 +25,9 @@ const RemindersList = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, reminderId: null, reminderTitle: "" });
+  const [snoozingReminders, setSnoozingReminders] = useState(new Set());
+  const [snoozeOptionsModal, setSnoozeOptionsModal] = useState({ isOpen: false, reminder: null });
 
   // Search & filter state
   const [search, setSearch] = useState("");
@@ -91,29 +95,158 @@ const RemindersList = () => {
     }
   }, [search, status, type, priority, page, limit]);
 
-  const handleDeleteReminder = useCallback(
-    async (reminderId) => {
-      if (
-        !reminderId ||
-        !window.confirm("Are you sure you want to delete this reminder?")
-      ) {
-        return;
+  // Handle snooze with options
+  const handleSnoozeClick = useCallback((reminder) => {
+    if (!reminder?._id) {
+      toast.error("Invalid reminder data");
+      return;
+    }
+    setSnoozeOptionsModal({ isOpen: true, reminder });
+  }, []);
+
+  // Handle snooze action with specific duration
+  const handleSnoozeAction = useCallback(async (duration, unit = 'hours') => {
+    const { reminder } = snoozeOptionsModal;
+    
+    if (!reminder?._id) {
+      toast.error("Invalid reminder data");
+      return;
+    }
+
+    try {
+      setSnoozingReminders(prev => new Set(prev).add(reminder._id));
+
+      // Calculate snooze until date based on duration and unit
+      const now = new Date();
+      let snoozeUntil;
+      
+      switch (unit) {
+        case 'hours':
+          snoozeUntil = addHours(now, duration);
+          break;
+        case 'days':
+          snoozeUntil = addDays(now, duration);
+          break;
+        default:
+          snoozeUntil = addHours(now, duration);
       }
 
-      try {
-        await reminderService.delete(reminderId);
-        toast.success("Reminder deleted successfully");
-        fetchReminders();
-        if (selectedReminder?._id === reminderId) {
-          setSelectedReminder(null);
-          setIsDetailModalOpen(false);
+      // Format the date for the backend (ISO string)
+      const snoozeData = {
+        snoozeUntil: snoozeUntil.toISOString(),
+        duration: duration,
+        unit: unit
+      };
+
+      await reminderService.snooze(reminder._id, snoozeData);
+      toast.success(`Reminder snoozed for ${duration} ${unit}`);
+      
+      // Refresh the list
+      await fetchReminders();
+      setSnoozeOptionsModal({ isOpen: false, reminder: null });
+    } catch (err) {
+      console.error("Error snoozing reminder:", err);
+      
+      // Try alternative approach if the first one fails
+      if (err.response?.data?.message?.includes("Invalid snooze date")) {
+        try {
+          // Try with just the date string without additional fields
+          const snoozeUntil = addHours(new Date(), duration);
+          const alternativeData = {
+            snoozeUntil: snoozeUntil.toISOString()
+          };
+          
+          await reminderService.snooze(reminder._id, alternativeData);
+          toast.success(`Reminder snoozed for ${duration} ${unit}`);
+          await fetchReminders();
+          setSnoozeOptionsModal({ isOpen: false, reminder: null });
+          return;
+        } catch (secondErr) {
+          console.error("Alternative snooze also failed:", secondErr);
         }
-      } catch (err) {
-        toast.error(err.response?.data?.message || "Failed to delete reminder");
       }
-    },
-    [fetchReminders, selectedReminder]
-  );
+      
+      toast.error(err.response?.data?.message || "Failed to snooze reminder");
+    } finally {
+      setSnoozingReminders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reminder._id);
+        return newSet;
+      });
+    }
+  }, [snoozeOptionsModal, fetchReminders]);
+
+  // Handle unsnooze
+  const handleUnsnooze = useCallback(async (reminder) => {
+    if (!reminder?._id) {
+      toast.error("Invalid reminder data");
+      return;
+    }
+
+    try {
+      setSnoozingReminders(prev => new Set(prev).add(reminder._id));
+      
+      // Update status back to active and clear snooze fields
+      await reminderService.update(reminder._id, { 
+        status: "active",
+        snoozeUntil: null
+      });
+      
+      toast.success("Reminder activated");
+      await fetchReminders();
+    } catch (err) {
+      console.error("Error unsnoozing reminder:", err);
+      toast.error(err.response?.data?.message || "Failed to activate reminder");
+    } finally {
+      setSnoozingReminders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reminder._id);
+        return newSet;
+      });
+    }
+  }, [fetchReminders]);
+
+  // Handle delete reminder with modal confirmation
+  const handleDeleteReminder = useCallback((reminder) => {
+    if (!reminder?._id) {
+      toast.error("Invalid reminder data");
+      return;
+    }
+
+    setDeleteModal({
+      isOpen: true,
+      reminderId: reminder._id,
+      reminderTitle: reminder.title || "Untitled Reminder"
+    });
+  }, []);
+
+  // Confirm delete action
+  const confirmDeleteReminder = useCallback(async () => {
+    const { reminderId } = deleteModal;
+    
+    if (!reminderId) {
+      setDeleteModal({ isOpen: false, reminderId: null, reminderTitle: "" });
+      return;
+    }
+
+    try {
+      await reminderService.delete(reminderId);
+      toast.success("Reminder deleted successfully");
+      
+      // Refresh the list
+      await fetchReminders();
+      
+      // Close detail modal if the deleted reminder was selected
+      if (selectedReminder?._id === reminderId) {
+        setSelectedReminder(null);
+        setIsDetailModalOpen(false);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete reminder");
+    } finally {
+      setDeleteModal({ isOpen: false, reminderId: null, reminderTitle: "" });
+    }
+  }, [deleteModal, fetchReminders, selectedReminder]);
 
   useEffect(() => {
     fetchReminders();
@@ -131,9 +264,13 @@ const RemindersList = () => {
   }, []);
 
   const handleViewReminder = useCallback((reminder) => {
-    setSelectedReminder(reminder);
-    setIsDetailModalOpen(true);
-  }, []);
+    if (reminder && reminder._id) {
+      navigate(`/reminders/${reminder._id}`);
+    } else {
+      console.error('Invalid reminder data:', reminder);
+      toast.error('Cannot view reminder: Invalid data');
+    }
+  }, [navigate]);
 
   const handleFormSuccess = useCallback(() => {
     fetchReminders();
@@ -217,7 +354,7 @@ const RemindersList = () => {
       header: "Title",
       accessor: "title",
       sortable: true,
-      width: "25%",
+      width: "20%",
       render: (row) => (
         <div className="font-medium text-gray-900 dark:text-white">
           {row.title || "Untitled Reminder"}
@@ -228,7 +365,7 @@ const RemindersList = () => {
       header: "Description",
       accessor: "description",
       sortable: true,
-      width: "20%",
+      width: "18%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
           {row.description ? `${row.description.substring(0, 50)}${row.description.length > 50 ? '...' : ''}` : "No description"}
@@ -253,7 +390,7 @@ const RemindersList = () => {
       header: "Type",
       accessor: "type",
       sortable: true,
-      width: "12%",
+      width: "10%",
       render: (row) => (
         <Badge color={getTypeBadgeColor(row.type)}>
           {row.type ? row.type.charAt(0).toUpperCase() + row.type.slice(1) : "Other"}
@@ -264,7 +401,7 @@ const RemindersList = () => {
       header: "Priority",
       accessor: "priority",
       sortable: true,
-      width: "12%",
+      width: "10%",
       render: (row) => (
         <Badge color={getPriorityBadgeColor(row.priority)}>
           {row.priority ? row.priority.charAt(0).toUpperCase() + row.priority.slice(1) : "Medium"}
@@ -275,7 +412,7 @@ const RemindersList = () => {
       header: "Status",
       accessor: "status",
       sortable: true,
-      width: "11%",
+      width: "10%",
       render: (row) => (
         <Badge color={getStatusBadgeColor(row.status)}>
           {row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : "Active"}
@@ -285,42 +422,79 @@ const RemindersList = () => {
     {
       header: "Actions",
       accessor: "actions",
-      width: "5%",
+      width: "17%",
       className: "text-center",
-      render: (row) => (
-        <div className="flex justify-center gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewReminder(row);
-            }}
-            className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-            title="View Reminder"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditReminder(row);
-            }}
-            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-            title="Edit Reminder"
-          >
-            <Edit className="h-4 w-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteReminder(row._id);
-            }}
-            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            title="Delete Reminder"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
-      ),
+      render: (row) => {
+        const isSnoozing = snoozingReminders.has(row._id);
+        const isSnoozed = row.status === "snoozed";
+        
+        return (
+          <div className="flex justify-center gap-1">
+            {/* Snooze/Unsnooze Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isSnoozed) {
+                  handleUnsnooze(row);
+                } else {
+                  handleSnoozeClick(row);
+                }
+              }}
+              disabled={isSnoozing}
+              className={`p-2 rounded transition ${
+                isSnoozed 
+                  ? "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50" 
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+              } ${isSnoozing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+              title={isSnoozed ? "Unsnooze Reminder" : "Snooze Reminder"}
+            >
+              {isSnoozing ? (
+                <Clock className="h-4 w-4 animate-spin" />
+              ) : isSnoozed ? (
+                <BellOff className="h-4 w-4" />
+              ) : (
+                <Clock className="h-4 w-4" />
+              )}
+            </button>
+
+            {/* View Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewReminder(row);
+              }}
+              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+              title="View Reminder"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+
+            {/* Edit Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditReminder(row);
+              }}
+              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-2 rounded hover:bg-green-50 dark:hover:bg-green-900/20 transition"
+              title="Edit Reminder"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+
+            {/* Delete Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteReminder(row);
+              }}
+              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+              title="Delete Reminder"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -374,7 +548,7 @@ const RemindersList = () => {
 
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -596,6 +770,75 @@ const RemindersList = () => {
           />
         </Modal>
       )}
+
+      {/* Snooze Options Modal */}
+      <Modal
+        isOpen={snoozeOptionsModal.isOpen}
+        onClose={() => setSnoozeOptionsModal({ isOpen: false, reminder: null })}
+        title="Snooze Reminder"
+        size="sm"
+      >
+        <div className="p-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            How long would you like to snooze this reminder?
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              onClick={() => handleSnoozeAction(1, 'hours')}
+              className="justify-center"
+            >
+              1 Hour
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSnoozeAction(2, 'hours')}
+              className="justify-center"
+            >
+              2 Hours
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSnoozeAction(4, 'hours')}
+              className="justify-center"
+            >
+              4 Hours
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSnoozeAction(8, 'hours')}
+              className="justify-center"
+            >
+              8 Hours
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSnoozeAction(1, 'days')}
+              className="justify-center"
+            >
+              1 Day
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSnoozeAction(2, 'days')}
+              className="justify-center"
+            >
+              2 Days
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, reminderId: null, reminderTitle: "" })}
+        onConfirm={confirmDeleteReminder}
+        title="Delete Reminder"
+        message={`Are you sure you want to delete the reminder "${deleteModal.reminderTitle}"? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="danger"
+      />
     </div>
   );
 };

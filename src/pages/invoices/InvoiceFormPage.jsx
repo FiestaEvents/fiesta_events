@@ -10,20 +10,26 @@ import {
   Calendar,
   ChevronRight,
   ChevronLeft,
-  Check,
   ArrowLeft,
   CreditCard,
   Building,
   Search,
-  AlertCircle,
+  Check,
   Users,
   Briefcase,
   Eye,
   Package,
   Mail,
   Phone,
-  Edit2,
+  AlertCircle,
   Info,
+  X,
+  User,
+  MapPin,
+  Clock,
+  Percent,
+  FileCheck,
+  History,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Card from "../../components/common/Card";
@@ -39,7 +45,97 @@ import {
   partnerService, 
   eventService 
 } from "../../api/index";
+import formatCurrency from "../../utils/formatCurrency";
 
+// ============================================
+// TOGGLE COMPONENT
+// ============================================
+const Toggle = ({ enabled, onChange, label, disabled = false }) => (
+  <div className="flex items-center gap-2">
+    <button
+      type="button"
+      onClick={() => !disabled && onChange(!enabled)}
+      disabled={disabled}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        enabled ? "bg-orange-500" : "bg-gray-300"
+      } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          enabled ? "translate-x-6" : "translate-x-1"
+        }`}
+      />
+    </button>
+    {label && (
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        {label}
+      </span>
+    )}
+  </div>
+);
+
+// ============================================
+// STICKY PRICE SUMMARY COMPONENT
+// ============================================
+const StickyPriceSummary = ({
+  subtotal,
+  tax,
+  discountAmount,
+  totalAmount,
+  visible,
+}) => {
+  if (!visible) return null;
+  
+  return (
+    <div className="fixed top-8 left-10 z-40 animate-in slide-in-from-bottom-5 duration-300">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-2 border-orange-200 dark:border-orange-700 p-4 min-w-[280px]">
+        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+          <DollarSign className="w-5 h-5 text-orange-500" />
+          <h4 className="font-bold text-gray-900 dark:text-white">
+            Price Summary
+          </h4>
+        </div>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {formatCurrency(subtotal)}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {formatCurrency(tax)}
+            </span>
+          </div>
+
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-red-600">
+              <span>Discount:</span>
+              <span className="font-semibold">
+                -{formatCurrency(discountAmount)}
+              </span>
+            </div>
+          )}
+
+          <div className="pt-2 border-t-2 border-orange-200 dark:border-orange-700 flex justify-between">
+            <span className="font-bold text-gray-900 dark:text-white">
+              Total:
+            </span>
+            <span className="font-bold text-2xl text-orange-600">
+              {formatCurrency(totalAmount)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// MAIN INVOICE FORM COMPONENT
+// ============================================
 const InvoiceFormPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -51,8 +147,11 @@ const InvoiceFormPage = () => {
   );
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 4;
 
+  // ============================================
+  // FORM STATE - ENHANCED
+  // ============================================
   const [formData, setFormData] = useState({
     invoiceType: invoiceType,
     client: "",
@@ -83,6 +182,9 @@ const InvoiceFormPage = () => {
     status: "draft",
   });
 
+  // ============================================
+  // UI STATE
+  // ============================================
   const [clients, setClients] = useState([]);
   const [partners, setPartners] = useState([]);
   const [events, setEvents] = useState([]);
@@ -90,10 +192,15 @@ const InvoiceFormPage = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(isEditMode);
+  const [fetchLoading, setFetchLoading] = useState(isEditMode);
   const [errors, setErrors] = useState({});
+  const [warnings, setWarnings] = useState({});
   const [recipientSearch, setRecipientSearch] = useState("");
+  const [hasDraft, setHasDraft] = useState(false);
 
+  // ============================================
+  // CALCULATIONS
+  // ============================================
   const [calculations, setCalculations] = useState({
     subtotal: 0,
     tax: 0,
@@ -101,45 +208,9 @@ const InvoiceFormPage = () => {
     totalAmount: 0,
   });
 
-  // FIXED: Dynamic category options based on invoice type
-  const getCategoryOptions = () => {
-    if (invoiceType === 'client') {
-      return [
-        { value: "venue_rental", label: "Venue Rental" },
-        { value: "catering", label: "Catering" },
-        { value: "decoration", label: "Decoration" },
-        { value: "photography", label: "Photography" },
-        { value: "music", label: "Music & Entertainment" },
-        { value: "security", label: "Security" },
-        { value: "cleaning", label: "Cleaning" },
-        { value: "audio_visual", label: "Audio Visual" },
-        { value: "floral", label: "Floral" },
-        { value: "entertainment", label: "Entertainment" },
-        { value: "transportation", label: "Transportation" },
-        { value: "equipment", label: "Equipment" },
-        { value: "other", label: "Other" },
-      ];
-    } else {
-      // For partner invoices, get unique categories from partners
-      const partnerCategories = [...new Set(partners
-        .filter(partner => partner.category)
-        .map(partner => partner.category)
-      )].sort();
-      
-      const categoryOptions = partnerCategories.map(category => ({
-        value: category.toLowerCase().replace(/\s+/g, '_'),
-        label: category
-      }));
-      
-      // Add "other" as fallback
-      categoryOptions.push({ value: "other", label: "Other" });
-      
-      return categoryOptions;
-    }
-  };
-
-  const categoryOptions = getCategoryOptions();
-
+  // ============================================
+  // CONFIGURATION
+  // ============================================
   const config = {
     client: {
       recipientLabel: "Client",
@@ -164,32 +235,32 @@ const InvoiceFormPage = () => {
   };
 
   const currentConfig = config[invoiceType];
+  const RecipientIcon = currentConfig.recipientIcon;
 
   const stepConfigs = {
     1: {
       title: "Recipient",
-      icon: currentConfig.recipientIcon,
+      icon: RecipientIcon,
       description: `Select ${currentConfig.recipientLabel.toLowerCase()}`,
+      color: "blue",
     },
     2: {
-      title: "Event",
-      icon: Calendar,
-      description: "Link to an event (optional)",
+      title: "Items & Pricing",
+      icon: Package,
+      description: "Add services and items with pricing",
+      color: "purple",
     },
     3: {
-      title: "Items",
-      icon: Package,
-      description: "Add services and items",
-    },
-    4: {
       title: "Details",
       icon: FileText,
       description: "Invoice details and terms",
+      color: "green",
     },
-    5: {
+    4: {
       title: "Review",
       icon: Eye,
-      description: "Final review",
+      description: "Final review and confirmation",
+      color: "orange",
     },
   };
 
@@ -207,49 +278,100 @@ const InvoiceFormPage = () => {
     { value: "mobile_payment", label: "Mobile Payment" },
   ];
 
-  // Load initial data
+  // ============================================
+  // AUTO-SAVE DRAFT FUNCTIONALITY
+  // ============================================
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [clientsResponse, partnersResponse, eventsResponse] = await Promise.all([
-          clientService.getAll({ status: "active", limit: 100 }),
-          partnerService.getAll({ status: "active", limit: 100 }),
-          eventService.getAll({ limit: 100 }),
-        ]);
+    if (!isEditMode && formData.client && currentStep > 1) {
+      const draftData = {
+        formData,
+        currentStep,
+        timestamp: new Date().toISOString(),
+      };
+      localStorage.setItem("invoiceFormDraft", JSON.stringify(draftData));
+    }
+  }, [formData, currentStep, isEditMode]);
 
-        setClients(clientsResponse?.clients || clientsResponse?.data || []);
-        setPartners(partnersResponse?.partners || partnersResponse?.data || []);
-        setEvents(eventsResponse?.events || eventsResponse?.data || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load data");
+  // Load draft on mount
+  useEffect(() => {
+    if (!isEditMode && !id) {
+      const draft = localStorage.getItem("invoiceFormDraft");
+      if (draft) {
+        try {
+          const { formData: savedData, currentStep: savedStep, timestamp } = JSON.parse(draft);
+          const draftAge = Date.now() - new Date(timestamp).getTime();
+          const oneDayMs = 24 * 60 * 60 * 1000;
+          if (draftAge < oneDayMs) {
+            setHasDraft(true);
+            window.__invoiceFormDraft = { savedData, savedStep, timestamp };
+          }
+        } catch (error) {
+          console.error("Error loading draft:", error);
+        }
       }
-    };
-
-    fetchData();
+    }
   }, []);
 
-  // FIXED: Update category options when partners data changes
-  useEffect(() => {
-    // This will ensure category options are updated when partners are loaded
-    if (invoiceType === 'partner' && partners.length > 0) {
-      // Force re-render of items with updated categories
-      setFormData(prev => ({
-        ...prev,
-        items: prev.items.map(item => ({
-          ...item,
-          category: item.category || getCategoryOptions()[0]?.value || "other"
-        }))
-      }));
+  const clearDraft = () => {
+    localStorage.removeItem("invoiceFormDraft");
+    setHasDraft(false);
+  };
+
+  // ============================================
+  // DATA FETCHING
+  // ============================================
+  const fetchDropdownData = async () => {
+    try {
+      const [clientsRes, partnersRes, eventsRes] = await Promise.allSettled([
+        clientService.getAll({ status: "active", limit: 100 }),
+        partnerService.getAll({ status: "active", limit: 100 }),
+        eventService.getAll({ limit: 100 }),
+      ]);
+
+      const extractArrayData = (response, serviceName) => {
+        if (response.status === "rejected") {
+          console.warn(`Failed to fetch ${serviceName}:`, response.reason);
+          return [];
+        }
+
+        const data = response.value;
+        if (!data) return [];
+
+        if (Array.isArray(data)) return data;
+        if (data.data && Array.isArray(data.data)) return data.data;
+        if (data.clients && Array.isArray(data.clients)) return data.clients;
+        if (data.partners && Array.isArray(data.partners)) return data.partners;
+        if (data.events && Array.isArray(data.events)) return data.events;
+
+        return [];
+      };
+
+      const clientsList = extractArrayData(clientsRes, "clients");
+      const partnersList = extractArrayData(partnersRes, "partners");
+      const eventsList = extractArrayData(eventsRes, "events");
+
+      setClients(clientsList);
+      setPartners(partnersList);
+      setEvents(eventsList);
+    } catch (error) {
+      console.error("Error fetching dropdown data:", error);
+      toast.error("Failed to load data");
+      setClients([]);
+      setPartners([]);
+      setEvents([]);
     }
-  }, [partners, invoiceType]);
+  };
+
+  useEffect(() => {
+    fetchDropdownData();
+  }, []);
 
   // Load invoice in edit mode
   useEffect(() => {
     if (isEditMode) {
       const fetchInvoice = async () => {
         try {
-          setLoadingData(true);
+          setFetchLoading(true);
           const response = await invoiceService.getById(id);
           const invoice = response?.invoice || response?.data?.invoice || response?.data;
 
@@ -272,13 +394,13 @@ const InvoiceFormPage = () => {
                 quantity: Number(item.quantity) || 1,
                 rate: Number(item.rate) || 0,
                 amount: Number(item.amount) || 0,
-                category: item.category || (invoice.invoiceType === 'partner' ? "other" : "venue_rental"),
+                category: item.category || "venue_rental",
               })) : [{
                 description: "",
                 quantity: 1,
                 rate: 0,
                 amount: 0,
-                category: invoice.invoiceType === 'partner' ? "other" : "venue_rental",
+                category: "venue_rental",
               }],
               taxRate: Number(invoice.taxRate) || 19,
               discount: Number(invoice.discount) || 0,
@@ -301,7 +423,7 @@ const InvoiceFormPage = () => {
           toast.error("Failed to load invoice");
           navigate("/invoices");
         } finally {
-          setLoadingData(false);
+          setFetchLoading(false);
         }
       };
 
@@ -355,6 +477,9 @@ const InvoiceFormPage = () => {
     });
   }, [formData.items, formData.taxRate, formData.discount, formData.discountType]);
 
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
   const handleChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -373,7 +498,7 @@ const InvoiceFormPage = () => {
       [field]: value,
     };
     
-    // Always recalculate amount when quantity or rate changes
+    // Recalculate amount when quantity or rate changes
     const quantity = Number(updatedItems[index].quantity) || 0;
     const rate = Number(updatedItems[index].rate) || 0;
     updatedItems[index].amount = quantity * rate;
@@ -394,10 +519,6 @@ const InvoiceFormPage = () => {
   };
 
   const handleAddItem = () => {
-    const defaultCategory = invoiceType === 'partner' 
-      ? (getCategoryOptions()[0]?.value || "other")
-      : "venue_rental";
-
     setFormData((prev) => ({
       ...prev,
       items: [
@@ -407,7 +528,7 @@ const InvoiceFormPage = () => {
           quantity: 1,
           rate: 0,
           amount: 0,
-          category: defaultCategory,
+          category: "venue_rental",
         },
       ],
     }));
@@ -423,6 +544,25 @@ const InvoiceFormPage = () => {
     } else {
       toast.error("At least one item is required");
     }
+  };
+
+  const handleSelectRecipient = (recipientId) => {
+    setSelectedRecipient(recipientId);
+    
+    if (invoiceType === 'client') {
+      setFormData(prev => ({ ...prev, client: recipientId, partner: "", event: "" }));
+    } else {
+      setFormData(prev => ({ ...prev, partner: recipientId, client: "", event: "" }));
+    }
+
+    setSelectedEvent(null);
+
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.client;
+      delete newErrors.partner;
+      return newErrors;
+    });
   };
 
   const handleEventSelect = async (eventId) => {
@@ -469,17 +609,12 @@ const InvoiceFormPage = () => {
             .filter(p => (p.partner?._id || p.partner) === partnerId)
             .forEach(partner => {
               if (partner.cost > 0) {
-                // FIXED: Use partner's category or service type
-                const partnerCategory = partner.service?.toLowerCase().replace(/\s+/g, '_') || 
-                                      partner.partner?.category?.toLowerCase().replace(/\s+/g, '_') || 
-                                      "other";
-                
                 eventItems.push({
                   description: `${partner.service || 'Service'} - ${event.title}`,
                   quantity: 1,
                   rate: Number(partner.cost),
                   amount: Number(partner.cost),
-                  category: partnerCategory,
+                  category: "other",
                 });
               }
             });
@@ -501,43 +636,9 @@ const InvoiceFormPage = () => {
     }
   };
 
-  const handleSelectRecipient = (recipientId) => {
-    setSelectedRecipient(recipientId);
-    
-    if (invoiceType === 'client') {
-      setFormData(prev => ({ ...prev, client: recipientId, partner: "", event: "" }));
-    } else {
-      setFormData(prev => ({ ...prev, partner: recipientId, client: "", event: "" }));
-    }
-
-    setSelectedEvent(null);
-
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.client;
-      delete newErrors.partner;
-      return newErrors;
-    });
-  };
-
-  const getSelectedRecipient = () => {
-    const recipients = invoiceType === 'client' ? clients : partners;
-    return recipients.find(r => r._id === selectedRecipient);
-  };
-
-  const recipients = invoiceType === 'client' ? clients : partners;
-
-  const filteredRecipients = recipients.filter((recipient) => {
-    const searchLower = recipientSearch.toLowerCase();
-    return (
-      recipient.name?.toLowerCase().includes(searchLower) ||
-      recipient.email?.toLowerCase().includes(searchLower) ||
-      recipient.phone?.includes(recipientSearch) ||
-      recipient.company?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  // FIXED: Proper validation for each step
+  // ============================================
+  // VALIDATION
+  // ============================================
   const validateStep = (step) => {
     const newErrors = {};
 
@@ -550,9 +651,7 @@ const InvoiceFormPage = () => {
       }
     }
 
-    // Step 2 is optional - no validation needed
-
-    if (step === 3) {
+    if (step === 2) {
       if (formData.items.length === 0) {
         newErrors.items = "At least one item is required";
       } else {
@@ -570,7 +669,7 @@ const InvoiceFormPage = () => {
       }
     }
 
-    if (step === 4) {
+    if (step === 3) {
       if (!formData.issueDate) newErrors.issueDate = "Issue date is required";
       if (!formData.dueDate) newErrors.dueDate = "Due date is required";
       if (formData.issueDate && formData.dueDate && new Date(formData.dueDate) < new Date(formData.issueDate)) {
@@ -582,6 +681,9 @@ const InvoiceFormPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ============================================
+  // NAVIGATION
+  // ============================================
   const nextStep = () => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
@@ -591,100 +693,183 @@ const InvoiceFormPage = () => {
   };
 
   const prevStep = () => {
-    // FIXED: Proper previous step navigation
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
-    }
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("fr-TN", {
-      style: "currency",
-      currency: formData.currency || "TND",
-      minimumFractionDigits: 3,
-      maximumFractionDigits: 3,
-    }).format(amount || 0);
-  };
-
-  const formatDate = (date) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (currentStep < totalSteps) {
+  const jumpToStep = (step) => {
+    if (step < currentStep) {
+      setCurrentStep(step);
+    } else if (step === currentStep + 1) {
       nextStep();
-      return;
+    }
+  };
+
+  // ============================================
+  // FORM SUBMISSION
+  // ============================================
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (currentStep < totalSteps) {
+    nextStep();
+    return;
+  }
+
+  if (!validateStep(4)) {
+    toast.error("Please fix all errors before submitting");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const invoiceData = {
+      invoiceType: invoiceType,
+      issueDate: formData.issueDate,
+      dueDate: formData.dueDate,
+      items: formData.items.map(item => ({
+        description: item.description.trim(),
+        quantity: Number(item.quantity),
+        rate: Number(item.rate),
+        amount: Number(item.amount),
+        category: item.category,
+      })),
+      taxRate: Number(formData.taxRate),
+      discount: Number(formData.discount),
+      discountType: formData.discountType,
+      notes: formData.notes.trim(),
+      terms: formData.terms.trim(),
+      currency: formData.currency,
+      paymentMethod: formData.paymentMethod,
+      status: formData.status,
+    };
+
+    if (invoiceType === 'client') {
+      invoiceData.client = formData.client;
+    } else {
+      invoiceData.partner = formData.partner;
     }
 
-    if (!validateStep(4)) {
-      toast.error("Please fix all errors before submitting");
-      return;
+    if (formData.event) {
+      invoiceData.event = formData.event;
     }
 
-    try {
-      setLoading(true);
-      const invoiceData = {
-        invoiceType: invoiceType,
-        issueDate: formData.issueDate,
-        dueDate: formData.dueDate,
-        items: formData.items.map(item => ({
-          description: item.description.trim(),
-          quantity: Number(item.quantity),
-          rate: Number(item.rate),
-          amount: Number(item.amount),
-          category: item.category,
-        })),
-        taxRate: Number(formData.taxRate),
-        discount: Number(formData.discount),
-        discountType: formData.discountType,
-        notes: formData.notes.trim(),
-        terms: formData.terms.trim(),
-        currency: formData.currency,
-        paymentMethod: formData.paymentMethod,
-        status: formData.status,
+    let response;
+    let createdInvoice;
+
+    if (isEditMode) {
+      response = await invoiceService.update(id, invoiceData);
+      toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} updated successfully`);
+      
+      // For edit mode, fetch the updated invoice to show in modal
+      try {
+        const updatedInvoiceResponse = await invoiceService.getById(id);
+        createdInvoice = updatedInvoiceResponse?.invoice || updatedInvoiceResponse?.data?.invoice || updatedInvoiceResponse?.data;
+      } catch (fetchError) {
+        console.error("Error fetching updated invoice:", fetchError);
+        // If we can't fetch the updated invoice, use the form data
+        createdInvoice = { ...invoiceData, _id: id };
+      }
+    } else {
+      response = await invoiceService.create(invoiceData);
+      toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} created successfully`);
+      clearDraft();
+      
+      // Extract the created invoice from response
+      createdInvoice = response?.invoice || response?.data?.invoice || response?.data;
+    }
+
+    // Show success modal with the created/updated invoice
+    if (createdInvoice) {
+      // Normalize the invoice data for the modal
+      const normalizedInvoice = {
+        _id: createdInvoice._id || id,
+        invoiceNumber: createdInvoice.invoiceNumber || `INV-${(createdInvoice._id || '').substring(0, 8)}`,
+        invoiceType: createdInvoice.invoiceType || invoiceType,
+        recipientName: invoiceType === 'client' 
+          ? (createdInvoice.client?.name || selectedRecipientDetails?.name || 'Client')
+          : (createdInvoice.partner?.name || selectedRecipientDetails?.name || 'Partner'),
+        recipientEmail: invoiceType === 'client'
+          ? (createdInvoice.client?.email || selectedRecipientDetails?.email)
+          : (createdInvoice.partner?.email || selectedRecipientDetails?.email),
+        recipientCompany: invoiceType === 'client'
+          ? (createdInvoice.client?.company || selectedRecipientDetails?.company)
+          : (createdInvoice.partner?.company || selectedRecipientDetails?.company),
+        totalAmount: createdInvoice.totalAmount || calculations.totalAmount,
+        subtotal: createdInvoice.subtotal || calculations.subtotal,
+        tax: createdInvoice.tax || calculations.tax,
+        taxRate: createdInvoice.taxRate || formData.taxRate,
+        discount: createdInvoice.discount || formData.discount,
+        discountType: createdInvoice.discountType || formData.discountType,
+        status: createdInvoice.status || formData.status,
+        issueDate: createdInvoice.issueDate || formData.issueDate,
+        dueDate: createdInvoice.dueDate || formData.dueDate,
+        items: createdInvoice.items || formData.items,
+        notes: createdInvoice.notes || formData.notes,
+        terms: createdInvoice.terms || formData.terms,
+        currency: createdInvoice.currency || formData.currency,
+        paymentMethod: createdInvoice.paymentMethod || formData.paymentMethod,
+        event: createdInvoice.event || formData.event,
+        createdAt: createdInvoice.createdAt || new Date().toISOString(),
+        updatedAt: createdInvoice.updatedAt || new Date().toISOString()
       };
 
-      if (invoiceType === 'client') {
-        invoiceData.client = formData.client;
-      } else {
-        invoiceData.partner = formData.partner;
-      }
+      // Set the invoice for modal view and open modal
+      setSelectedInvoice(normalizedInvoice);
+      setIsDetailModalOpen(true);
 
-      if (formData.event) {
-        invoiceData.event = formData.event;
-      }
-
-      if (isEditMode) {
-        await invoiceService.update(id, invoiceData);
-        toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} updated successfully`);
-      } else {
-        await invoiceService.create(invoiceData);
-        toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} created successfully`);
-      }
-
+      // Optional: Add a small delay before showing modal for better UX
+      setTimeout(() => {
+        // You can add any additional actions here after modal opens
+      }, 100);
+    } else {
+      // Fallback: navigate to invoices list if we can't show the modal
       navigate("/invoices");
-
-    } catch (error) {
-      console.error("Error saving invoice:", error);
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || "Failed to save invoice";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
     }
-  };
+
+  } catch (error) {
+    console.error("Error saving invoice:", error);
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || "Failed to save invoice";
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCancel = () => {
     navigate("/invoices");
   };
 
-  if (loadingData) {
+  // ============================================
+  // HELPER FUNCTIONS
+  // ============================================
+  const getSelectedRecipient = () => {
+    const recipients = invoiceType === 'client' ? clients : partners;
+    return recipients.find(r => r._id === selectedRecipient);
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '-';
+    const d = new Date(date);
+    const day = d.getDate();
+    const month = d.toLocaleString('en-GB', { month: 'short' });
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
+  const recipients = invoiceType === 'client' ? clients : partners;
+  const filteredRecipients = recipients.filter((recipient) => {
+    const searchLower = recipientSearch.toLowerCase();
+    return (
+      recipient.name?.toLowerCase().includes(searchLower) ||
+      recipient.email?.toLowerCase().includes(searchLower) ||
+      recipient.phone?.includes(recipientSearch) ||
+      recipient.company?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const selectedRecipientDetails = getSelectedRecipient();
+
+  if (fetchLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <LoadingSpinner size="medium" />
@@ -692,93 +877,158 @@ const InvoiceFormPage = () => {
     );
   }
 
-  const RecipientIcon = currentConfig.recipientIcon;
-  const selectedRecipientDetails = getSelectedRecipient();
+  const currentStepConfig = stepConfigs[currentStep];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
-        <div className="mb-6 bg-white p-6 rounded-md shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-xl ${
-                invoiceType === 'client' ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-orange-100 dark:bg-orange-900/30'
-              }`}>
-                <RecipientIcon className={`w-8 h-8 ${
-                  invoiceType === 'client' ? 'text-orange-600 dark:text-orange-400' : 'text-orange-600 dark:text-orange-400'
-                }`} />
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                  <RecipientIcon className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {isEditMode ? currentConfig.editLabel : currentConfig.createLabel}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                    {currentStepConfig.description}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {isEditMode ? currentConfig.editLabel : currentConfig.createLabel}
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Step {currentStep} of {totalSteps}: {stepConfigs[currentStep].description}
-                </p>
-              </div>
+              <Button
+                variant="outline"
+                icon={ArrowLeft}
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              icon={ArrowLeft}
-              onClick={handleCancel}
-            >
-              Cancel
-            </Button>
-          </div>
 
-          {/* Progress Bar */}
-          <div className="relative">
-            <div className="overflow-hidden h-2 text-xs flex rounded-full bg-gray-200 dark:bg-gray-700">
-              <div
-                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${
-                  invoiceType === 'client' ? 'bg-orange-500' : 'bg-orange-500'
-                }`}
-              />
-            </div>
-            <div className="flex justify-between mt-4">
-              {[1, 2, 3, 4, 5].map((step) => {
-                const config = stepConfigs[step];
-                const isActive = step === currentStep;
-                const isComplete = step < currentStep;
-                const StepIcon = config.icon;
-
-                return (
-                  <div key={step} className="flex flex-col items-center">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                        isActive
-                          ? invoiceType === 'client'
-                            ? 'bg-orange-500 border-orange-500 text-white'
-                            : 'bg-orange-500 border-orange-500 text-white'
-                          : isComplete
-                            ? 'bg-orange-500 border-orange-500 text-white'
-                            : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'
-                      }`}
+            {/* Draft indicator */}
+            {hasDraft && !isEditMode && window.__invoiceFormDraft && (
+              <div className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg shadow-lg animate-in slide-in-from-top-3 duration-500">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                      <History className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        Draft Found!
+                      </h3>
+                      <Badge variant="warning" className="text-xs">
+                        Unsaved Changes
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                      You have an unsaved draft from{" "}
+                      <strong className="text-orange-600 dark:text-orange-400">
+                        {new Date(window.__invoiceFormDraft.timestamp).toLocaleString()}
+                      </strong>
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 flex flex-col gap-2">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      icon={Check}
+                      onClick={() => {
+                        const { savedData, savedStep } = window.__invoiceFormDraft;
+                        setFormData(savedData);
+                        setCurrentStep(savedStep);
+                        setHasDraft(false);
+                        delete window.__invoiceFormDraft;
+                        toast.success("Draft restored successfully!");
+                      }}
+                      className="whitespace-nowrap"
                     >
-                      {isComplete ? (
-                        <Check className="w-5 h-5" />
-                      ) : (
-                        <StepIcon className="w-5 h-5" />
+                      Restore Draft
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      icon={Trash2}
+                      onClick={() => {
+                        localStorage.removeItem("invoiceFormDraft");
+                        setHasDraft(false);
+                        delete window.__invoiceFormDraft;
+                        toast.success("Draft discarded");
+                      }}
+                      className="whitespace-nowrap hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                    >
+                      Discard
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Enhanced Progress Steps */}
+            <div className="mt-6">
+              <div className="flex items-center justify-center">
+                {[1, 2, 3, 4].map((step) => {
+                  const config = stepConfigs[step];
+                  const isActive = step === currentStep;
+                  const isComplete = step < currentStep;
+                  const isClickable = step <= currentStep;
+                  const StepIcon = config.icon;
+
+                  return (
+                    <div key={step} className="flex items-center flex-1">
+                      <div className="flex flex-col items-center">
+                        <div
+                          onClick={() => isClickable && jumpToStep(step)}
+                          className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+                            isActive
+                              ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110"
+                              : isComplete
+                                ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
+                                : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400"
+                          }`}
+                        >
+                          {isComplete ? (
+                            <Check className="w-5 h-5" />
+                          ) : (
+                            <StepIcon className="w-5 h-5" />
+                          )}
+                          {isActive && (
+                            <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs mt-2 font-medium text-center transition-colors ${
+                            isActive
+                              ? "text-orange-600 dark:text-orange-400"
+                              : isComplete
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-gray-500"
+                          }`}
+                        >
+                          {config.title}
+                        </span>
+                      </div>
+                      {step < totalSteps && (
+                        <div
+                          className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${
+                            isComplete
+                              ? "bg-gradient-to-r from-green-500 to-green-600"
+                              : "bg-gray-200 dark:bg-gray-600"
+                          }`}
+                        />
                       )}
                     </div>
-                    <span
-                      className={`text-xs mt-2 font-medium ${
-                        isActive
-                          ? invoiceType === 'client'
-                            ? 'text-gray-600 dark:text-blue-400'
-                            : 'text-gray-600 dark:text-purple-400'
-                          : isComplete
-                            ? 'text-gray-600 dark:text-green-400'
-                            : 'text-gray-500'
-                      }`}
-                    >
-                      {config.title}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -786,202 +1036,167 @@ const InvoiceFormPage = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Step 1: Recipient Selection */}
           {currentStep === 1 && (
-            <Card className="border-0 shadow-lg">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className={`p-2 rounded-lg ${
-                    invoiceType === 'client' ? 'bg-orange-100 dark:bg-blue-900/30' : 'bg-orange-100 dark:bg-orange-900/30'
-                  }`}>
-                    <RecipientIcon className={`w-6 h-6 ${
-                      invoiceType === 'client' ? 'text-gray-600' : 'text-orange-600'
-                    }`} />
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <Card className="border-0 shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className={`p-2 rounded-lg ${
+                      invoiceType === 'client' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
+                    }`}>
+                      <RecipientIcon className={`w-6 h-6 ${
+                        invoiceType === 'client' ? 'text-blue-600' : 'text-purple-600'
+                      }`} />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Select {currentConfig.recipientLabel}
+                      </h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Choose who this {invoiceType === 'client' ? 'invoice' : 'bill'} is for
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Select {currentConfig.recipientLabel}
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Choose who this {invoiceType === 'client' ? 'invoice' : 'bill'} is for
-                    </p>
-                  </div>
-                </div>
 
-                <Input
-                  icon={Search}
-                  placeholder={`Search ${currentConfig.recipientLabel.toLowerCase()}s...`}
-                  value={recipientSearch}
-                  onChange={(e) => setRecipientSearch(e.target.value)}
-                  className="mb-4"
-                />
+                  <Input
+                    icon={Search}
+                    placeholder={`Search ${currentConfig.recipientLabel.toLowerCase()}s...`}
+                    value={recipientSearch}
+                    onChange={(e) => setRecipientSearch(e.target.value)}
+                    className="mb-4"
+                  />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-                  {filteredRecipients.length > 0 ? (
-                    filteredRecipients.map((recipient) => (
-                      <button
-                        key={recipient._id}
-                        type="button"
-                        onClick={() => handleSelectRecipient(recipient._id)}
-                        className={`p-4 rounded-lg border-2 text-left transition-all ${
-                          selectedRecipient === recipient._id
-                            ? invoiceType === 'client'
-                              ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                              : 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:shadow-sm'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${
-                              selectedRecipient === recipient._id
-                                ? invoiceType === 'client'
-                                  ? 'bg-blue-500'
-                                  : 'bg-purple-500'
-                                : 'bg-gray-400'
-                            }`}
-                          >
-                            {recipient.name?.charAt(0).toUpperCase() || "?"}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-gray-900 dark:text-white truncate">
-                              {recipient.name}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                    {filteredRecipients.length > 0 ? (
+                      filteredRecipients.map((recipient) => (
+                        <button
+                          key={recipient._id}
+                          type="button"
+                          onClick={() => handleSelectRecipient(recipient._id)}
+                          className={`p-4 rounded-lg border-2 text-left transition-all ${
+                            selectedRecipient === recipient._id
+                              ? invoiceType === 'client'
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                : 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:shadow-sm'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${
+                                selectedRecipient === recipient._id
+                                  ? invoiceType === 'client'
+                                    ? 'bg-blue-500'
+                                    : 'bg-purple-500'
+                                  : 'bg-gray-400'
+                              }`}
+                            >
+                              {recipient.name?.charAt(0).toUpperCase() || "?"}
                             </div>
-                            {recipient.company && (
-                              <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                {recipient.company}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-gray-900 dark:text-white truncate">
+                                {recipient.name}
                               </div>
+                              {recipient.company && (
+                                <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                  {recipient.company}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                                <div className="flex items-center gap-1 truncate">
+                                  <Mail className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">{recipient.email}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Phone className="w-3 h-3 flex-shrink-0" />
+                                  <span>{recipient.phone}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {selectedRecipient === recipient._id && (
+                              <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
                             )}
-                            <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                              <div className="flex items-center gap-1 truncate">
-                                <Mail className="w-3 h-3 flex-shrink-0" />
-                                <span className="truncate">{recipient.email}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Phone className="w-3 h-3 flex-shrink-0" />
-                                <span>{recipient.phone}</span>
-                              </div>
-                            </div>
                           </div>
-                          {selectedRecipient === recipient._id && (
-                            <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                          )}
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-12">
-                      <RecipientIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                      <p className="text-gray-500 font-medium">
-                        No {currentConfig.recipientLabel.toLowerCase()}s found
+                        </button>
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-12">
+                        <RecipientIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                        <p className="text-gray-500 font-medium">
+                          No {currentConfig.recipientLabel.toLowerCase()}s found
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {(errors.client || errors.partner) && (
+                    <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-red-800 dark:text-red-400">
+                        {errors.client || errors.partner}
                       </p>
                     </div>
                   )}
                 </div>
+              </Card>
 
-                {(errors.client || errors.partner) && (
-                  <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-800 dark:text-red-400">
-                      {errors.client || errors.partner}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* Step 2: Event Selection */}
-          {currentStep === 2 && (
-            <Card className="border-0 shadow-lg">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                    <Calendar className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Link to Event (Optional)
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Connect this {invoiceType === 'client' ? 'invoice' : 'bill'} to an event to auto-populate items
-                    </p>
-                  </div>
-                </div>
-
-                {selectedRecipientDetails && (
-                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Selected {currentConfig.recipientLabel}:</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{selectedRecipientDetails.name}</p>
-                  </div>
-                )}
-
-                <Select
-                  label="Select Event"
-                  value={formData.event}
-                  onChange={(e) => {
-                    handleChange("event", e.target.value);
-                    handleEventSelect(e.target.value);
-                  }}
-                >
-                  <option value="">No event selected - I'll add items manually</option>
-                  {relatedEvents.map((event) => (
-                    <option key={event._id} value={event._id}>
-                      {event.title} - {formatDate(event.startDate)} ({event.type})
-                    </option>
-                  ))}
-                </Select>
-
-                {relatedEvents.length === 0 && selectedRecipient && (
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Info className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+              {/* Event Selection */}
+              {selectedRecipient && (
+                <Card className="border-0 shadow-lg">
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                        <Calendar className="w-6 h-6 text-green-600" />
+                      </div>
                       <div>
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-300">
-                          No events found
-                        </p>
-                        <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                          No events found for this {currentConfig.recipientLabel.toLowerCase()}. You can skip this step and add items manually.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {selectedEvent && (
-                  <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-semibold text-green-900 dark:text-green-300">
-                          Event Loaded Successfully
-                        </p>
-                        <p className="text-sm text-green-700 dark:text-green-400 mt-1">
-                          <strong>{selectedEvent.title}</strong> - {formatDate(selectedEvent.startDate)}
-                        </p>
-                        <p className="text-sm text-green-600 dark:text-green-500 mt-2">
-                          Items from this event have been added to the invoice. You can review and modify them in the next step.
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                          Link to Event (Optional)
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Connect to an event to auto-populate items
                         </p>
                       </div>
                     </div>
-                  </div>
-                )}
 
-                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-start gap-3">
-                    <Info className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        <strong>Optional Step:</strong> You can skip event selection and proceed to add items manually in the next step.
-                      </p>
-                    </div>
+                    <Select
+                      label="Select Event"
+                      value={formData.event}
+                      onChange={(e) => {
+                        handleChange("event", e.target.value);
+                        handleEventSelect(e.target.value);
+                      }}
+                    >
+                      <option value="">No event selected - Add items manually</option>
+                      {relatedEvents.map((event) => (
+                        <option key={event._id} value={event._id}>
+                          {event.title} - {formatDate(event.startDate)} ({event.type})
+                        </option>
+                      ))}
+                    </Select>
+
+                    {relatedEvents.length === 0 && selectedRecipient && (
+                      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-900 dark:text-blue-300">
+                              No events found
+                            </p>
+                            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                              No events found for this {currentConfig.recipientLabel.toLowerCase()}. You can add items manually in the next step.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
-            </Card>
+                </Card>
+              )}
+            </div>
           )}
 
-          {/* Step 3: Items & Pricing - FIXED: Dynamic categories */}
-          {currentStep === 3 && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Step 2: Items & Pricing */}
+          {currentStep === 2 && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-right-5 duration-300">
               {/* Items List */}
               <div className="lg:col-span-2">
                 <Card className="border-0 shadow-lg">
@@ -1015,7 +1230,7 @@ const InvoiceFormPage = () => {
                       {formData.items.map((item, index) => (
                         <div
                           key={index}
-                          className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800"
+                          className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
                         >
                           <div className="space-y-4">
                             <Input
@@ -1045,17 +1260,18 @@ const InvoiceFormPage = () => {
                                 onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
                                 error={errors[`items[${index}].rate`]}
                               />
-                              <Select
-                                label="Category"
-                                value={item.category}
-                                onChange={(e) => handleItemChange(index, 'category', e.target.value)}
-                                options={categoryOptions}
+                              <Input
+                                label="Amount"
+                                type="number"
+                                value={item.amount}
+                                disabled
+                                className="bg-gray-50"
                               />
                             </div>
 
                             <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-600">
                               <div>
-                                <span className="text-sm text-gray-600 dark:text-gray-400">Amount: </span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">Total: </span>
                                 <span className="text-lg font-semibold text-gray-900 dark:text-white">
                                   {formatCurrency(item.amount)}
                                 </span>
@@ -1089,9 +1305,9 @@ const InvoiceFormPage = () => {
                 </Card>
               </div>
 
-              {/* Price Summary */}
+              {/* Price Summary & Settings */}
               <div className="lg:col-span-1">
-                <div className="sticky top-6">
+                <div className="sticky space-y-6">
                   <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
                     <div className="p-6">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
@@ -1133,21 +1349,24 @@ const InvoiceFormPage = () => {
                           </div>
                         </div>
                       </div>
+                    </div>
+                  </Card>
 
-                      <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Tax Rate (%)
-                          </label>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.1"
-                            value={formData.taxRate}
-                            onChange={(e) => handleChange("taxRate", e.target.value)}
-                          />
-                        </div>
+                  <Card className="border-0 shadow-lg">
+                    <div className="p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        Tax & Discount
+                      </h3>
+                      <div className="space-y-4">
+                        <Input
+                          label="Tax Rate (%)"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={formData.taxRate}
+                          onChange={(e) => handleChange("taxRate", e.target.value)}
+                        />
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
@@ -1184,14 +1403,14 @@ const InvoiceFormPage = () => {
             </div>
           )}
 
-          {/* Step 4: Details */}
-          {currentStep === 4 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Step 3: Details */}
+          {currentStep === 3 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-right-5 duration-300">
               <Card className="border-0 shadow-lg">
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                      <Calendar className="w-6 h-6 text-gray-600" />
+                      <Calendar className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
                       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1246,6 +1465,16 @@ const InvoiceFormPage = () => {
                       onChange={(e) => handleChange("paymentMethod", e.target.value)}
                       options={paymentMethodOptions}
                     />
+                    <Select
+                      label="Status"
+                      value={formData.status}
+                      onChange={(e) => handleChange("status", e.target.value)}
+                      options={[
+                        { value: 'draft', label: 'Draft' },
+                        { value: 'sent', label: 'Sent' },
+                        { value: 'paid', label: 'Paid' },
+                      ]}
+                    />
                   </div>
                 </div>
               </Card>
@@ -1284,121 +1513,183 @@ const InvoiceFormPage = () => {
             </div>
           )}
 
-          {/* Step 5: Review */}
-          {currentStep === 5 && (
-            <Card className="border-0 shadow-lg">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                    <Eye className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Review & Confirm
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Please review all details before creating the {invoiceType === 'client' ? 'invoice' : 'bill'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+          {/* Step 4: Review */}
+          {currentStep === 4 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <Card className="border-0 shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                      <Eye className="w-6 h-6 text-green-600" />
+                    </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        {currentConfig.recipientLabel}
-                      </h3>
-                      <p className="text-gray-900 dark:text-white font-medium">
-                        {selectedRecipientDetails?.name}
-                      </p>
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Review & Confirm
+                      </h2>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {selectedRecipientDetails?.email}
+                        Please review all details before {isEditMode ? 'updating' : 'creating'} the {invoiceType === 'client' ? 'invoice' : 'bill'}
                       </p>
                     </div>
+                  </div>
 
-                    {selectedEvent && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-6">
                       <div>
-                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Event
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                          {currentConfig.recipientLabel} Information
                         </h3>
-                        <p className="text-gray-900 dark:text-white font-medium">
-                          {selectedEvent.title}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {formatDate(selectedEvent.startDate)}
-                        </p>
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Dates
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Issue: {formatDate(formData.issueDate)}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Due: {formatDate(formData.dueDate)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Items ({formData.items.length})
-                      </h3>
-                      <div className="space-y-2">
-                        {formData.items.map((item, index) => (
-                          <div key={index} className="text-sm">
-                            <p className="text-gray-900 dark:text-white font-medium">
-                              {item.description}
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              {item.quantity} × {formatCurrency(item.rate)} = {formatCurrency(item.amount)}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                          <span className="text-gray-900 dark:text-white font-medium">
-                            {formatCurrency(calculations.subtotal)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Tax:</span>
-                          <span className="text-gray-900 dark:text-white font-medium">
-                            {formatCurrency(calculations.tax)}
-                          </span>
-                        </div>
-                        {calculations.discountAmount > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">Discount:</span>
-                            <span className="text-red-600 dark:text-red-400 font-medium">
-                              -{formatCurrency(calculations.discountAmount)}
-                            </span>
+                        {selectedRecipientDetails && (
+                          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-start gap-3">
+                              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                                {selectedRecipientDetails.name?.charAt(0).toUpperCase() || "?"}
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-semibold text-gray-900 dark:text-white">
+                                  {selectedRecipientDetails.name}
+                                </div>
+                                {selectedRecipientDetails.company && (
+                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    {selectedRecipientDetails.company}
+                                  </div>
+                                )}
+                                <div className="text-sm text-gray-500 mt-2 space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Mail className="w-4 h-4" />
+                                    {selectedRecipientDetails.email}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Phone className="w-4 h-4" />
+                                    {selectedRecipientDetails.phone}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         )}
-                        <div className="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200 dark:border-gray-700">
-                          <span className="text-gray-900 dark:text-white">Total:</span>
-                          <span className="text-orange-600 dark:text-orange-400">
-                            {formatCurrency(calculations.totalAmount)}
-                          </span>
+                      </div>
+
+                      {selectedEvent && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            Event Information
+                          </h3>
+                          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                            <div className="font-semibold text-green-900 dark:text-green-300">
+                              {selectedEvent.title}
+                            </div>
+                            <div className="text-sm text-green-700 dark:text-green-400 mt-1">
+                              {formatDate(selectedEvent.startDate)} - {selectedEvent.type}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                          Invoice Details
+                        </h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                            <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {formatDate(formData.issueDate)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                            <span className="text-gray-600 dark:text-gray-400">Due Date:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {formatDate(formData.dueDate)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                            <span className="text-gray-600 dark:text-gray-400">Currency:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {formData.currency}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-2">
+                            <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                            <Badge
+                              color={
+                                formData.status === "paid" ? "green" :
+                                formData.status === "sent" ? "blue" : "orange"
+                              }
+                            >
+                              {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                          Items Summary ({formData.items.length})
+                        </h3>
+                        <div className="space-y-3">
+                          {formData.items.map((item, index) => (
+                            <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="font-medium text-gray-900 dark:text-white">
+                                    {item.description}
+                                  </div>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    {item.quantity} × {formatCurrency(item.rate)}
+                                  </div>
+                                </div>
+                                <div className="font-semibold text-gray-900 dark:text-white">
+                                  {formatCurrency(item.amount)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <h4 className="font-semibold text-orange-900 dark:text-orange-300 mb-3">
+                          Final Amount
+                        </h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                            <span className="text-gray-900 dark:text-white font-medium">
+                              {formatCurrency(calculations.subtotal)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+                            <span className="text-gray-900 dark:text-white font-medium">
+                              {formatCurrency(calculations.tax)}
+                            </span>
+                          </div>
+                          {calculations.discountAmount > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">Discount:</span>
+                              <span className="text-red-600 dark:text-red-400 font-medium">
+                                -{formatCurrency(calculations.discountAmount)}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-lg font-bold pt-2 border-t border-orange-200 dark:border-orange-700">
+                            <span className="text-orange-900 dark:text-orange-300">Total:</span>
+                            <span className="text-orange-600 dark:text-orange-400">
+                              {formatCurrency(calculations.totalAmount)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           )}
 
-          {/* Footer Navigation - FIXED: Previous button now works properly */}
+          {/* Footer Navigation */}
           <Card className="border-0 shadow-lg">
             <div className="p-6">
               <div className="flex items-center justify-between">
@@ -1409,16 +1700,19 @@ const InvoiceFormPage = () => {
                       variant="outline"
                       icon={ChevronLeft}
                       onClick={prevStep}
+                      className="hover:scale-105 transition-transform"
                     >
                       Previous
                     </Button>
                   )}
                 </div>
                 <div className="flex items-center gap-4">
-                  {currentStep >= 3 && (
-                    <div className="text-right px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="text-xs text-gray-600 dark:text-gray-400">Total</div>
-                      <div className="text-xl font-bold text-orange-600">
+                  {currentStep >= 2 && (
+                    <div className="text-right px-4 py-2 bg-white dark:bg-gray-600 rounded-lg shadow">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        Total Amount
+                      </div>
+                      <div className="text-2xl font-bold text-orange-600">
                         {formatCurrency(calculations.totalAmount)}
                       </div>
                     </div>
@@ -1429,8 +1723,9 @@ const InvoiceFormPage = () => {
                       variant="primary"
                       icon={ChevronRight}
                       onClick={nextStep}
+                      className="hover:scale-105 transition-transform"
                     >
-                      Next: {stepConfigs[currentStep + 1]?.title}
+                      Continue
                     </Button>
                   ) : (
                     <Button
@@ -1438,6 +1733,7 @@ const InvoiceFormPage = () => {
                       variant="primary"
                       icon={Save}
                       loading={loading}
+                      className="hover:scale-105 transition-transform"
                     >
                       {isEditMode 
                         ? `Update ${invoiceType === 'client' ? 'Invoice' : 'Bill'}` 
@@ -1450,6 +1746,15 @@ const InvoiceFormPage = () => {
           </Card>
         </form>
       </div>
+
+      {/* Sticky Price Summary */}
+      <StickyPriceSummary
+        subtotal={calculations.subtotal}
+        tax={calculations.tax}
+        discountAmount={calculations.discountAmount}
+        totalAmount={calculations.totalAmount}
+        visible={currentStep >= 2}
+      />
     </div>
   );
 };

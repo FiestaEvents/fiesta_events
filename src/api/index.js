@@ -755,7 +755,6 @@ export const taskService = {
       return handleError(error);
     }
   },
-
   /**
    * Partially update task (PATCH)
    * @param {string} id - Task ID

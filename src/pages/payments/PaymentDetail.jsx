@@ -8,6 +8,7 @@ import Modal from "../../components/common/Modal";
 import Input from "../../components/common/Input";
 import { paymentService } from "../../api/index";
 import { toast } from "react-hot-toast";
+import formatCurrency from "../../utils/formatCurrency";
 import {
   ArrowLeft,
   Edit,
@@ -101,34 +102,25 @@ const PaymentDetail = () => {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("tn-TN", {
-      style: "currency",
-      currency: "TND",
-    }).format(amount || 0);
-  };
+const formatDate = (date) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
 
-  const formatDate = (date) => {
-    if (!date) return "—";
-    return new Date(date).toLocaleDateString("tn-TN", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatDateTime = (date) => {
-    if (!date) return "—";
-    return new Date(date).toLocaleString("tn-TN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+const formatDateTime = (dateString) => {
+  if (!dateString) return "";
+  const d = new Date(dateString);
+  const day = d.getDate();
+  const month = d.toLocaleString("en-GB", { month: "short" });
+  const year = d.getFullYear();
+  const hours = d.getHours().toString().padStart(2, "0");
+  const minutes = d.getMinutes().toString().padStart(2, "0");
+  return `${day} ${month} ${year}, ${hours}:${minutes}`;
+};
 
   const getStatusVariant = (status) => {
     const statusLower = (status || "").toLowerCase();
@@ -203,38 +195,6 @@ const PaymentDetail = () => {
               {payment.reference || `Payment #${id.slice(-8)}`}
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {payment.type === "income" &&
-            ["completed", "paid"].includes(
-              (payment.status || "").toLowerCase()
-            ) &&
-            !payment.refundAmount && (
-              <Button
-                variant="outline"
-                icon={RotateCcw}
-                onClick={() => {
-                  setRefundData({
-                    amount: payment.amount.toString(),
-                    reason: "",
-                  });
-                  setIsRefundModalOpen(true);
-                }}
-              >
-                Refund
-              </Button>
-            )}
-          <Button variant="outline" icon={Edit} onClick={handleEdit}>
-            Edit
-          </Button>
-          <Button
-            variant="danger"
-            icon={Trash2}
-            onClick={() => setIsDeleteModalOpen(true)}
-          >
-            Delete
-          </Button>
         </div>
       </div>
 

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { paymentService, eventService, clientService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
+import formatCurrency from "../../utils/formatCurrency";
 import {
   Save,
   X,
@@ -51,6 +52,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [clients, setClients] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [errors, setErrors] = useState({});
@@ -71,6 +73,42 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     fetchOptions();
   }, []);
 
+  // Fetch events by client ID
+  const fetchEventsByClient = useCallback(async (clientId) => {
+    if (!clientId) {
+      setFilteredEvents(events);
+      return;
+    }
+
+    try {
+      setLoadingOptions(true);
+      const response = await eventService.getByClientId(clientId);
+      const clientEvents = response?.events || response?.data?.events || response?.data || [];
+      setFilteredEvents(clientEvents);
+    } catch (error) {
+      console.error('Error fetching client events:', error);
+      toast.error('Failed to load client events');
+      setFilteredEvents(events);
+    } finally {
+      setLoadingOptions(false);
+    }
+  }, [events]);
+
+  // Set client when event is selected
+  const setClientFromEvent = useCallback((eventId) => {
+    if (!eventId) {
+      return;
+    }
+
+    const selectedEvent = events.find(event => event._id === eventId);
+    if (selectedEvent && selectedEvent.client) {
+      setFormData(prev => ({
+        ...prev,
+        client: selectedEvent.client._id || selectedEvent.client
+      }));
+    }
+  }, [events]);
+
   const fetchPayment = async () => {
     try {
       setLoading(true);
@@ -86,7 +124,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   };
 
   const loadPaymentData = (paymentData) => {
-    setFormData({
+    const loadedData = {
       type: paymentData.type || "income",
       amount: paymentData.amount?.toString() || "",
       method: paymentData.method || "cash",
@@ -106,7 +144,14 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
         platformFee: paymentData.fees?.platformFee?.toString() || "0",
         otherFees: paymentData.fees?.otherFees?.toString() || "0",
       },
-    });
+    };
+
+    setFormData(loadedData);
+
+    // If there's a client in the loaded data, fetch their events
+    if (loadedData.client) {
+      fetchEventsByClient(loadedData.client);
+    }
   };
 
   const fetchOptions = async () => {
@@ -117,8 +162,12 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
         clientService.getAll(),
       ]);
 
-      setEvents(eventsResponse.events || eventsResponse || []);
-      setClients(clientsResponse.clients || clientsResponse || []);
+      const eventsData = eventsResponse?.events || eventsResponse?.data?.events || eventsResponse?.data || eventsResponse || [];
+      const clientsData = clientsResponse?.clients || clientsResponse?.data?.clients || clientsResponse?.data || clientsResponse || [];
+
+      setEvents(eventsData);
+      setFilteredEvents(eventsData);
+      setClients(clientsData);
     } catch (error) {
       console.error("Error fetching options:", error);
       toast.error("Failed to load form options");
@@ -181,6 +230,34 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
         ...prev,
         [name]: "",
       }));
+    }
+  };
+
+  // Enhanced handler for client change
+  const handleClientChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({ 
+      ...prev, 
+      client: value,
+      event: '' // Reset event when client changes
+    }));
+    
+    // Fetch events for the selected client
+    if (value) {
+      fetchEventsByClient(value);
+    } else {
+      setFilteredEvents(events);
+    }
+  };
+
+  // Enhanced handler for event change
+  const handleEventChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({ ...prev, event: value }));
+    
+    // Set client from selected event
+    if (value) {
+      setClientFromEvent(value);
     }
   };
 
@@ -374,13 +451,6 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     return amount - processingFee - platformFee - otherFees;
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("tn-TN", {
-      style: "currency",
-      currency: "TND",
-    }).format(amount);
-  };
-
   // Render step indicator
   const renderStepIndicator = () => (
     <div className="mb-8">
@@ -564,29 +634,10 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
 
             <div className="grid grid-cols-1 gap-4">
               <Select
-                label="Related Event"
-                name="event"
-                value={formData.event}
-                onChange={handleChange}
-                disabled={loadingOptions}
-                className="w-full"
-              >
-                <option value="">Select an event</option>
-                {events.map((event) => (
-                  <option
-                    key={event._id || event.id}
-                    value={event._id || event.id}
-                  >
-                    {event.title}
-                  </option>
-                ))}
-              </Select>
-
-              <Select
                 label="Client"
                 name="client"
                 value={formData.client}
-                onChange={handleChange}
+                onChange={handleClientChange}
                 disabled={loadingOptions}
                 className="w-full"
               >
@@ -597,6 +648,25 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                     value={client._id || client.id}
                   >
                     {client.name}
+                  </option>
+                ))}
+              </Select>
+
+              <Select
+                label="Related Event"
+                name="event"
+                value={formData.event}
+                onChange={handleEventChange}
+                disabled={loadingOptions}
+                className="w-full"
+              >
+                <option value="">Select an event</option>
+                {filteredEvents.map((event) => (
+                  <option
+                    key={event._id || event.id}
+                    value={event._id || event.id}
+                  >
+                    {event.title}
                   </option>
                 ))}
               </Select>
@@ -791,7 +861,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             {currentStep > 1 && (
               <Button
                 type="button"
-                variant="variant"
+                variant="outline"
                 onClick={handlePrevious}
                 disabled={saving}
               >

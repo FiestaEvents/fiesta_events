@@ -444,7 +444,7 @@ const PartnersList = () => {
 
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input

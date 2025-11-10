@@ -195,6 +195,12 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
 
             <NavSection titleKey="sidebar.financial" isCollapsed={isCollapsed}>
               <NavLink
+                to="/finance"
+                icon={LineChartIcon}
+                labelKey="common.finance"
+                isCollapsed={isCollapsed}
+              />
+              <NavLink
                 to="/payments"
                 icon={CreditCardIcon}
                 labelKey="common.payments"
@@ -205,12 +211,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 to="/invoices"
                 icon={FileTextIcon}
                 labelKey="common.invoices"
-                isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/finance"
-                icon={LineChartIcon}
-                labelKey="common.finance"
                 isCollapsed={isCollapsed}
               />
             </NavSection>

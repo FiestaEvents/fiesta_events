@@ -177,13 +177,20 @@ const Transactions = () => {
     }).format(amount || 0);
   };
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("tn-TN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+const formatDate = useCallback((date) => {
+  if (!date) return "-";
+  try {
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return date;
+  }
+}, []);
+
+
 
   const columns = [
     {

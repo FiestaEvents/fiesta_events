@@ -42,6 +42,35 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
+  // Helper function to format date for display (dd/mm/yyyy)
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper function to format date for input (yyyy-mm-dd)
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
+
+  // Helper function to parse dd/mm/yyyy to Date object
+  const parseDateFromDisplay = (dateString) => {
+    if (!dateString) return null;
+    const [day, month, year] = dateString.split('/');
+    return new Date(year, month - 1, day);
+  };
+
+  // Get today's date in yyyy-mm-dd format
+  const getTodayDate = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -49,8 +78,8 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     priority: 'medium',
     status: 'todo',
     category: 'other',
-    dueDate: '',
-    startDate: '',
+    dueDate: '', // Due date is now empty by default
+    startDate: getTodayDate(), // Start date defaults to today
     reminderDate: '',
     estimatedHours: '',
     assignedTo: '',
@@ -66,6 +95,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   // UI state
   const [teamMembers, setTeamMembers] = useState([]);
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [clients, setClients] = useState([]);
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -142,9 +172,9 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       priority: taskData.priority || 'medium',
       status: taskData.status || 'todo',
       category: taskData.category || 'other',
-      dueDate: taskData.dueDate ? new Date(taskData.dueDate).toISOString().split('T')[0] : '',
-      startDate: taskData.startDate ? new Date(taskData.startDate).toISOString().split('T')[0] : '',
-      reminderDate: taskData.reminderDate ? new Date(taskData.reminderDate).toISOString().split('T')[0] : '',
+      dueDate: taskData.dueDate ? formatDateForInput(taskData.dueDate) : '',
+      startDate: taskData.startDate ? formatDateForInput(taskData.startDate) : getTodayDate(), // Default to today if no start date
+      reminderDate: taskData.reminderDate ? formatDateForInput(taskData.reminderDate) : '',
       estimatedHours: taskData.estimatedHours || '',
       assignedTo: taskData.assignedTo?._id || taskData.assignedTo || '',
       watchers: taskData.watchers?.map(w => w._id || w) || [],
@@ -156,6 +186,42 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       progress: taskData.progress || 0,
     });
   }, []);
+
+  // Fetch events by client ID
+  const fetchEventsByClient = useCallback(async (clientId) => {
+    if (!clientId) {
+      setFilteredEvents(events);
+      return;
+    }
+
+    try {
+      setFetchLoading(true);
+      const response = await eventService.getByClientId(clientId);
+      const clientEvents = response?.events || response?.data?.events || response?.data || [];
+      setFilteredEvents(clientEvents);
+    } catch (error) {
+      console.error('Error fetching client events:', error);
+      toast.error('Failed to load client events');
+      setFilteredEvents(events);
+    } finally {
+      setFetchLoading(false);
+    }
+  }, [events]);
+
+  // Set client when event is selected
+  const setClientFromEvent = useCallback((eventId) => {
+    if (!eventId) {
+      return;
+    }
+
+    const selectedEvent = events.find(event => event._id === eventId);
+    if (selectedEvent && selectedEvent.client) {
+      setFormData(prev => ({
+        ...prev,
+        relatedClient: selectedEvent.client._id || selectedEvent.client
+      }));
+    }
+  }, [events]);
 
   // Fetch task data (for edit mode via route)
   const fetchTask = useCallback(async () => {
@@ -189,10 +255,16 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
         partnerService.getAll({ limit: 100 }).catch(() => ({ data: [] })),
       ]);
 
-      setTeamMembers(teamRes?.team || teamRes?.data?.team || teamRes?.data || []);
-      setEvents(eventsRes?.events || eventsRes?.data?.events || eventsRes?.data || []);
-      setClients(clientsRes?.clients || clientsRes?.data?.clients || clientsRes?.data || []);
-      setPartners(partnersRes?.partners || partnersRes?.data?.partners || partnersRes?.data || []);
+      const teamData = teamRes?.team || teamRes?.data?.team || teamRes?.data || [];
+      const eventsData = eventsRes?.events || eventsRes?.data?.events || eventsRes?.data || [];
+      const clientsData = clientsRes?.clients || clientsRes?.data?.clients || clientsRes?.data || [];
+      const partnersData = partnersRes?.partners || partnersRes?.data?.partners || partnersRes?.data || [];
+
+      setTeamMembers(teamData);
+      setEvents(eventsData);
+      setFilteredEvents(eventsData);
+      setClients(clientsData);
+      setPartners(partnersData);
     } catch (error) {
       console.error('Error fetching related data:', error);
       toast.error('Failed to load form data');
@@ -219,6 +291,34 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  // Enhanced handler for client change
+  const handleClientChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({ 
+      ...prev, 
+      relatedClient: value,
+      relatedEvent: '' // Reset event when client changes
+    }));
+    
+    // Fetch events for the selected client
+    if (value) {
+      fetchEventsByClient(value);
+    } else {
+      setFilteredEvents(events);
+    }
+  };
+
+  // Enhanced handler for event change
+  const handleEventChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({ ...prev, relatedEvent: value }));
+    
+    // Set client from selected event
+    if (value) {
+      setClientFromEvent(value);
     }
   };
 
@@ -622,22 +722,22 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
                 type="date"
+                label="Start Date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleChange}
+                error={errors.startDate}
+                className="w-full"
+              />
+
+              <Input
+                type="date"
                 label="Due Date"
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
                 error={errors.dueDate}
                 required
-                className="w-full"
-              />
-
-              <Input
-                type="date"
-                label="Start Date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                error={errors.startDate}
                 className="w-full"
               />
 
@@ -739,15 +839,15 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Select
-                label="Related Event"
-                name="relatedEvent"
-                value={formData.relatedEvent}
-                onChange={handleChange}
+                label="Related Client"
+                name="relatedClient"
+                value={formData.relatedClient}
+                onChange={handleClientChange}
                 options={[
-                  { value: '', label: 'No event' },
-                  ...events.map(event => ({
-                    value: event._id,
-                    label: event.title,
+                  { value: '', label: 'No client' },
+                  ...clients.map(client => ({
+                    value: client._id,
+                    label: client.name,
                   }))
                 ]}
                 disabled={fetchLoading}
@@ -755,15 +855,15 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               />
 
               <Select
-                label="Related Client"
-                name="relatedClient"
-                value={formData.relatedClient}
-                onChange={handleChange}
+                label="Related Event"
+                name="relatedEvent"
+                value={formData.relatedEvent}
+                onChange={handleEventChange}
                 options={[
-                  { value: '', label: 'No client' },
-                  ...clients.map(client => ({
-                    value: client._id,
-                    label: client.name,
+                  { value: '', label: 'No event' },
+                  ...filteredEvents.map(event => ({
+                    value: event._id,
+                    label: event.title,
                   }))
                 ]}
                 disabled={fetchLoading}

@@ -7,7 +7,7 @@ import Card from '../../components/common/Card';
 import { authService } from '../../api/index';
 
 const ResetPassword = () => {
-  const { token } = useParams(); // token from URL /reset-password/:token
+  const { token } = useParams(); 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);

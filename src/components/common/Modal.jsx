@@ -50,7 +50,7 @@ const Modal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto ">
       {/* Overlay */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 transition-opacity"
@@ -58,10 +58,10 @@ const Modal = ({
       />
 
       {/* Modal Container */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-6 ">
         {/* Modal Content */}
         <div
-          className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full ${sizes[size]} ${className} animate-fade-in`}
+          className={`p-4 relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full ${sizes[size]} ${className} animate-fade-in`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

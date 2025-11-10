@@ -13,7 +13,7 @@ import PaymentDetails from "./PaymentDetail";
 import PaymentForm from "./PaymentForm";
 import Badge from "../../components/common/Badge";
 import { toast } from "react-hot-toast";
-
+import formatCurrency from "../../utils/formatCurrency";
 const PaymentsList = () => {
   const navigate = useNavigate();
   const [payments, setPayments] = useState([]);
@@ -163,10 +163,14 @@ const PaymentsList = () => {
     setIsFormOpen(true);
   }, []);
 
-  const handleViewPayment = useCallback((payment) => {
-    setSelectedPayment(payment);
-    setIsDetailModalOpen(true);
-  }, []);
+    const handleViewPayment = useCallback((payment) => {
+      if (payment && payment._id) {
+        navigate(`/payments/${payment._id}`);
+      } else {
+        console.error('Invalid payment data:', payment);
+        toast.error('Cannot view payment: Invalid data');
+      }
+    }, [navigate]);
 
   const handleRefundClick = useCallback((payment) => {
     setSelectedPayment(payment);
@@ -231,22 +235,14 @@ const PaymentsList = () => {
     }
   }, [payments]);
 
-  // Utility functions
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("tn-TN", {
-      style: "currency",
-      currency: "TND",
-    }).format(amount || 0);
-  };
-
-  const formatDate = (date) => {
-    if (!date) return "—";
-    return new Date(date).toLocaleDateString("tn-TN", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+const formatDate = (date) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
 
   const getClientName = (payment) => {
     if (payment.client?.name) return payment.client.name;
@@ -599,7 +595,7 @@ const PaymentsList = () => {
 
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -868,7 +864,7 @@ const PaymentsList = () => {
                 Cancel
               </Button>
               <Button 
-                variant="primary" 
+                variant="danger" 
                 onClick={() => handleRefundPayment(selectedPayment._id, refundData)}
               >
                 Confirm Refund

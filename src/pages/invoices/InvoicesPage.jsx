@@ -36,6 +36,7 @@ import Table from "../../components/common/NewTable";
 import Pagination from "../../components/common/Pagination";
 import { invoiceService } from "../../api/index";
 import { toast } from "react-hot-toast";
+import formatCurrency from "../../utils/formatCurrency";
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
@@ -464,26 +465,16 @@ const InvoicesPage = () => {
     }
   };
 
-  // Utility functions
-  const formatCurrency = (amount) => {
-    if (!amount && amount !== 0) return '-';
-    return new Intl.NumberFormat("tn-TN", {
-      style: "currency",
-      currency: "TND",
-      minimumFractionDigits: 3,
-    }).format(amount);
-  };
-
   const formatDate = (date) => {
     if (!date) return '-';
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
-  // Enhanced table columns configuration with action buttons
+  // Enhanced table columns configuration with improved action buttons
   const columns = [
     {
       accessor: "invoiceNumber",
@@ -574,13 +565,21 @@ const InvoicesPage = () => {
     {
       header: "Actions",
       accessor: "actions",
-      width: "12%",
+      width: "15%", // Increased width to accommodate more actions
       className: "text-center",
       render: (row) => {
         if (!row || !row._id) return <span className="text-gray-400">-</span>;
         
+        // Determine which actions are available based on invoice status
+        const canEdit = ["draft", "sent", "partial", "overdue"].includes(row.status);
+        const canDelete = ["draft"].includes(row.status) || 
+                         (row.status === "sent" && row.paymentStatus?.amountPaid === 0);
+        const canSend = row.status === "draft";
+        const canMarkPaid = ["sent", "partial", "overdue"].includes(row.status);
+        
         return (
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-1 pl-2">
+            {/* View Action */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -591,7 +590,8 @@ const InvoicesPage = () => {
             >
               <Eye className="h-4 w-4" />
             </button>
-            {row.status !== "paid" && row.status !== "cancelled" && (
+
+            {/* Edit Action - Now always visible for editable statuses */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -602,7 +602,8 @@ const InvoicesPage = () => {
               >
                 <Edit className="h-4 w-4" />
               </button>
-            )}
+
+            {/* Download Action */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -613,7 +614,37 @@ const InvoicesPage = () => {
             >
               <Download className="h-4 w-4" />
             </button>
-            {(row.status === "draft" || (row.status === "sent" && row.paymentStatus?.amountPaid === 0)) && (
+
+            {/* Send Action */}
+            {canSend && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSendInvoice(row);
+                }}
+                className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 p-1 rounded hover:bg-purple-50 dark:hover:bg-purple-900/20 transition"
+                title="Send Invoice"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            )}
+
+            {/* Mark as Paid Action */}
+            {canMarkPaid && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMarkAsPaid(row);
+                }}
+                className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 p-1 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                title="Mark as Paid"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+            )}
+
+            {/* Delete Action */}
+            {canDelete && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1278,28 +1309,52 @@ const InvoicesPage = () => {
                 Download PDF
               </Button>
               {selectedInvoice.status === "draft" && (
-                <Button
-                  variant="primary"
-                  icon={Send}
-                  onClick={() => {
-                    handleSendInvoice(selectedInvoice);
-                    handleCloseModal();
-                  }}
-                >
-                  Send Invoice
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    icon={Edit}
+                    onClick={() => {
+                      handleEditInvoice(selectedInvoice);
+                      handleCloseModal();
+                    }}
+                  >
+                    Edit Invoice
+                  </Button>
+                  <Button
+                    variant="primary"
+                    icon={Send}
+                    onClick={() => {
+                      handleSendInvoice(selectedInvoice);
+                      handleCloseModal();
+                    }}
+                  >
+                    Send Invoice
+                  </Button>
+                </>
               )}
               {(selectedInvoice.status === "sent" || selectedInvoice.status === "partial" || selectedInvoice.status === "overdue") && (
-                <Button
-                  variant="success"
-                  icon={Check}
-                  onClick={() => {
-                    handleMarkAsPaid(selectedInvoice);
-                    handleCloseModal();
-                  }}
-                >
-                  Mark as Paid
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    icon={Edit}
+                    onClick={() => {
+                      handleEditInvoice(selectedInvoice);
+                      handleCloseModal();
+                    }}
+                  >
+                    Edit Invoice
+                  </Button>
+                  <Button
+                    variant="success"
+                    icon={Check}
+                    onClick={() => {
+                      handleMarkAsPaid(selectedInvoice);
+                      handleCloseModal();
+                    }}
+                  >
+                    Mark as Paid
+                  </Button>
+                </>
               )}
             </div>
           </div>

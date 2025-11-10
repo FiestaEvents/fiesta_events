@@ -32,7 +32,7 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
@@ -50,7 +50,7 @@ const MainLayout = () => {
           onToggleCollapse={handleToggleCollapse}
         />
         <main className="pt-16">
-          <div className="p-6">
+          <div className="p-4">
             <div className="w-full min-h-[calc(100vh-4rem-3rem)]">
               <Outlet />
             </div>

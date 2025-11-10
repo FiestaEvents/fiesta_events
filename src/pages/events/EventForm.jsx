@@ -1282,7 +1282,7 @@ const EventForm = ({
     }
 
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="max-h-70% bg-white dark:bg-gray-900 flex items-center justify-center">
         {LoadingSpinner}
       </div>
     );
@@ -2597,7 +2597,7 @@ const EventForm = ({
               className="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity h-screen"
               onClick={handleClose}
             ></div>
-            <div className="relative inline-block align-middle w-full max-w-6xl">
+            <div className="relative inline-block align-middle w-full max-w-4xl">
               <div className="transform transition-all animate-in zoom-in-95 duration-300">
                 {formContent}
               </div>
