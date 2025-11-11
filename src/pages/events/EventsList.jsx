@@ -764,7 +764,7 @@ const EventList = () => {
   ];
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-white dark:bg-gray-800 min-h-screen rounded-lg space-y-6">
       {/* Event Detail Modal */}
       <EventDetailModal
         isOpen={isDetailsModalOpen}
@@ -796,8 +796,8 @@ const EventList = () => {
       )}
 
       {/* Header */}
-      <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
-        <div>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Event Calendar
           </h1>
@@ -808,7 +808,7 @@ const EventList = () => {
               `- Showing ${events.length} of ${totalItems} events`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
           {/* View Mode Toggle */}
           <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
             <button
@@ -848,11 +848,11 @@ const EventList = () => {
 
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
-                className="dark:bg-[#1f2937] dark:text-white"
+                className="dark:bg-[#1f2937] dark:text-white w-full md:w-[80%]"
                 icon={Search}
                 placeholder="Search events by title, description, or location..."
                 value={search}
@@ -958,19 +958,10 @@ const EventList = () => {
         </div>
       )}
 
-      {/* Loading State */}
-      {isLoading && !hasInitialLoad && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading events...
-          </p>
-        </div>
-      )}
       {viewMode === "calendar" ? (
         /* CALENDAR VIEW */
-        <TitleCard className="dark:bg-gray-800">
-          <div className="py-8">
+        <div className="dark:bg-gray-800">
+          <div>
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -1235,7 +1226,7 @@ const EventList = () => {
               </div>
             </div>
           </div>
-        </TitleCard>
+        </div>
       ) : (
         /* LIST VIEW */
         <div className="space-y-6">

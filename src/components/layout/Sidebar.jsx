@@ -241,7 +241,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
           <div className="p-3 border-t border-gray-200 dark:border-gray-700">
             {!isCollapsed && (
               <p className="text-xs text-gray-500 text-center dark:text-gray-400 mb-3">
-                &copy; 2024 Fiesta Inc. {t("common.allRightsReserved")}
+                &copy; 2025 Fiesta Inc. {t("common.allRightsReserved")}
               </p>
             )}
           </div>
