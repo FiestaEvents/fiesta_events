@@ -43,7 +43,6 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
-import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 
 // ============================================
@@ -2304,7 +2303,7 @@ const EventForm = ({
           {currentStep === 5 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+                <div className="border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
                   <div className="p-5">
                     <h4 className="font-semibold mb-4 flex items-center gap-2">
                       <Calendar className="w-5 h-5 text-blue-500" />
@@ -2383,9 +2382,9 @@ const EventForm = ({
                       )}
                     </div>
                   </div>
-                </Card>
+                </div>
 
-                <Card className="bg-white dark:bg-gray-700">
+                <div className="bg-white dark:bg-gray-700">
                   <div className="p-5">
                     <h4 className="font-semibold mb-4 flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-green-500" />
@@ -2472,10 +2471,10 @@ const EventForm = ({
                         )}
                     </div>
                   </div>
-                </Card>
+                </div>
               </div>
 
-              <Card className="border-l-4 border-purple-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
+              <div className="border-l-4 border-purple-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
                 <div className="p-5">
                   <h4 className="font-semibold mb-4 flex items-center gap-2">
                     <FileText className="w-5 h-5 text-purple-500" />
@@ -2491,11 +2490,11 @@ const EventForm = ({
                     showCount
                   />
                 </div>
-              </Card>
+              </div>
 
               {/* Auto-generate Invoice Option */}
               {!isEditMode && (
-                <Card className="border-l-4 border-indigo-500 shadow-md hover:shadow-lg transition-shadow bg-indigo-50 dark:bg-gray-700">
+                <div className="border-l-4 border-indigo-500 shadow-md hover:shadow-lg transition-shadow bg-indigo-50 dark:bg-gray-700">
                   <div className="p-5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -2520,7 +2519,7 @@ const EventForm = ({
                       />
                     </div>
                   </div>
-                </Card>
+                </div>
               )}
             </div>
           )}

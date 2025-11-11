@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Card from "../components/common/Card";
 import Button from "../components/common/Button";
 import Badge from "../components/common/Badge";
 import { 
@@ -522,7 +521,7 @@ const DashboardPage = () => {
       {/* Main Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Events This Month */}
-        <Card>
+        <div>
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -557,10 +556,10 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Revenue This Month */}
-        <Card>
+        <div>
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -595,10 +594,10 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Total Upcoming */}
-        <Card>
+        <div>
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -614,10 +613,10 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Pending Payments */}
-        <Card>
+        <div>
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -633,13 +632,13 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Charts & Metrics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Trend Chart */}
-        <Card>
+        <div>
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
@@ -667,10 +666,10 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Performance Metrics */}
-        <Card>
+        <div>
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5" />
@@ -698,10 +697,10 @@ const DashboardPage = () => {
               ))}
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Event Type Distribution - Now as a Pie Chart */}
-        <Card>
+        <div>
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <PieChart className="w-5 h-5" />
@@ -731,10 +730,10 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Recent Activity */}
-        <Card>
+        <div>
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -766,11 +765,11 @@ const DashboardPage = () => {
               ))}
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Event Status Breakdown */}
-      <Card>
+      <div>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -825,12 +824,12 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upcoming Events */}
-        <Card className="lg:col-span-2">
+        <div className="lg:col-span-2">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -919,12 +918,12 @@ const DashboardPage = () => {
               </table>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Right Sidebar */}
         <div className="space-y-6">
           {/* Recent Payments */}
-          <Card>
+          <div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -970,11 +969,11 @@ const DashboardPage = () => {
                 )}
               </ul>
             </div>
-          </Card>
+          </div>
 
           {/* My Tasks */}
           {tasks.length > 0 && (
-            <Card>
+            <div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1037,12 +1036,12 @@ const DashboardPage = () => {
                   ))}
                 </ul>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Upcoming Reminders */}
           {reminders.length > 0 && (
-            <Card>
+            <div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1082,7 +1081,7 @@ const DashboardPage = () => {
                   ))}
                 </ul>
               </div>
-            </Card>
+            </div>
           )}
         </div>
       </div>

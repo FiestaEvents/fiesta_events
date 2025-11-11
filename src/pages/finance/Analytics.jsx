@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { financeService } from "../../api/index";
 import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
 import Select from "../../components/common/Select";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
@@ -191,7 +190,7 @@ const Analytics = () => {
           const Icon = metric.icon;
 
           return (
-            <Card key={index}>
+            <div key={index}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className={`p-3 rounded-lg ${metric.bgColor}`}>
@@ -205,13 +204,13 @@ const Analytics = () => {
                   {metric.value}
                 </p>
               </div>
-            </Card>
+            </div>
           );
         })}
       </div>
 
       {/* Revenue vs Expenses Trend */}
-      <Card>
+      <div>
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -282,12 +281,12 @@ const Analytics = () => {
             </div>
           )}
         </div>
-      </Card>
+      </div>
 
       {/* Revenue Sources & Expense Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Sources */}
-        <Card>
+        <div>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
               Revenue Sources
@@ -327,10 +326,10 @@ const Analytics = () => {
               </div>
             )}
           </div>
-        </Card>
+        </div>
 
         {/* Expense Breakdown */}
-        <Card>
+        <div>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
               Expense Breakdown
@@ -370,11 +369,11 @@ const Analytics = () => {
               </div>
             )}
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Profit & Loss Statement */}
-      <Card>
+      <div>
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
             Profit & Loss Statement
@@ -418,10 +417,10 @@ const Analytics = () => {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Cash Flow Summary */}
-      <Card>
+      <div>
         <div className="p-6">
           <div className="flex items-center gap-2 mb-6">
             <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -485,7 +484,7 @@ const Analytics = () => {
             </div>
           )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

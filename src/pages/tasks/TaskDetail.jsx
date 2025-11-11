@@ -27,7 +27,6 @@ import {
 import { taskService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
-import Card from "../../components/common/Card";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import EmptyState from "../../components/common/EmptyState";
 import Modal from "../../components/common/Modal";
@@ -334,7 +333,7 @@ const TaskDetail = () => {
             {activeTab === "overview" && (
               <div className="space-y-6">
                 {/* Progress & Stats */}
-                <Card className="p-6">
+                <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Progress</p>
@@ -378,10 +377,10 @@ const TaskDetail = () => {
                       </div>
                     )}
                   </div>
-                </Card>
+                </div>
 
                 {/* Description */}
-                <Card>
+                <div>
                   <div className="p-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                       Description
@@ -396,11 +395,11 @@ const TaskDetail = () => {
                       </p>
                     )}
                   </div>
-                </Card>
+                </div>
 
                 {/* Blocked Status */}
                 {task.status === "blocked" && task.blockedReason && (
-                  <Card className="border-l-4 border-l-red-500">
+                  <div className="border-l-4 border-l-red-500">
                     <div className="p-6">
                       <div className="flex items-start gap-4">
                         <AlertTriangle className="w-6 h-6 text-red-500 mt-0.5 flex-shrink-0" />
@@ -414,14 +413,14 @@ const TaskDetail = () => {
                         </div>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 )}
               </div>
             )}
 
             {/* Subtasks Tab */}
             {activeTab === "subtasks" && (
-              <Card>
+              <div>
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -485,12 +484,12 @@ const TaskDetail = () => {
                     />
                   )}
                 </div>
-              </Card>
+              </div>
             )}
 
             {/* Comments Tab */}
             {activeTab === "comments" && (
-              <Card>
+              <div>
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                     Comments ({task.comments?.length || 0})
@@ -533,12 +532,12 @@ const TaskDetail = () => {
                     />
                   )}
                 </div>
-              </Card>
+              </div>
             )}
 
             {/* Attachments Tab */}
             {activeTab === "attachments" && (
-              <Card>
+              <div>
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                     Attachments ({task.attachments?.length || 0})
@@ -579,12 +578,12 @@ const TaskDetail = () => {
                     />
                   )}
                 </div>
-              </Card>
+              </div>
             )}
 
             {/* Timeline Tab */}
             {activeTab === "timeline" && (
-              <Card>
+              <div>
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                     Timeline
@@ -622,14 +621,14 @@ const TaskDetail = () => {
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <Card>
+            <div>
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   Quick Actions
@@ -679,10 +678,10 @@ const TaskDetail = () => {
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
 
             {/* Task Details */}
-            <Card>
+            <div>
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   Task Details
@@ -717,11 +716,11 @@ const TaskDetail = () => {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
 
             {/* Related Items */}
             {(task.relatedEvent || task.relatedClient || task.relatedPartner) && (
-              <Card>
+              <div>
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Related Items
@@ -749,7 +748,7 @@ const TaskDetail = () => {
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             )}
           </div>
         </div>

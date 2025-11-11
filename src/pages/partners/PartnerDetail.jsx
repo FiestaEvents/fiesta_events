@@ -3,7 +3,6 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { partnerService, eventService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
-import Card from "../../components/common/Card";
 import Modal from "../../components/common/Modal";
 import EmptyState from "../../components/common/EmptyState";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -362,7 +361,7 @@ const PartnerDetail = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -382,9 +381,9 @@ const PartnerDetail = () => {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -400,9 +399,9 @@ const PartnerDetail = () => {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -424,9 +423,9 @@ const PartnerDetail = () => {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -444,7 +443,7 @@ const PartnerDetail = () => {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -452,7 +451,7 @@ const PartnerDetail = () => {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Partner Quick Info */}
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                   <Briefcase className="w-5 h-5 mr-2 text-orange-600" />
@@ -502,10 +501,10 @@ const PartnerDetail = () => {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
 
             {/* Contact Information */}
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                   <Mail className="w-5 h-5 mr-2 text-orange-600" />
@@ -546,12 +545,12 @@ const PartnerDetail = () => {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
 
           {/* Main Content Area */}
           <div className="lg:col-span-3">
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               {/* Tabs Navigation */}
               <div className="border-b border-gray-200 dark:border-gray-700">
                 <nav className="flex space-x-8 px-6">
@@ -780,7 +779,7 @@ const PartnerDetail = () => {
                   <div className="space-y-6">
                     {/* Performance Overview */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800">
+                      <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800">
                         <div className="p-6">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                             <Target className="w-5 h-5 mr-2 text-orange-600" />
@@ -803,9 +802,9 @@ const PartnerDetail = () => {
                             </div>
                           </div>
                         </div>
-                      </Card>
+                      </div>
 
-                      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                      <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                         <div className="p-6">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                             <BarChart3 className="w-5 h-5 mr-2 text-orange-600" />
@@ -838,11 +837,11 @@ const PartnerDetail = () => {
                             </div>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     </div>
 
                     {/* Financial Summary */}
-                    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                       <div className="p-6">
                         <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                           <DollarSign className="w-5 h-5 mr-2 text-orange-600" />
@@ -877,11 +876,11 @@ const PartnerDetail = () => {
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       </div>

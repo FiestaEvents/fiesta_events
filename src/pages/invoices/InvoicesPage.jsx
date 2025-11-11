@@ -25,7 +25,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
@@ -712,60 +711,57 @@ const InvoicesPage = () => {
 
       {/* Error Message */}
       {error && (
-        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+        <div className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
           <div className="p-4 flex items-center justify-between">
             <p className="text-red-600 dark:text-red-400">{error}</p>
             <Button variant="outline" size="sm" onClick={fetchInvoices}>
               Retry
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* Invoice Type Toggle */}
-      <Card>
-        <div className="p-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setInvoiceType("client")}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                invoiceType === "client"
-                  ? "bg-orange-600 text-white shadow-lg"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span>Client Invoices</span>
-              {invoiceType === "client" && stats && (
-                <Badge variant="white" className="ml-2">
-                  {stats.totalInvoices}
-                </Badge>
-              )}
-            </button>
-            
-            <button
-              onClick={() => setInvoiceType("partner")}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                invoiceType === "partner"
-                  ? "bg-orange-600 text-white shadow-lg"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Briefcase className="w-5 h-5" />
-              <span>Partner Bills</span>
-              {invoiceType === "partner" && stats && (
-                <Badge variant="white" className="ml-2">
-                  {stats.totalInvoices}
-                </Badge>
-              )}
-            </button>
-          </div>
-        </div>
-      </Card>
-
+{/* Invoice Type Toggle */}
+<div className="p-4">
+  <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit">
+    <button
+      onClick={() => setInvoiceType("client")}
+      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+        invoiceType === "client"
+          ? "bg-orange-600 text-white shadow-sm"
+          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+      }`}
+    >
+      <Users className="w-4 h-4" />
+      <span>Client Invoices</span>
+      {invoiceType === "client" && stats && (
+        <Badge variant="white" className="ml-2">
+          {stats.totalInvoices}
+        </Badge>
+      )}
+    </button>
+    
+    <button
+      onClick={() => setInvoiceType("partner")}
+      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+        invoiceType === "partner"
+          ? "bg-orange-600 text-white shadow-sm"
+          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+      }`}
+    >
+      <Briefcase className="w-4 h-4" />
+      <span>Partner Bills</span>
+      {invoiceType === "partner" && stats && (
+        <Badge variant="white" className="ml-2">
+          {stats.totalInvoices}
+        </Badge>
+      )}
+    </button>
+  </div>
+</div>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <div>
           <div className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -796,9 +792,9 @@ const InvoicesPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card>
+        <div>
           <div className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -817,9 +813,9 @@ const InvoicesPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card>
+        <div>
           <div className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -842,9 +838,9 @@ const InvoicesPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card>
+        <div>
           <div className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -863,11 +859,11 @@ const InvoicesPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Search and Filters */}
-      <Card>
+      <div>
         <div className="p-4">
           <div className="flex flex-col gap-4">
             {/* Search Bar and Filter Toggle */}
@@ -944,7 +940,7 @@ const InvoicesPage = () => {
             )}
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Loading State */}
       {loading && !hasInitialLoad && (

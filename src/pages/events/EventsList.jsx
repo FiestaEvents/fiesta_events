@@ -47,6 +47,7 @@ const getStatusColor = (status) => {
   return colors[status] || "gray";
 };
 
+// Fixed: Ensure type color mapping returns valid Badge variants
 const getTypeColor = (type) => {
   const colors = {
     wedding: "purple",
@@ -57,7 +58,9 @@ const getTypeColor = (type) => {
     social: "orange",
     other: "gray",
   };
-  return colors[type?.toLowerCase()] || "gray";
+  // Normalize type to handle various cases and prevent undefined errors
+  const normalizedType = type?.toString().toLowerCase().trim() || "other";
+  return colors[normalizedType] || "gray";
 };
 
 // Fixed function to get complete Tailwind classes
@@ -98,7 +101,7 @@ const formatDateShort = (dateString) => {
   if (!dateString) return "";
   const d = new Date(dateString);
   const day = d.getDate();
-  const month = d.toLocaleString("en-GB", { month: "short" }); // ensures "Nov"
+  const month = d.toLocaleString("en-GB", { month: "short" });
   return `${day} ${month}`;
 };
 
@@ -180,10 +183,7 @@ const EventListComponent = ({
                     {event.status}
                   </Badge>
                   {event.type && (
-                    <Badge
-                      variant={getTypeColor(event.type)}
-                      className="text-xs"
-                    >
+                    <Badge variant={getTypeColor(event.type)} className="text-xs">
                       {event.type}
                     </Badge>
                   )}
@@ -311,10 +311,7 @@ const DateEventsModal = ({
                         {event.status}
                       </Badge>
                       {event.type && (
-                        <Badge
-                          variant={getTypeColor(event.type)}
-                          className="text-xs"
-                        >
+                        <Badge variant={getTypeColor(event.type)} className="text-xs">
                           {event.type}
                         </Badge>
                       )}
@@ -389,7 +386,7 @@ const EventList = () => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [viewMode, setViewMode] = useState("calendar"); // "calendar" or "list"
+  const [viewMode, setViewMode] = useState("list");
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   // Pagination for list view
@@ -438,6 +435,7 @@ const EventList = () => {
         sort: "startDate",
         ...(search.trim() && { search: search.trim() }),
         ...(status !== "all" && { status }),
+        // Fixed: Ensure type filter is passed correctly to API
         ...(eventType !== "all" && { type: eventType }),
         ...(dateRange !== "all" && { dateRange }),
       };
@@ -458,8 +456,6 @@ const EventList = () => {
       } else if (Array.isArray(response)) {
         eventsData = response;
       }
-
-      console.log("📅 All events loaded:", eventsData);
 
       // Sort events by start date
       const sortedEvents = eventsData.sort(
@@ -597,7 +593,7 @@ const EventList = () => {
     {
       header: "Actions",
       accessor: "actions",
-      width: "8%",
+      width: "10%", // Increased width to accommodate two icons
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
@@ -611,6 +607,7 @@ const EventList = () => {
           >
             <Eye className="h-4 w-4" />
           </button>
+          {/* Added Edit Event Icon */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -809,19 +806,9 @@ const EventList = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
+          {/* View Mode Toggle - Swapped Order */}
           <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode("calendar")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "calendar"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              <Grid className="w-4 h-4" />
-              Calendar
-            </button>
+            {/* List button now first */}
             <button
               onClick={() => setViewMode("list")}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -832,6 +819,18 @@ const EventList = () => {
             >
               <Table className="w-4 h-4" />
               List
+            </button>
+            {/* Calendar button now second */}
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === "calendar"
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              <Grid className="w-4 h-4" />
+              Calendar
             </button>
           </div>
 
@@ -967,8 +966,72 @@ const EventList = () => {
           </p>
         </div>
       )}
-      {viewMode === "calendar" ? (
-        /* CALENDAR VIEW */
+      {viewMode === "list" ? (
+        /* LIST VIEW - Now first */
+        <div className="space-y-6">
+          <TitleCard className="dark:bg-gray-800">
+            <div className="p-6">
+              {/* No Results from Search/Filter */}
+              {showNoResults && (
+                <div className="text-center py-12">
+                  <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No events found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    No events match your current search or filter criteria.
+                  </p>
+                  <Button onClick={handleClearFilters} variant="outline">
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
+
+              {/* Empty State - No events at all */}
+              {showEmptyState && (
+                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No events yet
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Get started by creating your first event.
+                  </p>
+                  <Button onClick={() => handleCreateEvent()} variant="primary">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Event
+                  </Button>
+                </div>
+              )}
+
+              {/* Events Table */}
+              {!showEmptyState && !showNoResults && (
+                <TableComponent
+                  columns={tableColumns}
+                  data={events}
+                  loading={isLoading}
+                  emptyMessage="No events found"
+                  onRowClick={onEventClick}
+                  striped={true}
+                  hoverable={true}
+                  pagination={true}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setCurrentPage(1);
+                  }}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                />
+              )}
+            </div>
+          </TitleCard>
+        </div>
+      ) : (
+        /* CALENDAR VIEW - Now second */
         <TitleCard className="dark:bg-gray-800">
           <div className="py-8">
             {/* Calendar Header */}
@@ -1134,7 +1197,11 @@ const EventList = () => {
                               ? "bg-orange-100/70 dark:bg-orange-900/10 border-orange-300 dark:border-orange-600"
                               : "bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                         }
-                        ${!isCurrentMonth ? "opacity-40 bg-gray-50 dark:bg-gray-800" : ""}
+                        ${
+                          !isCurrentMonth
+                            ? "opacity-40 bg-gray-50 dark:bg-gray-800"
+                            : ""
+                        }
                       `}
                           >
                             {/* Date number */}
@@ -1149,7 +1216,11 @@ const EventList = () => {
                                   ? "text-orange-600 dark:text-orange-300"
                                   : "text-gray-700 dark:text-gray-300"
                             }
-                            ${!isCurrentMonth ? "text-gray-400 dark:text-gray-500" : ""}
+                            ${
+                              !isCurrentMonth
+                                ? "text-gray-400 dark:text-gray-500"
+                                : ""
+                            }
                           `}
                               >
                                 {date.getDate()}
@@ -1236,70 +1307,6 @@ const EventList = () => {
             </div>
           </div>
         </TitleCard>
-      ) : (
-        /* LIST VIEW */
-        <div className="space-y-6">
-          <TitleCard className="dark:bg-gray-800">
-            <div className="p-6">
-              {/* No Results from Search/Filter */}
-              {showNoResults && (
-                <div className="text-center py-12">
-                  <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No events found
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    No events match your current search or filter criteria.
-                  </p>
-                  <Button onClick={handleClearFilters} variant="outline">
-                    Clear All Filters
-                  </Button>
-                </div>
-              )}
-
-              {/* Empty State - No events at all */}
-              {showEmptyState && (
-                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No events yet
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Get started by creating your first event.
-                  </p>
-                  <Button onClick={() => handleCreateEvent()} variant="primary">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Event
-                  </Button>
-                </div>
-              )}
-
-              {/* Events Table */}
-              {!showEmptyState && !showNoResults && (
-                <TableComponent
-                  columns={tableColumns}
-                  data={events}
-                  loading={isLoading}
-                  emptyMessage="No events found"
-                  onRowClick={onEventClick}
-                  striped={true}
-                  hoverable={true}
-                  pagination={true}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  pageSize={pageSize}
-                  totalItems={totalItems}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={(newSize) => {
-                    setPageSize(newSize);
-                    setCurrentPage(1);
-                  }}
-                  pageSizeOptions={[10, 25, 50, 100]}
-                />
-              )}
-            </div>
-          </TitleCard>
-        </div>
       )}
     </div>
   );

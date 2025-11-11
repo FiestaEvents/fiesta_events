@@ -30,14 +30,18 @@ import {
   Percent,
   FileCheck,
   History,
+  Download,
+  Send,
+  Printer,
+  Edit,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Textarea from "../../components/common/Textarea";
 import Badge from "../../components/common/Badge";
+import Modal from "../../components/common/Modal";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { 
   invoiceService, 
@@ -48,62 +52,35 @@ import {
 import formatCurrency from "../../utils/formatCurrency";
 
 // ============================================
-// TOGGLE COMPONENT
+// PRICE SUMMARY COMPONENT
 // ============================================
-const Toggle = ({ enabled, onChange, label, disabled = false }) => (
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => !disabled && onChange(!enabled)}
-      disabled={disabled}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        enabled ? "bg-orange-500" : "bg-gray-300"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-          enabled ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
-    {label && (
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        {label}
-      </span>
-    )}
-  </div>
-);
-
-// ============================================
-// STICKY PRICE SUMMARY COMPONENT
-// ============================================
-const StickyPriceSummary = ({
+const PriceSummary = ({
   subtotal,
   tax,
   discountAmount,
   totalAmount,
-  visible,
 }) => {
-  if (!visible) return null;
-  
   return (
-    <div className="fixed top-8 left-10 z-40 animate-in slide-in-from-bottom-5 duration-300">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-2 border-orange-200 dark:border-orange-700 p-4 min-w-[280px]">
-        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
-          <DollarSign className="w-5 h-5 text-orange-500" />
-          <h4 className="font-bold text-gray-900 dark:text-white">
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
+            <DollarSign className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Price Summary
-          </h4>
+          </h3>
         </div>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
+
+        <div className="space-y-4">
+          <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
             <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
             <span className="font-semibold text-gray-900 dark:text-white">
               {formatCurrency(subtotal)}
             </span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
             <span className="text-gray-600 dark:text-gray-400">Tax:</span>
             <span className="font-semibold text-gray-900 dark:text-white">
               {formatCurrency(tax)}
@@ -111,24 +88,88 @@ const StickyPriceSummary = ({
           </div>
 
           {discountAmount > 0 && (
-            <div className="flex justify-between text-red-600">
-              <span>Discount:</span>
-              <span className="font-semibold">
+            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+              <span className="text-gray-600 dark:text-gray-400">Discount:</span>
+              <span className="font-semibold text-red-600 dark:text-red-400">
                 -{formatCurrency(discountAmount)}
               </span>
             </div>
           )}
 
-          <div className="pt-2 border-t-2 border-orange-200 dark:border-orange-700 flex justify-between">
-            <span className="font-bold text-gray-900 dark:text-white">
-              Total:
-            </span>
-            <span className="font-bold text-2xl text-orange-600">
+          <div className="flex justify-between items-center pt-4 border-t-2 border-orange-200 dark:border-orange-800">
+            <span className="text-lg font-bold text-gray-900 dark:text-white">Total:</span>
+            <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {formatCurrency(totalAmount)}
             </span>
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+// ============================================
+// STEP INDICATOR COMPONENT
+// ============================================
+const StepIndicator = ({ currentStep, totalSteps, stepConfigs, onStepClick }) => {
+  return (
+    <div className="flex items-center justify-between mb-8">
+      {[1, 2, 3, 4].map((step) => {
+        const config = stepConfigs[step];
+        const isActive = step === currentStep;
+        const isComplete = step < currentStep;
+        const StepIcon = config.icon;
+
+        return (
+          <div key={step} className="flex items-center flex-1">
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => onStepClick(step)}
+                disabled={step > currentStep}
+                className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 ${
+                  isActive
+                    ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110"
+                    : isComplete
+                    ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
+                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400"
+                }`}
+              >
+                {isComplete ? (
+                  <Check className="w-6 h-6" />
+                ) : (
+                  <StepIcon className="w-6 h-6" />
+                )}
+                {isActive && (
+                  <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
+                )}
+              </button>
+              <span
+                className={`text-sm font-medium mt-3 text-center transition-colors ${
+                  isActive
+                    ? "text-orange-600 dark:text-orange-400 font-semibold"
+                    : isComplete
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-gray-500 dark:text-gray-400"
+                }`}
+              >
+                {config.title}
+              </span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-center">
+                {config.description}
+              </span>
+            </div>
+            {step < totalSteps && (
+              <div
+                className={`flex-1 h-1 mx-4 rounded-full transition-all duration-300 ${
+                  isComplete
+                    ? "bg-gradient-to-r from-green-500 to-green-600"
+                    : "bg-gray-200 dark:bg-gray-600"
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -150,7 +191,7 @@ const InvoiceFormPage = () => {
   const totalSteps = 4;
 
   // ============================================
-  // FORM STATE - ENHANCED
+  // FORM STATE
   // ============================================
   const [formData, setFormData] = useState({
     invoiceType: invoiceType,
@@ -194,9 +235,10 @@ const InvoiceFormPage = () => {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(isEditMode);
   const [errors, setErrors] = useState({});
-  const [warnings, setWarnings] = useState({});
   const [recipientSearch, setRecipientSearch] = useState("");
   const [hasDraft, setHasDraft] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   // ============================================
   // CALCULATIONS
@@ -247,19 +289,19 @@ const InvoiceFormPage = () => {
     2: {
       title: "Items & Pricing",
       icon: Package,
-      description: "Add services and items with pricing",
+      description: "Add services and items",
       color: "purple",
     },
     3: {
       title: "Details",
       icon: FileText,
-      description: "Invoice details and terms",
+      description: "Invoice details",
       color: "green",
     },
     4: {
       title: "Review",
       icon: Eye,
-      description: "Final review and confirmation",
+      description: "Final review",
       color: "orange",
     },
   };
@@ -279,6 +321,98 @@ const InvoiceFormPage = () => {
   ];
 
   // ============================================
+  // ACTION HANDLERS
+  // ============================================
+  const handleDownloadInvoice = async (invoice) => {
+    if (!invoice || !invoice._id) {
+      toast.error("Invalid invoice data");
+      return;
+    }
+    
+    try {
+      const loadingToast = toast.loading("Generating PDF...");
+      const blob = await invoiceService.download(invoice._id);
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${invoice.invoiceNumber || "document"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.dismiss(loadingToast);
+      toast.success("Invoice downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      toast.error(error.message || "Failed to download invoice");
+    }
+  };
+
+  const handleSendInvoice = async (invoice) => {
+    if (!invoice || !invoice._id) {
+      toast.error("Invalid invoice data");
+      return;
+    }
+    
+    try {
+      const loadingToast = toast.loading("Sending invoice...");
+      await invoiceService.send(invoice._id, {
+        message: "Please find your invoice attached. Payment is due by the date specified.",
+      });
+      toast.dismiss(loadingToast);
+      toast.success("Invoice sent successfully");
+      setIsDetailModalOpen(false);
+      navigate("/invoices");
+    } catch (error) {
+      console.error("Error sending invoice:", error);
+      toast.error(error.message || "Failed to send invoice");
+    }
+  };
+
+  const handlePrintInvoice = async (invoice) => {
+    if (!invoice || !invoice._id) {
+      toast.error("Invalid invoice data");
+      return;
+    }
+    
+    try {
+      const loadingToast = toast.loading("Preparing for print...");
+      const blob = await invoiceService.download(invoice._id);
+      const url = window.URL.createObjectURL(blob);
+      
+      const printWindow = window.open(url, '_blank');
+      if (printWindow) {
+        printWindow.onload = function() {
+          toast.dismiss(loadingToast);
+          printWindow.print();
+        };
+      } else {
+        toast.dismiss(loadingToast);
+        toast.error("Please allow pop-ups to print the invoice");
+      }
+    } catch (error) {
+      console.error("Error printing invoice:", error);
+      toast.error(error.message || "Failed to print invoice");
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedInvoice(null);
+    navigate("/invoices");
+  };
+
+  const handleEditInvoice = (invoice) => {
+    if (!invoice || !invoice._id) {
+      toast.error("Invalid invoice data");
+      return;
+    }
+    navigate(`/invoices/${invoice._id}/edit`);
+  };
+
+  // ============================================
   // AUTO-SAVE DRAFT FUNCTIONALITY
   // ============================================
   useEffect(() => {
@@ -292,7 +426,6 @@ const InvoiceFormPage = () => {
     }
   }, [formData, currentStep, isEditMode]);
 
-  // Load draft on mount
   useEffect(() => {
     if (!isEditMode && !id) {
       const draft = localStorage.getItem("invoiceFormDraft");
@@ -498,7 +631,6 @@ const InvoiceFormPage = () => {
       [field]: value,
     };
     
-    // Recalculate amount when quantity or rate changes
     const quantity = Number(updatedItems[index].quantity) || 0;
     const rate = Number(updatedItems[index].rate) || 0;
     updatedItems[index].amount = quantity * rate;
@@ -508,7 +640,6 @@ const InvoiceFormPage = () => {
       items: updatedItems,
     }));
 
-    // Clear item-specific errors
     if (errors[`items[${index}].${field}`]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -707,133 +838,121 @@ const InvoiceFormPage = () => {
   // ============================================
   // FORM SUBMISSION
   // ============================================
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (currentStep < totalSteps) {
-    nextStep();
-    return;
-  }
-
-  if (!validateStep(4)) {
-    toast.error("Please fix all errors before submitting");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    const invoiceData = {
-      invoiceType: invoiceType,
-      issueDate: formData.issueDate,
-      dueDate: formData.dueDate,
-      items: formData.items.map(item => ({
-        description: item.description.trim(),
-        quantity: Number(item.quantity),
-        rate: Number(item.rate),
-        amount: Number(item.amount),
-        category: item.category,
-      })),
-      taxRate: Number(formData.taxRate),
-      discount: Number(formData.discount),
-      discountType: formData.discountType,
-      notes: formData.notes.trim(),
-      terms: formData.terms.trim(),
-      currency: formData.currency,
-      paymentMethod: formData.paymentMethod,
-      status: formData.status,
-    };
-
-    if (invoiceType === 'client') {
-      invoiceData.client = formData.client;
-    } else {
-      invoiceData.partner = formData.partner;
+    if (currentStep < totalSteps) {
+      nextStep();
+      return;
     }
 
-    if (formData.event) {
-      invoiceData.event = formData.event;
+    if (!validateStep(4)) {
+      toast.error("Please fix all errors before submitting");
+      return;
     }
 
-    let response;
-    let createdInvoice;
-
-    if (isEditMode) {
-      response = await invoiceService.update(id, invoiceData);
-      toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} updated successfully`);
-      
-      // For edit mode, fetch the updated invoice to show in modal
-      try {
-        const updatedInvoiceResponse = await invoiceService.getById(id);
-        createdInvoice = updatedInvoiceResponse?.invoice || updatedInvoiceResponse?.data?.invoice || updatedInvoiceResponse?.data;
-      } catch (fetchError) {
-        console.error("Error fetching updated invoice:", fetchError);
-        // If we can't fetch the updated invoice, use the form data
-        createdInvoice = { ...invoiceData, _id: id };
-      }
-    } else {
-      response = await invoiceService.create(invoiceData);
-      toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} created successfully`);
-      clearDraft();
-      
-      // Extract the created invoice from response
-      createdInvoice = response?.invoice || response?.data?.invoice || response?.data;
-    }
-
-    // Show success modal with the created/updated invoice
-    if (createdInvoice) {
-      // Normalize the invoice data for the modal
-      const normalizedInvoice = {
-        _id: createdInvoice._id || id,
-        invoiceNumber: createdInvoice.invoiceNumber || `INV-${(createdInvoice._id || '').substring(0, 8)}`,
-        invoiceType: createdInvoice.invoiceType || invoiceType,
-        recipientName: invoiceType === 'client' 
-          ? (createdInvoice.client?.name || selectedRecipientDetails?.name || 'Client')
-          : (createdInvoice.partner?.name || selectedRecipientDetails?.name || 'Partner'),
-        recipientEmail: invoiceType === 'client'
-          ? (createdInvoice.client?.email || selectedRecipientDetails?.email)
-          : (createdInvoice.partner?.email || selectedRecipientDetails?.email),
-        recipientCompany: invoiceType === 'client'
-          ? (createdInvoice.client?.company || selectedRecipientDetails?.company)
-          : (createdInvoice.partner?.company || selectedRecipientDetails?.company),
-        totalAmount: createdInvoice.totalAmount || calculations.totalAmount,
-        subtotal: createdInvoice.subtotal || calculations.subtotal,
-        tax: createdInvoice.tax || calculations.tax,
-        taxRate: createdInvoice.taxRate || formData.taxRate,
-        discount: createdInvoice.discount || formData.discount,
-        discountType: createdInvoice.discountType || formData.discountType,
-        status: createdInvoice.status || formData.status,
-        issueDate: createdInvoice.issueDate || formData.issueDate,
-        dueDate: createdInvoice.dueDate || formData.dueDate,
-        items: createdInvoice.items || formData.items,
-        notes: createdInvoice.notes || formData.notes,
-        terms: createdInvoice.terms || formData.terms,
-        currency: createdInvoice.currency || formData.currency,
-        paymentMethod: createdInvoice.paymentMethod || formData.paymentMethod,
-        event: createdInvoice.event || formData.event,
-        createdAt: createdInvoice.createdAt || new Date().toISOString(),
-        updatedAt: createdInvoice.updatedAt || new Date().toISOString()
+    try {
+      setLoading(true);
+      const invoiceData = {
+        invoiceType: invoiceType,
+        issueDate: formData.issueDate,
+        dueDate: formData.dueDate,
+        items: formData.items.map(item => ({
+          description: item.description.trim(),
+          quantity: Number(item.quantity),
+          rate: Number(item.rate),
+          amount: Number(item.amount),
+          category: item.category,
+        })),
+        taxRate: Number(formData.taxRate),
+        discount: Number(formData.discount),
+        discountType: formData.discountType,
+        notes: formData.notes.trim(),
+        terms: formData.terms.trim(),
+        currency: formData.currency,
+        paymentMethod: formData.paymentMethod,
+        status: formData.status,
       };
 
-      // Set the invoice for modal view and open modal
-      setSelectedInvoice(normalizedInvoice);
-      setIsDetailModalOpen(true);
+      if (invoiceType === 'client') {
+        invoiceData.client = formData.client;
+      } else {
+        invoiceData.partner = formData.partner;
+      }
 
-      // Optional: Add a small delay before showing modal for better UX
-      setTimeout(() => {
-        // You can add any additional actions here after modal opens
-      }, 100);
-    } else {
-      // Fallback: navigate to invoices list if we can't show the modal
-      navigate("/invoices");
+      if (formData.event) {
+        invoiceData.event = formData.event;
+      }
+
+      let response;
+      let createdInvoice;
+
+      if (isEditMode) {
+        response = await invoiceService.update(id, invoiceData);
+        toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} updated successfully`);
+        
+        try {
+          const updatedInvoiceResponse = await invoiceService.getById(id);
+          createdInvoice = updatedInvoiceResponse?.invoice || updatedInvoiceResponse?.data?.invoice || updatedInvoiceResponse?.data;
+        } catch (fetchError) {
+          console.error("Error fetching updated invoice:", fetchError);
+          createdInvoice = { ...invoiceData, _id: id };
+        }
+      } else {
+        response = await invoiceService.create(invoiceData);
+        toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} created successfully`);
+        clearDraft();
+        
+        createdInvoice = response?.invoice || response?.data?.invoice || response?.data;
+      }
+
+      if (createdInvoice) {
+        const normalizedInvoice = {
+          _id: createdInvoice._id || id,
+          invoiceNumber: createdInvoice.invoiceNumber || `INV-${(createdInvoice._id || '').substring(0, 8)}`,
+          invoiceType: createdInvoice.invoiceType || invoiceType,
+          recipientName: invoiceType === 'client' 
+            ? (createdInvoice.client?.name || selectedRecipientDetails?.name || 'Client')
+            : (createdInvoice.partner?.name || selectedRecipientDetails?.name || 'Partner'),
+          recipientEmail: invoiceType === 'client'
+            ? (createdInvoice.client?.email || selectedRecipientDetails?.email)
+            : (createdInvoice.partner?.email || selectedRecipientDetails?.email),
+          recipientCompany: invoiceType === 'client'
+            ? (createdInvoice.client?.company || selectedRecipientDetails?.company)
+            : (createdInvoice.partner?.company || selectedRecipientDetails?.company),
+          totalAmount: createdInvoice.totalAmount || calculations.totalAmount,
+          subtotal: createdInvoice.subtotal || calculations.subtotal,
+          tax: createdInvoice.tax || calculations.tax,
+          taxRate: createdInvoice.taxRate || formData.taxRate,
+          discount: createdInvoice.discount || formData.discount,
+          discountType: createdInvoice.discountType || formData.discountType,
+          status: createdInvoice.status || formData.status,
+          issueDate: createdInvoice.issueDate || formData.issueDate,
+          dueDate: createdInvoice.dueDate || formData.dueDate,
+          items: createdInvoice.items || formData.items,
+          notes: createdInvoice.notes || formData.notes,
+          terms: createdInvoice.terms || formData.terms,
+          currency: createdInvoice.currency || formData.currency,
+          paymentMethod: createdInvoice.paymentMethod || formData.paymentMethod,
+          event: createdInvoice.event || formData.event,
+          createdAt: createdInvoice.createdAt || new Date().toISOString(),
+          updatedAt: createdInvoice.updatedAt || new Date().toISOString()
+        };
+
+        setSelectedInvoice(normalizedInvoice);
+        setIsDetailModalOpen(true);
+      } else {
+        navigate("/invoices");
+      }
+
+    } catch (error) {
+      console.error("Error saving invoice:", error);
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || "Failed to save invoice";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-  } catch (error) {
-    console.error("Error saving invoice:", error);
-    const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || "Failed to save invoice";
-    toast.error(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleCancel = () => {
     navigate("/invoices");
@@ -877,331 +996,278 @@ const handleSubmit = async (e) => {
     );
   }
 
-  const currentStepConfig = stepConfigs[currentStep];
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="container mx-auto px-4 max-w-7xl">
+      <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
-        <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
-                  <RecipientIcon className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isEditMode ? currentConfig.editLabel : currentConfig.createLabel}
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-                    {currentStepConfig.description}
-                  </p>
-                </div>
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                <RecipientIcon className="w-8 h-8 text-white" />
               </div>
-              <Button
-                variant="outline"
-                icon={ArrowLeft}
-                onClick={handleCancel}
-              >
-                Cancel
-              </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {isEditMode ? currentConfig.editLabel : currentConfig.createLabel}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  {stepConfigs[currentStep].description}
+                </p>
+              </div>
             </div>
+            <Button
+              variant="outline"
+              icon={ArrowLeft}
+              onClick={handleCancel}
+            >
+              Back to Invoices
+            </Button>
+          </div>
 
-            {/* Draft indicator */}
-            {hasDraft && !isEditMode && window.__invoiceFormDraft && (
-              <div className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg shadow-lg animate-in slide-in-from-top-3 duration-500">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
-                      <History className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        Draft Found!
-                      </h3>
-                      <Badge variant="warning" className="text-xs">
-                        Unsaved Changes
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                      You have an unsaved draft from{" "}
-                      <strong className="text-orange-600 dark:text-orange-400">
-                        {new Date(window.__invoiceFormDraft.timestamp).toLocaleString()}
-                      </strong>
+          {/* Step Indicator */}
+          <StepIndicator
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            stepConfigs={stepConfigs}
+            onStepClick={jumpToStep}
+          />
+
+          {/* Draft Banner */}
+          {hasDraft && !isEditMode && window.__invoiceFormDraft && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <History className="w-5 h-5 text-orange-600" />
+                  <div>
+                    <p className="font-medium text-orange-900 dark:text-orange-300">
+                      Unsaved draft available
+                    </p>
+                    <p className="text-sm text-orange-700 dark:text-orange-400">
+                      From {new Date(window.__invoiceFormDraft.timestamp).toLocaleString()}
                     </p>
                   </div>
-                  <div className="flex-shrink-0 flex flex-col gap-2">
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      icon={Check}
-                      onClick={() => {
-                        const { savedData, savedStep } = window.__invoiceFormDraft;
-                        setFormData(savedData);
-                        setCurrentStep(savedStep);
-                        setHasDraft(false);
-                        delete window.__invoiceFormDraft;
-                        toast.success("Draft restored successfully!");
-                      }}
-                      className="whitespace-nowrap"
-                    >
-                      Restore Draft
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      icon={Trash2}
-                      onClick={() => {
-                        localStorage.removeItem("invoiceFormDraft");
-                        setHasDraft(false);
-                        delete window.__invoiceFormDraft;
-                        toast.success("Draft discarded");
-                      }}
-                      className="whitespace-nowrap hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                    >
-                      Discard
-                    </Button>
-                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* Enhanced Progress Steps */}
-            <div className="mt-6">
-              <div className="flex items-center justify-center">
-                {[1, 2, 3, 4].map((step) => {
-                  const config = stepConfigs[step];
-                  const isActive = step === currentStep;
-                  const isComplete = step < currentStep;
-                  const isClickable = step <= currentStep;
-                  const StepIcon = config.icon;
-
-                  return (
-                    <div key={step} className="flex items-center flex-1">
-                      <div className="flex flex-col items-center">
-                        <div
-                          onClick={() => isClickable && jumpToStep(step)}
-                          className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
-                            isActive
-                              ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110"
-                              : isComplete
-                                ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
-                                : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400"
-                          }`}
-                        >
-                          {isComplete ? (
-                            <Check className="w-5 h-5" />
-                          ) : (
-                            <StepIcon className="w-5 h-5" />
-                          )}
-                          {isActive && (
-                            <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
-                          )}
-                        </div>
-                        <span
-                          className={`text-xs mt-2 font-medium text-center transition-colors ${
-                            isActive
-                              ? "text-orange-600 dark:text-orange-400"
-                              : isComplete
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-500"
-                          }`}
-                        >
-                          {config.title}
-                        </span>
-                      </div>
-                      {step < totalSteps && (
-                        <div
-                          className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${
-                            isComplete
-                              ? "bg-gradient-to-r from-green-500 to-green-600"
-                              : "bg-gray-200 dark:bg-gray-600"
-                          }`}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    icon={Check}
+                    onClick={() => {
+                      const { savedData, savedStep } = window.__invoiceFormDraft;
+                      setFormData(savedData);
+                      setCurrentStep(savedStep);
+                      setHasDraft(false);
+                      delete window.__invoiceFormDraft;
+                      toast.success("Draft restored successfully!");
+                    }}
+                  >
+                    Restore
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    icon={Trash2}
+                    onClick={() => {
+                      localStorage.removeItem("invoiceFormDraft");
+                      setHasDraft(false);
+                      delete window.__invoiceFormDraft;
+                      toast.success("Draft discarded");
+                    }}
+                  >
+                    Discard
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Step 1: Recipient Selection */}
           {currentStep === 1 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-              <Card className="border-0 shadow-lg">
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className={`p-2 rounded-lg ${
-                      invoiceType === 'client' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
-                    }`}>
-                      <RecipientIcon className={`w-6 h-6 ${
-                        invoiceType === 'client' ? 'text-blue-600' : 'text-purple-600'
-                      }`} />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Select {currentConfig.recipientLabel}
-                      </h2>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Choose who this {invoiceType === 'client' ? 'invoice' : 'bill'} is for
-                      </p>
-                    </div>
-                  </div>
-
-                  <Input
-                    icon={Search}
-                    placeholder={`Search ${currentConfig.recipientLabel.toLowerCase()}s...`}
-                    value={recipientSearch}
-                    onChange={(e) => setRecipientSearch(e.target.value)}
-                    className="mb-4"
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-                    {filteredRecipients.length > 0 ? (
-                      filteredRecipients.map((recipient) => (
-                        <button
-                          key={recipient._id}
-                          type="button"
-                          onClick={() => handleSelectRecipient(recipient._id)}
-                          className={`p-4 rounded-lg border-2 text-left transition-all ${
-                            selectedRecipient === recipient._id
-                              ? invoiceType === 'client'
-                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                : 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:shadow-sm'
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div
-                              className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${
-                                selectedRecipient === recipient._id
-                                  ? invoiceType === 'client'
-                                    ? 'bg-blue-500'
-                                    : 'bg-purple-500'
-                                  : 'bg-gray-400'
-                              }`}
-                            >
-                              {recipient.name?.charAt(0).toUpperCase() || "?"}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-gray-900 dark:text-white truncate">
-                                {recipient.name}
-                              </div>
-                              {recipient.company && (
-                                <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                  {recipient.company}
-                                </div>
-                              )}
-                              <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                                <div className="flex items-center gap-1 truncate">
-                                  <Mail className="w-3 h-3 flex-shrink-0" />
-                                  <span className="truncate">{recipient.email}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Phone className="w-3 h-3 flex-shrink-0" />
-                                  <span>{recipient.phone}</span>
-                                </div>
-                              </div>
-                            </div>
-                            {selectedRecipient === recipient._id && (
-                              <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                            )}
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-12">
-                        <RecipientIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                        <p className="text-gray-500 font-medium">
-                          No {currentConfig.recipientLabel.toLowerCase()}s found
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {(errors.client || errors.partner) && (
-                    <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-red-800 dark:text-red-400">
-                        {errors.client || errors.partner}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </Card>
-
-              {/* Event Selection */}
-              {selectedRecipient && (
-                <Card className="border-0 shadow-lg">
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                        <Calendar className="w-6 h-6 text-green-600" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
+              <div className="lg:col-span-2">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        invoiceType === 'client' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
+                      }`}>
+                        <RecipientIcon className={`w-6 h-6 ${
+                          invoiceType === 'client' ? 'text-blue-600' : 'text-purple-600'
+                        }`} />
                       </div>
                       <div>
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                          Link to Event (Optional)
+                          Select {currentConfig.recipientLabel}
                         </h2>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Connect to an event to auto-populate items
+                          Choose who this {invoiceType === 'client' ? 'invoice' : 'bill'} is for
                         </p>
                       </div>
                     </div>
+                  </div>
 
-                    <Select
-                      label="Select Event"
-                      value={formData.event}
-                      onChange={(e) => {
-                        handleChange("event", e.target.value);
-                        handleEventSelect(e.target.value);
-                      }}
-                    >
-                      <option value="">No event selected - Add items manually</option>
-                      {relatedEvents.map((event) => (
-                        <option key={event._id} value={event._id}>
-                          {event.title} - {formatDate(event.startDate)} ({event.type})
-                        </option>
-                      ))}
-                    </Select>
+                  <div className="p-6">
+                    <Input
+                      icon={Search}
+                      placeholder={`Search ${currentConfig.recipientLabel.toLowerCase()}s...`}
+                      value={recipientSearch}
+                      onChange={(e) => setRecipientSearch(e.target.value)}
+                      className="mb-6"
+                    />
 
-                    {relatedEvents.length === 0 && selectedRecipient && (
-                      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                      {filteredRecipients.length > 0 ? (
+                        filteredRecipients.map((recipient) => (
+                          <button
+                            key={recipient._id}
+                            type="button"
+                            onClick={() => handleSelectRecipient(recipient._id)}
+                            className={`p-4 rounded-lg border-2 text-left transition-all ${
+                              selectedRecipient === recipient._id
+                                ? invoiceType === 'client'
+                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                  : 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:shadow-sm'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${
+                                  selectedRecipient === recipient._id
+                                    ? invoiceType === 'client'
+                                      ? 'bg-blue-500'
+                                      : 'bg-purple-500'
+                                    : 'bg-gray-400'
+                                }`}
+                              >
+                                {recipient.name?.charAt(0).toUpperCase() || "?"}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-gray-900 dark:text-white truncate">
+                                  {recipient.name}
+                                </div>
+                                {recipient.company && (
+                                  <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                    {recipient.company}
+                                  </div>
+                                )}
+                                <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                                  <div className="flex items-center gap-1 truncate">
+                                    <Mail className="w-3 h-3 flex-shrink-0" />
+                                    <span className="truncate">{recipient.email}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Phone className="w-3 h-3 flex-shrink-0" />
+                                    <span>{recipient.phone}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              {selectedRecipient === recipient._id && (
+                                <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                              )}
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="col-span-full text-center py-12">
+                          <RecipientIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                          <p className="text-gray-500 font-medium">
+                            No {currentConfig.recipientLabel.toLowerCase()}s found
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {(errors.client || errors.partner) && (
+                      <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                         <div className="flex items-start gap-3">
-                          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium text-blue-900 dark:text-blue-300">
-                              No events found
-                            </p>
-                            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                              No events found for this {currentConfig.recipientLabel.toLowerCase()}. You can add items manually in the next step.
-                            </p>
-                          </div>
+                          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-red-800 dark:text-red-400">
+                            {errors.client || errors.partner}
+                          </p>
                         </div>
                       </div>
                     )}
                   </div>
-                </Card>
-              )}
+                </div>
+
+                {/* Event Selection */}
+                {selectedRecipient && (
+                  <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                          <Calendar className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                            Link to Event (Optional)
+                          </h2>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Connect to an event to auto-populate items
+                          </p>
+                        </div>
+                      </div>
+
+                      <Select
+                        label="Select Event"
+                        value={formData.event}
+                        onChange={(e) => {
+                          handleChange("event", e.target.value);
+                          handleEventSelect(e.target.value);
+                        }}
+                      >
+                        <option value="">No event selected - Add items manually</option>
+                        {relatedEvents.map((event) => (
+                          <option key={event._id} value={event._id}>
+                            {event.title} - {formatDate(event.startDate)} ({event.type})
+                          </option>
+                        ))}
+                      </Select>
+
+                      {relatedEvents.length === 0 && selectedRecipient && (
+                        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                          <div className="flex items-start gap-3">
+                            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium text-blue-900 dark:text-blue-300">
+                                No events found
+                              </p>
+                              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                                No events found for this {currentConfig.recipientLabel.toLowerCase()}. You can add items manually in the next step.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Price Summary */}
+              <div className="lg:col-span-1">
+                <PriceSummary
+                  subtotal={calculations.subtotal}
+                  tax={calculations.tax}
+                  discountAmount={calculations.discountAmount}
+                  totalAmount={calculations.totalAmount}
+                />
+              </div>
             </div>
           )}
 
           {/* Step 2: Items & Pricing */}
           {currentStep === 2 && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-right-5 duration-300">
-              {/* Items List */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
               <div className="lg:col-span-2">
-                <Card className="border-0 shadow-lg">
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
                           <Package className="w-6 h-6 text-purple-600" />
@@ -1225,179 +1291,130 @@ const handleSubmit = async (e) => {
                         Add Item
                       </Button>
                     </div>
-
-                    <div className="space-y-4">
-                      {formData.items.map((item, index) => (
-                        <div
-                          key={index}
-                          className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
-                        >
-                          <div className="space-y-4">
-                            <Input
-                              label="Description"
-                              value={item.description}
-                              onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                              placeholder="Enter service description"
-                              error={errors[`items[${index}].description`]}
-                            />
-
-                            <div className="grid grid-cols-3 gap-3">
-                              <Input
-                                label="Quantity"
-                                type="number"
-                                min="1"
-                                step="1"
-                                value={item.quantity}
-                                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                                error={errors[`items[${index}].quantity`]}
-                              />
-                              <Input
-                                label="Rate"
-                                type="number"
-                                min="0"
-                                step="0.001"
-                                value={item.rate}
-                                onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                                error={errors[`items[${index}].rate`]}
-                              />
-                              <Input
-                                label="Amount"
-                                type="number"
-                                value={item.amount}
-                                disabled
-                                className="bg-gray-50"
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-600">
-                              <div>
-                                <span className="text-sm text-gray-600 dark:text-gray-400">Total: </span>
-                                <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                                  {formatCurrency(item.amount)}
-                                </span>
-                              </div>
-                              {formData.items.length > 1 && (
-                                <Button
-                                  type="button"
-                                  variant="danger"
-                                  icon={Trash2}
-                                  onClick={() => handleRemoveItem(index)}
-                                  size="sm"
-                                >
-                                  Remove
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {errors.items && (
-                      <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                        <div className="flex items-start gap-3">
-                          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                          <p className="text-sm text-red-800 dark:text-red-400">{errors.items}</p>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                </Card>
-              </div>
 
-              {/* Price Summary & Settings */}
-              <div className="lg:col-span-1">
-                <div className="sticky space-y-6">
-                  <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-                    <div className="p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                        Price Summary
-                      </h3>
+                  <div className="p-6 space-y-6">
+                    {formData.items.map((item, index) => (
+                      <div
+                        key={index}
+                        className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50"
+                      >
+                        <div className="space-y-4">
+                          <Input
+                            label="Description"
+                            value={item.description}
+                            onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                            placeholder="Enter service description"
+                            error={errors[`items[${index}].description`]}
+                          />
 
-                      <div className="space-y-3 mb-6">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                          <span className="font-semibold text-gray-900 dark:text-white">
-                            {formatCurrency(calculations.subtotal)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Tax ({formData.taxRate}%):
-                          </span>
-                          <span className="font-semibold text-gray-900 dark:text-white">
-                            {formatCurrency(calculations.tax)}
-                          </span>
-                        </div>
-
-                        {calculations.discountAmount > 0 && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Discount:</span>
-                            <span className="font-semibold text-red-600 dark:text-red-400">
-                              -{formatCurrency(calculations.discountAmount)}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="pt-3 border-t-2 border-gray-300 dark:border-gray-600">
-                          <div className="flex justify-between">
-                            <span className="text-lg font-semibold text-gray-900 dark:text-white">Total:</span>
-                            <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                              {formatCurrency(calculations.totalAmount)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-
-                  <Card className="border-0 shadow-lg">
-                    <div className="p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Tax & Discount
-                      </h3>
-                      <div className="space-y-4">
-                        <Input
-                          label="Tax Rate (%)"
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          value={formData.taxRate}
-                          onChange={(e) => handleChange("taxRate", e.target.value)}
-                        />
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Discount
-                            </label>
+                          <div className="grid grid-cols-3 gap-4">
                             <Input
+                              label="Quantity"
+                              type="number"
+                              min="1"
+                              step="1"
+                              value={item.quantity}
+                              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                              error={errors[`items[${index}].quantity`]}
+                            />
+                            <Input
+                              label="Rate"
                               type="number"
                               min="0"
-                              step="0.01"
-                              value={formData.discount}
-                              onChange={(e) => handleChange("discount", e.target.value)}
+                              step="0.001"
+                              value={item.rate}
+                              onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                              error={errors[`items[${index}].rate`]}
+                            />
+                            <Input
+                              label="Amount"
+                              type="number"
+                              value={item.amount}
+                              disabled
+                              className="bg-gray-100 dark:bg-gray-800"
                             />
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Type
-                            </label>
-                            <Select
-                              value={formData.discountType}
-                              onChange={(e) => handleChange("discountType", e.target.value)}
-                              options={[
-                                { value: 'fixed', label: 'Fixed' },
-                                { value: 'percentage', label: '%' },
-                              ]}
-                            />
+
+                          <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
+                            <div>
+                              <span className="text-sm text-gray-600 dark:text-gray-400">Total: </span>
+                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {formatCurrency(item.amount)}
+                              </span>
+                            </div>
+                            {formData.items.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="danger"
+                                icon={Trash2}
+                                onClick={() => handleRemoveItem(index)}
+                                size="sm"
+                              >
+                                Remove
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-1 space-y-6">
+                <PriceSummary
+                  subtotal={calculations.subtotal}
+                  tax={calculations.tax}
+                  discountAmount={calculations.discountAmount}
+                  totalAmount={calculations.totalAmount}
+                />
+
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Tax & Discount
+                    </h3>
+                    <div className="space-y-4">
+                      <Input
+                        label="Tax Rate (%)"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={formData.taxRate}
+                        onChange={(e) => handleChange("taxRate", e.target.value)}
+                      />
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Discount
+                          </label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={formData.discount}
+                            onChange={(e) => handleChange("discount", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Type
+                          </label>
+                          <Select
+                            value={formData.discountType}
+                            onChange={(e) => handleChange("discountType", e.target.value)}
+                            options={[
+                              { value: 'fixed', label: 'Fixed' },
+                              { value: 'percentage', label: '%' },
+                            ]}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </Card>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1405,356 +1422,525 @@ const handleSubmit = async (e) => {
 
           {/* Step 3: Details */}
           {currentStep === 3 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-right-5 duration-300">
-              <Card className="border-0 shadow-lg">
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                      <Calendar className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Invoice Dates
-                      </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                        <Calendar className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                          Invoice Dates
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Set issue and due dates
+                        </p>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <Input
-                      label="Issue Date"
-                      type="date"
-                      value={formData.issueDate}
-                      onChange={(e) => handleChange("issueDate", e.target.value)}
-                      error={errors.issueDate}
-                    />
-                    <Input
-                      label="Due Date"
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={(e) => handleChange("dueDate", e.target.value)}
-                      error={errors.dueDate}
-                      min={formData.issueDate}
-                    />
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="Issue Date"
+                        type="date"
+                        value={formData.issueDate}
+                        onChange={(e) => handleChange("issueDate", e.target.value)}
+                        error={errors.issueDate}
+                      />
+                      <Input
+                        label="Due Date"
+                        type="date"
+                        value={formData.dueDate}
+                        onChange={(e) => handleChange("dueDate", e.target.value)}
+                        error={errors.dueDate}
+                        min={formData.issueDate}
+                      />
+                    </div>
                   </div>
                 </div>
-              </Card>
 
-              <Card className="border-0 shadow-lg">
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                      <CreditCard className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Payment Settings
-                      </h2>
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                        <CreditCard className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                          Payment Settings
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Configure payment method and currency
+                        </p>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <Select
-                      label="Currency"
-                      value={formData.currency}
-                      onChange={(e) => handleChange("currency", e.target.value)}
-                      options={currencyOptions}
-                    />
-                    <Select
-                      label="Payment Method"
-                      value={formData.paymentMethod}
-                      onChange={(e) => handleChange("paymentMethod", e.target.value)}
-                      options={paymentMethodOptions}
-                    />
-                    <Select
-                      label="Status"
-                      value={formData.status}
-                      onChange={(e) => handleChange("status", e.target.value)}
-                      options={[
-                        { value: 'draft', label: 'Draft' },
-                        { value: 'sent', label: 'Sent' },
-                        { value: 'paid', label: 'Paid' },
-                      ]}
-                    />
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Select
+                        label="Currency"
+                        value={formData.currency}
+                        onChange={(e) => handleChange("currency", e.target.value)}
+                        options={currencyOptions}
+                      />
+                      <Select
+                        label="Payment Method"
+                        value={formData.paymentMethod}
+                        onChange={(e) => handleChange("paymentMethod", e.target.value)}
+                        options={paymentMethodOptions}
+                      />
+                      <Select
+                        label="Status"
+                        value={formData.status}
+                        onChange={(e) => handleChange("status", e.target.value)}
+                        options={[
+                          { value: 'draft', label: 'Draft' },
+                          { value: 'sent', label: 'Sent' },
+                          { value: 'paid', label: 'Paid' },
+                        ]}
+                      />
+                    </div>
                   </div>
                 </div>
-              </Card>
 
-              <Card className="border-0 shadow-lg lg:col-span-2">
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                      <FileText className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Additional Information
-                      </h2>
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                        <FileText className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                          Additional Information
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Add notes and terms
+                        </p>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <Textarea
-                      label="Notes"
-                      value={formData.notes}
-                      onChange={(e) => handleChange("notes", e.target.value)}
-                      rows={3}
-                      placeholder="Add any additional notes..."
-                    />
-                    <Textarea
-                      label="Terms & Conditions"
-                      value={formData.terms}
-                      onChange={(e) => handleChange("terms", e.target.value)}
-                      rows={4}
-                      placeholder="Payment terms and conditions..."
-                    />
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      <Textarea
+                        label="Notes"
+                        value={formData.notes}
+                        onChange={(e) => handleChange("notes", e.target.value)}
+                        rows={3}
+                        placeholder="Add any additional notes..."
+                      />
+                      <Textarea
+                        label="Terms & Conditions"
+                        value={formData.terms}
+                        onChange={(e) => handleChange("terms", e.target.value)}
+                        rows={4}
+                        placeholder="Payment terms and conditions..."
+                      />
+                    </div>
                   </div>
                 </div>
-              </Card>
+              </div>
+
+              <div className="lg:col-span-1">
+                <PriceSummary
+                  subtotal={calculations.subtotal}
+                  tax={calculations.tax}
+                  discountAmount={calculations.discountAmount}
+                  totalAmount={calculations.totalAmount}
+                />
+              </div>
             </div>
           )}
 
           {/* Step 4: Review */}
           {currentStep === 4 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-              <Card className="border-0 shadow-lg">
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                      <Eye className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Review & Confirm
-                      </h2>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Please review all details before {isEditMode ? 'updating' : 'creating'} the {invoiceType === 'client' ? 'invoice' : 'bill'}
-                      </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
+              <div className="lg:col-span-2">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                        <Eye className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                          Review & Confirm
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Please review all details before {isEditMode ? 'updating' : 'creating'} the {invoiceType === 'client' ? 'invoice' : 'bill'}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                          {currentConfig.recipientLabel} Information
-                        </h3>
-                        {selectedRecipientDetails && (
-                          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div className="flex items-start gap-3">
-                              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                                {selectedRecipientDetails.name?.charAt(0).toUpperCase() || "?"}
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            {currentConfig.recipientLabel} Information
+                          </h3>
+                          {selectedRecipientDetails && (
+                            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                              <div className="flex items-start gap-3">
+                                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                                  {selectedRecipientDetails.name?.charAt(0).toUpperCase() || "?"}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-semibold text-gray-900 dark:text-white">
+                                    {selectedRecipientDetails.name}
+                                  </div>
+                                  {selectedRecipientDetails.company && (
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                      {selectedRecipientDetails.company}
+                                    </div>
+                                  )}
+                                  <div className="text-sm text-gray-500 mt-2 space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Mail className="w-4 h-4" />
+                                      {selectedRecipientDetails.email}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Phone className="w-4 h-4" />
+                                      {selectedRecipientDetails.phone}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex-1">
-                                <div className="font-semibold text-gray-900 dark:text-white">
-                                  {selectedRecipientDetails.name}
-                                </div>
-                                {selectedRecipientDetails.company && (
-                                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    {selectedRecipientDetails.company}
-                                  </div>
-                                )}
-                                <div className="text-sm text-gray-500 mt-2 space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4" />
-                                    {selectedRecipientDetails.email}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Phone className="w-4 h-4" />
-                                    {selectedRecipientDetails.phone}
-                                  </div>
-                                </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {selectedEvent && (
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                              Event Information
+                            </h3>
+                            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                              <div className="font-semibold text-green-900 dark:text-green-300">
+                                {selectedEvent.title}
+                              </div>
+                              <div className="text-sm text-green-700 dark:text-green-400 mt-1">
+                                {formatDate(selectedEvent.startDate)} - {selectedEvent.type}
                               </div>
                             </div>
                           </div>
                         )}
-                      </div>
 
-                      {selectedEvent && (
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            Event Information
+                            Invoice Details
                           </h3>
-                          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                            <div className="font-semibold text-green-900 dark:text-green-300">
-                              {selectedEvent.title}
-                            </div>
-                            <div className="text-sm text-green-700 dark:text-green-400 mt-1">
-                              {formatDate(selectedEvent.startDate)} - {selectedEvent.type}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                          Invoice Details
-                        </h3>
-                        <div className="space-y-3">
-                          <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                            <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">
-                              {formatDate(formData.issueDate)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                            <span className="text-gray-600 dark:text-gray-400">Due Date:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">
-                              {formatDate(formData.dueDate)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                            <span className="text-gray-600 dark:text-gray-400">Currency:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">
-                              {formData.currency}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-2">
-                            <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                            <Badge
-                              color={
-                                formData.status === "paid" ? "green" :
-                                formData.status === "sent" ? "blue" : "orange"
-                              }
-                            >
-                              {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                          Items Summary ({formData.items.length})
-                        </h3>
-                        <div className="space-y-3">
-                          {formData.items.map((item, index) => (
-                            <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <div className="font-medium text-gray-900 dark:text-white">
-                                    {item.description}
-                                  </div>
-                                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {item.quantity} × {formatCurrency(item.rate)}
-                                  </div>
-                                </div>
-                                <div className="font-semibold text-gray-900 dark:text-white">
-                                  {formatCurrency(item.amount)}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                        <h4 className="font-semibold text-orange-900 dark:text-orange-300 mb-3">
-                          Final Amount
-                        </h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                            <span className="text-gray-900 dark:text-white font-medium">
-                              {formatCurrency(calculations.subtotal)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">Tax:</span>
-                            <span className="text-gray-900 dark:text-white font-medium">
-                              {formatCurrency(calculations.tax)}
-                            </span>
-                          </div>
-                          {calculations.discountAmount > 0 && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-600 dark:text-gray-400">Discount:</span>
-                              <span className="text-red-600 dark:text-red-400 font-medium">
-                                -{formatCurrency(calculations.discountAmount)}
+                          <div className="space-y-3">
+                            <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                              <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {formatDate(formData.issueDate)}
                               </span>
                             </div>
-                          )}
-                          <div className="flex justify-between text-lg font-bold pt-2 border-t border-orange-200 dark:border-orange-700">
-                            <span className="text-orange-900 dark:text-orange-300">Total:</span>
-                            <span className="text-orange-600 dark:text-orange-400">
-                              {formatCurrency(calculations.totalAmount)}
-                            </span>
+                            <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                              <span className="text-gray-600 dark:text-gray-400">Due Date:</span>
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {formatDate(formData.dueDate)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                              <span className="text-gray-600 dark:text-gray-400">Currency:</span>
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {formData.currency}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-2">
+                              <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                              <Badge
+                                color={
+                                  formData.status === "paid" ? "green" :
+                                  formData.status === "sent" ? "blue" : "orange"
+                                }
+                              >
+                                {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            Items Summary ({formData.items.length})
+                          </h3>
+                          <div className="space-y-3">
+                            {formData.items.map((item, index) => (
+                              <div key={index} className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="font-medium text-gray-900 dark:text-white">
+                                      {item.description}
+                                    </div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                      {item.quantity} × {formatCurrency(item.rate)}
+                                    </div>
+                                  </div>
+                                  <div className="font-semibold text-gray-900 dark:text-white">
+                                    {formatCurrency(item.amount)}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                          <h4 className="font-semibold text-orange-900 dark:text-orange-300 mb-3">
+                            Final Amount
+                          </h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                              <span className="text-gray-900 dark:text-white font-medium">
+                                {formatCurrency(calculations.subtotal)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+                              <span className="text-gray-900 dark:text-white font-medium">
+                                {formatCurrency(calculations.tax)}
+                              </span>
+                            </div>
+                            {calculations.discountAmount > 0 && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600 dark:text-gray-400">Discount:</span>
+                                <span className="text-red-600 dark:text-red-400 font-medium">
+                                  -{formatCurrency(calculations.discountAmount)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-lg font-bold pt-2 border-t border-orange-200 dark:border-orange-700">
+                              <span className="text-orange-900 dark:text-orange-300">Total:</span>
+                              <span className="text-orange-600 dark:text-orange-400">
+                                {formatCurrency(calculations.totalAmount)}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
+
+              <div className="lg:col-span-1">
+                <PriceSummary
+                  subtotal={calculations.subtotal}
+                  tax={calculations.tax}
+                  discountAmount={calculations.discountAmount}
+                  totalAmount={calculations.totalAmount}
+                />
+              </div>
             </div>
           )}
 
-          {/* Footer Navigation */}
-          <Card className="border-0 shadow-lg">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  {currentStep > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      icon={ChevronLeft}
-                      onClick={prevStep}
-                      className="hover:scale-105 transition-transform"
-                    >
-                      Previous
-                    </Button>
-                  )}
-                </div>
-                <div className="flex items-center gap-4">
-                  {currentStep >= 2 && (
-                    <div className="text-right px-4 py-2 bg-white dark:bg-gray-600 rounded-lg shadow">
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        Total Amount
-                      </div>
-                      <div className="text-2xl font-bold text-orange-600">
-                        {formatCurrency(calculations.totalAmount)}
-                      </div>
-                    </div>
-                  )}
-                  {currentStep < totalSteps ? (
-                    <Button
-                      type="button"
-                      variant="primary"
-                      icon={ChevronRight}
-                      onClick={nextStep}
-                      className="hover:scale-105 transition-transform"
-                    >
-                      Continue
-                    </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      icon={Save}
-                      loading={loading}
-                      className="hover:scale-105 transition-transform"
-                    >
-                      {isEditMode 
-                        ? `Update ${invoiceType === 'client' ? 'Invoice' : 'Bill'}` 
-                        : `Create ${invoiceType === 'client' ? 'Invoice' : 'Bill'}`}
-                    </Button>
-                  )}
-                </div>
-              </div>
+          {/* Navigation Buttons */}
+          <div className="flex items-center justify-between pt-8 border-t border-gray-200 dark:border-gray-700">
+            <div>
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  icon={ChevronLeft}
+                  onClick={prevStep}
+                >
+                  Previous
+                </Button>
+              )}
             </div>
-          </Card>
+            
+            <div className="flex items-center gap-4">
+              {currentStep >= 2 && (
+                <div className="text-right px-4 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    Total Amount
+                  </div>
+                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {formatCurrency(calculations.totalAmount)}
+                  </div>
+                </div>
+              )}
+              
+              {currentStep < totalSteps ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  icon={ChevronRight}
+                  onClick={nextStep}
+                >
+                  Continue
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  variant="primary"
+                  icon={Save}
+                  loading={loading}
+                  className="min-w-[200px]"
+                >
+                  {isEditMode 
+                    ? `Update ${invoiceType === 'client' ? 'Invoice' : 'Bill'}` 
+                    : `Create ${invoiceType === 'client' ? 'Invoice' : 'Bill'}`}
+                </Button>
+              )}
+            </div>
+          </div>
         </form>
       </div>
 
-      {/* Sticky Price Summary */}
-      <StickyPriceSummary
-        subtotal={calculations.subtotal}
-        tax={calculations.tax}
-        discountAmount={calculations.discountAmount}
-        totalAmount={calculations.totalAmount}
-        visible={currentStep >= 2}
-      />
+      {/* Success Modal */}
+      {isDetailModalOpen && selectedInvoice && (
+        <Modal
+          isOpen={isDetailModalOpen}
+          onClose={handleCloseModal}
+          title="Invoice Created Successfully!"
+          size="lg"
+        >
+          <div className="p-6 space-y-6">
+            {/* Success Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                {isEditMode ? 'Invoice Updated!' : 'Invoice Created!'}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {isEditMode 
+                  ? 'Your invoice has been updated successfully.' 
+                  : 'Your invoice has been created successfully.'}
+              </p>
+            </div>
+
+            {/* Invoice Summary */}
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-orange-500" />
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    #{selectedInvoice.invoiceNumber}
+                  </span>
+                </div>
+                <Badge 
+                  color={
+                    selectedInvoice.status === "paid" ? "green" :
+                    selectedInvoice.status === "sent" ? "blue" : "orange"
+                  }
+                >
+                  {selectedInvoice.status?.charAt(0).toUpperCase() + selectedInvoice.status?.slice(1) || 'Draft'}
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Recipient:</span>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {selectedInvoice.recipientName}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Amount:</span>
+                  <p className="font-bold text-orange-600 dark:text-orange-400">
+                    {formatCurrency(selectedInvoice.totalAmount)}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Due Date:</span>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {formatDate(selectedInvoice.dueDate)}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Type:</span>
+                  <div className="flex items-center gap-1">
+                    {selectedInvoice.invoiceType === 'client' ? (
+                      <><Users className="w-4 h-4" /><span>Client Invoice</span></>
+                    ) : (
+                      <><Briefcase className="w-4 h-4" /><span>Partner Bill</span></>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
+              <Button
+                variant="outline"
+                icon={Eye}
+                onClick={() => {
+                  handleCloseModal();
+                  navigate(`/invoices`);
+                }}
+                className="flex-col h-auto py-3"
+              >
+                <span className="text-xs">View All</span>
+                <span className="font-semibold">Invoices</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                icon={Download}
+                onClick={() => handleDownloadInvoice(selectedInvoice)}
+                className="flex-col h-auto py-3"
+              >
+                <span className="text-xs">Download</span>
+                <span className="font-semibold">PDF</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                icon={Printer}
+                onClick={() => handlePrintInvoice(selectedInvoice)}
+                className="flex-col h-auto py-3"
+              >
+                <span className="text-xs">Print</span>
+                <span className="font-semibold">Invoice</span>
+              </Button>
+
+              {selectedInvoice.status === 'draft' && (
+                <Button
+                  variant="primary"
+                  icon={Send}
+                  onClick={() => handleSendInvoice(selectedInvoice)}
+                  className="flex-col h-auto py-3"
+                >
+                  <span className="text-xs">Send to</span>
+                  <span className="font-semibold">{selectedInvoice.recipientName}</span>
+                </Button>
+              )}
+            </div>
+
+            {/* Additional Actions */}
+            <div className="flex justify-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+              >
+                Close
+              </Button>
+              <Button
+                variant="outline"
+                icon={Edit}
+                onClick={() => {
+                  handleEditInvoice(selectedInvoice);
+                  handleCloseModal();
+                }}
+              >
+                Edit Invoice
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

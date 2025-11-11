@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { reminderService } from "../../api/index";
 import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import { ConfirmModal } from "../../components/common/Modal";
 import {
@@ -289,7 +288,7 @@ const ReminderDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Info */}
           <div className="lg:col-span-2 space-y-6">
-            <Card>
+            <div>
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Reminder Information
@@ -368,10 +367,10 @@ const ReminderDetails = () => {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
 
             {/* Notification Methods */}
-            <Card>
+            <div>
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Notification Methods
@@ -401,14 +400,14 @@ const ReminderDetails = () => {
                   </p>
                 )}
               </div>
-            </Card>
+            </div>
 
             {/* Related Items */}
             {(reminder.relatedEvent ||
               reminder.relatedClient ||
               reminder.relatedTask ||
               reminder.relatedPayment) && (
-              <Card>
+              <div>
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Related Items
@@ -504,14 +503,14 @@ const ReminderDetails = () => {
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Status Card */}
-            <Card>
+            <div>
               <div className="p-6">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">
                   Status
@@ -561,11 +560,11 @@ const ReminderDetails = () => {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
 
             {/* Assigned Users */}
             {reminder.assignedTo && reminder.assignedTo.length > 0 && (
-              <Card>
+              <div>
                 <div className="p-6">
                   <h3 className="text-sm font-semibold text-gray-900 mb-4">
                     Assigned To
@@ -587,11 +586,11 @@ const ReminderDetails = () => {
                     ))}
                   </div>
                 </div>
-              </Card>
+              </div>
             )}
 
             {/* Metadata */}
-            <Card>
+            <div>
               <div className="p-6">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">
                   Metadata
@@ -622,13 +621,13 @@ const ReminderDetails = () => {
                   </div>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === "recurrence" && (
-        <Card>
+        <div>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Recurrence Settings
@@ -708,11 +707,11 @@ const ReminderDetails = () => {
               </div>
             )}
           </div>
-        </Card>
+        </div>
       )}
 
       {activeTab === "history" && (
-        <Card>
+        <div>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Activity History
@@ -725,7 +724,7 @@ const ReminderDetails = () => {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Delete Confirmation Modal */}

@@ -6,7 +6,6 @@ import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Table from "../../components/common/Table";
 import Badge from "../../components/common/Badge";
-import Card from "../../components/common/Card";
 import Pagination from "../../components/common/Pagination";
 import EmptyState from "../../components/common/EmptyState";
 import Modal from "../../components/common/Modal";
@@ -394,7 +393,7 @@ const formatDate = useCallback((date) => {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index}>
+              <div key={index}>
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -410,14 +409,14 @@ const formatDate = useCallback((date) => {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
       )}
 
       {/* Search and Filters */}
-      <Card>
+      <div>
         <div className="p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
@@ -522,10 +521,10 @@ const formatDate = useCallback((date) => {
             </div>
           )}
         </div>
-      </Card>
+      </div>
 
       {/* Transactions Table */}
-      <Card>
+      <div>
         <div className="overflow-x-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
@@ -556,7 +555,7 @@ const formatDate = useCallback((date) => {
             />
           )}
         </div>
-      </Card>
+      </div>
 
       {/* Delete Confirmation Modal */}
       <Modal

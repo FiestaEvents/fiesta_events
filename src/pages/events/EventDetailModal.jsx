@@ -12,7 +12,6 @@ import {
 import { toast } from "react-hot-toast";
 import { eventService } from "../../api/index";
 import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 
 const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
@@ -95,7 +94,7 @@ const formatDateLong = (dateString) => {
           &#8203;
         </span>
         <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <Card className="border-0">
+          <div className="border-0">
             <div className="px-6 pt-5 pb-4">
               <div className="flex justify-between items-start">
                 <h3
@@ -171,7 +170,7 @@ const formatDateLong = (dateString) => {
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </div>

@@ -3,7 +3,6 @@ import { financeService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Card from "../../components/common/Card";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 import {
@@ -309,7 +308,7 @@ const Reports = () => {
       </div>
 
       {/* API Limitation Notice */}
-      <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
         <div className="p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <div>
@@ -323,10 +322,10 @@ const Reports = () => {
             </p>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Report Configuration */}
-      <Card>
+      <div>
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Configure Report
@@ -410,11 +409,11 @@ const Reports = () => {
             )}
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Report Preview */}
       {showPreview && reportData && (
-        <Card>
+        <div>
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -553,7 +552,7 @@ const Reports = () => {
               )}
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Report Types Grid */}
@@ -567,7 +566,7 @@ const Reports = () => {
             const isSelected = reportType === type.id;
 
             return (
-              <Card
+              <div
                 key={type.id}
                 className={`cursor-pointer transition-all hover:shadow-lg ${
                   isSelected ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
@@ -585,14 +584,14 @@ const Reports = () => {
                     {type.description}
                   </p>
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
       </div>
 
       {/* Quick Reports */}
-      <Card>
+      <div>
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Quick Reports
@@ -655,7 +654,7 @@ const Reports = () => {
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

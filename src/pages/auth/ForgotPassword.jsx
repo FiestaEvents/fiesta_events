@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import Card from '../../components/common/Card';
 import { authService } from '../../api/index';
 
 const ForgotPassword = () => {
@@ -31,7 +30,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md p-6">
+      <div className="w-full max-w-md p-6">
         <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Forgot Password</h1>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
           Enter your email to receive a password reset link.
@@ -63,7 +62,7 @@ const ForgotPassword = () => {
             Login
           </span>
         </p>
-      </Card>
+      </div>
     </div>
   );
 };
