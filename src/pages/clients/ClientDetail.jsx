@@ -1,22 +1,20 @@
 // ClientDetail.jsx
-import React, { useState, useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useState } from "react";
 import { toast } from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Components
+import Modal, { ConfirmModal } from "../../components/common/Modal";
+import EventDetailModal from "../events/EventDetailModal";
+import ClientForm from "./ClientForm";
+import ActivityTab from "./components/ActivityTab";
 import ClientHeader from "./components/ClientHeader";
 import ClientInfo from "./components/ClientInfo";
 import EventsTab from "./components/EventsTab";
 import PaymentsTab from "./components/PaymentsTab";
-import ActivityTab from "./components/ActivityTab";
-import Modal, { ConfirmModal } from "../../components/common/Modal";
-import ClientForm from "./ClientForm";
-import EventDetailModal from "../events/EventDetailModal";
-import Badge from "../../components/common/Badge";
 // Hooks and Services
-import { useClientDetail } from "../../hooks/useClientDetail";
 import { clientService } from "../../api/index";
-import { formatCurrency } from "../../utils/formatCurrency";
+import { useClientDetail } from "../../hooks/useClientDetail";
 
 const ClientDetail = () => {
   const navigate = useNavigate();
@@ -274,7 +272,7 @@ const ClientDetail = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
               <div className="border-b border-gray-200 dark:border-orange-800">
                 <nav className="flex -mb-px">
-                  {["events", "payments", "activity"].map((tab) => (
+                  {["activity", "events", "payments"].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}

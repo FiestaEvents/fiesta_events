@@ -20,6 +20,49 @@ import {
   EyeOff,
 } from "lucide-react";
 
+const DEFAULT_AMENITIES = [
+  "WiFi",
+  "Parking",
+  "A/C & Heating",
+  "Restrooms",
+  "Bridal Suite",
+  "Groom's Room",
+  "Stage",
+  "Dance Floor",
+  "Sound System",
+  "Lighting System",
+  "Projector & Screen",
+  "Microphones",
+  "Kitchen Access",
+  "Bar Area",
+  "Outdoor Space",
+  "Garden Area",
+  "Patio",
+  "Balcony",
+  "Elevator",
+  "Wheelchair Accessible",
+  "Coat Check",
+  "Valet Service",
+  "Security",
+  "Event Coordinator",
+  "Setup & Cleanup",
+  "Tables & Chairs",
+  "Linens",
+  "China & Glassware",
+  "Catering Kitchen",
+  "Liquor License",
+  "DJ Booth",
+  "Photo Booth Area",
+  "Fireplace",
+  "Waterfront View",
+  "Mountain View",
+  "City View",
+  "Pool Access",
+  "Beach Access",
+  "Changing Rooms",
+  "Storage Space",
+];
+
 // Reusable Components
 const Input = ({
   label,
@@ -377,6 +420,8 @@ const VenueSettings = () => {
   // Amenities & Hours state
   const [amenities, setAmenities] = useState([]);
   const [newAmenity, setNewAmenity] = useState("");
+  const [availableAmenities, setAvailableAmenities] =
+    useState(DEFAULT_AMENITIES);
   const [operatingHours, setOperatingHours] = useState({});
 
   // Spaces state
@@ -391,6 +436,26 @@ const VenueSettings = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Add these new handler functions
+  const handleAddDefaultAmenity = (amenity) => {
+    if (!amenities.includes(amenity)) {
+      setAmenities((prev) => [...prev, amenity]);
+      toast.success(`Added ${amenity}`);
+    } else {
+      toast.info(`${amenity} is already added`);
+    }
+  };
+
+  const handleAddCustomAmenity = () => {
+    if (newAmenity.trim() && !amenities.includes(newAmenity.trim())) {
+      setAmenities((prev) => [...prev, newAmenity.trim()]);
+      setNewAmenity("");
+      toast.success("Custom amenity added");
+    } else if (amenities.includes(newAmenity.trim())) {
+      toast.error("This amenity already exists");
+    }
+  };
 
   // Fetch data - IMPROVED VERSION
   useEffect(() => {
@@ -1443,57 +1508,152 @@ const VenueSettings = () => {
             {activeTab === "amenities" && (
               <div className="space-y-8">
                 {/* Amenities */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    Venue Amenities
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    Add amenities that your venue offers
-                  </p>
-
-                  <div className="flex gap-2  justify-between">
-                    <Input
-                      placeholder="Add amenity (e.g., WiFi, Parking, A/C)"
-                      value={newAmenity}
-                      onChange={(e) => setNewAmenity(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddAmenity();
-                        }
-                      }}
-                    />
-                    <Button
-                      variant="outline"
-                      icon={Plus}
-                      onClick={handleAddAmenity}
-                    >
-                      Add
-                    </Button>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                      Venue Amenities
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                      Add amenities that your venue offers. Select from common
+                      options or add custom ones.
+                    </p>
                   </div>
 
-                  {amenities.length > 0 ? (
+                  {/* Quick Add Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Quick Add Common Amenities
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Click to add frequently used amenities for wedding and
+                      event venues
+                    </p>
+
                     <div className="flex flex-wrap gap-2">
-                      {amenities.map((amenity, index) => (
-                        <Badge
-                          key={index}
-                          variant="purple"
-                          onRemove={() => handleRemoveAmenity(index)}
+                      {availableAmenities
+                        .filter((amenity) => !amenities.includes(amenity))
+                        .slice(0, 12) // Show first 12 available amenities
+                        .map((amenity) => (
+                          <button
+                            key={amenity}
+                            onClick={() => handleAddDefaultAmenity(amenity)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer border border-blue-200 dark:border-blue-800"
+                            title={`Add ${amenity}`}
+                          >
+                            <Plus className="w-3 h-3" />
+                            {amenity}
+                          </button>
+                        ))}
+                    </div>
+
+                    {/* Show more amenities dropdown */}
+                    {availableAmenities.filter(
+                      (amenity) => !amenities.includes(amenity)
+                    ).length > 12 && (
+                      <div className="relative">
+                        <select
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              handleAddDefaultAmenity(e.target.value);
+                              e.target.value = ""; // Reset select
+                            }
+                          }}
+                          className="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                          {amenity}
-                        </Badge>
-                      ))}
+                          <option value="">More amenities...</option>
+                          {availableAmenities
+                            .filter((amenity) => !amenities.includes(amenity))
+                            .slice(12)
+                            .map((amenity) => (
+                              <option key={amenity} value={amenity}>
+                                {amenity}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Custom Amenity Input */}
+                  <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                      Add Custom Amenity
+                    </h3>
+                    <div className="flex gap-2 justify-between">
+                      <Input
+                        fullWidth={true}
+                        placeholder="Enter custom amenity (e.g., Vintage Furniture, Fire Pit, etc.)"
+                        value={newAmenity}
+                        onChange={(e) => setNewAmenity(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddCustomAmenity();
+                          }
+                        }}
+                      />
+                      <Button
+                        className="shrink-0"
+                        variant="outline"
+                        icon={Plus}
+                        onClick={handleAddCustomAmenity}
+                        disabled={!newAmenity.trim()}
+                      >
+                        Add Custom
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
-                      <p className="text-gray-500 dark:text-gray-400">
-                        No amenities added yet. Add your first amenity above.
-                      </p>
+                  </div>
+
+                  {/* Selected Amenities */}
+                  <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                        Selected Amenities ({amenities.length})
+                      </h3>
+                      {amenities.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          icon={Trash2}
+                          onClick={() => {
+                            if (window.confirm("Remove all amenities?")) {
+                              setAmenities([]);
+                              toast.success("All amenities removed");
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          Clear All
+                        </Button>
+                      )}
                     </div>
-                  )}
+
+                    {amenities.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {amenities.map((amenity, index) => (
+                          <Badge
+                            key={index}
+                            variant="purple"
+                            onRemove={() => handleRemoveAmenity(index)}
+                          >
+                            {amenity}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 mb-3">
+                          <Plus className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          No amenities added yet. Select from common options
+                          above or add custom ones.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Operating Hours */}
+                {/* Operating Hours section remains the same */}
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                     Operating Hours

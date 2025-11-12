@@ -20,6 +20,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -40,7 +42,9 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     status: "active",
     location: "",
     specialties: "",
+    priceType: "hourly", // "hourly" or "fixed"
     hourlyRate: "",
+    fixedRate: "",
     rating: "0",
     address: {
       street: "",
@@ -58,6 +62,23 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
   // Load partner data for edit mode
   useEffect(() => {
     if (isEditMode && partner) {
+      // Determine price type based on existing data
+      const hasHourlyRate = partner.hourlyRate && partner.hourlyRate > 0;
+      const hasFixedRate = partner.fixedRate && partner.fixedRate > 0;
+
+      let priceType = "hourly";
+      if (hasFixedRate && !hasHourlyRate) {
+        priceType = "fixed";
+      } else if (hasHourlyRate && !hasFixedRate) {
+        priceType = "hourly";
+      } else if (hasHourlyRate && hasFixedRate) {
+        // If both exist, default to hourly but show warning
+        priceType = "hourly";
+        console.warn(
+          "Partner has both hourly and fixed rates. Defaulting to hourly."
+        );
+      }
+
       setFormData({
         name: partner.name || "",
         email: partner.email || "",
@@ -67,7 +88,10 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         status: partner.status || "active",
         location: partner.location || "",
         specialties: partner.specialties || "",
+        priceType: priceType,
         hourlyRate: partner.hourlyRate || "",
+        fixedRate: partner.fixedRate || "",
+        priceType: partner.priceType || "",
         rating: partner.rating || "0",
         address: {
           street: partner.address?.street || "",
@@ -132,6 +156,11 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     { value: "inactive", label: "Inactive" },
   ];
 
+  const priceTypeOptions = [
+    { value: "hourly", label: "Hourly Rate", icon: Clock },
+    { value: "fixed", label: "Fixed Amount", icon: DollarSign },
+  ];
+
   // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -161,6 +190,26 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     }
   };
 
+  // Handle price type change specifically
+  const handlePriceTypeChange = (e) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      priceType: value,
+      // Clear the other rate field when switching types
+      ...(value === "hourly" ? { fixedRate: "" } : { hourlyRate: "" }),
+    }));
+
+    // Clear rate errors
+    if (errors.hourlyRate || errors.fixedRate) {
+      setErrors((prev) => ({
+        ...prev,
+        hourlyRate: "",
+        fixedRate: "",
+      }));
+    }
+  };
+
   const validateStep = (step) => {
     const newErrors = {};
 
@@ -182,12 +231,28 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       if (!formData.category) {
         newErrors.category = "Category is required";
       }
-      if (
-        formData.hourlyRate &&
-        (isNaN(formData.hourlyRate) || formData.hourlyRate < 0)
-      ) {
-        newErrors.hourlyRate = "Hourly rate must be a positive number";
+
+      // Validate pricing based on selected price type
+      if (formData.priceType === "hourly") {
+        if (!formData.hourlyRate) {
+          newErrors.hourlyRate = "Hourly rate is required";
+        } else if (
+          isNaN(formData.hourlyRate) ||
+          parseFloat(formData.hourlyRate) < 0
+        ) {
+          newErrors.hourlyRate = "Hourly rate must be a positive number";
+        }
+      } else if (formData.priceType === "fixed") {
+        if (!formData.fixedRate) {
+          newErrors.fixedRate = "Fixed amount is required";
+        } else if (
+          isNaN(formData.fixedRate) ||
+          parseFloat(formData.fixedRate) < 0
+        ) {
+          newErrors.fixedRate = "Fixed amount must be a positive number";
+        }
       }
+
       if (
         formData.rating &&
         (isNaN(formData.rating) || formData.rating < 0 || formData.rating > 5)
@@ -221,12 +286,28 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     if (!formData.category) {
       newErrors.category = "Category is required";
     }
-    if (
-      formData.hourlyRate &&
-      (isNaN(formData.hourlyRate) || formData.hourlyRate < 0)
-    ) {
-      newErrors.hourlyRate = "Hourly rate must be a positive number";
+
+    // Validate pricing based on selected price type
+    if (formData.priceType === "hourly") {
+      if (!formData.hourlyRate) {
+        newErrors.hourlyRate = "Hourly rate is required";
+      } else if (
+        isNaN(formData.hourlyRate) ||
+        parseFloat(formData.hourlyRate) < 0
+      ) {
+        newErrors.hourlyRate = "Hourly rate must be a positive number";
+      }
+    } else if (formData.priceType === "fixed") {
+      if (!formData.fixedRate) {
+        newErrors.fixedRate = "Fixed amount is required";
+      } else if (
+        isNaN(formData.fixedRate) ||
+        parseFloat(formData.fixedRate) < 0
+      ) {
+        newErrors.fixedRate = "Fixed amount must be a positive number";
+      }
     }
+
     if (
       formData.rating &&
       (isNaN(formData.rating) || formData.rating < 0 || formData.rating > 5)
@@ -285,7 +366,12 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       // Jump to first step with errors
       if (errors.name || errors.email || errors.phone) {
         setCurrentStep(1);
-      } else if (errors.category || errors.hourlyRate || errors.rating) {
+      } else if (
+        errors.category ||
+        errors.hourlyRate ||
+        errors.fixedRate ||
+        errors.rating
+      ) {
         setCurrentStep(2);
       }
       return;
@@ -316,12 +402,24 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     try {
       setSaving(true);
 
-      // Prepare data for submission
+      // Prepare data for submission - only include the relevant rate based on price type
       const submitData = {
         ...formData,
-        hourlyRate: formData.hourlyRate
-          ? parseFloat(formData.hourlyRate)
-          : undefined,
+        priceType: formData.priceType,
+        // Only include the rate that matches the selected price type
+        ...(formData.priceType === "hourly"
+          ? {
+              hourlyRate: formData.hourlyRate
+                ? parseFloat(formData.hourlyRate)
+                : undefined,
+              fixedRate: undefined, // Clear fixed rate if hourly is selected
+            }
+          : {
+              fixedRate: formData.fixedRate
+                ? parseFloat(formData.fixedRate)
+                : undefined,
+              hourlyRate: undefined, // Clear hourly rate if fixed is selected
+            }),
         rating: formData.rating ? parseFloat(formData.rating) : 0,
       };
 
@@ -378,7 +476,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                     isCompleted
                       ? "bg-orange-600 text-white"
                       : isCurrent
-                        ? `bg-${step.color}-600 text-white ring-4 ring-${step.color}-200 dark:ring-${step.color}-900`
+                        ? `bg-orange-600 text-white ring-4 ring-orange-200 dark:ring-orange-900`
                         : "bg-orange-200 dark:bg-orange-700 text-orange-400"
                   }`}
                 >
@@ -515,19 +613,91 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                 className="w-full"
               />
 
-              <Input
-                label="Hourly Rate"
-                name="hourlyRate"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.hourlyRate}
-                onChange={handleChange}
-                error={errors.hourlyRate}
-                placeholder="0.00"
-                icon={DollarSign}
-                className="w-full"
-              />
+              {/* Price Type Selection */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Pricing Type <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  {priceTypeOptions.map((option) => {
+                    const IconComponent = option.icon;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          const event = {
+                            target: {
+                              name: "priceType",
+                              value: option.value,
+                            },
+                          };
+                          handlePriceTypeChange(event);
+                        }}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 border-2 rounded-lg transition-all ${
+                          formData.priceType === option.value
+                            ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:border-orange-400 dark:text-orange-300"
+                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-gray-500"
+                        }`}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          {option.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic Pricing Field */}
+            <div className="grid grid-cols-1 gap-4">
+              {formData.priceType === "hourly" ? (
+                <Input
+                  label="Hourly Rate"
+                  name="hourlyRate"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.hourlyRate}
+                  onChange={handleChange}
+                  error={errors.hourlyRate}
+                  required
+                  placeholder="0.00"
+                  icon={Clock}
+                  className="w-full"
+                  addOn={
+                    <div className="flex items-center px-3 bg-gray-100 border-l border-gray-300 dark:bg-gray-700 dark:border-gray-600">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        /hour
+                      </span>
+                    </div>
+                  }
+                />
+              ) : (
+                <Input
+                  label="Fixed Amount"
+                  name="fixedRate"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.fixedRate}
+                  onChange={handleChange}
+                  error={errors.fixedRate}
+                  required
+                  placeholder="0.00"
+                  icon={DollarSign}
+                  className="w-full"
+                  addOn={
+                    <div className="flex items-center px-3 bg-gray-100 border-l border-gray-300 dark:bg-gray-700 dark:border-gray-600">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        total
+                      </span>
+                    </div>
+                  }
+                />
+              )}
             </div>
 
             <div className="relative">
@@ -576,6 +746,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         return (
           <div className="space-y-4">
             <Input
+              className="w-full"
               label="Street Address"
               name="address.street"
               value={formData.address.street}
@@ -585,6 +756,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
+                className="w-full"
                 label="City"
                 name="address.city"
                 value={formData.address.city}
@@ -593,6 +765,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
               />
 
               <Input
+                className="w-full"
                 label="State/Province"
                 name="address.state"
                 value={formData.address.state}
@@ -601,6 +774,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
               />
 
               <Input
+                className="w-full"
                 label="ZIP/Postal Code"
                 name="address.zipCode"
                 value={formData.address.zipCode}
@@ -609,6 +783,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
               />
 
               <Input
+                className="w-full"
                 label="Country"
                 name="address.country"
                 value={formData.address.country}
@@ -623,6 +798,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         return (
           <div className="space-y-4">
             <Textarea
+              className="w-full"
               label="Notes"
               name="notes"
               value={formData.notes}
@@ -654,7 +830,9 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
 
       {/* Navigation Buttons */}
       <div className="flex items-center sticky bottom-0 bg-white justify-between pt-6 border-t border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-        <div>
+        <div className="space-x-4"></div>
+
+        <div className="flex items-center justify-between gap-3 w-full">
           {currentStep > 1 && (
             <Button
               type="button"
@@ -666,9 +844,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
               Previous
             </Button>
           )}
-        </div>
-
-        <div className="flex items-center gap-3">
           <Button
             type="button"
             variant="outline"
@@ -679,43 +854,43 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
             Cancel
           </Button>
 
-          {/* Quick Update button - only show in edit mode and not on last step */}
-          {isEditMode && currentStep < totalSteps && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleQuickUpdate}
-              loading={saving}
-              disabled={saving}
-              //dark mode
-              className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Update Now
-            </Button>
-          )}
+          <div className="flex items-center gap-4">
+            {/* Quick Update button - only show in edit mode and not on last step */}
+            {isEditMode && currentStep < totalSteps && (
+              <Button
+                type="button"
+                onClick={handleQuickUpdate}
+                loading={saving}
+                disabled={saving}
+                className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700 hover:bg-orange-600"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Update Now
+              </Button>
+            )}
 
-          {currentStep < totalSteps ? (
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleNext}
-              disabled={saving}
-            >
-              Next
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              variant="primary"
-              loading={saving}
-              disabled={saving}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {isEditMode ? "Update Partner" : "Create Partner"}
-            </Button>
-          )}
+            {currentStep < totalSteps ? (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleNext}
+                disabled={saving}
+              >
+                Next
+                <ChevronRight className="" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="primary"
+                loading={saving}
+                disabled={saving}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isEditMode ? "Update Partner" : "Create Partner"}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </form>

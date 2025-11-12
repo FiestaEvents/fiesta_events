@@ -159,7 +159,8 @@ const EventForm = ({
   const { id: urlEventId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const isModal = isOpen !== undefined;
+  const isModal =
+    location.pathname === "/events/new" ? true : isOpen !== undefined;
   const eventId = isModal ? modalEventId : urlEventId;
   const isEditMode = !!eventId;
   const [currentStep, setCurrentStep] = useState(1);
@@ -610,6 +611,7 @@ const EventForm = ({
             []
           : [];
 
+      console.log("clientsList", clientsList);
       setClients(clientsList);
       setPartners(partnersList);
       setVenueSpaces(
@@ -644,10 +646,12 @@ const EventForm = ({
   };
 
   useEffect(() => {
-    if (isModal ? isOpen : true) {
+    console.log("here", location.pathname);
+    if (location.pathname === "/events/new") {
+      console.log("or here");
       fetchDropdownData();
     }
-  }, [isModal ? isOpen : true]);
+  }, []);
 
   // Fetch event data in edit mode - FIXED
   useEffect(() => {
@@ -1337,7 +1341,7 @@ const EventForm = ({
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 ">
+            <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
                   <currentStepConfig.icon className="w-7 h-7 text-white" />
@@ -1352,64 +1356,72 @@ const EventForm = ({
                   </p>
                 </div>
               </div>
-              <div className="w-full xl:flex-1">
-                <div className="flex items-center justify-center xl:justify-start pl-20">
-                  {[1, 2, 3, 4, 5].map((step) => {
-                    const config = stepConfigs[step];
-                    const isActive = step === currentStep;
-                    const isComplete = step < currentStep;
-                    const isClickable = step <= currentStep;
 
-                    return (
-                      <div key={step} className="flex items-center flex-1">
-                        <div className="flex flex-col items-center">
-                          <div
-                            onClick={() => isClickable && jumpToStep(step)}
-                            className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
-                              isActive
-                                ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110 cursor-default"
-                                : isComplete
-                                  ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
-                                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed"
-                            }`}
-                          >
-                            {isComplete ? (
-                              <Check className="w-5 h-5" />
-                            ) : (
-                              <span className="font-bold">{step}</span>
-                            )}
-                            {isActive && (
-                              <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
-                            )}
+              {/* Fixed Stepper - Simple Equal Spacing */}
+              <div className="w-full">
+                <div className="flex justify-center">
+                  <div className="flex items-center w-full max-w-3xl">
+                    {[1, 2, 3, 4, 5].map((step, index) => {
+                      const config = stepConfigs[step];
+                      const isActive = step === currentStep;
+                      const isComplete = step < currentStep;
+                      const isClickable = step <= currentStep;
+
+                      return (
+                        <div key={step} className="flex items-center flex-1">
+                          {/* Step Circle */}
+                          <div className="flex flex-col items-center flex-shrink-0 mx-auto">
+                            <div
+                              onClick={() => isClickable && jumpToStep(step)}
+                              className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+                                isActive
+                                  ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110 cursor-default"
+                                  : isComplete
+                                    ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
+                                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed"
+                              }`}
+                            >
+                              {isComplete ? (
+                                <Check className="w-5 h-5" />
+                              ) : (
+                                <span className="font-bold">{step}</span>
+                              )}
+                              {isActive && (
+                                <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-xs mt-2 font-medium text-center transition-colors whitespace-nowrap ${
+                                isActive
+                                  ? "text-orange-600 dark:text-orange-400"
+                                  : isComplete
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-gray-500"
+                              }`}
+                            >
+                              {config.title}
+                            </span>
                           </div>
-                          <span
-                            className={`text-xs mt-2 font-medium text-center transition-colors ${
-                              isActive
-                                ? "text-orange-600 dark:text-orange-400"
-                                : isComplete
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-gray-500"
-                            }`}
-                          >
-                            {config.title}
-                          </span>
+
+                          {/* Connector Line - Fixed Equal Width */}
+                          {step < totalSteps && (
+                            <div
+                              className={`h-1 min-w-10  rounded-full transition-all duration-300 ${
+                                isComplete
+                                  ? "bg-green-500"
+                                  : "bg-gray-200 dark:bg-gray-600"
+                              }`}
+                            />
+                          )}
                         </div>
-                        {step < totalSteps && (
-                          <div
-                            className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${
-                              isComplete
-                                ? "bg-gradient-to-r from-green-500 to-green-600"
-                                : "bg-gray-200 dark:bg-gray-600"
-                            }`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
-            {/* Draft indicator */}
+
+            {/* Draft indicator remains the same */}
             {hasDraft && !isEditMode && window.__eventFormDraft && (
               <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg shadow-lg animate-in slide-in-from-top-3 duration-500">
                 <div className="flex items-start gap-4">

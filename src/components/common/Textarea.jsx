@@ -47,7 +47,6 @@ const Textarea = forwardRef(
           disabled={disabled}
           rows={rows}
           maxLength={maxLength}
-          value={value}
           className={`${baseStyles} ${errorStyles} ${widthClass} ${className}`}
           {...props}
         />

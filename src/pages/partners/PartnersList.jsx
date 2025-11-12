@@ -329,6 +329,7 @@ const PartnersList = () => {
       sortable: true,
       width: "12%",
       render: (row) => {
+        console.log("row", row);
         if (!row) return <div>-</div>;
         return (
           <Badge color={row.status === "active" ? "green" : "red"}>
@@ -346,7 +347,9 @@ const PartnersList = () => {
         if (!row) return <div>-</div>;
         return (
           <div className="text-sm text-gray-900 dark:text-white">
-            {row.hourlyRate ? `${row.hourlyRate}/hr` : "-"}
+            {row.priceType === "fixed"
+              ? `${row.fixedRate}/TND`
+              : `${row.hourlyRate}/TND`}
           </div>
         );
       },

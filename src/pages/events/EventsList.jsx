@@ -598,7 +598,7 @@ const EventList = () => {
       width: "20%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.client?.name || "Unknown Client"}
+          {row.clientId?.name || "Unknown Client"}
         </div>
       ),
     },
@@ -874,15 +874,6 @@ const EventList = () => {
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && !hasInitialLoad && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading events...
-          </p>
-        </div>
-      )}
       {viewMode === "calendar" ? (
         /* CALENDAR VIEW */
         <div className="dark:bg-gray-800">
