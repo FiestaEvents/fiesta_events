@@ -663,7 +663,7 @@ const EventList = () => {
   ];
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-white dark:bg-gray-800 min-h-screen rounded-lg space-y-6">
       {/* Event Detail Modal */}
       <EventDetailModal
         isOpen={isDetailsModalOpen}
@@ -692,8 +692,8 @@ const EventList = () => {
         />
       )}
       {/* Header */}
-      <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
-        <div>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Event Calendar
           </h1>
@@ -704,7 +704,7 @@ const EventList = () => {
               `- Showing ${events.length} of ${totalItems} events`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
           {/* View Mode Toggle */}
           <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
             <button
@@ -754,11 +754,11 @@ const EventList = () => {
       )}
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
-                className="dark:bg-[#1f2937] dark:text-white"
+                className="dark:bg-[#1f2937] dark:text-white w-full md:w-[80%]"
                 icon={Search}
                 placeholder="Search events by title, description, or location..."
                 value={search}
@@ -852,79 +852,18 @@ const EventList = () => {
       )}
 
       {/* Loading State */}
-      {loading && !hasInitialLoad && (
+      {isLoading && !hasInitialLoad && (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400">Loading events...</p>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">
+            Loading events...
+          </p>
         </div>
       )}
-
-      {viewMode === "list" ? (
-        /* LIST VIEW */
-        <div className="space-y-6">
-          <TitleCard className="dark:bg-gray-800">
-            <div className="p-6">
-              {/* No Results from Search/Filter */}
-              {showNoResults && (
-                <div className="text-center py-12">
-                  <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No events found
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    No events match your current search or filter criteria.
-                  </p>
-                  <Button onClick={handleClearFilters} variant="outline">
-                    Clear All Filters
-                  </Button>
-                </div>
-              )}
-              {/* Empty State - No events at all */}
-              {showEmptyState && (
-                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No events yet
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Get started by creating your first event.
-                  </p>
-                  <Button onClick={() => handleCreateEvent()} variant="primary">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Event
-                  </Button>
-                </div>
-              )}
-              {/* Events Table */}
-              {!showEmptyState && !showNoResults && (
-                <TableComponent
-                  columns={tableColumns}
-                  data={events}
-                  loading={loading}
-                  emptyMessage="No events found"
-                  onRowClick={onEventClick}
-                  striped={true}
-                  hoverable={true}
-                  pagination={true}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  pageSize={pageSize}
-                  totalItems={totalItems}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={(newSize) => {
-                    setPageSize(newSize);
-                    setCurrentPage(1);
-                  }}
-                  pageSizeOptions={[10, 25, 50, 100]}
-                />
-              )}
-            </div>
-          </TitleCard>
-        </div>
-      ) : (
+      {viewMode === "calendar" ? (
         /* CALENDAR VIEW */
-        <TitleCard className="dark:bg-gray-800">
-          <div className="py-8">
+        <div className="dark:bg-gray-800">
+          <div>
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -1167,47 +1106,67 @@ const EventList = () => {
             </div>
           </div>
         </TitleCard>
-      )}
+      ) : (
+        /* LIST VIEW */
+        <div className="space-y-6">
+          <TitleCard className="dark:bg-gray-800">
+            <div className="p-6">
+              {/* No Results from Search/Filter */}
+              {showNoResults && (
+                <div className="text-center py-12">
+                  <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No events found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    No events match your current search or filter criteria.
+                  </p>
+                  <Button onClick={handleClearFilters} variant="outline">
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={confirmationModal.isOpen}
-        onClose={closeConfirmationModal}
-        title="Confirm Deletion"
-        size="md"
-      >
-        <div className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Event
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.eventName}"</strong>?
-                This action cannot be undone and all associated data will be permanently removed.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={closeConfirmationModal}
-                  className="px-4 py-2"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={confirmationModal.onConfirm}
-                  className="px-4 py-2 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Event
-                </Button>
-              </div>
+              {/* Empty State - No events at all */}
+              {showEmptyState && (
+                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No events yet
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Get started by creating your first event.
+                  </p>
+                  <Button onClick={() => handleCreateEvent()} variant="primary">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Event
+                  </Button>
+                </div>
+              )}
+
+              {/* Events Table */}
+              {!showEmptyState && !showNoResults && (
+                <TableComponent
+                  columns={tableColumns}
+                  data={events}
+                  loading={isLoading}
+                  emptyMessage="No events found"
+                  onRowClick={onEventClick}
+                  striped={true}
+                  hoverable={true}
+                  pagination={true}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setCurrentPage(1);
+                  }}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                />
+              )}
             </div>
           </div>
         </div>
