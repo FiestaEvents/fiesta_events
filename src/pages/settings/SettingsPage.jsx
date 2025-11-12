@@ -57,7 +57,7 @@ const SettingPage = () => {
   };
 
   const handleEditProfile = () => {
-    navigate("/settings/profile");
+    navigate("/settings");
   };
 
   const handleManageTeam = () => {
@@ -78,7 +78,7 @@ const SettingPage = () => {
 
   if (error) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 space-y-8 "  >
+      <div className="p-4 sm:p-6 lg:p-8 space-y-8 ">
         <div className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 p-6">
           <div className="flex items-center justify-between">
             <div>

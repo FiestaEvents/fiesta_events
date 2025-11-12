@@ -15,17 +15,6 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
 
-// Custom CSS (add to your global styles or styled-components)
-const styles = `
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-`;
-
 // Input Component
 const Input = ({
   label,

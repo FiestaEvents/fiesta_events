@@ -2353,13 +2353,51 @@ export const venueService = {
   },
 
   /**
-   * Get venue spaces
+   * Get venue spaces (alias for venueSpacesService.getAll)
    * @param {Object} params - Query parameters
    * @returns {Promise<{ spaces: Array, pagination: Object }>}
    */
   getSpaces: async (params = {}) => {
     try {
       const response = await api.get("/venues/spaces", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Upload space images
+   * @param {string} spaceId - Space ID
+   * @param {FormData} formData - Image files
+   * @returns {Promise<{ images: Array }>}
+   */
+  uploadSpaceImages: async (spaceId, formData) => {
+    try {
+      const response = await api.post(
+        `/venues/spaces/${spaceId}/images`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete space image
+   * @param {string} spaceId - Space ID
+   * @param {string} imageId - Image ID
+   * @returns {Promise<{ success: boolean }>}
+   */
+  deleteSpaceImage: async (spaceId, imageId) => {
+    try {
+      const response = await api.delete(
+        `/venues/spaces/${spaceId}/images/${imageId}`
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2469,6 +2507,341 @@ export const venueService = {
     try {
       const response = await api.put("/venues/subscription", data);
       return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+};
+
+// ============================================
+// VENUE SPACES SERVICE
+// ============================================
+export const venueSpacesService = {
+  /**
+   * Get all venue spaces with optional filters
+   * @param {Object} params - { search, status, capacityMin, capacityMax, amenities, page, limit }
+   * @returns {Promise<{ spaces: Array, pagination }>}
+   */
+  getAll: async (params = {}) => {
+    try {
+      const response = await api.get("/venues/spaces", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get single space by ID
+   * @param {string} id - Space ID
+   * @returns {Promise<{ space }>}
+   */
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Create new venue space
+   * @param {Object} data - Space data { name, description, capacity, amenities, hourlyRate, dailyRate, status, images }
+   * @returns {Promise<{ space }>}
+   */
+  create: async (data) => {
+    try {
+      const response = await api.post("/venues/spaces", data);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Update venue space
+   * @param {string} id - Space ID
+   * @param {Object} data - Fields to update
+   * @returns {Promise<{ space }>}
+   */
+  update: async (id, data) => {
+    try {
+      const response = await api.put(`/venues/spaces/${id}`, data);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete venue space
+   * @param {string} id - Space ID
+   * @returns {Promise<{ success: boolean }>}
+   */
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/venues/spaces/${id}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Update space status
+   * @param {string} id - Space ID
+   * @param {string} status - New status (active, maintenance, unavailable)
+   * @returns {Promise<{ space }>}
+   */
+  updateStatus: async (id, status) => {
+    try {
+      const response = await api.patch(`/venues/spaces/${id}/status`, {
+        status,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get space availability
+   * @param {string} id - Space ID
+   * @param {Object} params - { startDate, endDate }
+   * @returns {Promise<{ available: boolean, conflicts: Array }>}
+   */
+  getAvailability: async (id, params = {}) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}/availability`, {
+        params,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Check multiple spaces availability
+   * @param {Object} params - { spaceIds, startDate, endDate }
+   * @returns {Promise<{ availability: Array }>}
+   */
+  checkAvailability: async (params = {}) => {
+    try {
+      const response = await api.get("/venues/spaces/availability", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get space events
+   * @param {string} id - Space ID
+   * @param {Object} params - { startDate, endDate, status }
+   * @returns {Promise<{ events: Array }>}
+   */
+  getEvents: async (id, params = {}) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}/events`, { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get space bookings
+   * @param {string} id - Space ID
+   * @param {Object} params - { startDate, endDate, status }
+   * @returns {Promise<{ bookings: Array }>}
+   */
+  getBookings: async (id, params = {}) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}/bookings`, {
+        params,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Upload space images
+   * @param {string} id - Space ID
+   * @param {FormData} formData - Image files
+   * @returns {Promise<{ images: Array }>}
+   */
+  uploadImages: async (id, formData) => {
+    try {
+      const response = await api.post(`/venues/spaces/${id}/images`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete space image
+   * @param {string} id - Space ID
+   * @param {string} imageId - Image ID
+   * @returns {Promise<{ success: boolean }>}
+   */
+  deleteImage: async (id, imageId) => {
+    try {
+      const response = await api.delete(
+        `/venues/spaces/${id}/images/${imageId}`
+      );
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Reorder space images
+   * @param {string} id - Space ID
+   * @param {Array} imageOrder - Array of image IDs in desired order
+   * @returns {Promise<{ space }>}
+   */
+  reorderImages: async (id, imageOrder) => {
+    try {
+      const response = await api.patch(`/venues/spaces/${id}/images/reorder`, {
+        imageOrder,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Set primary image for space
+   * @param {string} id - Space ID
+   * @param {string} imageId - Image ID to set as primary
+   * @returns {Promise<{ space }>}
+   */
+  setPrimaryImage: async (id, imageId) => {
+    try {
+      const response = await api.patch(`/venues/spaces/${id}/images/primary`, {
+        imageId,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get space statistics
+   * @param {string} id - Space ID
+   * @returns {Promise<{ stats }>}
+   */
+  getStats: async (id) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}/stats`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get all spaces statistics
+   * @returns {Promise<{ spaces: Array, utilization: Object, revenue: Object }>}
+   */
+  getAllStats: async () => {
+    try {
+      const response = await api.get("/venues/spaces/stats");
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Search spaces by criteria
+   * @param {Object} params - { query, capacity, amenities, dateRange, priceRange }
+   * @returns {Promise<{ spaces: Array }>}
+   */
+  search: async (params = {}) => {
+    try {
+      const response = await api.get("/venues/spaces/search", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk update spaces
+   * @param {Array} spaceIds - Array of space IDs
+   * @param {Object} data - Fields to update
+   * @returns {Promise<{ updated: number }>}
+   */
+  bulkUpdate: async (spaceIds, data) => {
+    try {
+      const response = await api.patch("/venues/spaces/bulk-update", {
+        spaceIds,
+        data,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk delete spaces
+   * @param {Array} spaceIds - Array of space IDs
+   * @returns {Promise<{ deleted: number }>}
+   */
+  bulkDelete: async (spaceIds) => {
+    try {
+      const response = await api.post("/venues/spaces/bulk-delete", {
+        spaceIds,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Duplicate space
+   * @param {string} id - Space ID to duplicate
+   * @param {Object} overrides - Fields to override in the duplicate
+   * @returns {Promise<{ space }>}
+   */
+  duplicate: async (id, overrides = {}) => {
+    try {
+      const response = await api.post(
+        `/venues/spaces/${id}/duplicate`,
+        overrides
+      );
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Export spaces to CSV/Excel
+   * @param {Object} filters - Filter parameters
+   * @param {string} format - Export format: 'csv' or 'excel'
+   * @returns {Promise<Blob>}
+   */
+  export: async (filters = {}, format = "csv") => {
+    try {
+      const response = await api.get("/venues/spaces/export", {
+        params: { ...filters, format },
+        responseType: "blob",
+      });
+      return response.data;
     } catch (error) {
       return handleError(error);
     }

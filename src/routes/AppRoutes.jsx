@@ -69,8 +69,6 @@ import RoleForm from "../pages/roles/RoleForm.jsx";
 
 // Settings
 import VenueSettings from "../pages/settings/VenueSettings.jsx";
-import ProfileSettings from "../pages/settings/ProfileSettings.jsx";
-import SecuritySettings from "../pages/settings/SecuritySettings.jsx";
 
 // ============================================
 // ROUTING CONFIGURATION
@@ -151,10 +149,10 @@ const AppRoutes = () => {
           <Route path="/roles/new" element={<RoleForm />} />
           <Route path="/roles/:id/edit" element={<RoleForm />} />
 
-            {/* Settings  */}
-            <Route path="/settings" element={<VenueSettings />} />
-          </Route>
+          {/* Settings  */}
+          <Route path="/settings" element={<VenueSettings />} />
         </Route>
+      </Route>
 
       {/* Catch-All */}
       <Route path="*" element={<Navigate to="/login" replace />} />

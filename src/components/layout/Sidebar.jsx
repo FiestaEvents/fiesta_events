@@ -10,7 +10,6 @@ import {
   ListChecksIcon,
   BellRingIcon,
   CreditCardIcon,
-  FileText,
   FileTextIcon,
   LineChartIcon,
   UsersIcon,
@@ -216,7 +215,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             </NavSection>
 
             <NavSection titleKey="sidebar.management" isCollapsed={isCollapsed}>
-              <NavLink
+              {/* <NavLink
                 to="/team"
                 icon={UsersIcon}
                 labelKey="common.team"
@@ -227,7 +226,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 icon={ShieldCheckIcon}
                 labelKey="common.roles"
                 isCollapsed={isCollapsed}
-              />
+              /> */}
               <NavLink
                 to="/settings"
                 icon={SettingsIcon}
