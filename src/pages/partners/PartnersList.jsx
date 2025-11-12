@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/common/Button";
-import Modal, { ConfirmModal } from "../../components/common/Modal";
+import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
@@ -17,20 +17,28 @@ import {
   Trash2,
   Users,
   Star,
+  AlertTriangle,
 } from "lucide-react";
 import PartnerForm from "./PartnerForm";
-import { toast } from "react-hot-toast";
+import { useToast } from "../../context/ToastContext";
 
 const PartnersList = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo, promise } = useToast();
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    partnerId: null,
+    partnerName: "",
+    onConfirm: null
+  });
 
   // Search & filter state
   const [search, setSearch] = useState("");
@@ -58,6 +66,7 @@ const PartnersList = () => {
     { value: "hairstyling", label: "Hair Styling" },
     { value: "other", label: "Other" },
   ];
+
   // Updated fetchPartners function with comprehensive validation
   const fetchPartners = useCallback(async () => {
     try {
@@ -156,32 +165,68 @@ const PartnersList = () => {
         err.message ||
         "Failed to load partners. Please try again.";
       setError(errorMessage);
+      showError(errorMessage);
       setPartners([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [search, status, category, page, limit]);
+  }, [search, status, category, page, limit, showError]);
 
-  const handleDeletePartner = async () => {
-    if (!selectedPartner?._id) {
-      toast.error("Cannot delete partner: Partner ID not found");
+  // Show confirmation modal
+  const showDeleteConfirmation = useCallback((partnerId, partnerName = "Partner") => {
+    setConfirmationModal({
+      isOpen: true,
+      partnerId,
+      partnerName,
+      onConfirm: () => handleDeleteConfirm(partnerId, partnerName)
+    });
+  }, []);
+
+  // Close confirmation modal
+  const closeConfirmationModal = useCallback(() => {
+    setConfirmationModal({
+      isOpen: false,
+      partnerId: null,
+      partnerName: "",
+      onConfirm: null
+    });
+  }, []);
+
+  // Handle confirmed deletion
+  const handleDeleteConfirm = useCallback(async (partnerId, partnerName = "Partner") => {
+    if (!partnerId) {
+      showError("Invalid partner ID");
       return;
     }
 
     try {
-      setDeleteLoading(true);
-      await partnerService.delete(selectedPartner._id);
-      toast.success("Partner deleted successfully");
-      setIsDeleteModalOpen(false);
-      setSelectedPartner(null);
+      // Use the promise toast for loading state
+      await promise(
+        partnerService.delete(partnerId),
+        {
+          loading: `Deleting ${partnerName}...`,
+          success: `${partnerName} deleted successfully`,
+          error: `Failed to delete ${partnerName}`
+        }
+      );
+
+      // Refresh the partners list
       fetchPartners();
+      
+      // Close confirmation modal
+      closeConfirmationModal();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete partner");
-    } finally {
-      setDeleteLoading(false);
+      // Error is already handled by the promise toast
+      console.error("Delete partner error:", err);
+      closeConfirmationModal();
     }
-  };
+  }, [fetchPartners, promise, showError, closeConfirmationModal]);
+
+  // Updated partner deletion handler
+  const handleDeletePartner = useCallback((partnerId, partnerName = "Partner") => {
+    showDeleteConfirmation(partnerId, partnerName);
+  }, [showDeleteConfirmation]);
 
   useEffect(() => {
     fetchPartners();
@@ -208,24 +253,25 @@ const PartnersList = () => {
     fetchPartners();
     setSelectedPartner(null);
     setIsFormOpen(false);
-    toast.success(
-      selectedPartner
-        ? "Partner updated successfully"
+    showSuccess(
+      selectedPartner 
+        ? "Partner updated successfully" 
         : "Partner added successfully"
     );
-  }, [fetchPartners, selectedPartner]);
+  }, [fetchPartners, selectedPartner, showSuccess]);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
     setStatus("all");
     setCategory("all");
     setPage(1);
-  }, []);
+    showInfo("Filters cleared");
+  }, [showInfo]);
 
-  const openDeleteModal = (partner) => {
-    setSelectedPartner(partner);
-    setIsDeleteModalOpen(true);
-  };
+  const handleRetry = useCallback(() => {
+    fetchPartners();
+    showInfo("Retrying to load partners...");
+  }, [fetchPartners, showInfo]);
 
   const hasActiveFilters =
     search.trim() !== "" || status !== "all" || category !== "all";
@@ -329,7 +375,6 @@ const PartnersList = () => {
       sortable: true,
       width: "12%",
       render: (row) => {
-        console.log("row", row);
         if (!row) return <div>-</div>;
         return (
           <Badge color={row.status === "active" ? "green" : "red"}>
@@ -347,9 +392,7 @@ const PartnersList = () => {
         if (!row) return <div>-</div>;
         return (
           <div className="text-sm text-gray-900 dark:text-white">
-            {row.priceType === "fixed"
-              ? `${row.fixedRate}/TND`
-              : `${row.hourlyRate}/TND`}
+            {row.hourlyRate ? `${row.hourlyRate}/hr` : "-"}
           </div>
         );
       },
@@ -386,7 +429,7 @@ const PartnersList = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                openDeleteModal(row);
+                handleDeletePartner(row._id, row.name || "Partner");
               }}
               className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
               title="Delete Partner"
@@ -403,11 +446,11 @@ const PartnersList = () => {
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-4">
+        <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Partners
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Manage your service partners and vendors.{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
@@ -438,7 +481,7 @@ const PartnersList = () => {
                 {error}
               </p>
             </div>
-            <Button onClick={fetchPartners} size="sm" variant="outline">
+            <Button onClick={handleRetry} size="sm" variant="outline">
               Retry
             </Button>
           </div>
@@ -538,7 +581,7 @@ const PartnersList = () => {
           emptyMessage="No partners found"
           striped
           hoverable
-          pagination={totalPages}
+          pagination={totalPages > 1}
           currentPage={page}
           totalPages={totalPages}
           pageSize={limit}
@@ -608,20 +651,48 @@ const PartnersList = () => {
       )}
 
       {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setSelectedPartner(null);
-        }}
-        onConfirm={handleDeletePartner}
-        title="Delete Partner"
-        message={`Are you sure you want to delete "${selectedPartner?.name}"? This action cannot be undone and will remove all associated data.`}
-        confirmText="Delete Partner"
-        cancelText="Cancel"
-        variant="danger"
-        loading={deleteLoading}
-      />
+      <Modal
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        title="Confirm Deletion"
+        size="md"
+      >
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Delete Partner
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to delete <strong>"{confirmationModal.partnerName}"</strong>? 
+                This action cannot be undone and all associated data will be permanently removed.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmationModal}
+                  className="px-4 py-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmationModal.onConfirm}
+                  className="px-4 py-2 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Partner
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { financeService, paymentService } from "../../api/index";
 import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
 import Select from "../../components/common/Select";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import formatCurrency from "../../utils/formatCurrency";
@@ -230,7 +229,7 @@ const Finance = () => {
           const Icon = metric.icon;
 
           return (
-            <Card key={index}>
+            <div key={index}>
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className={`p-3 rounded-lg ${metric.bgColor}`}>
@@ -247,7 +246,7 @@ const Finance = () => {
                   {metric.description}
                 </p>
               </div>
-            </Card>
+            </div>
           );
         })}
       </div>
@@ -255,7 +254,7 @@ const Finance = () => {
       {/* Event & Venue Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Event Financials */}
-        <Card>
+        <div>
           <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -310,10 +309,10 @@ const Finance = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Venue Operating Expenses */}
-        <Card>
+         <div>
           <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
@@ -377,13 +376,13 @@ const Finance = () => {
               </div>
             </div>
           </div>
-        </Card>
+      </div>
       </div>
 
       {/* Cash Flow & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cash Flow */}
-        <Card>
+         <div>
           <div className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -439,10 +438,10 @@ const Finance = () => {
               </div>
             )}
           </div>
-        </Card>
+      </div>
 
         {/* Recent Transactions */}
-        <Card className="lg:col-span-2">
+         <div className="lg:col-span-2">
           <div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -525,13 +524,13 @@ const Finance = () => {
               )}
             </div>
           </div>
-        </Card>
+      </div>
       </div>
 
       {/* Upcoming Payments */}
       {financialData.upcomingPayments &&
         financialData.upcomingPayments.length > 0 && (
-          <Card>
+           <div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -589,12 +588,12 @@ const Finance = () => {
                 })}
               </div>
             </div>
-          </Card>
+        </div>
         )}
 
       {/* Quick Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card
+         <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/transactions")}
         >
@@ -613,9 +612,9 @@ const Finance = () => {
               </div>
             </div>
           </div>
-        </Card>
+      </div>
 
-        <Card
+         <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/analytics")}
         >
@@ -634,9 +633,9 @@ const Finance = () => {
               </div>
             </div>
           </div>
-        </Card>
+      </div>
 
-        <Card
+         <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/reports")}
         >
@@ -655,9 +654,9 @@ const Finance = () => {
               </div>
             </div>
           </div>
-        </Card>
+      </div>
 
-        <Card
+         <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/profitability")}
         >
@@ -676,7 +675,7 @@ const Finance = () => {
               </div>
             </div>
           </div>
-        </Card>
+      </div>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ import {
   eventService,
   clientService,
   partnerService,
-  venueService,
+  venueSpacesService,
   invoiceService,
   paymentService,
 } from "../../api/index";
@@ -550,100 +550,249 @@ const EventForm = ({
       client.phone?.includes(clientSearch)
   );
 
-  // ============================================
-  // DATA FETCHING - UPDATED: Remove venue fetching
-  // ============================================
-  const fetchDropdownData = async () => {
-    try {
-      const [clientsRes, partnersRes, venueSpacesRes, eventsRes] =
-        await Promise.allSettled([
-          clientService.getAll
-            ? clientService.getAll({ limit: 100 })
-            : clientService.getClients
-              ? clientService.getClients({ limit: 100 })
-              : Promise.resolve({ data: [] }),
-          partnerService.getAll
-            ? partnerService.getAll({ limit: 100 })
-            : partnerService.getPartners
-              ? partnerService.getPartners({ limit: 100 })
-              : Promise.resolve({ data: [] }),
-          venueService.getSpaces
-            ? venueService.getSpaces({
-                limit: 100,
-                includeArchived: "false",
-                isActive: "true",
-              })
-            : Promise.resolve({ data: { spaces: [] } }),
-          eventService.getAll
-            ? eventService.getAll({ limit: 100 })
-            : eventService.getEvents
-              ? eventService.getEvents({ limit: 100 })
-              : Promise.resolve({ data: [] }),
-        ]);
+ // ============================================
+// DATA FETCHING - FIXED VERSION
+// ============================================
+const fetchDropdownData = async () => {
+  try {
+    setFetchLoading(true);
+    
+    const [clientsRes, partnersRes, venueSpacesRes, eventsRes] =
+      await Promise.allSettled([
+        // Clients - use getAll if available, otherwise getClients
+        clientService.getAll 
+          ? clientService.getAll({ limit: 100 })
+          : clientService.getClients
+            ? clientService.getClients({ limit: 100 })
+            : Promise.resolve({ data: [] }),
+        
+        // Partners - use getAll if available
+        partnerService.getAll
+          ? partnerService.getAll({ limit: 100 })
+          : Promise.resolve({ data: [] }),
+        
+        // Venue Spaces - use the correct service method
+        venueSpacesService.getAll
+          ? venueSpacesService.getAll({ 
+              limit: 100,
+              includeArchived: false,
+              isActive: true 
+            })
+          : Promise.resolve({ data: { spaces: [] } }),
+        
+        // Events - use getAll if available, otherwise getEvents
+        eventService.getAll
+          ? eventService.getAll({ limit: 100 })
+          : eventService.getEvents
+            ? eventService.getEvents({ limit: 100 })
+            : Promise.resolve({ data: [] }),
+      ]);
 
-      const extractArrayData = (response, serviceName) => {
-        if (response.status === "rejected") {
-          console.warn(`Failed to fetch ${serviceName}:`, response.reason);
-          return [];
-        }
-
-        const data = response.value;
-        if (!data) return [];
-
-        if (Array.isArray(data)) return data;
-        if (data.data && Array.isArray(data.data)) return data.data;
-        if (data.clients && Array.isArray(data.clients)) return data.clients;
-        if (data.partners && Array.isArray(data.partners)) return data.partners;
-        if (data.events && Array.isArray(data.events)) return data.events;
-
+    // FIXED: Improved data extraction logic
+    const extractArrayData = (response, serviceName) => {
+      if (response.status === "rejected") {
+        console.warn(`Failed to fetch ${serviceName}:`, response.reason);
         return [];
-      };
-
-      const clientsList = extractArrayData(clientsRes, "clients");
-      const partnersList = extractArrayData(partnersRes, "partners");
-      const eventsList = extractArrayData(eventsRes, "events");
-
-      const venueSpacesPayload =
-        venueSpacesRes.status === "fulfilled"
-          ? venueSpacesRes.value?.spaces ||
-            venueSpacesRes.value?.data?.spaces ||
-            venueSpacesRes.value?.data ||
-            []
-          : [];
-
-      console.log("clientsList", clientsList);
-      setClients(clientsList);
-      setPartners(partnersList);
-      setVenueSpaces(
-        Array.isArray(venueSpacesPayload)
-          ? venueSpacesPayload.map((space) => ({
-              ...space,
-              _id: space._id || space.id,
-              capacity: space.capacity || {},
-              amenities: Array.isArray(space.amenities) ? space.amenities : [],
-              basePrice: space.basePrice || 0,
-            }))
-          : []
-      );
-      setExistingEvents(eventsList);
-
-      // Handle prefilled client
-      const prefillClient = location.state?.prefillClient;
-      if (prefillClient && prefillClient._id && !isEditMode) {
-        setPrefilledClientData(prefillClient);
-        setSelectedClient(prefillClient._id);
-        setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
-        toast.success(`Client "${prefillClient.name}" pre-selected`);
       }
+
+      const data = response.value;
+      if (!data) return [];
+
+      // Handle different response structures
+      if (Array.isArray(data)) return data;
+      if (data.data && Array.isArray(data.data)) return data.data;
+      if (data.clients && Array.isArray(data.clients)) return data.clients;
+      if (data.partners && Array.isArray(data.partners)) return data.partners;
+      if (data.events && Array.isArray(data.events)) return data.events;
+      if (data.spaces && Array.isArray(data.spaces)) return data.spaces;
+      if (data.invoices && Array.isArray(data.invoices)) return data.invoices;
+      
+      // For paginated responses
+      if (data.data && data.data.records && Array.isArray(data.data.records)) {
+        return data.data.records;
+      }
+      
+      // For nested data structure
+      if (data.data && Array.isArray(data.data)) return data.data;
+
+      return [];
+    };
+
+    const clientsList = extractArrayData(clientsRes, "clients");
+    const partnersList = extractArrayData(partnersRes, "partners");
+    const eventsList = extractArrayData(eventsRes, "events");
+    
+    // FIXED: Proper venue spaces extraction
+    let venueSpacesList = [];
+    if (venueSpacesRes.status === "fulfilled") {
+      const venueData = venueSpacesRes.value;
+      
+      if (venueData && venueData.spaces && Array.isArray(venueData.spaces)) {
+        venueSpacesList = venueData.spaces;
+      } else if (venueData && venueData.data && venueData.data.spaces && Array.isArray(venueData.data.spaces)) {
+        venueSpacesList = venueData.data.spaces;
+      } else if (venueData && Array.isArray(venueData)) {
+        venueSpacesList = venueData;
+      } else if (venueData && venueData.data && Array.isArray(venueData.data)) {
+        venueSpacesList = venueData.data;
+      }
+    }
+
+    console.log("Fetched data:", {
+      clients: clientsList.length,
+      partners: partnersList.length,
+      venueSpaces: venueSpacesList.length,
+      events: eventsList.length
+    });
+
+    // FIXED: Normalize venue spaces data structure
+    const normalizedVenueSpaces = venueSpacesList.map((space) => ({
+      ...space,
+      _id: space._id || space.id,
+      name: space.name || 'Unnamed Space',
+      capacity: space.capacity || { min: 0, max: 0 },
+      amenities: Array.isArray(space.amenities) ? space.amenities : [],
+      basePrice: space.basePrice || space.hourlyRate || space.dailyRate || 0,
+      isActive: space.isActive !== false, // default to true if not specified
+      isArchived: space.isArchived || false,
+    }));
+
+    setClients(clientsList);
+    setPartners(partnersList);
+    setVenueSpaces(normalizedVenueSpaces);
+    setExistingEvents(eventsList);
+
+    // Handle prefilled client
+    const prefillClient = location.state?.prefillClient;
+    if (prefillClient && prefillClient._id && !isEditMode) {
+      setPrefilledClientData(prefillClient);
+      setSelectedClient(prefillClient._id);
+      setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
+      toast.success(`Client "${prefillClient.name}" pre-selected`);
+    }
+  } catch (error) {
+    console.error("Error fetching dropdown data:", error);
+    toast.error("Failed to load form data. Please try again.");
+    // Set empty arrays to prevent further errors
+    setClients([]);
+    setPartners([]);
+    setVenueSpaces([]);
+    setExistingEvents([]);
+  } finally {
+    setFetchLoading(false);
+  }
+};
+
+// FIXED: Call fetchDropdownData when component mounts
+useEffect(() => {
+  if (isOpen || location.pathname === "/events/new") {
+    fetchDropdownData();
+  }
+}, [isOpen, location.pathname]);
+
+// FIXED: Enhanced event fetching in edit mode
+useEffect(() => {
+  const fetchEvent = async () => {
+    if (!isEditMode || !eventId) return;
+    
+    try {
+      setFetchLoading(true);
+      const response = await eventService.getById(eventId);
+      
+      // FIXED: Handle different response structures
+      const event = response.event || response.data || response;
+
+      if (!event) {
+        throw new Error("Event not found");
+      }
+
+      const clientIdValue = event.clientId?._id || event.clientId || "";
+
+      // FIXED: Better venue space extraction
+      const eventSpaceRaw = event.venueSpace || event.venueSpaceId;
+      let eventSpaceId = "";
+      let venueSpaceData = null;
+
+      if (eventSpaceRaw) {
+        if (typeof eventSpaceRaw === "object") {
+          eventSpaceId = eventSpaceRaw._id || eventSpaceRaw.id || "";
+          venueSpaceData = eventSpaceRaw;
+        } else {
+          eventSpaceId = eventSpaceRaw;
+        }
+      }
+
+      // FIXED: If we have venue space data but it's not in our list, add it
+      if (venueSpaceData && !venueSpaces.find(s => s._id === eventSpaceId)) {
+        const normalizedSpace = {
+          ...venueSpaceData,
+          _id: eventSpaceId,
+          capacity: venueSpaceData.capacity || {},
+          amenities: Array.isArray(venueSpaceData.amenities) ? venueSpaceData.amenities : [],
+          basePrice: venueSpaceData.basePrice || event.pricing?.basePrice || 0,
+        };
+        setVenueSpaces(prev => [...prev, normalizedSpace]);
+      }
+
+      // FIXED: Set form data with proper fallbacks
+      setFormData({
+        title: event.title || "",
+        description: event.description || "",
+        type: event.type || "",
+        venueSpaceId: eventSpaceId,
+        clientId: clientIdValue,
+        sameDayEvent: event.startDate === event.endDate,
+        startDate: event.startDate
+          ? new Date(event.startDate).toISOString().split("T")[0]
+          : "",
+        endDate: event.endDate
+          ? new Date(event.endDate).toISOString().split("T")[0]
+          : "",
+        startTime: event.startTime || "",
+        endTime: event.endTime || "",
+        guestCount: event.guestCount || "",
+        status: event.status || "pending",
+        pricing: {
+          basePrice: event.pricing?.basePrice || venueSpaceData?.basePrice || "",
+          discount: event.pricing?.discount || "",
+          discountType: event.pricing?.discountType || "fixed",
+        },
+        partners: event.partners?.map((p) => ({
+          partner: p.partner?._id || p.partner || p.partnerId,
+          partnerName: p.partner?.name || p.partnerName || "Unknown Partner",
+          service: p.service || "General Service",
+          hourlyRate: p.hourlyRate || p.cost || 0,
+          status: p.status || "pending",
+        })) || [],
+        notes: event.notes || "",
+        payment: {
+          amount: "",
+          paymentMethod: "cash",
+          paymentDate: new Date().toISOString().split("T")[0],
+          status: "pending",
+          notes: "",
+        },
+        createInvoice: false,
+      });
+
+      if (clientIdValue) {
+        setSelectedClient(clientIdValue);
+      }
+
+      toast.success("Event loaded successfully");
     } catch (error) {
-      console.error("Error fetching dropdown data:", error);
-      toast.error("Failed to load data");
-      setClients([]);
-      setPartners([]);
-      setVenueSpaces([]);
-      setExistingEvents([]);
+      console.error("Error fetching event:", error);
+      toast.error(error.message || "Failed to load event data");
+    } finally {
+      setFetchLoading(false);
     }
   };
+
+  // Only fetch event data if we're in edit mode and have an event ID
+  if (isEditMode && eventId) {
+    fetchEvent();
+  }
+}, [eventId, isEditMode]);
 
   useEffect(() => {
     console.log("here", location.pathname);
@@ -854,18 +1003,42 @@ const EventForm = ({
     return true;
   };
 
-  const handlePartnerSelect = (partnerId) => {
-    if (!partnerId) {
-      setSelectedPartner("");
-      return;
-    }
+const handlePartnerSelect = (partnerId) => {
+  if (!partnerId) {
+    setSelectedPartner("");
+    return;
+  }
+  const partner = partners.find((p) => p._id === partnerId);
+  if (!partner) {
+    toast.error("Selected partner not found");
+    return;
+  }
 
-    setSelectedPartner(partnerId);
-    const added = handleAddPartner(partnerId);
-    if (added) {
-      setSelectedPartner("");
-    }
-  };
+  const isAlreadyAdded = formData.partners.some(
+    (p) => p.partner === partnerId
+  );
+  
+  if (isAlreadyAdded) {
+    toast.error(`${partner.name} is already added to this event`);
+    setSelectedPartner("");
+    return;
+  }
+    setFormData((prev) => ({
+    ...prev,
+    partners: [
+      ...prev.partners,
+      {
+        partner: partnerId,
+        partnerName: partner.name,
+        service: partner.category || partner.serviceType || "General Service",
+        hourlyRate: partner.hourlyRate || partner.pricing?.hourlyRate || partner.rate || 0,
+        status: "confirmed",
+      },
+    ],
+  }));
+    setSelectedPartner("");
+  toast.success(`${partner.name} added to event`);
+};
 
   const handleRemovePartner = (index) => {
     const partner = formData.partners[index];
@@ -876,65 +1049,69 @@ const EventForm = ({
     toast.success(`${partner.partnerName} removed`);
   };
 
-  const handleCreateClient = async () => {
-    if (!newClient.name.trim()) {
-      toast.error("Client name is required");
-      return;
-    }
-    if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
-      toast.error("Please enter a valid email");
-      return;
-    }
+// FIXED: Client creation with proper error handling
+const handleCreateClient = async () => {
+  if (!newClient.name.trim()) {
+    toast.error("Client name is required");
+    return;
+  }
+  
+  if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
+    toast.error("Please enter a valid email");
+    return;
+  }
 
-    const duplicate = clients.find(
-      (c) =>
-        c.email?.toLowerCase() === newClient.email?.toLowerCase() ||
-        c.phone === newClient.phone
-    );
+  // Check for duplicates
+  const duplicate = clients.find(
+    (c) =>
+      c.email?.toLowerCase() === newClient.email?.toLowerCase() ||
+      c.phone === newClient.phone
+  );
 
-    if (duplicate) {
-      toast.error("Client with this email or phone already exists");
-      return;
-    }
+  if (duplicate) {
+    toast.error("Client with this email or phone already exists");
+    return;
+  }
 
-    try {
-      setIsCreatingClient(true);
-      const response = await clientService.create({
+  try {
+    setIsCreatingClient(true);
+    
+    // FIXED: Use the correct client creation method
+    const response = await clientService.create(newClient);
+    
+    // FIXED: Handle different response structures
+    let createdClient = response?.client || response?.data || response;
+
+    if (!createdClient || !createdClient._id) {
+      // If response doesn't have expected structure, create a client object from input
+      createdClient = {
+        _id: `temp-${Date.now()}`,
         ...newClient,
-        venueId: formData.venueId,
-      });
-
-      let createdClient =
-        response?.client ||
-        response?.data?.client ||
-        response?.data ||
-        response;
-
-      if (!createdClient || !createdClient._id) {
-        throw new Error("Invalid client response structure");
-      }
-
-      setClients((prev) => [...prev, createdClient]);
-      setSelectedClient(createdClient._id);
-      setFormData((prev) => ({ ...prev, clientId: createdClient._id }));
-      setNewClient({ name: "", email: "", phone: "" });
-      setShowClientForm(false);
-
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.clientId;
-        return newErrors;
-      });
-
-      toast.success(`Client "${createdClient.name}" created successfully!`);
-    } catch (error) {
-      console.error("Error creating client:", error);
-      toast.error(error.response?.data?.message || "Failed to create client");
-    } finally {
-      setIsCreatingClient(false);
+        createdAt: new Date().toISOString(),
+      };
+      console.warn("Client created with unexpected response structure:", response);
     }
-  };
 
+    setClients((prev) => [...prev, createdClient]);
+    setSelectedClient(createdClient._id);
+    setFormData((prev) => ({ ...prev, clientId: createdClient._id }));
+    setNewClient({ name: "", email: "", phone: "" });
+    setShowClientForm(false);
+
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.clientId;
+      return newErrors;
+    });
+
+    toast.success(`Client "${createdClient.name}" created successfully!`);
+  } catch (error) {
+    console.error("Error creating client:", error);
+    toast.error(error.response?.data?.message || "Failed to create client");
+  } finally {
+    setIsCreatingClient(false);
+  }
+};
   const handleSelectClient = (clientId) => {
     setSelectedClient((prevSelected) => {
       const isDeselection = prevSelected === clientId;

@@ -20,24 +20,39 @@ import {
   RotateCcw,
   TrendingUp,
   TrendingDown,
+  AlertTriangle,
 } from "lucide-react";
 import PaymentDetails from "./PaymentDetail";
 import PaymentForm from "./PaymentForm";
 import Badge from "../../components/common/Badge";
-import { toast } from "react-hot-toast";
+import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
+
 const PaymentsList = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo, promise } = useToast();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    paymentId: null,
+    paymentName: "",
+    onConfirm: null
+  });
+
+  // Refund state
+  const [refundData, setRefundData] = useState({
+    amount: "",
+    reason: "",
+  });
 
   // Search & filter state
   const [search, setSearch] = useState("");
@@ -49,13 +64,7 @@ const PaymentsList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Refund state
-  const [refundData, setRefundData] = useState({
-    amount: "",
-    reason: "",
-  });
-
-  // Fetch payments
+  // Fetch payments with toast notifications
   const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
@@ -104,60 +113,105 @@ const PaymentsList = () => {
         err.message ||
         "Failed to load payments. Please try again.";
       setError(errorMessage);
+      showError(errorMessage);
       setPayments([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [search, type, status, method, page, limit]);
+  }, [search, type, status, method, page, limit, showError]);
 
-  const handleDeletePayment = useCallback(
-    async (paymentId) => {
-      if (
-        !paymentId ||
-        !window.confirm("Are you sure you want to delete this payment?")
-      ) {
-        return;
-      }
+  // Show confirmation modal
+  const showDeleteConfirmation = useCallback((paymentId, paymentName = "Payment") => {
+    setConfirmationModal({
+      isOpen: true,
+      paymentId,
+      paymentName,
+      onConfirm: () => handleDeleteConfirm(paymentId, paymentName)
+    });
+  }, []);
 
-      try {
-        await paymentService.delete(paymentId);
-        toast.success("Payment deleted successfully");
-        fetchPayments();
-        if (selectedPayment?._id === paymentId) {
-          setSelectedPayment(null);
-          setIsDetailModalOpen(false);
+  // Close confirmation modal
+  const closeConfirmationModal = useCallback(() => {
+    setConfirmationModal({
+      isOpen: false,
+      paymentId: null,
+      paymentName: "",
+      onConfirm: null
+    });
+  }, []);
+
+  // Handle confirmed deletion
+  const handleDeleteConfirm = useCallback(async (paymentId, paymentName = "Payment") => {
+    if (!paymentId) {
+      showError("Invalid payment ID");
+      return;
+    }
+
+    try {
+      // Use the promise toast for loading state
+      await promise(
+        paymentService.delete(paymentId),
+        {
+          loading: `Deleting ${paymentName}...`,
+          success: `${paymentName} deleted successfully`,
+          error: `Failed to delete ${paymentName}`
         }
-      } catch (err) {
-        toast.error(err.response?.data?.message || "Failed to delete payment");
+      );
+
+      // Refresh the payments list
+      fetchPayments();
+      
+      // Close detail modal if the deleted payment is currently selected
+      if (selectedPayment?._id === paymentId) {
+        setSelectedPayment(null);
+        setIsDetailModalOpen(false);
       }
-    },
-    [fetchPayments, selectedPayment]
-  );
+      
+      // Close confirmation modal
+      closeConfirmationModal();
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Delete payment error:", err);
+      closeConfirmationModal();
+    }
+  }, [fetchPayments, selectedPayment, promise, showError, closeConfirmationModal]);
+
+  // Updated payment deletion handler
+  const handleDeletePayment = useCallback((paymentId, paymentName = "Payment") => {
+    showDeleteConfirmation(paymentId, paymentName);
+  }, [showDeleteConfirmation]);
 
   const handleRefundPayment = useCallback(
     async (paymentId, refundData) => {
       try {
         if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
-          toast.error("Please enter a valid refund amount");
+          showError("Please enter a valid refund amount");
           return;
         }
 
-        await paymentService.refund(paymentId, {
-          refundAmount: parseFloat(refundData.amount),
-          refundReason: refundData.reason,
-        });
+        await promise(
+          paymentService.refund(paymentId, {
+            refundAmount: parseFloat(refundData.amount),
+            refundReason: refundData.reason,
+          }),
+          {
+            loading: "Processing refund...",
+            success: "Payment refunded successfully",
+            error: "Failed to refund payment"
+          }
+        );
 
-        toast.success("Payment refunded successfully");
         setIsRefundModalOpen(false);
         setSelectedPayment(null);
         setRefundData({ amount: "", reason: "" });
         fetchPayments();
       } catch (err) {
-        toast.error(err.response?.data?.message || "Failed to refund payment");
+        // Error is already handled by the promise toast
+        console.error("Refund payment error:", err);
       }
     },
-    [fetchPayments]
+    [fetchPayments, promise, showError]
   );
 
   useEffect(() => {
@@ -181,10 +235,10 @@ const PaymentsList = () => {
         navigate(`/payments/${payment._id}`);
       } else {
         console.error("Invalid payment data:", payment);
-        toast.error("Cannot view payment: Invalid data");
+        showError("Cannot view payment: Invalid data");
       }
     },
-    [navigate]
+    [navigate, showError]
   );
 
   const handleRefundClick = useCallback((payment) => {
@@ -200,7 +254,12 @@ const PaymentsList = () => {
     fetchPayments();
     setSelectedPayment(null);
     setIsFormOpen(false);
-  }, [fetchPayments]);
+    showSuccess(
+      selectedPayment 
+        ? "Payment updated successfully" 
+        : "Payment recorded successfully"
+    );
+  }, [fetchPayments, selectedPayment, showSuccess]);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -208,11 +267,17 @@ const PaymentsList = () => {
     setStatus("all");
     setMethod("all");
     setPage(1);
-  }, []);
+    showInfo("Filters cleared");
+  }, [showInfo]);
+
+  const handleRetry = useCallback(() => {
+    fetchPayments();
+    showInfo("Retrying to load payments...");
+  }, [fetchPayments, showInfo]);
 
   const handleExportCSV = useCallback(() => {
     if (!payments || payments.length === 0) {
-      toast.error("No payments to export");
+      showError("No payments to export");
       return;
     }
 
@@ -243,12 +308,12 @@ const PaymentsList = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success("Payments exported successfully");
+      showSuccess("Payments exported successfully");
     } catch (error) {
       console.error("Error exporting payments:", error);
-      toast.error("Failed to export payments");
+      showError("Failed to export payments");
     }
-  }, [payments]);
+  }, [payments, showSuccess, showError]);
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -466,7 +531,7 @@ const PaymentsList = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleDeletePayment(row._id);
+              handleDeletePayment(row._id, row.description || "Payment");
             }}
             className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
             title="Delete Payment"
@@ -608,7 +673,7 @@ const PaymentsList = () => {
                 {error}
               </p>
             </div>
-            <Button onClick={fetchPayments} size="sm" variant="outline">
+            <Button onClick={handleRetry} size="sm" variant="outline">
               Retry
             </Button>
           </div>
@@ -895,6 +960,50 @@ const PaymentsList = () => {
           </div>
         </Modal>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        title="Confirm Deletion"
+        size="md"
+      >
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Delete Payment
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to delete <strong>"{confirmationModal.paymentName}"</strong>? 
+                This action cannot be undone and all associated data will be permanently removed.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmationModal}
+                  className="px-4 py-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmationModal.onConfirm}
+                  className="px-4 py-2 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Payment
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

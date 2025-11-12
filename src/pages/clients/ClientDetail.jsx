@@ -261,7 +261,7 @@ const ClientDetail = () => {
                 getStatusLabel={getStatusLabel}
               />
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800 ">
                 <ClientInfo client={clientData} formatDate={formatDate} />
               </div>
             </div>

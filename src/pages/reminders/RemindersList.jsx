@@ -8,26 +8,16 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { reminderService } from "../../api/index";
 import { BellIcon } from "../../components/icons/IconComponents";
-import {
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  X,
-  Edit,
-  Trash2,
-  Clock,
-  BellOff,
-} from "lucide-react";
+import { Plus, Search, Filter, Eye, X, Edit, Trash2, Clock, BellOff, AlertTriangle } from "lucide-react";
 import ReminderDetails from "./ReminderDetails";
 import ReminderForm from "./ReminderForm";
 import Badge from "../../components/common/Badge";
 import { format, addHours, addDays, formatISO } from "date-fns";
-import { toast } from "react-hot-toast";
-import { ConfirmModal } from "../../components/common/Modal";
+import { useToast } from "../../context/ToastContext";
 
 const RemindersList = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo, promise } = useToast();
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,15 +25,20 @@ const RemindersList = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  const [deleteModal, setDeleteModal] = useState({
+  const [snoozingReminders, setSnoozingReminders] = useState(new Set());
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     reminderId: null,
-    reminderTitle: "",
+    reminderName: "",
+    onConfirm: null
   });
-  const [snoozingReminders, setSnoozingReminders] = useState(new Set());
-  const [snoozeOptionsModal, setSnoozeOptionsModal] = useState({
-    isOpen: false,
-    reminder: null,
+
+  // Snooze options modal state
+  const [snoozeOptionsModal, setSnoozeOptionsModal] = useState({ 
+    isOpen: false, 
+    reminder: null 
   });
 
   // Search & filter state
@@ -56,7 +51,7 @@ const RemindersList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch reminders
+  // Fetch reminders with toast notifications
   const fetchReminders = useCallback(async () => {
     try {
       setLoading(true);
@@ -105,173 +100,200 @@ const RemindersList = () => {
         err.message ||
         "Failed to load reminders. Please try again.";
       setError(errorMessage);
+      showError(errorMessage);
       setReminders([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [search, status, type, priority, page, limit]);
+  }, [search, status, type, priority, page, limit, showError]);
 
-  // Handle snooze with options
-  const handleSnoozeClick = useCallback((reminder) => {
-    if (!reminder?._id) {
-      toast.error("Invalid reminder data");
-      return;
-    }
-    setSnoozeOptionsModal({ isOpen: true, reminder });
-  }, []);
-
-  // Handle snooze action with specific duration
-  const handleSnoozeAction = useCallback(
-    async (duration, unit = "hours") => {
-      const { reminder } = snoozeOptionsModal;
-
-      if (!reminder?._id) {
-        toast.error("Invalid reminder data");
-        return;
-      }
-
-      try {
-        setSnoozingReminders((prev) => new Set(prev).add(reminder._id));
-
-        // Calculate snooze until date based on duration and unit
-        const now = new Date();
-        let snoozeUntil;
-
-        switch (unit) {
-          case "hours":
-            snoozeUntil = addHours(now, duration);
-            break;
-          case "days":
-            snoozeUntil = addDays(now, duration);
-            break;
-          default:
-            snoozeUntil = addHours(now, duration);
-        }
-
-        // Format the date for the backend (ISO string)
-        const snoozeData = {
-          snoozeUntil: snoozeUntil.toISOString(),
-          duration: duration,
-          unit: unit,
-        };
-
-        await reminderService.snooze(reminder._id, snoozeData);
-        toast.success(`Reminder snoozed for ${duration} ${unit}`);
-
-        // Refresh the list
-        await fetchReminders();
-        setSnoozeOptionsModal({ isOpen: false, reminder: null });
-      } catch (err) {
-        console.error("Error snoozing reminder:", err);
-
-        // Try alternative approach if the first one fails
-        if (err.response?.data?.message?.includes("Invalid snooze date")) {
-          try {
-            // Try with just the date string without additional fields
-            const snoozeUntil = addHours(new Date(), duration);
-            const alternativeData = {
-              snoozeUntil: snoozeUntil.toISOString(),
-            };
-
-            await reminderService.snooze(reminder._id, alternativeData);
-            toast.success(`Reminder snoozed for ${duration} ${unit}`);
-            await fetchReminders();
-            setSnoozeOptionsModal({ isOpen: false, reminder: null });
-            return;
-          } catch (secondErr) {
-            console.error("Alternative snooze also failed:", secondErr);
-          }
-        }
-
-        toast.error(err.response?.data?.message || "Failed to snooze reminder");
-      } finally {
-        setSnoozingReminders((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(reminder._id);
-          return newSet;
-        });
-      }
-    },
-    [snoozeOptionsModal, fetchReminders]
-  );
-
-  // Handle unsnooze
-  const handleUnsnooze = useCallback(
-    async (reminder) => {
-      if (!reminder?._id) {
-        toast.error("Invalid reminder data");
-        return;
-      }
-
-      try {
-        setSnoozingReminders((prev) => new Set(prev).add(reminder._id));
-
-        // Update status back to active and clear snooze fields
-        await reminderService.update(reminder._id, {
-          status: "active",
-          snoozeUntil: null,
-        });
-
-        toast.success("Reminder activated");
-        await fetchReminders();
-      } catch (err) {
-        console.error("Error unsnoozing reminder:", err);
-        toast.error(
-          err.response?.data?.message || "Failed to activate reminder"
-        );
-      } finally {
-        setSnoozingReminders((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(reminder._id);
-          return newSet;
-        });
-      }
-    },
-    [fetchReminders]
-  );
-
-  // Handle delete reminder with modal confirmation
-  const handleDeleteReminder = useCallback((reminder) => {
-    if (!reminder?._id) {
-      toast.error("Invalid reminder data");
-      return;
-    }
-
-    setDeleteModal({
+  // Show confirmation modal
+  const showDeleteConfirmation = useCallback((reminderId, reminderName = "Reminder") => {
+    setConfirmationModal({
       isOpen: true,
-      reminderId: reminder._id,
-      reminderTitle: reminder.title || "Untitled Reminder",
+      reminderId,
+      reminderName,
+      onConfirm: () => handleDeleteConfirm(reminderId, reminderName)
     });
   }, []);
 
-  // Confirm delete action
-  const confirmDeleteReminder = useCallback(async () => {
-    const { reminderId } = deleteModal;
+  // Close confirmation modal
+  const closeConfirmationModal = useCallback(() => {
+    setConfirmationModal({
+      isOpen: false,
+      reminderId: null,
+      reminderName: "",
+      onConfirm: null
+    });
+  }, []);
 
+  // Handle confirmed deletion
+  const handleDeleteConfirm = useCallback(async (reminderId, reminderName = "Reminder") => {
     if (!reminderId) {
-      setDeleteModal({ isOpen: false, reminderId: null, reminderTitle: "" });
+      showError("Invalid reminder ID");
       return;
     }
 
     try {
-      await reminderService.delete(reminderId);
-      toast.success("Reminder deleted successfully");
+      // Use the promise toast for loading state
+      await promise(
+        reminderService.delete(reminderId),
+        {
+          loading: `Deleting ${reminderName}...`,
+          success: `${reminderName} deleted successfully`,
+          error: `Failed to delete ${reminderName}`
+        }
+      );
 
-      // Refresh the list
-      await fetchReminders();
-
-      // Close detail modal if the deleted reminder was selected
+      // Refresh the reminders list
+      fetchReminders();
+      
+      // Close detail modal if the deleted reminder is currently selected
       if (selectedReminder?._id === reminderId) {
         setSelectedReminder(null);
         setIsDetailModalOpen(false);
       }
+      
+      // Close confirmation modal
+      closeConfirmationModal();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete reminder");
-    } finally {
-      setDeleteModal({ isOpen: false, reminderId: null, reminderTitle: "" });
+      // Error is already handled by the promise toast
+      console.error("Delete reminder error:", err);
+      closeConfirmationModal();
     }
-  }, [deleteModal, fetchReminders, selectedReminder]);
+  }, [fetchReminders, selectedReminder, promise, showError, closeConfirmationModal]);
+
+  // Updated reminder deletion handler
+  const handleDeleteReminder = useCallback((reminderId, reminderName = "Reminder") => {
+    showDeleteConfirmation(reminderId, reminderName);
+  }, [showDeleteConfirmation]);
+
+  // Handle snooze with options
+  const handleSnoozeClick = useCallback((reminder) => {
+    if (!reminder?._id) {
+      showError("Invalid reminder data");
+      return;
+    }
+    setSnoozeOptionsModal({ isOpen: true, reminder });
+  }, [showError]);
+
+  // Handle snooze action with specific duration
+  const handleSnoozeAction = useCallback(async (duration, unit = 'hours') => {
+    const { reminder } = snoozeOptionsModal;
+    
+    if (!reminder?._id) {
+      showError("Invalid reminder data");
+      return;
+    }
+
+    try {
+      setSnoozingReminders(prev => new Set(prev).add(reminder._id));
+
+      // Calculate snooze until date based on duration and unit
+      const now = new Date();
+      let snoozeUntil;
+      
+      switch (unit) {
+        case 'hours':
+          snoozeUntil = addHours(now, duration);
+          break;
+        case 'days':
+          snoozeUntil = addDays(now, duration);
+          break;
+        default:
+          snoozeUntil = addHours(now, duration);
+      }
+
+      // Format the date for the backend (ISO string)
+      const snoozeData = {
+        snoozeUntil: snoozeUntil.toISOString(),
+        duration: duration,
+        unit: unit
+      };
+
+      await promise(
+        reminderService.snooze(reminder._id, snoozeData),
+        {
+          loading: `Snoozing reminder for ${duration} ${unit}...`,
+          success: `Reminder snoozed for ${duration} ${unit}`,
+          error: `Failed to snooze reminder`
+        }
+      );
+      
+      // Refresh the list
+      await fetchReminders();
+      setSnoozeOptionsModal({ isOpen: false, reminder: null });
+    } catch (err) {
+      console.error("Error snoozing reminder:", err);
+      
+      // Try alternative approach if the first one fails
+      if (err.response?.data?.message?.includes("Invalid snooze date")) {
+        try {
+          // Try with just the date string without additional fields
+          const snoozeUntil = addHours(new Date(), duration);
+          const alternativeData = {
+            snoozeUntil: snoozeUntil.toISOString()
+          };
+          
+          await promise(
+            reminderService.snooze(reminder._id, alternativeData),
+            {
+              loading: `Snoozing reminder for ${duration} ${unit}...`,
+              success: `Reminder snoozed for ${duration} ${unit}`,
+              error: `Failed to snooze reminder`
+            }
+          );
+          await fetchReminders();
+          setSnoozeOptionsModal({ isOpen: false, reminder: null });
+          return;
+        } catch (secondErr) {
+          console.error("Alternative snooze also failed:", secondErr);
+        }
+      }
+    } finally {
+      setSnoozingReminders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reminder._id);
+        return newSet;
+      });
+    }
+  }, [snoozeOptionsModal, fetchReminders, promise, showError]);
+
+  // Handle unsnooze
+  const handleUnsnooze = useCallback(async (reminder) => {
+    if (!reminder?._id) {
+      showError("Invalid reminder data");
+      return;
+    }
+
+    try {
+      setSnoozingReminders(prev => new Set(prev).add(reminder._id));
+      
+      // Update status back to active and clear snooze fields
+      await promise(
+        reminderService.update(reminder._id, { 
+          status: "active",
+          snoozeUntil: null
+        }),
+        {
+          loading: "Activating reminder...",
+          success: "Reminder activated successfully",
+          error: "Failed to activate reminder"
+        }
+      );
+      
+      await fetchReminders();
+    } catch (err) {
+      console.error("Error unsnoozing reminder:", err);
+    } finally {
+      setSnoozingReminders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reminder._id);
+        return newSet;
+      });
+    }
+  }, [fetchReminders, promise, showError]);
 
   useEffect(() => {
     fetchReminders();
@@ -288,23 +310,25 @@ const RemindersList = () => {
     setIsFormOpen(true);
   }, []);
 
-  const handleViewReminder = useCallback(
-    (reminder) => {
-      if (reminder && reminder._id) {
-        navigate(`/reminders/${reminder._id}`);
-      } else {
-        console.error("Invalid reminder data:", reminder);
-        toast.error("Cannot view reminder: Invalid data");
-      }
-    },
-    [navigate]
-  );
+  const handleViewReminder = useCallback((reminder) => {
+    if (reminder && reminder._id) {
+      navigate(`/reminders/${reminder._id}`);
+    } else {
+      console.error('Invalid reminder data:', reminder);
+      showError('Cannot view reminder: Invalid data');
+    }
+  }, [navigate, showError]);
 
   const handleFormSuccess = useCallback(() => {
     fetchReminders();
     setSelectedReminder(null);
     setIsFormOpen(false);
-  }, [fetchReminders]);
+    showSuccess(
+      selectedReminder 
+        ? "Reminder updated successfully" 
+        : "Reminder created successfully"
+    );
+  }, [fetchReminders, selectedReminder, showSuccess]);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -312,7 +336,13 @@ const RemindersList = () => {
     setType("all");
     setPriority("all");
     setPage(1);
-  }, []);
+    showInfo("Filters cleared");
+  }, [showInfo]);
+
+  const handleRetry = useCallback(() => {
+    fetchReminders();
+    showInfo("Retrying to load reminders...");
+  }, [fetchReminders, showInfo]);
 
   // Helper functions for badges
   const getStatusBadgeColor = (status) => {
@@ -362,11 +392,7 @@ const RemindersList = () => {
     }
   };
 
-  const hasActiveFilters =
-    search.trim() !== "" ||
-    status !== "all" ||
-    type !== "all" ||
-    priority !== "all";
+  const hasActiveFilters = search.trim() !== "" || status !== "all" || type !== "all" || priority !== "all";
   const showEmptyState =
     !loading &&
     !error &&
@@ -400,9 +426,7 @@ const RemindersList = () => {
       width: "18%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.description
-            ? `${row.description.substring(0, 50)}${row.description.length > 50 ? "..." : ""}`
-            : "No description"}
+          {row.description ? `${row.description.substring(0, 50)}${row.description.length > 50 ? '...' : ''}` : "No description"}
         </div>
       ),
     },
@@ -413,9 +437,10 @@ const RemindersList = () => {
       width: "15%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.reminderDate
+          {row.reminderDate 
             ? `${format(new Date(row.reminderDate), "MMM dd, yyyy")} ${row.reminderTime || ""}`
-            : "No date"}
+            : "No date"
+          }
         </div>
       ),
     },
@@ -426,9 +451,7 @@ const RemindersList = () => {
       width: "10%",
       render: (row) => (
         <Badge color={getTypeBadgeColor(row.type)}>
-          {row.type
-            ? row.type.charAt(0).toUpperCase() + row.type.slice(1)
-            : "Other"}
+          {row.type ? row.type.charAt(0).toUpperCase() + row.type.slice(1) : "Other"}
         </Badge>
       ),
     },
@@ -439,9 +462,7 @@ const RemindersList = () => {
       width: "10%",
       render: (row) => (
         <Badge color={getPriorityBadgeColor(row.priority)}>
-          {row.priority
-            ? row.priority.charAt(0).toUpperCase() + row.priority.slice(1)
-            : "Medium"}
+          {row.priority ? row.priority.charAt(0).toUpperCase() + row.priority.slice(1) : "Medium"}
         </Badge>
       ),
     },
@@ -452,9 +473,7 @@ const RemindersList = () => {
       width: "10%",
       render: (row) => (
         <Badge color={getStatusBadgeColor(row.status)}>
-          {row.status
-            ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
-            : "Active"}
+          {row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : "Active"}
         </Badge>
       ),
     },
@@ -466,7 +485,7 @@ const RemindersList = () => {
       render: (row) => {
         const isSnoozing = snoozingReminders.has(row._id);
         const isSnoozed = row.status === "snoozed";
-
+        
         return (
           <div className="flex justify-center gap-1">
             {/* Snooze/Unsnooze Button */}
@@ -481,8 +500,8 @@ const RemindersList = () => {
               }}
               disabled={isSnoozing}
               className={`p-2 rounded transition ${
-                isSnoozed
-                  ? "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50"
+                isSnoozed 
+                  ? "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50" 
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
               } ${isSnoozing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               title={isSnoozed ? "Unsnooze Reminder" : "Snooze Reminder"}
@@ -524,7 +543,7 @@ const RemindersList = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleDeleteReminder(row);
+                handleDeleteReminder(row._id, row.title || "Reminder");
               }}
               className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
               title="Delete Reminder"
@@ -541,11 +560,11 @@ const RemindersList = () => {
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-4">
+        <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Reminders
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Manage notifications, alerts, and follow-up reminders.{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
@@ -578,7 +597,7 @@ const RemindersList = () => {
                 {error}
               </p>
             </div>
-            <Button onClick={fetchReminders} size="sm" variant="outline">
+            <Button onClick={handleRetry} size="sm" variant="outline">
               Retry
             </Button>
           </div>
@@ -675,7 +694,9 @@ const RemindersList = () => {
               {status !== "all" && (
                 <Badge color="purple">Status: {status}</Badge>
               )}
-              {type !== "all" && <Badge color="green">Type: {type}</Badge>}
+              {type !== "all" && (
+                <Badge color="green">Type: {type}</Badge>
+              )}
               {priority !== "all" && (
                 <Badge color="orange">Priority: {priority}</Badge>
               )}
@@ -822,42 +843,42 @@ const RemindersList = () => {
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
-              onClick={() => handleSnoozeAction(1, "hours")}
+              onClick={() => handleSnoozeAction(1, 'hours')}
               className="justify-center"
             >
               1 Hour
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleSnoozeAction(2, "hours")}
+              onClick={() => handleSnoozeAction(2, 'hours')}
               className="justify-center"
             >
               2 Hours
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleSnoozeAction(4, "hours")}
+              onClick={() => handleSnoozeAction(4, 'hours')}
               className="justify-center"
             >
               4 Hours
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleSnoozeAction(8, "hours")}
+              onClick={() => handleSnoozeAction(8, 'hours')}
               className="justify-center"
             >
               8 Hours
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleSnoozeAction(1, "days")}
+              onClick={() => handleSnoozeAction(1, 'days')}
               className="justify-center"
             >
               1 Day
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleSnoozeAction(2, "days")}
+              onClick={() => handleSnoozeAction(2, 'days')}
               className="justify-center"
             >
               2 Days
@@ -867,17 +888,48 @@ const RemindersList = () => {
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={deleteModal.isOpen}
-        onClose={() =>
-          setDeleteModal({ isOpen: false, reminderId: null, reminderTitle: "" })
-        }
-        onConfirm={confirmDeleteReminder}
-        title="Delete Reminder"
-        message={`Are you sure you want to delete the reminder "${deleteModal.reminderTitle}"? This action cannot be undone.`}
-        confirmText="Delete"
-        confirmVariant="danger"
-      />
+      <Modal
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        title="Confirm Deletion"
+        size="md"
+      >
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Delete Reminder
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to delete <strong>"{confirmationModal.reminderName}"</strong>? 
+                This action cannot be undone and all associated data will be permanently removed.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmationModal}
+                  className="px-4 py-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmationModal.onConfirm}
+                  className="px-4 py-2 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Reminder
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

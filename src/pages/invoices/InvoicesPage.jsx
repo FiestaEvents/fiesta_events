@@ -18,10 +18,10 @@ import {
   Trash2,
   Users,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import Card from "../../components/common/Card";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { invoiceService } from "../../api/index";
 import Badge from "../../components/common/Badge";
@@ -32,10 +32,12 @@ import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Pagination from "../../components/common/Pagination";
 import Select from "../../components/common/Select";
+import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo, promise } = useToast();
 
   // State
   const [invoices, setInvoices] = useState([]);
@@ -46,13 +48,19 @@ const InvoicesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const [deleteId, setDeleteId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    invoiceId: null,
+    invoiceName: "",
+    onConfirm: null
+  });
 
   // Invoice Type Toggle
   const [invoiceType, setInvoiceType] = useState("client");
@@ -176,10 +184,11 @@ const InvoicesPage = () => {
       setStats(typeStats);
     } catch (error) {
       console.error("Error fetching stats:", error);
+      showError("Failed to load invoice statistics");
     } finally {
       setStatsLoading(false);
     }
-  }, [filters.startDate, filters.endDate, invoiceType]);
+  }, [filters.startDate, filters.endDate, invoiceType, showError]);
 
   // Fetch invoices with enhanced data validation
   const fetchInvoices = useCallback(async () => {
@@ -230,13 +239,15 @@ const InvoicesPage = () => {
       setHasInitialLoad(true);
     } catch (error) {
       console.error("Error fetching invoices:", error);
-      setError(error.message || "Failed to load invoices. Please try again.");
+      const errorMessage = error.message || "Failed to load invoices. Please try again.";
+      setError(errorMessage);
+      showError(errorMessage);
       setInvoices([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters, currentPage, pageSize, invoiceType]);
+  }, [searchTerm, filters, currentPage, pageSize, invoiceType, showError]);
 
   useEffect(() => {
     fetchInvoices();
@@ -251,6 +262,68 @@ const InvoicesPage = () => {
     setCurrentPage(1);
     setSelectedRows([]);
   }, [invoiceType]);
+
+  // Show confirmation modal
+  const showDeleteConfirmation = useCallback((invoiceId, invoiceName = "Invoice") => {
+    setConfirmationModal({
+      isOpen: true,
+      invoiceId,
+      invoiceName,
+      onConfirm: () => handleDeleteConfirm(invoiceId, invoiceName)
+    });
+  }, []);
+
+  // Close confirmation modal
+  const closeConfirmationModal = useCallback(() => {
+    setConfirmationModal({
+      isOpen: false,
+      invoiceId: null,
+      invoiceName: "",
+      onConfirm: null
+    });
+  }, []);
+
+  // Handle confirmed deletion
+  const handleDeleteConfirm = useCallback(async (invoiceId, invoiceName = "Invoice") => {
+    if (!invoiceId) {
+      showError("Invalid invoice ID");
+      return;
+    }
+
+    try {
+      // Use the promise toast for loading state
+      await promise(
+        invoiceService.delete(invoiceId),
+        {
+          loading: `Deleting ${invoiceName}...`,
+          success: `${invoiceName} deleted successfully`,
+          error: `Failed to delete ${invoiceName}`
+        }
+      );
+
+      // Refresh the invoices list
+      fetchInvoices();
+      fetchStats();
+      
+      // Close detail modal if the deleted invoice is currently selected
+      if (selectedInvoice?._id === invoiceId) {
+        setSelectedInvoice(null);
+        setIsDetailModalOpen(false);
+      }
+      
+      // Close confirmation modal
+      closeConfirmationModal();
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Delete invoice error:", err);
+      closeConfirmationModal();
+    }
+  }, [fetchInvoices, fetchStats, selectedInvoice, promise, showError, closeConfirmationModal]);
+
+  // Updated invoice deletion handler
+  const handleDeleteClick = useCallback((invoiceId, invoiceName = "Invoice") => {
+    showDeleteConfirmation(invoiceId, invoiceName);
+  }, [showDeleteConfirmation]);
 
   // Safe render helper function with fallback values
   const safeRender = (renderFunction, row, fallback = "-") => {
@@ -278,7 +351,7 @@ const InvoicesPage = () => {
 
   const handleEditInvoice = (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
     navigate(`/invoices/${invoice._id}/edit`);
@@ -286,7 +359,7 @@ const InvoicesPage = () => {
 
   const handleViewInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
 
@@ -298,7 +371,7 @@ const InvoicesPage = () => {
       setIsDetailModalOpen(true);
     } catch (error) {
       console.error("Error fetching invoice details:", error);
-      toast.error("Failed to load invoice details");
+      showError("Failed to load invoice details");
     }
   };
 
@@ -307,109 +380,104 @@ const InvoicesPage = () => {
     setSelectedInvoice(null);
   };
 
-  const handleDeleteClick = (invoice) => {
-    if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
-      return;
-    }
-    setDeleteId(invoice._id);
-    setIsDeleteModalOpen(true);
-  };
-
   const handleCancelClick = (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
     setSelectedInvoice(invoice);
     setIsCancelModalOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteId) return;
-
-    try {
-      await invoiceService.delete(deleteId);
-      toast.success("Invoice deleted successfully");
-      setIsDeleteModalOpen(false);
-      setDeleteId(null);
-      fetchInvoices();
-      fetchStats();
-    } catch (error) {
-      console.error("Error deleting invoice:", error);
-      toast.error(error.message || "Failed to delete invoice");
-    }
-  };
-
   const handleCancelConfirm = async () => {
     if (!selectedInvoice || !selectedInvoice._id) return;
 
     try {
-      await invoiceService.cancel(selectedInvoice._id, cancelReason);
-      toast.success("Invoice cancelled successfully");
+      await promise(
+        invoiceService.cancel(selectedInvoice._id, cancelReason),
+        {
+          loading: "Cancelling invoice...",
+          success: "Invoice cancelled successfully",
+          error: "Failed to cancel invoice"
+        }
+      );
       setIsCancelModalOpen(false);
       setSelectedInvoice(null);
       setCancelReason("");
       fetchInvoices();
       fetchStats();
-    } catch (error) {
-      console.error("Error cancelling invoice:", error);
-      toast.error(error.message || "Failed to cancel invoice");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Cancel invoice error:", err);
     }
   };
 
   const handleSendInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
 
     try {
-      const loadingToast = toast.loading("Sending invoice...");
-      await invoiceService.send(invoice._id, {
-        message:
-          "Please find your invoice attached. Payment is due by the date specified.",
-      });
-      toast.dismiss(loadingToast);
-      toast.success("Invoice sent successfully");
+      await promise(
+        invoiceService.send(invoice._id, {
+          message:
+            "Please find your invoice attached. Payment is due by the date specified.",
+        }),
+        {
+          loading: "Sending invoice...",
+          success: "Invoice sent successfully",
+          error: "Failed to send invoice"
+        }
+      );
       fetchInvoices();
       fetchStats();
-    } catch (error) {
-      console.error("Error sending invoice:", error);
-      toast.error(error.message || "Failed to send invoice");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Send invoice error:", err);
     }
   };
 
   const handleMarkAsPaid = async (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
 
     try {
-      const loadingToast = toast.loading("Marking invoice as paid...");
-      await invoiceService.markAsPaid(invoice._id, {
-        paymentMethod: "cash",
-      });
-      toast.dismiss(loadingToast);
-      toast.success("Invoice marked as paid");
+      await promise(
+        invoiceService.markAsPaid(invoice._id, {
+          paymentMethod: "cash",
+        }),
+        {
+          loading: "Marking invoice as paid...",
+          success: "Invoice marked as paid",
+          error: "Failed to mark invoice as paid"
+        }
+      );
       fetchInvoices();
       fetchStats();
-    } catch (error) {
-      console.error("Error marking invoice as paid:", error);
-      toast.error(error.message || "Failed to mark invoice as paid");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Mark as paid error:", err);
     }
   };
 
   const handleDownloadInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
 
     try {
-      const loadingToast = toast.loading("Generating PDF...");
-      const blob = await invoiceService.download(invoice._id);
+      const blob = await promise(
+        invoiceService.download(invoice._id),
+        {
+          loading: "Generating PDF...",
+          success: "Invoice downloaded successfully",
+          error: "Failed to download invoice"
+        }
+      );
 
       // Create download link
       const url = window.URL.createObjectURL(blob);
@@ -420,12 +488,9 @@ const InvoicesPage = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
-      toast.dismiss(loadingToast);
-      toast.success("Invoice downloaded successfully");
-    } catch (error) {
-      console.error("Error downloading invoice:", error);
-      toast.error(error.message || "Failed to download invoice");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Download invoice error:", err);
     }
   };
 
@@ -445,18 +510,21 @@ const InvoicesPage = () => {
     });
     setSearchTerm("");
     setCurrentPage(1);
+    showInfo("Filters cleared");
   };
+
+  const handleRetry = useCallback(() => {
+    fetchInvoices();
+    showInfo("Retrying to load invoices...");
+  }, [fetchInvoices, showInfo]);
 
   const handleBulkSend = async () => {
     if (selectedRows.length === 0) {
-      toast.error("Please select invoices to send");
+      showError("Please select invoices to send");
       return;
     }
 
     try {
-      const loadingToast = toast.loading(
-        `Sending ${selectedRows.length} invoice(s)...`
-      );
       const promises = selectedRows.map((id) =>
         invoiceService.send(id).catch((err) => {
           console.error(`Failed to send invoice ${id}:`, err);
@@ -464,15 +532,20 @@ const InvoicesPage = () => {
         })
       );
 
-      await Promise.all(promises);
-      toast.dismiss(loadingToast);
-      toast.success(`Sent ${selectedRows.length} invoice(s) successfully`);
+      await promise(
+        Promise.all(promises),
+        {
+          loading: `Sending ${selectedRows.length} invoice(s)...`,
+          success: `Sent ${selectedRows.length} invoice(s) successfully`,
+          error: "Failed to send some invoices"
+        }
+      );
       setSelectedRows([]);
       fetchInvoices();
       fetchStats();
-    } catch (error) {
-      console.error("Error sending bulk invoices:", error);
-      toast.error("Failed to send some invoices");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Bulk send error:", err);
     }
   };
 
@@ -698,7 +771,7 @@ const InvoicesPage = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteClick(row);
+                  handleDeleteClick(row._id, row.invoiceNumber || "Invoice");
                 }}
                 className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                 title="Delete Invoice"
@@ -776,10 +849,17 @@ const InvoicesPage = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="p-4 flex items-center justify-between">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-            <Button variant="outline" size="sm" onClick={fetchInvoices}>
+            <div>
+              <p className="text-red-800 dark:text-red-200 font-medium">
+                Error Loading Invoices
+              </p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
+                {error}
+              </p>
+            </div>
+            <Button onClick={handleRetry} size="sm" variant="outline">
               Retry
             </Button>
           </div>
@@ -824,6 +904,7 @@ const InvoicesPage = () => {
           </button>
         </div>
       </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -942,7 +1023,6 @@ const InvoicesPage = () => {
       </div>
 
       {/* Search and Filters */}
-
       {invoices.length > 0 && (
         <div className="p-4">
           <div className="flex flex-col gap-4">
@@ -1121,7 +1201,6 @@ const InvoicesPage = () => {
         </div>
       )}
 
-      {/* Rest of the modals remain the same */}
       {/* Invoice Detail Modal */}
       {isDetailModalOpen && selectedInvoice && (
         <Modal
@@ -1489,32 +1568,44 @@ const InvoicesPage = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setDeleteId(null);
-        }}
-        title="Delete Invoice"
-        size="sm"
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        title="Confirm Deletion"
+        size="md"
       >
         <div className="p-6">
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this invoice? This action cannot be
-            undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsDeleteModalOpen(false);
-                setDeleteId(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="danger" onClick={handleDeleteConfirm}>
-              Delete
-            </Button>
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Delete Invoice
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to delete <strong>"{confirmationModal.invoiceName}"</strong>? 
+                This action cannot be undone and all associated data will be permanently removed.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmationModal}
+                  className="px-4 py-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmationModal.onConfirm}
+                  className="px-4 py-2 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Invoice
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </Modal>
