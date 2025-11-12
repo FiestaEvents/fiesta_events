@@ -94,6 +94,7 @@ const DashboardPage = () => {
   const [tasks, setTasks] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -102,6 +103,7 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setHasInitialLoad(false);
       
       // Fetch all data in parallel
       const [
@@ -202,8 +204,11 @@ const DashboardPage = () => {
         ? remindersResponse
         : (remindersResponse?.reminders || []);
       setReminders(Array.isArray(remindersArray) ? remindersArray.slice(0, 5) : []);
+      
+      setHasInitialLoad(true);
     } catch (err) {
       console.error("❌ Dashboard load failed:", err);
+      setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
@@ -464,12 +469,13 @@ const DashboardPage = () => {
     return 'bg-red-500';
   };
 
-  if (loading) {
+  // Loading State
+  if (loading && !hasInitialLoad) {
     return (
-      <div className="p-8 flex justify-center items-center min-h-screen text-gray-600 dark:text-gray-300">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-          <p>Loading dashboard...</p>
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     );
