@@ -8,7 +8,16 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { clientService } from "../../api/index";
 import { UsersIcon } from "../../components/icons/IconComponents";
-import { Plus, Search, Filter, Eye, X, Edit, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  X,
+  Edit,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 import ClientDetail from "./ClientDetail.jsx";
 import ClientForm from "./ClientForm.jsx";
 import Badge from "../../components/common/Badge";
@@ -26,13 +35,13 @@ const ClientsList = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  
+
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     clientId: null,
     clientName: "",
-    onConfirm: null
+    onConfirm: null,
   });
 
   // Search & filter state
@@ -99,14 +108,17 @@ const ClientsList = () => {
   }, [search, status, page, limit, showError]);
 
   // Show confirmation modal
-  const showDeleteConfirmation = useCallback((clientId, clientName = "Client") => {
-    setConfirmationModal({
-      isOpen: true,
-      clientId,
-      clientName,
-      onConfirm: () => handleDeleteConfirm(clientId, clientName)
-    });
-  }, []);
+  const showDeleteConfirmation = useCallback(
+    (clientId, clientName = "Client") => {
+      setConfirmationModal({
+        isOpen: true,
+        clientId,
+        clientName,
+        onConfirm: () => handleDeleteConfirm(clientId, clientName),
+      });
+    },
+    []
+  );
 
   // Close confirmation modal
   const closeConfirmationModal = useCallback(() => {
@@ -114,50 +126,53 @@ const ClientsList = () => {
       isOpen: false,
       clientId: null,
       clientName: "",
-      onConfirm: null
+      onConfirm: null,
     });
   }, []);
 
   // Handle confirmed deletion
-  const handleDeleteConfirm = useCallback(async (clientId, clientName = "Client") => {
-    if (!clientId) {
-      showError("Invalid client ID");
-      return;
-    }
+  const handleDeleteConfirm = useCallback(
+    async (clientId, clientName = "Client") => {
+      if (!clientId) {
+        showError("Invalid client ID");
+        return;
+      }
 
-    try {
-      // Use the promise toast for loading state
-      await promise(
-        clientService.delete(clientId),
-        {
+      try {
+        // Use the promise toast for loading state
+        await promise(clientService.delete(clientId), {
           loading: `Deleting ${clientName}...`,
           success: `${clientName} deleted successfully`,
-          error: `Failed to delete ${clientName}`
-        }
-      );
+          error: `Failed to delete ${clientName}`,
+        });
 
-      // Refresh the clients list
-      fetchClients();
-      
-      // Close detail modal if the deleted client is currently selected
-      if (selectedClient?._id === clientId) {
-        setSelectedClient(null);
-        setIsDetailModalOpen(false);
+        // Refresh the clients list
+        fetchClients();
+
+        // Close detail modal if the deleted client is currently selected
+        if (selectedClient?._id === clientId) {
+          setSelectedClient(null);
+          setIsDetailModalOpen(false);
+        }
+
+        // Close confirmation modal
+        closeConfirmationModal();
+      } catch (err) {
+        // Error is already handled by the promise toast
+        console.error("Delete client error:", err);
+        closeConfirmationModal();
       }
-      
-      // Close confirmation modal
-      closeConfirmationModal();
-    } catch (err) {
-      // Error is already handled by the promise toast
-      console.error("Delete client error:", err);
-      closeConfirmationModal();
-    }
-  }, [fetchClients, selectedClient, promise, showError, closeConfirmationModal]);
+    },
+    [fetchClients, selectedClient, promise, showError, closeConfirmationModal]
+  );
 
   // Updated client deletion handler
-  const handleDeleteClient = useCallback((clientId, clientName = "Client") => {
-    showDeleteConfirmation(clientId, clientName);
-  }, [showDeleteConfirmation]);
+  const handleDeleteClient = useCallback(
+    (clientId, clientName = "Client") => {
+      showDeleteConfirmation(clientId, clientName);
+    },
+    [showDeleteConfirmation]
+  );
 
   useEffect(() => {
     fetchClients();
@@ -186,8 +201,8 @@ const ClientsList = () => {
     setSelectedClient(null);
     setIsFormOpen(false);
     showSuccess(
-      selectedClient 
-        ? "Client updated successfully" 
+      selectedClient
+        ? "Client updated successfully"
         : "Client created successfully"
     );
   }, [fetchClients, selectedClient, showSuccess]);
@@ -336,11 +351,11 @@ const ClientsList = () => {
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
+        <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Clients
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Manage your client records and relationships.{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
@@ -579,8 +594,10 @@ const ClientsList = () => {
                 Delete Client
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.clientName}"</strong>? 
-                This action cannot be undone and all associated data will be permanently removed.
+                Are you sure you want to delete{" "}
+                <strong>"{confirmationModal.clientName}"</strong>? This action
+                cannot be undone and all associated data will be permanently
+                removed.
               </p>
               <div className="flex justify-end gap-3">
                 <Button

@@ -172,11 +172,17 @@ const DateEventsModal = ({
                       {event.title}
                     </h3>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      <Badge variant={getStatusColor(event.status)} className="text-xs">
+                      <Badge
+                        variant={getStatusColor(event.status)}
+                        className="text-xs"
+                      >
                         {event.status}
                       </Badge>
                       {event.type && (
-                        <Badge variant={getTypeColor(event.type)} className="text-xs">
+                        <Badge
+                          variant={getTypeColor(event.type)}
+                          className="text-xs"
+                        >
                           {event.type}
                         </Badge>
                       )}
@@ -247,7 +253,7 @@ const EventList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("list"); // "calendar" or "list"
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   // Pagination for list view
   const [currentPage, setCurrentPage] = useState(1);
@@ -291,7 +297,7 @@ const EventList = () => {
       setLoading(true);
       setError(null);
       const effectivePage = viewMode === "list" ? currentPage : 1;
-      const effectiveLimit = viewMode === "list" ? pageSize : 1000;
+      const effectiveLimit = viewMode === "list" ? pageSize : 100;
       const params = {
         page: effectivePage,
         limit: effectiveLimit,
@@ -335,7 +341,16 @@ const EventList = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, search, status, eventType, dateRange, viewMode, showError]);
+  }, [
+    currentPage,
+    pageSize,
+    search,
+    status,
+    eventType,
+    dateRange,
+    viewMode,
+    showError,
+  ]);
 
   // Combined refresh function
   const refreshAllData = useCallback(() => {
@@ -364,9 +379,14 @@ const EventList = () => {
   }, [fetchAllEvents, showInfo]);
 
   const hasActiveFilters =
-    search.trim() !== "" || status !== "all" || eventType !== "all" || dateRange !== "all";
-  const showEmptyState = !loading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
-  const showNoResults = !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
+    search.trim() !== "" ||
+    status !== "all" ||
+    eventType !== "all" ||
+    dateRange !== "all";
+  const showEmptyState =
+    !loading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults =
+    !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
 
   // Delete confirmation handlers
   const showDeleteConfirmation = useCallback((eventId, eventName = "Event") => {
@@ -394,14 +414,11 @@ const EventList = () => {
         return;
       }
       try {
-        await promise(
-          eventService.delete(eventId),
-          {
-            loading: `Deleting ${eventName}...`,
-            success: `${eventName} deleted successfully`,
-            error: `Failed to delete ${eventName}`,
-          }
-        );
+        await promise(eventService.delete(eventId), {
+          loading: `Deleting ${eventName}...`,
+          success: `${eventName} deleted successfully`,
+          error: `Failed to delete ${eventName}`,
+        });
         fetchAllEvents();
         if (selectedEvent?._id === eventId) {
           setSelectedEvent(null);
@@ -442,7 +459,9 @@ const EventList = () => {
     setSelectedEvent(null);
     setPrefilledDate(null);
     showSuccess(
-      selectedEvent ? "Event updated successfully" : "Event created successfully"
+      selectedEvent
+        ? "Event updated successfully"
+        : "Event created successfully"
     );
   }, [refreshAllData, selectedEvent, showSuccess]);
 
@@ -522,14 +541,17 @@ const EventList = () => {
     );
   }, []);
 
-  const isSelectedDate = useCallback((date) => {
-    if (!selectedDate) return false;
-    return (
-      date.getDate() === selectedDate.getDate() &&
-      date.getMonth() === selectedDate.getMonth() &&
-      date.getFullYear() === selectedDate.getFullYear()
-    );
-  }, [selectedDate]);
+  const isSelectedDate = useCallback(
+    (date) => {
+      if (!selectedDate) return false;
+      return (
+        date.getDate() === selectedDate.getDate() &&
+        date.getMonth() === selectedDate.getMonth() &&
+        date.getFullYear() === selectedDate.getFullYear()
+      );
+    },
+    [selectedDate]
+  );
 
   const calendarDays = useMemo(() => {
     const days = [];
@@ -576,7 +598,7 @@ const EventList = () => {
       width: "20%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.client?.name || "Unknown Client"}
+          {row.clientId?.name || "Unknown Client"}
         </div>
       ),
     },
@@ -663,7 +685,7 @@ const EventList = () => {
   ];
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg space-y-6">
       {/* Event Detail Modal */}
       <EventDetailModal
         isOpen={isDetailsModalOpen}
@@ -706,52 +728,45 @@ const EventList = () => {
         </div>
         <div className="flex items-center gap-3">
           {/* View Mode Toggle */}
-          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode("list")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "list"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
+          {events.length > 0 && (
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === "list"
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                <Table className="w-4 h-4" />
+                List
+              </button>
+              <button
+                onClick={() => setViewMode("calendar")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === "calendar"
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                <Grid className="w-4 h-4" />
+                Calendar
+              </button>
+            </div>
+          )}
+
+          {events.length > 0 && (
+            <Button
+              variant="primary"
+              icon={Plus}
+              onClick={() => handleCreateEvent()}
             >
-              <Table className="w-4 h-4" />
-              List
-            </button>
-            <button
-              onClick={() => setViewMode("calendar")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "calendar"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              <Grid className="w-4 h-4" />
-              Calendar
-            </button>
-          </div>
-          <Button variant="primary" icon={Plus} onClick={() => handleCreateEvent()}>
-            <Plus className="h-4 w-4" />
-            Create Event
-          </Button>
+              <Plus className="h-4 w-4" />
+              Create Event
+            </Button>
+          )}
         </div>
       </div>
-      {/* Error Message */}
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Events
-              </p>
-              <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</p>
-            </div>
-            <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
-            </Button>
-          </div>
-        </div>
-      )}
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
         <div className="p-4 bg-white dark:bg-gray-800 rounded-lg mb-6">
@@ -842,86 +857,24 @@ const EventList = () => {
           {hasActiveFilters && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span>Active filters:</span>
-              {search.trim() && <Badge color="blue">Search: "{search.trim()}"</Badge>}
-              {status !== "all" && <Badge color="purple">Status: {status}</Badge>}
-              {eventType !== "all" && <Badge color="green">Type: {eventType}</Badge>}
-              {dateRange !== "all" && <Badge color="orange">Date: {dateRange}</Badge>}
+              {search.trim() && (
+                <Badge color="blue">Search: "{search.trim()}"</Badge>
+              )}
+              {status !== "all" && (
+                <Badge color="purple">Status: {status}</Badge>
+              )}
+              {eventType !== "all" && (
+                <Badge color="green">Type: {eventType}</Badge>
+              )}
+              {dateRange !== "all" && (
+                <Badge color="orange">Date: {dateRange}</Badge>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && !hasInitialLoad && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400">Loading events...</p>
-        </div>
-      )}
-
-      {viewMode === "list" ? (
-        /* LIST VIEW */
-        <div className="space-y-6">
-          <TitleCard className="dark:bg-gray-800">
-            <div className="p-6">
-              {/* No Results from Search/Filter */}
-              {showNoResults && (
-                <div className="text-center py-12">
-                  <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No events found
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    No events match your current search or filter criteria.
-                  </p>
-                  <Button onClick={handleClearFilters} variant="outline">
-                    Clear All Filters
-                  </Button>
-                </div>
-              )}
-              {/* Empty State - No events at all */}
-              {showEmptyState && (
-                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No events yet
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Get started by creating your first event.
-                  </p>
-                  <Button onClick={() => handleCreateEvent()} variant="primary">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Event
-                  </Button>
-                </div>
-              )}
-              {/* Events Table */}
-              {!showEmptyState && !showNoResults && (
-                <TableComponent
-                  columns={tableColumns}
-                  data={events}
-                  loading={loading}
-                  emptyMessage="No events found"
-                  onRowClick={onEventClick}
-                  striped={true}
-                  hoverable={true}
-                  pagination={true}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  pageSize={pageSize}
-                  totalItems={totalItems}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={(newSize) => {
-                    setPageSize(newSize);
-                    setCurrentPage(1);
-                  }}
-                  pageSizeOptions={[10, 25, 50, 100]}
-                />
-              )}
-            </div>
-          </TitleCard>
-        </div>
-      ) : (
+      {viewMode === "calendar" ? (
         /* CALENDAR VIEW */
         <TitleCard className="dark:bg-gray-800">
           <div className="py-8">
@@ -962,7 +915,8 @@ const EventList = () => {
                     {eventTypeColors.map((item) => {
                       const eventsByType = events.filter(
                         (event) =>
-                          (event.type || "other").toLowerCase() === item.type.toLowerCase()
+                          (event.type || "other").toLowerCase() ===
+                          item.type.toLowerCase()
                       );
                       return (
                         <div
@@ -995,14 +949,18 @@ const EventList = () => {
                           Total Events
                         </span>
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          {events.filter((event) => {
-                            if (!event.startDate) return false;
-                            const eventDate = new Date(event.startDate);
-                            return (
-                              eventDate.getMonth() === currentDate.getMonth() &&
-                              eventDate.getFullYear() === currentDate.getFullYear()
-                            );
-                          }).length}
+                          {
+                            events.filter((event) => {
+                              if (!event.startDate) return false;
+                              const eventDate = new Date(event.startDate);
+                              return (
+                                eventDate.getMonth() ===
+                                  currentDate.getMonth() &&
+                                eventDate.getFullYear() ===
+                                  currentDate.getFullYear()
+                              );
+                            }).length
+                          }
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -1010,13 +968,15 @@ const EventList = () => {
                           Upcoming
                         </span>
                         <span className="font-semibold text-orange-600">
-                          {events.filter((event) => {
-                            if (!event.startDate) return false;
-                            const eventDate = new Date(event.startDate);
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            return eventDate >= today;
-                          }).length}
+                          {
+                            events.filter((event) => {
+                              if (!event.startDate) return false;
+                              const eventDate = new Date(event.startDate);
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              return eventDate >= today;
+                            }).length
+                          }
                         </span>
                       </div>
                     </div>
@@ -1057,7 +1017,8 @@ const EventList = () => {
                         const hasEvents = dayEvents.length > 0;
                         const isTodayDate = isToday(date);
                         const isSelected = isSelectedDate(date);
-                        const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+                        const isCurrentMonth =
+                          date.getMonth() === currentDate.getMonth();
                         return (
                           <button
                             key={index}
@@ -1069,8 +1030,8 @@ const EventList = () => {
                                 isTodayDate
                                   ? "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-700"
                                   : isSelected
-                                  ? "bg-orange-100/70 dark:bg-orange-900/10 border-orange-300 dark:border-orange-600"
-                                  : "bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                    ? "bg-orange-100/70 dark:bg-orange-900/10 border-orange-300 dark:border-orange-600"
+                                    : "bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                               }
                               ${!isCurrentMonth ? "opacity-40 bg-gray-50 dark:bg-gray-800" : ""}
                             `}
@@ -1084,8 +1045,8 @@ const EventList = () => {
                                     isTodayDate
                                       ? "text-orange-700 dark:text-orange-400"
                                       : isSelected
-                                      ? "text-orange-600 dark:text-orange-300"
-                                      : "text-gray-700 dark:text-gray-300"
+                                        ? "text-orange-600 dark:text-orange-300"
+                                        : "text-gray-700 dark:text-gray-300"
                                   }
                                   ${!isCurrentMonth ? "text-gray-400 dark:text-gray-500" : ""}
                                 `}
@@ -1149,14 +1110,18 @@ const EventList = () => {
                           </div>
                         </div>
                         <div>
-                          {events.filter((event) => {
-                            if (!event.startDate) return false;
-                            const eventDate = new Date(event.startDate);
-                            return (
-                              eventDate.getMonth() === currentDate.getMonth() &&
-                              eventDate.getFullYear() === currentDate.getFullYear()
-                            );
-                          }).length}{" "}
+                          {
+                            events.filter((event) => {
+                              if (!event.startDate) return false;
+                              const eventDate = new Date(event.startDate);
+                              return (
+                                eventDate.getMonth() ===
+                                  currentDate.getMonth() &&
+                                eventDate.getFullYear() ===
+                                  currentDate.getFullYear()
+                              );
+                            }).length
+                          }{" "}
                           events this month
                         </div>
                       </div>
@@ -1166,9 +1131,70 @@ const EventList = () => {
               </div>
             </div>
           </div>
-        </TitleCard>
-      )}
+        </div>
+      ) : (
+        /* LIST VIEW */
+        <div className="space-y-6">
+          <div>
+            {/* No Results from Search/Filter */}
+            {showNoResults && (
+              <div className="text-center py-12">
+                <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No events found
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  No events match your current search or filter criteria.
+                </p>
+                <Button onClick={handleClearFilters} variant="outline">
+                  Clear All Filters
+                </Button>
+              </div>
+            )}
 
+            {/* Empty State - No events at all */}
+            {showEmptyState && (
+              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No events yet
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Get started by creating your first event.
+                </p>
+                <Button onClick={() => handleCreateEvent()} variant="primary">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Event
+                </Button>
+              </div>
+            )}
+
+            {/* Events Table */}
+            {!showEmptyState && !showNoResults && (
+              <TableComponent
+                columns={tableColumns}
+                data={events}
+                loading={loading}
+                emptyMessage="No events found"
+                onRowClick={onEventClick}
+                striped={true}
+                hoverable={true}
+                pagination={true}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={totalItems}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+                pageSizeOptions={[10, 25, 50, 100]}
+              />
+            )}
+          </div>
+        </div>
+      )}
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={confirmationModal.isOpen}
@@ -1188,8 +1214,10 @@ const EventList = () => {
                 Delete Event
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.eventName}"</strong>?
-                This action cannot be undone and all associated data will be permanently removed.
+                Are you sure you want to delete{" "}
+                <strong>"{confirmationModal.eventName}"</strong>? This action
+                cannot be undone and all associated data will be permanently
+                removed.
               </p>
               <div className="flex justify-end gap-3">
                 <Button

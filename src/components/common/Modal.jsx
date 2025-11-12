@@ -66,7 +66,7 @@ const Modal = ({
         >
           {/* Header */}
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
               {title && (
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {title}
@@ -88,7 +88,7 @@ const Modal = ({
 
           {/* Footer */}
           {footer && (
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-2xl">
+            <div className="flex items-center justify-end gap-3 p-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-2xl">
               {footer}
             </div>
           )}
@@ -127,7 +127,7 @@ export const ConfirmModal = ({
         </>
       }
     >
-      <p className="text-gray-700 dark:text-gray-300">{message}</p>
+      <p className="text-gray-700 dark:text-gray-300 py-4">{message}</p>
     </Modal>
   );
 };

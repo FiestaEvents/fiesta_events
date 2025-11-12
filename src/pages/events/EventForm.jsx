@@ -159,7 +159,8 @@ const EventForm = ({
   const { id: urlEventId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const isModal = isOpen !== undefined;
+  const isModal =
+    location.pathname === "/events/new" ? true : isOpen !== undefined;
   const eventId = isModal ? modalEventId : urlEventId;
   const isEditMode = !!eventId;
   const [currentStep, setCurrentStep] = useState(1);
@@ -610,6 +611,7 @@ const EventForm = ({
             []
           : [];
 
+      console.log("clientsList", clientsList);
       setClients(clientsList);
       setPartners(partnersList);
       setVenueSpaces(
@@ -644,10 +646,12 @@ const EventForm = ({
   };
 
   useEffect(() => {
-    if (isModal ? isOpen : true) {
+    console.log("here", location.pathname);
+    if (location.pathname === "/events/new") {
+      console.log("or here");
       fetchDropdownData();
     }
-  }, [isModal ? isOpen : true]);
+  }, []);
 
   // Fetch event data in edit mode - FIXED
   useEffect(() => {
@@ -1337,7 +1341,7 @@ const EventForm = ({
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 ">
+            <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
                   <currentStepConfig.icon className="w-7 h-7 text-white" />
@@ -1352,64 +1356,72 @@ const EventForm = ({
                   </p>
                 </div>
               </div>
-              <div className="w-full xl:flex-1">
-                <div className="flex items-center justify-center xl:justify-start pl-20">
-                  {[1, 2, 3, 4, 5].map((step) => {
-                    const config = stepConfigs[step];
-                    const isActive = step === currentStep;
-                    const isComplete = step < currentStep;
-                    const isClickable = step <= currentStep;
 
-                    return (
-                      <div key={step} className="flex items-center flex-1">
-                        <div className="flex flex-col items-center">
-                          <div
-                            onClick={() => isClickable && jumpToStep(step)}
-                            className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
-                              isActive
-                                ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110 cursor-default"
-                                : isComplete
-                                  ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
-                                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed"
-                            }`}
-                          >
-                            {isComplete ? (
-                              <Check className="w-5 h-5" />
-                            ) : (
-                              <span className="font-bold">{step}</span>
-                            )}
-                            {isActive && (
-                              <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
-                            )}
+              {/* Fixed Stepper - Simple Equal Spacing */}
+              <div className="w-full">
+                <div className="flex justify-center">
+                  <div className="flex items-center w-full max-w-3xl">
+                    {[1, 2, 3, 4, 5].map((step, index) => {
+                      const config = stepConfigs[step];
+                      const isActive = step === currentStep;
+                      const isComplete = step < currentStep;
+                      const isClickable = step <= currentStep;
+
+                      return (
+                        <div key={step} className="flex items-center flex-1">
+                          {/* Step Circle */}
+                          <div className="flex flex-col items-center flex-shrink-0 mx-auto">
+                            <div
+                              onClick={() => isClickable && jumpToStep(step)}
+                              className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+                                isActive
+                                  ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110 cursor-default"
+                                  : isComplete
+                                    ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
+                                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed"
+                              }`}
+                            >
+                              {isComplete ? (
+                                <Check className="w-5 h-5" />
+                              ) : (
+                                <span className="font-bold">{step}</span>
+                              )}
+                              {isActive && (
+                                <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-xs mt-2 font-medium text-center transition-colors whitespace-nowrap ${
+                                isActive
+                                  ? "text-orange-600 dark:text-orange-400"
+                                  : isComplete
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-gray-500"
+                              }`}
+                            >
+                              {config.title}
+                            </span>
                           </div>
-                          <span
-                            className={`text-xs mt-2 font-medium text-center transition-colors ${
-                              isActive
-                                ? "text-orange-600 dark:text-orange-400"
-                                : isComplete
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-gray-500"
-                            }`}
-                          >
-                            {config.title}
-                          </span>
+
+                          {/* Connector Line - Fixed Equal Width */}
+                          {step < totalSteps && (
+                            <div
+                              className={`h-1 min-w-10  rounded-full transition-all duration-300 ${
+                                isComplete
+                                  ? "bg-green-500"
+                                  : "bg-gray-200 dark:bg-gray-600"
+                              }`}
+                            />
+                          )}
                         </div>
-                        {step < totalSteps && (
-                          <div
-                            className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${
-                              isComplete
-                                ? "bg-gradient-to-r from-green-500 to-green-600"
-                                : "bg-gray-200 dark:bg-gray-600"
-                            }`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
-            {/* Draft indicator */}
+
+            {/* Draft indicator remains the same */}
             {hasDraft && !isEditMode && window.__eventFormDraft && (
               <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg shadow-lg animate-in slide-in-from-top-3 duration-500">
                 <div className="flex items-start gap-4">
@@ -1638,7 +1650,7 @@ const EventForm = ({
           {/* Step 2: Client Selection */}
           {currentStep === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-              <div className="bg-white dark:bg-gray-700">
+              <div className="">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -1829,7 +1841,7 @@ const EventForm = ({
           {currentStep === 3 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
               {/* Venue Space Selection */}
-              <div className="bg-white dark:bg-gray-700">
+              <div className="">
                 <div className="flex items-center gap-2 mb-4">
                   <Building className="w-5 h-5 text-purple-500" />
                   <h4 className="font-semibold text-gray-900 dark:text-white">
@@ -2010,7 +2022,7 @@ const EventForm = ({
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Pricing with Discount Type */}
-                <div className="bg-white dark:bg-gray-700">
+                <div className="">
                   <div className="flex items-center gap-2 mb-4">
                     <DollarSign className="w-5 h-5 text-green-500" />
                     <h4 className="font-semibold text-gray-900 dark:text-white">
@@ -2098,7 +2110,7 @@ const EventForm = ({
                 </div>
 
                 {/* Partners with Preview */}
-                <div className="bg-white dark:bg-gray-700">
+                <div className="">
                   <div className="flex items-center gap-2 mb-4">
                     <Users className="w-5 h-5 text-blue-500" />
                     <h4 className="font-semibold text-gray-900 dark:text-white">
@@ -2173,7 +2185,7 @@ const EventForm = ({
               </div>
 
               {/* Price Summary */}
-              <div className="dark:bg-gray-700">
+              <div className="">
                 <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
                   <DollarSign className="w-6 h-6 text-orange-600" />
                   <span className="dark:text-white">Price Summary</span>
@@ -2229,7 +2241,7 @@ const EventForm = ({
                   payments section.
                 </p>
               </div>
-              <div className="bg-white dark:bg-gray-700">
+              <div className="">
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <CreditCard className="w-5 h-5 text-indigo-500" />
@@ -2301,95 +2313,93 @@ const EventForm = ({
 
           {/* Step 5: Review & Notes */}
           {currentStep === 5 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300 dark:text-white">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-                  <div className="p-5">
-                    <h4 className="font-semibold mb-4 flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-blue-500" />
-                      Event Summary
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Title:
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {formData.title || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Type:
-                        </span>
-                        <Badge className="capitalize">
-                          {formData.type || "N/A"}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Status:
-                        </span>
-                        <Badge
-                          variant={
-                            formData.status === "confirmed"
-                              ? "success"
-                              : "warning"
-                          }
-                          className="capitalize"
-                        >
-                          {formData.status}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Date:
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {formData.startDate || "N/A"}{" "}
-                          {formData.startDate !== formData.endDate &&
-                            `to ${formData.endDate}`}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Venue Space:
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {venueSpaces.find(
-                            (s) => s._id === formData.venueSpaceId
-                          )?.name || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-2 dark:border-gray-600">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Client:
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {clients.find((c) => c._id === formData.clientId)
-                            ?.name || "N/A"}
-                        </span>
-                      </div>
-                      {formData.guestCount && (
-                        <div className="flex justify-between py-2 border-t dark:border-gray-600">
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Guests:
-                          </span>
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {formData.guestCount}
-                          </span>
-                        </div>
-                      )}
+                <div className="p-5">
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-blue-500" />
+                    Event Summary
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Title:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formData.title || "N/A"}
+                      </span>
                     </div>
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Type:
+                      </span>
+                      <Badge className="capitalize">
+                        {formData.type || "N/A"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Status:
+                      </span>
+                      <Badge
+                        variant={
+                          formData.status === "confirmed"
+                            ? "success"
+                            : "warning"
+                        }
+                        className="capitalize"
+                      >
+                        {formData.status}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Date:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formData.startDate || "N/A"}{" "}
+                        {formData.startDate !== formData.endDate &&
+                          `to ${formData.endDate}`}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Venue Space:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {venueSpaces.find(
+                          (s) => s._id === formData.venueSpaceId
+                        )?.name || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-2 dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Client:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {clients.find((c) => c._id === formData.clientId)
+                          ?.name || "N/A"}
+                      </span>
+                    </div>
+                    {formData.guestCount && (
+                      <div className="flex justify-between py-2 border-t dark:border-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Guests:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {formData.guestCount}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-700">
-                  <div className="p-5">
-                    <h4 className="font-semibold mb-4 flex items-center gap-2">
-                      <DollarSign className="w-5 h-5 text-green-500" />
-                      Financial Summary
-                    </h4>
+                <div className="p-5">
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-500" />
+                    Financial Summary
+                  </h4>
+                  <div className="space-y-10">
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600 dark:text-gray-400">
@@ -2470,57 +2480,56 @@ const EventForm = ({
                           </>
                         )}
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-l-4 border-purple-500 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-700">
-                <div className="p-5">
-                  <h4 className="font-semibold mb-4 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-purple-500" />
-                    Additional Notes
-                  </h4>
-                  <Textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows={4}
-                    placeholder="Add any additional notes about this event..."
-                    maxLength={1000}
-                    showCount
-                  />
-                </div>
-              </div>
-
-              {/* Auto-generate Invoice Option */}
-              {!isEditMode && (
-                <div className="border-l-4 border-indigo-500 shadow-md hover:shadow-lg transition-shadow bg-indigo-50 dark:bg-gray-700">
-                  <div className="p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <FileCheck className="w-6 h-6 text-indigo-600" />
+                    {/* Auto-generate Invoice Option */}
+                    <div>
+                      {!isEditMode && (
                         <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white">
-                            Auto-Generate Invoice
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            Create a draft invoice for this event automatically
-                          </p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <FileCheck className="w-6 h-6 text-indigo-600" />
+                              <div>
+                                <h4 className="font-semibold text-gray-900 dark:text-white">
+                                  Auto-Generate Invoice
+                                </h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                  Create a draft invoice for this event
+                                  automatically
+                                </p>
+                              </div>
+                            </div>
+                            <Toggle
+                              enabled={formData.createInvoice}
+                              onChange={(val) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  createInvoice: val,
+                                }))
+                              }
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <Toggle
-                        enabled={formData.createInvoice}
-                        onChange={(val) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            createInvoice: val,
-                          }))
-                        }
-                      />
+                      )}
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              <div className="p-5">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-500" />
+                  Additional Notes
+                </h4>
+                <Textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="Add any additional notes about this event..."
+                  maxLength={1000}
+                  showCount
+                  className="w-full"
+                />
+              </div>
             </div>
           )}
         </div>

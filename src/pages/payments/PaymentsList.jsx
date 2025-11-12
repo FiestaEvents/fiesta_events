@@ -8,7 +8,19 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { paymentService } from "../../api/index";
 import { DollarSign } from "../../components/icons/IconComponents";
-import { Plus, Search, Filter, Eye, X, Edit, Trash2, Download, RotateCcw, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  X,
+  Edit,
+  Trash2,
+  Download,
+  RotateCcw,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 import PaymentDetails from "./PaymentDetail";
 import PaymentForm from "./PaymentForm";
 import Badge from "../../components/common/Badge";
@@ -163,14 +175,17 @@ const PaymentsList = () => {
     setIsFormOpen(true);
   }, []);
 
-    const handleViewPayment = useCallback((payment) => {
+  const handleViewPayment = useCallback(
+    (payment) => {
       if (payment && payment._id) {
         navigate(`/payments/${payment._id}`);
       } else {
-        console.error('Invalid payment data:', payment);
-        toast.error('Cannot view payment: Invalid data');
+        console.error("Invalid payment data:", payment);
+        toast.error("Cannot view payment: Invalid data");
       }
-    }, [navigate]);
+    },
+    [navigate]
+  );
 
   const handleRefundClick = useCallback((payment) => {
     setSelectedPayment(payment);
@@ -235,14 +250,14 @@ const PaymentsList = () => {
     }
   }, [payments]);
 
-const formatDate = (date) => {
-  if (!date) return '-';
-  const d = new Date(date);
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+  const formatDate = (date) => {
+    if (!date) return "-";
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   const getClientName = (payment) => {
     if (payment.client?.name) return payment.client.name;
@@ -288,7 +303,11 @@ const formatDate = (date) => {
   };
   stats.netAmount = stats.totalIncome - stats.totalExpenses;
 
-  const hasActiveFilters = search.trim() !== "" || type !== "all" || status !== "all" || method !== "all";
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    type !== "all" ||
+    status !== "all" ||
+    method !== "all";
   const showEmptyState =
     !loading &&
     !error &&
@@ -430,7 +449,9 @@ const formatDate = (date) => {
             <Edit className="h-4 w-4" />
           </button>
           {row.type === "income" &&
-            ["completed", "paid"].includes((row.status || "").toLowerCase()) && (
+            ["completed", "paid"].includes(
+              (row.status || "").toLowerCase()
+            ) && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -461,12 +482,12 @@ const formatDate = (date) => {
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
+        <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             Payments
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Track all income and expense payments.{" "}
+          <p className="text-gray-600 dark:text-gray-400">
+            Track all income and expense payments.
             {hasInitialLoad &&
               totalCount > 0 &&
               `Showing ${payments.length} of ${totalCount} payments`}
@@ -536,16 +557,17 @@ const formatDate = (date) => {
               <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
                 Net Amount
               </div>
-              <div className={`mt-1 text-2xl font-bold ${
-                stats.netAmount >= 0
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}>
+              <div
+                className={`mt-1 text-2xl font-bold ${
+                  stats.netAmount >= 0
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              >
                 {formatCurrency(stats.netAmount)}
               </div>
             </div>
-            <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
-            </div>
+            <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg"></div>
           </div>
         </div>
 
@@ -679,9 +701,7 @@ const formatDate = (date) => {
               {search.trim() && (
                 <Badge color="blue">Search: "{search.trim()}"</Badge>
               )}
-              {type !== "all" && (
-                <Badge color="green">Type: {type}</Badge>
-              )}
+              {type !== "all" && <Badge color="green">Type: {type}</Badge>}
               {status !== "all" && (
                 <Badge color="purple">Status: {status}</Badge>
               )}
@@ -863,9 +883,11 @@ const formatDate = (date) => {
               >
                 Cancel
               </Button>
-              <Button 
-                variant="danger" 
-                onClick={() => handleRefundPayment(selectedPayment._id, refundData)}
+              <Button
+                variant="danger"
+                onClick={() =>
+                  handleRefundPayment(selectedPayment._id, refundData)
+                }
               >
                 Confirm Refund
               </Button>

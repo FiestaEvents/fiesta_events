@@ -329,6 +329,7 @@ const PartnersList = () => {
       sortable: true,
       width: "12%",
       render: (row) => {
+        console.log("row", row);
         if (!row) return <div>-</div>;
         return (
           <Badge color={row.status === "active" ? "green" : "red"}>
@@ -346,7 +347,9 @@ const PartnersList = () => {
         if (!row) return <div>-</div>;
         return (
           <div className="text-sm text-gray-900 dark:text-white">
-            {row.hourlyRate ? `${row.hourlyRate}/hr` : "-"}
+            {row.priceType === "fixed"
+              ? `${row.fixedRate}/TND`
+              : `${row.hourlyRate}/TND`}
           </div>
         );
       },
@@ -400,11 +403,11 @@ const PartnersList = () => {
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
+        <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Partners
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Manage your service partners and vendors.{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
@@ -535,7 +538,7 @@ const PartnersList = () => {
           emptyMessage="No partners found"
           striped
           hoverable
-          pagination={totalPages > 1}
+          pagination={totalPages}
           currentPage={page}
           totalPages={totalPages}
           pageSize={limit}

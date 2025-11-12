@@ -1,36 +1,28 @@
 // ClientDetail.jsx
-import React, { useState, useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useState } from "react";
 import { toast } from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Components
+import Modal, { ConfirmModal } from "../../components/common/Modal";
+import EventDetailModal from "../events/EventDetailModal";
+import ClientForm from "./ClientForm";
+import ActivityTab from "./components/ActivityTab";
 import ClientHeader from "./components/ClientHeader";
 import ClientInfo from "./components/ClientInfo";
 import EventsTab from "./components/EventsTab";
 import PaymentsTab from "./components/PaymentsTab";
-import ActivityTab from "./components/ActivityTab";
-import Modal, { ConfirmModal } from "../../components/common/Modal";
-import ClientForm from "./ClientForm";
-import EventDetailModal from "../events/EventDetailModal";
-import Badge from "../../components/common/Badge";
 // Hooks and Services
-import { useClientDetail } from "../../hooks/useClientDetail";
 import { clientService } from "../../api/index";
-import { formatCurrency } from "../../utils/formatCurrency";
+import { useClientDetail } from "../../hooks/useClientDetail";
 
 const ClientDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
   // Use custom hook for client data
-  const {
-    clientData,
-    events,
-    eventsStats,
-    loading,
-    error,
-    refreshData,
-  } = useClientDetail(id);
+  const { clientData, events, eventsStats, loading, error, refreshData } =
+    useClientDetail(id);
 
   // UI state
   const [activeTab, setActiveTab] = useState("events");
@@ -41,19 +33,18 @@ const ClientDetail = () => {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
   // Utility functions
-const formatDate = useCallback((date) => {
-  if (!date) return "-";
-  try {
-    const d = new Date(date);
-    const day = d.getDate().toString().padStart(2, "0");
-    const month = (d.getMonth() + 1).toString().padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch {
-    return date;
-  }
-}, []);
-
+  const formatDate = useCallback((date) => {
+    if (!date) return "-";
+    try {
+      const d = new Date(date);
+      const day = d.getDate().toString().padStart(2, "0");
+      const month = (d.getMonth() + 1).toString().padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return date;
+    }
+  }, []);
 
   const getStatusLabel = useCallback((status) => {
     const labels = {
@@ -72,17 +63,28 @@ const formatDate = useCallback((date) => {
 
   const getStatusColor = useCallback((status) => {
     const colors = {
-      active: "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
-      inactive: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-      pending: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      confirmed: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      completed: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      cancelled: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+      active:
+        "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
+      inactive:
+        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+      pending:
+        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      confirmed:
+        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      completed:
+        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      cancelled:
+        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
       paid: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      partial: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      overdue: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+      partial:
+        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      overdue:
+        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
     };
-    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100";
+    return (
+      colors[status] ||
+      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+    );
   }, []);
 
   // Event handlers
@@ -91,21 +93,27 @@ const formatDate = useCallback((date) => {
     setIsEventModalOpen(true);
   }, []);
 
-  const handleEditEvent = useCallback((eventId) => {
-    setIsEventModalOpen(false);
-    navigate(`/events/${eventId}/edit`, {
-      state: {
-        returnUrl: `/clients/${id}`,
-      },
-    });
-  }, [navigate, id]);
+  const handleEditEvent = useCallback(
+    (eventId) => {
+      setIsEventModalOpen(false);
+      navigate(`/events/${eventId}/edit`, {
+        state: {
+          returnUrl: `/clients/${id}`,
+        },
+      });
+    },
+    [navigate, id]
+  );
 
-  const handleNavigateToEvent = useCallback((eventId, e) => {
-    if (e && e.stopPropagation) e.stopPropagation();
-    navigate(`/events/${eventId}`, {
-      state: { fromClient: id },
-    });
-  }, [navigate, id]);
+  const handleNavigateToEvent = useCallback(
+    (eventId, e) => {
+      if (e && e.stopPropagation) e.stopPropagation();
+      navigate(`/events/${eventId}`, {
+        state: { fromClient: id },
+      });
+    },
+    [navigate, id]
+  );
 
   const handleEditClient = useCallback(() => {
     if (!id) {
@@ -134,7 +142,10 @@ const formatDate = useCallback((date) => {
       setIsDeleteModalOpen(false);
       navigate("/clients");
     } catch (err) {
-      const errorMessage = err?.response?.data?.message || err?.message || "Failed to delete client";
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to delete client";
       toast.error(errorMessage);
     } finally {
       setDeleteLoading(false);
@@ -158,29 +169,32 @@ const formatDate = useCallback((date) => {
         returnUrl: `/clients/${id}`,
       },
     });
-  }, [navigate, id, clientData]); 
-
-  const handleRecordPayment = useCallback((eventId) => {
-    if (!eventId) {
-      toast.error("Please select an event first");
-      return;
-    }
-
-    if (!id) {
-      toast.error("Cannot record payment: Client ID not found");
-      return;
-    }
-
-    navigate(`/payments/new`, {
-      state: {
-        prefillEvent: {
-          _id: eventId,
-          clientId: id,
-          clientName: clientData?.name,
-        },
-      },
-    });
   }, [navigate, id, clientData]);
+
+  const handleRecordPayment = useCallback(
+    (eventId) => {
+      if (!eventId) {
+        toast.error("Please select an event first");
+        return;
+      }
+
+      if (!id) {
+        toast.error("Cannot record payment: Client ID not found");
+        return;
+      }
+
+      navigate(`/payments/new`, {
+        state: {
+          prefillEvent: {
+            _id: eventId,
+            clientId: id,
+            clientName: clientData?.name,
+          },
+        },
+      });
+    },
+    [navigate, id, clientData]
+  );
 
   // Loading state
   if (loading && !clientData) {
@@ -188,7 +202,9 @@ const formatDate = useCallback((date) => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading client details...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Loading client details...
+          </p>
         </div>
       </div>
     );
@@ -245,21 +261,18 @@ const formatDate = useCallback((date) => {
                 getStatusLabel={getStatusLabel}
               />
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-600 dark:border-gray-800">
-                <ClientInfo
-                  client={clientData}
-                  formatDate={formatDate}
-                />
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800">
+                <ClientInfo client={clientData} formatDate={formatDate} />
               </div>
             </div>
           </div>
 
           {/* Right Column - Tabs */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-600 dark:border-gray-800">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
               <div className="border-b border-gray-200 dark:border-orange-800">
                 <nav className="flex -mb-px">
-                  {["events", "payments", "activity"].map((tab) => (
+                  {["activity", "events", "payments"].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -315,8 +328,17 @@ const formatDate = useCallback((date) => {
       </div>
 
       {/* Modals */}
-      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Client" size="lg">
-        <ClientForm client={clientData} onSuccess={handleEditSuccess} onCancel={() => setIsEditModalOpen(false)} />
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Client"
+        size="lg"
+      >
+        <ClientForm
+          client={clientData}
+          onSuccess={handleEditSuccess}
+          onCancel={() => setIsEditModalOpen(false)}
+        />
       </Modal>
 
       <ConfirmModal

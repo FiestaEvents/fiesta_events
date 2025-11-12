@@ -6,28 +6,28 @@ const getInitials = (name = "") =>
   name
     .trim()
     .split(/\s+/)
-    .map(n => n[0])
+    .map((n) => n[0])
     .filter(Boolean)
     .slice(0, 2)
     .join("")
     .toUpperCase();
 
-const ClientHeader = ({ 
-  client, 
-  onBack, 
-  onEdit, 
+const ClientHeader = ({
+  client,
+  onBack,
+  onEdit,
   onDelete,
   getStatusColor,
-  getStatusLabel 
+  getStatusLabel,
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8 dark:bg-gray-600 dark:border-gray-700">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
       {/* Action Buttons */}
       <div className="flex justify-between gap-2 mb-4">
         <div>
           <button
             onClick={onBack}
-            className="flex items-center border border-gray-300 p-1 rounded-lg pr-2 gap-2 text-sm text-gray-600 hover:text-gray-900 transition dark:text-gray-400 dark:hover:text-white"
+            className="flex items-center border border-gray-300 p-1 rounded-lg pr-2 gap-2 text-sm text-gray-600 hover:text-gray-900 transition dark:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Clients
@@ -67,7 +67,9 @@ const ClientHeader = ({
           </p>
         )}
 
-        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border mt-3 ${getStatusColor(client.status)}`}>
+        <span
+          className={`inline-block px-3 py-1 rounded-full text-sm font-medium border mt-3 ${getStatusColor(client.status)}`}
+        >
           {getStatusLabel(client.status)}
         </span>
       </div>
