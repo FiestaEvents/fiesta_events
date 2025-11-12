@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ChevronLeft,
-  ChevronRight,
   Plus,
   Calendar as CalendarIcon,
   Clock,
@@ -11,7 +9,6 @@ import {
   Tag,
   X,
   List,
-  ArrowRight,
   Grid,
   Table,
   Eye,
@@ -19,8 +16,10 @@ import {
   Trash2,
   Search,
   Filter,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { eventService } from "../../api/index";
 import EventForm from "./EventForm";
 import EventDetailModal from "./EventDetailModal";
@@ -29,12 +28,12 @@ import TitleCard from "../../components/common/TitleCard";
 import Badge from "../../components/common/Badge";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import TableComponent from "../../components/common/NewTable";
-import Pagination from "../../components/common/Pagination";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
+import Modal from "../../components/common/Modal";
+import { useToast } from "../../context/ToastContext";
 
 // --- UTILITY FUNCTIONS ---
-
 const getStatusColor = (status) => {
   const colors = {
     draft: "gray",
@@ -47,7 +46,6 @@ const getStatusColor = (status) => {
   return colors[status] || "gray";
 };
 
-// Fixed: Ensure type color mapping returns valid Badge variants
 const getTypeColor = (type) => {
   const colors = {
     wedding: "purple",
@@ -58,15 +56,12 @@ const getTypeColor = (type) => {
     social: "orange",
     other: "gray",
   };
-  // Normalize type to handle various cases and prevent undefined errors
   const normalizedType = type?.toString().toLowerCase().trim() || "other";
   return colors[normalizedType] || "gray";
 };
 
-// Fixed function to get complete Tailwind classes
 const getTypeClasses = (type) => {
   const normalizedType = type?.toLowerCase() || "other";
-
   const classes = {
     wedding:
       "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-800",
@@ -83,7 +78,6 @@ const getTypeClasses = (type) => {
     other:
       "bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800",
   };
-
   return classes[normalizedType] || classes.other;
 };
 
@@ -96,7 +90,6 @@ const formatTime = (dateString) => {
   });
 };
 
-// Short: "10 Nov"
 const formatDateShort = (dateString) => {
   if (!dateString) return "";
   const d = new Date(dateString);
@@ -105,7 +98,6 @@ const formatDateShort = (dateString) => {
   return `${day} ${month}`;
 };
 
-// Long: "Monday, 10 November 2025"
 const formatDateLong = (dateString) => {
   if (!dateString) return "";
   const d = new Date(dateString);
@@ -116,7 +108,6 @@ const formatDateLong = (dateString) => {
   return `${weekday}, ${day} ${month} ${year}`;
 };
 
-// Date + Time: "10 Nov 2025, 14:30"
 const formatDateTime = (dateString) => {
   if (!dateString) return "";
   const d = new Date(dateString);
@@ -126,126 +117,6 @@ const formatDateTime = (dateString) => {
   const hours = d.getHours().toString().padStart(2, "0");
   const minutes = d.getMinutes().toString().padStart(2, "0");
   return `${day} ${month} ${year}, ${hours}:${minutes}`;
-};
-
-// --- EVENT LIST COMPONENT ---
-const EventListComponent = ({
-  events,
-  onEventClick,
-  isLoading,
-  onViewAll,
-  title = "Upcoming Events",
-  showViewAll = false,
-}) => {
-  const displayedEvents = events.slice(0, 100);
-
-  return (
-    <TitleCard
-      padding="none"
-      title={
-        <div className="flex items-center justify-between p-5">
-          <span>{title}</span>
-          {showViewAll && events.length > 10 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onViewAll}
-              className="text-xs"
-            >
-              View All
-              <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
-          )}
-        </div>
-      }
-    >
-      {isLoading ? (
-        <div className="flex items-center justify-center py-6">
-          <LoadingSpinner size="md" />
-        </div>
-      ) : displayedEvents.length > 0 ? (
-        <div className="space-y-3 p-5 overflow-y-auto max-h-[885px]">
-          {displayedEvents.map((event) => (
-            <div
-              key={event.id || event._id}
-              onClick={() => onEventClick(event)}
-              className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h4 className="font-semibold text-gray-900 dark:text-white text-sm flex-1 mr-2 line-clamp-2">
-                  {event.title}
-                </h4>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <Badge
-                    variant={getStatusColor(event.status)}
-                    className="text-xs"
-                  >
-                    {event.status}
-                  </Badge>
-                  {event.type && (
-                    <Badge variant={getTypeColor(event.type)} className="text-xs">
-                      {event.type}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                  <CalendarIcon className="w-3 h-3" />
-                  {formatDateTime(event.startDate)}
-                </div>
-
-                {event.client && (
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <Users className="w-3 h-3" />
-                    {event.client.name || "Unknown Client"}
-                  </div>
-                )}
-
-                {event.guestCount && (
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <MapPin className="w-3 h-3" />
-                    {event.guestCount} guests
-                  </div>
-                )}
-
-                {event.venueFee && (
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <Tag className="w-3 h-3" />${event.venueFee}
-                  </div>
-                )}
-              </div>
-
-              {event.description && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
-                  {event.description}
-                </p>
-              )}
-            </div>
-          ))}
-
-          {events.length > 10 && (
-            <div className="text-center pt-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Showing 10 of {events.length} events
-              </p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <List className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            No Events
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 text-xs">
-            There are no upcoming events scheduled.
-          </p>
-        </div>
-      )}
-    </TitleCard>
-  );
 };
 
 // --- DATE EVENTS MODAL COMPONENT ---
@@ -258,7 +129,6 @@ const DateEventsModal = ({
   onCreateEvent,
 }) => {
   if (!isOpen || !selectedDate) return null;
-
   const dateEvents = events.filter((event) => {
     const eventDate = new Date(event.startDate);
     return (
@@ -267,7 +137,6 @@ const DateEventsModal = ({
       eventDate.getFullYear() === selectedDate.getFullYear()
     );
   });
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full">
@@ -288,7 +157,6 @@ const DateEventsModal = ({
             <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
-
         {/* Content */}
         <div className="p-6">
           {dateEvents.length > 0 ? (
@@ -304,10 +172,7 @@ const DateEventsModal = ({
                       {event.title}
                     </h3>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      <Badge
-                        variant={getStatusColor(event.status)}
-                        className="text-xs"
-                      >
+                      <Badge variant={getStatusColor(event.status)} className="text-xs">
                         {event.status}
                       </Badge>
                       {event.type && (
@@ -317,28 +182,24 @@ const DateEventsModal = ({
                       )}
                     </div>
                   </div>
-
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <Clock className="w-4 h-4" />
                       {formatTime(event.startDate)}
                       {event.endDate && ` - ${formatTime(event.endDate)}`}
                     </div>
-
                     {event.client && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Users className="w-4 h-4" />
                         Client: {event.client.name || "Unknown"}
                       </div>
                     )}
-
                     {event.guestCount && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <MapPin className="w-4 h-4" />
                         {event.guestCount} guests
                       </div>
                     )}
-
                     {event.description && (
                       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                         {event.description}
@@ -359,7 +220,6 @@ const DateEventsModal = ({
               </p>
             </div>
           )}
-
           {/* Create Event Button */}
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <Button
@@ -378,73 +238,72 @@ const DateEventsModal = ({
   );
 };
 
-// --- MAIN CALENDAR COMPONENT ---
+// --- MAIN EVENT LIST COMPONENT ---
 const EventList = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo, promise } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [viewMode, setViewMode] = useState("list");
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-
   // Pagination for list view
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-
-  // Modal State
+  // Modal States
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDateEventsModalOpen, setIsDateEventsModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
-  const [editingEventId, setEditingEventId] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [prefilledDate, setPrefilledDate] = useState(null);
-
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    eventId: null,
+    eventName: "",
+    onConfirm: null,
+  });
   // Filter state
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [eventType, setEventType] = useState("all");
   const [dateRange, setDateRange] = useState("all");
 
-  const onEventClick = (event) => {
+  // Event handlers
+  const onEventClick = useCallback((event) => {
     setSelectedEvent(event);
     setIsDetailsModalOpen(true);
     setIsDateEventsModalOpen(false);
-  };
+  }, []);
 
-  const onDateClick = (date) => {
+  const onDateClick = useCallback((date) => {
     setSelectedDate(date);
     setIsDateEventsModalOpen(true);
-  };
+  }, []);
 
-  const onViewAllEvents = () => {
-    navigate("/events");
-  };
-
-  // Fetch all events with filters
+  // Fetch events with filters and view mode awareness
   const fetchAllEvents = useCallback(async () => {
     try {
-      setIsLoading(true);
-
+      setLoading(true);
+      setError(null);
+      const effectivePage = viewMode === "list" ? currentPage : 1;
+      const effectiveLimit = viewMode === "list" ? pageSize : 1000;
       const params = {
-        page: currentPage,
-        limit: pageSize,
+        page: effectivePage,
+        limit: effectiveLimit,
         sort: "startDate",
         ...(search.trim() && { search: search.trim() }),
         ...(status !== "all" && { status }),
-        // Fixed: Ensure type filter is passed correctly to API
         ...(eventType !== "all" && { type: eventType }),
         ...(dateRange !== "all" && { dateRange }),
       };
-
       const response = await eventService.getAll(params);
-
       let eventsData = [];
       let paginationData = {};
-
       if (response?.data?.events) {
         eventsData = response.data.events;
         paginationData = response.data.pagination || {};
@@ -456,46 +315,27 @@ const EventList = () => {
       } else if (Array.isArray(response)) {
         eventsData = response;
       }
-
       // Sort events by start date
       const sortedEvents = eventsData.sort(
         (a, b) => new Date(a.startDate) - new Date(b.startDate)
       );
-
       setEvents(sortedEvents);
-
-      // Filter upcoming events (from today onwards)
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-
-      const upcoming = sortedEvents
-        .filter((event) => {
-          if (!event.startDate) return false;
-          const eventDate = new Date(event.startDate);
-          return (
-            eventDate >= now &&
-            event.status !== "completed" &&
-            event.status !== "cancelled"
-          );
-        })
-        .slice(0, 100);
-
-      setUpcomingEvents(upcoming);
-
-      // Set pagination data
-      setTotalPages(paginationData.pages || paginationData.totalPages || 1);
+      setTotalPages(paginationData.totalPages || paginationData.pages || 1);
       setTotalItems(paginationData.total || eventsData.length);
       setHasInitialLoad(true);
-    } catch (error) {
-      console.error("Failed to load events:", error);
-      toast.error("Failed to load events");
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to load events. Please try again.";
+      setError(errorMessage);
+      showError(errorMessage);
       setEvents([]);
-      setUpcomingEvents([]);
       setHasInitialLoad(true);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [currentPage, pageSize, search, status, eventType, dateRange]);
+  }, [currentPage, pageSize, search, status, eventType, dateRange, viewMode, showError]);
 
   // Combined refresh function
   const refreshAllData = useCallback(() => {
@@ -514,17 +354,207 @@ const EventList = () => {
     setEventType("all");
     setDateRange("all");
     setCurrentPage(1);
-  }, []);
+    showInfo("Filters cleared");
+  }, [showInfo]);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    fetchAllEvents();
+    showInfo("Retrying to load events...");
+  }, [fetchAllEvents, showInfo]);
 
   const hasActiveFilters =
-    search.trim() !== "" ||
-    status !== "all" ||
-    eventType !== "all" ||
-    dateRange !== "all";
-  const showEmptyState =
-    !isLoading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
-  const showNoResults =
-    !isLoading && events.length === 0 && hasActiveFilters && hasInitialLoad;
+    search.trim() !== "" || status !== "all" || eventType !== "all" || dateRange !== "all";
+  const showEmptyState = !loading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
+
+  // Delete confirmation handlers
+  const showDeleteConfirmation = useCallback((eventId, eventName = "Event") => {
+    setConfirmationModal({
+      isOpen: true,
+      eventId,
+      eventName,
+      onConfirm: () => handleDeleteConfirm(eventId, eventName),
+    });
+  }, []);
+
+  const closeConfirmationModal = useCallback(() => {
+    setConfirmationModal({
+      isOpen: false,
+      eventId: null,
+      eventName: "",
+      onConfirm: null,
+    });
+  }, []);
+
+  const handleDeleteConfirm = useCallback(
+    async (eventId, eventName = "Event") => {
+      if (!eventId) {
+        showError("Invalid event ID");
+        return;
+      }
+      try {
+        await promise(
+          eventService.delete(eventId),
+          {
+            loading: `Deleting ${eventName}...`,
+            success: `${eventName} deleted successfully`,
+            error: `Failed to delete ${eventName}`,
+          }
+        );
+        fetchAllEvents();
+        if (selectedEvent?._id === eventId) {
+          setSelectedEvent(null);
+          setIsDetailsModalOpen(false);
+        }
+        closeConfirmationModal();
+      } catch (err) {
+        console.error("Delete event error:", err);
+        closeConfirmationModal();
+      }
+    },
+    [fetchAllEvents, selectedEvent, promise, showError, closeConfirmationModal]
+  );
+
+  const handleDeleteEvent = useCallback(
+    (eventId, eventName = "Event") => {
+      showDeleteConfirmation(eventId, eventName);
+    },
+    [showDeleteConfirmation]
+  );
+
+  const handleCreateEvent = useCallback((date = null) => {
+    setSelectedEvent(null);
+    setPrefilledDate(date);
+    setShowEventModal(true);
+    setIsDateEventsModalOpen(false);
+  }, []);
+
+  const handleEditEvent = useCallback((event) => {
+    setSelectedEvent(event);
+    setShowEventModal(true);
+    setIsDetailsModalOpen(false);
+  }, []);
+
+  const handleFormSuccess = useCallback(() => {
+    refreshAllData();
+    setShowEventModal(false);
+    setSelectedEvent(null);
+    setPrefilledDate(null);
+    showSuccess(
+      selectedEvent ? "Event updated successfully" : "Event created successfully"
+    );
+  }, [refreshAllData, selectedEvent, showSuccess]);
+
+  const handleFormClose = useCallback(() => {
+    setShowEventModal(false);
+    setSelectedEvent(null);
+    setPrefilledDate(null);
+  }, []);
+
+  const handleDateEventsModalClose = useCallback(() => {
+    setIsDateEventsModalOpen(false);
+    setSelectedDate(null);
+  }, []);
+
+  // Calendar calculations
+  const { daysInMonth, startingDayOfWeek } = useMemo(() => {
+    const date = currentDate;
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    return { daysInMonth, startingDayOfWeek };
+  }, [currentDate]);
+
+  const getEventsForDate = useCallback(
+    (date) => {
+      if (!date) return [];
+      return events
+        .filter((event) => {
+          if (!event.startDate) return false;
+          const eventDate = new Date(event.startDate);
+          return (
+            eventDate.getDate() === date.getDate() &&
+            eventDate.getMonth() === date.getMonth() &&
+            eventDate.getFullYear() === date.getFullYear()
+          );
+        })
+        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    },
+    [events]
+  );
+
+  // Navigation handlers
+  const previousMonth = useCallback(() => {
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    );
+  }, [currentDate]);
+
+  const nextMonth = useCallback(() => {
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+    );
+  }, [currentDate]);
+
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedDate(today);
+  }, []);
+
+  const formatMonthYear = (date) => {
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const isToday = useCallback((date) => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  }, []);
+
+  const isSelectedDate = useCallback((date) => {
+    if (!selectedDate) return false;
+    return (
+      date.getDate() === selectedDate.getDate() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getFullYear() === selectedDate.getFullYear()
+    );
+  }, [selectedDate]);
+
+  const calendarDays = useMemo(() => {
+    const days = [];
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(
+        new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+      );
+    }
+    return days;
+  }, [currentDate, daysInMonth, startingDayOfWeek]);
+
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // Event type colors for legend
+  const eventTypeColors = [
+    { type: "Wedding", color: "bg-purple-500" },
+    { type: "Corporate", color: "bg-blue-500" },
+    { type: "Birthday", color: "bg-pink-500" },
+    { type: "Conference", color: "bg-green-500" },
+    { type: "Party/Social", color: "bg-orange-500" },
+    { type: "Other", color: "bg-gray-500" },
+  ];
 
   // Table columns for list view
   const tableColumns = [
@@ -593,7 +623,7 @@ const EventList = () => {
     {
       header: "Actions",
       accessor: "actions",
-      width: "10%", // Increased width to accommodate two icons
+      width: "10%",
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
@@ -607,157 +637,29 @@ const EventList = () => {
           >
             <Eye className="h-4 w-4" />
           </button>
-          {/* Added Edit Event Icon */}
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleEditEvent(row._id);
+              handleEditEvent(row);
             }}
             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
             title="Edit Event"
           >
             <Edit className="h-4 w-4" />
           </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteEvent(row._id, row.title || "Event");
+            }}
+            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+            title="Delete Event"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
       ),
     },
-  ];
-
-  // Calendar grid calculations
-  const { daysInMonth, startingDayOfWeek } = useMemo(() => {
-    const date = currentDate;
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    return { daysInMonth, startingDayOfWeek };
-  }, [currentDate]);
-
-  const getEventsForDate = useCallback(
-    (date) => {
-      if (!date) return [];
-
-      return events
-        .filter((event) => {
-          if (!event.startDate) return false;
-          const eventDate = new Date(event.startDate);
-          return (
-            eventDate.getDate() === date.getDate() &&
-            eventDate.getMonth() === date.getMonth() &&
-            eventDate.getFullYear() === date.getFullYear()
-          );
-        })
-        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-    },
-    [events]
-  );
-
-  // Navigation handlers
-  const previousMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    );
-  };
-
-  const nextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    );
-  };
-
-  const goToToday = () => {
-    const today = new Date();
-    setCurrentDate(today);
-    setSelectedDate(today);
-  };
-
-  const handleCreateEvent = (date = null) => {
-    setEditingEventId(null);
-    setPrefilledDate(date);
-    setShowEventModal(true);
-    setIsDateEventsModalOpen(false);
-  };
-
-  const handleEditEvent = (eventId) => {
-    setEditingEventId(eventId);
-    setPrefilledDate(null);
-    setShowEventModal(true);
-    setIsDetailsModalOpen(false);
-  };
-
-  const handleFormSuccess = () => {
-    refreshAllData();
-    setShowEventModal(false);
-    setEditingEventId(null);
-    setPrefilledDate(null);
-    toast.success(
-      editingEventId
-        ? "Event updated successfully"
-        : "Event created successfully"
-    );
-  };
-
-  const handleFormClose = () => {
-    setShowEventModal(false);
-    setEditingEventId(null);
-    setPrefilledDate(null);
-  };
-
-  const handleDateEventsModalClose = () => {
-    setIsDateEventsModalOpen(false);
-    setSelectedDate(null);
-  };
-
-  const formatMonthYear = (date) => {
-    return date.toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const isToday = (date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
-
-  const isSelectedDate = (date) => {
-    if (!selectedDate) return false;
-    return (
-      date.getDate() === selectedDate.getDate() &&
-      date.getMonth() === selectedDate.getMonth() &&
-      date.getFullYear() === selectedDate.getFullYear()
-    );
-  };
-
-  const calendarDays = useMemo(() => {
-    const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(
-        new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-      );
-    }
-    return days;
-  }, [currentDate, daysInMonth, startingDayOfWeek]);
-
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  // Event type colors for legend
-  const eventTypeColors = [
-    { type: "Wedding", color: "bg-purple-500" },
-    { type: "Corporate", color: "bg-blue-500" },
-    { type: "Birthday", color: "bg-pink-500" },
-    { type: "Conference", color: "bg-green-500" },
-    { type: "Party/Social", color: "bg-orange-500" },
-    { type: "Other", color: "bg-gray-500" },
   ];
 
   return (
@@ -770,7 +672,6 @@ const EventList = () => {
         onEdit={handleEditEvent}
         refreshData={refreshAllData}
       />
-
       {/* Date Events Modal */}
       <DateEventsModal
         isOpen={isDateEventsModalOpen}
@@ -780,18 +681,16 @@ const EventList = () => {
         onEventClick={onEventClick}
         onCreateEvent={handleCreateEvent}
       />
-
       {/* Event Form Modal */}
       {showEventModal && (
         <EventForm
           isOpen={showEventModal}
           onClose={handleFormClose}
-          eventId={editingEventId}
+          event={selectedEvent}
           onSuccess={handleFormSuccess}
           initialDate={prefilledDate}
         />
       )}
-
       {/* Header */}
       <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
         <div>
@@ -806,9 +705,8 @@ const EventList = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* View Mode Toggle - Swapped Order */}
+          {/* View Mode Toggle */}
           <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            {/* List button now first */}
             <button
               onClick={() => setViewMode("list")}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -820,7 +718,6 @@ const EventList = () => {
               <Table className="w-4 h-4" />
               List
             </button>
-            {/* Calendar button now second */}
             <button
               onClick={() => setViewMode("calendar")}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -833,18 +730,28 @@ const EventList = () => {
               Calendar
             </button>
           </div>
-
-          <Button
-            variant="primary"
-            icon={Plus}
-            onClick={() => handleCreateEvent()}
-          >
+          <Button variant="primary" icon={Plus} onClick={() => handleCreateEvent()}>
             <Plus className="h-4 w-4" />
             Create Event
           </Button>
         </div>
       </div>
-
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-red-800 dark:text-red-200 font-medium">
+                Error Loading Events
+              </p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</p>
+            </div>
+            <Button onClick={handleRetry} size="sm" variant="outline">
+              Retry
+            </Button>
+          </div>
+        </div>
+      )}
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
         <div className="p-4 bg-white dark:bg-gray-800 rounded-lg mb-6">
@@ -861,7 +768,6 @@ const EventList = () => {
                 }}
               />
             </div>
-
             <div className="sm:w-48">
               <Select
                 className="dark:bg-[#1f2937] dark:text-white"
@@ -882,7 +788,6 @@ const EventList = () => {
                 ]}
               />
             </div>
-
             <div className="sm:w-48">
               <Select
                 className="dark:bg-[#1f2937] dark:text-white"
@@ -903,7 +808,6 @@ const EventList = () => {
                 ]}
               />
             </div>
-
             <div className="sm:w-48">
               <Select
                 className="dark:bg-[#1f2937] dark:text-white"
@@ -924,7 +828,6 @@ const EventList = () => {
                 ]}
               />
             </div>
-
             {hasActiveFilters && (
               <Button
                 variant="outline"
@@ -936,38 +839,28 @@ const EventList = () => {
               </Button>
             )}
           </div>
-
           {hasActiveFilters && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span>Active filters:</span>
-              {search.trim() && (
-                <Badge color="blue">Search: "{search.trim()}"</Badge>
-              )}
-              {status !== "all" && (
-                <Badge color="purple">Status: {status}</Badge>
-              )}
-              {eventType !== "all" && (
-                <Badge color="green">Type: {eventType}</Badge>
-              )}
-              {dateRange !== "all" && (
-                <Badge color="orange">Date: {dateRange}</Badge>
-              )}
+              {search.trim() && <Badge color="blue">Search: "{search.trim()}"</Badge>}
+              {status !== "all" && <Badge color="purple">Status: {status}</Badge>}
+              {eventType !== "all" && <Badge color="green">Type: {eventType}</Badge>}
+              {dateRange !== "all" && <Badge color="orange">Date: {dateRange}</Badge>}
             </div>
           )}
         </div>
       )}
 
       {/* Loading State */}
-      {isLoading && !hasInitialLoad && (
+      {loading && !hasInitialLoad && (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading events...
-          </p>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">Loading events...</p>
         </div>
       )}
+
       {viewMode === "list" ? (
-        /* LIST VIEW - Now first */
+        /* LIST VIEW */
         <div className="space-y-6">
           <TitleCard className="dark:bg-gray-800">
             <div className="p-6">
@@ -986,7 +879,6 @@ const EventList = () => {
                   </Button>
                 </div>
               )}
-
               {/* Empty State - No events at all */}
               {showEmptyState && (
                 <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1003,13 +895,12 @@ const EventList = () => {
                   </Button>
                 </div>
               )}
-
               {/* Events Table */}
               {!showEmptyState && !showNoResults && (
                 <TableComponent
                   columns={tableColumns}
                   data={events}
-                  loading={isLoading}
+                  loading={loading}
                   emptyMessage="No events found"
                   onRowClick={onEventClick}
                   striped={true}
@@ -1031,7 +922,7 @@ const EventList = () => {
           </TitleCard>
         </div>
       ) : (
-        /* CALENDAR VIEW - Now second */
+        /* CALENDAR VIEW */
         <TitleCard className="dark:bg-gray-800">
           <div className="py-8">
             {/* Calendar Header */}
@@ -1059,7 +950,6 @@ const EventList = () => {
                 </div>
               </div>
             </div>
-
             <div className="flex gap-8">
               {/* Vertical Legend - Left Side */}
               <div className="w-64 flex-shrink-0">
@@ -1070,13 +960,10 @@ const EventList = () => {
                   </h3>
                   <div className="space-y-3">
                     {eventTypeColors.map((item) => {
-                      // Count events by type
                       const eventsByType = events.filter(
                         (event) =>
-                          (event.type || "other").toLowerCase() ===
-                          item.type.toLowerCase()
+                          (event.type || "other").toLowerCase() === item.type.toLowerCase()
                       );
-
                       return (
                         <div
                           key={item.type}
@@ -1097,7 +984,6 @@ const EventList = () => {
                       );
                     })}
                   </div>
-
                   {/* Quick Stats */}
                   <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
@@ -1109,18 +995,14 @@ const EventList = () => {
                           Total Events
                         </span>
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          {
-                            events.filter((event) => {
-                              if (!event.startDate) return false;
-                              const eventDate = new Date(event.startDate);
-                              return (
-                                eventDate.getMonth() ===
-                                  currentDate.getMonth() &&
-                                eventDate.getFullYear() ===
-                                  currentDate.getFullYear()
-                              );
-                            }).length
-                          }
+                          {events.filter((event) => {
+                            if (!event.startDate) return false;
+                            const eventDate = new Date(event.startDate);
+                            return (
+                              eventDate.getMonth() === currentDate.getMonth() &&
+                              eventDate.getFullYear() === currentDate.getFullYear()
+                            );
+                          }).length}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -1128,25 +1010,22 @@ const EventList = () => {
                           Upcoming
                         </span>
                         <span className="font-semibold text-orange-600">
-                          {
-                            events.filter((event) => {
-                              if (!event.startDate) return false;
-                              const eventDate = new Date(event.startDate);
-                              const today = new Date();
-                              today.setHours(0, 0, 0, 0);
-                              return eventDate >= today;
-                            }).length
-                          }
+                          {events.filter((event) => {
+                            if (!event.startDate) return false;
+                            const eventDate = new Date(event.startDate);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            return eventDate >= today;
+                          }).length}
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Calendar Grid - Right Side (Expanded) */}
+              {/* Calendar Grid - Right Side */}
               <div className="flex-1">
-                {isLoading ? (
+                {loading ? (
                   <div className="flex items-center justify-center py-20">
                     <LoadingSpinner size="lg" />
                   </div>
@@ -1163,7 +1042,6 @@ const EventList = () => {
                         </div>
                       ))}
                     </div>
-
                     {/* Calendar days grid */}
                     <div className="grid grid-cols-7 auto-rows-[1fr] min-h-[600px]">
                       {calendarDays.map((date, index) => {
@@ -1175,53 +1053,42 @@ const EventList = () => {
                             />
                           );
                         }
-
                         const dayEvents = getEventsForDate(date);
                         const hasEvents = dayEvents.length > 0;
                         const isTodayDate = isToday(date);
                         const isSelected = isSelectedDate(date);
-                        const isCurrentMonth =
-                          date.getMonth() === currentDate.getMonth();
-
+                        const isCurrentMonth = date.getMonth() === currentDate.getMonth();
                         return (
                           <button
                             key={index}
                             onClick={() => onDateClick(date)}
                             className={`
-                        relative p-3 border-r border-b border-gray-100 dark:border-gray-600 last:border-r-0
-                        transition-all duration-200 text-left group
-                        ${
-                          isTodayDate
-                            ? "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-700"
-                            : isSelected
-                              ? "bg-orange-100/70 dark:bg-orange-900/10 border-orange-300 dark:border-orange-600"
-                              : "bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                        }
-                        ${
-                          !isCurrentMonth
-                            ? "opacity-40 bg-gray-50 dark:bg-gray-800"
-                            : ""
-                        }
-                      `}
+                              relative p-3 border-r border-b border-gray-100 dark:border-gray-600 last:border-r-0
+                              transition-all duration-200 text-left group
+                              ${
+                                isTodayDate
+                                  ? "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-700"
+                                  : isSelected
+                                  ? "bg-orange-100/70 dark:bg-orange-900/10 border-orange-300 dark:border-orange-600"
+                                  : "bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                              }
+                              ${!isCurrentMonth ? "opacity-40 bg-gray-50 dark:bg-gray-800" : ""}
+                            `}
                           >
                             {/* Date number */}
                             <div className="flex items-center justify-between mb-2">
                               <span
                                 className={`
-                            text-sm font-medium
-                            ${
-                              isTodayDate
-                                ? "text-orange-700 dark:text-orange-400"
-                                : isSelected
-                                  ? "text-orange-600 dark:text-orange-300"
-                                  : "text-gray-700 dark:text-gray-300"
-                            }
-                            ${
-                              !isCurrentMonth
-                                ? "text-gray-400 dark:text-gray-500"
-                                : ""
-                            }
-                          `}
+                                  text-sm font-medium
+                                  ${
+                                    isTodayDate
+                                      ? "text-orange-700 dark:text-orange-400"
+                                      : isSelected
+                                      ? "text-orange-600 dark:text-orange-300"
+                                      : "text-gray-700 dark:text-gray-300"
+                                  }
+                                  ${!isCurrentMonth ? "text-gray-400 dark:text-gray-500" : ""}
+                                `}
                               >
                                 {date.getDate()}
                               </span>
@@ -1229,7 +1096,6 @@ const EventList = () => {
                                 <div className="w-2 h-2 bg-orange-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                               )}
                             </div>
-
                             {/* Events */}
                             {hasEvents && (
                               <div className="space-y-1.5">
@@ -1241,11 +1107,11 @@ const EventList = () => {
                                       onEventClick(event);
                                     }}
                                     className={`
-                                ${getTypeClasses(event.type)}
-                                transform group-hover:translate-x-1 transition-transform
-                                cursor-pointer hover:shadow-sm
-                                px-2 py-1 rounded text-[10px] font-medium border
-                              `}
+                                      ${getTypeClasses(event.type)}
+                                      transform group-hover:translate-x-1 transition-transform
+                                      cursor-pointer hover:shadow-sm
+                                      px-2 py-1 rounded text-[10px] font-medium border
+                                    `}
                                     title={`${event.title} (${event.type || "Other"})`}
                                   >
                                     <div className="flex items-center gap-1.5">
@@ -1263,14 +1129,12 @@ const EventList = () => {
                                 )}
                               </div>
                             )}
-
                             {/* Hover effect */}
                             <div className="absolute inset-0 border-2 border-transparent group-hover:border-orange-300 dark:group-hover:border-orange-600 rounded pointer-events-none transition-colors"></div>
                           </button>
                         );
                       })}
                     </div>
-
                     {/* Calendar Footer */}
                     <div className="bg-gray-50 dark:bg-gray-800 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
                       <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
@@ -1285,18 +1149,14 @@ const EventList = () => {
                           </div>
                         </div>
                         <div>
-                          {
-                            events.filter((event) => {
-                              if (!event.startDate) return false;
-                              const eventDate = new Date(event.startDate);
-                              return (
-                                eventDate.getMonth() ===
-                                  currentDate.getMonth() &&
-                                eventDate.getFullYear() ===
-                                  currentDate.getFullYear()
-                              );
-                            }).length
-                          }{" "}
+                          {events.filter((event) => {
+                            if (!event.startDate) return false;
+                            const eventDate = new Date(event.startDate);
+                            return (
+                              eventDate.getMonth() === currentDate.getMonth() &&
+                              eventDate.getFullYear() === currentDate.getFullYear()
+                            );
+                          }).length}{" "}
                           events this month
                         </div>
                       </div>
@@ -1308,6 +1168,50 @@ const EventList = () => {
           </div>
         </TitleCard>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        title="Confirm Deletion"
+        size="md"
+      >
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Delete Event
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to delete <strong>"{confirmationModal.eventName}"</strong>?
+                This action cannot be undone and all associated data will be permanently removed.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmationModal}
+                  className="px-4 py-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmationModal.onConfirm}
+                  className="px-4 py-2 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Event
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
