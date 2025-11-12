@@ -3096,16 +3096,49 @@ export const invoiceService = {
    * @param {string} id - Invoice ID
    * @returns {Promise<Blob>}
    */
-  download: async (id) => {
-    try {
-      const response = await api.get(`/invoices/${id}/download`, {
-        responseType: "blob",
-      });
+download: async (id) => {
+  try {
+    const response = await api.get(`/invoices/${id}/download`, {
+      responseType: 'blob',
+      timeout: 30000, // 30 second timeout
+    });
+    
+    // Check if response is a blob
+    if (response.data instanceof Blob) {
       return response.data;
-    } catch (error) {
-      return handleError(error);
     }
-  },
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Download API error:', error);
+    
+    // Handle blob errors - read the blob to get error message
+    if (error.response?.data instanceof Blob) {
+      try {
+        const errorText = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsText(error.response.data);
+        });
+        
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.message || 'PDF generation failed');
+      } catch (parseError) {
+        throw new Error('Failed to generate PDF');
+      }
+    }
+    
+    // Handle other errors
+    if (error.response?.status === 404) {
+      throw new Error('Invoice not found');
+    } else if (error.response?.status === 500) {
+      throw new Error('Server error generating PDF');
+    } else if (error.code === 'ECONNABORTED') {
+      throw new Error('Request timeout - PDF generation taking too long');
+    }
+    
+    throw new Error(error.message || 'Failed to download invoice');
+  }
+},
 
   /**
    * Mark invoice as paid

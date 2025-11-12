@@ -96,23 +96,33 @@ const ClientDetail = () => {
   const handleEditEvent = useCallback(
     (eventId) => {
       setIsEventModalOpen(false);
-      navigate(`/events/${eventId}/edit`, {
+      navigate(`/events/${eventId}`, {
         state: {
           returnUrl: `/clients/${id}`,
+          prefillClient: {
+            _id: id,
+            name: clientData?.name,
+            email: clientData?.email,
+            phone: clientData?.phone,
+          },
+          fromClient: true,
         },
       });
     },
-    [navigate, id]
+    [navigate, id, clientData]
   );
 
   const handleNavigateToEvent = useCallback(
     (eventId, e) => {
       if (e && e.stopPropagation) e.stopPropagation();
       navigate(`/events/${eventId}`, {
-        state: { fromClient: id },
+        state: { 
+          fromClient: id,
+          clientData: clientData 
+        },
       });
     },
-    [navigate, id]
+    [navigate, id, clientData]
   );
 
   const handleEditClient = useCallback(() => {
@@ -248,27 +258,32 @@ const ClientDetail = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Client Details - Fixed Position */}
+        {/* FIXED: Improved grid layout with better scrolling behavior */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Column - Client Details - Fixed with proper height constraints */}
           <div className="lg:col-span-1">
-            <div className="sticky top-4 space-y-6">
-              <ClientHeader
-                client={clientData}
-                onBack={() => navigate("/clients")}
-                onEdit={handleEditClient}
-                onDelete={() => setIsDeleteModalOpen(true)}
-                getStatusColor={getStatusColor}
-                getStatusLabel={getStatusLabel}
-              />
+            <div className="space-y-6">
+              {/* Make header non-sticky to avoid overlap issues */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
+                <ClientHeader
+                  client={clientData}
+                  onBack={() => navigate("/clients")}
+                  onEdit={handleEditClient}
+                  onDelete={() => setIsDeleteModalOpen(true)}
+                  getStatusColor={getStatusColor}
+                  getStatusLabel={getStatusLabel}
+                />
+              </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800 ">
+              {/* Contact Information with proper height constraints */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800">
                 <ClientInfo client={clientData} formatDate={formatDate} />
               </div>
             </div>
           </div>
 
-          {/* Right Column - Tabs */}
-          <div className="lg:col-span-2">
+          {/* Right Column - Tabs with proper width */}
+          <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
               <div className="border-b border-gray-200 dark:border-orange-800">
                 <nav className="flex -mb-px">

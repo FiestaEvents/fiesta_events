@@ -1293,72 +1293,97 @@ const InvoiceFormPage = () => {
                     </div>
                   </div>
 
-                  <div className="p-6 space-y-6">
-                    {formData.items.map((item, index) => (
-                      <div
-                        key={index}
-                        className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50"
-                      >
-                        <div className="space-y-4">
-                          <Input
-                            label="Description"
-                            value={item.description}
-                            onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                            placeholder="Enter service description"
-                            error={errors[`items[${index}].description`]}
-                          />
+<div className="p-4 space-y-4">
+  {formData.items.map((item, index) => (
+    <div
+      key={index}
+      className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm"
+    >
+      <div className="space-y-4">
+        {/* Description Input */}
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Description
+          </label>
+          <Input
+            value={item.description}
+            onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+            placeholder="Enter service description"
+            error={errors[`items[${index}].description`]}
+            className="w-full"
+          />
+          {errors[`items[${index}].description`] && (
+            <p className="text-red-500 text-xs mt-1">Description is required</p>
+          )}
+        </div>
 
-                          <div className="grid grid-cols-3 gap-4">
-                            <Input
-                              label="Quantity"
-                              type="number"
-                              min="1"
-                              step="1"
-                              value={item.quantity}
-                              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                              error={errors[`items[${index}].quantity`]}
-                            />
-                            <Input
-                              label="Rate"
-                              type="number"
-                              min="0"
-                              step="0.001"
-                              value={item.rate}
-                              onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                              error={errors[`items[${index}].rate`]}
-                            />
-                            <Input
-                              label="Amount"
-                              type="number"
-                              value={item.amount}
-                              disabled
-                              className="bg-gray-100 dark:bg-gray-800"
-                            />
-                          </div>
+        {/* Quantity, Rate, Amount Row */}
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Quantity
+            </label>
+            <Input
+              type="number"
+              min="1"
+              step="1"
+              value={item.quantity}
+              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+              error={errors[`items[${index}].quantity`]}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Rate
+            </label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={item.rate}
+              onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+              error={errors[`items[${index}].rate`]}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Amount
+            </label>
+            <Input
+              type="number"
+              value={item.amount}
+              disabled
+              className="w-full bg-gray-50 dark:bg-gray-700"
+            />
+          </div>
+        </div>
 
-                          <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
-                            <div>
-                              <span className="text-sm text-gray-600 dark:text-gray-400">Total: </span>
-                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                                {formatCurrency(item.amount)}
-                              </span>
-                            </div>
-                            {formData.items.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="danger"
-                                icon={Trash2}
-                                onClick={() => handleRemoveItem(index)}
-                                size="sm"
-                              >
-                                Remove
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+        {/* Item Total and Remove Button */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-600">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Item Total:</span>
+            <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              {formatCurrency(item.amount)}
+            </span>
+          </div>
+          {formData.items.length > 1 && (
+            <Button
+              type="button"
+              variant="danger"
+              icon={Trash2}
+              onClick={() => handleRemoveItem(index)}
+              size="sm"
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
                 </div>
               </div>
 

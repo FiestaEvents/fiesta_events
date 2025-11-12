@@ -662,17 +662,33 @@ const EventList = () => {
         </div>
       ),
     },
-    {
-      header: "Client",
-      accessor: "client",
-      sortable: true,
-      width: "20%",
-      render: (row) => (
+  {
+    header: "Client",
+    accessor: "client",
+    sortable: true,
+    width: "20%",
+    render: (row) => {
+      // Enhanced client name extraction
+      const getClientName = (event) => {
+        if (!event) return 'Unknown Client';
+        
+        // Try different possible client data structures
+        if (event.client?.name) return event.client.name;
+        if (event.clientId?.name) return event.clientId.name;
+        if (event.clientName) return event.clientName;
+        if (typeof event.client === 'string') return event.client;
+        if (typeof event.clientId === 'string') return 'Loading...';
+        
+        return 'Unknown Client';
+      };
+
+      return (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.client?.name || "Unknown Client"}
+          {getClientName(row)}
         </div>
-      ),
+      );
     },
+  },
     {
       header: "Date & Time",
       accessor: "startDate",

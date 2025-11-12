@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
-const Reports = () => {
+const FinanceReports = () => {
   const [reportType, setReportType] = useState("profit-loss");
   const [period, setPeriod] = useState("month");
   const [customRange, setCustomRange] = useState({
@@ -31,78 +31,84 @@ const Reports = () => {
 
   // FIXED: Get date range based on period
   const getDateRange = (period) => {
-    const now = new Date();
+    const endDate = new Date();
     let startDate = new Date();
 
     switch (period) {
       case "week":
-        startDate.setDate(now.getDate() - 7);
+        startDate.setDate(endDate.getDate() - 7);
         break;
       case "month":
-        startDate.setMonth(now.getMonth() - 1);
+        startDate.setMonth(endDate.getMonth() - 1);
         break;
       case "quarter":
-        startDate.setMonth(now.getMonth() - 3);
+        startDate.setMonth(endDate.getMonth() - 3);
         break;
       case "year":
-        startDate.setFullYear(now.getFullYear() - 1);
+        startDate.setFullYear(endDate.getFullYear() - 1);
         break;
       case "last-month":
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        now.setDate(0); // Last day of previous month
+        startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1);
+        endDate.setDate(0); // Last day of previous month
         break;
       case "last-quarter":
-        startDate.setMonth(now.getMonth() - 6);
-        now.setMonth(now.getMonth() - 3);
+        startDate.setMonth(endDate.getMonth() - 6);
+        endDate.setMonth(endDate.getMonth() - 3);
         break;
       case "last-year":
-        startDate = new Date(now.getFullYear() - 1, 0, 1);
-        now.setFullYear(now.getFullYear() - 1);
-        now.setMonth(11);
-        now.setDate(31);
+        startDate = new Date(endDate.getFullYear() - 1, 0, 1);
+        endDate.setFullYear(endDate.getFullYear() - 1);
+        endDate.setMonth(11);
+        endDate.setDate(31);
         break;
       case "custom":
+        if (!customRange.startDate || !customRange.endDate) {
+          toast.error("Please select both start and end dates for custom range");
+          return null;
+        }
         return {
           startDate: customRange.startDate,
           endDate: customRange.endDate,
         };
       default:
-        startDate.setMonth(now.getMonth() - 1);
+        startDate.setMonth(endDate.getMonth() - 1);
     }
 
     return {
-      startDate: startDate.toISOString(),
-      endDate: now.toISOString(),
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
     };
   };
 
-  // FIXED: Generate report using actual API methods
+  // FIXED: Generate report using only available API methods
   const handleGenerateReport = async () => {
     try {
       setIsGenerating(true);
       const dateRange = getDateRange(period);
+      
+      if (!dateRange) {
+        setIsGenerating(false);
+        return;
+      }
 
       let data = null;
 
-      // Call appropriate API based on report type
+      // Call appropriate API based on report type - ONLY AVAILABLE ENDPOINTS
       switch (reportType) {
         case "profit-loss":
-          data = await financeService.getProfitLoss();
+          data = await financeService.getProfitLoss(dateRange);
           break;
         case "cash-flow":
-          data = await financeService.getCashflow();
+          data = await financeService.getCashflow(dateRange);
           break;
         case "expense-breakdown":
-          data = await financeService.getExpensesBreakdown();
+          data = await financeService.getExpensesBreakdown(dateRange);
           break;
         case "revenue-analysis":
-          data = await financeService.getIncomeBreakdown();
+          data = await financeService.getIncomeBreakdown(dateRange);
           break;
         case "tax-summary":
-          data = await financeService.getTaxSummary();
-          break;
-        case "summary":
-          data = await financeService.getSummary(dateRange);
+          data = await financeService.getTaxSummary(dateRange);
           break;
         default:
           throw new Error("Invalid report type");
@@ -113,13 +119,13 @@ const Reports = () => {
       toast.success("Report generated successfully");
     } catch (error) {
       console.error("Error generating report:", error);
-      toast.error(error.message || "Failed to generate report");
+      toast.error(error.response?.data?.error || error.message || "Failed to generate report");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // FIXED: Client-side CSV export
+  // FIXED: Client-side CSV export for available reports only
   const handleExportCSV = () => {
     if (!reportData) {
       toast.error("Please generate a report first");
@@ -130,7 +136,7 @@ const Reports = () => {
       let csvContent = "";
       const timestamp = new Date().toISOString().split("T")[0];
 
-      // Generate CSV based on report type
+      // Generate CSV based on report type - ONLY AVAILABLE ENDPOINTS
       switch (reportType) {
         case "profit-loss":
           csvContent = generateProfitLossCSV(reportData);
@@ -146,9 +152,6 @@ const Reports = () => {
           break;
         case "tax-summary":
           csvContent = generateTaxSummaryCSV(reportData);
-          break;
-        case "summary":
-          csvContent = generateSummaryCSV(reportData);
           break;
         default:
           throw new Error("Invalid report type");
@@ -172,67 +175,125 @@ const Reports = () => {
     }
   };
 
-  // CSV generation helpers
+  // CSV generation helpers for available endpoints
   const generateProfitLossCSV = (data) => {
-    const rows = data?.profitLoss || data || [];
-    let csv = "Period,Income,Expenses,Net Profit\n";
-    rows.forEach((row) => {
-      const period = row.period || row.month || "N/A";
-      const income = row.income || 0;
-      const expenses = row.expenses || 0;
-      const profit = income - expenses;
-      csv += `${period},${income},${expenses},${profit}\n`;
-    });
+    // Handle different response formats from getProfitLoss
+    const revenue = data?.revenue || 0;
+    const expenses = data?.expenses || 0;
+    const profitability = data?.profitability || (revenue - expenses);
+    
+    let csv = "Category,Amount\n";
+    csv += `Total Revenue,${revenue}\n`;
+    csv += `Total Expenses,${expenses}\n`;
+    csv += `Net Profit,${profitability}\n`;
+    
     return csv;
   };
 
   const generateCashFlowCSV = (data) => {
-    const cashflow = data?.cashflow || data || {};
-    let csv = "Category,Amount\n";
-    csv += `Total Inflow,${cashflow.totalInflow || 0}\n`;
-    csv += `Total Outflow,${cashflow.totalOutflow || 0}\n`;
-    csv += `Net Cash Flow,${cashflow.netCashFlow || 0}\n`;
+    const cashFlow = data?.cashFlow || [];
+    const currentBalance = data?.currentBalance || 0;
+    
+    let csv = "Period,Inflow,Outflow,Net Cash Flow\n";
+    
+    if (cashFlow.length > 0) {
+      cashFlow.forEach((flow) => {
+        const period = flow.period || flow.month || "N/A";
+        const inflow = flow.inflow || 0;
+        const outflow = flow.outflow || 0;
+        const net = flow.net || (inflow - outflow);
+        csv += `${period},${inflow},${outflow},${net}\n`;
+      });
+    } else {
+      // Fallback if no time series data
+      csv += `Current Balance,,,${currentBalance}\n`;
+    }
+    
     return csv;
   };
 
   const generateExpenseBreakdownCSV = (data) => {
-    const expenses = data?.expenses || data || [];
-    let csv = "Category,Total Amount\n";
-    expenses.forEach((exp) => {
-      const category = (exp.category || exp._id || "Other").replace(/,/g, " ");
-      csv += `${category},${exp.total || 0}\n`;
+    const breakdown = data?.breakdown || [];
+    const totalExpenses = data?.totalExpenses || 0;
+    
+    let csv = "Category,Amount,Percentage\n";
+    
+    breakdown.forEach((item) => {
+      const category = item.category || item._id || "Other";
+      const amount = item.amount || item.total || 0;
+      const percentage = totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(2) : 0;
+      csv += `${category},${amount},${percentage}%\n`;
     });
+    
+    // Add total row
+    csv += `Total,${totalExpenses},100%\n`;
+    
     return csv;
   };
 
   const generateRevenueAnalysisCSV = (data) => {
-    const income = data?.income || data || [];
-    let csv = "Category,Total Amount\n";
-    income.forEach((inc) => {
-      const category = (inc.category || inc._id || "Other").replace(/,/g, " ");
-      csv += `${category},${inc.total || 0}\n`;
+    const breakdown = data?.breakdown || [];
+    const totalIncome = data?.totalIncome || 0;
+    
+    let csv = "Category,Amount,Percentage\n";
+    
+    breakdown.forEach((item) => {
+      const category = item.category || item._id || "Other";
+      const amount = item.amount || item.total || 0;
+      const percentage = totalIncome > 0 ? ((amount / totalIncome) * 100).toFixed(2) : 0;
+      csv += `${category},${amount},${percentage}%\n`;
     });
+    
+    // Add total row
+    csv += `Total,${totalIncome},100%\n`;
+    
     return csv;
   };
 
   const generateTaxSummaryCSV = (data) => {
-    const taxData = data?.taxSummary || data || {};
-    let csv = "Category,Amount\n";
-    csv += `Total Revenue,${taxData.totalRevenue || 0}\n`;
-    csv += `Total Deductions,${taxData.totalDeductions || 0}\n`;
-    csv += `Taxable Income,${taxData.taxableIncome || 0}\n`;
-    csv += `Estimated Tax,${taxData.estimatedTax || 0}\n`;
+    const year = data?.year || new Date().getFullYear();
+    const totalIncome = data?.totalIncome || 0;
+    const totalExpense = data?.totalExpense || 0;
+    const taxableIncome = data?.taxableIncome || 0;
+    const totalTaxPaid = data?.totalTaxPaid || 0;
+    
+    let csv = "Tax Summary for " + year + "\n\n";
+    csv += "Category,Amount\n";
+    csv += `Total Income,${totalIncome}\n`;
+    csv += `Total Expenses,${totalExpense}\n`;
+    csv += `Taxable Income,${taxableIncome}\n`;
+    csv += `Total Tax Paid,${totalTaxPaid}\n`;
+    
     return csv;
   };
 
   const generateSummaryCSV = (data) => {
     const summary = data?.summary || data || {};
-    let csv = "Metric,Value\n";
-    csv += `Total Income,${summary.totalIncome || 0}\n`;
-    csv += `Total Expenses,${summary.totalExpenses || 0}\n`;
-    csv += `Net Profit,${(summary.totalIncome || 0) - (summary.totalExpenses || 0)}\n`;
-    csv += `Transaction Count,${summary.totalTransactions || 0}\n`;
-    csv += `Average Transaction,${summary.avgTransaction || 0}\n`;
+    const categoryBreakdown = data?.categoryBreakdown || [];
+    const timeSeries = data?.timeSeries || [];
+    
+    let csv = "Financial Summary\n\n";
+    
+    // Summary section
+    csv += "Overview\n";
+    csv += "Metric,Value\n";
+    csv += `Total Income,${summary.totalIncome || summary.income || 0}\n`;
+    csv += `Total Expenses,${summary.totalExpenses || summary.expenses || 0}\n`;
+    csv += `Net Profit,${summary.netProfit || (summary.totalIncome || 0) - (summary.totalExpenses || 0)}\n`;
+    csv += `Transaction Count,${summary.totalTransactions || summary.transactions || 0}\n\n`;
+    
+    // Category breakdown if available
+    if (categoryBreakdown.length > 0) {
+      csv += "Category Breakdown\n";
+      csv += "Category,Amount\n";
+      categoryBreakdown.forEach((item) => {
+        const category = item.category || item._id || "Other";
+        const amount = item.amount || item.total || 0;
+        csv += `${category},${amount}\n`;
+      });
+      csv += "\n";
+    }
+    
     return csv;
   };
 
@@ -243,7 +304,7 @@ const Reports = () => {
     }).format(amount || 0);
   };
 
-  // FIXED: Report types that map to actual API methods
+  // FIXED: Only include report types that have API endpoints
   const reportTypes = [
     {
       id: "profit-loss",
@@ -285,14 +346,6 @@ const Reports = () => {
       bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
       iconColor: "text-yellow-600 dark:text-yellow-400",
     },
-    {
-      id: "summary",
-      name: "Financial Summary",
-      description: "Overall financial overview",
-      icon: BarChart3,
-      bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
-      iconColor: "text-indigo-600 dark:text-indigo-400",
-    },
   ];
 
   return (
@@ -308,7 +361,7 @@ const Reports = () => {
       </div>
 
       {/* API Limitation Notice */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <div className="p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <div>
@@ -317,15 +370,14 @@ const Reports = () => {
             </h4>
             <p className="text-sm text-blue-700 dark:text-blue-400">
               Reports are generated from your financial data and can be
-              previewed on-screen or exported as CSV. PDF and Excel formats
-              require backend support and are not currently available.
+              previewed on-screen or exported as CSV. All reports use actual API endpoints.
             </p>
           </div>
         </div>
       </div>
 
       {/* Report Configuration */}
-      <div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Configure Report
@@ -395,6 +447,7 @@ const Reports = () => {
               icon={Eye}
               onClick={handleGenerateReport}
               loading={isGenerating}
+              disabled={isGenerating}
             >
               {isGenerating ? "Generating..." : "Generate Report"}
             </Button>
@@ -413,7 +466,7 @@ const Reports = () => {
 
       {/* Report Preview */}
       {showPreview && reportData && (
-        <div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -430,46 +483,34 @@ const Reports = () => {
 
             <div className="overflow-x-auto">
               {reportType === "profit-loss" && (
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                        Period
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                        Income
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                        Expenses
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Total Revenue
+                      </p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {formatCurrency(reportData?.revenue || 0)}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Total Expenses
+                      </p>
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                        {formatCurrency(reportData?.expenses || 0)}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                         Net Profit
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    {(reportData?.profitLoss || reportData || []).map(
-                      (row, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {row.period || row.month || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 dark:text-green-400">
-                            {formatCurrency(row.income || 0)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
-                            {formatCurrency(row.expenses || 0)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
-                            {formatCurrency(
-                              (row.income || 0) - (row.expenses || 0)
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
+                      </p>
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {formatCurrency(reportData?.profitability || (reportData?.revenue || 0) - (reportData?.expenses || 0))}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {reportType === "cash-flow" && (
@@ -477,121 +518,231 @@ const Reports = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Inflow
+                        Current Balance
                       </p>
                       <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(
-                          reportData?.cashflow?.totalInflow ||
-                            reportData?.totalInflow ||
-                            0
-                        )}
+                        {formatCurrency(reportData?.currentBalance || 0)}
+                      </p>
+                    </div>
+                  </div>
+                  {reportData?.cashFlow && reportData.cashFlow.length > 0 && (
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            Period
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            Inflow
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            Outflow
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            Net Flow
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                        {reportData.cashFlow.map((flow, index) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                              {flow.period || flow.month || "N/A"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 dark:text-green-400">
+                              {formatCurrency(flow.inflow || 0)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
+                              {formatCurrency(flow.outflow || 0)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
+                              {formatCurrency(flow.net || (flow.inflow || 0) - (flow.outflow || 0))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+
+              {(reportType === "expense-breakdown" || reportType === "revenue-analysis") && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Total {reportType === "expense-breakdown" ? "Expenses" : "Income"}
+                    </p>
+                    <p className={`text-2xl font-bold ${
+                      reportType === "expense-breakdown" 
+                        ? "text-red-600 dark:text-red-400" 
+                        : "text-green-600 dark:text-green-400"
+                    }`}>
+                      {formatCurrency(
+                        reportType === "expense-breakdown" 
+                          ? reportData?.totalExpenses || 0
+                          : reportData?.totalIncome || 0
+                      )}
+                    </p>
+                  </div>
+                  
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Category
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Amount
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Percentage
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                      {(reportData?.breakdown || []).map((item, index) => {
+                        const total = reportType === "expense-breakdown" 
+                          ? reportData?.totalExpenses || 1
+                          : reportData?.totalIncome || 1;
+                        const percentage = ((item.amount || item.total || 0) / total * 100).toFixed(1);
+                        
+                        return (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize">
+                              {(item.category || item._id || "Other").replace(/_/g, " ")}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
+                              {formatCurrency(item.amount || item.total || 0)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
+                              {percentage}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {reportType === "tax-summary" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Total Income
+                      </p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {formatCurrency(reportData?.totalIncome || 0)}
                       </p>
                     </div>
                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Outflow
+                        Total Expenses
                       </p>
                       <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {formatCurrency(
-                          reportData?.cashflow?.totalOutflow ||
-                            reportData?.totalOutflow ||
-                            0
-                        )}
+                        {formatCurrency(reportData?.totalExpense || 0)}
                       </p>
                     </div>
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Net Cash Flow
+                        Taxable Income
                       </p>
                       <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {formatCurrency(
-                          reportData?.cashflow?.netCashFlow ||
-                            reportData?.netCashFlow ||
-                            0
-                        )}
+                        {formatCurrency(reportData?.taxableIncome || 0)}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Total Tax Paid
+                      </p>
+                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                        {formatCurrency(reportData?.totalTaxPaid || 0)}
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {(reportType === "expense-breakdown" ||
-                reportType === "revenue-analysis") && (
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                        Category
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                        Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    {(
-                      reportData?.expenses ||
-                      reportData?.income ||
-                      reportData ||
-                      []
-                    ).map((item, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize">
-                          {(item.category || item._id || "Other").replace(
-                            /_/g,
-                            " "
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency(item.total || 0)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {reportType === "summary" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Total Income
+                      </p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {formatCurrency(reportData?.summary?.totalIncome || reportData?.totalIncome || 0)}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Total Expenses
+                      </p>
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                        {formatCurrency(reportData?.summary?.totalExpenses || reportData?.totalExpenses || 0)}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Net Profit
+                      </p>
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {formatCurrency(
+                          reportData?.summary?.netProfit || 
+                          (reportData?.summary?.totalIncome || reportData?.totalIncome || 0)
+                          (reportData?.summary?.totalExpenses || reportData?.totalExpenses || 0)
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
         </div>
       )}
+        {/* Report Types Grid */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Available Reports
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {reportTypes.map((type) => {
+              const Icon = type.icon;
+              const isSelected = reportType === type.id;
 
-      {/* Report Types Grid */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Available Reports
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reportTypes.map((type) => {
-            const Icon = type.icon;
-            const isSelected = reportType === type.id;
-
-            return (
-              <div
-                key={type.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${
-                  isSelected ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
-                }`}
-                onClick={() => setReportType(type.id)}
-              >
-                <div className="p-6">
-                  <div className={`p-3 ${type.bgColor} rounded-lg w-fit mb-4`}>
-                    <Icon className={`w-6 h-6 ${type.iconColor}`} />
+              return (
+                <div
+                  key={type.id}
+                  className={`cursor-pointer transition-all hover:shadow-lg border rounded-lg ${
+                    isSelected 
+                      ? "ring-2 ring-blue-500 dark:ring-blue-400 border-blue-300 dark:border-blue-600" 
+                      : "border-gray-200 dark:border-gray-700"
+                  }`}
+                  onClick={() => setReportType(type.id)}
+                >
+                  <div className="p-6">
+                    <div className={`p-3 ${type.bgColor} rounded-lg w-fit mb-4`}>
+                      <Icon className={`w-6 h-6 ${type.iconColor}`} />
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      {type.name}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {type.description}
+                    </p>
                   </div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    {type.name}
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {type.description}
-                  </p>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Quick Reports */}
-      <div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Quick Reports
@@ -659,4 +810,4 @@ const Reports = () => {
   );
 };
 
-export default Reports;
+export default FinanceReports;

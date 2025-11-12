@@ -463,37 +463,92 @@ const InvoicesPage = () => {
     }
   };
 
-  const handleDownloadInvoice = async (invoice) => {
-    if (!invoice || !invoice._id) {
-      showError("Invalid invoice data");
-      return;
+const handleDownloadInvoice = async (invoice) => {
+  if (!invoice || !invoice._id) {
+    showError("Invalid invoice data");
+    return;
+  }
+
+  try {
+    // Show loading state
+    showInfo("Generating PDF... Please wait");
+
+    console.log("Starting download for invoice:", invoice._id);
+    
+    const blob = await invoiceService.download(invoice._id);
+    
+    console.log("Received blob:", blob);
+    
+    // Validate blob
+    if (!blob || !(blob instanceof Blob)) {
+      throw new Error('Invalid file received from server');
     }
 
-    try {
-      const blob = await promise(
-        invoiceService.download(invoice._id),
-        {
-          loading: "Generating PDF...",
-          success: "Invoice downloaded successfully",
-          error: "Failed to download invoice"
-        }
-      );
+    if (blob.size === 0) {
+      throw new Error('Generated PDF is empty');
+    }
 
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `invoice-${invoice.invoiceNumber || "document"}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    // Check if it's actually a PDF
+    if (blob.type && blob.type !== 'application/pdf') {
+      console.warn('Unexpected file type:', blob.type);
+      // Try to read the blob as text to see if it's an error message
+      const text = await blob.text();
+      if (text.includes('error') || text.includes('Error')) {
+        throw new Error('Server returned an error instead of PDF');
+      }
+      // If it's not text error, continue with download
+    }
+
+    // Create filename
+    const invoiceNumber = invoice.invoiceNumber || `INV-${invoice._id.substring(0, 8)}`;
+    const filename = `${invoiceNumber}.pdf`;
+
+    // Download the file
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    setTimeout(() => {
       window.URL.revokeObjectURL(url);
-    } catch (err) {
-      // Error is already handled by the promise toast
-      console.error("Download invoice error:", err);
-    }
-  };
+    }, 1000);
 
+    showSuccess(`Invoice ${invoiceNumber} downloaded successfully`);
+    
+  } catch (err) {
+    console.error("Download invoice error details:", err);
+    
+    let errorMessage = "Failed to download invoice";
+    
+    // Provide specific error messages
+    if (err.message.includes('PDF generation failed')) {
+      errorMessage = "PDF generation service unavailable";
+    } else if (err.message.includes('Server error')) {
+      errorMessage = "Server error while generating PDF";
+    } else if (err.message.includes('timeout')) {
+      errorMessage = "PDF generation timed out. Please try again";
+    } else if (err.message.includes('not found')) {
+      errorMessage = "Invoice not found";
+    } else if (err.message.includes('empty')) {
+      errorMessage = "Generated PDF is empty";
+    } else if (err.message.includes('Server returned an error')) {
+      errorMessage = "PDF generation failed on server";
+    }
+    
+    showError(errorMessage);
+    
+    // If PDF generation fails, offer alternative
+    setTimeout(() => {
+      showAlternativeDownloadOption(invoice);
+    }, 2000);
+  }
+};
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);

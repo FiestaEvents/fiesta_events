@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { financeService } from "../../api/index";
 import Button from "../../components/common/Button";
@@ -44,6 +44,20 @@ const Transactions = () => {
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
+  // FIXED: Proper date formatting function
+  const formatDate = useCallback((date) => {
+    if (!date) return "-";
+    try {
+      const d = new Date(date);
+      const day = d.getDate().toString().padStart(2, "0");
+      const month = (d.getMonth() + 1).toString().padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return date;
+    }
+  }, []);
+
   // Fetch transactions
   const fetchTransactions = async (page = 1) => {
     try {
@@ -61,14 +75,21 @@ const Transactions = () => {
         limit: 10,
       };
 
+      // Remove undefined values
+      Object.keys(params).forEach(key => {
+        if (params[key] === undefined) {
+          delete params[key];
+        }
+      });
+
       const response = await financeService.getAll(params);
 
-      // API service handleResponse returns { finance: [], pagination: {} }
-      const financeData = response?.finance || [];
-      const paginationData = response?.pagination || {
-        page: 1,
+      // FIXED: Handle the response structure properly
+      const financeData = response?.finance || response?.data?.records || [];
+      const paginationData = response?.pagination || response?.data?.pagination || {
+        page: page,
         pages: 1,
-        total: 0,
+        total: financeData.length,
       };
 
       setTransactions(financeData);
@@ -77,13 +98,14 @@ const Transactions = () => {
       console.error("Error fetching transactions:", error);
       toast.error(error.message || "Failed to load transactions");
       setTransactions([]);
+      setPagination({ page: 1, pages: 1, total: 0 });
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTransactions();
+    fetchTransactions(1);
   }, [searchQuery, filters]);
 
   const handleSearch = (e) => {
@@ -114,12 +136,12 @@ const Transactions = () => {
       fetchTransactions(pagination.page);
     } catch (error) {
       console.error("Error deleting transaction:", error);
-      toast.error(error.message || "Failed to delete transaction");
+      toast.error(error.response?.data?.error || error.message || "Failed to delete transaction");
     }
   };
 
-  // FIXED: Client-side CSV export
-  const handleExport = async () => {
+  // FIXED: Client-side CSV export with better error handling
+  const handleExport = () => {
     try {
       if (!transactions || transactions.length === 0) {
         toast.error("No transactions to export");
@@ -131,15 +153,12 @@ const Transactions = () => {
         "Date,Description,Type,Category,Amount,Payment Method,Reference,Status\n";
 
       transactions.forEach((transaction) => {
-        const date = new Date(transaction.date).toLocaleDateString();
+        const date = formatDate(transaction.date);
         const description = (transaction.description || "").replace(/,/g, " ");
         const type = transaction.type || "";
         const category = (transaction.category || "").replace(/_/g, " ");
         const amount = transaction.amount || 0;
-        const paymentMethod = (transaction.paymentMethod || "").replace(
-          /_/g,
-          " "
-        );
+        const paymentMethod = (transaction.paymentMethod || "").replace(/_/g, " ");
         const reference = (transaction.reference || "").replace(/,/g, " ");
         const status = transaction.status || "";
 
@@ -175,21 +194,6 @@ const Transactions = () => {
       currency: "TND",
     }).format(amount || 0);
   };
-
-const formatDate = useCallback((date) => {
-  if (!date) return "-";
-  try {
-    const d = new Date(date);
-    const day = d.getDate().toString().padStart(2, "0");
-    const month = (d.getMonth() + 1).toString().padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch {
-    return date;
-  }
-}, []);
-
-
 
   const columns = [
     {
@@ -234,7 +238,7 @@ const formatDate = useCallback((date) => {
     description: (
       <div>
         <div className="font-medium text-gray-900 dark:text-white">
-          {transaction.description}
+          {transaction.description || "No description"}
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">
           {(transaction.category || "").replace(/_/g, " ")}
@@ -262,7 +266,7 @@ const formatDate = useCallback((date) => {
         }`}
       >
         {transaction.type === "income" ? "+" : "-"}
-        {formatCurrency(transaction.amount)}
+        {formatCurrency(Math.abs(transaction.amount || 0))}
       </div>
     ),
     paymentMethod: (
@@ -313,53 +317,50 @@ const formatDate = useCallback((date) => {
   }));
 
   // Calculate statistics
-  const stats =
-    transactions.length > 0
-      ? [
-          {
-            label: "Total Income",
-            value: formatCurrency(
-              transactions
-                .filter((t) => t.type === "income")
-                .reduce((sum, t) => sum + (t.amount || 0), 0)
-            ),
-            icon: TrendingUp,
-            bgColor: "bg-green-50 dark:bg-green-900/20",
-            iconColor: "text-green-600 dark:text-green-400",
-          },
-          {
-            label: "Total Expenses",
-            value: formatCurrency(
-              transactions
-                .filter((t) => t.type === "expense")
-                .reduce((sum, t) => sum + (t.amount || 0), 0)
-            ),
-            icon: TrendingDown,
-            bgColor: "bg-red-50 dark:bg-red-900/20",
-            iconColor: "text-red-600 dark:text-red-400",
-          },
-          {
-            label: "Net Amount",
-            value: formatCurrency(
-              transactions.reduce((sum, t) => {
-                return t.type === "income"
-                  ? sum + (t.amount || 0)
-                  : sum - (t.amount || 0);
-              }, 0)
-            ),
-            icon: DollarSign,
-            bgColor: "bg-blue-50 dark:bg-blue-900/20",
-            iconColor: "text-blue-600 dark:text-blue-400",
-          },
-          {
-            label: "Total Transactions",
-            value: transactions.length,
-            icon: Wallet,
-            bgColor: "bg-purple-50 dark:bg-purple-900/20",
-            iconColor: "text-purple-600 dark:text-purple-400",
-          },
-        ]
-      : [];
+  const stats = [
+    {
+      label: "Total Income",
+      value: formatCurrency(
+        transactions
+          .filter((t) => t.type === "income")
+          .reduce((sum, t) => sum + (t.amount || 0), 0)
+      ),
+      icon: TrendingUp,
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      iconColor: "text-green-600 dark:text-green-400",
+    },
+    {
+      label: "Total Expenses",
+      value: formatCurrency(
+        transactions
+          .filter((t) => t.type === "expense")
+          .reduce((sum, t) => sum + (t.amount || 0), 0)
+      ),
+      icon: TrendingDown,
+      bgColor: "bg-red-50 dark:bg-red-900/20",
+      iconColor: "text-red-600 dark:text-red-400",
+    },
+    {
+      label: "Net Amount",
+      value: formatCurrency(
+        transactions.reduce((sum, t) => {
+          return t.type === "income"
+            ? sum + (t.amount || 0)
+            : sum - (t.amount || 0);
+        }, 0)
+      ),
+      icon: DollarSign,
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      iconColor: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      label: "Total Transactions",
+      value: transactions.length,
+      icon: Wallet,
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      iconColor: "text-purple-600 dark:text-purple-400",
+    },
+  ];
 
   return (
     <div className="space-y-6 p-6">
@@ -388,12 +389,12 @@ const formatDate = useCallback((date) => {
       </div>
 
       {/* Stats Cards */}
-      {stats.length > 0 && (
+      {transactions.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index}>
+              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -416,11 +417,10 @@ const formatDate = useCallback((date) => {
       )}
 
       {/* Search and Filters */}
-      <div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
-              {/* FIXED: Typo - Input not Inputes */}
               <Input
                 icon={Search}
                 placeholder="Search by description, category, or reference..."
@@ -524,7 +524,7 @@ const formatDate = useCallback((date) => {
       </div>
 
       {/* Transactions Table */}
-      <div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="overflow-x-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
