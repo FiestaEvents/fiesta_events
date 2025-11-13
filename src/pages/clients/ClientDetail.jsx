@@ -1,24 +1,28 @@
-// ClientDetail.jsx
+// ClientDetail.jsx - UPDATED with cleaner prop-based approach
 import { useCallback, useState } from "react";
-import { toast } from "react-hot-toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams,useLocation } from "react-router-dom";
+import { useToast } from "../../hooks/useToast";
 
 // Components
 import Modal, { ConfirmModal } from "../../components/common/Modal";
 import EventDetailModal from "../events/EventDetailModal";
+import EventForm from "../events/EventForm";
 import ClientForm from "./ClientForm";
 import ActivityTab from "./components/ActivityTab";
 import ClientHeader from "./components/ClientHeader";
 import ClientInfo from "./components/ClientInfo";
 import EventsTab from "./components/EventsTab";
 import PaymentsTab from "./components/PaymentsTab";
+
 // Hooks and Services
 import { clientService } from "../../api/index";
 import { useClientDetail } from "../../hooks/useClientDetail";
 
 const ClientDetail = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
+  const { showSuccess, showError, showInfo, promise } = useToast();
 
   // Use custom hook for client data
   const { clientData, events, eventsStats, loading, error, refreshData } =
@@ -31,6 +35,10 @@ const ClientDetail = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  
+  // NEW: EventForm modal state
+  const [isEventFormOpen, setIsEventFormOpen] = useState(false);
+  const [editingEventId, setEditingEventId] = useState(null);
 
   // Utility functions
   const formatDate = useCallback((date) => {
@@ -93,23 +101,14 @@ const ClientDetail = () => {
     setIsEventModalOpen(true);
   }, []);
 
+  // MODIFIED: Open EventForm modal for editing
   const handleEditEvent = useCallback(
     (eventId) => {
       setIsEventModalOpen(false);
-      navigate(`/events/${eventId}`, {
-        state: {
-          returnUrl: `/clients/${id}`,
-          prefillClient: {
-            _id: id,
-            name: clientData?.name,
-            email: clientData?.email,
-            phone: clientData?.phone,
-          },
-          fromClient: true,
-        },
-      });
+      setEditingEventId(eventId);
+      setIsEventFormOpen(true);
     },
-    [navigate, id, clientData]
+    []
   );
 
   const handleNavigateToEvent = useCallback(
@@ -127,69 +126,80 @@ const ClientDetail = () => {
 
   const handleEditClient = useCallback(() => {
     if (!id) {
-      toast.error("Cannot edit client: Client ID not found");
+      showError("Cannot edit client: Client ID not found");
       return;
     }
     setIsEditModalOpen(true);
-  }, [id]);
+  }, [id, showError]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
     await refreshData();
-    toast.success("Client updated successfully");
-  }, [refreshData]);
+    showSuccess("Client updated successfully");
+  }, [refreshData, showSuccess]);
 
   const handleDeleteClient = useCallback(async () => {
     if (!id) {
-      toast.error("Cannot delete client: Client ID not found");
+      showError("Cannot delete client: Client ID not found");
       return;
     }
 
     try {
       setDeleteLoading(true);
-      await clientService.delete(id);
-      toast.success("Client deleted successfully");
+      await promise(
+        clientService.delete(id),
+        {
+          loading: "Deleting client...",
+          success: "Client deleted successfully",
+          error: "Failed to delete client"
+        }
+      );
       setIsDeleteModalOpen(false);
       navigate("/clients");
     } catch (err) {
-      const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to delete client";
-      toast.error(errorMessage);
+      console.error("Delete client error:", err);
+      // Error is handled by the promise toast
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate]);
+  }, [id, navigate, promise, showError]);
 
+  // MODIFIED: Open EventForm modal instead of navigating (simplified with props)
   const handleCreateEvent = useCallback(() => {
     if (!id) {
-      toast.error("Cannot create event: Client ID not found");
+      showError("Cannot create event: Client ID not found");
       return;
     }
 
-    navigate("/events/new", {
-      state: {
-        prefillClient: {
-          _id: id,
-          name: clientData?.name,
-          email: clientData?.email,
-          phone: clientData?.phone,
-        },
-        returnUrl: `/clients/${id}`,
-      },
-    });
-  }, [navigate, id, clientData]);
+    setEditingEventId(null); // Clear any editing state
+    setIsEventFormOpen(true);
+  }, [id, showError]);
+
+  // NEW: Handle EventForm modal close
+  const handleEventFormClose = useCallback(() => {
+    setIsEventFormOpen(false);
+    setEditingEventId(null);
+  }, []);
+
+  // NEW: Handle EventForm success
+  const handleEventFormSuccess = useCallback(async () => {
+    setIsEventFormOpen(false);
+    setEditingEventId(null);
+    
+    // Refresh client data to show new/updated event
+    await refreshData();
+    showSuccess(editingEventId ? "Event updated successfully!" : "Event created successfully!");
+  }, [editingEventId, refreshData, showSuccess]);
 
   const handleRecordPayment = useCallback(
     (eventId) => {
       if (!eventId) {
-        toast.error("Please select an event first");
+        showError("Please select an event first");
         return;
       }
 
       if (!id) {
-        toast.error("Cannot record payment: Client ID not found");
+        showError("Cannot record payment: Client ID not found");
         return;
       }
 
@@ -203,8 +213,13 @@ const ClientDetail = () => {
         },
       });
     },
-    [navigate, id, clientData]
+    [navigate, id, clientData, showError]
   );
+
+  const handleRetry = useCallback(() => {
+    refreshData();
+    showInfo("Retrying to load client details...");
+  }, [refreshData, showInfo]);
 
   // Loading state
   if (loading && !clientData) {
@@ -235,13 +250,13 @@ const ClientDetail = () => {
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => navigate("/clients")}
-                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition "
+                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
               >
                 Back to Clients
               </button>
               {error && (
                 <button
-                  onClick={refreshData}
+                  onClick={handleRetry}
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
                 >
                   Try Again
@@ -258,12 +273,10 @@ const ClientDetail = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-4 py-8">
-        {/* FIXED: Improved grid layout with better scrolling behavior */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Column - Client Details - Fixed with proper height constraints */}
+          {/* Left Column - Client Details */}
           <div className="lg:col-span-1">
             <div className="space-y-6">
-              {/* Make header non-sticky to avoid overlap issues */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
                 <ClientHeader
                   client={clientData}
@@ -275,14 +288,13 @@ const ClientDetail = () => {
                 />
               </div>
 
-              {/* Contact Information with proper height constraints */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800">
                 <ClientInfo client={clientData} formatDate={formatDate} />
               </div>
             </div>
           </div>
 
-          {/* Right Column - Tabs with proper width */}
+          {/* Right Column - Tabs */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
               <div className="border-b border-gray-200 dark:border-orange-800">
@@ -378,6 +390,24 @@ const ClientDetail = () => {
         onEdit={handleEditEvent}
         refreshData={refreshData}
       />
+
+      {/* NEW: EventForm Modal - Passes props directly */}
+      {isEventFormOpen && (
+        <EventForm
+          isOpen={isEventFormOpen}
+          onClose={handleEventFormClose}
+          onSuccess={handleEventFormSuccess}
+          eventId={editingEventId}
+          prefillClientProp={{
+            _id: id,
+            name: clientData?.name,
+            email: clientData?.email,
+            phone: clientData?.phone,
+          }}
+          returnUrlProp={`/clients/${id}`}
+          fromClientProp={true}
+        />
+      )}
     </div>
   );
 };

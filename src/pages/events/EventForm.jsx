@@ -26,6 +26,7 @@ import {
   History,
   FileCheck,
   XIcon,
+  CheckCircle,
 } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -144,7 +145,7 @@ const StickyPriceSummary = ({
 };
 
 // ============================================
-// MAIN EVENT FORM COMPONENT - FIXED
+// MAIN EVENT FORM COMPONENT - ENHANCED
 // ============================================
 const EventForm = ({
   isOpen,
@@ -162,8 +163,15 @@ const EventForm = ({
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
 
+  // Extract navigation state - ENHANCED
+  const prefillClient = location.state?.prefillClient;
+  const prefillPartner = location.state?.prefillPartner;
+  const returnUrl = location.state?.returnUrl;
+  const fromClient = location.state?.fromClient;
+  const fromPartner = location.state?.fromPartner;
+
   // ============================================
-  // INITIALIZATION STATE - CRITICAL FIX
+  // INITIALIZATION STATE
   // ============================================
   const [isInitialized, setIsInitialized] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -223,10 +231,11 @@ const EventForm = ({
   const [clientSearch, setClientSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
   const [prefilledClientData, setPrefilledClientData] = useState(null);
+  const [prefilledPartnerData, setPrefilledPartnerData] = useState(null);
   const [hasDraft, setHasDraft] = useState(false);
 
   // ============================================
-  // CENTRALIZED DATA FETCHING - CRITICAL FIX
+  // CENTRALIZED DATA FETCHING - ENHANCED
   // ============================================
   useEffect(() => {
     let isMounted = true;
@@ -339,13 +348,37 @@ const EventForm = ({
         setExistingEvents(eventsList);
         setDataLoaded(true);
 
-        // Handle prefilled client from navigation state
-        const prefillClient = location.state?.prefillClient;
+        // ============================================
+        // HANDLE PREFILL CLIENT (from Client Details)
+        // ============================================
         if (prefillClient && prefillClient._id && !isEditMode) {
           setPrefilledClientData(prefillClient);
           setSelectedClient(prefillClient._id);
           setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
           toast.success(`Client "${prefillClient.name}" pre-selected`);
+        }
+
+        // ============================================
+        // HANDLE PREFILL PARTNER (from Partner Details)
+        // ============================================
+        if (prefillPartner && prefillPartner._id && !isEditMode) {
+          const partner = partnersList.find(p => p._id === prefillPartner._id);
+          if (partner) {
+            setPrefilledPartnerData(prefillPartner);
+            setFormData((prev) => ({
+              ...prev,
+              partners: [
+                {
+                  partner: partner._id,
+                  partnerName: partner.name,
+                  service: partner.category || partner.serviceType || "General Service",
+                  hourlyRate: partner.hourlyRate || partner.pricing?.hourlyRate || partner.rate || 0,
+                  status: "confirmed",
+                },
+              ],
+            }));
+            toast.success(`Partner "${partner.name}" pre-selected`);
+          }
         }
 
         // Load event data in edit mode
@@ -445,6 +478,7 @@ const EventForm = ({
             startDate: dateString,
             endDate: dateString,
           }));
+          toast.success(`Date ${dateString} pre-selected`);
         }
 
         setIsInitialized(true);
@@ -467,7 +501,7 @@ const EventForm = ({
     return () => {
       isMounted = false;
     };
-  }, []); // Only run once on mount
+  }, [eventId, isEditMode, isInitialized, initialDate, prefillClient, prefillPartner]);
 
   // ============================================
   // AUTO-SAVE DRAFT FUNCTIONALITY
@@ -790,6 +824,8 @@ const EventForm = ({
         ...prev,
         venueSpaceId: value,
         pricing: { ...prev.pricing, basePrice: "" },
+        // Preserve partners when changing venue
+        partners: prev.partners,
       }));
 
       if (errors[name]) {
@@ -1048,7 +1084,7 @@ const EventForm = ({
   };
 
   // ============================================
-  // FORM SUBMISSION - FIXED INVOICE GENERATION
+  // FORM SUBMISSION - ENHANCED
   // ============================================
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1118,16 +1154,14 @@ const EventForm = ({
         }
       }
 
-      // FIXED: Auto-generate invoice if requested
+      // Auto-generate invoice if requested
       if (formData.createInvoice && !isEditMode) {
         try {
           const client = clients.find((c) => c._id === formData.clientId);
           const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
 
-          // Build invoice items
           const invoiceItems = [];
 
-          // Add venue rental item
           if (venuePrice > 0) {
             invoiceItems.push({
               description: `${space?.name || "Venue Space"} Rental - ${formData.title}`,
@@ -1138,7 +1172,6 @@ const EventForm = ({
             });
           }
 
-          // Add partner services
           formData.partners.forEach((p) => {
             const partnerCost = getPartnerCostForHours(p, calculateEventHours());
             if (partnerCost > 0) {
@@ -1152,7 +1185,6 @@ const EventForm = ({
             }
           });
 
-          // Calculate discount amount
           let discountAmount = 0;
           if (formData.pricing.discount && parseFloat(formData.pricing.discount) > 0) {
             if (formData.pricing.discountType === "percentage") {
@@ -1190,8 +1222,7 @@ const EventForm = ({
         }
       }
 
-      const returnUrl = location.state?.returnUrl;
-
+      // ENHANCED: Use returnUrl if available
       if (onSuccess) {
         onSuccess(response);
       } else if (returnUrl) {
@@ -1199,6 +1230,8 @@ const EventForm = ({
       } else {
         navigate("/events");
       }
+
+      handleClose();
     } catch (error) {
       console.error("Error saving event:", error);
       toast.error(
@@ -1210,6 +1243,7 @@ const EventForm = ({
     }
   };
 
+  // ENHANCED: handleClose with returnUrl support
   const handleClose = () => {
     setFormData({
       title: "",
@@ -1241,19 +1275,18 @@ const EventForm = ({
     setCurrentStep(1);
     setSelectedClient(null);
     setPrefilledClientData(null);
+    setPrefilledPartnerData(null);
     setNewClient({ name: "", email: "", phone: "" });
     setSelectedPartner("");
     setClientSearch("");
     setShowClientForm(false);
+
     if (isModal && onClose) {
       onClose();
+    } else if (returnUrl) {
+      navigate(returnUrl);
     } else {
-      const returnUrl = location.state?.returnUrl;
-      if (returnUrl) {
-        navigate(returnUrl);
-      } else {
-        navigate("/events");
-      }
+      navigate("/events");
     }
   };
 
@@ -1572,7 +1605,7 @@ const EventForm = ({
                 )}
 
                 {prefilledClientData && (
-                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900 dark:border-green-700 animate-in slide-in-from-top-2 duration-300">
+                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800 animate-in slide-in-from-top-2 duration-300">
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
                         <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
@@ -1590,6 +1623,12 @@ const EventForm = ({
                           {prefilledClientData.email} •{" "}
                           {prefilledClientData.phone}
                         </p>
+                        {returnUrl && (
+                          <p className="text-xs text-green-500 dark:text-green-600 mt-2 flex items-center gap-1">
+                            <ArrowLeft className="w-3 h-3" />
+                            From: {returnUrl.split('/').slice(-2).join(' / ')}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1612,8 +1651,8 @@ const EventForm = ({
                             onClick={() => handleSelectClient(client._id)}
                             className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 transform ${
                               selectedClient === client._id
-                                ? "bg-orange-50 border-orange-400 shadow-md dark:bg-orange-900 dark:border-orange-500"
-                                : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500"
+                                ? "bg-orange-50 border-orange-400 shadow-md dark:bg-orange-900/20 dark:border-orange-500"
+                                : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -1935,6 +1974,26 @@ const EventForm = ({
                     Service Partners
                   </h4>
                 </div>
+
+                {/* ENHANCED: Show prefilled partner prominently */}
+                {prefilledPartnerData && (
+                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800 animate-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-semibold">Partner Pre-selected</span>
+                    </div>
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      <strong>{prefilledPartnerData.name}</strong> has been automatically added to this event
+                    </p>
+                    {returnUrl && (
+                      <p className="text-xs text-green-500 dark:text-green-600 mt-2 flex items-center gap-1">
+                        <ArrowLeft className="w-3 h-3" />
+                        From: {returnUrl.split('/').slice(-2).join(' / ')}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-3 w-full">
                   <Select
                     label="Select Partner"
@@ -1943,14 +2002,15 @@ const EventForm = ({
                     onChange={(e) => handlePartnerSelect(e.target.value)}
                     options={[
                       { value: "", label: "Select Partner" },
-                      ...partners.map((p) => {
-                        const rate =
-                          p?.hourlyRate ?? p?.pricing?.hourlyRate ?? 0;
-                        return {
-                          value: p?._id || "",
-                          label: `${p?.name || "Partner"} - ${rate} TND/hr`,
-                        };
-                      }),
+                      ...partners
+                        .filter((p) => !formData.partners.some((fp) => fp.partner === p._id))
+                        .map((p) => {
+                          const rate = p?.hourlyRate ?? p?.pricing?.hourlyRate ?? 0;
+                          return {
+                            value: p?._id || "",
+                            label: `${p?.name || "Partner"} - ${rate} TND/hr`,
+                          };
+                        }),
                     ]}
                   />
 
@@ -1962,7 +2022,7 @@ const EventForm = ({
                       {formData.partners.map((partner, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-500 hover:shadow-md transition-shadow"
+                          className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow"
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
@@ -2006,7 +2066,7 @@ const EventForm = ({
                 <span className="dark:text-white">Price Summary</span>
               </h4>
               <div className="grid grid-cols-4 gap-4">
-                <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                   <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                     Venue Price
                   </div>
@@ -2014,7 +2074,7 @@ const EventForm = ({
                     {venuePrice.toFixed(2)} TND
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                   <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                     Partners
                   </div>
@@ -2022,7 +2082,7 @@ const EventForm = ({
                     {partnersTotal.toFixed(2)} TND
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-600 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                   <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                     Discount
                   </div>
@@ -2378,6 +2438,26 @@ const EventForm = ({
                 </div>
               </div>
 
+              {/* ENHANCED: Context indicators */}
+              {prefillClient && (
+                <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  Client pre-selected: <strong>{prefillClient.name}</strong>
+                </p>
+              )}
+              {prefillPartner && (
+                <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  Partner pre-selected: <strong>{prefillPartner.name}</strong>
+                </p>
+              )}
+              {returnUrl && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                  <ArrowLeft className="w-3 h-3" />
+                  Will return to: {returnUrl.split('/').slice(-2).join('/')}
+                </p>
+              )}
+
               {/* Stepper */}
               <div className="w-full">
                 <div className="flex justify-center">
@@ -2518,7 +2598,7 @@ const EventForm = ({
         </div>
       </form>
 
-      {/* Footer */}
+      {/* Footer - ENHANCED: Context-aware button text */}
       <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t-2 border-gray-200 dark:border-gray-600">
         <div className="flex items-center justify-between">
           <div>
@@ -2567,7 +2647,13 @@ const EventForm = ({
                 onClick={handleSubmit}
                 className="hover:scale-105 transition-transform min-w-[140px]"
               >
-                {isEditMode ? "Update Event" : "Create Event"}
+                {isEditMode 
+                  ? "Update Event" 
+                  : fromClient 
+                    ? `Create for ${prefillClient?.name}` 
+                    : fromPartner 
+                      ? `Create with ${prefillPartner?.name}`
+                      : "Create Event"}
               </Button>
             )}
           </div>

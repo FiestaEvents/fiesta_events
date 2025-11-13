@@ -1,191 +1,186 @@
-// components/partners/EventsTab.jsx
-import React from "react";
-import {
-  Calendar,
-  DollarSign,
+import React from 'react';
+import { 
+  Calendar, 
+  MapPin, 
+  DollarSign, 
+  Eye,
   ExternalLink,
-  TrendingUp,
-  Star,
-  Clock,
-  CheckCircle2,
-} from "lucide-react";
+  RefreshCw,
+  Plus,
+  AlertCircle
+} from 'lucide-react';
+import Button from '../../../components/common/Button';
+import EmptyState from '../../../components/common/EmptyState';
 
 const EventsTab = ({
   events,
-  partnerStats,
+  eventsStats,
   loading,
   onRefresh,
   onViewEvent,
   onNavigateToEvent,
   formatDate,
-  formatDateTime,
   getEventStatusColor,
-  formatCurrency,
-  partnerId,
-  partnerData,
+  getStatusLabel
 }) => {
-  // Calculate partner-specific revenue for each event
-  const getPartnerRevenue = (event) => {
-    const partnerData = event.partners?.find((p) => {
-      const partnerIdValue =
-        p.partner?._id?.$oid || p.partner?._id || p.partner;
-      return (
-        partnerIdValue === partnerId || partnerIdValue === partnerData?._id
-      );
-    });
+  const formatCurrency = (amount) => {
+    if (!amount) return '$0.00';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  const getPartnerCost = (event) => {
+    const partnerData = event.partners?.[0]; // Assuming first partner is the current one
     return partnerData?.cost || partnerData?.hourlyRate || 0;
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      {/* Header with Stats */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Event History ({events.length})
+            Event History
           </h3>
-          {loading && (
-            <p className="text-sm text-gray-500 mt-1">Loading events...</p>
-          )}
-        </div>
-      </div>
-
-      {/* Partner Event Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {partnerStats.totalEvents}
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                Total Events
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
-              <CheckCircle2 className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {partnerStats.completedEvents}
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                Completed
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
-              <DollarSign className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(partnerStats.totalRevenue)}
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                Total Revenue
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
-              <Star className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(partnerStats.averageRevenue)}
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                Avg per Event
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {events.length === 0 ? (
-        <div className="text-center py-12">
-          <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600 dark:text-gray-400">
-            This partner hasn't been assigned to any events yet.
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {events?.length || 0} events total
           </p>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {events.map((event) => {
-            const partnerRevenue = getPartnerRevenue(event);
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={RefreshCw}
+            onClick={onRefresh}
+            loading={loading}
+          >
+            Refresh
+          </Button>
+        </div>
+      </div>
 
-            return (
+      {/* Events List */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        {events && events.length > 0 ? (
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            {events.map((event, index) => (
               <div
-                key={event._id}
+                key={event._id || index}
+                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                 onClick={() => onViewEvent(event)}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer dark:border-gray-700 dark:hover:shadow-lg"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
                         {event.title}
                       </h4>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getEventStatusColor(
-                          event.status
-                        )}`}
-                      >
-                        {event.status?.charAt(0).toUpperCase() +
-                          event.status?.slice(1)}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getEventStatusColor(event.status)}`}>
+                        {getStatusLabel(event.status)}
                       </span>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
-                        {formatDateTime(event.startDate)}
+                        <span>{formatDate(event.startDate)}</span>
                       </div>
-                      {event.type && (
+                      
+                      {event.location && (
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs dark:bg-gray-700 dark:text-gray-300">
-                            {event.type}
-                          </span>
+                          <MapPin className="w-4 h-4" />
+                          <span className="truncate">{event.location}</span>
                         </div>
                       )}
-                    </div>
-
-                    {/* Partner-specific revenue */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-600">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Partner Revenue
-                      </div>
-                      <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                        {formatCurrency(partnerRevenue)}
+                      
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        <span>{formatCurrency(getPartnerCost(event))}</span>
                       </div>
                     </div>
+                    
+                    {event.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-3 line-clamp-2">
+                        {event.description}
+                      </p>
+                    )}
                   </div>
-
-                  <button
-                    onClick={(e) => onNavigateToEvent(event._id, e)}
-                    className="ml-2 p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition dark:text-orange-400 dark:hover:bg-orange-900"
-                    title="View Full Event Page"
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                  </button>
+                  
+                  <div className="flex items-center gap-2 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={Eye}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewEvent(event);
+                      }}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      icon={ExternalLink}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigateToEvent(event._id, e);
+                      }}
+                    >
+                      Open
+                    </Button>
+                  </div>
                 </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={Calendar}
+            title="No Events Found"
+            description="This partner hasn't been assigned to any events yet."
+            size="lg"
+          />
+        )}
+      </div>
+
+      {/* Events Summary */}
+      {events && events.length > 0 && (
+        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
+          <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
+            Events Summary
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {eventsStats?.total || events.length}
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">Total Events</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {eventsStats?.completed || events.filter(e => e.status === 'completed').length}
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">Completed</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {eventsStats?.upcoming || events.filter(e => 
+                  ['confirmed', 'pending', 'in-progress'].includes(e.status)
+                ).length}
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">Upcoming</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {formatCurrency(events.reduce((sum, event) => sum + getPartnerCost(event), 0))}
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">Total Revenue</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

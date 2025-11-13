@@ -19,7 +19,7 @@ import Dashboard from "../pages/Dashboard.jsx";
 
 // Events
 import EventsList from "../pages/events/EventsList.jsx";
-import EventDetail from "../pages/events/EventDetailModal.jsx";
+import EventDetail from "../pages/events/EventDetail.jsx";
 import EventForm from "../pages/events/EventForm.jsx";
 
 // Clients
