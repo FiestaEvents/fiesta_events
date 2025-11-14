@@ -8,6 +8,7 @@ import {
   Plus,
   Trash2,
   Users,
+  HelpCircle,
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -218,7 +219,7 @@ const VenueDetailsStep = ({ data, onChange, errors }) => (
         value={data.phone}
         onChange={(e) => onChange({ phone: e.target.value })}
         error={errors.phone}
-        placeholder="+216 XX XXX XXX"
+        placeholder="12345678"
         fullWidth
       />
       <Input
@@ -767,6 +768,86 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
     </div>
   );
 };
+// Password Requirements Tooltip Component
+const PasswordRequirementsTooltip = ({ password, isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  const requirements = [
+    {
+      label: "At least 8 characters",
+      met: password.length >= 8,
+    },
+    {
+      label: "One lowercase letter",
+      met: /[a-z]/.test(password),
+    },
+    {
+      label: "One uppercase letter",
+      met: /[A-Z]/.test(password),
+    },
+    {
+      label: "One number",
+      met: /\d/.test(password),
+    },
+    {
+      label: "One special character",
+      met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    },
+  ];
+
+  return (
+    <div className="absolute z-10 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 mt-2">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="font-semibold text-gray-900">Password Requirements</h4>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <X size={16} />
+        </button>
+      </div>
+      
+      <div className="space-y-2 mb-3">
+        {requirements.map((req, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <div
+              className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                req.met
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200 text-gray-400"
+              }`}
+            >
+              {req.met && <Check size={10} />}
+            </div>
+            <span
+              className={`text-sm ${
+                req.met ? "text-green-600 font-medium" : "text-gray-600"
+              }`}
+            >
+              {req.label}
+            </span>
+          </div>
+        ))}
+      </div>
+      
+      <div className="border-t border-gray-200 pt-3">
+        <p className="text-xs text-blue-600 font-medium mb-1">
+          Allowed special characters:
+        </p>
+        <p className="text-xs text-gray-600 break-words">
+          ! @ # $ % ^ & * ( ) _ + - = [ ] &#123; &#125; ; ' : " \ | , . &lt; &gt; / ?        
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Helper function to detect invalid characters in real-time
+const getInvalidPasswordCharacters = (password) => {
+  if (!password) return [];
+  const invalidChars = password.match(/[^A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g);
+  return invalidChars ? [...new Set(invalidChars)] : [];
+};
 
 // Main Register Component
 const Register = () => {
@@ -777,33 +858,135 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    venueName: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [showPasswordTooltip, setShowPasswordTooltip] = useState(false);
   const { toast } = useToast();
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+    
+    // Update password strength in real-time
+    if (name === 'password') {
+      setPasswordStrength(calculatePasswordStrength(value));
+    }
+  };
+
+  const calculatePasswordStrength = (password) => {
+    if (!password) return 0;
+    
+    let strength = 0;
+    // Length check
+    if (password.length >= 8) strength += 1;
+    // Lowercase check
+    if (/[a-z]/.test(password)) strength += 1;
+    // Uppercase check
+    if (/[A-Z]/.test(password)) strength += 1;
+    // Number check
+    if (/[0-9]/.test(password)) strength += 1;
+    // Special character check - ALL common special characters
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength += 1;
+    
+    return strength;
+  };
+
+  const getPasswordStrengthColor = (strength) => {
+    if (strength <= 2) return 'bg-red-500';
+    if (strength <= 3) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const getPasswordStrengthText = (strength) => {
+    if (strength <= 2) return 'Weak';
+    if (strength <= 3) return 'Medium';
+    return 'Strong';
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Name validation - matches backend: letters and spaces only, 2-50 chars
+    if (!formData.name?.trim()) {
+      newErrors.name = "Name is required";
+    } else if (formData.name.length < 2 || formData.name.length > 50) {
+      newErrors.name = "Name must be between 2 and 50 characters";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      newErrors.name = "Name can only contain letters and spaces";
+    }
+    
+    // Email validation
+    if (!formData.email?.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please provide a valid email";
+    } else if (formData.email.length > 100) {
+      newErrors.email = "Email must be less than 100 characters";
+    }
+    
+    // Enhanced Password validation with specific error messages
+    if (!formData.password?.trim()) {
+      newErrors.password = "Password is required";
+    } else {
+      // Check for invalid characters first
+      const invalidChars = getInvalidPasswordCharacters(formData.password);
+      if (invalidChars.length > 0) {
+        newErrors.password = `Password contains invalid characters: ${invalidChars.join(', ')}. Only letters, numbers, and common special characters are allowed.`;
+      }
+      // Then check for requirements
+      else if (formData.password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+      } else if (formData.password.length > 128) {
+        newErrors.password = "Password must be less than 128 characters";
+      } else if (!/(?=.*[a-z])/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one lowercase letter";
+      } else if (!/(?=.*[A-Z])/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one uppercase letter";
+      } else if (!/(?=.*\d)/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one number";
+      } else if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one special character";
+      }
+    }
+    
+    // Confirm password validation
+    if (!formData.confirmPassword?.trim()) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    // Venue name validation - matches backend
+    if (!formData.venueName?.trim()) {
+      newErrors.venueName = "Venue name is required";
+    } else if (formData.venueName.length < 2 || formData.venueName.length > 100) {
+      newErrors.venueName = "Venue name must be between 2 and 100 characters";
+    } else if (!/^[a-zA-Z0-9\s\-&',.]+$/.test(formData.venueName)) {
+      newErrors.venueName = "Venue name contains invalid characters";
+    }
+
+    return newErrors;
   };
 
   const handleInitialSubmit = async () => {
-    const newErrors = {};
-    if (!formData.name?.trim()) newErrors.name = "Full name is required";
-    if (!formData.email?.trim()) newErrors.email = "Email is required";
-    if (!formData.password?.trim()) newErrors.password = "Password is required";
-    else if (formData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
-    if (!formData.confirmPassword?.trim())
-      newErrors.confirmPassword = "Please confirm your password";
-    else if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match";
-
-    setErrors(newErrors);
+    // Validate all form fields first
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
 
     // If there are validation errors, don't proceed with email verification
-    if (Object.keys(newErrors).length > 0) {
+    if (Object.keys(validationErrors).length > 0) {
+      // Scroll to first error if any
+      const firstErrorField = Object.keys(validationErrors)[0];
+      const element = document.querySelector(`[name="${firstErrorField}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.focus();
+      }
       return;
     }
 
@@ -818,6 +1001,20 @@ const Register = () => {
       setErrors({
         email: error.message || "Email verification failed",
       });
+      
+      // Focus on email field if verification fails
+      const emailField = document.querySelector('[name="email"]');
+      if (emailField) {
+        emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        emailField.focus();
+      }
+    }
+  };
+
+  // Add onKeyPress handler for Enter key
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleInitialSubmit();
     }
   };
 
@@ -825,7 +1022,7 @@ const Register = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       <div className="flex-1 flex items-center justify-center p-0 md:p-4">
         <div className="bg-white w-full h-full md:rounded-2xl md:shadow-lg md:max-w-md md:w-full md:h-auto flex flex-col justify-center">
-          <div className="px-6 py-8 md:px-8 md:py-4 space-y-4">
+          <div className="px-6 py-8 md:px-8 md:py-4 space-y-4" onKeyPress={handleKeyPress}>
             <div className="flex justify-center">
               <div className="w-full flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
                 <img
@@ -864,17 +1061,83 @@ const Register = () => {
                 fullWidth
               />
               <Input
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
+                label="Venue Name"
+                name="venueName"
+                value={formData.venueName}
                 onChange={handleChange}
-                iconRight={showPassword ? EyeOff : Eye}
-                onIconClick={() => setShowPassword(!showPassword)}
-                placeholder="••••••••"
-                error={errors.password}
+                placeholder="Grand Palace Events"
+                error={errors.venueName}
                 fullWidth
               />
+              
+              {/* Password Field with Tooltip */}
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordTooltip(!showPasswordTooltip)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    onMouseEnter={() => setShowPasswordTooltip(true)}
+                    onMouseLeave={() => setShowPasswordTooltip(false)}
+                  >
+                    <HelpCircle size={16} />
+                  </button>
+                </div>
+                
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    iconRight={showPassword ? EyeOff : Eye}
+                    onIconClick={() => setShowPassword(!showPassword)}
+                    placeholder="••••••••"
+                    error={errors.password}
+                    fullWidth
+                  />
+                  
+                  {/* Password Requirements Tooltip */}
+                  <PasswordRequirementsTooltip
+                    password={formData.password}
+                    isOpen={showPasswordTooltip}
+                    onClose={() => setShowPasswordTooltip(false)}
+                  />
+                </div>
+                
+                {/* Password Strength Indicator */}
+                {formData.password && (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">Password strength:</span>
+                      <span className={`text-xs font-medium ${
+                        passwordStrength <= 2 ? 'text-red-500' : 
+                        passwordStrength <= 3 ? 'text-yellow-500' : 'text-green-500'
+                      }`}>
+                        {getPasswordStrengthText(passwordStrength)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div 
+                        className={`h-1.5 rounded-full transition-all duration-300 ${getPasswordStrengthColor(passwordStrength)}`}
+                        style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                      />
+                    </div>
+                    
+                    {/* Show invalid characters if any */}
+                    {getInvalidPasswordCharacters(formData.password).length > 0 && (
+                      <div className="text-xs text-red-500 p-2 bg-red-50 rounded border border-red-200">
+                        <strong>Invalid characters detected:</strong> {getInvalidPasswordCharacters(formData.password).join(', ')}
+                        <div className="mt-1">Please remove these characters or use only allowed special characters.</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <Input
                 label="Confirm Password"
                 type={showConfirmPassword ? "text" : "password"}
@@ -916,5 +1179,6 @@ const Register = () => {
     </div>
   );
 };
+
 
 export default Register;

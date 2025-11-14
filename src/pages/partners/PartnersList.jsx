@@ -20,6 +20,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import PartnerForm from "./PartnerForm";
+import PartnerDetailModal from "./PartnerDetailModal";
 import { useToast } from "../../context/ToastContext";
 
 const PartnersList = () => {
@@ -29,6 +30,7 @@ const PartnersList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPartner, setSelectedPartner] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
@@ -67,7 +69,7 @@ const PartnersList = () => {
     { value: "other", label: "Other" },
   ];
 
-  // Updated fetchPartners function with comprehensive validation
+  // Fetch partners with comprehensive validation
   const fetchPartners = useCallback(async () => {
     try {
       setLoading(true);
@@ -214,6 +216,12 @@ const PartnersList = () => {
       // Refresh the partners list
       fetchPartners();
       
+      // Close detail modal if the deleted partner is currently selected
+      if (selectedPartner?._id === partnerId) {
+        setSelectedPartner(null);
+        setIsDetailModalOpen(false);
+      }
+
       // Close confirmation modal
       closeConfirmationModal();
     } catch (err) {
@@ -221,12 +229,24 @@ const PartnersList = () => {
       console.error("Delete partner error:", err);
       closeConfirmationModal();
     }
-  }, [fetchPartners, promise, showError, closeConfirmationModal]);
+  }, [fetchPartners, selectedPartner, promise, showError, closeConfirmationModal]);
 
   // Updated partner deletion handler
   const handleDeletePartner = useCallback((partnerId, partnerName = "Partner") => {
     showDeleteConfirmation(partnerId, partnerName);
   }, [showDeleteConfirmation]);
+
+  // Handle row click to open detail modal
+  const handleRowClick = useCallback((partner) => {
+    setSelectedPartner(partner);
+    setIsDetailModalOpen(true);
+  }, []);
+
+  // Handle detail modal close
+  const handleDetailModalClose = useCallback(() => {
+    setSelectedPartner(null);
+    setIsDetailModalOpen(false);
+  }, []);
 
   useEffect(() => {
     fetchPartners();
@@ -239,6 +259,7 @@ const PartnersList = () => {
 
   const handleEditPartner = useCallback((partner) => {
     setSelectedPartner(partner);
+    setIsDetailModalOpen(false);
     setIsFormOpen(true);
   }, []);
 
@@ -259,6 +280,11 @@ const PartnersList = () => {
         : "Partner added successfully"
     );
   }, [fetchPartners, selectedPartner, showSuccess]);
+
+  const handleFormClose = useCallback(() => {
+    setSelectedPartner(null);
+    setIsFormOpen(false);
+  }, []);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -392,7 +418,7 @@ const PartnersList = () => {
         if (!row) return <div>-</div>;
         return (
           <div className="text-sm text-gray-900 dark:text-white">
-            {row.hourlyRate ? `${row.hourlyRate}/hr` : "-"}
+            {row.hourlyRate ? `$${row.hourlyRate}/hr` : "-"}
           </div>
         );
       },
@@ -409,7 +435,7 @@ const PartnersList = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleViewPartner(row);
+                handleRowClick(row);
               }}
               className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
               title="View Partner"
@@ -579,6 +605,7 @@ const PartnersList = () => {
           data={partners}
           loading={loading}
           emptyMessage="No partners found"
+          onRowClick={handleRowClick}
           striped
           hoverable
           pagination={totalPages > 1}
@@ -628,27 +655,28 @@ const PartnersList = () => {
         </div>
       )}
 
+      {/* Partner Detail Modal */}
+      <PartnerDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleDetailModalClose}
+        partner={selectedPartner}
+        onEdit={handleEditPartner}
+        refreshData={fetchPartners}
+      />
+
       {/* Add/Edit Form Modal */}
-      {isFormOpen && (
-        <Modal
-          isOpen={isFormOpen}
-          onClose={() => {
-            setSelectedPartner(null);
-            setIsFormOpen(false);
-          }}
-          title={selectedPartner ? "Edit Partner" : "Add New Partner"}
-          size="lg"
-        >
-          <PartnerForm
-            partner={selectedPartner}
-            onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setSelectedPartner(null);
-              setIsFormOpen(false);
-            }}
-          />
-        </Modal>
-      )}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={handleFormClose}
+        title={selectedPartner ? "Edit Partner" : "Add New Partner"}
+        size="lg"
+      >
+        <PartnerForm
+          partner={selectedPartner}
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormClose}
+        />
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal

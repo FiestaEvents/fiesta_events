@@ -153,7 +153,7 @@ const PartnerDetail = () => {
   const handleNavigateToEvent = useCallback(
     (eventId, e) => {
       if (e && e.stopPropagation) e.stopPropagation();
-      navigate(`/events/${eventId}`, {
+      navigate(`/events/${eventId}/detail`, {
         state: { 
           fromPartner: id,
           partnerData: partnerData 

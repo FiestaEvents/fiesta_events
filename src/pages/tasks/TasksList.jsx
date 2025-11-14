@@ -30,7 +30,7 @@ import {
   AlertTriangle,
   Info,
 } from "lucide-react";
-import TaskDetails from "./TaskDetail";
+import TaskDetailModal from "./TaskDetailModal";
 import TaskForm from "./TaskForm";
 import { useToast } from "../../hooks/useToast";
 
@@ -156,6 +156,18 @@ const TasksList = () => {
       onConfirm: null,
       type: "info",
     });
+  }, []);
+
+  // Handle row click to open detail modal
+  const handleRowClick = useCallback((task) => {
+    setSelectedTask(task);
+    setIsDetailModalOpen(true);
+  }, []);
+
+  // Handle detail modal close
+  const handleDetailModalClose = useCallback(() => {
+    setSelectedTask(null);
+    setIsDetailModalOpen(false);
   }, []);
 
   // Archive task (for active tasks)
@@ -291,6 +303,11 @@ const TasksList = () => {
     setSelectedTask(null);
     setIsFormOpen(false);
   }, [fetchTasks]);
+
+  const handleFormClose = useCallback(() => {
+    setSelectedTask(null);
+    setIsFormOpen(false);
+  }, []);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -463,7 +480,7 @@ const TasksList = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleViewTask(row);
+              handleRowClick(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
             title="View Task"
@@ -887,6 +904,7 @@ const TasksList = () => {
                 columns={getColumns()}
                 data={tasks}
                 loading={loading}
+                onRowClick={handleRowClick}
                 pagination={true}
                 currentPage={page}
                 totalPages={totalPages}
@@ -978,7 +996,7 @@ const TasksList = () => {
                       <div
                         key={task._id}
                         className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-md transition-all group"
-                        onClick={() => handleViewTask(task)}
+                        onClick={() => handleRowClick(task)}
                       >
                         <div className="space-y-3">
                           <div className="flex items-start justify-between gap-2">
@@ -1071,40 +1089,27 @@ const TasksList = () => {
       )}
 
       {/* Task Detail Modal */}
-      {isDetailModalOpen && selectedTask && (
-        <Modal
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setSelectedTask(null);
-            setIsDetailModalOpen(false);
-          }}
-          title="Task Details"
-          size="lg"
-        >
-          <div className="p-6">
-            <TaskDetails task={selectedTask} />
-          </div>
-        </Modal>
-      )}
+      <TaskDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleDetailModalClose}
+        task={selectedTask}
+        onEdit={handleEditTask}
+        refreshData={fetchTasks}
+        showArchived={showArchived}
+      />
 
       {/* Add/Edit Form */}
       {isFormOpen && (
         <Modal
           isOpen={isFormOpen}
-          onClose={() => {
-            setSelectedTask(null);
-            setIsFormOpen(false);
-          }}
+          onClose={handleFormClose}
           title={selectedTask ? "Edit Task" : "Create New Task"}
           size="lg"
         >
           <TaskForm
             task={selectedTask}
             onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setSelectedTask(null);
-              setIsFormOpen(false);
-            }}
+            onCancel={handleFormClose}
           />
         </Modal>
       )}

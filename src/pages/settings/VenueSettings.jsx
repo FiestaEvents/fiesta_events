@@ -1264,7 +1264,7 @@ const VenueSettings = () => {
                     name="phone"
                     value={userForm.phone}
                     onChange={handleUserChange}
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="12345678"
                   />
 
                   <Input
@@ -1478,7 +1478,7 @@ const VenueSettings = () => {
                       value={venueForm.contact.phone}
                       onChange={handleVenueChange}
                       error={errors["contact.phone"]}
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="12345678"
                     />
                     <Input
                       label="Email"

@@ -22,7 +22,7 @@ import {
   TrendingDown,
   AlertTriangle,
 } from "lucide-react";
-import PaymentDetails from "./PaymentDetail";
+import PaymentDetailModal from "./PaymentDetailModal";
 import PaymentForm from "./PaymentForm";
 import Badge from "../../components/common/Badge";
 import { useToast } from "../../context/ToastContext";
@@ -182,6 +182,18 @@ const PaymentsList = () => {
     showDeleteConfirmation(paymentId, paymentName);
   }, [showDeleteConfirmation]);
 
+  // Handle row click to open detail modal
+  const handleRowClick = useCallback((payment) => {
+    setSelectedPayment(payment);
+    setIsDetailModalOpen(true);
+  }, []);
+
+  // Handle detail modal close
+  const handleDetailModalClose = useCallback(() => {
+    setSelectedPayment(null);
+    setIsDetailModalOpen(false);
+  }, []);
+
   const handleRefundPayment = useCallback(
     async (paymentId, refundData) => {
       try {
@@ -260,6 +272,11 @@ const PaymentsList = () => {
         : "Payment recorded successfully"
     );
   }, [fetchPayments, selectedPayment, showSuccess]);
+
+  const handleFormClose = useCallback(() => {
+    setSelectedPayment(null);
+    setIsFormOpen(false);
+  }, []);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -496,7 +513,7 @@ const PaymentsList = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleViewPayment(row);
+              handleRowClick(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
             title="View Payment"
@@ -796,7 +813,7 @@ const PaymentsList = () => {
               columns={columns}
               data={payments}
               loading={loading}
-              // Enable pagination
+              onRowClick={handleRowClick}
               pagination={true}
               currentPage={page}
               totalPages={totalPages}
@@ -864,40 +881,26 @@ const PaymentsList = () => {
       )}
 
       {/* Payment Detail Modal */}
-      {isDetailModalOpen && selectedPayment && (
-        <Modal
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setSelectedPayment(null);
-            setIsDetailModalOpen(false);
-          }}
-          title="Payment Details"
-          size="lg"
-        >
-          <div className="p-6">
-            <PaymentDetails payment={selectedPayment} />
-          </div>
-        </Modal>
-      )}
+      <PaymentDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleDetailModalClose}
+        payment={selectedPayment}
+        onEdit={handleEditPayment}
+        refreshData={fetchPayments}
+      />
 
       {/* Add/Edit Form */}
       {isFormOpen && (
         <Modal
           isOpen={isFormOpen}
-          onClose={() => {
-            setSelectedPayment(null);
-            setIsFormOpen(false);
-          }}
+          onClose={handleFormClose}
           title={selectedPayment ? "Edit Payment" : "Record New Payment"}
           size="lg"
         >
           <PaymentForm
             payment={selectedPayment}
             onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setSelectedPayment(null);
-              setIsFormOpen(false);
-            }}
+            onCancel={handleFormClose}
           />
         </Modal>
       )}

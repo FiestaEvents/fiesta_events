@@ -558,7 +558,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                 onChange={handleChange}
                 error={errors.phone}
                 required
-                placeholder="+1 (555) 000-0000"
+                placeholder="12345678"
                 icon={Phone}
                 className="w-full"
               />

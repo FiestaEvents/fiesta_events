@@ -357,7 +357,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
                   <Input
                     label="Phone Number"
-                    placeholder="e.g. +1 (555) 123-4567"
+                    placeholder="e.g. 12345678"
                     {...register("phone", {
                       required: "Phone number is required",
                       pattern: {

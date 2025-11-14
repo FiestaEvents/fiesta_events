@@ -34,7 +34,6 @@ import Pagination from "../../components/common/Pagination";
 import Select from "../../components/common/Select";
 import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
-
 const InvoicesPage = () => {
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo, promise } = useToast();
@@ -47,13 +46,12 @@ const InvoicesPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
@@ -348,14 +346,24 @@ const InvoicesPage = () => {
   const handleCreateInvoice = () => {
     navigate(`/invoices/new?type=${invoiceType}`);
   };
+const handleRowClick = useCallback((invoice) => {
+  setSelectedInvoice(invoice);
+  setIsDetailModalOpen(true);
+}, []);
 
-  const handleEditInvoice = (invoice) => {
-    if (!invoice || !invoice._id) {
-      showError("Invalid invoice data");
-      return;
-    }
-    navigate(`/invoices/${invoice._id}/edit`);
-  };
+const handleDetailModalClose = useCallback(() => {
+  setSelectedInvoice(null);
+  setIsDetailModalOpen(false);
+}, []);
+
+const handleEditInvoice = (invoice) => {
+  if (!invoice || !invoice._id) {
+    showError("Invalid invoice data");
+    return;
+  }
+  setIsDetailModalOpen(false);
+  navigate(`/invoices/${invoice._id}/edit`);
+};
 
   const handleViewInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
@@ -1177,30 +1185,30 @@ const handleDownloadInvoice = async (invoice) => {
       {!loading && hasInitialLoad && invoices.length > 0 && (
         <>
           <div className="overflow-x-auto">
-            <Table
-              columns={columns}
-              data={invoices}
-              loading={loading}
-              emptyMessage={
-                searchTerm || filters.status
-                  ? "No invoices found matching your search."
-                  : `No ${invoiceType} invoices found. Create your first ${invoiceType === "client" ? "invoice" : "bill"} to get started.`
-              }
-              onRowClick={handleViewInvoice}
-              selectable={true}
-              onSelectionChange={setSelectedRows}
-              selectedRows={selectedRows}
-              striped={true}
-              hoverable={true}
-              pagination={true}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              totalItems={totalItems}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setPageSize}
-              pageSizeOptions={[10, 25, 50, 100]}
-            />
+<Table
+  columns={columns}
+  data={invoices}
+  loading={loading}
+  emptyMessage={
+    searchTerm || filters.status
+      ? "No invoices found matching your search."
+      : `No ${invoiceType} invoices found. Create your first ${invoiceType === "client" ? "invoice" : "bill"} to get started.`
+  }
+  onRowClick={handleRowClick} 
+  selectable={true}
+  onSelectionChange={setSelectedRows}
+  selectedRows={selectedRows}
+  striped={true}
+  hoverable={true}
+  pagination={true}
+  currentPage={currentPage}
+  totalPages={totalPages}
+  pageSize={pageSize}
+  totalItems={totalItems}
+  onPageChange={setCurrentPage}
+  onPageSizeChange={setPageSize}
+  pageSizeOptions={[10, 25, 50, 100]}
+/>
           </div>
 
           {/* Pagination */}

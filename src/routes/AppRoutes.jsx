@@ -94,7 +94,7 @@ const AppRoutes = () => {
           {/* Events */}
           <Route path="/events" element={<EventsList />} />
           <Route path="/events/new" element={<EventForm />} />
-          <Route path="/events/:id" element={<EventDetail />} />
+          <Route path="/events/:id/detail" element={<EventDetail />} />
           <Route path="/events/:id" element={<EventForm />} />
 
           {/* Clients */}

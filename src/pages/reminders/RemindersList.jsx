@@ -9,7 +9,7 @@ import Pagination from "../../components/common/Pagination";
 import { reminderService } from "../../api/index";
 import { BellIcon } from "../../components/icons/IconComponents";
 import { Plus, Search, Filter, Eye, X, Edit, Trash2, Clock, BellOff, AlertTriangle } from "lucide-react";
-import ReminderDetails from "./ReminderDetails";
+import ReminderDetailModal from "./ReminderDetailModal";
 import ReminderForm from "./ReminderForm";
 import Badge from "../../components/common/Badge";
 import { format, addHours, addDays, formatISO } from "date-fns";
@@ -168,6 +168,18 @@ const RemindersList = () => {
   const handleDeleteReminder = useCallback((reminderId, reminderName = "Reminder") => {
     showDeleteConfirmation(reminderId, reminderName);
   }, [showDeleteConfirmation]);
+
+  // Handle row click to open detail modal
+  const handleRowClick = useCallback((reminder) => {
+    setSelectedReminder(reminder);
+    setIsDetailModalOpen(true);
+  }, []);
+
+  // Handle detail modal close
+  const handleDetailModalClose = useCallback(() => {
+    setSelectedReminder(null);
+    setIsDetailModalOpen(false);
+  }, []);
 
   // Handle snooze with options
   const handleSnoozeClick = useCallback((reminder) => {
@@ -329,6 +341,11 @@ const RemindersList = () => {
         : "Reminder created successfully"
     );
   }, [fetchReminders, selectedReminder, showSuccess]);
+
+  const handleFormClose = useCallback(() => {
+    setSelectedReminder(null);
+    setIsFormOpen(false);
+  }, []);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -519,7 +536,7 @@ const RemindersList = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleViewReminder(row);
+                handleRowClick(row);
               }}
               className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
               title="View Reminder"
@@ -723,7 +740,7 @@ const RemindersList = () => {
               columns={columns}
               data={reminders}
               loading={loading}
-              // Enable pagination
+              onRowClick={handleRowClick}
               pagination={true}
               currentPage={page}
               totalPages={totalPages}
@@ -791,40 +808,26 @@ const RemindersList = () => {
       )}
 
       {/* Reminder Detail Modal */}
-      {isDetailModalOpen && selectedReminder && (
-        <Modal
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setSelectedReminder(null);
-            setIsDetailModalOpen(false);
-          }}
-          title="Reminder Details"
-          size="lg"
-        >
-          <div className="p-6">
-            <ReminderDetails reminder={selectedReminder} />
-          </div>
-        </Modal>
-      )}
+      <ReminderDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleDetailModalClose}
+        reminder={selectedReminder}
+        onEdit={handleEditReminder}
+        refreshData={fetchReminders}
+      />
 
       {/* Add/Edit Form */}
       {isFormOpen && (
         <Modal
           isOpen={isFormOpen}
-          onClose={() => {
-            setSelectedReminder(null);
-            setIsFormOpen(false);
-          }}
+          onClose={handleFormClose}
           title={selectedReminder ? "Edit Reminder" : "Create New Reminder"}
           size="lg"
         >
           <ReminderForm
             reminder={selectedReminder}
             onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setSelectedReminder(null);
-              setIsFormOpen(false);
-            }}
+            onCancel={handleFormClose}
           />
         </Modal>
       )}

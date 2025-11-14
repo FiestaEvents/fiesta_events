@@ -114,7 +114,7 @@ const ClientDetail = () => {
   const handleNavigateToEvent = useCallback(
     (eventId, e) => {
       if (e && e.stopPropagation) e.stopPropagation();
-      navigate(`/events/${eventId}`, {
+      navigate(`/events/${eventId}/detail`, {
         state: { 
           fromClient: id,
           clientData: clientData 

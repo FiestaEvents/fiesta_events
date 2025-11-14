@@ -77,7 +77,7 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
   // Handle viewing full event details
   const handleViewFullDetails = () => {
     onClose(); // Close the current modal
-    navigate(`/events/${event._id}`); // Navigate to the full event detail page
+    navigate(`/events/${event._id}/detail`); // Navigate to the full event detail page
   };
 
   return (

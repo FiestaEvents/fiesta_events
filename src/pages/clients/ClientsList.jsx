@@ -8,6 +8,7 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { clientService } from "../../api/index";
 import { UsersIcon } from "../../components/icons/IconComponents";
+import ClientDetailModal from "./ClientDetailModal.jsx"
 import {
   Plus,
   Search,
@@ -144,7 +145,7 @@ const ClientsList = () => {
           loading: `Deleting ${clientName}...`,
           success: `${clientName} deleted successfully`,
           error: `Failed to delete ${clientName}`,
-        });
+        _});
 
         // Refresh the clients list
         fetchClients();
@@ -174,21 +175,13 @@ const ClientsList = () => {
     [showDeleteConfirmation]
   );
 
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
-
-  const handleAddClient = useCallback(() => {
-    setSelectedClient(null);
-    setIsFormOpen(true);
-  }, []);
-
-  const handleEditClient = useCallback((client) => {
+  // Handle row click to open detail modal
+  const handleRowClick = useCallback((client) => {
     setSelectedClient(client);
-    setIsDetailModalOpen(false);
-    setIsFormOpen(true);
+    setIsDetailModalOpen(true);
   }, []);
 
+  // Handle view client (alternative navigation)
   const handleViewClient = useCallback(
     (client) => {
       navigate(`/clients/${client._id}`, { state: { client } });
@@ -196,6 +189,20 @@ const ClientsList = () => {
     [navigate]
   );
 
+  // Handle edit client
+  const handleEditClient = useCallback((client) => {
+    setSelectedClient(client);
+    setIsDetailModalOpen(false);
+    setIsFormOpen(true);
+  }, []);
+
+  // Handle add client
+  const handleAddClient = useCallback(() => {
+    setSelectedClient(null);
+    setIsFormOpen(true);
+  }, []);
+
+  // Handle form success
   const handleFormSuccess = useCallback(() => {
     fetchClients();
     setSelectedClient(null);
@@ -207,6 +214,19 @@ const ClientsList = () => {
     );
   }, [fetchClients, selectedClient, showSuccess]);
 
+  // Handle form close
+  const handleFormClose = useCallback(() => {
+    setSelectedClient(null);
+    setIsFormOpen(false);
+  }, []);
+
+  // Handle detail modal close
+  const handleDetailModalClose = useCallback(() => {
+    setSelectedClient(null);
+    setIsDetailModalOpen(false);
+  }, []);
+
+  // Clear filters
   const handleClearFilters = useCallback(() => {
     setSearch("");
     setStatus("all");
@@ -214,10 +234,15 @@ const ClientsList = () => {
     showInfo("Filters cleared");
   }, [showInfo]);
 
+  // Retry loading
   const handleRetry = useCallback(() => {
     fetchClients();
     showInfo("Retrying to load clients...");
   }, [fetchClients, showInfo]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   const hasActiveFilters = search.trim() !== "" || status !== "all";
   const showEmptyState =
@@ -315,7 +340,7 @@ const ClientsList = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleViewClient(row);
+              handleRowClick(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
             title="View Client"
@@ -469,6 +494,8 @@ const ClientsList = () => {
               columns={columns}
               data={clients}
               loading={loading}
+              // Enable row clicking for detail modal
+              onRowClick={handleRowClick}
               // Enable pagination
               pagination={true}
               currentPage={page}
@@ -481,6 +508,9 @@ const ClientsList = () => {
                 setPage(1);
               }}
               pageSizeOptions={[10, 25, 50, 100]}
+              // Add hover and striped styling like EventList
+              striped={true}
+              hoverable={true}
             />
           </div>
 
@@ -505,7 +535,7 @@ const ClientsList = () => {
 
       {/* No Results from Search/Filter */}
       {showNoResults && (
-        <div className="text-center py-12 bg">
+        <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             No clients found
@@ -537,43 +567,27 @@ const ClientsList = () => {
       )}
 
       {/* Client Detail Modal */}
-      {isDetailModalOpen && selectedClient && (
-        <Modal
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setSelectedClient(null);
-            setIsDetailModalOpen(false);
-          }}
-          title="Client Details"
-          size="lg"
-        >
-          <div className="p-6">
-            <ClientDetail client={selectedClient} />
-          </div>
-        </Modal>
-      )}
+<ClientDetailModal
+  isOpen={isDetailModalOpen}
+  onClose={handleDetailModalClose}
+  client={selectedClient}
+  onEdit={handleEditClient}
+  refreshData={fetchClients}
+/>
 
-      {/* Add/Edit Form */}
-      {isFormOpen && (
-        <Modal
-          isOpen={isFormOpen}
-          onClose={() => {
-            setSelectedClient(null);
-            setIsFormOpen(false);
-          }}
-          title={selectedClient ? "Edit Client" : "Add New Client"}
-          size="lg"
-        >
-          <ClientForm
-            client={selectedClient}
-            onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setSelectedClient(null);
-              setIsFormOpen(false);
-            }}
-          />
-        </Modal>
-      )}
+      {/* Add/Edit Form Modal */}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={handleFormClose}
+        title={selectedClient ? "Edit Client" : "Add New Client"}
+        size="lg"
+      >
+        <ClientForm
+          client={selectedClient}
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormClose}
+        />
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal

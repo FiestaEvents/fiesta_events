@@ -903,64 +903,95 @@ const EventForm = ({
     toast.success(`${partner.partnerName} removed`);
   };
 
-  const handleCreateClient = async () => {
-    if (!newClient.name.trim()) {
-      toast.error("Client name is required");
-      return;
-    }
+const handleCreateClient = async () => {
+ if (!newClient.name.trim()) {
+    console.log("❌ Client name validation failed");
+    toast.error("Client name is required");
+    return;
+  }
+  
+  if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
+    console.log("❌ Email validation failed");
+    toast.error("Please enter a valid email");
+    return;
+  }
+
+  const duplicate = clients.find(
+    (c) =>
+      c.email?.toLowerCase() === newClient.email?.toLowerCase() ||
+      c.phone === newClient.phone
+  );
+
+  if (duplicate) {
+    console.log("❌ Duplicate client found");
+    toast.error("Client with this email or phone already exists");
+    return;
+  }
+
+  try {
+    console.log("⏳ Starting client creation with data:", newClient);
+    setIsCreatingClient(true);
     
-    if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
-      toast.error("Please enter a valid email");
-      return;
+    // Add timeout and better error handling
+    const response = await clientService.create(newClient);
+    console.log("✅ Client creation API response:", response);
+    
+    let createdClient = response?.client || response?.data || response;
+
+    if (!createdClient || !createdClient._id) {
+      console.warn("⚠️ Client created with unexpected response structure:", response);
+      createdClient = {
+        _id: `temp-${Date.now()}`,
+        ...newClient,
+        createdAt: new Date().toISOString(),
+      };
     }
 
-    const duplicate = clients.find(
-      (c) =>
-        c.email?.toLowerCase() === newClient.email?.toLowerCase() ||
-        c.phone === newClient.phone
-    );
+    console.log("📝 Created client object:", createdClient);
 
-    if (duplicate) {
-      toast.error("Client with this email or phone already exists");
-      return;
-    }
+    // Update state in sequence to ensure proper updates
+    setClients((prev) => {
+      const updatedClients = [...prev, createdClient];
+      console.log("📋 Clients list updated:", updatedClients.length);
+      return updatedClients;
+    });
 
-    try {
-      setIsCreatingClient(true);
-      
-      const response = await clientService.create(newClient);
-      
-      let createdClient = response?.client || response?.data || response;
+    setSelectedClient(createdClient._id);
+    console.log("🎯 Selected client ID:", createdClient._id);
+    
+    setFormData((prev) => {
+      const updatedFormData = { ...prev, clientId: createdClient._id };
+      console.log("📄 Form data updated with client ID:", updatedFormData.clientId);
+      return updatedFormData;
+    });
+    
+    setNewClient({ name: "", email: "", phone: "" });
+    setShowClientForm(false);
 
-      if (!createdClient || !createdClient._id) {
-        createdClient = {
-          _id: `temp-${Date.now()}`,
-          ...newClient,
-          createdAt: new Date().toISOString(),
-        };
-        console.warn("Client created with unexpected response structure:", response);
-      }
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.clientId;
+      return newErrors;
+    });
 
-      setClients((prev) => [...prev, createdClient]);
-      setSelectedClient(createdClient._id);
-      setFormData((prev) => ({ ...prev, clientId: createdClient._id }));
-      setNewClient({ name: "", email: "", phone: "" });
-      setShowClientForm(false);
-
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.clientId;
-        return newErrors;
-      });
-
-      toast.success(`Client "${createdClient.name}" created successfully!`);
-    } catch (error) {
-      console.error("Error creating client:", error);
-      toast.error(error.response?.data?.message || "Failed to create client");
-    } finally {
-      setIsCreatingClient(false);
-    }
-  };
+    console.log("🎉 Client creation completed successfully");
+    toast.success(`Client "${createdClient.name}" created successfully!`);
+    
+  } catch (error) {
+    console.error("❌ Error creating client:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    
+    toast.error(error.response?.data?.message || "Failed to create client");
+  } finally {
+    console.log("🏁 Finally block - setting loading to false");
+    setIsCreatingClient(false);
+  }
+};
 
   const handleSelectClient = (clientId) => {
     setSelectedClient((prevSelected) => {
