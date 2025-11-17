@@ -91,7 +91,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         priceType: priceType,
         hourlyRate: partner.hourlyRate || "",
         fixedRate: partner.fixedRate || "",
-        priceType: partner.priceType || "",
         rating: partner.rating || "0",
         address: {
           street: partner.address?.street || "",

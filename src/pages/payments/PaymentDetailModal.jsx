@@ -20,7 +20,13 @@ import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
 import formatCurrency from "../../utils/formatCurrency";
 
-const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) => {
+const PaymentDetailModal = ({
+  isOpen,
+  onClose,
+  payment,
+  onEdit,
+  refreshData,
+}) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError, promise } = useToast();
@@ -60,9 +66,10 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
 
   const formatMethod = (method) => {
     if (!method) return "Unknown";
-    return method.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+    return method
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   const getClientName = () => {
@@ -80,17 +87,14 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
   // Handle delete
   const handleDelete = async () => {
     if (!payment._id) return;
-    
+
     try {
       setIsProcessing(true);
-      await promise(
-        paymentService.delete(payment._id),
-        {
-          loading: "Deleting payment...",
-          success: "Payment deleted successfully",
-          error: "Failed to delete payment"
-        }
-      );
+      await promise(paymentService.delete(payment._id), {
+        loading: "Deleting payment...",
+        success: "Payment deleted successfully",
+        error: "Failed to delete payment",
+      });
       onClose();
       refreshData();
     } catch (error) {
@@ -103,18 +107,18 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
   // Handle refund
   const handleRefund = async () => {
     if (!payment._id) return;
-    
+
     try {
       setIsProcessing(true);
       await promise(
         paymentService.refund(payment._id, {
           refundAmount: payment.amount,
-          refundReason: "Refund requested from payment details"
+          refundReason: "Refund requested from payment details",
         }),
         {
           loading: "Processing refund...",
           success: "Payment refunded successfully",
-          error: "Failed to refund payment"
+          error: "Failed to refund payment",
         }
       );
       onClose();
@@ -131,9 +135,10 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
     navigate(`/payments/${payment._id}`);
   };
 
-  const canRefund = payment.type === "income" && 
-                   ["completed", "paid"].includes((payment.status || "").toLowerCase()) &&
-                   !payment.refundAmount;
+  const canRefund =
+    payment.type === "income" &&
+    ["completed", "paid"].includes((payment.status || "").toLowerCase()) &&
+    !payment.refundAmount;
 
   return (
     <div
@@ -175,7 +180,7 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                     <Badge color={getStatusBadgeColor(payment.status)}>
                       {payment.status || "Unknown"}
                     </Badge>
-                    {payment.refundAmount && (
+                    {payment.refundAmount !== 0 && (
                       <Badge color="blue">
                         Refunded: {formatCurrency(payment.refundAmount)}
                       </Badge>
@@ -190,7 +195,7 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
-              
+
               <div className="mt-6 space-y-4">
                 {/* Amount */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -198,25 +203,32 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                     <div className="flex items-center gap-3">
                       <DollarSign className="w-8 h-8 text-orange-500" />
                       <div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Amount</div>
-                        <div className={`text-2xl font-bold ${
-                          payment.type === "income" 
-                            ? "text-green-600 dark:text-green-400" 
-                            : "text-red-600 dark:text-red-400"
-                        }`}>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          Amount
+                        </div>
+                        <div
+                          className={`text-2xl font-bold ${
+                            payment.type === "income"
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
+                          }`}
+                        >
                           {payment.type === "income" ? "+" : "-"}
                           {formatCurrency(payment.amount)}
                         </div>
                       </div>
                     </div>
-                    {payment.netAmount && payment.netAmount !== payment.amount && (
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Net Amount</div>
-                        <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency(payment.netAmount)}
+                    {payment.netAmount &&
+                      payment.netAmount !== payment.amount && (
+                        <div className="text-right">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            Net Amount
+                          </div>
+                          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {formatCurrency(payment.netAmount)}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
 
@@ -230,7 +242,9 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                     <div className="flex items-center gap-3 text-sm">
                       <CreditCard className="w-5 h-5 text-orange-500 flex-shrink-0" />
                       <div>
-                        <div className="text-gray-500 dark:text-gray-400">Payment Method</div>
+                        <div className="text-gray-500 dark:text-gray-400">
+                          Payment Method
+                        </div>
                         <div className="font-medium text-gray-900 dark:text-white">
                           {formatMethod(payment.method)}
                         </div>
@@ -241,9 +255,13 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                     <div className="flex items-center gap-3 text-sm">
                       <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
                       <div>
-                        <div className="text-gray-500 dark:text-gray-400">Payment Date</div>
+                        <div className="text-gray-500 dark:text-gray-400">
+                          Payment Date
+                        </div>
                         <div className="font-medium text-gray-900 dark:text-white">
-                          {formatDateLong(payment.paidDate || payment.createdAt)}
+                          {formatDateLong(
+                            payment.paidDate || payment.createdAt
+                          )}
                         </div>
                       </div>
                     </div>
@@ -253,7 +271,9 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                       <div className="flex items-center gap-3 text-sm">
                         <FileText className="w-5 h-5 text-orange-500 flex-shrink-0" />
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400">Reference</div>
+                          <div className="text-gray-500 dark:text-gray-400">
+                            Reference
+                          </div>
                           <div className="font-medium text-gray-900 dark:text-white">
                             {payment.reference}
                           </div>
@@ -274,7 +294,9 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                       <div className="flex items-center gap-3 text-sm">
                         <User className="w-5 h-5 text-orange-500 flex-shrink-0" />
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400">Client</div>
+                          <div className="text-gray-500 dark:text-gray-400">
+                            Client
+                          </div>
                           <div className="font-medium text-gray-900 dark:text-white">
                             {getClientName()}
                           </div>
@@ -287,7 +309,9 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                       <div className="flex items-center gap-3 text-sm">
                         <Building className="w-5 h-5 text-orange-500 flex-shrink-0" />
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400">Partner</div>
+                          <div className="text-gray-500 dark:text-gray-400">
+                            Partner
+                          </div>
                           <div className="font-medium text-gray-900 dark:text-white">
                             {getPartnerName()}
                           </div>
@@ -300,7 +324,9 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                       <div className="flex items-center gap-3 text-sm">
                         <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400">Event</div>
+                          <div className="text-gray-500 dark:text-gray-400">
+                            Event
+                          </div>
                           <div className="font-medium text-gray-900 dark:text-white">
                             {payment.event.title || "Event"}
                           </div>
@@ -319,7 +345,9 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                     <div className="space-y-2">
                       {payment.fees && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">Processing Fee</span>
+                          <span className="text-gray-500 dark:text-gray-400">
+                            Processing Fee
+                          </span>
                           <span className="text-gray-900 dark:text-white">
                             {formatCurrency(payment.fees.processingFee || 0)}
                           </span>
@@ -327,15 +355,19 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                       )}
                       {payment.fees && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">Platform Fee</span>
+                          <span className="text-gray-500 dark:text-gray-400">
+                            Platform Fee
+                          </span>
                           <span className="text-gray-900 dark:text-white">
                             {formatCurrency(payment.fees.platformFee || 0)}
                           </span>
                         </div>
                       )}
-                      {payment.refundAmount && (
+                      {payment.refundAmount !== 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-red-500 dark:text-red-400">Refund Amount</span>
+                          <span className="text-red-500 dark:text-red-400">
+                            Refund Amount
+                          </span>
                           <span className="text-red-600 dark:text-red-400 font-medium">
                             -{formatCurrency(payment.refundAmount)}
                           </span>
@@ -343,7 +375,9 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                       )}
                       {payment.refundReason && (
                         <div className="text-sm">
-                          <div className="text-gray-500 dark:text-gray-400">Refund Reason</div>
+                          <div className="text-gray-500 dark:text-gray-400">
+                            Refund Reason
+                          </div>
                           <div className="text-gray-900 dark:text-white mt-1">
                             {payment.refundReason}
                           </div>
@@ -367,7 +401,7 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                 )}
               </div>
             </div>
-            
+
             {/* Action Buttons */}
             <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex justify-between gap-3 rounded-b-xl">
               <div className="flex gap-2">
@@ -380,7 +414,7 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
                 >
                   {isProcessing ? "Deleting..." : "Delete"}
                 </Button>
-                
+
                 {canRefund && (
                   <Button
                     variant="outline"
