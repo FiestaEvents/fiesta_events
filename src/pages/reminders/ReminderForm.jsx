@@ -916,7 +916,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] ">
       {/* Header */}
       {!isModalMode && (
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">

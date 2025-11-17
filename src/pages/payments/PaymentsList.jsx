@@ -513,7 +513,7 @@ const PaymentsList = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleRowClick(row);
+              handleViewPayment(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
             title="View Payment"

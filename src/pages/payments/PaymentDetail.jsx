@@ -175,7 +175,7 @@ const formatDateTime = (dateString) => {
   const TypeIcon = payment.type === "income" ? TrendingUp : TrendingDown;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-white dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
         <div className="flex items-start gap-4">

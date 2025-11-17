@@ -4,6 +4,7 @@ import { financeService, paymentService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Select from "../../components/common/Select";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import Card from "../../components/common/Card"
 import formatCurrency from "../../utils/formatCurrency";
 import {
   DollarSign,
@@ -224,7 +225,7 @@ const Finance = () => {
       </div>
 
       {/* Main Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <Card className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {mainMetrics.map((metric, index) => {
           const Icon = metric.icon;
 
@@ -249,12 +250,12 @@ const Finance = () => {
             </div>
           );
         })}
-      </div>
+      </Card>
 
       {/* Event & Venue Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Event Financials */}
-        <div>
+        <Card>
           <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -309,11 +310,10 @@ const Finance = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Venue Operating Expenses */}
-         <div>
-          <div className="p-6">
+          <Card className="p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                 <Building className="w-5 h-5 text-orange-600 dark:text-orange-400" />
@@ -375,14 +375,13 @@ const Finance = () => {
                 </div>
               </div>
             </div>
-          </div>
-      </div>
+          </Card>
       </div>
 
       {/* Cash Flow & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cash Flow */}
-         <div>
+         <Card>
           <div className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -438,11 +437,11 @@ const Finance = () => {
               </div>
             )}
           </div>
-      </div>
+      </Card>
 
         {/* Recent Transactions */}
          <div className="lg:col-span-2">
-          <div>
+          <Card>
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -523,15 +522,14 @@ const Finance = () => {
                 </div>
               )}
             </div>
-          </div>
+          </Card>
       </div>
       </div>
 
       {/* Upcoming Payments */}
       {financialData.upcomingPayments &&
         financialData.upcomingPayments.length > 0 && (
-           <div>
-            <div className="p-6">
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Upcoming Payments
@@ -587,12 +585,11 @@ const Finance = () => {
                   );
                 })}
               </div>
-            </div>
-        </div>
+            </Card>
         )}
 
       {/* Quick Action Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <Card className="grid grid-cols-1 md:grid-cols-4 gap-6">
          <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/transactions")}
@@ -676,7 +673,7 @@ const Finance = () => {
             </div>
           </div>
       </div>
-      </div>
+      </Card>
     </div>
   );
 };
