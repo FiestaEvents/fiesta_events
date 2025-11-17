@@ -17,7 +17,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
-  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -74,40 +73,47 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   }, []);
 
   // Fetch events by client ID
-  const fetchEventsByClient = useCallback(async (clientId) => {
-    if (!clientId) {
-      setFilteredEvents(events);
-      return;
-    }
+  const fetchEventsByClient = useCallback(
+    async (clientId) => {
+      if (!clientId) {
+        setFilteredEvents(events);
+        return;
+      }
 
-    try {
-      setLoadingOptions(true);
-      const response = await eventService.getByClientId(clientId);
-      const clientEvents = response?.events || response?.data?.events || response?.data || [];
-      setFilteredEvents(clientEvents);
-    } catch (error) {
-      console.error('Error fetching client events:', error);
-      toast.error('Failed to load client events');
-      setFilteredEvents(events);
-    } finally {
-      setLoadingOptions(false);
-    }
-  }, [events]);
+      try {
+        setLoadingOptions(true);
+        const response = await eventService.getByClientId(clientId);
+        const clientEvents =
+          response?.events || response?.data?.events || response?.data || [];
+        setFilteredEvents(clientEvents);
+      } catch (error) {
+        console.error("Error fetching client events:", error);
+        toast.error("Failed to load client events");
+        setFilteredEvents(events);
+      } finally {
+        setLoadingOptions(false);
+      }
+    },
+    [events]
+  );
 
   // Set client when event is selected
-  const setClientFromEvent = useCallback((eventId) => {
-    if (!eventId) {
-      return;
-    }
+  const setClientFromEvent = useCallback(
+    (eventId) => {
+      if (!eventId) {
+        return;
+      }
 
-    const selectedEvent = events.find(event => event._id === eventId);
-    if (selectedEvent && selectedEvent.client) {
-      setFormData(prev => ({
-        ...prev,
-        client: selectedEvent.client._id || selectedEvent.client
-      }));
-    }
-  }, [events]);
+      const selectedEvent = events.find((event) => event._id === eventId);
+      if (selectedEvent && selectedEvent.client) {
+        setFormData((prev) => ({
+          ...prev,
+          client: selectedEvent.client._id || selectedEvent.client,
+        }));
+      }
+    },
+    [events]
+  );
 
   const fetchPayment = async () => {
     try {
@@ -162,8 +168,18 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
         clientService.getAll(),
       ]);
 
-      const eventsData = eventsResponse?.events || eventsResponse?.data?.events || eventsResponse?.data || eventsResponse || [];
-      const clientsData = clientsResponse?.clients || clientsResponse?.data?.clients || clientsResponse?.data || clientsResponse || [];
+      const eventsData =
+        eventsResponse?.events ||
+        eventsResponse?.data?.events ||
+        eventsResponse?.data ||
+        eventsResponse ||
+        [];
+      const clientsData =
+        clientsResponse?.clients ||
+        clientsResponse?.data?.clients ||
+        clientsResponse?.data ||
+        clientsResponse ||
+        [];
 
       setEvents(eventsData);
       setFilteredEvents(eventsData);
@@ -236,12 +252,12 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   // Enhanced handler for client change
   const handleClientChange = (e) => {
     const { value } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData((prev) => ({
+      ...prev,
       client: value,
-      event: '' // Reset event when client changes
+      event: "", // Reset event when client changes
     }));
-    
+
     // Fetch events for the selected client
     if (value) {
       fetchEventsByClient(value);
@@ -253,8 +269,8 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   // Enhanced handler for event change
   const handleEventChange = (e) => {
     const { value } = e.target;
-    setFormData(prev => ({ ...prev, event: value }));
-    
+    setFormData((prev) => ({ ...prev, event: value }));
+
     // Set client from selected event
     if (value) {
       setClientFromEvent(value);
@@ -843,7 +859,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg">
       <form
         onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}

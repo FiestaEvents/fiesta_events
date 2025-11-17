@@ -1,7 +1,6 @@
 // src/pages/settings/SettingPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -58,7 +57,7 @@ const SettingPage = () => {
   };
 
   const handleEditProfile = () => {
-    navigate("/settings/profile");
+    navigate("/settings");
   };
 
   const handleManageTeam = () => {
@@ -79,8 +78,8 @@ const SettingPage = () => {
 
   if (error) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 space-y-8 "  >
-        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 p-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-8 ">
+        <div className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 p-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-red-800 dark:text-red-200">
@@ -92,7 +91,7 @@ const SettingPage = () => {
               Retry
             </Button>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
@@ -100,11 +99,11 @@ const SettingPage = () => {
   if (!venue) {
     return (
       <div className="p-4 sm:p-6 lg:p-8 space-y-8 ">
-        <Card className="p-6 text-center">
+        <div className="p-6 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             No venue information available
           </p>
-        </Card>
+        </div>
       </div>
     );
   }
@@ -123,7 +122,7 @@ const SettingPage = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card
+        <div
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={handleEditVenue}
         >
@@ -140,9 +139,9 @@ const SettingPage = () => {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card
+        <div
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={handleEditProfile}
         >
@@ -159,9 +158,9 @@ const SettingPage = () => {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card
+        <div
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={handleManageTeam}
         >
@@ -178,9 +177,9 @@ const SettingPage = () => {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card
+        <div
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={handleManageSubscription}
         >
@@ -197,11 +196,11 @@ const SettingPage = () => {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Venue Overview */}
-      <Card>
+      <div>
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -323,11 +322,11 @@ const SettingPage = () => {
             </div>
           )}
         </div>
-      </Card>
+      </div>
 
       {/* Subscription Status */}
       {venue.subscription && (
-        <Card>
+        <div>
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -415,12 +414,12 @@ const SettingPage = () => {
               </div>
             )}
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Operating Hours */}
       {venue.operatingHours && (
-        <Card>
+        <div>
           <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
               Operating Hours
@@ -446,7 +445,7 @@ const SettingPage = () => {
               ))}
             </div>
           </div>
-        </Card>
+        </div>
       )}
     </div>
   );

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Card from "../components/common/Card";
 import Button from "../components/common/Button";
 import Badge from "../components/common/Badge";
 import { 
@@ -10,7 +9,9 @@ import {
   eventService,
   paymentService,
   clientService,
-  venueService
+  venueService,
+  invoiceService,
+  financeService
 } from "../api/index";
 import { formatCurrency } from "../utils/formatCurrency";
 import {
@@ -32,6 +33,13 @@ import {
   Target,
   Activity,
   Zap,
+  CreditCard,
+  UserCheck,
+  Building,
+  Package,
+  Heart,
+  Shield,
+  ThumbsUp,
 } from "lucide-react";
 
 // Import Chart.js
@@ -44,8 +52,11 @@ import {
   LinearScale,
   BarElement,
   Title,
+  LineElement,
+  PointElement,
+  Filler,
 } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
+import { Doughnut, Bar, Line } from 'react-chartjs-2';
 
 // Register Chart.js components
 ChartJS.register(
@@ -55,7 +66,10 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  Title
+  Title,
+  LineElement,
+  PointElement,
+  Filler
 );
 
 const DashboardPage = () => {
@@ -90,11 +104,17 @@ const DashboardPage = () => {
     performanceMetrics: {},
     recentActivity: [],
     teamPerformance: [],
+    financialHealth: {},
+    clientRetention: 0,
+    partnerPerformance: [],
+    averageEventValue: 0,
+    clientSatisfaction: 0,
   });
   
   const [tasks, setTasks] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -103,359 +123,403 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setHasInitialLoad(false);
       
-      // Fetch all data in parallel
+      // Fetch all data in parallel with proper limits
       const [
         dashboardResponse, 
         tasksResponse, 
         remindersResponse,
-        enhancedData
+        eventsResponse,
+        paymentsResponse,
+        clientsResponse,
+        invoicesResponse,
+        financeSummaryResponse
       ] = await Promise.all([
         dashboardService.getStats(),
         taskService.getMyTasks().catch(() => ({ tasks: [] })),
         reminderService.getUpcoming().catch(() => ({ reminders: [] })),
-        fetchEnhancedData(),
+        // Use proper limit that doesn't exceed API constraints
+        eventService.getAll({ limit: 100, includeArchived: false }).catch(() => ({ events: [] })),
+        paymentService.getAll({ limit: 100 }).catch(() => ({ payments: [] })),
+        clientService.getAll({ limit: 100 }).catch(() => ({ clients: [] })),
+        invoiceService.getStats().catch(() => ({})),
+        financeService.getSummary().catch(() => ({}))
       ]);
 
       console.log("📊 Dashboard Response:", dashboardResponse);
-      console.log("🚀 Enhanced Data:", enhancedData);
+      console.log("📈 Events Response:", eventsResponse);
 
       const dashboardData = dashboardResponse?.data || dashboardResponse || {};
+      const financeSummary = financeSummaryResponse || {};
 
-      // Calculate monthly comparison
+      // Process events data with proper error handling
+      const events = eventsResponse?.events || eventsResponse?.data?.events || [];
       const currentMonth = new Date().getMonth();
-      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const currentYear = new Date().getFullYear();
       
-      const currentMonthRevenue = dashboardData.summary?.revenueThisMonth || 0;
-      const lastMonthRevenue = dashboardData.summary?.revenueLastMonth || 0;
+      const currentMonthEvents = events.filter(event => {
+        if (!event.startDate) return false;
+        const eventDate = new Date(event.startDate);
+        return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+      }).length;
+
+      const lastMonthEvents = events.filter(event => {
+        if (!event.startDate) return false;
+        const eventDate = new Date(event.startDate);
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const year = currentMonth === 0 ? currentYear - 1 : currentYear;
+        return eventDate.getMonth() === lastMonth && eventDate.getFullYear() === year;
+      }).length;
+
+      // Calculate revenue from payments with proper error handling
+      const payments = paymentsResponse?.payments || paymentsResponse?.data?.payments || [];
+      const currentMonthRevenue = payments
+        .filter(payment => {
+          const paymentDate = new Date(payment.paidDate || payment.createdAt);
+          return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+
+      const lastMonthRevenue = payments
+        .filter(payment => {
+          const paymentDate = new Date(payment.paidDate || payment.createdAt);
+          const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+          const year = currentMonth === 0 ? currentYear - 1 : currentYear;
+          return paymentDate.getMonth() === lastMonth && paymentDate.getFullYear() === year;
+        })
+        .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+
       const revenueChange = lastMonthRevenue > 0 
-        ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
-        : 0;
+        ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100)
+        : currentMonthRevenue > 0 ? 100 : 0;
 
-      const currentMonthEvents = dashboardData.summary?.eventsThisMonth || 0;
-      const lastMonthEvents = dashboardData.summary?.eventsLastMonth || 0;
       const eventsChange = lastMonthEvents > 0
-        ? ((currentMonthEvents - lastMonthEvents) / lastMonthEvents * 100).toFixed(1)
-        : 0;
+        ? ((currentMonthEvents - lastMonthEvents) / lastMonthEvents * 100)
+        : currentMonthEvents > 0 ? 100 : 0;
 
-      // Count events by status
-      const eventsByStatus = {
-        pending: 0,
-        confirmed: 0,
-        completed: 0,
-        cancelled: 0,
-      };
-
-      (dashboardData.upcomingEvents || []).forEach(event => {
-        const status = event.status?.toLowerCase();
-        if (eventsByStatus.hasOwnProperty(status)) {
-          eventsByStatus[status]++;
+      // Count events by status with proper error handling
+      const eventsByStatus = events.reduce((acc, event) => {
+        const status = event.status?.toLowerCase() || 'pending';
+        if (acc.hasOwnProperty(status)) {
+          acc[status]++;
         }
-      });
+        return acc;
+      }, { pending: 0, confirmed: 0, completed: 0, cancelled: 0 });
+
+      // Get upcoming events (next 30 days) with proper error handling
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      
+      const upcomingEvents = events
+        .filter(event => {
+          if (!event.startDate) return false;
+          const eventDate = new Date(event.startDate);
+          return eventDate >= new Date() && eventDate <= thirtyDaysFromNow;
+        })
+        .slice(0, 5)
+        .map(event => ({
+          id: event._id,
+          title: event.title || 'Untitled Event',
+          date: event.startDate,
+          clientName: event.clientId?.name || "N/A",
+          guestCount: event.guestCount || 0,
+          status: event.status || 'pending',
+        }));
 
       setStats({
         totalEvents: currentMonthEvents,
         revenue: currentMonthRevenue,
-        activeClients: dashboardData.summary?.totalClients || 0,
-        pendingPayments: dashboardData.upcomingEvents?.filter(
-          (e) => e.payment?.status === "pending"
-        ).length || 0,
-        upcomingEvents: (dashboardData.upcomingEvents || []).map((event) => ({
-          id: event._id,
-          title: event.title,
-          date: event.startDate,
-          location: event.clientId?.name || "N/A",
-          guestCount: event.guestCount,
-          status: event.status,
-        })),
-        recentPayments: (dashboardData.recentPayments || []).map((payment) => ({
+        activeClients: clientsResponse?.clients?.length || clientsResponse?.data?.clients?.length || 0,
+        pendingPayments: invoicesResponse?.overdue?.total || 0,
+        upcomingEvents,
+        recentPayments: payments.slice(0, 5).map(payment => ({
           id: payment._id,
-          clientName: payment.description || payment.category || "Payment",
-          date: payment.date || payment.createdAt,
-          amount: payment.amount,
+          clientName: payment.clientId?.name || payment.description || "Payment",
+          date: payment.paidDate || payment.createdAt,
+          amount: payment.amount || 0,
         })),
         monthlyComparison: {
           events: {
             current: currentMonthEvents,
             previous: lastMonthEvents,
-            change: parseFloat(eventsChange),
+            change: parseFloat(eventsChange.toFixed(1)),
           },
           revenue: {
             current: currentMonthRevenue,
             previous: lastMonthRevenue,
-            change: parseFloat(revenueChange),
+            change: parseFloat(revenueChange.toFixed(1)),
           },
         },
         eventsByStatus,
       });
 
-      // Set enhanced stats
+      // Fetch enhanced stats
+      const enhancedData = await fetchEnhancedData(events, payments, clientsResponse, financeSummary, currentMonthEvents, currentMonthRevenue);
       setEnhancedStats(enhancedData);
 
-      // Safely handle tasks response
-      const tasksArray = Array.isArray(tasksResponse) 
-        ? tasksResponse 
-        : (tasksResponse?.tasks || []);
+      // Handle tasks and reminders with proper error handling
+      const tasksArray = tasksResponse?.tasks || tasksResponse?.data?.tasks || [];
       setTasks(Array.isArray(tasksArray) ? tasksArray.slice(0, 5) : []);
 
-      // Safely handle reminders response
-      const remindersArray = Array.isArray(remindersResponse)
-        ? remindersResponse
-        : (remindersResponse?.reminders || []);
+      const remindersArray = remindersResponse?.reminders || remindersResponse?.data?.reminders || [];
       setReminders(Array.isArray(remindersArray) ? remindersArray.slice(0, 5) : []);
+      
+      setHasInitialLoad(true);
     } catch (err) {
       console.error("❌ Dashboard load failed:", err);
+      setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchEnhancedData = async () => {
+  const fetchEnhancedData = async (events, payments, clientsResponse, financeSummary, currentMonthEvents, currentMonthRevenue) => {
     try {
-      // Fetch all enhanced data in parallel
+      // Fetch additional data for enhanced metrics with proper error handling
       const [
-        eventsResponse,
-        paymentsResponse,
-        clientsResponse,
         venuesResponse,
-        tasksResponse,
-        revenueTrendResponse
+        allTasksResponse,
+        clientStatsResponse
       ] = await Promise.all([
-        // Get events for type distribution and occupancy
-        eventService.getAll({ 
-          limit: 1000, 
-          startDate: new Date(new Date().getFullYear(), 0, 1).toISOString() 
-        }).catch(() => ({ events: [] })),
-        
-        // Get payments for collection rate
-        paymentService.getAll({ limit: 1000 }).catch(() => ({ payments: [] })),
-        
-        // Get clients for ratings
-        clientService.getAll({ limit: 1000 }).catch(() => ({ clients: [] })),
-        
-        // Get venue data for occupancy
-        venueService.getAll().catch(() => ({ venues: [] })),
-        
-        // Get tasks for completion rate
-        taskService.getAll({ limit: 1000 }).catch(() => ({ tasks: [] })),
-        
-        // Get revenue trend data (last 6 months)
-        dashboardService.getRevenueTrend({ period: '6months' }).catch(() => ({ trend: [] }))
+        venueService.getMe().catch(() => ({})),
+        taskService.getAll({ limit: 100 }).catch(() => ({ tasks: [] })),
+        clientService.getStats().catch(() => ({}))
       ]);
 
-      // Calculate occupancy rate
-      const events = eventsResponse?.events || eventsResponse?.data?.events || [];
-      const venues = venuesResponse?.venues || venuesResponse?.data?.venues || [];
-      const totalVenueCapacity = venues.reduce((sum, venue) => sum + (venue.capacity || 0), 0);
-      const bookedEvents = events.filter(event => 
-        ['confirmed', 'completed'].includes(event.status?.toLowerCase())
-      ).length;
-      const occupancyRate = totalVenueCapacity > 0 ? 
-        Math.round((bookedEvents / totalVenueCapacity) * 100) : 0;
-
-      // Calculate average rating from clients
+      const venues = venuesResponse?.venue || venuesResponse?.data || {};
+      const allTasks = allTasksResponse?.tasks || allTasksResponse?.data?.tasks || [];
       const clients = clientsResponse?.clients || clientsResponse?.data?.clients || [];
-      const ratings = clients.filter(client => client.rating).map(client => client.rating);
-      const averageRating = ratings.length > 0 ? 
-        Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : 0;
+      const clientStats = clientStatsResponse || {};
+
+      // Calculate occupancy rate based on venue capacity and booked events
+      const venueCapacity = venues.capacity?.max || 1;
+      const bookedEvents = events.filter(event => 
+        ['confirmed', 'completed', 'in-progress'].includes(event.status?.toLowerCase())
+      ).length;
+      const occupancyRate = Math.round((bookedEvents / venueCapacity) * 100);
 
       // Calculate task completion rate
-      const allTasks = tasksResponse?.tasks || tasksResponse?.data?.tasks || [];
       const completedTasks = allTasks.filter(task => 
         task.status?.toLowerCase() === 'completed'
       ).length;
       const taskCompletion = allTasks.length > 0 ? 
         Math.round((completedTasks / allTasks.length) * 100) : 0;
 
-      // Calculate payment collection rate
-      const payments = paymentsResponse?.payments || paymentsResponse?.data?.payments || [];
-      const totalInvoiced = events.reduce((sum, event) => sum + (event.totalAmount || 0), 0);
+      // Calculate payment collection rate from invoices
+      const totalInvoiced = events.reduce((sum, event) => sum + (event.pricing?.totalAmount || 0), 0);
       const totalCollected = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
       const paymentCollection = totalInvoiced > 0 ? 
         Math.round((totalCollected / totalInvoiced) * 100) : 0;
 
-      // Calculate event type distribution
+      // Calculate average event value
+      const averageEventValue = currentMonthEvents > 0 ? currentMonthRevenue / currentMonthEvents : 0;
+
+      // Calculate event type distribution with proper error handling
       const eventTypeCount = {};
       events.forEach(event => {
-        const type = event.eventType || 'Other';
+        const type = event.type || event.eventType || 'Other';
         eventTypeCount[type] = (eventTypeCount[type] || 0) + 1;
       });
 
-      const eventTypeDistribution = Object.entries(eventTypeCount).map(([type, count], index) => {
-        const colors = ['bg-purple-500', 'bg-blue-500', 'bg-pink-500', 'bg-green-500', 'bg-orange-500', 'bg-gray-500'];
-        return {
-          type: type.charAt(0).toUpperCase() + type.slice(1),
-          count,
-          color: colors[index % colors.length]
-        };
+      const eventTypeDistribution = Object.entries(eventTypeCount)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 6)
+        .map(([type, count], index) => {
+          const colors = ['#8B5CF6', '#3B82F6', '#EC4899', '#10B981', '#F59E0B', '#6B7280'];
+          return {
+            type: type.charAt(0).toUpperCase() + type.slice(1),
+            count,
+            color: colors[index % colors.length]
+          };
+        });
+
+      // Generate revenue trend (last 6 months) with proper error handling
+      const revenueTrend = Array.from({ length: 6 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - (5 - i));
+        const month = date.toLocaleDateString('en-US', { month: 'short' });
+        
+        const monthRevenue = payments
+          .filter(payment => {
+            if (!payment.paidDate && !payment.createdAt) return false;
+            const paymentDate = new Date(payment.paidDate || payment.createdAt);
+            return paymentDate.getMonth() === date.getMonth() && 
+                   paymentDate.getFullYear() === date.getFullYear();
+          })
+          .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        
+        return { month, revenue: monthRevenue };
       });
 
-      // Process revenue trend data
-      const revenueTrendData = revenueTrendResponse?.trend || revenueTrendResponse?.data?.trend || [];
-      const revenueTrend = revenueTrendData.map(item => ({
-        month: item.month,
-        revenue: item.revenue || 0
-      }));
-
-      // Calculate performance metrics
-      const performanceMetrics = {
-        venueUtilization: occupancyRate,
-        taskCompletion,
-        paymentCollection,
-        clientSatisfaction: Math.round(averageRating * 20), // Convert 5-star to percentage
+      // Calculate financial health metrics
+      const totalRevenue = financeSummary.totalRevenue || totalCollected;
+      const totalExpenses = financeSummary.totalExpenses || 0;
+      const profitMargin = totalRevenue > 0 ? Math.round(((totalRevenue - totalExpenses) / totalRevenue) * 100) : 0;
+      
+      const financialHealth = {
+        profitMargin,
+        cashFlow: (financeSummary.cashFlow?.currentBalance || 0),
+        revenueGrowth: stats.monthlyComparison.revenue.change,
+        expenseRatio: totalRevenue > 0 ? Math.round((totalExpenses / totalRevenue) * 100) : 0,
       };
 
-      // Get recent activity from various sources
+      // Calculate client retention rate (simplified)
+      const repeatClients = clients.filter(client => 
+        client.totalEvents > 1
+      ).length;
+      const clientRetention = clients.length > 0 ? 
+        Math.round((repeatClients / clients.length) * 100) : 0;
+
+      // Calculate client satisfaction (simplified - based on ratings)
+      const ratedClients = clients.filter(client => client.rating);
+      const clientSatisfaction = ratedClients.length > 0 ? 
+        Math.round((ratedClients.reduce((sum, client) => sum + (client.rating || 0), 0) / ratedClients.length) * 20) : 85;
+
+      // Get recent activity from multiple sources with proper error handling
       const recentActivity = [
-        ...(payments.slice(0, 2).map(payment => ({
+        ...payments.slice(0, 2).map(payment => ({
           action: 'Payment received',
           details: `${payment.clientId?.name || 'Client'} - ${formatCurrency(payment.amount)}`,
-          time: new Date(payment.createdAt).toLocaleDateString(),
+          time: new Date(payment.paidDate || payment.createdAt).toLocaleDateString(),
           type: 'payment'
-        }))),
-        ...(events.slice(0, 2).map(event => ({
-          action: 'Event ' + event.status,
+        })),
+        ...events.slice(0, 2).map(event => ({
+          action: `Event ${event.status}`,
           details: `${event.title} - ${new Date(event.startDate).toLocaleDateString()}`,
-          time: new Date(event.updatedAt).toLocaleDateString(),
+          time: new Date(event.updatedAt || event.createdAt).toLocaleDateString(),
           type: 'event'
-        })))
-      ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 4);
-
-      // Mock team performance (replace with actual team API if available)
-      const teamPerformance = [
-        { name: 'John Doe', tasksCompleted: 12, eventsManaged: 8, rating: 4.8 },
-        { name: 'Jane Smith', tasksCompleted: 15, eventsManaged: 10, rating: 4.9 },
-        { name: 'Mike Johnson', tasksCompleted: 8, eventsManaged: 6, rating: 4.6 },
-      ];
+        })),
+        ...allTasks.slice(0, 1).filter(task => task.status === 'completed').map(task => ({
+          action: 'Task completed',
+          details: task.title,
+          time: new Date(task.completedAt || task.updatedAt).toLocaleDateString(),
+          type: 'task'
+        }))
+      ]
+      .sort((a, b) => new Date(b.time) - new Date(a.time))
+      .slice(0, 4);
 
       return {
         occupancyRate,
-        averageRating,
+        averageRating: clientStats.averageRating || 4.5,
         taskCompletion,
         paymentCollection,
-        revenueTrend: revenueTrend.length > 0 ? revenueTrend : [
-          { month: 'Jan', revenue: 45000 },
-          { month: 'Feb', revenue: 52000 },
-          { month: 'Mar', revenue: 48000 },
-          { month: 'Apr', revenue: 61000 },
-          { month: 'May', revenue: 58000 },
-          { month: 'Jun', revenue: 72000 },
-        ],
-        eventTypeDistribution: eventTypeDistribution.length > 0 ? eventTypeDistribution : [
-          { type: 'Wedding', count: 8, color: 'bg-purple-500' },
-          { type: 'Corporate', count: 5, color: 'bg-blue-500' },
-          { type: 'Birthday', count: 3, color: 'bg-pink-500' },
-          { type: 'Other', count: 2, color: 'bg-gray-500' },
-        ],
-        performanceMetrics,
-        recentActivity: recentActivity.length > 0 ? recentActivity : [
-          { action: 'Payment received', details: 'Wedding Client - $2,500', time: '2 hours ago', type: 'payment' },
-          { action: 'Event confirmed', details: 'Corporate Gala - Dec 15', time: '5 hours ago', type: 'event' },
-          { action: 'Task completed', details: 'Finalize venue setup', time: '1 day ago', type: 'task' },
-          { action: 'New client registered', details: 'Sarah Johnson - Birthday', time: '1 day ago', type: 'client' },
-        ],
-        teamPerformance,
+        revenueTrend,
+        eventTypeDistribution,
+        performanceMetrics: {
+          venueUtilization: occupancyRate,
+          taskCompletion,
+          paymentCollection,
+          clientSatisfaction,
+        },
+        financialHealth,
+        clientRetention,
+        clientSatisfaction,
+        averageEventValue,
+        recentActivity,
+        teamPerformance: [], // This would come from a team API
       };
 
     } catch (error) {
       console.error("Error fetching enhanced data:", error);
-      // Return fallback data if API calls fail
-      return {
-        occupancyRate: 75,
-        averageRating: 4.8,
-        taskCompletion: 90,
-        paymentCollection: 88,
-        revenueTrend: [
-          { month: 'Jan', revenue: 45000 },
-          { month: 'Feb', revenue: 52000 },
-          { month: 'Mar', revenue: 48000 },
-          { month: 'Apr', revenue: 61000 },
-          { month: 'May', revenue: 58000 },
-          { month: 'Jun', revenue: 72000 },
-        ],
-        eventTypeDistribution: [
-          { type: 'Wedding', count: 8, color: 'bg-purple-500' },
-          { type: 'Corporate', count: 5, color: 'bg-blue-500' },
-          { type: 'Birthday', count: 3, color: 'bg-pink-500' },
-          { type: 'Other', count: 2, color: 'bg-gray-500' },
-        ],
-        performanceMetrics: {
-          venueUtilization: 75,
-          taskCompletion: 90,
-          paymentCollection: 88,
-          clientSatisfaction: 92,
-        },
-        recentActivity: [
-          { action: 'Payment received', details: 'Wedding Client - $2,500', time: '2 hours ago', type: 'payment' },
-          { action: 'Event confirmed', details: 'Corporate Gala - Dec 15', time: '5 hours ago', type: 'event' },
-          { action: 'Task completed', details: 'Finalize venue setup', time: '1 day ago', type: 'task' },
-          { action: 'New client registered', details: 'Sarah Johnson - Birthday', time: '1 day ago', type: 'client' },
-        ],
-        teamPerformance: [
-          { name: 'John Doe', tasksCompleted: 12, eventsManaged: 8, rating: 4.8 },
-          { name: 'Jane Smith', tasksCompleted: 15, eventsManaged: 10, rating: 4.9 },
-          { name: 'Mike Johnson', tasksCompleted: 8, eventsManaged: 6, rating: 4.6 },
-        ],
-      };
+      return getFallbackEnhancedData();
     }
   };
 
-  // Prepare chart data for Event Type Distribution
+  const getFallbackEnhancedData = () => ({
+    occupancyRate: 75,
+    averageRating: 4.5,
+    taskCompletion: 85,
+    paymentCollection: 80,
+    revenueTrend: [
+      { month: 'Jan', revenue: 45000 },
+      { month: 'Feb', revenue: 52000 },
+      { month: 'Mar', revenue: 48000 },
+      { month: 'Apr', revenue: 61000 },
+      { month: 'May', revenue: 58000 },
+      { month: 'Jun', revenue: 72000 },
+    ],
+    eventTypeDistribution: [
+      { type: 'Wedding', count: 8, color: '#8B5CF6' },
+      { type: 'Corporate', count: 5, color: '#3B82F6' },
+      { type: 'Birthday', count: 3, color: '#EC4899' },
+      { type: 'Other', count: 2, color: '#6B7280' },
+    ],
+    performanceMetrics: {
+      venueUtilization: 75,
+      taskCompletion: 85,
+      paymentCollection: 80,
+      clientSatisfaction: 90,
+    },
+    financialHealth: {
+      profitMargin: 35,
+      cashFlow: 125000,
+      revenueGrowth: 12.5,
+      expenseRatio: 65,
+    },
+    clientRetention: 78,
+    clientSatisfaction: 90,
+    averageEventValue: 4500,
+    recentActivity: [
+      { action: 'Payment received', details: 'Wedding Client - $2,500', time: '2 hours ago', type: 'payment' },
+      { action: 'Event confirmed', details: 'Corporate Gala - Dec 15', time: '5 hours ago', type: 'event' },
+      { action: 'Task completed', details: 'Finalize venue setup', time: '1 day ago', type: 'task' },
+    ],
+    teamPerformance: [],
+  });
+
+  // Prepare chart data
   const eventTypeChartData = {
     labels: enhancedStats.eventTypeDistribution.map(item => item.type),
     datasets: [
       {
         data: enhancedStats.eventTypeDistribution.map(item => item.count),
-        backgroundColor: [
-          'rgba(147, 51, 234, 0.8)',  // Purple for Wedding
-          'rgba(59, 130, 246, 0.8)',  // Blue for Corporate
-          'rgba(236, 72, 153, 0.8)',  // Pink for Birthday
-          'rgba(16, 185, 129, 0.8)',  // Green for Other types
-          'rgba(249, 115, 22, 0.8)',  // Orange for additional types
-          'rgba(107, 114, 128, 0.8)', // Gray for Other
-        ],
-        borderColor: [
-          'rgba(147, 51, 234, 1)',
-          'rgba(59, 130, 246, 1)',
-          'rgba(236, 72, 153, 1)',
-          'rgba(16, 185, 129, 1)',
-          'rgba(249, 115, 22, 1)',
-          'rgba(107, 114, 128, 1)',
-        ],
+        backgroundColor: enhancedStats.eventTypeDistribution.map(item => item.color),
+        borderColor: enhancedStats.eventTypeDistribution.map(item => item.color),
         borderWidth: 2,
         hoverOffset: 15,
       },
     ],
   };
 
-  const eventTypeChartOptions = {
+  const revenueTrendChartData = {
+    labels: enhancedStats.revenueTrend.map(item => item.month),
+    datasets: [
+      {
+        label: 'Revenue',
+        data: enhancedStats.revenueTrend.map(item => item.revenue),
+        borderColor: '#10B981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 20,
-          font: {
-            size: 12,
-          },
-          color: '#6B7280', // gray-500
-        },
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            const label = context.label || '';
-            const value = context.raw || 0;
-            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-            const percentage = Math.round((value / total) * 100);
-            return `${label}: ${value} events (${percentage}%)`;
-          }
-        }
       },
     },
-    cutout: '60%',
+  };
+
+  const revenueChartOptions = {
+    ...chartOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return formatCurrency(value);
+          }
+        }
+      }
+    }
   };
 
   const getProgressBarColor = (percentage) => {
@@ -465,12 +529,37 @@ const DashboardPage = () => {
     return 'bg-red-500';
   };
 
-  if (loading) {
+  const getFinancialHealthColor = (metric, value) => {
+    if (metric === 'profitMargin') {
+      if (value >= 30) return 'text-green-600';
+      if (value >= 15) return 'text-yellow-600';
+      return 'text-red-600';
+    }
+    if (metric === 'expenseRatio') {
+      if (value <= 60) return 'text-green-600';
+      if (value <= 75) return 'text-yellow-600';
+      return 'text-red-600';
+    }
+    return 'text-gray-600';
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      case 'confirmed': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+      case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    }
+  };
+
+  // Loading State
+  if (loading && !hasInitialLoad) {
     return (
-      <div className="p-8 flex justify-center items-center min-h-screen text-gray-600 dark:text-gray-300">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-          <p>Loading dashboard...</p>
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -486,7 +575,7 @@ const DashboardPage = () => {
             Dashboard
           </h1>
           <p className="mt-1 text-base text-gray-600 dark:text-gray-300">
-            Overview of key metrics and upcoming events
+            Comprehensive overview of your venue performance
           </p>
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -499,6 +588,57 @@ const DashboardPage = () => {
         </div>
       </div>
 
+      {/* Financial Health Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Profit Margin</div>
+              <div className={`text-2xl font-bold ${getFinancialHealthColor('profitMargin', enhancedStats.financialHealth.profitMargin)}`}>
+                {enhancedStats.financialHealth.profitMargin}%
+              </div>
+            </div>
+            <TrendingUp className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Cash Flow</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {formatCurrency(enhancedStats.financialHealth.cashFlow)}
+              </div>
+            </div>
+            <CreditCard className="w-8 h-8 text-blue-500" />
+          </div>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Client Retention</div>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {enhancedStats.clientRetention}%
+              </div>
+            </div>
+            <UserCheck className="w-8 h-8 text-purple-500" />
+          </div>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Expense Ratio</div>
+              <div className={`text-2xl font-bold ${getFinancialHealthColor('expenseRatio', enhancedStats.financialHealth.expenseRatio)}`}>
+                {enhancedStats.financialHealth.expenseRatio}%
+              </div>
+            </div>
+            <TrendingDown className="w-8 h-8 text-red-500" />
+          </div>
+        </div>
+      </div>
+
       {/* Quick Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
@@ -506,7 +646,7 @@ const DashboardPage = () => {
           <div className="text-sm text-gray-600 dark:text-gray-400">Occupancy Rate</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{enhancedStats.averageRating}</div>
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{enhancedStats.averageRating}/5</div>
           <div className="text-sm text-gray-600 dark:text-gray-400">Avg. Rating</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
@@ -522,7 +662,7 @@ const DashboardPage = () => {
       {/* Main Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Events This Month */}
-        <Card>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -557,10 +697,10 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Revenue This Month */}
-        <Card>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -595,82 +735,64 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Total Upcoming */}
-        <Card>
+        {/* Average Event Value */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Upcoming
+                  Avg. Event Value
                 </div>
-                <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-                  {stats.upcomingEvents.length}
+                <div className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
+                  {formatCurrency(enhancedStats.averageEventValue)}
                 </div>
               </div>
               <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <Package className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Pending Payments */}
-        <Card>
+        {/* Client Satisfaction */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Pending Payments
+                  Client Satisfaction
                 </div>
-                <div className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                  {stats.pendingPayments}
+                <div className="mt-2 text-3xl font-bold text-pink-600 dark:text-pink-400">
+                  {enhancedStats.clientSatisfaction}%
                 </div>
               </div>
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+              <div className="p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg">
+                <ThumbsUp className="w-6 h-6 text-pink-600 dark:text-pink-400" />
               </div>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Charts & Metrics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Trend Chart */}
-        <Card>
+        {/* Revenue Trend Line Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
               Revenue Trend (Last 6 Months)
             </h3>
             <div className="h-64">
-              <div className="flex items-end justify-between h-48 gap-2 px-4">
-                {enhancedStats.revenueTrend.map((item, index) => {
-                  const maxRevenue = Math.max(...enhancedStats.revenueTrend.map(d => d.revenue));
-                  const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
-                  return (
-                    <div key={index} className="flex flex-col items-center flex-1">
-                      <div 
-                        className="w-full bg-gradient-to-t from-green-500 to-green-400 rounded-t transition-all hover:opacity-80 cursor-pointer"
-                        style={{ height: `${height}%` }}
-                        title={`${item.month}: ${formatCurrency(item.revenue)}`}
-                      />
-                      <span className="text-xs mt-2 text-gray-600 dark:text-gray-400">{item.month}</span>
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {formatCurrency(item.revenue / 1000)}K
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+              <Line data={revenueTrendChartData} options={revenueChartOptions} />
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Performance Metrics */}
-        <Card>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5" />
@@ -698,17 +820,17 @@ const DashboardPage = () => {
               ))}
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Event Type Distribution - Now as a Pie Chart */}
-        <Card>
+        {/* Event Type Distribution */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <PieChart className="w-5 h-5" />
               Event Type Distribution
             </h3>
             <div className="h-64 relative">
-              <Doughnut data={eventTypeChartData} options={eventTypeChartOptions} />
+              <Doughnut data={eventTypeChartData} options={chartOptions} />
             </div>
             {/* Additional summary stats */}
             <div className="mt-4 grid grid-cols-2 gap-2 text-center">
@@ -731,10 +853,10 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Recent Activity */}
-        <Card>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -766,15 +888,15 @@ const DashboardPage = () => {
               ))}
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Event Status Breakdown */}
-      <Card>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <PieChart className="w-5 h-5" />
+              <BarChart3 className="w-5 h-5" />
               Event Status Breakdown
             </h3>
           </div>
@@ -825,16 +947,16 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upcoming Events */}
-        <Card className="lg:col-span-2">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Upcoming Events
+                Upcoming Events (30 Days)
               </h2>
               <Button
                 variant="outline"
@@ -894,23 +1016,15 @@ const DashboardPage = () => {
                           })}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                          {event.location}
+                          {event.clientName}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
                           {event.guestCount}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge
-                            variant={
-                              event.status?.toLowerCase() === "confirmed"
-                                ? "success"
-                                : event.status?.toLowerCase() === "pending"
-                                  ? "warning"
-                                  : "info"
-                            }
-                          >
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
                             {event.status}
-                          </Badge>
+                          </span>
                         </td>
                       </tr>
                     ))
@@ -919,12 +1033,12 @@ const DashboardPage = () => {
               </table>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Right Sidebar */}
         <div className="space-y-6">
           {/* Recent Payments */}
-          <Card>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -970,11 +1084,11 @@ const DashboardPage = () => {
                 )}
               </ul>
             </div>
-          </Card>
+          </div>
 
           {/* My Tasks */}
           {tasks.length > 0 && (
-            <Card>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1017,32 +1131,30 @@ const DashboardPage = () => {
                             {task.title}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Due: {new Date(task.dueDate).toLocaleDateString("en-US", {
+                            Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
-                            })}
+                            }) : 'No due date'}
                           </p>
                         </div>
-                        <Badge
-                          variant={
-                            task.priority === 'urgent' ? 'danger' :
-                            task.priority === 'high' ? 'warning' : 'info'
-                          }
-                          className="text-xs"
-                        >
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          task.priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                          task.priority === 'high' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400' :
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                        }`}>
                           {task.priority}
-                        </Badge>
+                        </span>
                       </div>
                     </li>
                   ))}
                 </ul>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Upcoming Reminders */}
           {reminders.length > 0 && (
-            <Card>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1071,10 +1183,10 @@ const DashboardPage = () => {
                             {reminder.title}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {new Date(reminder.reminderDate).toLocaleDateString("en-US", {
+                            {reminder.reminderDate ? new Date(reminder.reminderDate).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
-                            })} at {reminder.reminderTime}
+                            }) : 'No date set'}
                           </p>
                         </div>
                       </div>
@@ -1082,7 +1194,7 @@ const DashboardPage = () => {
                   ))}
                 </ul>
               </div>
-            </Card>
+            </div>
           )}
         </div>
       </div>

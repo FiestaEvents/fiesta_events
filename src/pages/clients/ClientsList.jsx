@@ -8,7 +8,17 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { clientService } from "../../api/index";
 import { UsersIcon } from "../../components/icons/IconComponents";
-import { Plus, Search, Filter, Eye, X, Edit, Trash2, AlertTriangle } from "lucide-react";
+import ClientDetailModal from "./ClientDetailModal.jsx"
+import {
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  X,
+  Edit,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 import ClientDetail from "./ClientDetail.jsx";
 import ClientForm from "./ClientForm.jsx";
 import Badge from "../../components/common/Badge";
@@ -26,13 +36,13 @@ const ClientsList = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  
+
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     clientId: null,
     clientName: "",
-    onConfirm: null
+    onConfirm: null,
   });
 
   // Search & filter state
@@ -99,14 +109,17 @@ const ClientsList = () => {
   }, [search, status, page, limit, showError]);
 
   // Show confirmation modal
-  const showDeleteConfirmation = useCallback((clientId, clientName = "Client") => {
-    setConfirmationModal({
-      isOpen: true,
-      clientId,
-      clientName,
-      onConfirm: () => handleDeleteConfirm(clientId, clientName)
-    });
-  }, []);
+  const showDeleteConfirmation = useCallback(
+    (clientId, clientName = "Client") => {
+      setConfirmationModal({
+        isOpen: true,
+        clientId,
+        clientName,
+        onConfirm: () => handleDeleteConfirm(clientId, clientName),
+      });
+    },
+    []
+  );
 
   // Close confirmation modal
   const closeConfirmationModal = useCallback(() => {
@@ -114,66 +127,61 @@ const ClientsList = () => {
       isOpen: false,
       clientId: null,
       clientName: "",
-      onConfirm: null
+      onConfirm: null,
     });
   }, []);
 
   // Handle confirmed deletion
-  const handleDeleteConfirm = useCallback(async (clientId, clientName = "Client") => {
-    if (!clientId) {
-      showError("Invalid client ID");
-      return;
-    }
+  const handleDeleteConfirm = useCallback(
+    async (clientId, clientName = "Client") => {
+      if (!clientId) {
+        showError("Invalid client ID");
+        return;
+      }
 
-    try {
-      // Use the promise toast for loading state
-      await promise(
-        clientService.delete(clientId),
-        {
+      try {
+        // Use the promise toast for loading state
+        await promise(clientService.delete(clientId), {
           loading: `Deleting ${clientName}...`,
           success: `${clientName} deleted successfully`,
-          error: `Failed to delete ${clientName}`
-        }
-      );
+          error: `Failed to delete ${clientName}`,
+        _});
 
-      // Refresh the clients list
-      fetchClients();
-      
-      // Close detail modal if the deleted client is currently selected
-      if (selectedClient?._id === clientId) {
-        setSelectedClient(null);
-        setIsDetailModalOpen(false);
+        // Refresh the clients list
+        fetchClients();
+
+        // Close detail modal if the deleted client is currently selected
+        if (selectedClient?._id === clientId) {
+          setSelectedClient(null);
+          setIsDetailModalOpen(false);
+        }
+
+        // Close confirmation modal
+        closeConfirmationModal();
+      } catch (err) {
+        // Error is already handled by the promise toast
+        console.error("Delete client error:", err);
+        closeConfirmationModal();
       }
-      
-      // Close confirmation modal
-      closeConfirmationModal();
-    } catch (err) {
-      // Error is already handled by the promise toast
-      console.error("Delete client error:", err);
-      closeConfirmationModal();
-    }
-  }, [fetchClients, selectedClient, promise, showError, closeConfirmationModal]);
+    },
+    [fetchClients, selectedClient, promise, showError, closeConfirmationModal]
+  );
 
   // Updated client deletion handler
-  const handleDeleteClient = useCallback((clientId, clientName = "Client") => {
-    showDeleteConfirmation(clientId, clientName);
-  }, [showDeleteConfirmation]);
+  const handleDeleteClient = useCallback(
+    (clientId, clientName = "Client") => {
+      showDeleteConfirmation(clientId, clientName);
+    },
+    [showDeleteConfirmation]
+  );
 
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
-
-  const handleAddClient = useCallback(() => {
-    setSelectedClient(null);
-    setIsFormOpen(true);
-  }, []);
-
-  const handleEditClient = useCallback((client) => {
+  // Handle row click to open detail modal
+  const handleRowClick = useCallback((client) => {
     setSelectedClient(client);
-    setIsDetailModalOpen(false);
-    setIsFormOpen(true);
+    setIsDetailModalOpen(true);
   }, []);
 
+  // Handle view client (alternative navigation)
   const handleViewClient = useCallback(
     (client) => {
       navigate(`/clients/${client._id}`, { state: { client } });
@@ -181,17 +189,44 @@ const ClientsList = () => {
     [navigate]
   );
 
+  // Handle edit client
+  const handleEditClient = useCallback((client) => {
+    setSelectedClient(client);
+    setIsDetailModalOpen(false);
+    setIsFormOpen(true);
+  }, []);
+
+  // Handle add client
+  const handleAddClient = useCallback(() => {
+    setSelectedClient(null);
+    setIsFormOpen(true);
+  }, []);
+
+  // Handle form success
   const handleFormSuccess = useCallback(() => {
     fetchClients();
     setSelectedClient(null);
     setIsFormOpen(false);
     showSuccess(
-      selectedClient 
-        ? "Client updated successfully" 
+      selectedClient
+        ? "Client updated successfully"
         : "Client created successfully"
     );
   }, [fetchClients, selectedClient, showSuccess]);
 
+  // Handle form close
+  const handleFormClose = useCallback(() => {
+    setSelectedClient(null);
+    setIsFormOpen(false);
+  }, []);
+
+  // Handle detail modal close
+  const handleDetailModalClose = useCallback(() => {
+    setSelectedClient(null);
+    setIsDetailModalOpen(false);
+  }, []);
+
+  // Clear filters
   const handleClearFilters = useCallback(() => {
     setSearch("");
     setStatus("all");
@@ -199,10 +234,15 @@ const ClientsList = () => {
     showInfo("Filters cleared");
   }, [showInfo]);
 
+  // Retry loading
   const handleRetry = useCallback(() => {
     fetchClients();
     showInfo("Retrying to load clients...");
   }, [fetchClients, showInfo]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   const hasActiveFilters = search.trim() !== "" || status !== "all";
   const showEmptyState =
@@ -300,7 +340,7 @@ const ClientsList = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleViewClient(row);
+              handleRowClick(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
             title="View Client"
@@ -336,11 +376,11 @@ const ClientsList = () => {
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
+        <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Clients
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Manage your client records and relationships.{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
@@ -454,6 +494,8 @@ const ClientsList = () => {
               columns={columns}
               data={clients}
               loading={loading}
+              // Enable row clicking for detail modal
+              onRowClick={handleRowClick}
               // Enable pagination
               pagination={true}
               currentPage={page}
@@ -466,6 +508,9 @@ const ClientsList = () => {
                 setPage(1);
               }}
               pageSizeOptions={[10, 25, 50, 100]}
+              // Add hover and striped styling like EventList
+              striped={true}
+              hoverable={true}
             />
           </div>
 
@@ -490,7 +535,7 @@ const ClientsList = () => {
 
       {/* No Results from Search/Filter */}
       {showNoResults && (
-        <div className="text-center py-12 bg">
+        <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             No clients found
@@ -522,43 +567,27 @@ const ClientsList = () => {
       )}
 
       {/* Client Detail Modal */}
-      {isDetailModalOpen && selectedClient && (
-        <Modal
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setSelectedClient(null);
-            setIsDetailModalOpen(false);
-          }}
-          title="Client Details"
-          size="lg"
-        >
-          <div className="p-6">
-            <ClientDetail client={selectedClient} />
-          </div>
-        </Modal>
-      )}
+<ClientDetailModal
+  isOpen={isDetailModalOpen}
+  onClose={handleDetailModalClose}
+  client={selectedClient}
+  onEdit={handleEditClient}
+  refreshData={fetchClients}
+/>
 
-      {/* Add/Edit Form */}
-      {isFormOpen && (
-        <Modal
-          isOpen={isFormOpen}
-          onClose={() => {
-            setSelectedClient(null);
-            setIsFormOpen(false);
-          }}
-          title={selectedClient ? "Edit Client" : "Add New Client"}
-          size="lg"
-        >
-          <ClientForm
-            client={selectedClient}
-            onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setSelectedClient(null);
-              setIsFormOpen(false);
-            }}
-          />
-        </Modal>
-      )}
+      {/* Add/Edit Form Modal */}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={handleFormClose}
+        title={selectedClient ? "Edit Client" : "Add New Client"}
+        size="lg"
+      >
+        <ClientForm
+          client={selectedClient}
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormClose}
+        />
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -579,8 +608,10 @@ const ClientsList = () => {
                 Delete Client
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.clientName}"</strong>? 
-                This action cannot be undone and all associated data will be permanently removed.
+                Are you sure you want to delete{" "}
+                <strong>"{confirmationModal.clientName}"</strong>? This action
+                cannot be undone and all associated data will be permanently
+                removed.
               </p>
               <div className="flex justify-end gap-3">
                 <Button

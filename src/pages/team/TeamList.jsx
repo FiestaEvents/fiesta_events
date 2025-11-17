@@ -1,6 +1,5 @@
 // src/pages/team/TeamPage.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/Table";
@@ -137,46 +136,46 @@ const TeamList = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <div>
           <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
             Total Members
           </div>
           <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
             {totalMembers}
           </div>
-        </Card>
-        <Card>
+        </div>
+        <div>
           <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
             Active Members
           </div>
           <div className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
             {activeMembers}
           </div>
-        </Card>
-        <Card>
+        </div>
+        <div>
           <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
             Pending Invites
           </div>
           <div className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
             {pendingInvites}
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 p-4">
           <div className="flex items-center justify-between">
             <p className="text-red-800 dark:text-red-200">{error}</p>
             <Button onClick={handleRefresh} size="sm" variant="outline">
               Retry
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Search & Filters */}
-      <Card className="flex flex-col sm:flex-row sm:items-center gap-4 p-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4">
         <div className="flex-1">
           <Input
             placeholder="Search by name or email..."
@@ -197,10 +196,10 @@ const TeamList = () => {
             aria-label="Filter by role"
           />
         </div>
-      </Card>
+      </div>
 
       {/* Team Members Table */}
-      <Card>
+      <div>
         {teamMembers.length > 0 ? (
           <>
             <Table
@@ -251,7 +250,7 @@ const TeamList = () => {
             </p>
           </div>
         )}
-      </Card>
+      </div>
 
       {/* View Member Modal */}
       {isModalOpen && selectedMember && (

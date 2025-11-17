@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import Card from '../../components/common/Card';
+import Crd from '../../components/common/Card';
 import { authService } from '../../api/index';
 
 const ResetPassword = () => {
@@ -39,7 +39,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md p-6">
+      <div className="w-full max-w-md p-6">
         <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Reset Password</h1>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
           Enter your new password below.
@@ -69,7 +69,7 @@ const ResetPassword = () => {
             Reset Password
           </Button>
         </form>
-      </Card>
+      </div>
     </div>
   );
 };

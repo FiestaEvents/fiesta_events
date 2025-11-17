@@ -18,6 +18,7 @@ const Input = forwardRef(
       containerClassName = "",
       leftElement,
       rightElement,
+      defaultValue,
       ...props
     },
     ref
@@ -77,6 +78,7 @@ const Input = forwardRef(
 
           {/* Input Field */}
           <input
+            defaultValue={defaultValue}
             ref={ref}
             disabled={disabled}
             className={`${baseInputStyles} ${errorStyles} ${paddingLeft} ${paddingRight} ${widthClass} ${className}`}

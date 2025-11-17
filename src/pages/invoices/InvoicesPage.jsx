@@ -1,45 +1,42 @@
 // src/pages/invoices/InvoicesPage.jsx
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  FileText,
-  Plus,
-  Eye,
-  Download,
-  Search,
-  X,
-  Calendar,
-  DollarSign,
-  Send,
-  Check,
-  Edit,
-  Trash2,
-  Filter,
-  Mail,
   AlertCircle,
-  TrendingUp,
-  Clock,
-  XCircle,
-  Users,
   Briefcase,
+  Check,
   ChevronDown,
   ChevronUp,
+  Clock,
+  DollarSign,
+  Download,
+  Edit,
+  Eye,
+  FileText,
+  Mail,
+  Plus,
+  Search,
+  Send,
+  Trash2,
+  Users,
+  X,
+  AlertTriangle,
 } from "lucide-react";
 import Card from "../../components/common/Card";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { invoiceService } from "../../api/index";
+import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
-import Select from "../../components/common/Select";
-import Badge from "../../components/common/Badge";
-import Modal from "../../components/common/Modal";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Pagination from "../../components/common/Pagination";
-import { invoiceService } from "../../api/index";
-import { toast } from "react-hot-toast";
+import Select from "../../components/common/Select";
+import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
-
 const InvoicesPage = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo, promise } = useToast();
 
   // State
   const [invoices, setInvoices] = useState([]);
@@ -49,17 +46,22 @@ const InvoicesPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const [deleteId, setDeleteId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    invoiceId: null,
+    invoiceName: "",
+    onConfirm: null
+  });
+
   // Invoice Type Toggle
-  const [invoiceType, setInvoiceType] = useState("client"); 
+  const [invoiceType, setInvoiceType] = useState("client");
 
   // Filters
   const [filters, setFilters] = useState({
@@ -79,68 +81,76 @@ const InvoicesPage = () => {
 
   // Enhanced invoice data normalizer
   const normalizeInvoiceData = (invoice) => {
-    if (!invoice || typeof invoice !== 'object') {
-      console.warn('Invalid invoice data:', invoice);
+    if (!invoice || typeof invoice !== "object") {
+      console.warn("Invalid invoice data:", invoice);
       return null;
     }
 
     // Extract recipient information based on invoice type
-    let recipientName = '';
-    let recipientEmail = '';
-    let recipientCompany = '';
-    let recipientPhone = '';
+    let recipientName = "";
+    let recipientEmail = "";
+    let recipientCompany = "";
+    let recipientPhone = "";
 
-    if (invoice.invoiceType === 'client') {
-      recipientName = invoice.client?.name || invoice.recipientName || 'Client';
+    if (invoice.invoiceType === "client") {
+      recipientName = invoice.client?.name || invoice.recipientName || "Client";
       recipientEmail = invoice.client?.email || invoice.recipientEmail;
       recipientCompany = invoice.client?.company || invoice.recipientCompany;
       recipientPhone = invoice.client?.phone || invoice.recipientPhone;
     } else {
-      recipientName = invoice.partner?.name || invoice.recipientName || 'Partner';
+      recipientName =
+        invoice.partner?.name || invoice.recipientName || "Partner";
       recipientEmail = invoice.partner?.email || invoice.recipientEmail;
       recipientCompany = invoice.partner?.company || invoice.recipientCompany;
       recipientPhone = invoice.partner?.phone || invoice.recipientPhone;
     }
 
     // Calculate if invoice is overdue
-    const isOverdue = invoice.status === 'sent' && 
-                     invoice.dueDate && 
-                     new Date(invoice.dueDate) < new Date();
+    const isOverdue =
+      invoice.status === "sent" &&
+      invoice.dueDate &&
+      new Date(invoice.dueDate) < new Date();
 
     return {
       _id: invoice._id || invoice.id,
-      invoiceNumber: invoice.invoiceNumber || `INV-${(invoice._id || '').substring(0, 8)}`,
-      invoiceType: invoice.invoiceType || 'client',
+      invoiceNumber:
+        invoice.invoiceNumber || `INV-${(invoice._id || "").substring(0, 8)}`,
+      invoiceType: invoice.invoiceType || "client",
       recipientName,
       recipientEmail,
       recipientCompany,
       recipientPhone,
-      recipientAddress: invoice.recipientAddress || invoice.client?.address || invoice.partner?.address,
+      recipientAddress:
+        invoice.recipientAddress ||
+        invoice.client?.address ||
+        invoice.partner?.address,
       totalAmount: invoice.totalAmount || 0,
       subtotal: invoice.subtotal || 0,
       tax: invoice.tax || 0,
       taxRate: invoice.taxRate || 0,
       discount: invoice.discount || 0,
-      discountType: invoice.discountType || 'fixed',
-      status: invoice.status || 'draft',
+      discountType: invoice.discountType || "fixed",
+      status: invoice.status || "draft",
       issueDate: invoice.issueDate || new Date().toISOString(),
-      dueDate: invoice.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      dueDate:
+        invoice.dueDate ||
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       sentAt: invoice.sentAt,
       paidAt: invoice.paidAt,
       items: invoice.items || [],
-      notes: invoice.notes || '',
-      terms: invoice.terms || '',
-      currency: invoice.currency || 'TND',
-      paymentMethod: invoice.paymentMethod || 'cash',
+      notes: invoice.notes || "",
+      terms: invoice.terms || "",
+      currency: invoice.currency || "TND",
+      paymentMethod: invoice.paymentMethod || "cash",
       paymentStatus: invoice.paymentStatus || {
         amountPaid: invoice.amountPaid || 0,
         amountDue: invoice.amountDue || invoice.totalAmount || 0,
-        lastPaymentDate: invoice.lastPaymentDate
+        lastPaymentDate: invoice.lastPaymentDate,
       },
       event: invoice.event || null,
       isOverdue,
       createdAt: invoice.createdAt || new Date().toISOString(),
-      updatedAt: invoice.updatedAt || new Date().toISOString()
+      updatedAt: invoice.updatedAt || new Date().toISOString(),
     };
   };
 
@@ -153,10 +163,10 @@ const InvoicesPage = () => {
         endDate: filters.endDate || undefined,
         invoiceType: invoiceType,
       });
-      
+
       // Handle stats array format from backend
       const statsArray = response?.stats || response?.data?.stats || [];
-      const typeStats = statsArray.find(s => s._id === invoiceType) || {
+      const typeStats = statsArray.find((s) => s._id === invoiceType) || {
         totalInvoices: 0,
         totalRevenue: 0,
         totalPaid: 0,
@@ -168,14 +178,15 @@ const InvoicesPage = () => {
         overdue: 0,
         cancelled: 0,
       };
-      
+
       setStats(typeStats);
     } catch (error) {
       console.error("Error fetching stats:", error);
+      showError("Failed to load invoice statistics");
     } finally {
       setStatsLoading(false);
     }
-  }, [filters.startDate, filters.endDate, invoiceType]);
+  }, [filters.startDate, filters.endDate, invoiceType, showError]);
 
   // Fetch invoices with enhanced data validation
   const fetchInvoices = useCallback(async () => {
@@ -187,8 +198,10 @@ const InvoicesPage = () => {
         search: searchTerm || undefined,
         invoiceType: invoiceType,
         status: filters.status || undefined,
-        client: invoiceType === "client" ? filters.client || undefined : undefined,
-        partner: invoiceType === "partner" ? filters.partner || undefined : undefined,
+        client:
+          invoiceType === "client" ? filters.client || undefined : undefined,
+        partner:
+          invoiceType === "partner" ? filters.partner || undefined : undefined,
         event: filters.event || undefined,
         startDate: filters.startDate || undefined,
         endDate: filters.endDate || undefined,
@@ -197,39 +210,42 @@ const InvoicesPage = () => {
         sort: "-createdAt",
       };
 
-      console.log('Fetching invoices with params:', params);
+      console.log("Fetching invoices with params:", params);
       const response = await invoiceService.getAll(params);
 
       // Handle response structure and validate data
       let invoicesData = response?.invoices || response?.data?.invoices || [];
-      
-      console.log('Raw invoices data:', invoicesData);
+
+      console.log("Raw invoices data:", invoicesData);
 
       // Normalize and validate invoice data
       invoicesData = invoicesData
         .map(normalizeInvoiceData)
-        .filter(invoice => invoice !== null);
+        .filter((invoice) => invoice !== null);
 
-      const paginationData = response?.pagination || response?.data?.pagination || {
-        current: currentPage,
-        pages: 1,
-        total: invoicesData.length
-      };
+      const paginationData = response?.pagination ||
+        response?.data?.pagination || {
+          current: currentPage,
+          pages: 1,
+          total: invoicesData.length,
+        };
 
-      console.log('Normalized invoices:', invoicesData);
+      console.log("Normalized invoices:", invoicesData);
       setInvoices(invoicesData);
       setTotalPages(paginationData.pages || paginationData.totalPages || 1);
       setTotalItems(paginationData.total || invoicesData.length);
       setHasInitialLoad(true);
     } catch (error) {
       console.error("Error fetching invoices:", error);
-      setError(error.message || "Failed to load invoices. Please try again.");
+      const errorMessage = error.message || "Failed to load invoices. Please try again.";
+      setError(errorMessage);
+      showError(errorMessage);
       setInvoices([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters, currentPage, pageSize, invoiceType]);
+  }, [searchTerm, filters, currentPage, pageSize, invoiceType, showError]);
 
   useEffect(() => {
     fetchInvoices();
@@ -245,21 +261,83 @@ const InvoicesPage = () => {
     setSelectedRows([]);
   }, [invoiceType]);
 
+  // Show confirmation modal
+  const showDeleteConfirmation = useCallback((invoiceId, invoiceName = "Invoice") => {
+    setConfirmationModal({
+      isOpen: true,
+      invoiceId,
+      invoiceName,
+      onConfirm: () => handleDeleteConfirm(invoiceId, invoiceName)
+    });
+  }, []);
+
+  // Close confirmation modal
+  const closeConfirmationModal = useCallback(() => {
+    setConfirmationModal({
+      isOpen: false,
+      invoiceId: null,
+      invoiceName: "",
+      onConfirm: null
+    });
+  }, []);
+
+  // Handle confirmed deletion
+  const handleDeleteConfirm = useCallback(async (invoiceId, invoiceName = "Invoice") => {
+    if (!invoiceId) {
+      showError("Invalid invoice ID");
+      return;
+    }
+
+    try {
+      // Use the promise toast for loading state
+      await promise(
+        invoiceService.delete(invoiceId),
+        {
+          loading: `Deleting ${invoiceName}...`,
+          success: `${invoiceName} deleted successfully`,
+          error: `Failed to delete ${invoiceName}`
+        }
+      );
+
+      // Refresh the invoices list
+      fetchInvoices();
+      fetchStats();
+      
+      // Close detail modal if the deleted invoice is currently selected
+      if (selectedInvoice?._id === invoiceId) {
+        setSelectedInvoice(null);
+        setIsDetailModalOpen(false);
+      }
+      
+      // Close confirmation modal
+      closeConfirmationModal();
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Delete invoice error:", err);
+      closeConfirmationModal();
+    }
+  }, [fetchInvoices, fetchStats, selectedInvoice, promise, showError, closeConfirmationModal]);
+
+  // Updated invoice deletion handler
+  const handleDeleteClick = useCallback((invoiceId, invoiceName = "Invoice") => {
+    showDeleteConfirmation(invoiceId, invoiceName);
+  }, [showDeleteConfirmation]);
+
   // Safe render helper function with fallback values
-  const safeRender = (renderFunction, row, fallback = '-') => {
-    if (!row || typeof row !== 'object') {
+  const safeRender = (renderFunction, row, fallback = "-") => {
+    if (!row || typeof row !== "object") {
       return fallback;
     }
-    
+
     try {
       const result = renderFunction(row);
       // Check if the result is empty or undefined
-      if (result === null || result === undefined || result === '') {
+      if (result === null || result === undefined || result === "") {
         return fallback;
       }
       return result;
     } catch (error) {
-      console.error('Error rendering table cell:', error, row);
+      console.error("Error rendering table cell:", error, row);
       return fallback;
     }
   };
@@ -268,29 +346,40 @@ const InvoicesPage = () => {
   const handleCreateInvoice = () => {
     navigate(`/invoices/new?type=${invoiceType}`);
   };
+const handleRowClick = useCallback((invoice) => {
+  setSelectedInvoice(invoice);
+  setIsDetailModalOpen(true);
+}, []);
 
-  const handleEditInvoice = (invoice) => {
-    if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
-      return;
-    }
-    navigate(`/invoices/${invoice._id}/edit`);
-  };
+const handleDetailModalClose = useCallback(() => {
+  setSelectedInvoice(null);
+  setIsDetailModalOpen(false);
+}, []);
+
+const handleEditInvoice = (invoice) => {
+  if (!invoice || !invoice._id) {
+    showError("Invalid invoice data");
+    return;
+  }
+  setIsDetailModalOpen(false);
+  navigate(`/invoices/${invoice._id}/edit`);
+};
 
   const handleViewInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
-    
+
     try {
       const response = await invoiceService.getById(invoice._id);
-      const invoiceData = response?.invoice || response?.data?.invoice || response?.data;
+      const invoiceData =
+        response?.invoice || response?.data?.invoice || response?.data;
       setSelectedInvoice(normalizeInvoiceData(invoiceData) || invoice);
       setIsDetailModalOpen(true);
     } catch (error) {
       console.error("Error fetching invoice details:", error);
-      toast.error("Failed to load invoice details");
+      showError("Failed to load invoice details");
     }
   };
 
@@ -299,127 +388,175 @@ const InvoicesPage = () => {
     setSelectedInvoice(null);
   };
 
-  const handleDeleteClick = (invoice) => {
-    if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
-      return;
-    }
-    setDeleteId(invoice._id);
-    setIsDeleteModalOpen(true);
-  };
-
   const handleCancelClick = (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
     setSelectedInvoice(invoice);
     setIsCancelModalOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteId) return;
-    
-    try {
-      await invoiceService.delete(deleteId);
-      toast.success("Invoice deleted successfully");
-      setIsDeleteModalOpen(false);
-      setDeleteId(null);
-      fetchInvoices();
-      fetchStats();
-    } catch (error) {
-      console.error("Error deleting invoice:", error);
-      toast.error(error.message || "Failed to delete invoice");
-    }
-  };
-
   const handleCancelConfirm = async () => {
     if (!selectedInvoice || !selectedInvoice._id) return;
-    
+
     try {
-      await invoiceService.cancel(selectedInvoice._id, cancelReason);
-      toast.success("Invoice cancelled successfully");
+      await promise(
+        invoiceService.cancel(selectedInvoice._id, cancelReason),
+        {
+          loading: "Cancelling invoice...",
+          success: "Invoice cancelled successfully",
+          error: "Failed to cancel invoice"
+        }
+      );
       setIsCancelModalOpen(false);
       setSelectedInvoice(null);
       setCancelReason("");
       fetchInvoices();
       fetchStats();
-    } catch (error) {
-      console.error("Error cancelling invoice:", error);
-      toast.error(error.message || "Failed to cancel invoice");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Cancel invoice error:", err);
     }
   };
 
   const handleSendInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
-    
+
     try {
-      const loadingToast = toast.loading("Sending invoice...");
-      await invoiceService.send(invoice._id, {
-        message: "Please find your invoice attached. Payment is due by the date specified.",
-      });
-      toast.dismiss(loadingToast);
-      toast.success("Invoice sent successfully");
+      await promise(
+        invoiceService.send(invoice._id, {
+          message:
+            "Please find your invoice attached. Payment is due by the date specified.",
+        }),
+        {
+          loading: "Sending invoice...",
+          success: "Invoice sent successfully",
+          error: "Failed to send invoice"
+        }
+      );
       fetchInvoices();
       fetchStats();
-    } catch (error) {
-      console.error("Error sending invoice:", error);
-      toast.error(error.message || "Failed to send invoice");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Send invoice error:", err);
     }
   };
 
   const handleMarkAsPaid = async (invoice) => {
     if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
+      showError("Invalid invoice data");
       return;
     }
-    
+
     try {
-      const loadingToast = toast.loading("Marking invoice as paid...");
-      await invoiceService.markAsPaid(invoice._id, {
-        paymentMethod: "cash",
-      });
-      toast.dismiss(loadingToast);
-      toast.success("Invoice marked as paid");
+      await promise(
+        invoiceService.markAsPaid(invoice._id, {
+          paymentMethod: "cash",
+        }),
+        {
+          loading: "Marking invoice as paid...",
+          success: "Invoice marked as paid",
+          error: "Failed to mark invoice as paid"
+        }
+      );
       fetchInvoices();
       fetchStats();
-    } catch (error) {
-      console.error("Error marking invoice as paid:", error);
-      toast.error(error.message || "Failed to mark invoice as paid");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Mark as paid error:", err);
     }
   };
 
-  const handleDownloadInvoice = async (invoice) => {
-    if (!invoice || !invoice._id) {
-      toast.error("Invalid invoice data");
-      return;
+const handleDownloadInvoice = async (invoice) => {
+  if (!invoice || !invoice._id) {
+    showError("Invalid invoice data");
+    return;
+  }
+
+  try {
+    // Show loading state
+    showInfo("Generating PDF... Please wait");
+
+    console.log("Starting download for invoice:", invoice._id);
+    
+    const blob = await invoiceService.download(invoice._id);
+    
+    console.log("Received blob:", blob);
+    
+    // Validate blob
+    if (!blob || !(blob instanceof Blob)) {
+      throw new Error('Invalid file received from server');
+    }
+
+    if (blob.size === 0) {
+      throw new Error('Generated PDF is empty');
+    }
+
+    // Check if it's actually a PDF
+    if (blob.type && blob.type !== 'application/pdf') {
+      console.warn('Unexpected file type:', blob.type);
+      // Try to read the blob as text to see if it's an error message
+      const text = await blob.text();
+      if (text.includes('error') || text.includes('Error')) {
+        throw new Error('Server returned an error instead of PDF');
+      }
+      // If it's not text error, continue with download
+    }
+
+    // Create filename
+    const invoiceNumber = invoice.invoiceNumber || `INV-${invoice._id.substring(0, 8)}`;
+    const filename = `${invoiceNumber}.pdf`;
+
+    // Download the file
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 1000);
+
+    showSuccess(`Invoice ${invoiceNumber} downloaded successfully`);
+    
+  } catch (err) {
+    console.error("Download invoice error details:", err);
+    
+    let errorMessage = "Failed to download invoice";
+    
+    // Provide specific error messages
+    if (err.message.includes('PDF generation failed')) {
+      errorMessage = "PDF generation service unavailable";
+    } else if (err.message.includes('Server error')) {
+      errorMessage = "Server error while generating PDF";
+    } else if (err.message.includes('timeout')) {
+      errorMessage = "PDF generation timed out. Please try again";
+    } else if (err.message.includes('not found')) {
+      errorMessage = "Invoice not found";
+    } else if (err.message.includes('empty')) {
+      errorMessage = "Generated PDF is empty";
+    } else if (err.message.includes('Server returned an error')) {
+      errorMessage = "PDF generation failed on server";
     }
     
-    try {
-      const loadingToast = toast.loading("Generating PDF...");
-      const blob = await invoiceService.download(invoice._id);
-      
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `invoice-${invoice.invoiceNumber || "document"}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast.dismiss(loadingToast);
-      toast.success("Invoice downloaded successfully");
-    } catch (error) {
-      console.error("Error downloading invoice:", error);
-      toast.error(error.message || "Failed to download invoice");
-    }
-  };
-
+    showError(errorMessage);
+    
+    // If PDF generation fails, offer alternative
+    setTimeout(() => {
+      showAlternativeDownloadOption(invoice);
+    }, 2000);
+  }
+};
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
@@ -436,16 +573,21 @@ const InvoicesPage = () => {
     });
     setSearchTerm("");
     setCurrentPage(1);
+    showInfo("Filters cleared");
   };
+
+  const handleRetry = useCallback(() => {
+    fetchInvoices();
+    showInfo("Retrying to load invoices...");
+  }, [fetchInvoices, showInfo]);
 
   const handleBulkSend = async () => {
     if (selectedRows.length === 0) {
-      toast.error("Please select invoices to send");
+      showError("Please select invoices to send");
       return;
     }
 
     try {
-      const loadingToast = toast.loading(`Sending ${selectedRows.length} invoice(s)...`);
       const promises = selectedRows.map((id) =>
         invoiceService.send(id).catch((err) => {
           console.error(`Failed to send invoice ${id}:`, err);
@@ -453,23 +595,28 @@ const InvoicesPage = () => {
         })
       );
 
-      await Promise.all(promises);
-      toast.dismiss(loadingToast);
-      toast.success(`Sent ${selectedRows.length} invoice(s) successfully`);
+      await promise(
+        Promise.all(promises),
+        {
+          loading: `Sending ${selectedRows.length} invoice(s)...`,
+          success: `Sent ${selectedRows.length} invoice(s) successfully`,
+          error: "Failed to send some invoices"
+        }
+      );
       setSelectedRows([]);
       fetchInvoices();
       fetchStats();
-    } catch (error) {
-      console.error("Error sending bulk invoices:", error);
-      toast.error("Failed to send some invoices");
+    } catch (err) {
+      // Error is already handled by the promise toast
+      console.error("Bulk send error:", err);
     }
   };
 
   const formatDate = (date) => {
-    if (!date) return '-';
+    if (!date) return "-";
     const d = new Date(date);
-    const day = d.getDate().toString().padStart(2, '0');
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -481,86 +628,122 @@ const InvoicesPage = () => {
       header: "Invoice #",
       sortable: true,
       width: "15%",
-      render: (row) => safeRender((row) => (
-        <div className="font-medium text-gray-900 dark:text-white">
-          {row.invoiceNumber || `INV-${(row._id || '').substring(0, 8)}`}
-        </div>
-      ), row, 'No Number')
+      render: (row) =>
+        safeRender(
+          (row) => (
+            <div className="font-medium text-gray-900 dark:text-white">
+              {row.invoiceNumber || `INV-${(row._id || "").substring(0, 8)}`}
+            </div>
+          ),
+          row,
+          "No Number"
+        ),
     },
     {
       accessor: "recipientName",
       header: invoiceType === "client" ? "Client" : "Partner",
       sortable: true,
       width: "25%",
-      render: (row) => safeRender((row) => (
-        <div className="min-w-0">
-          <p className="text-gray-900 dark:text-white font-medium">
-            {row.recipientName || 'No Recipient'}
-          </p>
-          {row.recipientEmail && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-              {row.recipientEmail}
-            </p>
-          )}
-          {row.recipientCompany && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {row.recipientCompany}
-            </p>
-          )}
-        </div>
-      ), row, 'No Recipient')
+      render: (row) =>
+        safeRender(
+          (row) => (
+            <div className="min-w-0">
+              <p className="text-gray-900 dark:text-white font-medium">
+                {row.recipientName || "No Recipient"}
+              </p>
+              {row.recipientEmail && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                  {row.recipientEmail}
+                </p>
+              )}
+              {row.recipientCompany && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {row.recipientCompany}
+                </p>
+              )}
+            </div>
+          ),
+          row,
+          "No Recipient"
+        ),
     },
     {
       accessor: "issueDate",
       header: "Issue Date",
       sortable: true,
       width: "12%",
-      render: (row) => safeRender((row) => (
-        <div className="text-gray-600 dark:text-gray-400">
-          {row.issueDate ? new Date(row.issueDate).toLocaleDateString() : "-"}
-        </div>
-      ), row)
+      render: (row) =>
+        safeRender(
+          (row) => (
+            <div className="text-gray-600 dark:text-gray-400">
+              {row.issueDate
+                ? new Date(row.issueDate).toLocaleDateString()
+                : "-"}
+            </div>
+          ),
+          row
+        ),
     },
     {
       accessor: "dueDate",
       header: "Due Date",
       sortable: true,
       width: "12%",
-      render: (row) => safeRender((row) => (
-        <div className="text-gray-600 dark:text-gray-400">
-          {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "-"}
-        </div>
-      ), row)
+      render: (row) =>
+        safeRender(
+          (row) => (
+            <div className="text-gray-600 dark:text-gray-400">
+              {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "-"}
+            </div>
+          ),
+          row
+        ),
     },
     {
       accessor: "totalAmount",
       header: "Amount",
       sortable: true,
       width: "12%",
-      render: (row) => safeRender((row) => (
-        <div className="font-medium text-gray-900 dark:text-white">
-          {formatCurrency(row.totalAmount)}
-        </div>
-      ), row)
+      render: (row) =>
+        safeRender(
+          (row) => (
+            <div className="font-medium text-gray-900 dark:text-white">
+              {formatCurrency(row.totalAmount)}
+            </div>
+          ),
+          row
+        ),
     },
     {
       accessor: "status",
       header: "Status",
       sortable: true,
       width: "12%",
-      render: (row) => safeRender((row) => (
-        <Badge
-          color={
-            row.status === "paid" ? "green" :
-            row.status === "sent" ? "blue" :
-            row.status === "partial" ? "yellow" :
-            row.status === "overdue" ? "red" :
-            row.status === "cancelled" ? "gray" : "orange"
-          }
-        >
-          {row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : 'Draft'}
-        </Badge>
-      ), row)
+      render: (row) =>
+        safeRender(
+          (row) => (
+            <Badge
+              color={
+                row.status === "paid"
+                  ? "green"
+                  : row.status === "sent"
+                    ? "blue"
+                    : row.status === "partial"
+                      ? "yellow"
+                      : row.status === "overdue"
+                        ? "red"
+                        : row.status === "cancelled"
+                          ? "gray"
+                          : "orange"
+              }
+            >
+              {row.status
+                ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
+                : "Draft"}
+            </Badge>
+          ),
+          row
+        ),
     },
     {
       header: "Actions",
@@ -569,14 +752,17 @@ const InvoicesPage = () => {
       className: "text-center",
       render: (row) => {
         if (!row || !row._id) return <span className="text-gray-400">-</span>;
-        
+
         // Determine which actions are available based on invoice status
-        const canEdit = ["draft", "sent", "partial", "overdue"].includes(row.status);
-        const canDelete = ["draft"].includes(row.status) || 
-                         (row.status === "sent" && row.paymentStatus?.amountPaid === 0);
+        const canEdit = ["draft", "sent", "partial", "overdue"].includes(
+          row.status
+        );
+        const canDelete =
+          ["draft"].includes(row.status) ||
+          (row.status === "sent" && row.paymentStatus?.amountPaid === 0);
         const canSend = row.status === "draft";
         const canMarkPaid = ["sent", "partial", "overdue"].includes(row.status);
-        
+
         return (
           <div className="flex justify-center gap-1 pl-2">
             {/* View Action */}
@@ -592,16 +778,16 @@ const InvoicesPage = () => {
             </button>
 
             {/* Edit Action - Now always visible for editable statuses */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditInvoice(row);
-                }}
-                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-                title="Edit Invoice"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditInvoice(row);
+              }}
+              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+              title="Edit Invoice"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
 
             {/* Download Action */}
             <button
@@ -648,7 +834,7 @@ const InvoicesPage = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteClick(row);
+                  handleDeleteClick(row._id, row.invoiceNumber || "Invoice");
                 }}
                 className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                 title="Delete Invoice"
@@ -663,9 +849,21 @@ const InvoicesPage = () => {
   ];
 
   // Helper variables for empty states
-  const hasActiveFilters = searchTerm.trim() !== "" || Object.values(filters).some(value => value !== "");
-  const showEmptyState = !loading && !error && invoices.length === 0 && !hasActiveFilters && hasInitialLoad;
-  const showNoResults = !loading && !error && invoices.length === 0 && hasActiveFilters && hasInitialLoad;
+  const hasActiveFilters =
+    searchTerm.trim() !== "" ||
+    Object.values(filters).some((value) => value !== "");
+  const showEmptyState =
+    !loading &&
+    !error &&
+    invoices.length === 0 &&
+    !hasActiveFilters &&
+    hasInitialLoad;
+  const showNoResults =
+    !loading &&
+    !error &&
+    invoices.length === 0 &&
+    hasActiveFilters &&
+    hasInitialLoad;
 
   if (loading && !hasInitialLoad) {
     return (
@@ -678,99 +876,108 @@ const InvoicesPage = () => {
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
   return (
-    <div className="p-4 bg-white sm:p-6 lg:p-8 space-y-6  dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-white space-y-6 dark:bg-gray-900">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <FileText className="w-8 h-8" />
             Invoices
           </h1>
-          <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-            {invoiceType === "client" 
-              ? "Manage client invoices and receivables" 
+          <p className="text-base text-gray-600 dark:text-gray-400">
+            {invoiceType === "client"
+              ? "Manage client invoices and receivables"
               : "Manage partner bills and payables"}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {selectedRows.length > 0 && (
-            <Button
-              variant="outline"
-              icon={Mail}
-              onClick={handleBulkSend}
-              loading={loading}
-            >
-              Send Selected ({selectedRows.length})
-            </Button>
-          )}
+        {invoices.length > 0 && (
+          <div className="flex items-center gap-3">
+            {selectedRows.length > 0 && (
+              <Button
+                variant="outline"
+                icon={Mail}
+                onClick={handleBulkSend}
+                loading={loading}
+              >
+                Send Selected ({selectedRows.length})
+              </Button>
+            )}
 
-          <Button variant="primary" icon={Plus} onClick={handleCreateInvoice}>
-            Create {invoiceType === "client" ? "Invoice" : "Bill"}
-          </Button>
-        </div>
+            <Button variant="primary" icon={Plus} onClick={handleCreateInvoice}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create {invoiceType === "client" ? "Invoice" : "Bill"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Error Message */}
       {error && (
-        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="p-4 flex items-center justify-between">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-            <Button variant="outline" size="sm" onClick={fetchInvoices}>
+            <div>
+              <p className="text-red-800 dark:text-red-200 font-medium">
+                Error Loading Invoices
+              </p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
+                {error}
+              </p>
+            </div>
+            <Button onClick={handleRetry} size="sm" variant="outline">
               Retry
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Invoice Type Toggle */}
-      <Card>
-        <div className="p-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setInvoiceType("client")}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                invoiceType === "client"
-                  ? "bg-orange-600 text-white shadow-lg"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span>Client Invoices</span>
-              {invoiceType === "client" && stats && (
-                <Badge variant="white" className="ml-2">
-                  {stats.totalInvoices}
-                </Badge>
-              )}
-            </button>
-            
-            <button
-              onClick={() => setInvoiceType("partner")}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                invoiceType === "partner"
-                  ? "bg-orange-600 text-white shadow-lg"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Briefcase className="w-5 h-5" />
-              <span>Partner Bills</span>
-              {invoiceType === "partner" && stats && (
-                <Badge variant="white" className="ml-2">
-                  {stats.totalInvoices}
-                </Badge>
-              )}
-            </button>
-          </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+          <button
+            onClick={() => setInvoiceType("client")}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              invoiceType === "client"
+                ? "bg-orange-600 text-white shadow-sm"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Client Invoices</span>
+            {invoiceType === "client" && stats && (
+              <Badge variant="white" className="ml-2">
+                {stats.totalInvoices}
+              </Badge>
+            )}
+          </button>
+
+          <button
+            onClick={() => setInvoiceType("partner")}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              invoiceType === "partner"
+                ? "bg-orange-600 text-white shadow-sm"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <Briefcase className="w-4 h-4" />
+            <span>Partner Bills</span>
+            {invoiceType === "partner" && stats && (
+              <Badge variant="white" className="ml-2">
+                {stats.totalInvoices}
+              </Badge>
+            )}
+          </button>
         </div>
-      </Card>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <div className="p-4">
+          <div>
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {invoiceType === "client" ? "Total Revenue" : "Total Expenses"}
+                  {invoiceType === "client"
+                    ? "Total Revenue"
+                    : "Total Expenses"}
                 </div>
                 <div className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
                   {statsLoading ? (
@@ -783,30 +990,38 @@ const InvoicesPage = () => {
                   {stats?.totalInvoices || 0} invoices
                 </div>
               </div>
-              <div className={`p-3 rounded-lg ${
-                invoiceType === "client" 
-                  ? "bg-blue-50 dark:bg-blue-900/20" 
-                  : "bg-purple-50 dark:bg-purple-900/20"
-              }`}>
-                <DollarSign className={`w-6 h-6 ${
+              <div
+                className={`p-3 rounded-lg ${
                   invoiceType === "client"
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-purple-600 dark:text-purple-400"
-                }`} />
+                    ? "bg-blue-50 dark:bg-blue-900/20"
+                    : "bg-purple-50 dark:bg-purple-900/20"
+                }`}
+              >
+                <DollarSign
+                  className={`w-6 h-6 ${
+                    invoiceType === "client"
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-purple-600 dark:text-purple-400"
+                  }`}
+                />
               </div>
             </div>
           </div>
         </Card>
 
         <Card>
-          <div className="p-4">
+          <div>
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Paid
                 </div>
                 <div className="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
-                  {statsLoading ? <LoadingSpinner size="sm" /> : stats?.paid || 0}
+                  {statsLoading ? (
+                    <LoadingSpinner size="sm" />
+                  ) : (
+                    stats?.paid || 0
+                  )}
                 </div>
                 <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {formatCurrency(stats?.totalPaid || 0)}
@@ -820,7 +1035,7 @@ const InvoicesPage = () => {
         </Card>
 
         <Card>
-          <div className="p-4">
+          <div>
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -845,14 +1060,18 @@ const InvoicesPage = () => {
         </Card>
 
         <Card>
-          <div className="p-4">
+          <div>
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Overdue
                 </div>
                 <div className="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
-                  {statsLoading ? <LoadingSpinner size="sm" /> : stats?.overdue || 0}
+                  {statsLoading ? (
+                    <LoadingSpinner size="sm" />
+                  ) : (
+                    stats?.overdue || 0
+                  )}
                 </div>
                 <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Needs attention
@@ -867,7 +1086,7 @@ const InvoicesPage = () => {
       </div>
 
       {/* Search and Filters */}
-      <Card>
+      {invoices.length > 0 && (
         <div className="p-4">
           <div className="flex flex-col gap-4">
             {/* Search Bar and Filter Toggle */}
@@ -886,7 +1105,7 @@ const InvoicesPage = () => {
                 onClick={() => setShowFilters(!showFilters)}
                 className="whitespace-nowrap"
               >
-                {showFilters ? "Hide" : "Show"} Filters 
+                {showFilters ? "Hide" : "Show"} Filters
                 {activeFiltersCount > 0 && (
                   <Badge variant="primary" className="ml-2">
                     {activeFiltersCount}
@@ -902,7 +1121,9 @@ const InvoicesPage = () => {
                   <Select
                     label="Status"
                     value={filters.status}
-                    onChange={(e) => handleFilterChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
                   >
                     <option value="">All Status</option>
                     <option value="draft">Draft</option>
@@ -917,14 +1138,18 @@ const InvoicesPage = () => {
                     label="Start Date"
                     type="date"
                     value={filters.startDate}
-                    onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("startDate", e.target.value)
+                    }
                   />
 
                   <Input
                     label="End Date"
                     type="date"
                     value={filters.endDate}
-                    onChange={(e) => handleFilterChange("endDate", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("endDate", e.target.value)
+                    }
                     min={filters.startDate}
                   />
 
@@ -944,7 +1169,7 @@ const InvoicesPage = () => {
             )}
           </div>
         </div>
-      </Card>
+      )}
 
       {/* Loading State */}
       {loading && !hasInitialLoad && (
@@ -960,30 +1185,30 @@ const InvoicesPage = () => {
       {!loading && hasInitialLoad && invoices.length > 0 && (
         <>
           <div className="overflow-x-auto">
-            <Table
-              columns={columns}
-              data={invoices}
-              loading={loading}
-              emptyMessage={
-                searchTerm || filters.status
-                  ? "No invoices found matching your search."
-                  : `No ${invoiceType} invoices found. Create your first ${invoiceType === "client" ? "invoice" : "bill"} to get started.`
-              }
-              onRowClick={handleViewInvoice}
-              selectable={true}
-              onSelectionChange={setSelectedRows}
-              selectedRows={selectedRows}
-              striped={true}
-              hoverable={true}
-              pagination={true}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              totalItems={totalItems}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setPageSize}
-              pageSizeOptions={[10, 25, 50, 100]}
-            />
+<Table
+  columns={columns}
+  data={invoices}
+  loading={loading}
+  emptyMessage={
+    searchTerm || filters.status
+      ? "No invoices found matching your search."
+      : `No ${invoiceType} invoices found. Create your first ${invoiceType === "client" ? "invoice" : "bill"} to get started.`
+  }
+  onRowClick={handleRowClick} 
+  selectable={true}
+  onSelectionChange={setSelectedRows}
+  selectedRows={selectedRows}
+  striped={true}
+  hoverable={true}
+  pagination={true}
+  currentPage={currentPage}
+  totalPages={totalPages}
+  pageSize={pageSize}
+  totalItems={totalItems}
+  onPageChange={setCurrentPage}
+  onPageSizeChange={setPageSize}
+  pageSizeOptions={[10, 25, 50, 100]}
+/>
           </div>
 
           {/* Pagination */}
@@ -1029,7 +1254,8 @@ const InvoicesPage = () => {
             No invoices yet
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Get started by creating your first {invoiceType === "client" ? "invoice" : "bill"}.
+            Get started by creating your first{" "}
+            {invoiceType === "client" ? "invoice" : "bill"}.
           </p>
           <Button onClick={handleCreateInvoice} variant="primary">
             <Plus className="h-4 w-4 mr-2" />
@@ -1038,7 +1264,6 @@ const InvoicesPage = () => {
         </div>
       )}
 
-      {/* Rest of the modals remain the same */}
       {/* Invoice Detail Modal */}
       {isDetailModalOpen && selectedInvoice && (
         <Modal
@@ -1055,14 +1280,22 @@ const InvoicesPage = () => {
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                     Invoice #{selectedInvoice.invoiceNumber}
                   </h3>
-                  <Badge 
-                    variant={selectedInvoice.invoiceType === "client" ? "info" : "purple"}
+                  <Badge
+                    variant={
+                      selectedInvoice.invoiceType === "client"
+                        ? "info"
+                        : "purple"
+                    }
                     className="ml-2"
                   >
                     {selectedInvoice.invoiceType === "client" ? (
-                      <><Users className="w-3 h-3 mr-1" /> Client</>
+                      <>
+                        <Users className="w-3 h-3 mr-1" /> Client
+                      </>
                     ) : (
-                      <><Briefcase className="w-3 h-3 mr-1" /> Partner</>
+                      <>
+                        <Briefcase className="w-3 h-3 mr-1" /> Partner
+                      </>
                     )}
                   </Badge>
                 </div>
@@ -1075,14 +1308,20 @@ const InvoicesPage = () => {
                   </p>
                 )}
               </div>
-              <Badge 
+              <Badge
                 color={
-                  selectedInvoice.status === "paid" ? "green" :
-                  selectedInvoice.status === "sent" ? "blue" :
-                  selectedInvoice.status === "partial" ? "yellow" :
-                  selectedInvoice.status === "overdue" ? "red" :
-                  selectedInvoice.status === "cancelled" ? "gray" : "orange"
-                } 
+                  selectedInvoice.status === "paid"
+                    ? "green"
+                    : selectedInvoice.status === "sent"
+                      ? "blue"
+                      : selectedInvoice.status === "partial"
+                        ? "yellow"
+                        : selectedInvoice.status === "overdue"
+                          ? "red"
+                          : selectedInvoice.status === "cancelled"
+                            ? "gray"
+                            : "orange"
+                }
                 size="lg"
               >
                 {selectedInvoice.status || "Draft"}
@@ -1093,7 +1332,9 @@ const InvoicesPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                  {selectedInvoice.invoiceType === "client" ? "Bill To:" : "Pay To:"}
+                  {selectedInvoice.invoiceType === "client"
+                    ? "Bill To:"
+                    : "Pay To:"}
                 </h4>
                 <p className="text-gray-700 dark:text-gray-300 font-medium">
                   {selectedInvoice.recipientName}
@@ -1118,11 +1359,14 @@ const InvoicesPage = () => {
                     {selectedInvoice.recipientAddress.street && (
                       <p>{selectedInvoice.recipientAddress.street}</p>
                     )}
-                    {(selectedInvoice.recipientAddress.city || selectedInvoice.recipientAddress.state) && (
+                    {(selectedInvoice.recipientAddress.city ||
+                      selectedInvoice.recipientAddress.state) && (
                       <p>
                         {selectedInvoice.recipientAddress.city}
-                        {selectedInvoice.recipientAddress.state && `, ${selectedInvoice.recipientAddress.state}`}
-                        {selectedInvoice.recipientAddress.zipCode && ` ${selectedInvoice.recipientAddress.zipCode}`}
+                        {selectedInvoice.recipientAddress.state &&
+                          `, ${selectedInvoice.recipientAddress.state}`}
+                        {selectedInvoice.recipientAddress.zipCode &&
+                          ` ${selectedInvoice.recipientAddress.zipCode}`}
                       </p>
                     )}
                   </div>
@@ -1135,14 +1379,18 @@ const InvoicesPage = () => {
                 </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Due Date:</span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Due Date:
+                    </span>
                     <span className="text-gray-900 dark:text-white font-medium">
                       {formatDate(selectedInvoice.dueDate)}
                     </span>
                   </div>
                   {selectedInvoice.event && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400">Event:</span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Event:
+                      </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {selectedInvoice.event.title}
                       </span>
@@ -1150,7 +1398,9 @@ const InvoicesPage = () => {
                   )}
                   {selectedInvoice.currency && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400">Currency:</span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Currency:
+                      </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {selectedInvoice.currency}
                       </span>
@@ -1190,7 +1440,7 @@ const InvoicesPage = () => {
                           <td className="px-4 py-3">
                             <div>
                               <p className="text-gray-900 dark:text-white font-medium">
-                                {item.description || 'No description'}
+                                {item.description || "No description"}
                               </p>
                               {item.category && (
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -1221,7 +1471,9 @@ const InvoicesPage = () => {
               <div className="flex justify-end">
                 <div className="w-72 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Subtotal:
+                    </span>
                     <span className="text-gray-900 dark:text-white">
                       {formatCurrency(selectedInvoice.subtotal || 0)}
                     </span>
@@ -1229,7 +1481,11 @@ const InvoicesPage = () => {
                   {selectedInvoice.tax > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">
-                        Tax {selectedInvoice.taxRate ? `(${selectedInvoice.taxRate}%)` : ""}:
+                        Tax{" "}
+                        {selectedInvoice.taxRate
+                          ? `(${selectedInvoice.taxRate}%)`
+                          : ""}
+                        :
                       </span>
                       <span className="text-gray-900 dark:text-white">
                         {formatCurrency(selectedInvoice.tax)}
@@ -1247,7 +1503,9 @@ const InvoicesPage = () => {
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-900 dark:text-white">Total:</span>
+                    <span className="text-gray-900 dark:text-white">
+                      Total:
+                    </span>
                     <span className="text-gray-900 dark:text-white">
                       {formatCurrency(selectedInvoice.totalAmount)}
                     </span>
@@ -1256,12 +1514,20 @@ const InvoicesPage = () => {
                     <>
                       <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
                         <span>Amount Paid:</span>
-                        <span>{formatCurrency(selectedInvoice.paymentStatus.amountPaid)}</span>
+                        <span>
+                          {formatCurrency(
+                            selectedInvoice.paymentStatus.amountPaid
+                          )}
+                        </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold">
-                        <span className="text-gray-900 dark:text-white">Amount Due:</span>
                         <span className="text-gray-900 dark:text-white">
-                          {formatCurrency(selectedInvoice.paymentStatus.amountDue)}
+                          Amount Due:
+                        </span>
+                        <span className="text-gray-900 dark:text-white">
+                          {formatCurrency(
+                            selectedInvoice.paymentStatus.amountDue
+                          )}
                         </span>
                       </div>
                     </>
@@ -1332,7 +1598,9 @@ const InvoicesPage = () => {
                   </Button>
                 </>
               )}
-              {(selectedInvoice.status === "sent" || selectedInvoice.status === "partial" || selectedInvoice.status === "overdue") && (
+              {(selectedInvoice.status === "sent" ||
+                selectedInvoice.status === "partial" ||
+                selectedInvoice.status === "overdue") && (
                 <>
                   <Button
                     variant="outline"
@@ -1363,31 +1631,44 @@ const InvoicesPage = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setDeleteId(null);
-        }}
-        title="Delete Invoice"
-        size="sm"
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        title="Confirm Deletion"
+        size="md"
       >
         <div className="p-6">
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this invoice? This action cannot be undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsDeleteModalOpen(false);
-                setDeleteId(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="danger" onClick={handleDeleteConfirm}>
-              Delete
-            </Button>
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Delete Invoice
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to delete <strong>"{confirmationModal.invoiceName}"</strong>? 
+                This action cannot be undone and all associated data will be permanently removed.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmationModal}
+                  className="px-4 py-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmationModal.onConfirm}
+                  className="px-4 py-2 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Invoice
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </Modal>

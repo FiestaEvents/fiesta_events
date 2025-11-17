@@ -8,15 +8,17 @@ import {
   Clock,
   MapPin,
   Users,
+  ArrowRight,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { eventService } from "../../api/index";
 import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 
 const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
 
   if (!isOpen || !event) return null;
 
@@ -40,15 +42,15 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
     });
   };
 
-const formatDateLong = (dateString) => {
-  if (!dateString) return "";
-  const d = new Date(dateString);
-  const weekday = d.toLocaleString("en-GB", { weekday: "long" });
-  const day = d.getDate();
-  const month = d.toLocaleString("en-GB", { month: "long" });
-  const year = d.getFullYear();
-  return `${weekday}, ${day} ${month} ${year}`;
-};
+  const formatDateLong = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const weekday = d.toLocaleString("en-GB", { weekday: "long" });
+    const day = d.getDate();
+    const month = d.toLocaleString("en-GB", { month: "long" });
+    const year = d.getFullYear();
+    return `${weekday}, ${day} ${month} ${year}`;
+  };
 
   const handleDelete = async () => {
     if (
@@ -70,6 +72,12 @@ const formatDateLong = (dateString) => {
         setIsDeleting(false);
       }
     }
+  };
+
+  // Handle viewing full event details
+  const handleViewFullDetails = () => {
+    onClose(); // Close the current modal
+    navigate(`/events/${event._id}/detail`); // Navigate to the full event detail page
   };
 
   return (
@@ -95,7 +103,7 @@ const formatDateLong = (dateString) => {
           &#8203;
         </span>
         <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <Card className="border-0">
+          <div className="border-0">
             <div className="px-6 pt-5 pb-4">
               <div className="flex justify-between items-start">
                 <h3
@@ -104,7 +112,13 @@ const formatDateLong = (dateString) => {
                 >
                   {event.title}
                 </h3>
-                <Button variant="ghost" size="sm" icon={X} onClick={onClose} />
+<button
+  onClick={onClose}
+  className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+  title="Close"
+>
+  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+</button>
               </div>
               <div className="mt-4 space-y-4">
                 <div className="flex justify-between items-center">
@@ -166,12 +180,20 @@ const formatDateLong = (dateString) => {
                 >
                   Edit Event
                 </Button>
-                <Button variant="primary" onClick={onClose}>
-                  Done
+                {/* Small square button for View Full Details */}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleViewFullDetails}
+                  className="gap-3 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
+                  title="View Full Details"
+                >
+                  More Details
+                  <ArrowRight className="w-5 h-5 text-white" />
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </div>

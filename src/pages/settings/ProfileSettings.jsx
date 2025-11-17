@@ -192,7 +192,7 @@ const formatDate = (date) => {
                   name="phone"
                   value={profile.phone}
                   onChange={handleChange}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="12345678"
                   type="tel"
                 />
               </div>

@@ -7,7 +7,7 @@ const Button = ({
   variant = "primary",
   size = "md",
   className = "",
-  icon, // This should be a React element
+  icon, 
   disabled,
 }) => {
   const baseClasses =

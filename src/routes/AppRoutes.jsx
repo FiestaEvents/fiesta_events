@@ -19,7 +19,7 @@ import Dashboard from "../pages/Dashboard.jsx";
 
 // Events
 import EventsList from "../pages/events/EventsList.jsx";
-import EventDetail from "../pages/events/EventDetailModal.jsx";
+import EventDetail from "../pages/events/EventDetail.jsx";
 import EventForm from "../pages/events/EventForm.jsx";
 
 // Clients
@@ -69,8 +69,6 @@ import RoleForm from "../pages/roles/RoleForm.jsx";
 
 // Settings
 import VenueSettings from "../pages/settings/VenueSettings.jsx";
-import ProfileSettings from "../pages/settings/ProfileSettings.jsx";
-import SecuritySettings from "../pages/settings/SecuritySettings.jsx";
 
 // ============================================
 // ROUTING CONFIGURATION
@@ -96,8 +94,8 @@ const AppRoutes = () => {
           {/* Events */}
           <Route path="/events" element={<EventsList />} />
           <Route path="/events/new" element={<EventForm />} />
-          <Route path="/events/:id" element={<EventDetail />} />
-          <Route path="/events/:id/edit" element={<EventForm />} />
+          <Route path="/events/:id/detail" element={<EventDetail />} />
+          <Route path="/events/:id" element={<EventForm />} />
 
           {/* Clients */}
           <Route path="/clients" element={<ClientsList />} />
@@ -151,10 +149,10 @@ const AppRoutes = () => {
           <Route path="/roles/new" element={<RoleForm />} />
           <Route path="/roles/:id/edit" element={<RoleForm />} />
 
-            {/* Settings  */}
-            <Route path="/settings" element={<VenueSettings />} />
-          </Route>
+          {/* Settings  */}
+          <Route path="/settings" element={<VenueSettings />} />
         </Route>
+      </Route>
 
       {/* Catch-All */}
       <Route path="*" element={<Navigate to="/login" replace />} />

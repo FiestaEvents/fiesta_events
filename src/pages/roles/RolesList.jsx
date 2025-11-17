@@ -7,7 +7,6 @@ import Input from "../../components/common/Input";
 import Badge from "../../components/common/Badge";
 import Table from "../../components/common/Table";
 import Modal from "../../components/common/Modal";
-import Card from "../../components/common/Card";
 import EmptyState from "../../components/common/EmptyState";
 import {
   Shield,
@@ -194,7 +193,7 @@ const formatDate = (date) => {
       </div>
 
       {/* Info Banner */}
-      <Card className="border-blue-200 bg-blue-50">
+      <div className="border-blue-200 bg-blue-50">
         <div className="p-4 flex items-start">
           <AlertCircle className="w-5 h-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-800">
@@ -207,11 +206,11 @@ const formatDate = (date) => {
             </p>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6">
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Roles</p>
@@ -223,9 +222,9 @@ const formatDate = (date) => {
               <Shield className="w-6 h-6 text-purple-600" />
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-6">
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">System Roles</p>
@@ -237,9 +236,9 @@ const formatDate = (date) => {
               <Key className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-6">
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Custom Roles</p>
@@ -251,7 +250,7 @@ const formatDate = (date) => {
               <Users className="w-6 h-6 text-green-600" />
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Search */}

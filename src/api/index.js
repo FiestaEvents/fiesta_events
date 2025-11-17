@@ -1,3 +1,4 @@
+
 //fiesta_events/src/api/index.js
 /**
  * ============================================
@@ -7,18 +8,8 @@
  */
 
 import api from "./axios";
+import { handleResponse, handleError } from "../utils/apiUtils.js";
 
-// ============================================
-// RESPONSE HANDLER UTILITY
-// ============================================
-// Normalizes API responses to consistent structure
-const handleResponse = (response) => {
-  return response.data?.data || response.data;
-};
-
-const handleError = (error) => {
-  throw error;
-};
 // ============================================
 // AUTH SERVICE
 // ============================================
@@ -211,7 +202,7 @@ export const authService = {
 export const eventService = {
   /**
    * Get all events with optional filters
-   * @param {Object} params - { status, startDate, endDate, clientId, page, limit }
+   * @param {Object} params - { status, startDate, endDate, clientId, page, limit, includeArchived }
    * @returns {Promise<{ events: Array, pagination }>}
    */
   getAll: async (params = {}) => {
@@ -250,6 +241,13 @@ export const eventService = {
       return handleError(error);
     }
   },
+
+  /**
+   * Get events by client ID
+   * @param {string} clientId - Client ID
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{ events: Array, client: Object, stats: Object, pagination: Object }>}
+   */
   getByClientId: async (clientId, params = {}) => {
     try {
       const response = await api.get(`/events/client/${clientId}`, { params });
@@ -258,6 +256,7 @@ export const eventService = {
       return handleError(error);
     }
   },
+
   /**
    * Update event
    * @param {string} id - Event ID
@@ -274,9 +273,9 @@ export const eventService = {
   },
 
   /**
-   * Delete event
+   * Archive event (soft delete)
    * @param {string} id - Event ID
-   * @returns {Promise<{ success: boolean }>}
+   * @returns {Promise<{ event }>}
    */
   delete: async (id) => {
     try {
@@ -288,9 +287,38 @@ export const eventService = {
   },
 
   /**
+   * Restore archived event
+   * @param {string} id - Event ID
+   * @returns {Promise<{ event }>}
+   */
+  restore: async (id) => {
+    try {
+      const response = await api.patch(`/events/${id}/restore`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get archived events
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{ events: Array, pagination: Object }>}
+   */
+  getArchived: async (params = {}) => {
+    try {
+      const response = await api.get("/events/archived", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
    * Update event status
    * @param {string} id - Event ID
-   * @param {string} status - New status (pending, confirmed, completed, cancelled)
+   * @param {string} status - New status (pending, confirmed, in-progress, completed, cancelled)
+   * @returns {Promise<{ event }>}
    */
   updateStatus: async (id, status) => {
     try {
@@ -303,7 +331,7 @@ export const eventService = {
 
   /**
    * Get calendar view of events
-   * @param {Object} params - { month, year }
+   * @param {Object} params - { month, year, includeArchived }
    * @returns {Promise<{ events: Array }>}
    */
   getCalendar: async (params = {}) => {
@@ -317,7 +345,7 @@ export const eventService = {
 
   /**
    * Get event statistics
-   * @returns {Promise<{ total, confirmed, pending, completed, cancelled }>}
+   * @returns {Promise<{ statusStats: Array, typeStats: Array, summary: Object }>}
    */
   getStats: async () => {
     try {
@@ -327,6 +355,153 @@ export const eventService = {
       return handleError(error);
     }
   },
+
+  /**
+   * Check date availability for event
+   * @param {Object} data - { startDate, endDate, excludeEventId }
+   * @returns {Promise<{ available: boolean, conflictingEvent: Object|null }>}
+   */
+  checkAvailability: async (data) => {
+    try {
+      const response = await api.post("/events/check-availability", data);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Add payment to event
+   * @param {string} id - Event ID
+   * @param {Object} paymentData - Payment data
+   * @returns {Promise<{ event }>}
+   */
+  addPayment: async (id, paymentData) => {
+    try {
+      const response = await api.post(`/events/${id}/payments`, paymentData);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Add partner to event
+   * @param {string} id - Event ID
+   * @param {Object} partnerData - Partner data
+   * @returns {Promise<{ event }>}
+   */
+  addPartner: async (id, partnerData) => {
+    try {
+      const response = await api.post(`/events/${id}/partners`, partnerData);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Update event partner
+   * @param {string} id - Event ID
+   * @param {string} partnerId - Partner ID
+   * @param {Object} partnerData - Partner data to update
+   * @returns {Promise<{ event }>}
+   */
+  updatePartner: async (id, partnerId, partnerData) => {
+    try {
+      const response = await api.put(`/events/${id}/partners/${partnerId}`, partnerData);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Remove partner from event
+   * @param {string} id - Event ID
+   * @param {string} partnerId - Partner ID
+   * @returns {Promise<{ event }>}
+   */
+  removePartner: async (id, partnerId) => {
+    try {
+      const response = await api.delete(`/events/${id}/partners/${partnerId}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get event timeline (upcoming events)
+   * @param {Object} params - { days, limit }
+   * @returns {Promise<{ events: Array }>}
+   */
+  getTimeline: async (params = {}) => {
+    try {
+      const response = await api.get("/events/timeline", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Duplicate existing event
+   * @param {string} id - Event ID to duplicate
+   * @param {Object} overrides - Data to override in duplicated event
+   * @returns {Promise<{ event }>}
+   */
+  duplicate: async (id, overrides = {}) => {
+    try {
+      const response = await api.post(`/events/${id}/duplicate`, overrides);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk update events
+   * @param {Array} ids - Array of event IDs
+   * @param {Object} data - Data to update
+   * @returns {Promise<{ updatedCount: number }>}
+   */
+  bulkUpdate: async (ids, data) => {
+    try {
+      const response = await api.patch("/events/bulk-update", { ids, data });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk archive events
+   * @param {Array} ids - Array of event IDs
+   * @returns {Promise<{ archivedCount: number }>}
+   */
+  bulkArchive: async (ids) => {
+    try {
+      const response = await api.post("/events/bulk-archive", { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk restore events
+   * @param {Array} ids - Array of event IDs
+   * @returns {Promise<{ restoredCount: number }>}
+   */
+  bulkRestore: async (ids) => {
+    try {
+      const response = await api.post("/events/bulk-restore", { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  }
 };
 
 // ============================================
@@ -335,7 +510,7 @@ export const eventService = {
 export const clientService = {
   /**
    * Get all clients with optional filters
-   * @param {Object} params - { search, status, page, limit }
+   * @param {Object} params - { search, status, page, limit, includeArchived }
    * @returns {Promise<{ clients: Array, pagination }>}
    */
   getAll: async (params = {}) => {
@@ -391,9 +566,9 @@ export const clientService = {
   },
 
   /**
-   * Delete client
+   * Archive client (soft delete)
    * @param {string} id - Client ID
-   * @returns {Promise<{ success: boolean }>}
+   * @returns {Promise<{ client }>}
    */
   delete: async (id) => {
     try {
@@ -405,13 +580,42 @@ export const clientService = {
   },
 
   /**
+   * Restore archived client
+   * @param {string} id - Client ID
+   * @returns {Promise<{ client }>}
+   */
+  restore: async (id) => {
+    try {
+      const response = await api.patch(`/clients/${id}/restore`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get archived clients
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{ clients: Array, pagination: Object }>}
+   */
+  getArchived: async (params = {}) => {
+    try {
+      const response = await api.get("/clients/archived", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
    * Get client events
    * @param {string} id - Client ID
+   * @param {Object} params - Query parameters
    * @returns {Promise<{ events: Array }>}
    */
-  getEvents: async (id) => {
+  getEvents: async (id, params = {}) => {
     try {
-      const response = await api.get(`/clients/${id}/events`);
+      const response = await api.get(`/clients/${id}/events`, { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -420,7 +624,7 @@ export const clientService = {
 
   /**
    * Get client statistics
-   * @returns {Promise<{ total, active, inactive }>}
+   * @returns {Promise<{ total, active, inactive, newClientsThisMonth, topClients }>}
    */
   getStats: async () => {
     try {
@@ -430,6 +634,97 @@ export const clientService = {
       return handleError(error);
     }
   },
+
+  /**
+   * Search clients by name, email, or phone
+   * @param {string} query - Search query
+   * @param {Object} params - Additional parameters
+   * @returns {Promise<{ clients: Array }>}
+   */
+  search: async (query, params = {}) => {
+    try {
+      const response = await api.get("/clients", { 
+        params: { ...params, search: query } 
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk update clients
+   * @param {Array} ids - Array of client IDs
+   * @param {Object} data - Data to update
+   * @returns {Promise<{ updatedCount: number }>}
+   */
+  bulkUpdate: async (ids, data) => {
+    try {
+      const response = await api.patch("/clients/bulk-update", { ids, data });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk archive clients
+   * @param {Array} ids - Array of client IDs
+   * @returns {Promise<{ archivedCount: number }>}
+   */
+  bulkArchive: async (ids) => {
+    try {
+      const response = await api.post("/clients/bulk-archive", { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk restore clients
+   * @param {Array} ids - Array of client IDs
+   * @returns {Promise<{ restoredCount: number }>}
+   */
+  bulkRestore: async (ids) => {
+    try {
+      const response = await api.post("/clients/bulk-restore", { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Import clients from CSV or other sources
+   * @param {Array} clients - Array of client objects
+   * @returns {Promise<{ imported: number, errors: Array }>}
+   */
+  import: async (clients) => {
+    try {
+      const response = await api.post("/clients/import", { clients });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Export clients to CSV
+   * @param {Object} params - Filter parameters
+   * @returns {Promise<{ csv: string }>}
+   */
+  export: async (params = {}) => {
+    try {
+      const response = await api.get("/clients/export", { 
+        params,
+        responseType: 'blob'
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  }
 };
 
 // ============================================
@@ -1643,6 +1938,11 @@ export const taskService = {
 // REMINDER SERVICE
 // ============================================
 export const reminderService = {
+  /**
+   * Get all reminders with optional filters
+   * @param {Object} params - { type, priority, status, startDate, endDate, isArchived, page, limit }
+   * @returns {Promise<{ reminders: Array, pagination }>}
+   */
   getAll: async (params = {}) => {
     try {
       const response = await api.get("/reminders", { params });
@@ -1652,6 +1952,11 @@ export const reminderService = {
     }
   },
 
+  /**
+   * Get single reminder by ID
+   * @param {string} id - Reminder ID
+   * @returns {Promise<{ reminder }>}
+   */
   getById: async (id) => {
     try {
       const response = await api.get(`/reminders/${id}`);
@@ -1661,6 +1966,11 @@ export const reminderService = {
     }
   },
 
+  /**
+   * Create new reminder
+   * @param {Object} data - Reminder data
+   * @returns {Promise<{ reminder }>}
+   */
   create: async (data) => {
     try {
       const response = await api.post("/reminders", data);
@@ -1670,6 +1980,12 @@ export const reminderService = {
     }
   },
 
+  /**
+   * Update reminder
+   * @param {string} id - Reminder ID
+   * @param {Object} data - Fields to update
+   * @returns {Promise<{ reminder }>}
+   */
   update: async (id, data) => {
     try {
       const response = await api.put(`/reminders/${id}`, data);
@@ -1679,6 +1995,11 @@ export const reminderService = {
     }
   },
 
+  /**
+   * Archive reminder (soft delete)
+   * @param {string} id - Reminder ID
+   * @returns {Promise<{ success: boolean }>}
+   */
   delete: async (id) => {
     try {
       const response = await api.delete(`/reminders/${id}`);
@@ -1688,6 +2009,12 @@ export const reminderService = {
     }
   },
 
+  /**
+   * Snooze reminder
+   * @param {string} id - Reminder ID
+   * @param {Object} data - { snoozeUntil }
+   * @returns {Promise<{ reminder }>}
+   */
   snooze: async (id, data) => {
     try {
       const response = await api.post(`/reminders/${id}/snooze`, data);
@@ -1697,14 +2024,147 @@ export const reminderService = {
     }
   },
 
-  getUpcoming: async () => {
+  /**
+   * Get upcoming reminders
+   * @param {Object} params - { days }
+   * @returns {Promise<{ reminders: Array }>}
+   */
+  getUpcoming: async (params = {}) => {
     try {
-      const response = await api.get("/reminders/upcoming");
+      const response = await api.get("/reminders/upcoming", { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
+
+  /**
+   * Restore archived reminder
+   * @param {string} id - Reminder ID
+   * @returns {Promise<{ reminder }>}
+   */
+  restore: async (id) => {
+    try {
+      const response = await api.patch(`/reminders/${id}/restore`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get archived reminders
+   * @param {Object} params - { type, page, limit, sortBy, sortOrder }
+   * @returns {Promise<{ reminders: Array, pagination: Object }>}
+   */
+  getArchived: async (params = {}) => {
+    try {
+      const response = await api.get("/reminders/archived", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk archive reminders
+   * @param {Array} ids - Array of reminder IDs
+   * @returns {Promise<{ archived: number }>}
+   */
+  bulkArchive: async (ids) => {
+    try {
+      const response = await api.post("/reminders/bulk-archive", { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk restore reminders
+   * @param {Array} ids - Array of reminder IDs
+   * @returns {Promise<{ restored: number }>}
+   */
+  bulkRestore: async (ids) => {
+    try {
+      const response = await api.post("/reminders/bulk-restore", { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Complete reminder
+   * @param {string} id - Reminder ID
+   * @returns {Promise<{ reminder }>}
+   */
+  complete: async (id) => {
+    try {
+      const response = await api.post(`/reminders/${id}/complete`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Cancel reminder
+   * @param {string} id - Reminder ID
+   * @returns {Promise<{ reminder }>}
+   */
+  cancel: async (id) => {
+    try {
+      const response = await api.post(`/reminders/${id}/cancel`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get reminder statistics
+   * @returns {Promise<{ total, active, completed, snoozed, cancelled, archived }>}
+   */
+  getStats: async () => {
+    try {
+      const response = await api.get("/reminders/stats");
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get reminders by type
+   * @param {string} type - Reminder type
+   * @param {Object} params - Additional parameters
+   * @returns {Promise<{ reminders: Array }>}
+   */
+  getByType: async (type, params = {}) => {
+    try {
+      const response = await api.get("/reminders", { 
+        params: { ...params, type } 
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get reminders assigned to current user
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{ reminders: Array }>}
+   */
+  getMyReminders: async (params = {}) => {
+    try {
+      const response = await api.get("/reminders/assigned-to-me", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  }
 };
 
 // ============================================
@@ -1893,13 +2353,51 @@ export const venueService = {
   },
 
   /**
-   * Get venue spaces
+   * Get venue spaces (alias for venueSpacesService.getAll)
    * @param {Object} params - Query parameters
    * @returns {Promise<{ spaces: Array, pagination: Object }>}
    */
   getSpaces: async (params = {}) => {
     try {
       const response = await api.get("/venues/spaces", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Upload space images
+   * @param {string} spaceId - Space ID
+   * @param {FormData} formData - Image files
+   * @returns {Promise<{ images: Array }>}
+   */
+  uploadSpaceImages: async (spaceId, formData) => {
+    try {
+      const response = await api.post(
+        `/venues/spaces/${spaceId}/images`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete space image
+   * @param {string} spaceId - Space ID
+   * @param {string} imageId - Image ID
+   * @returns {Promise<{ success: boolean }>}
+   */
+  deleteSpaceImage: async (spaceId, imageId) => {
+    try {
+      const response = await api.delete(
+        `/venues/spaces/${spaceId}/images/${imageId}`
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2016,6 +2514,341 @@ export const venueService = {
 };
 
 // ============================================
+// VENUE SPACES SERVICE
+// ============================================
+export const venueSpacesService = {
+  /**
+   * Get all venue spaces with optional filters
+   * @param {Object} params - { search, status, capacityMin, capacityMax, amenities, page, limit }
+   * @returns {Promise<{ spaces: Array, pagination }>}
+   */
+  getAll: async (params = {}) => {
+    try {
+      const response = await api.get("/venues/spaces", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get single space by ID
+   * @param {string} id - Space ID
+   * @returns {Promise<{ space }>}
+   */
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Create new venue space
+   * @param {Object} data - Space data { name, description, capacity, amenities, hourlyRate, dailyRate, status, images }
+   * @returns {Promise<{ space }>}
+   */
+  create: async (data) => {
+    try {
+      const response = await api.post("/venues/spaces", data);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Update venue space
+   * @param {string} id - Space ID
+   * @param {Object} data - Fields to update
+   * @returns {Promise<{ space }>}
+   */
+  update: async (id, data) => {
+    try {
+      const response = await api.put(`/venues/spaces/${id}`, data);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete venue space
+   * @param {string} id - Space ID
+   * @returns {Promise<{ success: boolean }>}
+   */
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/venues/spaces/${id}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Update space status
+   * @param {string} id - Space ID
+   * @param {string} status - New status (active, maintenance, unavailable)
+   * @returns {Promise<{ space }>}
+   */
+  updateStatus: async (id, status) => {
+    try {
+      const response = await api.patch(`/venues/spaces/${id}/status`, {
+        status,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get space availability
+   * @param {string} id - Space ID
+   * @param {Object} params - { startDate, endDate }
+   * @returns {Promise<{ available: boolean, conflicts: Array }>}
+   */
+  getAvailability: async (id, params = {}) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}/availability`, {
+        params,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Check multiple spaces availability
+   * @param {Object} params - { spaceIds, startDate, endDate }
+   * @returns {Promise<{ availability: Array }>}
+   */
+  checkAvailability: async (params = {}) => {
+    try {
+      const response = await api.get("/venues/spaces/availability", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get space events
+   * @param {string} id - Space ID
+   * @param {Object} params - { startDate, endDate, status }
+   * @returns {Promise<{ events: Array }>}
+   */
+  getEvents: async (id, params = {}) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}/events`, { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get space bookings
+   * @param {string} id - Space ID
+   * @param {Object} params - { startDate, endDate, status }
+   * @returns {Promise<{ bookings: Array }>}
+   */
+  getBookings: async (id, params = {}) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}/bookings`, {
+        params,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Upload space images
+   * @param {string} id - Space ID
+   * @param {FormData} formData - Image files
+   * @returns {Promise<{ images: Array }>}
+   */
+  uploadImages: async (id, formData) => {
+    try {
+      const response = await api.post(`/venues/spaces/${id}/images`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Delete space image
+   * @param {string} id - Space ID
+   * @param {string} imageId - Image ID
+   * @returns {Promise<{ success: boolean }>}
+   */
+  deleteImage: async (id, imageId) => {
+    try {
+      const response = await api.delete(
+        `/venues/spaces/${id}/images/${imageId}`
+      );
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Reorder space images
+   * @param {string} id - Space ID
+   * @param {Array} imageOrder - Array of image IDs in desired order
+   * @returns {Promise<{ space }>}
+   */
+  reorderImages: async (id, imageOrder) => {
+    try {
+      const response = await api.patch(`/venues/spaces/${id}/images/reorder`, {
+        imageOrder,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Set primary image for space
+   * @param {string} id - Space ID
+   * @param {string} imageId - Image ID to set as primary
+   * @returns {Promise<{ space }>}
+   */
+  setPrimaryImage: async (id, imageId) => {
+    try {
+      const response = await api.patch(`/venues/spaces/${id}/images/primary`, {
+        imageId,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get space statistics
+   * @param {string} id - Space ID
+   * @returns {Promise<{ stats }>}
+   */
+  getStats: async (id) => {
+    try {
+      const response = await api.get(`/venues/spaces/${id}/stats`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get all spaces statistics
+   * @returns {Promise<{ spaces: Array, utilization: Object, revenue: Object }>}
+   */
+  getAllStats: async () => {
+    try {
+      const response = await api.get("/venues/spaces/stats");
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Search spaces by criteria
+   * @param {Object} params - { query, capacity, amenities, dateRange, priceRange }
+   * @returns {Promise<{ spaces: Array }>}
+   */
+  search: async (params = {}) => {
+    try {
+      const response = await api.get("/venues/spaces/search", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk update spaces
+   * @param {Array} spaceIds - Array of space IDs
+   * @param {Object} data - Fields to update
+   * @returns {Promise<{ updated: number }>}
+   */
+  bulkUpdate: async (spaceIds, data) => {
+    try {
+      const response = await api.patch("/venues/spaces/bulk-update", {
+        spaceIds,
+        data,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk delete spaces
+   * @param {Array} spaceIds - Array of space IDs
+   * @returns {Promise<{ deleted: number }>}
+   */
+  bulkDelete: async (spaceIds) => {
+    try {
+      const response = await api.post("/venues/spaces/bulk-delete", {
+        spaceIds,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Duplicate space
+   * @param {string} id - Space ID to duplicate
+   * @param {Object} overrides - Fields to override in the duplicate
+   * @returns {Promise<{ space }>}
+   */
+  duplicate: async (id, overrides = {}) => {
+    try {
+      const response = await api.post(
+        `/venues/spaces/${id}/duplicate`,
+        overrides
+      );
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Export spaces to CSV/Excel
+   * @param {Object} filters - Filter parameters
+   * @param {string} format - Export format: 'csv' or 'excel'
+   * @returns {Promise<Blob>}
+   */
+  export: async (filters = {}, format = "csv") => {
+    try {
+      const response = await api.get("/venues/spaces/export", {
+        params: { ...filters, format },
+        responseType: "blob",
+      });
+      return response.data;
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+};
+
+// ============================================
 // DASHBOARD SERVICE
 // ============================================
 export const dashboardService = {
@@ -2084,7 +2917,7 @@ export const dashboardService = {
 export const invoiceService = {
   /**
    * Get all invoices with filters
-   * @param {Object} params - { search, status, invoiceType, client, partner, event, startDate, endDate, page, limit }
+   * @param {Object} params - { search, status, invoiceType, client, partner, event, startDate, endDate, page, limit, isArchived }
    * @returns {Promise<{ invoices: Array, pagination }>}
    */
   getAll: async (params = {}) => {
@@ -2174,13 +3007,69 @@ export const invoiceService = {
   },
 
   /**
-   * Delete invoice
+   * Archive invoice (soft delete)
    * @param {string} id - Invoice ID
-   * @returns {Promise<{ success: boolean }>}
+   * @returns {Promise<{ invoice }>}
    */
   delete: async (id) => {
     try {
       const response = await api.delete(`/invoices/${id}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Restore archived invoice
+   * @param {string} id - Invoice ID
+   * @returns {Promise<{ invoice }>}
+   */
+  restore: async (id) => {
+    try {
+      const response = await api.patch(`/invoices/${id}/restore`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get archived invoices
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{ invoices: Array, pagination: Object }>}
+   */
+  getArchived: async (params = {}) => {
+    try {
+      const response = await api.get("/invoices/archived", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk archive invoices
+   * @param {Array} ids - Array of invoice IDs
+   * @returns {Promise<{ archived: number }>}
+   */
+  bulkArchive: async (ids) => {
+    try {
+      const response = await api.post("/invoices/bulk-archive", { ids });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Bulk restore invoices
+   * @param {Array} ids - Array of invoice IDs
+   * @returns {Promise<{ restored: number }>}
+   */
+  bulkRestore: async (ids) => {
+    try {
+      const response = await api.post("/invoices/bulk-restore", { ids });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2207,16 +3096,49 @@ export const invoiceService = {
    * @param {string} id - Invoice ID
    * @returns {Promise<Blob>}
    */
-  download: async (id) => {
-    try {
-      const response = await api.get(`/invoices/${id}/download`, {
-        responseType: "blob",
-      });
+download: async (id) => {
+  try {
+    const response = await api.get(`/invoices/${id}/download`, {
+      responseType: 'blob',
+      timeout: 30000, // 30 second timeout
+    });
+    
+    // Check if response is a blob
+    if (response.data instanceof Blob) {
       return response.data;
-    } catch (error) {
-      return handleError(error);
     }
-  },
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Download API error:', error);
+    
+    // Handle blob errors - read the blob to get error message
+    if (error.response?.data instanceof Blob) {
+      try {
+        const errorText = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsText(error.response.data);
+        });
+        
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.message || 'PDF generation failed');
+      } catch (parseError) {
+        throw new Error('Failed to generate PDF');
+      }
+    }
+    
+    // Handle other errors
+    if (error.response?.status === 404) {
+      throw new Error('Invoice not found');
+    } else if (error.response?.status === 500) {
+      throw new Error('Server error generating PDF');
+    } else if (error.code === 'ECONNABORTED') {
+      throw new Error('Request timeout - PDF generation taking too long');
+    }
+    
+    throw new Error(error.message || 'Failed to download invoice');
+  }
+},
 
   /**
    * Mark invoice as paid
@@ -2371,6 +3293,50 @@ export const invoiceService = {
       return handleError(error);
     }
   },
+
+  /**
+   * Duplicate existing invoice
+   * @param {string} id - Invoice ID to duplicate
+   * @param {Object} overrides - Data to override in duplicated invoice
+   * @returns {Promise<{ invoice }>}
+   */
+  duplicate: async (id, overrides = {}) => {
+    try {
+      const response = await api.post(`/invoices/${id}/duplicate`, overrides);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Add payment to invoice
+   * @param {string} id - Invoice ID
+   * @param {Object} paymentData - Payment data
+   * @returns {Promise<{ invoice }>}
+   */
+  addPayment: async (id, paymentData) => {
+    try {
+      const response = await api.post(`/invoices/${id}/payments`, paymentData);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get invoice payments
+   * @param {string} id - Invoice ID
+   * @returns {Promise<{ payments: Array }>}
+   */
+  getPayments: async (id) => {
+    try {
+      const response = await api.get(`/invoices/${id}/payments`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  }
 };
 // ============================================
 // USER SERVICE

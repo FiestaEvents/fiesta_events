@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -202,7 +201,7 @@ const formatDateTime = (dateString) => {
         {/* Main Information */}
         <div className="lg:col-span-2 space-y-6">
           {/* Payment Overview */}
-          <Card>
+          <div>
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <FileText className="w-5 h-5" />
@@ -327,13 +326,13 @@ const formatDateTime = (dateString) => {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
           {/* Fees Breakdown */}
           {(payment.fees?.processingFee > 0 ||
             payment.fees?.platformFee > 0 ||
             payment.fees?.otherFees > 0) && (
-            <Card>
+            <div>
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   Fees & Charges
@@ -381,12 +380,12 @@ const formatDateTime = (dateString) => {
                   </div>
                 </div>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Refund Information */}
           {payment.refundAmount > 0 && (
-            <Card>
+            <div>
               <div className="p-6 bg-orange-50 dark:bg-orange-900/20">
                 <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-300 mb-4 flex items-center gap-2">
                   <AlertCircle className="w-5 h-5" />
@@ -423,12 +422,12 @@ const formatDateTime = (dateString) => {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Related Information */}
           {(payment.event || payment.client) && (
-            <Card>
+            <div>
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <User className="w-5 h-5" />
@@ -471,14 +470,14 @@ const formatDateTime = (dateString) => {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
           )}
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Quick Actions */}
-          <Card>
+          <div>
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Quick Actions
@@ -522,10 +521,10 @@ const formatDateTime = (dateString) => {
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
 
           {/* Metadata */}
-          <Card>
+          <div>
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Metadata
@@ -557,7 +556,7 @@ const formatDateTime = (dateString) => {
                 )}
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
 

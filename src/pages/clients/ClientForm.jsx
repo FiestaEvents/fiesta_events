@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from "react";
+import {
+  Building2,
+  FileText,
+  Mail,
+  MapPin,
+  Phone,
+  Save,
+  User,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { clientService } from "../../api/index";
+import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Textarea from "../../components/common/Textarea";
-import Button from "../../components/common/Button";
-import { clientService } from "../../api/index";
-import { useForm, Controller } from "react-hook-form";
-import {
-  X,
-  User,
-  Mail,
-  Phone,
-  Building2,
-  MapPin,
-  FileText,
-  Save,
-  Calendar,
-} from "lucide-react";
 
 const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
   const [loading, setLoading] = useState(false);
@@ -88,7 +87,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
         // Your API service uses handleResponse which returns response.data?.data || response.data
         // So we should get the data directly
         if (response) {
-          clientData = response;
+          clientData = response.client;
         }
 
         if (!clientData) {
@@ -97,6 +96,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
         console.log("👤 Extracted client data:", clientData);
 
+        console.log("clientData", clientData);
         // Format the data for the form
         const formData = {
           name: clientData.name || "",
@@ -115,23 +115,22 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
         console.log("📝 Form data to reset:", formData);
         reset(formData);
-
       } catch (err) {
         if (!isMounted) return;
-        
+
         console.error("❌ Error fetching client data:", err);
-        
+
         // Handle abort errors differently
-        if (err.name === 'AbortError') {
-          console.log('Client fetch cancelled');
+        if (err.name === "AbortError") {
+          console.log("Client fetch cancelled");
           return;
         }
 
-        const errorMessage = 
+        const errorMessage =
           err.response?.data?.message ||
           err.message ||
           "Failed to load client data. Please try again.";
-        
+
         setError(errorMessage);
       } finally {
         if (isMounted) {
@@ -208,7 +207,6 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
       } else {
         throw new Error("No response from server");
       }
-
     } catch (err) {
       console.error("❌ Error saving client:", err);
       const errorMessage =
@@ -321,15 +319,16 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
+                    defaultValue={client?.name}
                     label="Full Name"
                     placeholder="e.g. Jane Doe"
                     autoFocus
-                    {...register("name", { 
+                    {...register("name", {
                       required: "Full name is required",
                       minLength: {
                         value: 2,
-                        message: "Name must be at least 2 characters"
-                      }
+                        message: "Name must be at least 2 characters",
+                      },
                     })}
                     error={errors.name?.message}
                     required
@@ -342,7 +341,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                     label="Email Address"
                     placeholder="name@company.com"
                     type="email"
-                    {...register("email", { 
+                    {...register("email", {
                       required: "Email is required",
                       pattern: {
                         value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -358,7 +357,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
                   <Input
                     label="Phone Number"
-                    placeholder="e.g. +1 (555) 123-4567"
+                    placeholder="e.g. 12345678"
                     {...register("phone", {
                       required: "Phone number is required",
                       pattern: {
