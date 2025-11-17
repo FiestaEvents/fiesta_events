@@ -155,9 +155,6 @@ const ActivityTab = ({
 
   return (
     <div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-6 dark:text-white">
-        Recent Activity
-      </h3>
       {/* Detailed Event Stats */}
       {events.length > 0 && (
         <div className="mb-6">

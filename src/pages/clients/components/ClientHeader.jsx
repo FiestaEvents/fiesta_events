@@ -21,7 +21,7 @@ const ClientHeader = ({
   getStatusLabel,
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
+    <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
       {/* Action Buttons */}
       <div className="flex justify-between gap-2 mb-4">
         <div>

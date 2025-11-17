@@ -1,6 +1,6 @@
 // ClientDetail.jsx - UPDATED with cleaner prop-based approach
 import { useCallback, useState } from "react";
-import { useNavigate, useParams,useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useToast } from "../../hooks/useToast";
 
 // Components
@@ -29,13 +29,13 @@ const ClientDetail = () => {
     useClientDetail(id);
 
   // UI state
-  const [activeTab, setActiveTab] = useState("events");
+  const [activeTab, setActiveTab] = useState("activity");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  
+
   // NEW: EventForm modal state
   const [isEventFormOpen, setIsEventFormOpen] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
@@ -102,22 +102,19 @@ const ClientDetail = () => {
   }, []);
 
   // MODIFIED: Open EventForm modal for editing
-  const handleEditEvent = useCallback(
-    (eventId) => {
-      setIsEventModalOpen(false);
-      setEditingEventId(eventId);
-      setIsEventFormOpen(true);
-    },
-    []
-  );
+  const handleEditEvent = useCallback((eventId) => {
+    setIsEventModalOpen(false);
+    setEditingEventId(eventId);
+    setIsEventFormOpen(true);
+  }, []);
 
   const handleNavigateToEvent = useCallback(
     (eventId, e) => {
       if (e && e.stopPropagation) e.stopPropagation();
       navigate(`/events/${eventId}/detail`, {
-        state: { 
+        state: {
           fromClient: id,
-          clientData: clientData 
+          clientData: clientData,
         },
       });
     },
@@ -146,14 +143,11 @@ const ClientDetail = () => {
 
     try {
       setDeleteLoading(true);
-      await promise(
-        clientService.delete(id),
-        {
-          loading: "Deleting client...",
-          success: "Client deleted successfully",
-          error: "Failed to delete client"
-        }
-      );
+      await promise(clientService.delete(id), {
+        loading: "Deleting client...",
+        success: "Client deleted successfully",
+        error: "Failed to delete client",
+      });
       setIsDeleteModalOpen(false);
       navigate("/clients");
     } catch (err) {
@@ -185,10 +179,14 @@ const ClientDetail = () => {
   const handleEventFormSuccess = useCallback(async () => {
     setIsEventFormOpen(false);
     setEditingEventId(null);
-    
+
     // Refresh client data to show new/updated event
     await refreshData();
-    showSuccess(editingEventId ? "Event updated successfully!" : "Event created successfully!");
+    showSuccess(
+      editingEventId
+        ? "Event updated successfully!"
+        : "Event created successfully!"
+    );
   }, [editingEventId, refreshData, showSuccess]);
 
   const handleRecordPayment = useCallback(
@@ -277,7 +275,7 @@ const ClientDetail = () => {
           {/* Left Column - Client Details */}
           <div className="lg:col-span-1">
             <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
+              <div className="bg-white rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-800">
                 <ClientHeader
                   client={clientData}
                   onBack={() => navigate("/clients")}
@@ -288,7 +286,7 @@ const ClientDetail = () => {
                 />
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800">
+              <div className="bg-white rounded-lg shadow-sm p-6 dark:bg-gray-800 dark:border-gray-800">
                 <ClientInfo client={clientData} formatDate={formatDate} />
               </div>
             </div>

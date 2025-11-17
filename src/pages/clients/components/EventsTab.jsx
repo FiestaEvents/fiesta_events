@@ -1,30 +1,30 @@
 // components/clients/EventsTab.jsx
 import React from "react";
-import { 
-  Calendar, 
-  User, 
-  DollarSign, 
-  CreditCard, 
+import {
+  Calendar,
+  User,
+  DollarSign,
+  CreditCard,
   ExternalLink,
   Plus,
   RefreshCw,
   TrendingUp,
   Star,
-  Clock 
+  Clock,
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
 
-const EventsTab = ({ 
-  events, 
-  eventsStats, 
-  loading, 
-  onRefresh, 
-  onCreateEvent, 
-  onViewEvent, 
+const EventsTab = ({
+  events,
+  eventsStats,
+  loading,
+  onRefresh,
+  onCreateEvent,
+  onViewEvent,
   onNavigateToEvent,
   formatDate,
   getStatusColor,
-  getStatusLabel 
+  getStatusLabel,
 }) => {
   return (
     <div>
@@ -33,78 +33,99 @@ const EventsTab = ({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Event History ({events.length})
           </h3>
-          {loading && <p className="text-sm text-gray-500 mt-1">Loading events...</p>}
+          {loading && (
+            <p className="text-sm text-gray-500 mt-1">Loading events...</p>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onCreateEvent}
-            className="px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-          >
-            <Plus className="h-4 w-4" />
-            Create New Event
-          </button>
-        </div>
+        {events.length > 0 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onCreateEvent}
+              className="px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+            >
+              <Plus className="h-4 w-4" />
+              Create New Event
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{eventsStats.totalEvents}</div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">Total Events</div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
-              <Star className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{eventsStats.upcomingEvents}</div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">Upcoming</div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
-              <DollarSign className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(eventsStats.totalRevenue)}
+      {events.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
+                <TrendingUp className="w-5 h-5 text-white" />
               </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">Total Revenue</div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
-              <Clock className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(eventsStats.pendingAmount)}
+              <div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {eventsStats.totalEvents}
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  Total Events
+                </div>
               </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">Outstanding</div>
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
+                <Star className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {eventsStats.upcomingEvents}
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  Upcoming
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
+                <DollarSign className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatCurrency(eventsStats.totalRevenue)}
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  Total Revenue
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-900 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-600">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatCurrency(eventsStats.pendingAmount)}
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  Outstanding
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {events.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-12 flex justify-center items-center flex-col">
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600 dark:text-gray-400">No events found for this client</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            No events found for this client
+          </p>
           <button
             onClick={onCreateEvent}
-            className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+            className="mt-4 px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
           >
+            <Plus className="h-4 w-4" />
             Create First Event
           </button>
         </div>
@@ -119,8 +140,12 @@ const EventsTab = ({
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{event.title}</h4>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(event.status)}`}>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {event.title}
+                    </h4>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(event.status)}`}
+                    >
                       {getStatusLabel(event.status)}
                     </span>
                   </div>
@@ -137,13 +162,21 @@ const EventsTab = ({
                     )}
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
-                      {formatCurrency(event.pricing?.totalAmount || event.pricing?.basePrice || 0)}
+                      {formatCurrency(
+                        event.pricing?.totalAmount ||
+                          event.pricing?.basePrice ||
+                          0
+                      )}
                     </div>
                     {event.paymentSummary && (
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4" />
-                        <span className={`inline-block px-3 py-0.5 rounded-full text-sm border ${getStatusColor(event.paymentSummary?.status || "pending")}`}>
-                          {getStatusLabel(event.paymentSummary?.status || "pending")}
+                        <span
+                          className={`inline-block px-3 py-0.5 rounded-full text-sm border ${getStatusColor(event.paymentSummary?.status || "pending")}`}
+                        >
+                          {getStatusLabel(
+                            event.paymentSummary?.status || "pending"
+                          )}
                         </span>
                       </div>
                     )}

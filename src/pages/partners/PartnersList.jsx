@@ -39,7 +39,7 @@ const PartnersList = () => {
     isOpen: false,
     partnerId: null,
     partnerName: "",
-    onConfirm: null
+    onConfirm: null,
   });
 
   // Search & filter state
@@ -176,14 +176,17 @@ const PartnersList = () => {
   }, [search, status, category, page, limit, showError]);
 
   // Show confirmation modal
-  const showDeleteConfirmation = useCallback((partnerId, partnerName = "Partner") => {
-    setConfirmationModal({
-      isOpen: true,
-      partnerId,
-      partnerName,
-      onConfirm: () => handleDeleteConfirm(partnerId, partnerName)
-    });
-  }, []);
+  const showDeleteConfirmation = useCallback(
+    (partnerId, partnerName = "Partner") => {
+      setConfirmationModal({
+        isOpen: true,
+        partnerId,
+        partnerName,
+        onConfirm: () => handleDeleteConfirm(partnerId, partnerName),
+      });
+    },
+    []
+  );
 
   // Close confirmation modal
   const closeConfirmationModal = useCallback(() => {
@@ -191,50 +194,53 @@ const PartnersList = () => {
       isOpen: false,
       partnerId: null,
       partnerName: "",
-      onConfirm: null
+      onConfirm: null,
     });
   }, []);
 
   // Handle confirmed deletion
-  const handleDeleteConfirm = useCallback(async (partnerId, partnerName = "Partner") => {
-    if (!partnerId) {
-      showError("Invalid partner ID");
-      return;
-    }
-
-    try {
-      // Use the promise toast for loading state
-      await promise(
-        partnerService.delete(partnerId),
-        {
-          loading: `Deleting ${partnerName}...`,
-          success: `${partnerName} deleted successfully`,
-          error: `Failed to delete ${partnerName}`
-        }
-      );
-
-      // Refresh the partners list
-      fetchPartners();
-      
-      // Close detail modal if the deleted partner is currently selected
-      if (selectedPartner?._id === partnerId) {
-        setSelectedPartner(null);
-        setIsDetailModalOpen(false);
+  const handleDeleteConfirm = useCallback(
+    async (partnerId, partnerName = "Partner") => {
+      if (!partnerId) {
+        showError("Invalid partner ID");
+        return;
       }
 
-      // Close confirmation modal
-      closeConfirmationModal();
-    } catch (err) {
-      // Error is already handled by the promise toast
-      console.error("Delete partner error:", err);
-      closeConfirmationModal();
-    }
-  }, [fetchPartners, selectedPartner, promise, showError, closeConfirmationModal]);
+      try {
+        // Use the promise toast for loading state
+        await promise(partnerService.delete(partnerId), {
+          loading: `Deleting ${partnerName}...`,
+          success: `${partnerName} deleted successfully`,
+          error: `Failed to delete ${partnerName}`,
+        });
+
+        // Refresh the partners list
+        fetchPartners();
+
+        // Close detail modal if the deleted partner is currently selected
+        if (selectedPartner?._id === partnerId) {
+          setSelectedPartner(null);
+          setIsDetailModalOpen(false);
+        }
+
+        // Close confirmation modal
+        closeConfirmationModal();
+      } catch (err) {
+        // Error is already handled by the promise toast
+        console.error("Delete partner error:", err);
+        closeConfirmationModal();
+      }
+    },
+    [fetchPartners, selectedPartner, promise, showError, closeConfirmationModal]
+  );
 
   // Updated partner deletion handler
-  const handleDeletePartner = useCallback((partnerId, partnerName = "Partner") => {
-    showDeleteConfirmation(partnerId, partnerName);
-  }, [showDeleteConfirmation]);
+  const handleDeletePartner = useCallback(
+    (partnerId, partnerName = "Partner") => {
+      showDeleteConfirmation(partnerId, partnerName);
+    },
+    [showDeleteConfirmation]
+  );
 
   // Handle row click to open detail modal
   const handleRowClick = useCallback((partner) => {
@@ -275,8 +281,8 @@ const PartnersList = () => {
     setSelectedPartner(null);
     setIsFormOpen(false);
     showSuccess(
-      selectedPartner 
-        ? "Partner updated successfully" 
+      selectedPartner
+        ? "Partner updated successfully"
         : "Partner added successfully"
     );
   }, [fetchPartners, selectedPartner, showSuccess]);
@@ -608,7 +614,7 @@ const PartnersList = () => {
           onRowClick={handleRowClick}
           striped
           hoverable
-          pagination={totalPages > 1}
+          pagination={totalPages}
           currentPage={page}
           totalPages={totalPages}
           pageSize={limit}
@@ -697,8 +703,10 @@ const PartnersList = () => {
                 Delete Partner
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.partnerName}"</strong>? 
-                This action cannot be undone and all associated data will be permanently removed.
+                Are you sure you want to delete{" "}
+                <strong>"{confirmationModal.partnerName}"</strong>? This action
+                cannot be undone and all associated data will be permanently
+                removed.
               </p>
               <div className="flex justify-end gap-3">
                 <Button

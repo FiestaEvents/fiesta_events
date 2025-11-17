@@ -69,6 +69,7 @@ import RoleForm from "../pages/roles/RoleForm.jsx";
 
 // Settings
 import VenueSettings from "../pages/settings/VenueSettings.jsx";
+import Landing from "../pages/landing.jsx";
 
 // ============================================
 // ROUTING CONFIGURATION
@@ -79,6 +80,7 @@ const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/landing" element={<Landing />} />
       <Route element={<AuthLayout />}>
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

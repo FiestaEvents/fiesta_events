@@ -8,7 +8,7 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { clientService } from "../../api/index";
 import { UsersIcon } from "../../components/icons/IconComponents";
-import ClientDetailModal from "./ClientDetailModal.jsx"
+import ClientDetailModal from "./ClientDetailModal.jsx";
 import {
   Plus,
   Search,
@@ -19,7 +19,6 @@ import {
   Trash2,
   AlertTriangle,
 } from "lucide-react";
-import ClientDetail from "./ClientDetail.jsx";
 import ClientForm from "./ClientForm.jsx";
 import Badge from "../../components/common/Badge";
 import { useTranslation } from "react-i18next";
@@ -145,7 +144,8 @@ const ClientsList = () => {
           loading: `Deleting ${clientName}...`,
           success: `${clientName} deleted successfully`,
           error: `Failed to delete ${clientName}`,
-        _});
+          _,
+        });
 
         // Refresh the clients list
         fetchClients();
@@ -277,8 +277,9 @@ const ClientsList = () => {
       sortable: true,
       width: "25%",
       render: (row) => (
-        <div className="text-gray-600 dark:text-gray-400">
-          {row.email || "No email"}
+        <div className="text-gray-600 dark:text-gray-400 flex flex-col">
+          <span>{row.email || "No email"}</span>
+          <span>{row.phone || "No phone"}</span>
         </div>
       ),
     },
@@ -567,13 +568,13 @@ const ClientsList = () => {
       )}
 
       {/* Client Detail Modal */}
-<ClientDetailModal
-  isOpen={isDetailModalOpen}
-  onClose={handleDetailModalClose}
-  client={selectedClient}
-  onEdit={handleEditClient}
-  refreshData={fetchClients}
-/>
+      <ClientDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleDetailModalClose}
+        client={selectedClient}
+        onEdit={handleEditClient}
+        refreshData={fetchClients}
+      />
 
       {/* Add/Edit Form Modal */}
       <Modal

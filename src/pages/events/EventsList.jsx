@@ -173,11 +173,17 @@ const DateEventsModal = ({
                       {event.title}
                     </h3>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      <Badge color={getStatusColor(event.status)} className="text-xs">
+                      <Badge
+                        color={getStatusColor(event.status)}
+                        className="text-xs"
+                      >
                         {event.status}
                       </Badge>
                       {event.type && (
-                        <Badge color={getTypeColor(event.type)} className="text-xs">
+                        <Badge
+                          color={getTypeColor(event.type)}
+                          className="text-xs"
+                        >
                           {event.type}
                         </Badge>
                       )}
@@ -293,7 +299,7 @@ const EventList = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {
         page: currentPage,
         limit: pageSize,
@@ -307,7 +313,7 @@ const EventList = () => {
       const response = await eventService.getAll(params);
       let eventsData = [];
       let paginationData = {};
-      
+
       if (response?.data?.events) {
         eventsData = response.data.events;
         paginationData = response.data.pagination || {};
@@ -319,7 +325,7 @@ const EventList = () => {
       } else if (Array.isArray(response)) {
         eventsData = response;
       }
-      
+
       // Sort events by start date
       const sortedEvents = eventsData.sort(
         (a, b) => new Date(a.startDate) - new Date(b.startDate)
@@ -346,10 +352,10 @@ const EventList = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-      
+
       // For calendar view, we'll fetch events in batches if needed
       const params = {
         page: 1,
@@ -365,7 +371,7 @@ const EventList = () => {
 
       const response = await eventService.getAll(params);
       let eventsData = [];
-      
+
       if (response?.data?.events) {
         eventsData = response.data.events;
       } else if (response?.events) {
@@ -375,7 +381,7 @@ const EventList = () => {
       } else if (Array.isArray(response)) {
         eventsData = response;
       }
-      
+
       // Sort events by start date
       const sortedEvents = eventsData.sort(
         (a, b) => new Date(a.startDate) - new Date(b.startDate)
@@ -435,9 +441,14 @@ const EventList = () => {
   }, [refreshAllData, showInfo]);
 
   const hasActiveFilters =
-    search.trim() !== "" || status !== "all" || eventType !== "all" || dateRange !== "all";
-  const showEmptyState = !loading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
-  const showNoResults = !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
+    search.trim() !== "" ||
+    status !== "all" ||
+    eventType !== "all" ||
+    dateRange !== "all";
+  const showEmptyState =
+    !loading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults =
+    !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
 
   // Delete confirmation handlers
   const showDeleteConfirmation = useCallback((eventId, eventName = "Event") => {
@@ -465,14 +476,11 @@ const EventList = () => {
         return;
       }
       try {
-        await promise(
-          eventService.delete(eventId),
-          {
-            loading: `Deleting ${eventName}...`,
-            success: `${eventName} deleted successfully`,
-            error: `Failed to delete ${eventName}`,
-          }
-        );
+        await promise(eventService.delete(eventId), {
+          loading: `Deleting ${eventName}...`,
+          success: `${eventName} deleted successfully`,
+          error: `Failed to delete ${eventName}`,
+        });
         refreshAllData();
         if (selectedEvent?._id === eventId) {
           setSelectedEvent(null);
@@ -513,7 +521,9 @@ const EventList = () => {
     setSelectedEvent(null);
     setPrefilledDate(null);
     showSuccess(
-      selectedEvent ? "Event updated successfully" : "Event created successfully"
+      selectedEvent
+        ? "Event updated successfully"
+        : "Event created successfully"
     );
   }, [refreshAllData, selectedEvent, showSuccess]);
 
@@ -594,24 +604,30 @@ const EventList = () => {
     );
   }, []);
 
-  const isSelectedDate = useCallback((date) => {
-    if (!selectedDate) return false;
-    return (
-      date.getDate() === selectedDate.getDate() &&
-      date.getMonth() === selectedDate.getMonth() &&
-      date.getFullYear() === selectedDate.getFullYear()
-    );
-  }, [selectedDate]);
+  const isSelectedDate = useCallback(
+    (date) => {
+      if (!selectedDate) return false;
+      return (
+        date.getDate() === selectedDate.getDate() &&
+        date.getMonth() === selectedDate.getMonth() &&
+        date.getFullYear() === selectedDate.getFullYear()
+      );
+    },
+    [selectedDate]
+  );
 
   // Year selection handlers
   const currentYear = currentDate.getFullYear();
   const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
 
-  const handleYearSelect = useCallback((year) => {
-    setCurrentDate(new Date(year, currentDate.getMonth(), 1));
-    setShowYearSelector(false);
-    showInfo(`Navigated to ${year}`);
-  }, [currentDate, showInfo]);
+  const handleYearSelect = useCallback(
+    (year) => {
+      setCurrentDate(new Date(year, currentDate.getMonth(), 1));
+      setShowYearSelector(false);
+      showInfo(`Navigated to ${year}`);
+    },
+    [currentDate, showInfo]
+  );
 
   const calendarDays = useMemo(() => {
     const days = [];
@@ -662,33 +678,33 @@ const EventList = () => {
         </div>
       ),
     },
-  {
-    header: "Client",
-    accessor: "client",
-    sortable: true,
-    width: "20%",
-    render: (row) => {
-      // Enhanced client name extraction
-      const getClientName = (event) => {
-        if (!event) return 'Unknown Client';
-        
-        // Try different possible client data structures
-        if (event.client?.name) return event.client.name;
-        if (event.clientId?.name) return event.clientId.name;
-        if (event.clientName) return event.clientName;
-        if (typeof event.client === 'string') return event.client;
-        if (typeof event.clientId === 'string') return 'Loading...';
-        
-        return 'Unknown Client';
-      };
+    {
+      header: "Client",
+      accessor: "client",
+      sortable: true,
+      width: "20%",
+      render: (row) => {
+        // Enhanced client name extraction
+        const getClientName = (event) => {
+          if (!event) return "Unknown Client";
 
-      return (
-        <div className="text-gray-600 dark:text-gray-400">
-          {getClientName(row)}
-        </div>
-      );
+          // Try different possible client data structures
+          if (event.client?.name) return event.client.name;
+          if (event.clientId?.name) return event.clientId.name;
+          if (event.clientName) return event.clientName;
+          if (typeof event.client === "string") return event.client;
+          if (typeof event.clientId === "string") return "Loading...";
+
+          return "Unknown Client";
+        };
+
+        return (
+          <div className="text-gray-600 dark:text-gray-400">
+            {getClientName(row)}
+          </div>
+        );
+      },
     },
-  },
     {
       header: "Date & Time",
       accessor: "startDate",
@@ -772,7 +788,7 @@ const EventList = () => {
   ];
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 min-h-screen">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Event Detail Modal */}
       <EventDetailModal
         isOpen={isDetailsModalOpen}
@@ -801,8 +817,8 @@ const EventList = () => {
         />
       )}
       {/* Header */}
-      <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Event Calendar
           </h1>
@@ -839,7 +855,11 @@ const EventList = () => {
               Calendar
             </button>
           </div>
-          <Button variant="primary" icon={Plus} onClick={() => handleCreateEvent()}>
+          <Button
+            variant="primary"
+            icon={Plus}
+            onClick={() => handleCreateEvent()}
+          >
             <Plus className="h-4 w-4" />
             Create Event
           </Button>
@@ -853,7 +873,9 @@ const EventList = () => {
               <p className="text-red-800 dark:text-red-200 font-medium">
                 Error Loading Events
               </p>
-              <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
+                {error}
+              </p>
             </div>
             <Button onClick={handleRetry} size="sm" variant="outline">
               Retry
@@ -951,10 +973,18 @@ const EventList = () => {
           {hasActiveFilters && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span>Active filters:</span>
-              {search.trim() && <Badge color="blue">Search: "{search.trim()}"</Badge>}
-              {status !== "all" && <Badge color="purple">Status: {status}</Badge>}
-              {eventType !== "all" && <Badge color="green">Type: {eventType}</Badge>}
-              {dateRange !== "all" && <Badge color="orange">Date: {dateRange}</Badge>}
+              {search.trim() && (
+                <Badge color="blue">Search: "{search.trim()}"</Badge>
+              )}
+              {status !== "all" && (
+                <Badge color="purple">Status: {status}</Badge>
+              )}
+              {eventType !== "all" && (
+                <Badge color="green">Type: {eventType}</Badge>
+              )}
+              {dateRange !== "all" && (
+                <Badge color="orange">Date: {dateRange}</Badge>
+              )}
             </div>
           )}
         </div>
@@ -962,8 +992,8 @@ const EventList = () => {
       {viewMode === "list" ? (
         /* LIST VIEW */
         <div className="space-y-6">
-          <TitleCard className="dark:bg-gray-800">
-            <div className="p-6">
+          <div className="dark:bg-gray-800">
+            <div>
               {/* No Results from Search/Filter */}
               {showNoResults && (
                 <div className="text-center py-12">
@@ -1019,12 +1049,12 @@ const EventList = () => {
                 />
               )}
             </div>
-          </TitleCard>
+          </div>
         </div>
       ) : (
         /* CALENDAR VIEW */
-        <TitleCard className="dark:bg-gray-800">
-          <div className="py-8">
+        <div className="dark:bg-gray-800">
+          <div className="">
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
@@ -1093,14 +1123,17 @@ const EventList = () => {
                     {eventTypeColors.map((item) => {
                       const eventsByType = events.filter(
                         (event) =>
-                          (event.type || "other").toLowerCase() === item.type.toLowerCase()
+                          (event.type || "other").toLowerCase() ===
+                          item.type.toLowerCase()
                       );
                       return (
                         <div
                           key={item.type}
                           className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors group cursor-pointer"
                           onClick={() => {
-                            setEventType(item.type === "all" ? "all" : item.type);
+                            setEventType(
+                              item.type === "all" ? "all" : item.type
+                            );
                             setCurrentPage(1);
                             showInfo(`Filtering by ${item.label} events`);
                           }}
@@ -1131,14 +1164,18 @@ const EventList = () => {
                           Total Events
                         </span>
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          {events.filter((event) => {
-                            if (!event.startDate) return false;
-                            const eventDate = new Date(event.startDate);
-                            return (
-                              eventDate.getMonth() === currentDate.getMonth() &&
-                              eventDate.getFullYear() === currentDate.getFullYear()
-                            );
-                          }).length}
+                          {
+                            events.filter((event) => {
+                              if (!event.startDate) return false;
+                              const eventDate = new Date(event.startDate);
+                              return (
+                                eventDate.getMonth() ===
+                                  currentDate.getMonth() &&
+                                eventDate.getFullYear() ===
+                                  currentDate.getFullYear()
+                              );
+                            }).length
+                          }
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -1146,13 +1183,15 @@ const EventList = () => {
                           Upcoming
                         </span>
                         <span className="font-semibold text-orange-600">
-                          {events.filter((event) => {
-                            if (!event.startDate) return false;
-                            const eventDate = new Date(event.startDate);
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            return eventDate >= today;
-                          }).length}
+                          {
+                            events.filter((event) => {
+                              if (!event.startDate) return false;
+                              const eventDate = new Date(event.startDate);
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              return eventDate >= today;
+                            }).length
+                          }
                         </span>
                       </div>
                     </div>
@@ -1193,7 +1232,8 @@ const EventList = () => {
                         const hasEvents = dayEvents.length > 0;
                         const isTodayDate = isToday(date);
                         const isSelected = isSelectedDate(date);
-                        const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+                        const isCurrentMonth =
+                          date.getMonth() === currentDate.getMonth();
                         return (
                           <button
                             key={index}
@@ -1205,8 +1245,8 @@ const EventList = () => {
                                 isTodayDate
                                   ? "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-700"
                                   : isSelected
-                                  ? "bg-orange-100/70 dark:bg-orange-900/10 border-orange-300 dark:border-orange-600"
-                                  : "bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                    ? "bg-orange-100/70 dark:bg-orange-900/10 border-orange-300 dark:border-orange-600"
+                                    : "bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                               }
                               ${!isCurrentMonth ? "opacity-40 bg-gray-50 dark:bg-gray-800" : ""}
                             `}
@@ -1220,8 +1260,8 @@ const EventList = () => {
                                     isTodayDate
                                       ? "text-orange-700 dark:text-orange-400"
                                       : isSelected
-                                      ? "text-orange-600 dark:text-orange-300"
-                                      : "text-gray-700 dark:text-gray-300"
+                                        ? "text-orange-600 dark:text-orange-300"
+                                        : "text-gray-700 dark:text-gray-300"
                                   }
                                   ${!isCurrentMonth ? "text-gray-400 dark:text-gray-500" : ""}
                                 `}
@@ -1285,14 +1325,18 @@ const EventList = () => {
                           </div>
                         </div>
                         <div>
-                          {events.filter((event) => {
-                            if (!event.startDate) return false;
-                            const eventDate = new Date(event.startDate);
-                            return (
-                              eventDate.getMonth() === currentDate.getMonth() &&
-                              eventDate.getFullYear() === currentDate.getFullYear()
-                            );
-                          }).length}{" "}
+                          {
+                            events.filter((event) => {
+                              if (!event.startDate) return false;
+                              const eventDate = new Date(event.startDate);
+                              return (
+                                eventDate.getMonth() ===
+                                  currentDate.getMonth() &&
+                                eventDate.getFullYear() ===
+                                  currentDate.getFullYear()
+                              );
+                            }).length
+                          }{" "}
                           events this month
                         </div>
                       </div>
@@ -1302,7 +1346,7 @@ const EventList = () => {
               </div>
             </div>
           </div>
-        </TitleCard>
+        </div>
       )}
 
       {/* Delete Confirmation Modal */}
@@ -1324,8 +1368,10 @@ const EventList = () => {
                 Delete Event
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.eventName}"</strong>?
-                This action cannot be undone and all associated data will be permanently removed.
+                Are you sure you want to delete{" "}
+                <strong>"{confirmationModal.eventName}"</strong>? This action
+                cannot be undone and all associated data will be permanently
+                removed.
               </p>
               <div className="flex justify-end gap-3">
                 <Button
