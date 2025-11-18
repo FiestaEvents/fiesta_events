@@ -279,7 +279,6 @@ const ClientsList = () => {
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400 flex flex-col">
           <span>{row.email || "No email"}</span>
-          <span>{row.phone || "No phone"}</span>
         </div>
       ),
     },

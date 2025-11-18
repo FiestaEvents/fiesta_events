@@ -415,20 +415,19 @@ const PartnersList = () => {
         );
       },
     },
-    {
-      header: "Hourly Rate",
-      accessor: "hourlyRate",
-      sortable: true,
-      width: "12%",
-      render: (row) => {
-        if (!row) return <div>-</div>;
-        return (
-          <div className="text-sm text-gray-900 dark:text-white">
-            {row.hourlyRate ? `$${row.hourlyRate}/hr` : "-"}
-          </div>
-        );
-      },
-    },
+{
+  header: "Price",
+  accessor: "price",
+  sortable: true,
+  width: "10%",
+  render: (row) => {
+ const Price = row.priceType === "hourly" ? `${row.hourlyRate} TND/hr` : `${row.fixedRate} TND`;    return (
+      <div className="text-sm text-gray-900 dark:text-white">
+        {Price }
+      </div>
+    );
+  },
+},
     {
       header: "Actions",
       accessor: "actions",
@@ -441,7 +440,7 @@ const PartnersList = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleRowClick(row);
+                handleViewPartner(row);
               }}
               className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
               title="View Partner"

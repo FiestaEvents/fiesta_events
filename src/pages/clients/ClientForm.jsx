@@ -361,15 +361,27 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                     {...register("phone", {
                       required: "Phone number is required",
                       pattern: {
-                        value: /^[0-9+()\-\s]{7,20}$/,
-                        message: "Please enter a valid phone number",
+                        value: /^[0-9]{8}$/,
+                        message: "Phone number must be exactly 8 digits",
                       },
                     })}
+                    onChange={(e) => {
+                      // Remove any non-digit characters and limit to 8 digits
+                      const numbersOnly = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 8);
+                      e.target.value = numbersOnly;
+
+                      // Trigger react-hook-form's onChange
+                      const { onChange } = register("phone");
+                      onChange(e);
+                    }}
                     error={errors.phone?.message}
                     required
                     fullWidth
                     icon={Phone}
                     className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                    type="tel"
                   />
 
                   <Input
@@ -391,7 +403,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Street Address"
+                    label="Full Address"
                     placeholder="123 Main Street"
                     {...register("street")}
                     fullWidth

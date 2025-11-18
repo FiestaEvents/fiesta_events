@@ -4,7 +4,7 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-
+import formatCurrency from "../../utils/formatCurrency";
 import {
   FileText,
   Download,
@@ -297,14 +297,6 @@ const FinanceReports = () => {
     return csv;
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("tn-TN", {
-      style: "currency",
-      currency: "TND",
-    }).format(amount || 0);
-  };
-
-  // FIXED: Only include report types that have API endpoints
   const reportTypes = [
     {
       id: "profit-loss",
@@ -331,14 +323,6 @@ const FinanceReports = () => {
       iconColor: "text-red-600 dark:text-red-400",
     },
     {
-      id: "revenue-analysis",
-      name: "Revenue Analysis",
-      description: "Income sources and trends",
-      icon: TrendingUp,
-      bgColor: "bg-green-50 dark:bg-green-900/20",
-      iconColor: "text-green-600 dark:text-green-400",
-    },
-    {
       id: "tax-summary",
       name: "Tax Summary",
       description: "Tax obligations and deductions",
@@ -349,7 +333,7 @@ const FinanceReports = () => {
   ];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="bg-white space-y-6 p-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">

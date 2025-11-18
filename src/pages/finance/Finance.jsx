@@ -225,13 +225,13 @@ const Finance = () => {
       </div>
 
       {/* Main Metrics */}
-      <Card className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {mainMetrics.map((metric, index) => {
           const Icon = metric.icon;
 
           return (
             <div key={index}>
-              <div>
+              <Card>
                 <div className="flex items-center justify-between mb-4">
                   <div className={`p-3 rounded-lg ${metric.bgColor}`}>
                     <Icon className={`w-6 h-6 ${metric.iconColor}`} />
@@ -246,19 +246,19 @@ const Finance = () => {
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                   {metric.description}
                 </p>
-              </div>
+              </Card>
             </div>
           );
         })}
-      </Card>
+      </div>
 
       {/* Event & Venue Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Event Financials */}
         <Card>
-          <div className="p-6">
+          <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
@@ -382,7 +382,7 @@ const Finance = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cash Flow */}
          <Card>
-          <div className="p-6">
+          <div>
             <div className="flex items-center gap-2 mb-4">
               <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -442,7 +442,7 @@ const Finance = () => {
         {/* Recent Transactions */}
          <div className="lg:col-span-2">
           <Card>
-            <div className="p-6">
+            <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Recent Transactions
@@ -589,14 +589,14 @@ const Finance = () => {
         )}
 
       {/* Quick Action Cards */}
-      <Card className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
          <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/transactions")}
         >
-          <div className="p-6">
+          <Card>
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30">
                 <Wallet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
@@ -608,14 +608,14 @@ const Finance = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
       </div>
 
          <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/analytics")}
         >
-          <div className="p-6">
+          <Card>
             <div className="flex items-center gap-4">
               <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
                 <BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -629,14 +629,14 @@ const Finance = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
       </div>
 
          <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/reports")}
         >
-          <div className="p-6">
+          <Card>
             <div className="flex items-center gap-4">
               <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
                 <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -650,14 +650,14 @@ const Finance = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
       </div>
 
          <div
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate("/finance/profitability")}
         >
-          <div className="p-6">
+          <Card>
             <div className="flex items-center gap-4">
               <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
                 <PieChart className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -671,9 +671,9 @@ const Finance = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
       </div>
-      </Card>
+      </div>
     </div>
   );
 };

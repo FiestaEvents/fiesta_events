@@ -1,1282 +1,185 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  X,
-  Save,
-  Plus,
-  Trash2,
-  Calendar,
-  Clock,
-  Users,
-  DollarSign,
-  ChevronRight,
-  ChevronLeft,
-  UserPlus,
-  Building,
-  FileText,
-  Search,
-  Check,
-  User,
-  CreditCard,
-  ArrowLeft,
-  AlertCircle,
-  Percent,
-  MapPin,
-  Info,
-  AlertTriangle,
-  History,
-  FileCheck,
-  XIcon,
-  CheckCircle,
-} from "lucide-react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-hot-toast";
-import {
-  eventService,
-  clientService,
-  partnerService,
-  venueSpacesService,
-  invoiceService,
-  paymentService,
-} from "../../api/index";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
-import Textarea from "../../components/common/Textarea";
-import Select from "../../components/common/Select";
-import Badge from "../../components/common/Badge";
+  import React, { useState, useEffect, useMemo } from "react";
+  import {
+    X,
+    Save,
+    Plus,
+    Trash2,
+    Calendar,
+    Clock,
+    Users,
+    DollarSign,
+    ChevronRight,
+    ChevronLeft,
+    UserPlus,
+    Building,
+    FileText,
+    Search,
+    Check,
+    User,
+    CreditCard,
+    ArrowLeft,
+    AlertCircle,
+    Percent,
+    MapPin,
+    Info,
+    AlertTriangle,
+    History,
+    FileCheck,
+    XIcon,
+    CheckCircle,
+  } from "lucide-react";
+  import { useParams, useNavigate, useLocation } from "react-router-dom";
+  import { toast } from "react-hot-toast";
+  import {
+    eventService,
+    clientService,
+    partnerService,
+    venueSpacesService,
+    invoiceService,
+    paymentService,
+  } from "../../api/index";
+  import Button from "../../components/common/Button";
+  import Input from "../../components/common/Input";
+  import Textarea from "../../components/common/Textarea";
+  import Select from "../../components/common/Select";
+  import Badge from "../../components/common/Badge";
 
-// ============================================
-// TOGGLE COMPONENT
-// ============================================
-const Toggle = ({ enabled, onChange, label, disabled = false }) => (
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => !disabled && onChange(!enabled)}
-      disabled={disabled}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        enabled ? "bg-orange-500" : "bg-gray-300"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-          enabled ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
-    {label && (
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        {label}
-      </span>
-    )}
-  </div>
-);
+  // ============================================
+  // TOGGLE COMPONENT
+  // ============================================
+  const Toggle = ({ enabled, onChange, label, disabled = false }) => (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => !disabled && onChange(!enabled)}
+        disabled={disabled}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+          enabled ? "bg-orange-500" : "bg-gray-300"
+        } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+            enabled ? "translate-x-6" : "translate-x-1"
+          }`}
+        />
+      </button>
+      {label && (
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {label}
+        </span>
+      )}
+    </div>
+  );
 
-// ============================================
-// STICKY PRICE SUMMARY COMPONENT
-// ============================================
-const StickyPriceSummary = ({
-  venuePrice,
-  partnersTotal,
-  discount,
-  discountType,
-  totalPrice,
-  visible,
-}) => {
-  if (!visible) return null;
-  return (
-    <div className="fixed bottom-6 right-6 z-40 animate-in slide-in-from-bottom-5 duration-300">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-2 border-orange-200 dark:border-orange-700 p-4 min-w-[280px]">
-        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
-          <DollarSign className="w-5 h-5 text-orange-500" />
-          <h4 className="font-bold text-gray-900 dark:text-white">
-            Price Summary
-          </h4>
-        </div>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-400">Venue:</span>
-            <span className="font-semibold text-gray-900 dark:text-white">
-              {venuePrice.toFixed(2)} TND
-            </span>
+  // ============================================
+  // STICKY PRICE SUMMARY COMPONENT
+  // ============================================
+  const StickyPriceSummary = ({
+    venuePrice,
+    partnersTotal,
+    discount,
+    discountType,
+    totalPrice,
+    visible,
+  }) => {
+    if (!visible) return null;
+    return (
+      <div className="fixed bottom-6 right-6 z-40 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-2 border-orange-200 dark:border-orange-700 p-4 min-w-[280px]">
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+            <DollarSign className="w-5 h-5 text-orange-500" />
+            <h4 className="font-bold text-gray-900 dark:text-white">
+              Price Summary
+            </h4>
           </div>
-
-          {partnersTotal > 0 && (
+          <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">
-                Partners:
-              </span>
+              <span className="text-gray-600 dark:text-gray-400">Venue:</span>
               <span className="font-semibold text-gray-900 dark:text-white">
-                {partnersTotal.toFixed(2)} TND
+                {venuePrice.toFixed(2)} TND
               </span>
             </div>
-          )}
 
-          {discount > 0 && (
-            <div className="flex justify-between text-red-600">
-              <span>Discount:</span>
-              <span className="font-semibold">
-                -
-                {discountType === "percentage"
-                  ? `${discount}%`
-                  : `${discount.toFixed(2)} TND`}
+            {partnersTotal > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Partners:
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {partnersTotal.toFixed(2)} TND
+                </span>
+              </div>
+            )}
+
+            {discount > 0 && (
+              <div className="flex justify-between text-red-600">
+                <span>Discount:</span>
+                <span className="font-semibold">
+                  -
+                  {discountType === "percentage"
+                    ? `${discount}%`
+                    : `${discount.toFixed(2)} TND`}
+                </span>
+              </div>
+            )}
+
+            <div className="pt-2 border-t-2 border-orange-200 dark:border-orange-700 flex justify-between">
+              <span className="font-bold text-gray-900 dark:text-white">
+                Total:
+              </span>
+              <span className="font-bold text-2xl text-orange-600">
+                {totalPrice.toFixed(2)} TND
               </span>
             </div>
-          )}
-
-          <div className="pt-2 border-t-2 border-orange-200 dark:border-orange-700 flex justify-between">
-            <span className="font-bold text-gray-900 dark:text-white">
-              Total:
-            </span>
-            <span className="font-bold text-2xl text-orange-600">
-              {totalPrice.toFixed(2)} TND
-            </span>
           </div>
-        </div>
 
-        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-            <Info className="w-4 h-4" />
-            <span>Real-time calculation</span>
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+              <Info className="w-4 h-4" />
+              <span>Real-time calculation</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-// ============================================
-// MAIN EVENT FORM COMPONENT - ENHANCED
-// ============================================
-const EventForm = ({
-  isOpen,
-  onClose,
-  eventId: modalEventId,
-  onSuccess,
-  initialDate,
-}) => {
-  const { id: urlEventId } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isModal = location.pathname === "/events/new" ? true : isOpen !== undefined;
-  const eventId = isModal ? modalEventId : urlEventId;
-  const isEditMode = !!eventId;
-  const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
-
-  // Extract navigation state - ENHANCED
-  const prefillClient = location.state?.prefillClient;
-  const prefillPartner = location.state?.prefillPartner;
-  const returnUrl = location.state?.returnUrl;
-  const fromClient = location.state?.fromClient;
-  const fromPartner = location.state?.fromPartner;
-
-  // ============================================
-  // INITIALIZATION STATE
-  // ============================================
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
-
-  // ============================================
-  // FORM STATE
-  // ============================================
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    type: "",
-    venueSpaceId: "",
-    clientId: "",
-    sameDayEvent: true,
-    startDate: "",
-    endDate: "",
-    startTime: "",
-    endTime: "",
-    guestCount: "",
-    status: "pending",
-    pricing: {
-      basePrice: "",
-      discount: "",
-      discountType: "fixed",
-    },
-    partners: [],
-    notes: "",
-    payment: {
-      amount: "",
-      paymentMethod: "cash",
-      paymentDate: new Date().toISOString().split("T")[0],
-      status: "pending",
-      notes: "",
-    },
-    createInvoice: false,
-  });
-
-  // ============================================
-  // UI STATE
-  // ============================================
-  const [venueSpaces, setVenueSpaces] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [partners, setPartners] = useState([]);
-  const [existingEvents, setExistingEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(true);
-  const [errors, setErrors] = useState({});
-  const [warnings, setWarnings] = useState({});
-  const [selectedPartner, setSelectedPartner] = useState("");
-  const [newClient, setNewClient] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
-  const [isCreatingClient, setIsCreatingClient] = useState(false);
-  const [showClientForm, setShowClientForm] = useState(false);
-  const [clientSearch, setClientSearch] = useState("");
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [prefilledClientData, setPrefilledClientData] = useState(null);
-  const [prefilledPartnerData, setPrefilledPartnerData] = useState(null);
-  const [hasDraft, setHasDraft] = useState(false);
-
-  // ============================================
-  // CENTRALIZED DATA FETCHING - ENHANCED
-  // ============================================
-  useEffect(() => {
-    let isMounted = true;
-
-    const initializeForm = async () => {
-      if (isInitialized) return;
-
-      try {
-        setFetchLoading(true);
-        console.log("🔄 Starting data fetch...");
-
-        // Fetch all dropdown data first
-        const [clientsRes, partnersRes, venueSpacesRes, eventsRes] =
-          await Promise.allSettled([
-            clientService.getAll 
-              ? clientService.getAll({ limit: 100 })
-              : clientService.getClients
-                ? clientService.getClients({ limit: 100 })
-                : Promise.resolve({ data: [] }),
-            
-            partnerService.getAll
-              ? partnerService.getAll({ limit: 100 })
-              : Promise.resolve({ data: [] }),
-            
-            venueSpacesService.getAll
-              ? venueSpacesService.getAll({ 
-                  limit: 100,
-                  includeArchived: false,
-                  isActive: true 
-                })
-              : Promise.resolve({ data: { spaces: [] } }),
-            
-            eventService.getAll
-              ? eventService.getAll({ limit: 100 })
-              : eventService.getEvents
-                ? eventService.getEvents({ limit: 100 })
-                : Promise.resolve({ data: [] }),
-          ]);
-
-        if (!isMounted) return;
-
-        // Extract data
-        const extractArrayData = (response, serviceName) => {
-          if (response.status === "rejected") {
-            console.warn(`Failed to fetch ${serviceName}:`, response.reason);
-            return [];
-          }
-
-          const data = response.value;
-          if (!data) return [];
-
-          if (Array.isArray(data)) return data;
-          if (data.data && Array.isArray(data.data)) return data.data;
-          if (data.clients && Array.isArray(data.clients)) return data.clients;
-          if (data.partners && Array.isArray(data.partners)) return data.partners;
-          if (data.events && Array.isArray(data.events)) return data.events;
-          if (data.spaces && Array.isArray(data.spaces)) return data.spaces;
-          if (data.data && data.data.records && Array.isArray(data.data.records)) {
-            return data.data.records;
-          }
-          
-          return [];
-        };
-
-        const clientsList = extractArrayData(clientsRes, "clients");
-        const partnersList = extractArrayData(partnersRes, "partners");
-        const eventsList = extractArrayData(eventsRes, "events");
-        
-        // Extract venue spaces
-        let venueSpacesList = [];
-        if (venueSpacesRes.status === "fulfilled") {
-          const venueData = venueSpacesRes.value;
-          
-          if (venueData && venueData.spaces && Array.isArray(venueData.spaces)) {
-            venueSpacesList = venueData.spaces;
-          } else if (venueData && venueData.data && venueData.data.spaces && Array.isArray(venueData.data.spaces)) {
-            venueSpacesList = venueData.data.spaces;
-          } else if (venueData && Array.isArray(venueData)) {
-            venueSpacesList = venueData;
-          } else if (venueData && venueData.data && Array.isArray(venueData.data)) {
-            venueSpacesList = venueData.data;
-          }
-        }
-
-        console.log("✅ Fetched data:", {
-          clients: clientsList.length,
-          partners: partnersList.length,
-          venueSpaces: venueSpacesList.length,
-          events: eventsList.length
-        });
-
-        // Normalize venue spaces
-        const normalizedVenueSpaces = venueSpacesList.map((space) => ({
-          ...space,
-          _id: space._id || space.id,
-          name: space.name || 'Unnamed Space',
-          capacity: space.capacity || { min: 0, max: 0 },
-          amenities: Array.isArray(space.amenities) ? space.amenities : [],
-          basePrice: space.basePrice || space.hourlyRate || space.dailyRate || 0,
-          isActive: space.isActive !== false,
-          isArchived: space.isArchived || false,
-        }));
-
-        if (!isMounted) return;
-
-        // Set all data at once
-        setClients(clientsList);
-        setPartners(partnersList);
-        setVenueSpaces(normalizedVenueSpaces);
-        setExistingEvents(eventsList);
-        setDataLoaded(true);
-
-        // ============================================
-        // HANDLE PREFILL CLIENT (from Client Details)
-        // ============================================
-        if (prefillClient && prefillClient._id && !isEditMode) {
-          setPrefilledClientData(prefillClient);
-          setSelectedClient(prefillClient._id);
-          setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
-          toast.success(`Client "${prefillClient.name}" pre-selected`);
-        }
-
-        // ============================================
-        // HANDLE PREFILL PARTNER (from Partner Details)
-        // ============================================
-        if (prefillPartner && prefillPartner._id && !isEditMode) {
-          const partner = partnersList.find(p => p._id === prefillPartner._id);
-          if (partner) {
-            setPrefilledPartnerData(prefillPartner);
-            setFormData((prev) => ({
-              ...prev,
-              partners: [
-                {
-                  partner: partner._id,
-                  partnerName: partner.name,
-                  service: partner.category || partner.serviceType || "General Service",
-                  hourlyRate: partner.hourlyRate || partner.pricing?.hourlyRate || partner.rate || 0,
-                  status: "confirmed",
-                },
-              ],
-            }));
-            toast.success(`Partner "${partner.name}" pre-selected`);
-          }
-        }
-
-        // Load event data in edit mode
-        if (isEditMode && eventId) {
-          console.log("📝 Loading event:", eventId);
-          const response = await eventService.getById(eventId);
-          const event = response.event || response.data || response;
-
-          if (!event) {
-            throw new Error("Event not found");
-          }
-
-          if (!isMounted) return;
-
-          const clientIdValue = event.clientId?._id || event.clientId || "";
-
-          // Extract venue space
-          const eventSpaceRaw = event.venueSpace || event.venueSpaceId;
-          let eventSpaceId = "";
-          let venueSpaceData = null;
-
-          if (eventSpaceRaw) {
-            if (typeof eventSpaceRaw === "object") {
-              eventSpaceId = eventSpaceRaw._id || eventSpaceRaw.id || "";
-              venueSpaceData = eventSpaceRaw;
-            } else {
-              eventSpaceId = eventSpaceRaw;
-            }
-          }
-
-          // Add venue space if not in list
-          if (venueSpaceData && !normalizedVenueSpaces.find(s => s._id === eventSpaceId)) {
-            const normalizedSpace = {
-              ...venueSpaceData,
-              _id: eventSpaceId,
-              capacity: venueSpaceData.capacity || {},
-              amenities: Array.isArray(venueSpaceData.amenities) ? venueSpaceData.amenities : [],
-              basePrice: venueSpaceData.basePrice || event.pricing?.basePrice || 0,
-            };
-            setVenueSpaces(prev => [...prev, normalizedSpace]);
-          }
-
-          // Set form data
-          setFormData({
-            title: event.title || "",
-            description: event.description || "",
-            type: event.type || "",
-            venueSpaceId: eventSpaceId,
-            clientId: clientIdValue,
-            sameDayEvent: event.startDate === event.endDate,
-            startDate: event.startDate
-              ? new Date(event.startDate).toISOString().split("T")[0]
-              : "",
-            endDate: event.endDate
-              ? new Date(event.endDate).toISOString().split("T")[0]
-              : "",
-            startTime: event.startTime || "",
-            endTime: event.endTime || "",
-            guestCount: event.guestCount || "",
-            status: event.status || "pending",
-            pricing: {
-              basePrice: event.pricing?.basePrice || "",
-              discount: event.pricing?.discount || "",
-              discountType: event.pricing?.discountType || "fixed",
-            },
-            partners: event.partners?.map((p) => ({
-              partner: p.partner?._id || p.partner || p.partnerId,
-              partnerName: p.partner?.name || p.partnerName || "Unknown Partner",
-              service: p.service || "General Service",
-              hourlyRate: p.hourlyRate || p.cost || 0,
-              status: p.status || "pending",
-            })) || [],
-            notes: event.notes || "",
-            payment: {
-              amount: "",
-              paymentMethod: "cash",
-              paymentDate: new Date().toISOString().split("T")[0],
-              status: "pending",
-              notes: "",
-            },
-            createInvoice: false,
-          });
-
-          if (clientIdValue) {
-            setSelectedClient(clientIdValue);
-          }
-
-          console.log("✅ Event loaded successfully");
-          toast.success("Event loaded successfully");
-        }
-
-        // Handle initial date
-        if (initialDate && !isEditMode) {
-          const dateString = initialDate.toISOString().split("T")[0];
-          setFormData((prev) => ({
-            ...prev,
-            startDate: dateString,
-            endDate: dateString,
-          }));
-          toast.success(`Date ${dateString} pre-selected`);
-        }
-
-        setIsInitialized(true);
-      } catch (error) {
-        console.error("❌ Error initializing form:", error);
-        toast.error(error.message || "Failed to load form data");
-        setClients([]);
-        setPartners([]);
-        setVenueSpaces([]);
-        setExistingEvents([]);
-      } finally {
-        if (isMounted) {
-          setFetchLoading(false);
-        }
-      }
-    };
-
-    initializeForm();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [eventId, isEditMode, isInitialized, initialDate, prefillClient, prefillPartner]);
-
-  // ============================================
-  // AUTO-SAVE DRAFT FUNCTIONALITY
-  // ============================================
-  useEffect(() => {
-    if (!isEditMode && formData.title && currentStep > 1) {
-      const draftData = {
-        formData,
-        currentStep,
-        timestamp: new Date().toISOString(),
-      };
-      localStorage.setItem("eventFormDraft", JSON.stringify(draftData));
-    }
-  }, [formData, currentStep, isEditMode]);
-
-  useEffect(() => {
-    if (!isEditMode && !eventId) {
-      const draft = localStorage.getItem("eventFormDraft");
-      if (draft) {
-        try {
-          const {
-            formData: savedData,
-            currentStep: savedStep,
-            timestamp,
-          } = JSON.parse(draft);
-          const draftAge = Date.now() - new Date(timestamp).getTime();
-          const oneDayMs = 24 * 60 * 60 * 1000;
-          if (draftAge < oneDayMs) {
-            setHasDraft(true);
-            window.__eventFormDraft = { savedData, savedStep, timestamp };
-          }
-        } catch (error) {
-          console.error("Error loading draft:", error);
-        }
-      }
-    }
-  }, []);
-
-  const clearDraft = () => {
-    localStorage.removeItem("eventFormDraft");
-    setHasDraft(false);
-  };
-
-  // ============================================
-  // SYNC EFFECTS
-  // ============================================
-  useEffect(() => {
-    if (formData.sameDayEvent && formData.startDate) {
-      setFormData((prev) => ({ ...prev, endDate: prev.startDate }));
-    }
-  }, [formData.sameDayEvent, formData.startDate]);
-
-  useEffect(() => {
-    if (!formData.venueSpaceId || !dataLoaded) {
-      return;
-    }
-
-    const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
-
-    if (!space || !space.basePrice) {
-      return;
-    }
-
-    const numericBasePrice = Number(space.basePrice) || 0;
-
-    setFormData((prev) => {
-      if (prev.pricing.basePrice === numericBasePrice) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        pricing: { ...prev.pricing, basePrice: numericBasePrice },
-      };
-    });
-  }, [formData.venueSpaceId, venueSpaces, dataLoaded]);
-
-  // ============================================
-  // VALIDATION CHECKS
-  // ============================================
-  useEffect(() => {
-    if (!formData.venueSpaceId || !formData.guestCount || !dataLoaded) {
-      setWarnings((prev) => {
-        const newWarnings = { ...prev };
-        delete newWarnings.guestCount;
-        return newWarnings;
-      });
-      return;
-    }
-
-    const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
-    if (!space || !space.capacity) {
-      setWarnings((prev) => {
-        const newWarnings = { ...prev };
-        delete newWarnings.guestCount;
-        return newWarnings;
-      });
-      return;
-    }
-
-    const capacityMin = space.capacity.min || 0;
-    const capacityMax = space.capacity.max || 0;
-
-    if (!capacityMin && !capacityMax) {
-      setWarnings((prev) => {
-        const newWarnings = { ...prev };
-        delete newWarnings.guestCount;
-        return newWarnings;
-      });
-      return;
-    }
-
-    const guestCount = parseInt(formData.guestCount);
-    if (Number.isNaN(guestCount)) {
-      setWarnings((prev) => {
-        const newWarnings = { ...prev };
-        delete newWarnings.guestCount;
-        return newWarnings;
-      });
-      return;
-    }
-
-    setWarnings((prev) => {
-      const newWarnings = { ...prev };
-
-      if (capacityMax && guestCount > capacityMax) {
-        newWarnings.guestCount = {
-          type: "error",
-          message: `Guest count (${guestCount}) exceeds venue capacity (max: ${capacityMax})`,
-        };
-      } else if (capacityMin && guestCount < capacityMin) {
-        newWarnings.guestCount = {
-          type: "warning",
-          message: `Guest count (${guestCount}) is below venue minimum (min: ${capacityMin})`,
-        };
-      } else {
-        delete newWarnings.guestCount;
-      }
-
-      return newWarnings;
-    });
-  }, [formData.venueSpaceId, formData.guestCount, venueSpaces, dataLoaded]);
-
-  useEffect(() => {
-    if (!formData.venueSpaceId || !formData.startDate || !formData.startTime || !dataLoaded) {
-      setWarnings((prev) => {
-        const newWarnings = { ...prev };
-        delete newWarnings.dateConflict;
-        return newWarnings;
-      });
-      return;
-    }
-
-    const conflictingEvents = existingEvents.filter((event) => {
-      if (event._id === eventId) return false;
-
-      const eventVenueSpaceId = event.venueSpaceId?._id || event.venueSpaceId;
-      if (eventVenueSpaceId !== formData.venueSpaceId) return false;
-
-      try {
-        const eventStart = new Date(
-          `${formData.startDate}T${formData.startTime || "00:00"}`
-        );
-        const eventEnd = new Date(
-          `${formData.endDate || formData.startDate}T${formData.endTime || "23:59"}`
-        );
-        const existingStart = new Date(
-          `${event.startDate}T${event.startTime || "00:00"}`
-        );
-        const existingEnd = new Date(
-          `${event.endDate}T${event.endTime || "23:59"}`
-        );
-
-        return eventStart < existingEnd && eventEnd > existingStart;
-      } catch (error) {
-        console.error("Error comparing dates:", error);
-        return false;
-      }
-    });
-
-    setWarnings((prev) => {
-      const newWarnings = { ...prev };
-
-      if (conflictingEvents.length > 0) {
-        newWarnings.dateConflict = {
-          type: "error",
-          message: `Venue space has ${conflictingEvents.length} conflicting event(s) at this time`,
-          conflicts: conflictingEvents,
-        };
-      } else {
-        delete newWarnings.dateConflict;
-      }
-
-      return newWarnings;
-    });
-  }, [
-    formData.venueSpaceId,
-    formData.startDate,
-    formData.endDate,
-    formData.startTime,
-    formData.endTime,
-    existingEvents,
-    eventId,
-    dataLoaded,
-  ]);
-
-  // ============================================
-  // CALCULATION HELPERS
-  // ============================================
-  const calculateEventHours = () => {
-    try {
-      if (!formData.startDate || !formData.endDate) return 1;
-      const startTime = formData.startTime || "00:00";
-      const endTime = formData.endTime || "00:00";
-      const start = new Date(`${formData.startDate}T${startTime}:00`);
-      const end = new Date(`${formData.endDate}T${endTime}:00`);
-      const diffMs = end.getTime() - start.getTime();
-      if (!isFinite(diffMs) || diffMs <= 0) return 1;
-      const hours = Math.ceil(diffMs / (1000 * 60 * 60));
-      return Math.max(1, hours);
-    } catch (_) {
-      return 1;
-    }
-  };
-
-  const getPartnerCostForHours = (partner, hours) => {
-    const rate = partner.hourlyRate || 0;
-    return Math.max(0, rate * hours);
-  };
-
-  const rawBasePrice = formData.pricing.basePrice;
-  const basePrice =
-    rawBasePrice === "" || rawBasePrice === null || rawBasePrice === undefined
-      ? 0
-      : parseFloat(rawBasePrice) || 0;
-  const displayBasePrice =
-    rawBasePrice === "" || rawBasePrice === null || rawBasePrice === undefined
-      ? ""
-      : basePrice;
-
-  const calculateTotalPrice = () => {
-    const hours = calculateEventHours();
-    const partnersCost = formData.partners.reduce((total, partner) => {
-      return total + getPartnerCostForHours(partner, hours);
-    }, 0);
-    let discountAmount = 0;
-    if (formData.pricing.discount) {
-      const discountValue = parseFloat(formData.pricing.discount) || 0;
-      if (formData.pricing.discountType === "percentage") {
-        discountAmount = (basePrice + partnersCost) * (discountValue / 100);
-      } else {
-        discountAmount = discountValue;
-      }
-    }
-
-    return Math.max(0, basePrice + partnersCost - discountAmount);
-  };
-
-  const totalPrice = calculateTotalPrice();
-  const venuePrice = basePrice;
-  const partnersTotal = formData.partners.reduce(
-    (t, p) => t + getPartnerCostForHours(p, calculateEventHours()),
-    0
-  );
-
-  // ============================================
-  // OPTIONS
-  // ============================================
-  const eventTypeOptions = [
-    { value: "", label: "Select Event Type" },
-    { value: "wedding", label: "Wedding" },
-    { value: "birthday", label: "Birthday" },
-    { value: "corporate", label: "Corporate" },
-    { value: "conference", label: "Conference" },
-    { value: "party", label: "Party" },
-    { value: "other", label: "Other" },
-  ];
-
-  const statusOptions = [
-    { value: "pending", label: "Pending" },
-    { value: "confirmed", label: "Confirmed" },
-    { value: "in-progress", label: "In Progress" },
-    { value: "completed", label: "Completed" },
-    { value: "cancelled", label: "Cancelled" },
-  ];
-
-  const paymentMethodOptions = [
-    { value: "cash", label: "Cash" },
-    { value: "credit_card", label: "Credit Card" },
-    { value: "bank_transfer", label: "Bank Transfer" },
-    { value: "check", label: "Check" },
-    { value: "mobile_payment", label: "Mobile Payment" },
-  ];
-
-  const paymentStatusOptions = [
-    { value: "pending", label: "Pending" },
-    { value: "completed", label: "Completed" },
-    { value: "failed", label: "Failed" },
-    { value: "refunded", label: "Refunded" },
-  ];
-
-  // ============================================
-  // FILTERED DATA
-  // ============================================
-  const filteredClients = clients.filter(
-    (client) =>
-      client.name?.toLowerCase().includes(clientSearch.toLowerCase()) ||
-      client.email?.toLowerCase().includes(clientSearch.toLowerCase()) ||
-      client.phone?.includes(clientSearch)
-  );
-
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === "venueSpaceId") {
-      setFormData((prev) => ({
-        ...prev,
-        venueSpaceId: value,
-        pricing: { ...prev.pricing, basePrice: "" },
-        // Preserve partners when changing venue
-        partners: prev.partners,
-      }));
-
-      if (errors[name]) {
-        setErrors((prev) => ({ ...prev, [name]: "" }));
-      }
-      return;
-    }
-
-    if (name.startsWith("pricing.")) {
-      const field = name.split(".")[1];
-      setFormData((prev) => ({
-        ...prev,
-        pricing: { ...prev.pricing, [field]: value },
-      }));
-    } else if (name.startsWith("payment.")) {
-      const field = name.split(".")[1];
-      setFormData((prev) => ({
-        ...prev,
-        payment: { ...prev.payment, [field]: value },
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const handlePartnerSelect = (partnerId) => {
-    if (!partnerId) {
-      setSelectedPartner("");
-      return;
-    }
-    const partner = partners.find((p) => p._id === partnerId);
-    if (!partner) {
-      toast.error("Selected partner not found");
-      return;
-    }
-
-    const isAlreadyAdded = formData.partners.some(
-      (p) => p.partner === partnerId
     );
-    
-    if (isAlreadyAdded) {
-      toast.error(`${partner.name} is already added to this event`);
-      setSelectedPartner("");
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      partners: [
-        ...prev.partners,
-        {
-          partner: partnerId,
-          partnerName: partner.name,
-          service: partner.category || partner.serviceType || "General Service",
-          hourlyRate: partner.hourlyRate || partner.pricing?.hourlyRate || partner.rate || 0,
-          status: "confirmed",
-        },
-      ],
-    }));
-
-    setSelectedPartner("");
-    toast.success(`${partner.name} added to event`);
-  };
-
-  const handleRemovePartner = (index) => {
-    const partner = formData.partners[index];
-    setFormData((prev) => ({
-      ...prev,
-      partners: prev.partners.filter((_, i) => i !== index),
-    }));
-    toast.success(`${partner.partnerName} removed`);
-  };
-
-const handleCreateClient = async () => {
- if (!newClient.name.trim()) {
-    console.log("❌ Client name validation failed");
-    toast.error("Client name is required");
-    return;
-  }
-  
-  if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
-    console.log("❌ Email validation failed");
-    toast.error("Please enter a valid email");
-    return;
-  }
-
-  const duplicate = clients.find(
-    (c) =>
-      c.email?.toLowerCase() === newClient.email?.toLowerCase() ||
-      c.phone === newClient.phone
-  );
-
-  if (duplicate) {
-    console.log("❌ Duplicate client found");
-    toast.error("Client with this email or phone already exists");
-    return;
-  }
-
-  try {
-    console.log("⏳ Starting client creation with data:", newClient);
-    setIsCreatingClient(true);
-    
-    // Add timeout and better error handling
-    const response = await clientService.create(newClient);
-    console.log("✅ Client creation API response:", response);
-    
-    let createdClient = response?.client || response?.data || response;
-
-    if (!createdClient || !createdClient._id) {
-      console.warn("⚠️ Client created with unexpected response structure:", response);
-      createdClient = {
-        _id: `temp-${Date.now()}`,
-        ...newClient,
-        createdAt: new Date().toISOString(),
-      };
-    }
-
-    console.log("📝 Created client object:", createdClient);
-
-    // Update state in sequence to ensure proper updates
-    setClients((prev) => {
-      const updatedClients = [...prev, createdClient];
-      console.log("📋 Clients list updated:", updatedClients.length);
-      return updatedClients;
-    });
-
-    setSelectedClient(createdClient._id);
-    console.log("🎯 Selected client ID:", createdClient._id);
-    
-    setFormData((prev) => {
-      const updatedFormData = { ...prev, clientId: createdClient._id };
-      console.log("📄 Form data updated with client ID:", updatedFormData.clientId);
-      return updatedFormData;
-    });
-    
-    setNewClient({ name: "", email: "", phone: "" });
-    setShowClientForm(false);
-
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.clientId;
-      return newErrors;
-    });
-
-    console.log("🎉 Client creation completed successfully");
-    toast.success(`Client "${createdClient.name}" created successfully!`);
-    
-  } catch (error) {
-    console.error("❌ Error creating client:", error);
-    console.error("Error details:", {
-      message: error.message,
-      response: error.response,
-      status: error.response?.status,
-      data: error.response?.data
-    });
-    
-    toast.error(error.response?.data?.message || "Failed to create client");
-  } finally {
-    console.log("🏁 Finally block - setting loading to false");
-    setIsCreatingClient(false);
-  }
-};
-
-  const handleSelectClient = (clientId) => {
-    setSelectedClient((prevSelected) => {
-      const isDeselection = prevSelected === clientId;
-
-      setFormData((prev) => ({
-        ...prev,
-        clientId: isDeselection ? "" : clientId,
-      }));
-
-      setPrefilledClientData(null);
-
-      if (!isDeselection) {
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.clientId;
-          return newErrors;
-        });
-      }
-
-      return isDeselection ? null : clientId;
-    });
-  };
-
-  const handleClearVenueSpace = () => {
-    setFormData((prev) => ({
-      ...prev,
-      venueSpaceId: "",
-      pricing: { ...prev.pricing, basePrice: "" },
-    }));
-    setWarnings((prev) => {
-      const updated = { ...prev };
-      delete updated.guestCount;
-      delete updated.dateConflict;
-      return updated;
-    });
   };
 
   // ============================================
-  // VALIDATION
+  // MAIN EVENT FORM COMPONENT - ENHANCED
   // ============================================
-  const validateStep = (step) => {
-    const newErrors = {};
+  const EventForm = ({
+    isOpen,
+    onClose,
+    eventId: modalEventId,
+    onSuccess,
+    initialDate,
+  }) => {
+    const { id: urlEventId } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isModal = location.pathname === "/events/new" ? true : isOpen !== undefined;
+    const eventId = isModal ? modalEventId : urlEventId;
+    const isEditMode = !!eventId;
+    const [currentStep, setCurrentStep] = useState(1);
+    const totalSteps = 5;
 
-    if (step === 1) {
-      if (!formData.title.trim()) newErrors.title = "Event title is required";
-      if (!formData.type) newErrors.type = "Event type is required";
-      if (!formData.startDate) newErrors.startDate = "Start date is required";
-      if (!formData.sameDayEvent && !formData.endDate) {
-        newErrors.endDate = "End date is required";
-      }
-      if (formData.startTime && formData.endTime && formData.sameDayEvent) {
-        if (formData.startTime >= formData.endTime) {
-          newErrors.endTime = "End time must be after start time";
-        }
-      }
-    }
+    // Extract navigation state - ENHANCED
+    const prefillClient = location.state?.prefillClient;
+    const prefillPartner = location.state?.prefillPartner;
+    const returnUrl = location.state?.returnUrl;
+    const fromClient = location.state?.fromClient;
+    const fromPartner = location.state?.fromPartner;
 
-    if (step === 2) {
-      if (!formData.clientId && !selectedClient) {
-        newErrors.clientId = "Please select a client";
-      }
-    }
+    // ============================================
+    // INITIALIZATION STATE
+    // ============================================
+    const [isInitialized, setIsInitialized] = useState(false);
+    const [dataLoaded, setDataLoaded] = useState(false);
 
-    if (step === 3) {
-      if (!formData.venueSpaceId) {
-        newErrors.venueSpaceId = "Please select a venue space";
-      }
-
-      const basePriceValue = parseFloat(formData.pricing.basePrice);
-      if (isNaN(basePriceValue) || basePriceValue < 0) {
-        newErrors["pricing.basePrice"] = "Valid base price is required";
-      }
-
-      if (warnings.guestCount?.type === "error") {
-        newErrors.guestCount = warnings.guestCount.message;
-      }
-      if (warnings.dateConflict?.type === "error") {
-        newErrors.dateConflict = warnings.dateConflict.message;
-      }
-    }
-
-    if (step === 4) {
-      if (formData.payment.amount) {
-        const paymentAmount = parseFloat(formData.payment.amount);
-        if (paymentAmount > totalPrice) {
-          newErrors["payment.amount"] =
-            "Payment amount cannot exceed total price";
-        }
-        if (paymentAmount < 0) {
-          newErrors["payment.amount"] = "Payment amount cannot be negative";
-        }
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // ============================================
-  // NAVIGATION
-  // ============================================
-  const nextStep = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-    } else {
-      toast.error("Please fix the errors before continuing");
-    }
-  };
-
-  const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-  };
-
-  const jumpToStep = (step) => {
-    if (step < currentStep) {
-      setCurrentStep(step);
-    } else if (step === currentStep + 1) {
-      nextStep();
-    }
-  };
-
-  // ============================================
-  // FORM SUBMISSION - ENHANCED
-  // ============================================
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (currentStep < totalSteps) {
-      nextStep();
-      return;
-    }
-
-    if (!validateStep(currentStep)) {
-      toast.error("Please fix the form errors");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const submitData = {
-        ...formData,
-        guestCount: formData.guestCount
-          ? parseInt(formData.guestCount)
-          : undefined,
-        pricing: {
-          basePrice,
-          discount: formData.pricing.discount
-            ? parseFloat(formData.pricing.discount)
-            : 0,
-          discountType: formData.pricing.discountType,
-          totalAmount: totalPrice,
-        },
-      };
-
-      delete submitData.payment;
-      delete submitData.createInvoice;
-
-      let response;
-      if (isEditMode) {
-        response = await eventService.update(eventId, submitData);
-        toast.success("Event updated successfully");
-      } else {
-        response = await eventService.create(submitData);
-        toast.success("Event created successfully");
-        clearDraft();
-      }
-
-      const createdEvent = response.event || response.data || response;
-      const finalEventId = createdEvent._id || eventId;
-
-      // Create payment if provided
-      if (formData.payment.amount && parseFloat(formData.payment.amount) > 0) {
-        try {
-          const paymentData = {
-            event: finalEventId,
-            client: formData.clientId,
-            amount: parseFloat(formData.payment.amount),
-            method: formData.payment.paymentMethod,
-            status: formData.payment.status,
-            description: formData.payment.notes || "Initial event payment",
-            paidDate: formData.payment.paymentDate,
-            type: "income",
-          };
-
-          await paymentService.create(paymentData);
-          toast.success("Payment recorded successfully");
-        } catch (paymentError) {
-          console.error("Error creating payment:", paymentError);
-          toast.error("Event saved but failed to record payment");
-        }
-      }
-
-      // Auto-generate invoice if requested
-      if (formData.createInvoice && !isEditMode) {
-        try {
-          const client = clients.find((c) => c._id === formData.clientId);
-          const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
-
-          const invoiceItems = [];
-
-          if (venuePrice > 0) {
-            invoiceItems.push({
-              description: `${space?.name || "Venue Space"} Rental - ${formData.title}`,
-              quantity: 1,
-              rate: venuePrice,
-              amount: venuePrice,
-              category: "venue_rental",
-            });
-          }
-
-          formData.partners.forEach((p) => {
-            const partnerCost = getPartnerCostForHours(p, calculateEventHours());
-            if (partnerCost > 0) {
-              invoiceItems.push({
-                description: `${p.partnerName} - ${p.service}`,
-                quantity: calculateEventHours(),
-                rate: p.hourlyRate,
-                amount: partnerCost,
-                category: "service",
-              });
-            }
-          });
-
-          let discountAmount = 0;
-          if (formData.pricing.discount && parseFloat(formData.pricing.discount) > 0) {
-            if (formData.pricing.discountType === "percentage") {
-              discountAmount = ((venuePrice + partnersTotal) * parseFloat(formData.pricing.discount)) / 100;
-            } else {
-              discountAmount = parseFloat(formData.pricing.discount);
-            }
-          }
-
-          const invoiceData = {
-            invoiceType: "client",
-            client: formData.clientId,
-            event: finalEventId,
-            issueDate: new Date().toISOString().split("T")[0],
-            dueDate: formData.startDate,
-            items: invoiceItems,
-            subtotal: venuePrice + partnersTotal,
-            taxRate: 19,
-            discount: formData.pricing.discount ? parseFloat(formData.pricing.discount) : 0,
-            discountType: formData.pricing.discountType,
-            totalAmount: totalPrice,
-            status: "draft",
-            notes: formData.notes || `Invoice for ${formData.title}`,
-            terms: "Payment is due within 30 days of the invoice date. Late payments may incur additional fees.",
-            currency: "TND",
-            paymentMethod: "bank_transfer",
-          };
-
-          console.log("📄 Creating invoice with data:", invoiceData);
-          await invoiceService.create(invoiceData);
-          toast.success("Invoice created successfully");
-        } catch (invoiceError) {
-          console.error("Error creating invoice:", invoiceError);
-          toast.error(invoiceError.response?.data?.message || "Event saved but failed to create invoice");
-        }
-      }
-
-      // ENHANCED: Use returnUrl if available
-      if (onSuccess) {
-        onSuccess(response);
-      } else if (returnUrl) {
-        navigate(returnUrl);
-      } else {
-        navigate("/events");
-      }
-
-      handleClose();
-    } catch (error) {
-      console.error("Error saving event:", error);
-      toast.error(
-        error.response?.data?.message ||
-          `Failed to ${isEditMode ? "update" : "create"} event`
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ENHANCED: handleClose with returnUrl support
-  const handleClose = () => {
-    setFormData({
+    // ============================================
+    // FORM STATE
+    // ============================================
+    const [formData, setFormData] = useState({
       title: "",
       description: "",
       type: "",
@@ -1289,7 +192,11 @@ const handleCreateClient = async () => {
       endTime: "",
       guestCount: "",
       status: "pending",
-      pricing: { basePrice: "", discount: "", discountType: "fixed" },
+      pricing: {
+        basePrice: "",
+        discount: "",
+        discountType: "fixed",
+      },
       partners: [],
       notes: "",
       payment: {
@@ -1301,198 +208,1292 @@ const handleCreateClient = async () => {
       },
       createInvoice: false,
     });
-    setErrors({});
-    setWarnings({});
-    setCurrentStep(1);
-    setSelectedClient(null);
-    setPrefilledClientData(null);
-    setPrefilledPartnerData(null);
-    setNewClient({ name: "", email: "", phone: "" });
-    setSelectedPartner("");
-    setClientSearch("");
-    setShowClientForm(false);
 
-    if (isModal && onClose) {
-      onClose();
-    } else if (returnUrl) {
-      navigate(returnUrl);
-    } else {
-      navigate("/events");
+    // ============================================
+    // UI STATE
+    // ============================================
+    const [venueSpaces, setVenueSpaces] = useState([]);
+    const [clients, setClients] = useState([]);
+    const [partners, setPartners] = useState([]);
+    const [existingEvents, setExistingEvents] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(true);
+    const [errors, setErrors] = useState({});
+    const [warnings, setWarnings] = useState({});
+    const [selectedPartner, setSelectedPartner] = useState("");
+    const [newClient, setNewClient] = useState({
+      name: "",
+      email: "",
+      phone: "",
+    });
+    const [isCreatingClient, setIsCreatingClient] = useState(false);
+    const [showClientForm, setShowClientForm] = useState(false);
+    const [clientSearch, setClientSearch] = useState("");
+    const [selectedClient, setSelectedClient] = useState(null);
+    const [prefilledClientData, setPrefilledClientData] = useState(null);
+    const [prefilledPartnerData, setPrefilledPartnerData] = useState(null);
+    const [hasDraft, setHasDraft] = useState(false);
+
+    // ============================================
+    // CENTRALIZED DATA FETCHING - ENHANCED
+    // ============================================
+    useEffect(() => {
+      let isMounted = true;
+
+      const initializeForm = async () => {
+        if (isInitialized) return;
+
+        try {
+          setFetchLoading(true);
+          console.log("🔄 Starting data fetch...");
+
+          // Fetch all dropdown data first
+          const [clientsRes, partnersRes, venueSpacesRes, eventsRes] =
+            await Promise.allSettled([
+              clientService.getAll 
+                ? clientService.getAll({ limit: 100 })
+                : clientService.getClients
+                  ? clientService.getClients({ limit: 100 })
+                  : Promise.resolve({ data: [] }),
+              
+              partnerService.getAll
+                ? partnerService.getAll({ limit: 100 })
+                : Promise.resolve({ data: [] }),
+              
+              venueSpacesService.getAll
+                ? venueSpacesService.getAll({ 
+                    limit: 100,
+                    includeArchived: false,
+                    isActive: true 
+                  })
+                : Promise.resolve({ data: { spaces: [] } }),
+              
+              eventService.getAll
+                ? eventService.getAll({ limit: 100 })
+                : eventService.getEvents
+                  ? eventService.getEvents({ limit: 100 })
+                  : Promise.resolve({ data: [] }),
+            ]);
+
+          if (!isMounted) return;
+
+          // Extract data
+          const extractArrayData = (response, serviceName) => {
+            if (response.status === "rejected") {
+              console.warn(`Failed to fetch ${serviceName}:`, response.reason);
+              return [];
+            }
+
+            const data = response.value;
+            if (!data) return [];
+
+            if (Array.isArray(data)) return data;
+            if (data.data && Array.isArray(data.data)) return data.data;
+            if (data.clients && Array.isArray(data.clients)) return data.clients;
+            if (data.partners && Array.isArray(data.partners)) return data.partners;
+            if (data.events && Array.isArray(data.events)) return data.events;
+            if (data.spaces && Array.isArray(data.spaces)) return data.spaces;
+            if (data.data && data.data.records && Array.isArray(data.data.records)) {
+              return data.data.records;
+            }
+            
+            return [];
+          };
+
+          const clientsList = extractArrayData(clientsRes, "clients");
+          const partnersList = extractArrayData(partnersRes, "partners");
+          const eventsList = extractArrayData(eventsRes, "events");
+          
+          // Extract venue spaces
+          let venueSpacesList = [];
+          if (venueSpacesRes.status === "fulfilled") {
+            const venueData = venueSpacesRes.value;
+            
+            if (venueData && venueData.spaces && Array.isArray(venueData.spaces)) {
+              venueSpacesList = venueData.spaces;
+            } else if (venueData && venueData.data && venueData.data.spaces && Array.isArray(venueData.data.spaces)) {
+              venueSpacesList = venueData.data.spaces;
+            } else if (venueData && Array.isArray(venueData)) {
+              venueSpacesList = venueData;
+            } else if (venueData && venueData.data && Array.isArray(venueData.data)) {
+              venueSpacesList = venueData.data;
+            }
+          }
+
+          console.log("✅ Fetched data:", {
+            clients: clientsList.length,
+            partners: partnersList.length,
+            venueSpaces: venueSpacesList.length,
+            events: eventsList.length
+          });
+
+          // Normalize venue spaces
+          const normalizedVenueSpaces = venueSpacesList.map((space) => ({
+            ...space,
+            _id: space._id || space.id,
+            name: space.name || 'Unnamed Space',
+            capacity: space.capacity || { min: 0, max: 0 },
+            amenities: Array.isArray(space.amenities) ? space.amenities : [],
+            basePrice: space.basePrice || space.hourlyRate || space.dailyRate || 0,
+            isActive: space.isActive !== false,
+            isArchived: space.isArchived || false,
+          }));
+
+          if (!isMounted) return;
+
+          // Set all data at once
+          setClients(clientsList);
+          setPartners(partnersList);
+          setVenueSpaces(normalizedVenueSpaces);
+          setExistingEvents(eventsList);
+          setDataLoaded(true);
+
+          // ============================================
+          // HANDLE PREFILL CLIENT (from Client Details)
+          // ============================================
+          if (prefillClient && prefillClient._id && !isEditMode) {
+            setPrefilledClientData(prefillClient);
+            setSelectedClient(prefillClient._id);
+            setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
+            toast.success(`Client "${prefillClient.name}" pre-selected`);
+          }
+
+          // ============================================
+          // HANDLE PREFILL PARTNER (from Partner Details)
+          // ============================================
+          if (prefillPartner && prefillPartner._id && !isEditMode) {
+            const partner = partnersList.find(p => p._id === prefillPartner._id);
+            if (partner) {
+              setPrefilledPartnerData(prefillPartner);
+              setFormData((prev) => ({
+                ...prev,
+                partners: [
+                  {
+                    partner: partner._id,
+                    partnerName: partner.name,
+                    service: partner.category || partner.serviceType || "General Service",
+                    hourlyRate: partner.hourlyRate || partner.pricing?.hourlyRate || partner.rate || 0,
+                    status: "confirmed",
+                  },
+                ],
+              }));
+              toast.success(`Partner "${partner.name}" pre-selected`);
+            }
+          }
+
+          // Load event data in edit mode
+          if (isEditMode && eventId) {
+            console.log("📝 Loading event:", eventId);
+            const response = await eventService.getById(eventId);
+            const event = response.event || response.data || response;
+
+            if (!event) {
+              throw new Error("Event not found");
+            }
+
+            if (!isMounted) return;
+
+            const clientIdValue = event.clientId?._id || event.clientId || "";
+
+            // Extract venue space
+            const eventSpaceRaw = event.venueSpace || event.venueSpaceId;
+            let eventSpaceId = "";
+            let venueSpaceData = null;
+
+            if (eventSpaceRaw) {
+              if (typeof eventSpaceRaw === "object") {
+                eventSpaceId = eventSpaceRaw._id || eventSpaceRaw.id || "";
+                venueSpaceData = eventSpaceRaw;
+              } else {
+                eventSpaceId = eventSpaceRaw;
+              }
+            }
+
+            // Add venue space if not in list
+            if (venueSpaceData && !normalizedVenueSpaces.find(s => s._id === eventSpaceId)) {
+              const normalizedSpace = {
+                ...venueSpaceData,
+                _id: eventSpaceId,
+                capacity: venueSpaceData.capacity || {},
+                amenities: Array.isArray(venueSpaceData.amenities) ? venueSpaceData.amenities : [],
+                basePrice: venueSpaceData.basePrice || event.pricing?.basePrice || 0,
+              };
+              setVenueSpaces(prev => [...prev, normalizedSpace]);
+            }
+
+            // Set form data
+            setFormData({
+              title: event.title || "",
+              description: event.description || "",
+              type: event.type || "",
+              venueSpaceId: eventSpaceId,
+              clientId: clientIdValue,
+              sameDayEvent: event.startDate === event.endDate,
+              startDate: event.startDate
+                ? new Date(event.startDate).toISOString().split("T")[0]
+                : "",
+              endDate: event.endDate
+                ? new Date(event.endDate).toISOString().split("T")[0]
+                : "",
+              startTime: event.startTime || "",
+              endTime: event.endTime || "",
+              guestCount: event.guestCount || "",
+              status: event.status || "pending",
+              pricing: {
+                basePrice: event.pricing?.basePrice || "",
+                discount: event.pricing?.discount || "",
+                discountType: event.pricing?.discountType || "fixed",
+              },
+              partners: event.partners?.map((p) => ({
+                partner: p.partner?._id || p.partner || p.partnerId,
+                partnerName: p.partner?.name || p.partnerName || "Unknown Partner",
+                service: p.service || "General Service",
+                hourlyRate: p.hourlyRate || p.cost || 0,
+                status: p.status || "pending",
+              })) || [],
+              notes: event.notes || "",
+              payment: {
+                amount: "",
+                paymentMethod: "cash",
+                paymentDate: new Date().toISOString().split("T")[0],
+                status: "pending",
+                notes: "",
+              },
+              createInvoice: false,
+            });
+
+            if (clientIdValue) {
+              setSelectedClient(clientIdValue);
+            }
+
+            console.log("✅ Event loaded successfully");
+            toast.success("Event loaded successfully");
+          }
+
+          // Handle initial date
+// Handle initial date - FIXED VERSION
+if (initialDate && !isEditMode) {
+  // Create a new date without timezone issues
+  const localDate = new Date(
+    initialDate.getFullYear(),
+    initialDate.getMonth(),
+    initialDate.getDate()
+  );
+  
+  // Format as YYYY-MM-DD without timezone conversion
+  const year = localDate.getFullYear();
+  const month = String(localDate.getMonth() + 1).padStart(2, '0');
+  const day = String(localDate.getDate()).padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;
+  
+  setFormData((prev) => ({
+    ...prev,
+    startDate: dateString,
+    endDate: dateString,
+  }));
+  toast.success(`Date ${dateString} pre-selected`);
+}
+
+          setIsInitialized(true);
+        } catch (error) {
+          console.error("❌ Error initializing form:", error);
+          toast.error(error.message || "Failed to load form data");
+          setClients([]);
+          setPartners([]);
+          setVenueSpaces([]);
+          setExistingEvents([]);
+        } finally {
+          if (isMounted) {
+            setFetchLoading(false);
+          }
+        }
+      };
+
+      initializeForm();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [eventId, isEditMode, isInitialized, initialDate, prefillClient, prefillPartner]);
+
+    // ============================================
+    // AUTO-SAVE DRAFT FUNCTIONALITY
+    // ============================================
+    useEffect(() => {
+      if (!isEditMode && formData.title && currentStep > 1) {
+        const draftData = {
+          formData,
+          currentStep,
+          timestamp: new Date().toISOString(),
+        };
+        localStorage.setItem("eventFormDraft", JSON.stringify(draftData));
+      }
+    }, [formData, currentStep, isEditMode]);
+
+    useEffect(() => {
+      if (!isEditMode && !eventId) {
+        const draft = localStorage.getItem("eventFormDraft");
+        if (draft) {
+          try {
+            const {
+              formData: savedData,
+              currentStep: savedStep,
+              timestamp,
+            } = JSON.parse(draft);
+            const draftAge = Date.now() - new Date(timestamp).getTime();
+            const oneDayMs = 24 * 60 * 60 * 1000;
+            if (draftAge < oneDayMs) {
+              setHasDraft(true);
+              window.__eventFormDraft = { savedData, savedStep, timestamp };
+            }
+          } catch (error) {
+            console.error("Error loading draft:", error);
+          }
+        }
+      }
+    }, []);
+
+    const clearDraft = () => {
+      localStorage.removeItem("eventFormDraft");
+      setHasDraft(false);
+    };
+
+    // ============================================
+    // SYNC EFFECTS
+    // ============================================
+    useEffect(() => {
+      if (formData.sameDayEvent && formData.startDate) {
+        setFormData((prev) => ({ ...prev, endDate: prev.startDate }));
+      }
+    }, [formData.sameDayEvent, formData.startDate]);
+
+    useEffect(() => {
+      if (!formData.venueSpaceId || !dataLoaded) {
+        return;
+      }
+
+      const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
+
+      if (!space || !space.basePrice) {
+        return;
+      }
+
+      const numericBasePrice = Number(space.basePrice) || 0;
+
+      setFormData((prev) => {
+        if (prev.pricing.basePrice === numericBasePrice) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          pricing: { ...prev.pricing, basePrice: numericBasePrice },
+        };
+      });
+    }, [formData.venueSpaceId, venueSpaces, dataLoaded]);
+
+    // ============================================
+    // VALIDATION CHECKS
+    // ============================================
+    useEffect(() => {
+      if (!formData.venueSpaceId || !formData.guestCount || !dataLoaded) {
+        setWarnings((prev) => {
+          const newWarnings = { ...prev };
+          delete newWarnings.guestCount;
+          return newWarnings;
+        });
+        return;
+      }
+
+      const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
+      if (!space || !space.capacity) {
+        setWarnings((prev) => {
+          const newWarnings = { ...prev };
+          delete newWarnings.guestCount;
+          return newWarnings;
+        });
+        return;
+      }
+
+      const capacityMin = space.capacity.min || 0;
+      const capacityMax = space.capacity.max || 0;
+
+      if (!capacityMin && !capacityMax) {
+        setWarnings((prev) => {
+          const newWarnings = { ...prev };
+          delete newWarnings.guestCount;
+          return newWarnings;
+        });
+        return;
+      }
+
+      const guestCount = parseInt(formData.guestCount);
+      if (Number.isNaN(guestCount)) {
+        setWarnings((prev) => {
+          const newWarnings = { ...prev };
+          delete newWarnings.guestCount;
+          return newWarnings;
+        });
+        return;
+      }
+
+      setWarnings((prev) => {
+        const newWarnings = { ...prev };
+
+        if (capacityMax && guestCount > capacityMax) {
+          newWarnings.guestCount = {
+            type: "error",
+            message: `Guest count (${guestCount}) exceeds venue capacity (max: ${capacityMax})`,
+          };
+        } else if (capacityMin && guestCount < capacityMin) {
+          newWarnings.guestCount = {
+            type: "warning",
+            message: `Guest count (${guestCount}) is below venue minimum (min: ${capacityMin})`,
+          };
+        } else {
+          delete newWarnings.guestCount;
+        }
+
+        return newWarnings;
+      });
+    }, [formData.venueSpaceId, formData.guestCount, venueSpaces, dataLoaded]);
+
+    useEffect(() => {
+      if (!formData.venueSpaceId || !formData.startDate || !formData.startTime || !dataLoaded) {
+        setWarnings((prev) => {
+          const newWarnings = { ...prev };
+          delete newWarnings.dateConflict;
+          return newWarnings;
+        });
+        return;
+      }
+
+      const conflictingEvents = existingEvents.filter((event) => {
+        if (event._id === eventId) return false;
+
+        const eventVenueSpaceId = event.venueSpaceId?._id || event.venueSpaceId;
+        if (eventVenueSpaceId !== formData.venueSpaceId) return false;
+
+        try {
+          const eventStart = new Date(
+            `${formData.startDate}T${formData.startTime || "00:00"}`
+          );
+          const eventEnd = new Date(
+            `${formData.endDate || formData.startDate}T${formData.endTime || "23:59"}`
+          );
+          const existingStart = new Date(
+            `${event.startDate}T${event.startTime || "00:00"}`
+          );
+          const existingEnd = new Date(
+            `${event.endDate}T${event.endTime || "23:59"}`
+          );
+
+          return eventStart < existingEnd && eventEnd > existingStart;
+        } catch (error) {
+          console.error("Error comparing dates:", error);
+          return false;
+        }
+      });
+
+      setWarnings((prev) => {
+        const newWarnings = { ...prev };
+
+        if (conflictingEvents.length > 0) {
+          newWarnings.dateConflict = {
+            type: "error",
+            message: `Venue space has ${conflictingEvents.length} conflicting event(s) at this time`,
+            conflicts: conflictingEvents,
+          };
+        } else {
+          delete newWarnings.dateConflict;
+        }
+
+        return newWarnings;
+      });
+    }, [
+      formData.venueSpaceId,
+      formData.startDate,
+      formData.endDate,
+      formData.startTime,
+      formData.endTime,
+      existingEvents,
+      eventId,
+      dataLoaded,
+    ]);
+
+    // ============================================
+    // CALCULATION HELPERS
+    // ============================================
+    const calculateEventHours = () => {
+      try {
+        if (!formData.startDate || !formData.endDate) return 1;
+        const startTime = formData.startTime || "00:00";
+        const endTime = formData.endTime || "00:00";
+        const start = new Date(`${formData.startDate}T${startTime}:00`);
+        const end = new Date(`${formData.endDate}T${endTime}:00`);
+        const diffMs = end.getTime() - start.getTime();
+        if (!isFinite(diffMs) || diffMs <= 0) return 1;
+        const hours = Math.ceil(diffMs / (1000 * 60 * 60));
+        return Math.max(1, hours);
+      } catch (_) {
+        return 1;
+      }
+    };
+
+    const getPartnerCostForHours = (partner, hours) => {
+      const rate = partner.hourlyRate || 0;
+      return Math.max(0, rate * hours);
+    };
+
+    const rawBasePrice = formData.pricing.basePrice;
+    const basePrice =
+      rawBasePrice === "" || rawBasePrice === null || rawBasePrice === undefined
+        ? 0
+        : parseFloat(rawBasePrice) || 0;
+    const displayBasePrice =
+      rawBasePrice === "" || rawBasePrice === null || rawBasePrice === undefined
+        ? ""
+        : basePrice;
+
+    const calculateTotalPrice = () => {
+      const hours = calculateEventHours();
+      const partnersCost = formData.partners.reduce((total, partner) => {
+        return total + getPartnerCostForHours(partner, hours);
+      }, 0);
+      let discountAmount = 0;
+      if (formData.pricing.discount) {
+        const discountValue = parseFloat(formData.pricing.discount) || 0;
+        if (formData.pricing.discountType === "percentage") {
+          discountAmount = (basePrice + partnersCost) * (discountValue / 100);
+        } else {
+          discountAmount = discountValue;
+        }
+      }
+
+      return Math.max(0, basePrice + partnersCost - discountAmount);
+    };
+
+    const totalPrice = calculateTotalPrice();
+    const venuePrice = basePrice;
+    const partnersTotal = formData.partners.reduce(
+      (t, p) => t + getPartnerCostForHours(p, calculateEventHours()),
+      0
+    );
+
+    // ============================================
+    // OPTIONS
+    // ============================================
+    const eventTypeOptions = [
+      { value: "", label: "Select Event Type" },
+      { value: "wedding", label: "Wedding" },
+      { value: "birthday", label: "Birthday" },
+      { value: "corporate", label: "Corporate" },
+      { value: "conference", label: "Conference" },
+      { value: "party", label: "Party" },
+      { value: "other", label: "Other" },
+    ];
+
+    const statusOptions = [
+      { value: "pending", label: "Pending" },
+      { value: "confirmed", label: "Confirmed" },
+      { value: "in-progress", label: "In Progress" },
+      { value: "completed", label: "Completed" },
+      { value: "cancelled", label: "Cancelled" },
+    ];
+
+    const paymentMethodOptions = [
+      { value: "cash", label: "Cash" },
+      { value: "credit_card", label: "Credit Card" },
+      { value: "bank_transfer", label: "Bank Transfer" },
+      { value: "check", label: "Check" },
+      { value: "mobile_payment", label: "Mobile Payment" },
+    ];
+
+    const paymentStatusOptions = [
+      { value: "pending", label: "Pending" },
+      { value: "completed", label: "Completed" },
+      { value: "failed", label: "Failed" },
+      { value: "refunded", label: "Refunded" },
+    ];
+
+    // ============================================
+    // FILTERED DATA
+    // ============================================
+    const filteredClients = clients.filter(
+      (client) =>
+        client.name?.toLowerCase().includes(clientSearch.toLowerCase()) ||
+        client.email?.toLowerCase().includes(clientSearch.toLowerCase()) ||
+        client.phone?.includes(clientSearch)
+    );
+
+    // ============================================
+    // EVENT HANDLERS
+    // ============================================
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+
+      if (name === "venueSpaceId") {
+        setFormData((prev) => ({
+          ...prev,
+          venueSpaceId: value,
+          pricing: { ...prev.pricing, basePrice: "" },
+          // Preserve partners when changing venue
+          partners: prev.partners,
+        }));
+
+        if (errors[name]) {
+          setErrors((prev) => ({ ...prev, [name]: "" }));
+        }
+        return;
+      }
+
+      if (name.startsWith("pricing.")) {
+        const field = name.split(".")[1];
+        setFormData((prev) => ({
+          ...prev,
+          pricing: { ...prev.pricing, [field]: value },
+        }));
+      } else if (name.startsWith("payment.")) {
+        const field = name.split(".")[1];
+        setFormData((prev) => ({
+          ...prev,
+          payment: { ...prev.payment, [field]: value },
+        }));
+      } else {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      }
+
+      if (errors[name]) {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
+    };
+
+    const handlePartnerSelect = (partnerId) => {
+      if (!partnerId) {
+        setSelectedPartner("");
+        return;
+      }
+      const partner = partners.find((p) => p._id === partnerId);
+      if (!partner) {
+        toast.error("Selected partner not found");
+        return;
+      }
+
+      const isAlreadyAdded = formData.partners.some(
+        (p) => p.partner === partnerId
+      );
+      
+      if (isAlreadyAdded) {
+        toast.error(`${partner.name} is already added to this event`);
+        setSelectedPartner("");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        partners: [
+          ...prev.partners,
+          {
+            partner: partnerId,
+            partnerName: partner.name,
+            service: partner.category || partner.serviceType || "General Service",
+            hourlyRate: partner.hourlyRate || partner.pricing?.hourlyRate || partner.rate || 0,
+            status: "confirmed",
+          },
+        ],
+      }));
+
+      setSelectedPartner("");
+      toast.success(`${partner.name} added to event`);
+    };
+
+    const handleRemovePartner = (index) => {
+      const partner = formData.partners[index];
+      setFormData((prev) => ({
+        ...prev,
+        partners: prev.partners.filter((_, i) => i !== index),
+      }));
+      toast.success(`${partner.partnerName} removed`);
+    };
+
+  const handleCreateClient = async () => {
+  if (!newClient.name.trim()) {
+      console.log("❌ Client name validation failed");
+      toast.error("Client name is required");
+      return;
+    }
+    
+    if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
+      console.log("❌ Email validation failed");
+      toast.error("Please enter a valid email");
+      return;
+    }
+
+    const duplicate = clients.find(
+      (c) =>
+        c.email?.toLowerCase() === newClient.email?.toLowerCase() ||
+        c.phone === newClient.phone
+    );
+
+    if (duplicate) {
+      console.log("❌ Duplicate client found");
+      toast.error("Client with this email or phone already exists");
+      return;
+    }
+
+    try {
+      console.log("⏳ Starting client creation with data:", newClient);
+      setIsCreatingClient(true);
+      
+      // Add timeout and better error handling
+      const response = await clientService.create(newClient);
+      console.log("✅ Client creation API response:", response);
+      
+      let createdClient = response?.client || response?.data || response;
+
+      if (!createdClient || !createdClient._id) {
+        console.warn("⚠️ Client created with unexpected response structure:", response);
+        createdClient = {
+          _id: `temp-${Date.now()}`,
+          ...newClient,
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      console.log("📝 Created client object:", createdClient);
+
+      // Update state in sequence to ensure proper updates
+      setClients((prev) => {
+        const updatedClients = [...prev, createdClient];
+        console.log("📋 Clients list updated:", updatedClients.length);
+        return updatedClients;
+      });
+
+      setSelectedClient(createdClient._id);
+      console.log("🎯 Selected client ID:", createdClient._id);
+      
+      setFormData((prev) => {
+        const updatedFormData = { ...prev, clientId: createdClient._id };
+        console.log("📄 Form data updated with client ID:", updatedFormData.clientId);
+        return updatedFormData;
+      });
+      
+      setNewClient({ name: "", email: "", phone: "" });
+      setShowClientForm(false);
+
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.clientId;
+        return newErrors;
+      });
+
+      console.log("🎉 Client creation completed successfully");
+      toast.success(`Client "${createdClient.name}" created successfully!`);
+      
+    } catch (error) {
+      console.error("❌ Error creating client:", error);
+      console.error("Error details:", {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      
+      toast.error(error.response?.data?.message || "Failed to create client");
+    } finally {
+      console.log("🏁 Finally block - setting loading to false");
+      setIsCreatingClient(false);
     }
   };
 
-  // ============================================
-  // LOADING STATE
-  // ============================================
-  if (!isModal && !isOpen) return null;
-  
-  if (fetchLoading) {
-    const LoadingSpinner = (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">
-            Loading event data...
-          </p>
-        </div>
-      </div>
-    );
+    const handleSelectClient = (clientId) => {
+      setSelectedClient((prevSelected) => {
+        const isDeselection = prevSelected === clientId;
+
+        setFormData((prev) => ({
+          ...prev,
+          clientId: isDeselection ? "" : clientId,
+        }));
+
+        setPrefilledClientData(null);
+
+        if (!isDeselection) {
+          setErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.clientId;
+            return newErrors;
+          });
+        }
+
+        return isDeselection ? null : clientId;
+      });
+    };
+
+    const handleClearVenueSpace = () => {
+      setFormData((prev) => ({
+        ...prev,
+        venueSpaceId: "",
+        pricing: { ...prev.pricing, basePrice: "" },
+      }));
+      setWarnings((prev) => {
+        const updated = { ...prev };
+        delete updated.guestCount;
+        delete updated.dateConflict;
+        return updated;
+      });
+    };
+
+    // ============================================
+    // VALIDATION
+    // ============================================
+    const validateStep = (step) => {
+      const newErrors = {};
+
+      if (step === 1) {
+        if (!formData.title.trim()) newErrors.title = "Event title is required";
+        if (!formData.type) newErrors.type = "Event type is required";
+        if (!formData.startDate) newErrors.startDate = "Start date is required";
+        if (!formData.sameDayEvent && !formData.endDate) {
+          newErrors.endDate = "End date is required";
+        }
+        if (formData.startTime && formData.endTime && formData.sameDayEvent) {
+          if (formData.startTime >= formData.endTime) {
+            newErrors.endTime = "End time must be after start time";
+          }
+        }
+      }
+
+      if (step === 2) {
+        if (!formData.clientId && !selectedClient) {
+          newErrors.clientId = "Please select a client";
+        }
+      }
+
+      if (step === 3) {
+        if (!formData.venueSpaceId) {
+          newErrors.venueSpaceId = "Please select a venue space";
+        }
+
+        const basePriceValue = parseFloat(formData.pricing.basePrice);
+        if (isNaN(basePriceValue) || basePriceValue < 0) {
+          newErrors["pricing.basePrice"] = "Valid base price is required";
+        }
+
+        if (warnings.guestCount?.type === "error") {
+          newErrors.guestCount = warnings.guestCount.message;
+        }
+        if (warnings.dateConflict?.type === "error") {
+          newErrors.dateConflict = warnings.dateConflict.message;
+        }
+      }
+
+      if (step === 4) {
+        if (formData.payment.amount) {
+          const paymentAmount = parseFloat(formData.payment.amount);
+          if (paymentAmount > totalPrice) {
+            newErrors["payment.amount"] =
+              "Payment amount cannot exceed total price";
+          }
+          if (paymentAmount < 0) {
+            newErrors["payment.amount"] = "Payment amount cannot be negative";
+          }
+        }
+      }
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    const nextStep = () => {
+      if (validateStep(currentStep)) {
+        setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+      } else {
+        toast.error("Please fix the errors before continuing");
+      }
+    };
+
+    const prevStep = () => {
+      setCurrentStep((prev) => Math.max(prev - 1, 1));
+    };
+
+    const jumpToStep = (step) => {
+      if (step < currentStep) {
+        setCurrentStep(step);
+      } else if (step === currentStep + 1) {
+        nextStep();
+      }
+    };
+
+    // ============================================
+    // FORM SUBMISSION - ENHANCED
+    // ============================================
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      if (currentStep < totalSteps) {
+        nextStep();
+        return;
+      }
+
+      if (!validateStep(currentStep)) {
+        toast.error("Please fix the form errors");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const submitData = {
+          ...formData,
+          guestCount: formData.guestCount
+            ? parseInt(formData.guestCount)
+            : undefined,
+          pricing: {
+            basePrice,
+            discount: formData.pricing.discount
+              ? parseFloat(formData.pricing.discount)
+              : 0,
+            discountType: formData.pricing.discountType,
+            totalAmount: totalPrice,
+          },
+        };
+
+        delete submitData.payment;
+        delete submitData.createInvoice;
+
+        let response;
+        if (isEditMode) {
+          response = await eventService.update(eventId, submitData);
+          toast.success("Event updated successfully");
+        } else {
+          response = await eventService.create(submitData);
+          toast.success("Event created successfully");
+          clearDraft();
+        }
+
+        const createdEvent = response.event || response.data || response;
+        const finalEventId = createdEvent._id || eventId;
+
+        // Create payment if provided
+        if (formData.payment.amount && parseFloat(formData.payment.amount) > 0) {
+          try {
+            const paymentData = {
+              event: finalEventId,
+              client: formData.clientId,
+              amount: parseFloat(formData.payment.amount),
+              method: formData.payment.paymentMethod,
+              status: formData.payment.status,
+              description: formData.payment.notes || "Initial event payment",
+              paidDate: formData.payment.paymentDate,
+              type: "income",
+            };
+
+            await paymentService.create(paymentData);
+            toast.success("Payment recorded successfully");
+          } catch (paymentError) {
+            console.error("Error creating payment:", paymentError);
+            toast.error("Event saved but failed to record payment");
+          }
+        }
+
+        // Auto-generate invoice if requested
+        if (formData.createInvoice && !isEditMode) {
+          try {
+            const client = clients.find((c) => c._id === formData.clientId);
+            const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
+
+            const invoiceItems = [];
+
+            if (venuePrice > 0) {
+              invoiceItems.push({
+                description: `${space?.name || "Venue Space"} Rental - ${formData.title}`,
+                quantity: 1,
+                rate: venuePrice,
+                amount: venuePrice,
+                category: "venue_rental",
+              });
+            }
+
+            formData.partners.forEach((p) => {
+              const partnerCost = getPartnerCostForHours(p, calculateEventHours());
+              if (partnerCost > 0) {
+                invoiceItems.push({
+                  description: `${p.partnerName} - ${p.service}`,
+                  quantity: calculateEventHours(),
+                  rate: p.hourlyRate,
+                  amount: partnerCost,
+                  category: "service",
+                });
+              }
+            });
+
+            let discountAmount = 0;
+            if (formData.pricing.discount && parseFloat(formData.pricing.discount) > 0) {
+              if (formData.pricing.discountType === "percentage") {
+                discountAmount = ((venuePrice + partnersTotal) * parseFloat(formData.pricing.discount)) / 100;
+              } else {
+                discountAmount = parseFloat(formData.pricing.discount);
+              }
+            }
+
+            const invoiceData = {
+              invoiceType: "client",
+              client: formData.clientId,
+              event: finalEventId,
+              issueDate: new Date().toISOString().split("T")[0],
+              dueDate: formData.startDate,
+              items: invoiceItems,
+              subtotal: venuePrice + partnersTotal,
+              taxRate: 19,
+              discount: formData.pricing.discount ? parseFloat(formData.pricing.discount) : 0,
+              discountType: formData.pricing.discountType,
+              totalAmount: totalPrice,
+              status: "draft",
+              notes: formData.notes || `Invoice for ${formData.title}`,
+              terms: "Payment is due within 30 days of the invoice date. Late payments may incur additional fees.",
+              currency: "TND",
+              paymentMethod: "bank_transfer",
+            };
+
+            console.log("📄 Creating invoice with data:", invoiceData);
+            await invoiceService.create(invoiceData);
+            toast.success("Invoice created successfully");
+          } catch (invoiceError) {
+            console.error("Error creating invoice:", invoiceError);
+            toast.error(invoiceError.response?.data?.message || "Event saved but failed to create invoice");
+          }
+        }
+
+        // ENHANCED: Use returnUrl if available
+        if (onSuccess) {
+          onSuccess(response);
+        } else if (returnUrl) {
+          navigate(returnUrl);
+        } else {
+          navigate("/events");
+        }
+
+        handleClose();
+      } catch (error) {
+        console.error("Error saving event:", error);
+        toast.error(
+          error.response?.data?.message ||
+            `Failed to ${isEditMode ? "update" : "create"} event`
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // ENHANCED: handleClose with returnUrl support
+    const handleClose = () => {
+      setFormData({
+        title: "",
+        description: "",
+        type: "",
+        venueSpaceId: "",
+        clientId: "",
+        sameDayEvent: true,
+        startDate: "",
+        endDate: "",
+        startTime: "",
+        endTime: "",
+        guestCount: "",
+        status: "pending",
+        pricing: { basePrice: "", discount: "", discountType: "fixed" },
+        partners: [],
+        notes: "",
+        payment: {
+          amount: "",
+          paymentMethod: "cash",
+          paymentDate: new Date().toISOString().split("T")[0],
+          status: "pending",
+          notes: "",
+        },
+        createInvoice: false,
+      });
+      setErrors({});
+      setWarnings({});
+      setCurrentStep(1);
+      setSelectedClient(null);
+      setPrefilledClientData(null);
+      setPrefilledPartnerData(null);
+      setNewClient({ name: "", email: "", phone: "" });
+      setSelectedPartner("");
+      setClientSearch("");
+      setShowClientForm(false);
+
+      if (isModal && onClose) {
+        onClose();
+      } else if (returnUrl) {
+        navigate(returnUrl);
+      } else {
+        navigate("/events");
+      }
+    };
+
+    // ============================================
+    // LOADING STATE
+    // ============================================
+    if (!isModal && !isOpen) return null;
     
-    if (isModal) {
-      return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-            <div className="relative bg-white dark:bg-gray-800 rounded-lg p-8">
-              {LoadingSpinner}
+    if (fetchLoading) {
+      const LoadingSpinner = (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">
+              Loading event data...
+            </p>
+          </div>
+        </div>
+      );
+      
+      if (isModal) {
+        return (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg p-8">
+                {LoadingSpinner}
+              </div>
             </div>
           </div>
+        );
+      }
+
+      return (
+        <div className="max-h-70% bg-white dark:bg-gray-900 flex items-center justify-center">
+          {LoadingSpinner}
         </div>
       );
     }
 
-    return (
-      <div className="max-h-70% bg-white dark:bg-gray-900 flex items-center justify-center">
-        {LoadingSpinner}
-      </div>
-    );
-  }
+    // ============================================
+    // STEP CONFIGURATIONS
+    // ============================================
+    const stepConfigs = {
+      1: {
+        title: "Event Details",
+        icon: Calendar,
+        description: "Set up the core details of your event",
+        color: "blue",
+      },
+      2: {
+        title: "Client Selection",
+        icon: UserPlus,
+        description: "Select existing client or create a new one",
+        color: "green",
+      },
+      3: {
+        title: "Venue Space & Pricing",
+        icon: Building,
+        description: "Select venue space and configure pricing",
+        color: "purple",
+      },
+      4: {
+        title: "Payment",
+        icon: CreditCard,
+        description: "Record initial payment (optional)",
+        color: "indigo",
+      },
+      5: {
+        title: "Review & Notes",
+        icon: FileText,
+        description: "Final review and additional notes",
+        color: "orange",
+      },
+    };
 
-  // ============================================
-  // STEP CONFIGURATIONS
-  // ============================================
-  const stepConfigs = {
-    1: {
-      title: "Event Details",
-      icon: Calendar,
-      description: "Set up the core details of your event",
-      color: "blue",
-    },
-    2: {
-      title: "Client Selection",
-      icon: UserPlus,
-      description: "Select existing client or create a new one",
-      color: "green",
-    },
-    3: {
-      title: "Venue Space & Pricing",
-      icon: Building,
-      description: "Select venue space and configure pricing",
-      color: "purple",
-    },
-    4: {
-      title: "Payment",
-      icon: CreditCard,
-      description: "Record initial payment (optional)",
-      color: "indigo",
-    },
-    5: {
-      title: "Review & Notes",
-      icon: FileText,
-      description: "Final review and additional notes",
-      color: "orange",
-    },
-  };
+    const currentStepConfig = stepConfigs[currentStep];
 
-  const currentStepConfig = stepConfigs[currentStep];
-
-  // ============================================
-  // RENDER FORM CONTENT
-  // ============================================
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-gray-800/50 border rounded-lg">
-                <div className="px-10 py-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-5 h-5 text-blue-500" />
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      Event Details
-                    </h4>
-                  </div>
-                  <div className="space-y-4 w-full">
-                    <Input
-                      label="Event Title"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      error={errors.title}
-                      required
-                      className="w-full"
-                    />
-
-                    <Select
-                      label="Event Type"
-                      name="type"
-                      value={formData.type}
-                      onChange={handleChange}
-                      options={eventTypeOptions}
-                      error={errors.type}
-                      required
-                    />
-
-                    <Select
-                      label="Status"
-                      name="status"
-                      value={formData.status}
-                      onChange={handleChange}
-                      options={statusOptions}
-                    />
-                    <Textarea
-                      label="Event Description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      rows={4}
-                      placeholder="Event description..."
-                      className="w-full dark:bg-gray-800/50 dark:text-white"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800/50 border rounded-lg">
-                <div className="px-10 py-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Clock className="w-5 h-5 text-blue-500" />
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      Date & Time
-                    </h4>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Same Day Event
-                      </span>
-                      <Toggle
-                        enabled={formData.sameDayEvent}
-                        onChange={(val) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            sameDayEvent: val,
-                          }))
-                        }
-                      />
+    // ============================================
+    // RENDER FORM CONTENT
+    // ============================================
+    const renderStepContent = () => {
+      switch (currentStep) {
+        case 1:
+          return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white dark:bg-gray-800/50 border rounded-lg">
+                  <div className="px-10 py-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Calendar className="w-5 h-5 text-blue-500" />
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        Event Details
+                      </h4>
                     </div>
-
-                    {formData.sameDayEvent ? (
+                    <div className="space-y-4 w-full">
                       <Input
-                        label="Event Date"
-                        name="startDate"
-                        type="date"
-                        value={formData.startDate}
+                        label="Event Title"
+                        name="title"
+                        value={formData.title}
                         onChange={handleChange}
-                        error={errors.startDate}
+                        error={errors.title}
                         required
                         className="w-full"
                       />
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3">
+
+                      <Select
+                        label="Event Type"
+                        name="type"
+                        value={formData.type}
+                        onChange={handleChange}
+                        options={eventTypeOptions}
+                        error={errors.type}
+                        required
+                      />
+
+                      <Select
+                        label="Status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleChange}
+                        options={statusOptions}
+                      />
+                      <Textarea
+                        label="Event Description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        rows={4}
+                        placeholder="Event description..."
+                        className="w-full dark:bg-gray-800/50 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800/50 border rounded-lg">
+                  <div className="px-10 py-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Clock className="w-5 h-5 text-blue-500" />
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        Date & Time
+                      </h4>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Same Day Event
+                        </span>
+                        <Toggle
+                          enabled={formData.sameDayEvent}
+                          onChange={(val) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              sameDayEvent: val,
+                            }))
+                          }
+                        />
+                      </div>
+
+                      {formData.sameDayEvent ? (
                         <Input
-                          label="Start Date"
+                          label="Event Date"
                           name="startDate"
                           type="date"
                           value={formData.startDate}
@@ -1501,1240 +1502,1266 @@ const handleCreateClient = async () => {
                           required
                           className="w-full"
                         />
+                      ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                          <Input
+                            label="Start Date"
+                            name="startDate"
+                            type="date"
+                            value={formData.startDate}
+                            onChange={handleChange}
+                            error={errors.startDate}
+                            required
+                            className="w-full"
+                          />
+                          <Input
+                            label="End Date"
+                            name="endDate"
+                            type="date"
+                            value={formData.endDate}
+                            onChange={handleChange}
+                            error={errors.endDate}
+                            required
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3">
                         <Input
-                          label="End Date"
-                          name="endDate"
-                          type="date"
-                          value={formData.endDate}
+                          label="Start Time"
+                          name="startTime"
+                          type="time"
+                          value={formData.startTime}
                           onChange={handleChange}
-                          error={errors.endDate}
-                          required
+                          className="w-full"
+                        />
+                        <Input
+                          label="End Time"
+                          name="endTime"
+                          type="time"
+                          value={formData.endTime}
+                          onChange={handleChange}
+                          error={errors.endTime}
                           className="w-full"
                         />
                       </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-3">
                       <Input
-                        label="Start Time"
-                        name="startTime"
-                        type="time"
-                        value={formData.startTime}
+                        label="Guest Count"
+                        name="guestCount"
+                        type="number"
+                        min="1"
+                        value={formData.guestCount}
                         onChange={handleChange}
+                        icon={Users}
                         className="w-full"
-                      />
-                      <Input
-                        label="End Time"
-                        name="endTime"
-                        type="time"
-                        value={formData.endTime}
-                        onChange={handleChange}
-                        error={errors.endTime}
-                        className="w-full"
+                        error={errors.guestCount}
                       />
                     </div>
-                    <Input
-                      label="Guest Count"
-                      name="guestCount"
-                      type="number"
-                      min="1"
-                      value={formData.guestCount}
-                      onChange={handleChange}
-                      icon={Users}
-                      className="w-full"
-                      error={errors.guestCount}
-                    />
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        );
+          );
 
-      case 2:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <div className="">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <UserPlus className="w-5 h-5 text-blue-500" />
-                    Client Selection
-                  </h4>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    icon={showClientForm ? X : Plus}
-                    onClick={() => setShowClientForm(!showClientForm)}
-                  >
-                    {showClientForm ? (
-                      <XIcon className="w-4 h-4" />
-                    ) : (
-                      <Plus className="w-4 h-4" />
-                    )}
-                    {showClientForm ? "Cancel" : "New Client"}
-                  </Button>
-                </div>
-
-                {showClientForm && (
-                  <div className="mb-6 p-4 bg-white dark:bg-gray-900/20 border-2 border-gray-200 dark:border-gray-800 rounded-lg animate-in slide-in-from-top-2 duration-300">
-                    <h5 className="font-semibold text-gray-800 dark:text-gray-300 mb-3 flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      Create New Client
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                      <Input
-                        className="w-full"
-                        placeholder="Client Name"
-                        value={newClient.name}
-                        onChange={(e) =>
-                          setNewClient((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                      />
-                      <Input
-                        className="w-full"
-                        placeholder="Email"
-                        type="email"
-                        value={newClient.email}
-                        onChange={(e) =>
-                          setNewClient((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                      />
-                      <Input
-                        className="w-full"
-                        placeholder="Phone"
-                        value={newClient.phone}
-                        onChange={(e) =>
-                          setNewClient((prev) => ({
-                            ...prev,
-                            phone: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="primary"
-                        icon={Check}
-                        onClick={handleCreateClient}
-                        loading={isCreatingClient}
-                        className="whitespace-nowrap"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Create & Select Client
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {prefilledClientData && (
-                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                          <Check className="w-6 h-6 text-white" />
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 text-green-800 dark:text-green-300 font-semibold mb-1">
-                          <span>Client Pre-selected</span>
-                        </div>
-                        <p className="text-sm text-green-700 dark:text-green-400">
-                          <strong>{prefilledClientData.name}</strong>
-                        </p>
-                        <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                          {prefilledClientData.email} •{" "}
-                          {prefilledClientData.phone}
-                        </p>
-                        {returnUrl && (
-                          <p className="text-xs text-green-500 dark:text-green-600 mt-2 flex items-center gap-1">
-                            <ArrowLeft className="w-3 h-3" />
-                            From: {returnUrl.split('/').slice(-2).join(' / ')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {!showClientForm && (
-                  <>
-                    <Input
-                      icon={Search}
-                      placeholder="Search clients by name, email, or phone..."
-                      value={clientSearch}
-                      onChange={(e) => setClientSearch(e.target.value)}
-                      className="mb-4 w-full"
-                    />
-                    <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
-                      {filteredClients.length > 0 ? (
-                        filteredClients.map((client) => (
-                          <div
-                            key={client._id}
-                            onClick={() => handleSelectClient(client._id)}
-                            className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 transform ${
-                              selectedClient === client._id
-                                ? "bg-orange-50 border-orange-400 shadow-md dark:bg-orange-900/20 dark:border-orange-500"
-                                : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                                    selectedClient === client._id
-                                      ? "bg-orange-500"
-                                      : "bg-gray-400"
-                                  }`}
-                                >
-                                  {client.name?.charAt(0).toUpperCase() ||
-                                    "C"}
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-900 dark:text-white">
-                                    {client.name}
-                                  </div>
-                                  <div className="text-xs text-gray-600 dark:text-gray-400">
-                                    {client.email} • {client.phone}
-                                  </div>
-                                </div>
-                              </div>
-                              {selectedClient === client._id && (
-                                <div className="flex items-center gap-2 text-green-600">
-                                  <Check className="w-5 h-5 text-green-500" />
-                                  <span className="text-xs font-semibold">
-                                    Selected (click to unselect)
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-12 text-gray-500">
-                          <User className="w-16 h-16 mx-auto mb-3 opacity-30" />
-                          <p className="font-medium">No clients found</p>
-                          <p className="text-sm mt-1">
-                            Try a different search or create a new client
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-                {!showClientForm && errors.clientId && (
-                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 dark:bg-red-900/20 dark:border-red-800">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-red-600 dark:text-red-400">
-                      {errors.clientId}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <div className="">
-              <div className="flex items-center gap-2 mb-4">
-                <Building className="w-5 h-5 text-purple-500" />
-                <h4 className="font-semibold text-gray-900 dark:text-white">
-                  Venue Space Selection
-                </h4>
-              </div>
-
-              {warnings.dateConflict && (
-                <div className="mb-4 p-3 bg-red-50 border-2 border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800 flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-red-800 dark:text-red-300">
-                      {warnings.dateConflict.message}
-                    </p>
-                    {warnings.dateConflict.conflicts &&
-                      warnings.dateConflict.conflicts.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {warnings.dateConflict.conflicts.map(
-                            (event, idx) => (
-                              <p
-                                key={idx}
-                                className="text-xs text-red-700 dark:text-red-400"
-                              >
-                                • {event.title} (
-                                {new Date(
-                                  event.startDate
-                                ).toLocaleDateString()}
-                                )
-                              </p>
-                            )
-                          )}
-                        </div>
-                      )}
-                  </div>
-                </div>
-              )}
-
-              <Select
-                name="venueSpaceId"
-                label="Select Venue Space"
-                value={formData.venueSpaceId}
-                onChange={handleChange}
-                error={errors.venueSpaceId}
-                required
-                options={[
-                  { value: "", label: "Select a Venue Space" },
-                  ...venueSpaces
-                    .filter((space) => space.isActive && !space.isArchived)
-                    .map((space) => {
-                      const capacityMin = space.capacity?.min || 0;
-                      const capacityMax = space.capacity?.max || 0;
-
-                      return {
-                        value: space._id,
-                        label: `${space.name} - ${space.basePrice} TND (${capacityMin}-${capacityMax} guests)`,
-                      };
-                    }),
-                ]}
-              />
-
-              {formData.venueSpaceId && (() => {
-                const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
-                if (!space) return null;
-
-                return (
-                  <div className="mt-4 p-4 bg-white dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg">
-                    <div className="flex justify-between items-start gap-3 mb-3">
-                      <h5 className="font-semibold text-gray-700 dark:text-gray-300">
-                        Selected Venue Space
-                      </h5>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleClearVenueSpace}
-                      >
-                        Change Space
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-gray-600" />
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          {space.name}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Base Price:
-                          </span>
-                          <p className="font-bold text-orange-600">
-                            {space.basePrice} TND
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Capacity:
-                          </span>
-                          <p className="font-semibold text-gray-900 dark:text-white">
-                            {space.capacity?.min || 0}-{space.capacity?.max || 0}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Status:
-                          </span>
-                          <p className="font-semibold text-gray-900 dark:text-white capitalize">
-                            {space.isReserved ? "Reserved" : "Available"}
-                          </p>
-                        </div>
-                      </div>
-                      {space.description && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                          {space.description}
-                        </div>
-                      )}
-                      {Array.isArray(space.amenities) && space.amenities.length > 0 && (
-                        <div className="mt-2">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                            Amenities:
-                          </span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {space.amenities.map((amenity, idx) => (
-                              <Badge key={idx} className="text-xs">
-                                {amenity}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {warnings.guestCount && (
-                <div
-                  className={`mt-4 p-3 border-2 rounded-lg flex items-start gap-2 ${
-                    warnings.guestCount.type === "error"
-                      ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
-                      : "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800"
-                  }`}
-                >
-                  <AlertTriangle
-                    className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                      warnings.guestCount.type === "error"
-                        ? "text-red-600"
-                        : "text-yellow-600"
-                    }`}
-                  />
-                  <span
-                    className={`text-sm ${
-                      warnings.guestCount.type === "error"
-                        ? "text-red-800 dark:text-red-300"
-                        : "text-yellow-800 dark:text-yellow-300"
-                    }`}
-                  >
-                    {warnings.guestCount.message}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        case 2:
+          return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
               <div className="">
-                <div className="flex items-center gap-2 mb-4">
-                  <DollarSign className="w-5 h-5 text-green-500" />
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Pricing
-                  </h4>
-                </div>
-                <div className="space-y-4">
-                  <Input
-                    className="w-full"
-                    label="Base Price (from venue space)"
-                    name="pricing.basePrice"
-                    type="number"
-                    step="0.01"
-                    value={displayBasePrice}
-                    onChange={handleChange}
-                    error={errors["pricing.basePrice"]}
-                    leftElement={
-                      <span className="text-sm font-semibold text-gray-500 dark:text-gray-300 pointer-events-none">
-                        TND
-                      </span>
-                    }
-                    disabled
-                  />
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <UserPlus className="w-5 h-5 text-blue-500" />
+                      Client Selection
+                    </h4>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      icon={showClientForm ? X : Plus}
+                      onClick={() => setShowClientForm(!showClientForm)}
+                    >
+                      {showClientForm ? (
+                        <XIcon className="w-4 h-4" />
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
+                      {showClientForm ? "Cancel" : "New Client"}
+                    </Button>
+                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-                      Discount
-                    </label>
-
-                    <Input
-                      className="w-full"
-                      name="pricing.discount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.pricing.discount}
-                      onChange={handleChange}
-                      leftElement={
-                        <span className="text-sm font-semibold text-gray-500 dark:text-gray-300 pointer-events-none">
-                          {formData.pricing.discountType === "percentage"
-                            ? "%"
-                            : "TND"}
-                        </span>
-                      }
-                      rightElement={
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
+                  {showClientForm && (
+                    <div className="mb-6 p-4 bg-white dark:bg-gray-900/20 border-2 border-gray-200 dark:border-gray-800 rounded-lg animate-in slide-in-from-top-2 duration-300">
+                      <h5 className="font-semibold text-gray-800 dark:text-gray-300 mb-3 flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        Create New Client
+                      </h5>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                        <Input
+                          className="w-full"
+                          placeholder="Client Name"
+                          value={newClient.name}
+                          onChange={(e) =>
+                            setNewClient((prev) => ({
                               ...prev,
-                              pricing: {
-                                ...prev.pricing,
-                                discountType:
-                                  prev.pricing.discountType === "fixed"
-                                    ? "percentage"
-                                    : "fixed",
-                              },
+                              name: e.target.value,
                             }))
                           }
-                          className={`flex items-center gap-1 px-3 py-1.5 rounded-md border-2 text-xs font-semibold uppercase tracking-wide transition-all ${
-                            formData.pricing.discountType === "percentage"
-                              ? "bg-orange-50 border-orange-500 text-orange-700"
-                              : "bg-gray-50 border-gray-300 text-gray-700 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
-                          }`}
+                        />
+                        <Input
+                          className="w-full"
+                          placeholder="Email"
+                          type="email"
+                          value={newClient.email}
+                          onChange={(e) =>
+                            setNewClient((prev) => ({
+                              ...prev,
+                              email: e.target.value,
+                            }))
+                          }
+                        />
+<Input
+  className="w-full"
+  placeholder="Phone Number"
+  value={newClient.phone}
+  onChange={(e) => {
+    // Remove any non-digit characters
+    const numbersOnly = e.target.value.replace(/\D/g, '');
+    
+    // Limit to 8 digits
+    const limitedNumbers = numbersOnly.slice(0, 8);
+    
+    setNewClient((prev) => ({
+      ...prev,
+      phone: limitedNumbers,
+    }));
+  }}
+  onBlur={(e) => {
+    // Validate on blur to show error if not exactly 8 digits
+    if (e.target.value.length > 0 && e.target.value.length !== 8) {
+      // You can add error state handling here if needed
+    }
+  }}
+  type="tel" // Use tel type for better mobile keyboard
+  pattern="[0-9]{8}" // HTML5 pattern validation
+/>
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          icon={Check}
+                          onClick={handleCreateClient}
+                          loading={isCreatingClient}
+                          className="whitespace-nowrap"
                         >
-                          {formData.pricing.discountType === "percentage" ? (
-                            <>
-                              <Percent className="w-4 h-4" />
-                            </>
-                          ) : (
-                            <>TND</>
-                          )}
-                        </button>
-                      }
-                    />
-
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formData.pricing.discountType === "percentage"
-                        ? "Percentage discount"
-                        : "Fixed amount discount"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="">
-                <div className="flex items-center gap-2 mb-4">
-                  <Users className="w-5 h-5 text-blue-500" />
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Service Partners
-                  </h4>
-                </div>
-
-                {/* ENHANCED: Show prefilled partner prominently */}
-                {prefilledPartnerData && (
-                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
-                      <CheckCircle className="w-5 h-5" />
-                      <span className="font-semibold">Partner Pre-selected</span>
+                          <Plus className="w-4 h-4" />
+                          Create & Select Client
+                        </Button>
+                      </div>
                     </div>
-                    <p className="text-sm text-green-600 dark:text-green-400">
-                      <strong>{prefilledPartnerData.name}</strong> has been automatically added to this event
-                    </p>
-                    {returnUrl && (
-                      <p className="text-xs text-green-500 dark:text-green-600 mt-2 flex items-center gap-1">
-                        <ArrowLeft className="w-3 h-3" />
-                        From: {returnUrl.split('/').slice(-2).join(' / ')}
-                      </p>
-                    )}
-                  </div>
-                )}
+                  )}
 
-                <div className="space-y-3 w-full">
-                  <Select
-                    label="Select Partner"
-                    className="w-full"
-                    value={selectedPartner}
-                    onChange={(e) => handlePartnerSelect(e.target.value)}
-                    options={[
-                      { value: "", label: "Select Partner" },
-                      ...partners
-                        .filter((p) => !formData.partners.some((fp) => fp.partner === p._id))
-                        .map((p) => {
-                          const rate = p?.hourlyRate ?? p?.pricing?.hourlyRate ?? 0;
-                          return {
-                            value: p?._id || "",
-                            label: `${p?.name || "Partner"} - ${rate} TND/hr`,
-                          };
-                        }),
-                    ]}
-                  />
-
-                  {formData.partners.length > 0 && (
-                    <div className="space-y-2 mt-4">
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Added Partners ({formData.partners.length})
-                      </p>
-                      {formData.partners.map((partner, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              {partner.partnerName?.charAt(0).toUpperCase() ||
-                                "P"}
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-white">
-                                {partner.partnerName}
-                              </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">
-                                {partner.hourlyRate ?? 0} TND/hr ×{" "}
-                                {calculateEventHours()}h ={" "}
-                                {getPartnerCostForHours(
-                                  partner,
-                                  calculateEventHours()
-                                ).toFixed(2)}{" "}
-                                TND
-                              </div>
-                            </div>
+                  {prefilledClientData && (
+                    <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800 animate-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                            <Check className="w-6 h-6 text-white" />
                           </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            icon={Trash2}
-                            onClick={() => handleRemovePartner(idx)}
-                            className="hover:bg-red-50 hover:text-red-600"
-                          />
                         </div>
-                      ))}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-green-800 dark:text-green-300 font-semibold mb-1">
+                            <span>Client Pre-selected</span>
+                          </div>
+                          <p className="text-sm text-green-700 dark:text-green-400">
+                            <strong>{prefilledClientData.name}</strong>
+                          </p>
+                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                            {prefilledClientData.email} •{" "}
+                            {prefilledClientData.phone}
+                          </p>
+                          {returnUrl && (
+                            <p className="text-xs text-green-500 dark:text-green-600 mt-2 flex items-center gap-1">
+                              <ArrowLeft className="w-3 h-3" />
+                              From: {returnUrl.split('/').slice(-2).join(' / ')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!showClientForm && (
+                    <>
+                      <Input
+                        icon={Search}
+                        placeholder="Search clients by name, email, or phone..."
+                        value={clientSearch}
+                        onChange={(e) => setClientSearch(e.target.value)}
+                        className="mb-4 w-full"
+                      />
+                      <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                        {filteredClients.length > 0 ? (
+                          filteredClients.map((client) => (
+                            <div
+                              key={client._id}
+                              onClick={() => handleSelectClient(client._id)}
+                              className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 transform ${
+                                selectedClient === client._id
+                                  ? "bg-orange-50 border-orange-400 shadow-md dark:bg-orange-900/20 dark:border-orange-500"
+                                  : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                                      selectedClient === client._id
+                                        ? "bg-orange-500"
+                                        : "bg-gray-400"
+                                    }`}
+                                  >
+                                    {client.name?.charAt(0).toUpperCase() ||
+                                      "C"}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900 dark:text-white">
+                                      {client.name}
+                                    </div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                                      {client.email} • {client.phone}
+                                    </div>
+                                  </div>
+                                </div>
+                                {selectedClient === client._id && (
+                                  <div className="flex items-center gap-2 text-green-600">
+                                    <Check className="w-5 h-5 text-green-500" />
+                                    <span className="text-xs font-semibold">
+                                      Selected (click to unselect)
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-12 text-gray-500">
+                            <User className="w-16 h-16 mx-auto mb-3 opacity-30" />
+                            <p className="font-medium">No clients found</p>
+                            <p className="text-sm mt-1">
+                              Try a different search or create a new client
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {!showClientForm && errors.clientId && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 dark:bg-red-900/20 dark:border-red-800">
+                      <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-red-600 dark:text-red-400">
+                        {errors.clientId}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
+          );
 
-            <div className="">
-              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <DollarSign className="w-6 h-6 text-orange-600" />
-                <span className="dark:text-white">Price Summary</span>
-              </h4>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    Venue Price
-                  </div>
-                  <div className="font-bold text-lg text-gray-900 dark:text-white">
-                    {venuePrice.toFixed(2)} TND
-                  </div>
-                </div>
-                <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    Partners
-                  </div>
-                  <div className="font-bold text-lg text-gray-900 dark:text-white">
-                    {partnersTotal.toFixed(2)} TND
-                  </div>
-                </div>
-                <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    Discount
-                  </div>
-                  <div className="font-bold text-lg text-red-600">
-                    -
-                    {formData.pricing.discountType === "percentage"
-                      ? `${formData.pricing.discount || 0}%`
-                      : `${(parseFloat(formData.pricing.discount) || 0).toFixed(2)} TND`}
-                  </div>
-                </div>
-                <div className="p-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg text-center transform hover:scale-110 transition-transform">
-                  <div className="text-xs text-orange-100 mb-1 font-semibold">
-                    Total Price
-                  </div>
-                  <div className="font-bold text-2xl text-white">
-                    {totalPrice.toFixed(2)} TND
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-            <div className="flex items-center justify-center gap-2 text-gray-500 text-sm p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
-              <AlertCircle className="w-5 h-5" />
-              <p>
-                This step is optional. You can record payments later from the
-                payments section.
-              </p>
-            </div>
-            <div className="">
-              <div className="p-5">
+        case 3:
+          return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <div className="">
                 <div className="flex items-center gap-2 mb-4">
-                  <CreditCard className="w-5 h-5 text-indigo-500" />
+                  <Building className="w-5 h-5 text-purple-500" />
                   <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Record Initial Payment (Optional)
+                    Venue Space Selection
                   </h4>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {warnings.dateConflict && (
+                  <div className="mb-4 p-3 bg-red-50 border-2 border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800 flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-red-800 dark:text-red-300">
+                        {warnings.dateConflict.message}
+                      </p>
+                      {warnings.dateConflict.conflicts &&
+                        warnings.dateConflict.conflicts.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {warnings.dateConflict.conflicts.map(
+                              (event, idx) => (
+                                <p
+                                  key={idx}
+                                  className="text-xs text-red-700 dark:text-red-400"
+                                >
+                                  • {event.title} (
+                                  {new Date(
+                                    event.startDate
+                                  ).toLocaleDateString()}
+                                  )
+                                </p>
+                              )
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                )}
+
+                <Select
+                  name="venueSpaceId"
+                  label="Select Venue Space"
+                  value={formData.venueSpaceId}
+                  onChange={handleChange}
+                  error={errors.venueSpaceId}
+                  required
+                  options={[
+                    { value: "", label: "Select a Venue Space" },
+                    ...venueSpaces
+                      .filter((space) => space.isActive && !space.isArchived)
+                      .map((space) => {
+                        const capacityMin = space.capacity?.min || 0;
+                        const capacityMax = space.capacity?.max || 0;
+
+                        return {
+                          value: space._id,
+                          label: `${space.name} - ${space.basePrice} TND (${capacityMin}-${capacityMax} guests)`,
+                        };
+                      }),
+                  ]}
+                />
+
+                {formData.venueSpaceId && (() => {
+                  const space = venueSpaces.find((s) => s._id === formData.venueSpaceId);
+                  if (!space) return null;
+
+                  return (
+                    <div className="mt-4 p-4 bg-white dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg">
+                      <div className="flex justify-between items-start gap-3 mb-3">
+                        <h5 className="font-semibold text-gray-700 dark:text-gray-300">
+                          Selected Venue Space
+                        </h5>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleClearVenueSpace}
+                        >
+                          Change Space
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-gray-600" />
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {space.name}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Base Price:
+                            </span>
+                            <p className="font-bold text-orange-600">
+                              {space.basePrice} TND
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Capacity:
+                            </span>
+                            <p className="font-semibold text-gray-900 dark:text-white">
+                              {space.capacity?.min || 0}-{space.capacity?.max || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Status:
+                            </span>
+                            <p className="font-semibold text-gray-900 dark:text-white capitalize">
+                              {space.isReserved ? "Reserved" : "Available"}
+                            </p>
+                          </div>
+                        </div>
+                        {space.description && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            {space.description}
+                          </div>
+                        )}
+                        {Array.isArray(space.amenities) && space.amenities.length > 0 && (
+                          <div className="mt-2">
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                              Amenities:
+                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {space.amenities.map((amenity, idx) => (
+                                <Badge key={idx} className="text-xs">
+                                  {amenity}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {warnings.guestCount && (
+                  <div
+                    className={`mt-4 p-3 border-2 rounded-lg flex items-start gap-2 ${
+                      warnings.guestCount.type === "error"
+                        ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
+                        : "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800"
+                    }`}
+                  >
+                    <AlertTriangle
+                      className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                        warnings.guestCount.type === "error"
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                      }`}
+                    />
+                    <span
+                      className={`text-sm ${
+                        warnings.guestCount.type === "error"
+                          ? "text-red-800 dark:text-red-300"
+                          : "text-yellow-800 dark:text-yellow-300"
+                      }`}
+                    >
+                      {warnings.guestCount.message}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="">
+                  <div className="flex items-center gap-2 mb-4">
+                    <DollarSign className="w-5 h-5 text-green-500" />
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                      Pricing
+                    </h4>
+                  </div>
                   <div className="space-y-4">
                     <Input
                       className="w-full"
-                      label="Payment Amount"
-                      name="payment.amount"
+                      label="Base Price (from venue space)"
+                      name="pricing.basePrice"
                       type="number"
                       step="0.01"
-                      value={formData.payment.amount}
+                      value={displayBasePrice}
                       onChange={handleChange}
-                      error={errors["payment.amount"]}
+                      error={errors["pricing.basePrice"]}
                       leftElement={
                         <span className="text-sm font-semibold text-gray-500 dark:text-gray-300 pointer-events-none">
                           TND
                         </span>
                       }
-                      placeholder="0.00"
+                      disabled
                     />
 
-                    <Select
-                      label="Payment Method"
-                      name="payment.paymentMethod"
-                      value={formData.payment.paymentMethod}
-                      onChange={handleChange}
-                      options={paymentMethodOptions}
-                    />
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        Discount
+                      </label>
 
-                    <Input
-                      className="w-full"
-                      label="Payment Date"
-                      name="payment.paymentDate"
-                      type="date"
-                      value={formData.payment.paymentDate}
-                      onChange={handleChange}
-                    />
-                  </div>
+                      <Input
+                        className="w-full"
+                        name="pricing.discount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.pricing.discount}
+                        onChange={handleChange}
+                        leftElement={
+                          <span className="text-sm font-semibold text-gray-500 dark:text-gray-300 pointer-events-none">
+                            {formData.pricing.discountType === "percentage"
+                              ? "%"
+                              : "TND"}
+                          </span>
+                        }
+                        rightElement={
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                pricing: {
+                                  ...prev.pricing,
+                                  discountType:
+                                    prev.pricing.discountType === "fixed"
+                                      ? "percentage"
+                                      : "fixed",
+                                },
+                              }))
+                            }
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-md border-2 text-xs font-semibold uppercase tracking-wide transition-all ${
+                              formData.pricing.discountType === "percentage"
+                                ? "bg-orange-50 border-orange-500 text-orange-700"
+                                : "bg-gray-50 border-gray-300 text-gray-700 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
+                            }`}
+                          >
+                            {formData.pricing.discountType === "percentage" ? (
+                              <>
+                                <Percent className="w-4 h-4" />
+                              </>
+                            ) : (
+                              <>TND</>
+                            )}
+                          </button>
+                        }
+                      />
 
-                  <div className="space-y-4">
-                    <Select
-                      label="Payment Status"
-                      name="payment.status"
-                      value={formData.payment.status}
-                      onChange={handleChange}
-                      options={paymentStatusOptions}
-                    />
-
-                    <Textarea
-                      className="w-full"
-                      label="Payment Notes"
-                      name="payment.notes"
-                      value={formData.payment.notes}
-                      onChange={handleChange}
-                      rows={3}
-                      placeholder="Any notes about this payment..."
-                    />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formData.pricing.discountType === "percentage"
+                          ? "Percentage discount"
+                          : "Fixed amount discount"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        );
 
-      case 5:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300 dark:text-white">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="p-5">
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-blue-500" />
-                  Event Summary
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Title:
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {formData.title || "N/A"}
-                    </span>
+                <div className="">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="w-5 h-5 text-blue-500" />
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                      Service Partners
+                    </h4>
                   </div>
-                  <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Type:
-                    </span>
-                    <Badge className="capitalize">
-                      {formData.type || "N/A"}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Status:
-                    </span>
-                    <Badge
-                      variant={
-                        formData.status === "confirmed"
-                          ? "success"
-                          : "warning"
-                      }
-                      className="capitalize"
-                    >
-                      {formData.status}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Date:
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {formData.startDate || "N/A"}{" "}
-                      {formData.startDate !== formData.endDate &&
-                        `to ${formData.endDate}`}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Venue Space:
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {venueSpaces.find(
-                        (s) => s._id === formData.venueSpaceId
-                      )?.name || "N/A"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-2 dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Client:
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {clients.find((c) => c._id === formData.clientId)
-                        ?.name || "N/A"}
-                    </span>
-                  </div>
-                  {formData.guestCount && (
-                    <div className="flex justify-between py-2 border-t dark:border-gray-600">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Guests:
-                      </span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {formData.guestCount}
-                      </span>
+
+                  {/* ENHANCED: Show prefilled partner prominently */}
+                  {prefilledPartnerData && (
+                    <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800 animate-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
+                        <CheckCircle className="w-5 h-5" />
+                        <span className="font-semibold">Partner Pre-selected</span>
+                      </div>
+                      <p className="text-sm text-green-600 dark:text-green-400">
+                        <strong>{prefilledPartnerData.name}</strong> has been automatically added to this event
+                      </p>
+                      {returnUrl && (
+                        <p className="text-xs text-green-500 dark:text-green-600 mt-2 flex items-center gap-1">
+                          <ArrowLeft className="w-3 h-3" />
+                          From: {returnUrl.split('/').slice(-2).join(' / ')}
+                        </p>
+                      )}
                     </div>
                   )}
-                </div>
-              </div>
 
-              <div className="p-5">
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-green-500" />
-                  Financial Summary
-                </h4>
-                <div className="space-y-10">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between py-2">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Venue Price:
-                      </span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {venuePrice.toFixed(2)} TND
-                      </span>
-                    </div>
+                  <div className="space-y-3 w-full">
+                    <Select
+                      label="Select Partner"
+                      className="w-full"
+                      value={selectedPartner}
+                      onChange={(e) => handlePartnerSelect(e.target.value)}
+                      options={[
+                        { value: "", label: "Select Partner" },
+                        ...partners
+                          .filter((p) => !formData.partners.some((fp) => fp.partner === p._id))
+                          .map((p) => {
+                            const rate = p?.hourlyRate ?? p?.pricing?.hourlyRate ?? 0;
+                            return {
+                              value: p?._id || "",
+                              label: `${p?.name || "Partner"} - ${rate} TND/hr`,
+                            };
+                          }),
+                      ]}
+                    />
+
                     {formData.partners.length > 0 && (
-                      <div className="border-t pt-2 dark:border-gray-600">
-                        <p className="text-gray-600 dark:text-gray-400 mb-1 font-medium">
-                          Partners:
+                      <div className="space-y-2 mt-4">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Added Partners ({formData.partners.length})
                         </p>
-                        {formData.partners.map((p, idx) => (
+                        {formData.partners.map((partner, idx) => (
                           <div
                             key={idx}
-                            className="flex justify-between py-1 text-xs text-gray-600 dark:text-gray-400 pl-4"
+                            className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow"
                           >
-                            <span>• {p.partnerName}:</span>
-                            <span>
-                              {getPartnerCostForHours(
-                                p,
-                                calculateEventHours()
-                              ).toFixed(2)}{" "}
-                              TND
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                {partner.partnerName?.charAt(0).toUpperCase() ||
+                                  "P"}
+                              </div>
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  {partner.partnerName}
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-300">
+                                  {partner.hourlyRate ?? 0} TND/hr ×{" "}
+                                  {calculateEventHours()}h ={" "}
+                                  {getPartnerCostForHours(
+                                    partner,
+                                    calculateEventHours()
+                                  ).toFixed(2)}{" "}
+                                  TND
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              icon={Trash2}
+                              onClick={() => handleRemovePartner(idx)}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            />
                           </div>
                         ))}
                       </div>
                     )}
-                    {formData.pricing.discount &&
-                      parseFloat(formData.pricing.discount) > 0 && (
-                        <div className="flex justify-between py-2 border-t dark:border-gray-600">
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Discount:
+                  </div>
+                </div>
+              </div>
+
+              <div className="">
+                <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <DollarSign className="w-6 h-6 text-orange-600" />
+                  <span className="dark:text-white">Price Summary</span>
+                </h4>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Venue Price
+                    </div>
+                    <div className="font-bold text-lg text-gray-900 dark:text-white">
+                      {venuePrice.toFixed(2)} TND
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Partners
+                    </div>
+                    <div className="font-bold text-lg text-gray-900 dark:text-white">
+                      {partnersTotal.toFixed(2)} TND
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Discount
+                    </div>
+                    <div className="font-bold text-lg text-red-600">
+                      -
+                      {formData.pricing.discountType === "percentage"
+                        ? `${formData.pricing.discount || 0}%`
+                        : `${(parseFloat(formData.pricing.discount) || 0).toFixed(2)} TND`}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg text-center transform hover:scale-110 transition-transform">
+                    <div className="text-xs text-orange-100 mb-1 font-semibold">
+                      Total Price
+                    </div>
+                    <div className="font-bold text-2xl text-white">
+                      {totalPrice.toFixed(2)} TND
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+
+        case 4:
+          return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+              <div className="flex items-center justify-center gap-2 text-gray-500 text-sm p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
+                <AlertCircle className="w-5 h-5" />
+                <p>
+                  This step is optional. You can record payments later from the
+                  payments section.
+                </p>
+              </div>
+              <div className="">
+                <div className="p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CreditCard className="w-5 h-5 text-indigo-500" />
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                      Record Initial Payment (Optional)
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <Input
+                        className="w-full"
+                        label="Payment Amount"
+                        name="payment.amount"
+                        type="number"
+                        step="0.01"
+                        value={formData.payment.amount}
+                        onChange={handleChange}
+                        error={errors["payment.amount"]}
+                        leftElement={
+                          <span className="text-sm font-semibold text-gray-500 dark:text-gray-300 pointer-events-none">
+                            TND
                           </span>
-                          <span className="font-medium text-red-600">
-                            -
-                            {formData.pricing.discountType === "percentage"
-                              ? `${formData.pricing.discount}%`
-                              : `${parseFloat(formData.pricing.discount).toFixed(2)} TND`}
-                          </span>
-                        </div>
-                      )}
-                    <div className="flex justify-between pt-3 border-t-2 border-orange-200 dark:border-orange-700 font-bold text-lg">
-                      <span className="text-gray-900 dark:text-white">
-                        Total:
+                        }
+                        placeholder="0.00"
+                      />
+
+                      <Select
+                        label="Payment Method"
+                        name="payment.paymentMethod"
+                        value={formData.payment.paymentMethod}
+                        onChange={handleChange}
+                        options={paymentMethodOptions}
+                      />
+
+                      <Input
+                        className="w-full"
+                        label="Payment Date"
+                        name="payment.paymentDate"
+                        type="date"
+                        value={formData.payment.paymentDate}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <Select
+                        label="Payment Status"
+                        name="payment.status"
+                        value={formData.payment.status}
+                        onChange={handleChange}
+                        options={paymentStatusOptions}
+                      />
+
+                      <Textarea
+                        className="w-full"
+                        label="Payment Notes"
+                        name="payment.notes"
+                        value={formData.payment.notes}
+                        onChange={handleChange}
+                        rows={3}
+                        placeholder="Any notes about this payment..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+
+        case 5:
+          return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300 dark:text-white">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="p-5">
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-blue-500" />
+                    Event Summary
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Title:
                       </span>
-                      <span className="text-orange-600">
-                        {totalPrice.toFixed(2)} TND
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formData.title || "N/A"}
                       </span>
                     </div>
-                    {formData.payment.amount &&
-                      parseFloat(formData.payment.amount) > 0 && (
-                        <>
-                          <div className="flex justify-between py-2 border-t dark:border-gray-600">
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Initial Payment:
-                            </span>
-                            <span className="font-medium text-green-600">
-                              {parseFloat(formData.payment.amount).toFixed(2)}{" "}
-                              TND
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-2 border-t-2 border-gray-300 dark:border-gray-600 font-bold">
-                            <span className="text-gray-900 dark:text-white">
-                              Remaining:
-                            </span>
-                            <span className="text-orange-600">
-                              {(
-                                totalPrice -
-                                parseFloat(formData.payment.amount || 0)
-                              ).toFixed(2)}{" "}
-                              TND
-                            </span>
-                          </div>
-                        </>
-                      )}
-                  </div>
-                  {!isEditMode && (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <FileCheck className="w-6 h-6 text-indigo-600" />
-                          <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white">
-                              Auto-Generate Invoice
-                            </h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                              Create a draft invoice for this event
-                              automatically
-                            </p>
-                          </div>
-                        </div>
-                        <Toggle
-                          enabled={formData.createInvoice}
-                          onChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              createInvoice: val,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5">
-              <h4 className="font-semibold mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-purple-500" />
-                Additional Notes
-              </h4>
-              <Textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                rows={4}
-                placeholder="Add any additional notes about this event..."
-                maxLength={1000}
-                showCount
-                className="w-full"
-              />
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  // ============================================
-  // FORM CONTENT
-  // ============================================
-  const formContent = (
-    <div>
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-800 rounded-t-lg shadow-xl overflow-hidden"
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
-                  <currentStepConfig.icon className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isEditMode ? "Edit Event" : "Create New Event"}
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-                    {currentStepConfig.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* ENHANCED: Context indicators */}
-              {prefillClient && (
-                <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" />
-                  Client pre-selected: <strong>{prefillClient.name}</strong>
-                </p>
-              )}
-              {prefillPartner && (
-                <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" />
-                  Partner pre-selected: <strong>{prefillPartner.name}</strong>
-                </p>
-              )}
-              {returnUrl && (
-                <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                  <ArrowLeft className="w-3 h-3" />
-                  Will return to: {returnUrl.split('/').slice(-2).join('/')}
-                </p>
-              )}
-
-              {/* Stepper */}
-              <div className="w-full">
-                <div className="flex justify-center">
-                  <div className="flex items-center w-full max-w-3xl">
-                    {[1, 2, 3, 4, 5].map((step, index) => {
-                      const config = stepConfigs[step];
-                      const isActive = step === currentStep;
-                      const isComplete = step < currentStep;
-                      const isClickable = step <= currentStep;
-
-                      return (
-                        <div key={step} className="flex items-center flex-1">
-                          <div className="flex flex-col items-center flex-shrink-0 mx-auto">
-                            <div
-                              onClick={() => isClickable && jumpToStep(step)}
-                              className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
-                                isActive
-                                  ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110 cursor-default"
-                                  : isComplete
-                                    ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
-                                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed"
-                              }`}
-                            >
-                              {isComplete ? (
-                                <Check className="w-5 h-5" />
-                              ) : (
-                                <span className="font-bold">{step}</span>
-                              )}
-                              {isActive && (
-                                <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
-                              )}
-                            </div>
-                            <span
-                              className={`text-xs mt-2 font-medium text-center transition-colors whitespace-nowrap ${
-                                isActive
-                                  ? "text-orange-600 dark:text-orange-400"
-                                  : isComplete
-                                    ? "text-green-600 dark:text-green-400"
-                                    : "text-gray-500"
-                              }`}
-                            >
-                              {config.title}
-                            </span>
-                          </div>
-
-                          {step < totalSteps && (
-                            <div
-                              className={`h-1 min-w-10 rounded-full transition-all duration-300 ${
-                                isComplete
-                                  ? "bg-green-500"
-                                  : "bg-gray-200 dark:bg-gray-600"
-                              }`}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Draft indicator */}
-            {hasDraft && !isEditMode && window.__eventFormDraft && (
-              <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg shadow-lg animate-in slide-in-from-top-3 duration-500">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
-                      <History className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        Draft Found!
-                      </h3>
-                      <Badge variant="warning" className="text-xs">
-                        Unsaved Changes
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Type:
+                      </span>
+                      <Badge className="capitalize">
+                        {formData.type || "N/A"}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                      You have an unsaved draft from{" "}
-                      <strong className="text-orange-600 dark:text-orange-400">
-                        {new Date(
-                          window.__eventFormDraft.timestamp
-                        ).toLocaleString()}
-                      </strong>
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Your progress has been automatically saved. Restore it to
-                      continue where you left off.
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Status:
+                      </span>
+                      <Badge
+                        variant={
+                          formData.status === "confirmed"
+                            ? "success"
+                            : "warning"
+                        }
+                        className="capitalize"
+                      >
+                        {formData.status}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Date:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formData.startDate || "N/A"}{" "}
+                        {formData.startDate !== formData.endDate &&
+                          `to ${formData.endDate}`}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Venue Space:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {venueSpaces.find(
+                          (s) => s._id === formData.venueSpaceId
+                        )?.name || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-2 dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Client:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {clients.find((c) => c._id === formData.clientId)
+                          ?.name || "N/A"}
+                      </span>
+                    </div>
+                    {formData.guestCount && (
+                      <div className="flex justify-between py-2 border-t dark:border-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Guests:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {formData.guestCount}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-5">
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-500" />
+                    Financial Summary
+                  </h4>
+                  <div className="space-y-10">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Venue Price:
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {venuePrice.toFixed(2)} TND
+                        </span>
+                      </div>
+                      {formData.partners.length > 0 && (
+                        <div className="border-t pt-2 dark:border-gray-600">
+                          <p className="text-gray-600 dark:text-gray-400 mb-1 font-medium">
+                            Partners:
+                          </p>
+                          {formData.partners.map((p, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between py-1 text-xs text-gray-600 dark:text-gray-400 pl-4"
+                            >
+                              <span>• {p.partnerName}:</span>
+                              <span>
+                                {getPartnerCostForHours(
+                                  p,
+                                  calculateEventHours()
+                                ).toFixed(2)}{" "}
+                                TND
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {formData.pricing.discount &&
+                        parseFloat(formData.pricing.discount) > 0 && (
+                          <div className="flex justify-between py-2 border-t dark:border-gray-600">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Discount:
+                            </span>
+                            <span className="font-medium text-red-600">
+                              -
+                              {formData.pricing.discountType === "percentage"
+                                ? `${formData.pricing.discount}%`
+                                : `${parseFloat(formData.pricing.discount).toFixed(2)} TND`}
+                            </span>
+                          </div>
+                        )}
+                      <div className="flex justify-between pt-3 border-t-2 border-orange-200 dark:border-orange-700 font-bold text-lg">
+                        <span className="text-gray-900 dark:text-white">
+                          Total:
+                        </span>
+                        <span className="text-orange-600">
+                          {totalPrice.toFixed(2)} TND
+                        </span>
+                      </div>
+                      {formData.payment.amount &&
+                        parseFloat(formData.payment.amount) > 0 && (
+                          <>
+                            <div className="flex justify-between py-2 border-t dark:border-gray-600">
+                              <span className="text-gray-600 dark:text-gray-400">
+                                Initial Payment:
+                              </span>
+                              <span className="font-medium text-green-600">
+                                {parseFloat(formData.payment.amount).toFixed(2)}{" "}
+                                TND
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-2 border-t-2 border-gray-300 dark:border-gray-600 font-bold">
+                              <span className="text-gray-900 dark:text-white">
+                                Remaining:
+                              </span>
+                              <span className="text-orange-600">
+                                {(
+                                  totalPrice -
+                                  parseFloat(formData.payment.amount || 0)
+                                ).toFixed(2)}{" "}
+                                TND
+                              </span>
+                            </div>
+                          </>
+                        )}
+                    </div>
+                    {!isEditMode && (
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <FileCheck className="w-6 h-6 text-indigo-600" />
+                            <div>
+                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                                Auto-Generate Invoice
+                              </h4>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                Create a draft invoice for this event
+                                automatically
+                              </p>
+                            </div>
+                          </div>
+                          <Toggle
+                            enabled={formData.createInvoice}
+                            onChange={(val) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                createInvoice: val,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-500" />
+                  Additional Notes
+                </h4>
+                <Textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="Add any additional notes about this event..."
+                  maxLength={1000}
+                  showCount
+                  className="w-full"
+                />
+              </div>
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    };
+
+    // ============================================
+    // FORM CONTENT
+    // ============================================
+    const formContent = (
+      <div>
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white dark:bg-gray-800 rounded-t-lg shadow-xl overflow-hidden"
+        >
+          {/* Header */}
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                    <currentStepConfig.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {isEditMode ? "Edit Event" : "Create New Event"}
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                      {currentStepConfig.description}
                     </p>
                   </div>
-                  <div className="flex-shrink-0 flex flex-col gap-2">
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      icon={Check}
-                      onClick={() => {
-                        const { savedData, savedStep } =
-                          window.__eventFormDraft;
-                        setFormData(savedData);
-                        setCurrentStep(savedStep);
-                        setHasDraft(false);
-                        delete window.__eventFormDraft;
-                        toast.success("Draft restored successfully!");
-                      }}
-                      className="whitespace-nowrap"
-                    >
-                      Restore Draft
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      icon={Trash2}
-                      onClick={() => {
-                        localStorage.removeItem("eventFormDraft");
-                        setHasDraft(false);
-                        delete window.__eventFormDraft;
-                        toast.success("Draft discarded");
-                      }}
-                      className="whitespace-nowrap hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                    >
-                      Discard
-                    </Button>
+                </div>
+
+                {/* ENHANCED: Context indicators */}
+                {prefillClient && (
+                  <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Client pre-selected: <strong>{prefillClient.name}</strong>
+                  </p>
+                )}
+                {prefillPartner && (
+                  <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Partner pre-selected: <strong>{prefillPartner.name}</strong>
+                  </p>
+                )}
+                {returnUrl && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                    <ArrowLeft className="w-3 h-3" />
+                    Will return to: {returnUrl.split('/').slice(-2).join('/')}
+                  </p>
+                )}
+
+                {/* Stepper */}
+                <div className="w-full">
+                  <div className="flex justify-center">
+                    <div className="flex items-center w-full max-w-3xl">
+                      {[1, 2, 3, 4, 5].map((step, index) => {
+                        const config = stepConfigs[step];
+                        const isActive = step === currentStep;
+                        const isComplete = step < currentStep;
+                        const isClickable = step <= currentStep;
+
+                        return (
+                          <div key={step} className="flex items-center flex-1">
+                            <div className="flex flex-col items-center flex-shrink-0 mx-auto">
+                              <div
+                                onClick={() => isClickable && jumpToStep(step)}
+                                className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+                                  isActive
+                                    ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110 cursor-default"
+                                    : isComplete
+                                      ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105"
+                                      : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed"
+                                }`}
+                              >
+                                {isComplete ? (
+                                  <Check className="w-5 h-5" />
+                                ) : (
+                                  <span className="font-bold">{step}</span>
+                                )}
+                                {isActive && (
+                                  <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
+                                )}
+                              </div>
+                              <span
+                                className={`text-xs mt-2 font-medium text-center transition-colors whitespace-nowrap ${
+                                  isActive
+                                    ? "text-orange-600 dark:text-orange-400"
+                                    : isComplete
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-gray-500"
+                                }`}
+                              >
+                                {config.title}
+                              </span>
+                            </div>
+
+                            {step < totalSteps && (
+                              <div
+                                className={`h-1 min-w-10 rounded-full transition-all duration-300 ${
+                                  isComplete
+                                    ? "bg-green-500"
+                                    : "bg-gray-200 dark:bg-gray-600"
+                                }`}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Form Content */}
-        <div className="p-6 space-y-6 max-h-[55vh] overflow-y-auto hide-scrollbar">
-          {renderStepContent()}
-        </div>
-      </form>
-
-      {/* Footer - ENHANCED: Context-aware button text */}
-      <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t-2 border-gray-200 dark:border-gray-600">
-        <div className="flex items-center justify-between">
-          <div>
-            {currentStep > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                icon={ChevronLeft}
-                onClick={prevStep}
-                className="hover:scale-105 transition-transform min-w-[100px]"
-              >
-                Previous
-              </Button>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            {currentStep >= 3 && (
-              <div className="text-right px-4 py-2 bg-white dark:bg-gray-600 rounded-lg shadow">
-                <div className="text-xs text-gray-600 dark:text-gray-400">
-                  Total Amount
+              {/* Draft indicator */}
+              {hasDraft && !isEditMode && window.__eventFormDraft && (
+                <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg shadow-lg animate-in slide-in-from-top-3 duration-500">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                        <History className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Draft Found!
+                        </h3>
+                        <Badge variant="warning" className="text-xs">
+                          Unsaved Changes
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                        You have an unsaved draft from{" "}
+                        <strong className="text-orange-600 dark:text-orange-400">
+                          {new Date(
+                            window.__eventFormDraft.timestamp
+                          ).toLocaleString()}
+                        </strong>
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Your progress has been automatically saved. Restore it to
+                        continue where you left off.
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 flex flex-col gap-2">
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        icon={Check}
+                        onClick={() => {
+                          const { savedData, savedStep } =
+                            window.__eventFormDraft;
+                          setFormData(savedData);
+                          setCurrentStep(savedStep);
+                          setHasDraft(false);
+                          delete window.__eventFormDraft;
+                          toast.success("Draft restored successfully!");
+                        }}
+                        className="whitespace-nowrap"
+                      >
+                        Restore Draft
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        icon={Trash2}
+                        onClick={() => {
+                          localStorage.removeItem("eventFormDraft");
+                          setHasDraft(false);
+                          delete window.__eventFormDraft;
+                          toast.success("Draft discarded");
+                        }}
+                        className="whitespace-nowrap hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                      >
+                        Discard
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-orange-600">
-                  {totalPrice.toFixed(2)} TND
-                </div>
-              </div>
-            )}
-            {currentStep < totalSteps ? (
-              <Button
-                type="button"
-                variant="primary"
-                icon={ChevronRight}
-                onClick={(e) => {
-                  e.preventDefault();
-                  nextStep();
-                }}
-                className="hover:scale-105 transition-transform min-w-[100px]"
-              >
-                Continue
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                variant="primary"
-                icon={Save}
-                loading={loading}
-                onClick={handleSubmit}
-                className="hover:scale-105 transition-transform min-w-[140px]"
-              >
-                {isEditMode 
-                  ? "Update Event" 
-                  : fromClient 
-                    ? `Create for ${prefillClient?.name}` 
-                    : fromPartner 
-                      ? `Create with ${prefillPartner?.name}`
-                      : "Create Event"}
-              </Button>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
 
-  // Sticky Price Summary
-  const showStickySummary = currentStep >= 3 && formData.venueSpaceId;
+          {/* Form Content */}
+          <div className="p-6 space-y-6 max-h-[55vh] overflow-y-auto hide-scrollbar">
+            {renderStepContent()}
+          </div>
+        </form>
 
-  // Return modal or page layout
-  if (isModal) {
-    return (
-      <>
-        <div className="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm">
-          <div className="flex items-center justify-center min-h-auto pt-4 px-4">
-            <div
-              className="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity h-screen"
-              onClick={handleClose}
-            ></div>
-            <div className="relative inline-block align-middle w-full max-w-4xl">
-              <div className="transform transition-all animate-in zoom-in-95 duration-300">
-                {formContent}
-              </div>
+        {/* Footer - ENHANCED: Context-aware button text */}
+        <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t-2 border-gray-200 dark:border-gray-600">
+          <div className="flex items-center justify-between">
+            <div>
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  icon={ChevronLeft}
+                  onClick={prevStep}
+                  className="hover:scale-105 transition-transform min-w-[100px]"
+                >
+                  Previous
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              {currentStep >= 3 && (
+                <div className="text-right px-4 py-2 bg-white dark:bg-gray-600 rounded-lg shadow">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    Total Amount
+                  </div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {totalPrice.toFixed(2)} TND
+                  </div>
+                </div>
+              )}
+              {currentStep < totalSteps ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  icon={ChevronRight}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    nextStep();
+                  }}
+                  className="hover:scale-105 transition-transform min-w-[100px]"
+                >
+                  Continue
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  variant="primary"
+                  icon={Save}
+                  loading={loading}
+                  onClick={handleSubmit}
+                  className="hover:scale-105 transition-transform min-w-[140px]"
+                >
+                  {isEditMode 
+                    ? "Update Event" 
+                    : fromClient 
+                      ? `Create for ${prefillClient?.name}` 
+                      : fromPartner 
+                        ? `Create with ${prefillPartner?.name}`
+                        : "Create Event"}
+                </Button>
+              )}
             </div>
           </div>
         </div>
+      </div>
+    );
+
+    // Sticky Price Summary
+    const showStickySummary = currentStep >= 3 && formData.venueSpaceId;
+
+    // Return modal or page layout
+    if (isModal) {
+      return (
+        <>
+          <div className="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm">
+            <div className="flex items-center justify-center min-h-auto pt-4 px-4">
+              <div
+                className="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity h-screen"
+                onClick={handleClose}
+              ></div>
+              <div className="relative inline-block align-middle w-full max-w-4xl">
+                <div className="transform transition-all animate-in zoom-in-95 duration-300">
+                  {formContent}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // Page layout
+    return (
+      <>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">{formContent}</div>
+          </div>
+        </div>
+        <StickyPriceSummary
+          venuePrice={venuePrice}
+          partnersTotal={partnersTotal}
+          discount={parseFloat(formData.pricing.discount) || 0}
+          discountType={formData.pricing.discountType}
+          totalPrice={totalPrice}
+          visible={showStickySummary}
+        />
       </>
     );
-  }
+  };
 
-  // Page layout
-  return (
-    <>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">{formContent}</div>
-        </div>
-      </div>
-      <StickyPriceSummary
-        venuePrice={venuePrice}
-        partnersTotal={partnersTotal}
-        discount={parseFloat(formData.pricing.discount) || 0}
-        discountType={formData.pricing.discountType}
-        totalPrice={totalPrice}
-        visible={showStickySummary}
-      />
-    </>
-  );
-};
-
-export default EventForm;
+  export default EventForm;

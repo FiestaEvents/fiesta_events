@@ -936,7 +936,7 @@ const handleDownloadInvoice = async (invoice) => {
             onClick={() => setInvoiceType("client")}
             className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               invoiceType === "client"
-                ? "bg-orange-600 text-white shadow-sm"
+                ? "bg-orange-500 text-white shadow-sm"
                 : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             }`}
           >

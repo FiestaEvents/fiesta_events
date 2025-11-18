@@ -338,7 +338,7 @@ const DashboardPage = () => {
       const revenueTrend = Array.from({ length: 6 }, (_, i) => {
         const date = new Date();
         date.setMonth(date.getMonth() - (5 - i));
-        const month = date.toLocaleDateString('en-US', { month: 'short' });
+        const month = date.toLocaleDateString('tn-TN', { month: 'short' });
         
         const monthRevenue = payments
           .filter(payment => {
@@ -374,7 +374,7 @@ const DashboardPage = () => {
       // Calculate client satisfaction (simplified - based on ratings)
       const ratedClients = clients.filter(client => client.rating);
       const clientSatisfaction = ratedClients.length > 0 ? 
-        Math.round((ratedClients.reduce((sum, client) => sum + (client.rating || 0), 0) / ratedClients.length) * 20) : 85;
+        Math.round((ratedClients.reduce((sum, client) => sum + (client.rating || 0), 0) / ratedClients.length) * 20):0;
 
       // Get recent activity from multiple sources with proper error handling
       const recentActivity = [
@@ -402,7 +402,7 @@ const DashboardPage = () => {
 
       return {
         occupancyRate,
-        averageRating: clientStats.averageRating || 4.5,
+        averageRating: clientStats.averageRating || 0,
         taskCompletion,
         paymentCollection,
         revenueTrend,
@@ -426,49 +426,6 @@ const DashboardPage = () => {
       return getFallbackEnhancedData();
     }
   };
-
-  const getFallbackEnhancedData = () => ({
-    occupancyRate: 75,
-    averageRating: 4.5,
-    taskCompletion: 85,
-    paymentCollection: 80,
-    revenueTrend: [
-      { month: 'Jan', revenue: 45000 },
-      { month: 'Feb', revenue: 52000 },
-      { month: 'Mar', revenue: 48000 },
-      { month: 'Apr', revenue: 61000 },
-      { month: 'May', revenue: 58000 },
-      { month: 'Jun', revenue: 72000 },
-    ],
-    eventTypeDistribution: [
-      { type: 'Wedding', count: 8, color: '#8B5CF6' },
-      { type: 'Corporate', count: 5, color: '#3B82F6' },
-      { type: 'Birthday', count: 3, color: '#EC4899' },
-      { type: 'Other', count: 2, color: '#6B7280' },
-    ],
-    performanceMetrics: {
-      venueUtilization: 75,
-      taskCompletion: 85,
-      paymentCollection: 80,
-      clientSatisfaction: 90,
-    },
-    financialHealth: {
-      profitMargin: 35,
-      cashFlow: 125000,
-      revenueGrowth: 12.5,
-      expenseRatio: 65,
-    },
-    clientRetention: 78,
-    clientSatisfaction: 90,
-    averageEventValue: 4500,
-    recentActivity: [
-      { action: 'Payment received', details: 'Wedding Client - $2,500', time: '2 hours ago', type: 'payment' },
-      { action: 'Event confirmed', details: 'Corporate Gala - Dec 15', time: '5 hours ago', type: 'event' },
-      { action: 'Task completed', details: 'Finalize venue setup', time: '1 day ago', type: 'task' },
-    ],
-    teamPerformance: [],
-  });
-
   // Prepare chart data
   const eventTypeChartData = {
     labels: enhancedStats.eventTypeDistribution.map(item => item.type),
@@ -800,10 +757,10 @@ const DashboardPage = () => {
             </h3>
             <div className="space-y-4">
               {[
-                { label: 'Venue Utilization', value: enhancedStats.performanceMetrics.venueUtilization || 75 },
-                { label: 'Task Completion', value: enhancedStats.performanceMetrics.taskCompletion || 90 },
-                { label: 'Payment Collection', value: enhancedStats.performanceMetrics.paymentCollection || 88 },
-                { label: 'Client Satisfaction', value: enhancedStats.performanceMetrics.clientSatisfaction || 92 },
+                { label: 'Venue Utilization', value: enhancedStats.performanceMetrics.venueUtilization  },
+                { label: 'Task Completion', value: enhancedStats.performanceMetrics.taskCompletion  },
+                { label: 'Payment Collection', value: enhancedStats.performanceMetrics.paymentCollection },
+                { label: 'Client Satisfaction', value: enhancedStats.performanceMetrics.clientSatisfaction  },
               ].map((metric, index) => (
                 <div key={index}>
                   <div className="flex justify-between text-sm mb-1">

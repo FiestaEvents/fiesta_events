@@ -550,17 +550,41 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                 className="w-full"
               />
 
-              <Input
-                label="Phone Number"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                error={errors.phone}
-                required
-                placeholder="12345678"
-                icon={Phone}
-                className="w-full"
-              />
+<Input
+  label="Phone Number"
+  name="phone"
+  value={formData.phone}
+  onChange={(e) => {
+    // Remove any non-digit characters and limit to 8 digits
+    const numbersOnly = e.target.value.replace(/\D/g, '').slice(0, 8);
+    
+    // Update form data directly
+    setFormData((prev) => ({
+      ...prev,
+      phone: numbersOnly
+    }));
+    
+    // Clear error if any
+    if (errors.phone) {
+      setErrors((prev) => ({ ...prev, phone: '' }));
+    }
+  }}
+  onBlur={() => {
+    // Validate on blur
+    if (formData.phone && formData.phone.length !== 8) {
+      setErrors((prev) => ({ 
+        ...prev, 
+        phone: 'Phone number must be exactly 8 digits' 
+      }));
+    }
+  }}
+  error={errors.phone}
+  required
+  placeholder="12345678"
+  icon={Phone}
+  className="w-full"
+  type="tel"
+/>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

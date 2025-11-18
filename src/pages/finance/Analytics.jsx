@@ -3,6 +3,7 @@ import { financeService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Select from "../../components/common/Select";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import formatCurrency from "../../utils/formatCurrency";
 import {
   TrendingUp,
   TrendingDown,
@@ -106,15 +107,6 @@ const Analytics = () => {
     };
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("tn-TN", {
-      style: "currency",
-      currency: "TND",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount || 0);
-  };
-
   // Calculate key metrics with proper fallbacks
   const summary = analyticsData.summary || {};
   const profitLoss = analyticsData.profitLoss || {};
@@ -183,7 +175,7 @@ const Analytics = () => {
   const expensesBreakdown = calculatePercentage(analyticsData.expensesBreakdown || []);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="bg-white space-y-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

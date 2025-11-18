@@ -240,7 +240,6 @@ const VenueDetailsStep = ({ data, onChange, errors }) => {
         <Input
           required="true"
           label="Venue Name"
-          value={data.venueName}
           onChange={(e) => onChange({ venueName: e.target.value })}
           error={errors.venueName}
           placeholder="e.g., Grand Palace Events"
@@ -464,7 +463,7 @@ const AddressStep = ({ data, onChange, errors }) => (
     </div>
     <div className="space-y-4">
       <Input
-        label="Street Address"
+        label="Full Address"
         value={data.address?.street || ""}
         onChange={(e) =>
           onChange({ address: { ...data.address, street: e.target.value } })
@@ -705,33 +704,15 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
 
       case 3: // Address
         if (!formData.address?.street?.trim()) {
-          newErrors.street = "Street address is required";
+          newErrors.street = "Full address is required";
         } else if (formData.address.street.length > 200) {
-          newErrors.street = "Street address must be less than 200 characters";
+          newErrors.street = "Full address must be less than 200 characters";
         }
 
         if (!formData.address?.city?.trim()) {
           newErrors.city = "City is required";
         } else if (formData.address.city.length > 100) {
           newErrors.city = "City must be less than 100 characters";
-        }
-
-        if (!formData.address?.state?.trim()) {
-          newErrors.state = "State is required";
-        } else if (formData.address.state.length > 100) {
-          newErrors.state = "State must be less than 100 characters";
-        }
-
-        if (!formData.address?.zipCode?.trim()) {
-          newErrors.zipCode = "ZIP code is required";
-        } else if (!/^\d+$/.test(formData.address.zipCode)) {
-          newErrors.zipCode = "ZIP code must contain only numbers";
-        }
-
-        if (!formData.address?.country?.trim()) {
-          newErrors.country = "Country is required";
-        } else if (formData.address.country.length > 100) {
-          newErrors.country = "Country must be less than 100 characters";
         }
         break;
     }
@@ -1068,23 +1049,15 @@ const Register = () => {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    // Venue name validation - matches backend
-    if (!formData.venueName?.trim()) {
-      newErrors.venueName = "Venue name is required";
-    } else if (formData.venueName.length < 2 || formData.venueName.length > 100) {
-      newErrors.venueName = "Venue name must be between 2 and 100 characters";
-    } else if (!/^[a-zA-Z0-9\s\-&',.]+$/.test(formData.venueName)) {
-      newErrors.venueName = "Venue name contains invalid characters";
-    }
-
     return newErrors;
   };
 
   const handleInitialSubmit = async () => {
     // Validate all form fields first
+    console.log('')
     const validationErrors = validateForm();
     setErrors(validationErrors);
-
+console.log()
     // If there are validation errors, don't proceed with email verification
     if (Object.keys(validationErrors).length > 0) {
       // Scroll to first error if any
@@ -1165,15 +1138,6 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="john@example.com"
                 error={errors.email}
-                fullWidth
-              />
-              <Input
-                label="Venue Name"
-                name="venueName"
-                value={formData.venueName}
-                onChange={handleChange}
-                placeholder="Grand Palace Events"
-                error={errors.venueName}
                 fullWidth
               />
               
