@@ -23,6 +23,7 @@ const Input = ({
   iconRight: IconRight,
   onIconClick,
   fullWidth,
+  type = "text",
   ...props
 }) => (
   <div className={fullWidth ? "w-full" : ""}>
@@ -33,6 +34,7 @@ const Input = ({
     )}
     <div className="relative">
       <input
+        type={type}
         className={`w-full px-4 py-1.5 text-base border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all duration-200 hover:shadow-md ${
           error ? "border-red-500" : "border-gray-300"
         }`}
@@ -133,6 +135,45 @@ const ProgressSteps = ({ currentStep }) => {
   );
 };
 
+// Validation utilities
+const validationUtils = {
+  // Phone validation: exactly 8 digits
+  validatePhone: (phone) => {
+    if (!phone?.trim()) return "Phone number is required";
+    if (!/^\d+$/.test(phone)) return "Phone number must contain only numbers";
+    if (phone.length !== 8) return "Phone number must be exactly 8 digits";
+    return null;
+  },
+
+  // Email validation
+  validateEmail: (email) => {
+    if (!email?.trim()) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Please provide a valid email";
+    if (email.length > 100) return "Email must be less than 100 characters";
+    return null;
+  },
+
+  // Number validation: positive numbers only
+  validatePositiveNumber: (value, fieldName) => {
+    if (!value && value !== 0) return `${fieldName} is required`;
+    if (!/^\d+$/.test(value.toString())) return `${fieldName} must be a number`;
+    if (parseFloat(value) < 0) return `${fieldName} cannot be negative`;
+    return null;
+  },
+
+  // Capacity validation
+  validateCapacity: (min, max) => {
+    const minError = validationUtils.validatePositiveNumber(min, "Min capacity");
+    if (minError) return minError;
+    
+    const maxError = validationUtils.validatePositiveNumber(max, "Max capacity");
+    if (maxError) return maxError;
+    
+    if (parseInt(min) > parseInt(max)) return "Min capacity cannot be greater than max capacity";
+    return null;
+  }
+};
+
 // Step 1: Business Type
 const BusinessTypeStep = ({ data, onChange, onNext }) => (
   <div className="space-y-6 flex justify-center items-center flex-col gap-6 md:gap-10">
@@ -179,65 +220,72 @@ const BusinessTypeStep = ({ data, onChange, onNext }) => (
 );
 
 // Step 2: Venue Details
-const VenueDetailsStep = ({ data, onChange, errors }) => (
-  <div className="space-y-6">
-    <div>
-      <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-        Tell Us About Your Venue
-      </h3>
-      <p className="text-gray-600">
-        Provide basic information about your venue
-      </p>
-    </div>
-    <div className="space-y-4">
-      <Input
-        required="true"
-        label="Venue Name"
-        value={data.venueName}
-        onChange={(e) => onChange({ venueName: e.target.value })}
-        error={errors.venueName}
-        placeholder="e.g., Grand Palace Events"
-        fullWidth
-      />
+const VenueDetailsStep = ({ data, onChange, errors }) => {
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+    onChange({ phone: value });
+  };
+
+  return (
+    <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description
-        </label>
-        <textarea
-          value={data.description || ""}
-          onChange={(e) => onChange({ description: e.target.value })}
-          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none"
-          rows={4}
-          placeholder="Describe your venue..."
-        />
-        {errors.description && (
-          <p className="text-sm text-red-600 mt-1">{errors.description}</p>
-        )}
+        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+          Tell Us About Your Venue
+        </h3>
+        <p className="text-gray-600">
+          Provide basic information about your venue
+        </p>
       </div>
-      <Input
-        label="Phone Number"
-        value={data.phone}
-        onChange={(e) => onChange({ phone: e.target.value })}
-        error={errors.phone}
-        placeholder="12345678"
-        fullWidth
-      />
-      <Input
-        disabled={true}
-        label="Email"
-        type="email"
-        value={data.venueEmail || data.email}
-        onChange={(e) => onChange({ venueEmail: e.target.value })}
-        error={errors.venueEmail}
-        placeholder="venue@example.com"
-        fullWidth
-      />
+      <div className="space-y-4">
+        <Input
+          required="true"
+          label="Venue Name"
+          value={data.venueName}
+          onChange={(e) => onChange({ venueName: e.target.value })}
+          error={errors.venueName}
+          placeholder="e.g., Grand Palace Events"
+          fullWidth
+        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <textarea
+            value={data.description || ""}
+            onChange={(e) => onChange({ description: e.target.value })}
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none"
+            rows={4}
+            placeholder="Describe your venue..."
+          />
+          {errors.description && (
+            <p className="text-sm text-red-600 mt-1">{errors.description}</p>
+          )}
+        </div>
+        <Input
+          label="Phone Number"
+          value={data.phone}
+          onChange={handlePhoneChange}
+          error={errors.phone}
+          placeholder="12345678"
+          fullWidth
+        />
+        <Input
+          disabled={true}
+          label="Email"
+          type="email"
+          value={data.venueEmail || data.email}
+          onChange={(e) => onChange({ venueEmail: e.target.value })}
+          error={errors.venueEmail}
+          placeholder="venue@example.com"
+          fullWidth
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Step 3: Spaces
-const SpacesStep = ({ data, onChange }) => {
+const SpacesStep = ({ data, onChange, errors }) => {
   const initializeSpaces = () => {
     if (!data.spaces || data.spaces.length === 0) {
       return [
@@ -281,6 +329,11 @@ const SpacesStep = ({ data, onChange }) => {
   };
 
   const updateSpace = (id, field, value) => {
+    // For numeric fields, only allow numbers and prevent negative values
+    if (['minCapacity', 'maxCapacity', 'basePrice'].includes(field)) {
+      value = value.replace(/\D/g, '');
+    }
+    
     const newSpaces = spaces.map((space) =>
       space.id === id ? { ...space, [field]: value } : space
     );
@@ -331,6 +384,7 @@ const SpacesStep = ({ data, onChange }) => {
                 label="Space Name"
                 value={space.name}
                 onChange={(e) => updateSpace(space.id, "name", e.target.value)}
+                error={errors[`space-${space.id}-name`]}
                 placeholder="e.g., Main Hall"
                 fullWidth
               />
@@ -341,7 +395,9 @@ const SpacesStep = ({ data, onChange }) => {
                 onChange={(e) =>
                   updateSpace(space.id, "basePrice", e.target.value)
                 }
+                error={errors[`space-${space.id}-basePrice`]}
                 placeholder="5000"
+                min="0"
                 fullWidth
               />
               <div className="grid grid-cols-2 gap-4">
@@ -352,7 +408,9 @@ const SpacesStep = ({ data, onChange }) => {
                   onChange={(e) =>
                     updateSpace(space.id, "minCapacity", e.target.value)
                   }
+                  error={errors[`space-${space.id}-minCapacity`]}
                   placeholder="50"
+                  min="0"
                   fullWidth
                 />
                 <Input
@@ -362,10 +420,17 @@ const SpacesStep = ({ data, onChange }) => {
                   onChange={(e) =>
                     updateSpace(space.id, "maxCapacity", e.target.value)
                   }
+                  error={errors[`space-${space.id}-maxCapacity`]}
                   placeholder="500"
+                  min="0"
                   fullWidth
                 />
               </div>
+              {errors[`space-${space.id}-capacity`] && (
+                <p className="text-sm text-red-600 mt-1">
+                  {errors[`space-${space.id}-capacity`]}
+                </p>
+              )}
             </div>
           </div>
         ))}
@@ -587,44 +652,90 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
 
   const validateStep = () => {
     const newErrors = {};
+    
     switch (currentStep) {
-      case 1:
-        if (!formData.venueName?.trim())
+      case 1: // Venue Details
+        if (!formData.venueName?.trim()) {
           newErrors.venueName = "Venue name is required";
+        } else if (formData.venueName.length < 2 || formData.venueName.length > 100) {
+          newErrors.venueName = "Venue name must be between 2 and 100 characters";
+        } else if (!/^[a-zA-Z0-9\s\-&',.]+$/.test(formData.venueName)) {
+          newErrors.venueName = "Venue name contains invalid characters";
+        }
 
-        if (!formData.phone?.trim())
-          newErrors.phone = "Phone number is required";
+        const phoneError = validationUtils.validatePhone(formData.phone);
+        if (phoneError) newErrors.phone = phoneError;
+
+        if (formData.description && formData.description.length > 500) {
+          newErrors.description = "Description must be less than 500 characters";
+        }
         break;
-      case 2:
+
+      case 2: // Spaces
         if (!formData.spaces || formData.spaces.length === 0) {
           toast("Please add at least one space", "error");
           return false;
         }
-        const hasInvalidSpace = formData.spaces.some(
-          (space) =>
-            !space.name?.trim() ||
-            !space.basePrice ||
-            !space.minCapacity ||
-            !space.maxCapacity
-        );
+
+        let hasInvalidSpace = false;
+        formData.spaces.forEach((space) => {
+          if (!space.name?.trim()) {
+            newErrors[`space-${space.id}-name`] = "Space name is required";
+            hasInvalidSpace = true;
+          }
+
+          const basePriceError = validationUtils.validatePositiveNumber(space.basePrice, "Base price");
+          if (basePriceError) {
+            newErrors[`space-${space.id}-basePrice`] = basePriceError;
+            hasInvalidSpace = true;
+          }
+
+          const capacityError = validationUtils.validateCapacity(space.minCapacity, space.maxCapacity);
+          if (capacityError) {
+            newErrors[`space-${space.id}-capacity`] = capacityError;
+            hasInvalidSpace = true;
+          }
+        });
+
         if (hasInvalidSpace) {
-          toast("Please fill in all space details", "error");
+          setErrors(newErrors);
           return false;
         }
         break;
-      case 3:
-        if (!formData.address?.street?.trim())
+
+      case 3: // Address
+        if (!formData.address?.street?.trim()) {
           newErrors.street = "Street address is required";
-        if (!formData.address?.city?.trim())
+        } else if (formData.address.street.length > 200) {
+          newErrors.street = "Street address must be less than 200 characters";
+        }
+
+        if (!formData.address?.city?.trim()) {
           newErrors.city = "City is required";
-        if (!formData.address?.state?.trim())
+        } else if (formData.address.city.length > 100) {
+          newErrors.city = "City must be less than 100 characters";
+        }
+
+        if (!formData.address?.state?.trim()) {
           newErrors.state = "State is required";
-        if (!formData.address?.zipCode?.trim())
+        } else if (formData.address.state.length > 100) {
+          newErrors.state = "State must be less than 100 characters";
+        }
+
+        if (!formData.address?.zipCode?.trim()) {
           newErrors.zipCode = "ZIP code is required";
-        if (!formData.address?.country?.trim())
+        } else if (!/^\d+$/.test(formData.address.zipCode)) {
+          newErrors.zipCode = "ZIP code must contain only numbers";
+        }
+
+        if (!formData.address?.country?.trim()) {
           newErrors.country = "Country is required";
+        } else if (formData.address.country.length > 100) {
+          newErrors.country = "Country must be less than 100 characters";
+        }
         break;
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -768,6 +879,7 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
     </div>
   );
 };
+
 // Password Requirements Tooltip Component
 const PasswordRequirementsTooltip = ({ password, isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -921,13 +1033,8 @@ const Register = () => {
     }
     
     // Email validation
-    if (!formData.email?.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please provide a valid email";
-    } else if (formData.email.length > 100) {
-      newErrors.email = "Email must be less than 100 characters";
-    }
+    const emailError = validationUtils.validateEmail(formData.email);
+    if (emailError) newErrors.email = emailError;
     
     // Enhanced Password validation with specific error messages
     if (!formData.password?.trim()) {
@@ -1179,6 +1286,5 @@ const Register = () => {
     </div>
   );
 };
-
 
 export default Register;
