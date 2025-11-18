@@ -51,5 +51,188 @@
     "untitledReminder": "Untitled Reminder",
     "today": "Today",
     "tomorrow": "Tomorrow"
+  },
+  "landing": {
+    "nav": {
+      "products": "Products",
+      "features": "Features",
+      "marketplace": "Marketplace",
+      "contact": "Contact",
+      "bookDemo": "Book Demo"
+    },
+    "hero": {
+      "badge": "Tunisia's Premier Event Management Platform",
+      "title": "Transform Your",
+      "titleHighlight": "Event Experience",
+      "description": "The complete three-sided marketplace connecting venue owners, event planners, and service partners. Streamline your events from booking to celebration.",
+      "bookDemo": "Book a Demo",
+      "browseMarketplace": "Browse Marketplace",
+      "stats": {
+        "activeVenues": "Active Venues",
+        "eventsHosted": "Events Hosted",
+        "servicePartners": "Service Partners",
+        "satisfactionRate": "Satisfaction Rate"
+      }
+    },
+    "mobileApp": {
+      "comingSoon": "Coming Soon",
+      "title": "Plan Your Dream Wedding",
+      "titleSub": "On The Go",
+      "description": "Our mobile app is launching soon! Browse venues, book services, and manage every detail of your perfect wedding day—all from your smartphone.",
+      "instantBrowsing": "Instant venue browsing",
+      "realtimeBooking": "Real-time booking"
+    },
+    "products": {
+      "title": "Our Products",
+      "subtitle": "Powerful solutions for every need",
+      "webApp": {
+        "title": "Web App Management System",
+        "description": "Complete event management platform for venue owners and partners. Manage bookings, track finances, coordinate teams, and grow your business.",
+        "features": {
+          "booking": "Booking Management",
+          "reports": "Financial Reports",
+          "collaboration": "Team Collaboration",
+          "database": "Client Database",
+          "invoicing": "Invoice Generation"
+        },
+        "learnMore": "Learn More"
+      },
+      "mobileApp": {
+        "title": "Mobile App for Booking",
+        "description": "Browse venues, plan events, and book services on-the-go. Perfect for event planners and clients organizing their special occasions.",
+        "features": {
+          "discovery": "Venue Discovery",
+          "booking": "Instant Booking",
+          "tools": "Event Planning Tools",
+          "partners": "Service Partners",
+          "updates": "Real-time Updates"
+        },
+        "learnMore": "Learn More"
+      }
+    },
+    "features": {
+      "title": "Everything You Need",
+      "subtitle": "Comprehensive tools for every stakeholder",
+      "venueOwners": {
+        "title": "For Venue Owners",
+        "description": "Maximize your venue's potential with powerful management tools",
+        "features": {
+          "calendar": "Smart booking calendar",
+          "analytics": "Financial reporting & analytics",
+          "team": "Team management system",
+          "invoicing": "Automated invoicing"
+        },
+        "viewApp": "View Web App"
+      },
+      "eventPlanners": {
+        "title": "For Event Planners",
+        "description": "Plan perfect events with seamless coordination",
+        "features": {
+          "browse": "Browse & book venues instantly",
+          "connect": "Connect with service partners",
+          "tracking": "Real-time event tracking",
+          "dashboard": "Comprehensive event dashboard"
+        },
+        "viewApp": "View Mobile App"
+      },
+      "servicePartners": {
+        "title": "For Service Partners",
+        "description": "Grow your business through our marketplace",
+        "features": {
+          "connections": "Direct client connections",
+          "dashboard": "Job management dashboard",
+          "reviews": "Review & rating system",
+          "payments": "Payment processing"
+        },
+        "viewApp": "View Web App"
+      }
+    },
+    "howItWorks": {
+      "title": "How Fiesta Works",
+      "subtitle": "Simple, streamlined, and powerful",
+      "steps": {
+        "createAccount": {
+          "title": "Create Account",
+          "description": "Sign up as a venue owner, event planner, or service partner"
+        },
+        "setupProfile": {
+          "title": "Set Up Profile",
+          "description": "Complete your profile with services, pricing, and availability"
+        },
+        "connectBook": {
+          "title": "Connect & Book",
+          "description": "Browse, connect, and book through our marketplace"
+        },
+        "manageEvents": {
+          "title": "Manage Events",
+          "description": "Track everything from planning to completion"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "Trusted by the Best",
+      "subtitle": "See what our clients say about us"
+    },
+    "pricing": {
+      "title": "Custom Pricing For You",
+      "description": "Every business is unique. We offer flexible pricing plans tailored to your specific needs. Contact our sales team to discuss the perfect solution for you.",
+      "noHiddenFees": "No Hidden Fees",
+      "noHiddenFeesDesc": "Transparent pricing structure",
+      "flexiblePlans": "Flexible Plans",
+      "flexiblePlansDesc": "Scalable to your growth",
+      "bestValue": "Best Value",
+      "bestValueDesc": "Competitive rates guaranteed",
+      "callUs": "Call Us Now",
+      "contactSales": "Contact Sales"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know",
+      "questions": {
+        "marketplace": {
+          "q": "How does the marketplace work?",
+          "a": "Fiesta connects three key groups: venue owners who list their spaces, clients who book venues for events, and service partners (caterers, photographers, DJs, etc.) who provide event services. Our platform facilitates seamless communication, booking, and payment processing for all parties."
+        },
+        "eventTypes": {
+          "q": "What event types are supported?",
+          "a": "Fiesta supports all event types including weddings, birthdays, corporate events, conferences, parties, and more. Our flexible system adapts to any event size or complexity."
+        },
+        "getStarted": {
+          "q": "How do I get started?",
+          "a": "Simply contact our sales team to discuss your needs. We'll create a custom package and get you onboarded quickly with full training and support."
+        },
+        "tryBefore": {
+          "q": "Can I try before committing?",
+          "a": "Yes! We offer personalized demos where you can explore all features. Contact us to schedule your demo session."
+        },
+        "support": {
+          "q": "What support do you provide?",
+          "a": "We provide comprehensive support including onboarding training, technical assistance, and dedicated account management. Our team is committed to your success."
+        }
+      }
+    },
+    "contact": {
+      "title": "Ready to Transform Your Events?",
+      "subtitle": "Join hundreds of venues, planners, and partners already using Fiesta",
+      "callUs": "CALL US",
+      "emailUs": "EMAIL US",
+      "visitUs": "VISIT US",
+      "bookDemo": "Book a Demo",
+      "browseMarketplace": "Browse Marketplace"
+    },
+    "footer": {
+      "description": "Tunisia's premier event management platform connecting venues, planners, and service partners.",
+      "product": "Product",
+      "company": "Company",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "blog": "Blog",
+      "legal": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "copyright": "2025 Fiesta. All rights reserved. Made with",
+      "inTunisia": "in Tunisia"
+    }
   }
 }

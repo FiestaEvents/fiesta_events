@@ -51,5 +51,188 @@
     "untitledReminder": "Rappel sans titre",
     "today": "Aujourd'hui",
     "tomorrow": "Demain"
+  },
+  "landing": {
+    "nav": {
+      "products": "Produits",
+      "features": "Fonctionnalités",
+      "marketplace": "Marché",
+      "contact": "Contact",
+      "bookDemo": "Réserver une démo"
+    },
+    "hero": {
+      "badge": "Plateforme de gestion d'événements de premier plan en Tunisie",
+      "title": "Transformez votre",
+      "titleHighlight": "Expérience d'événement",
+      "description": "Le marché complet à trois faces connectant les propriétaires de lieux, les organisateurs d'événements et les partenaires de services. Rationalisez vos événements de la réservation à la célébration.",
+      "bookDemo": "Réserver une démo",
+      "browseMarketplace": "Parcourir le marché",
+      "stats": {
+        "activeVenues": "Lieux actifs",
+        "eventsHosted": "Événements organisés",
+        "servicePartners": "Partenaires de services",
+        "satisfactionRate": "Taux de satisfaction"
+      }
+    },
+    "mobileApp": {
+      "comingSoon": "Bientôt disponible",
+      "title": "Planifiez votre mariage de rêve",
+      "titleSub": "En déplacement",
+      "description": "Notre application mobile arrive bientôt ! Parcourez les lieux, réservez des services et gérez tous les détails de votre journée de mariage parfaite—tout depuis votre smartphone.",
+      "instantBrowsing": "Navigation instantanée des lieux",
+      "realtimeBooking": "Réservation en temps réel"
+    },
+    "products": {
+      "title": "Nos produits",
+      "subtitle": "Des solutions puissantes pour tous les besoins",
+      "webApp": {
+        "title": "Système de gestion d'application web",
+        "description": "Plateforme complète de gestion d'événements pour les propriétaires de lieux et les partenaires. Gérez les réservations, suivez les finances, coordonnez les équipes et développez votre entreprise.",
+        "features": {
+          "booking": "Gestion des réservations",
+          "reports": "Rapports financiers",
+          "collaboration": "Collaboration d'équipe",
+          "database": "Base de données clients",
+          "invoicing": "Génération de factures"
+        },
+        "learnMore": "En savoir plus"
+      },
+      "mobileApp": {
+        "title": "Application mobile pour la réservation",
+        "description": "Parcourez les lieux, planifiez des événements et réservez des services en déplacement. Parfait pour les organisateurs d'événements et les clients organisant leurs occasions spéciales.",
+        "features": {
+          "discovery": "Découverte de lieux",
+          "booking": "Réservation instantanée",
+          "tools": "Outils de planification d'événements",
+          "partners": "Partenaires de services",
+          "updates": "Mises à jour en temps réel"
+        },
+        "learnMore": "En savoir plus"
+      }
+    },
+    "features": {
+      "title": "Tout ce dont vous avez besoin",
+      "subtitle": "Outils complets pour toutes les parties prenantes",
+      "venueOwners": {
+        "title": "Pour les propriétaires de lieux",
+        "description": "Maximisez le potentiel de votre lieu avec des outils de gestion puissants",
+        "features": {
+          "calendar": "Calendrier de réservation intelligent",
+          "analytics": "Rapports et analyses financiers",
+          "team": "Système de gestion d'équipe",
+          "invoicing": "Facturation automatisée"
+        },
+        "viewApp": "Voir l'application web"
+      },
+      "eventPlanners": {
+        "title": "Pour les organisateurs d'événements",
+        "description": "Planifiez des événements parfaits avec une coordination transparente",
+        "features": {
+          "browse": "Parcourir et réserver des lieux instantanément",
+          "connect": "Se connecter avec les partenaires de services",
+          "tracking": "Suivi d'événements en temps réel",
+          "dashboard": "Tableau de bord d'événements complet"
+        },
+        "viewApp": "Voir l'application mobile"
+      },
+      "servicePartners": {
+        "title": "Pour les partenaires de services",
+        "description": "Développez votre entreprise grâce à notre marché",
+        "features": {
+          "connections": "Connexions directes avec les clients",
+          "dashboard": "Tableau de bord de gestion des emplois",
+          "reviews": "Système d'avis et d'évaluation",
+          "payments": "Traitement des paiements"
+        },
+        "viewApp": "Voir l'application web"
+      }
+    },
+    "howItWorks": {
+      "title": "Comment fonctionne Fiesta",
+      "subtitle": "Simple, rationalisé et puissant",
+      "steps": {
+        "createAccount": {
+          "title": "Créer un compte",
+          "description": "Inscrivez-vous en tant que propriétaire de lieu, organisateur d'événements ou partenaire de services"
+        },
+        "setupProfile": {
+          "title": "Configurer le profil",
+          "description": "Complétez votre profil avec les services, les prix et la disponibilité"
+        },
+        "connectBook": {
+          "title": "Se connecter et réserver",
+          "description": "Parcourez, connectez-vous et réservez via notre marché"
+        },
+        "manageEvents": {
+          "title": "Gérer les événements",
+          "description": "Suivez tout de la planification à la réalisation"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "Approuvé par les meilleurs",
+      "subtitle": "Découvrez ce que nos clients disent de nous"
+    },
+    "pricing": {
+      "title": "Tarification personnalisée pour vous",
+      "description": "Chaque entreprise est unique. Nous proposons des plans tarifaires flexibles adaptés à vos besoins spécifiques. Contactez notre équipe commerciale pour discuter de la solution parfaite pour vous.",
+      "noHiddenFees": "Aucun frais caché",
+      "noHiddenFeesDesc": "Structure tarifaire transparente",
+      "flexiblePlans": "Plans flexibles",
+      "flexiblePlansDesc": "Évolutif selon votre croissance",
+      "bestValue": "Meilleure valeur",
+      "bestValueDesc": "Tarifs compétitifs garantis",
+      "callUs": "Appelez-nous maintenant",
+      "contactSales": "Contacter les ventes"
+    },
+    "faq": {
+      "title": "Questions fréquemment posées",
+      "subtitle": "Tout ce que vous devez savoir",
+      "questions": {
+        "marketplace": {
+          "q": "Comment fonctionne le marché ?",
+          "a": "Fiesta connecte trois groupes clés : les propriétaires de lieux qui listent leurs espaces, les clients qui réservent des lieux pour des événements, et les partenaires de services (traiteurs, photographes, DJ, etc.) qui fournissent des services d'événements. Notre plateforme facilite la communication transparente, la réservation et le traitement des paiements pour toutes les parties."
+        },
+        "eventTypes": {
+          "q": "Quels types d'événements sont pris en charge ?",
+          "a": "Fiesta prend en charge tous les types d'événements, y compris les mariages, les anniversaires, les événements d'entreprise, les conférences, les fêtes, et plus encore. Notre système flexible s'adapte à toute taille ou complexité d'événement."
+        },
+        "getStarted": {
+          "q": "Comment commencer ?",
+          "a": "Contactez simplement notre équipe commerciale pour discuter de vos besoins. Nous créerons un package personnalisé et vous intégrerons rapidement avec une formation et un support complets."
+        },
+        "tryBefore": {
+          "q": "Puis-je essayer avant de m'engager ?",
+          "a": "Oui ! Nous proposons des démos personnalisées où vous pouvez explorer toutes les fonctionnalités. Contactez-nous pour planifier votre session de démo."
+        },
+        "support": {
+          "q": "Quel support fournissez-vous ?",
+          "a": "Nous fournissons un support complet, notamment une formation d'intégration, une assistance technique et une gestion de compte dédiée. Notre équipe est engagée dans votre succès."
+        }
+      }
+    },
+    "contact": {
+      "title": "Prêt à transformer vos événements ?",
+      "subtitle": "Rejoignez des centaines de lieux, organisateurs et partenaires utilisant déjà Fiesta",
+      "callUs": "APPelez-nous",
+      "emailUs": "Écrivez-nous",
+      "visitUs": "Visitez-nous",
+      "bookDemo": "Réserver une démo",
+      "browseMarketplace": "Parcourir le marché"
+    },
+    "footer": {
+      "description": "Plateforme de gestion d'événements de premier plan en Tunisie connectant les lieux, les organisateurs et les partenaires de services.",
+      "product": "Produit",
+      "company": "Entreprise",
+      "aboutUs": "À propos de nous",
+      "careers": "Carrières",
+      "blog": "Blog",
+      "legal": "Légal",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions d'utilisation",
+      "cookies": "Politique des cookies",
+      "copyright": "2025 Fiesta. Tous droits réservés. Fait avec",
+      "inTunisia": "en Tunisie"
+    }
   }
 }

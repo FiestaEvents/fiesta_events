@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../context/LanguageContext";
+import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import {
   Menu,
   X,
@@ -27,6 +30,8 @@ import {
 } from "lucide-react";
 
 const FiestaLanding = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -137,13 +142,12 @@ const FiestaLanding = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo with subtle animation */}
-            <div className="flex items-center space-x-3 group cursor-pointer">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center transform transition-all duration-300 group-hover:rotate-12 group-hover:scale-110 shadow-lg">
-                <Sparkles className="w-7 h-7 text-white" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
-                Fiesta
-              </span>
+            <div className="flex items-center cursor-pointer">
+              <img
+                src="/fiesta logo-01.png"
+                alt="Fiesta Logo"
+                className="w-[100px] object-cover"
+              />
             </div>
 
             {/* Desktop Menu */}
@@ -152,32 +156,33 @@ const FiestaLanding = () => {
                 onClick={() => scrollToSection("products")}
                 className="text-gray-600 hover:text-orange-500 transition-all duration-300 hover:scale-105"
               >
-                Products
+                {t("landing.nav.products")}
               </button>
               <button
                 onClick={() => scrollToSection("features")}
                 className="text-gray-600 hover:text-orange-500 transition-all duration-300 hover:scale-105"
               >
-                Features
+                {t("landing.nav.features")}
               </button>
               <button
                 onClick={() => handleNavigation("/marketplace")}
                 className="text-gray-600 hover:text-orange-500 transition-all duration-300 hover:scale-105 flex items-center gap-2"
               >
                 <Store className="w-4 h-4" />
-                Marketplace
+                {t("landing.nav.marketplace")}
               </button>
               <button
                 onClick={() => scrollToSection("contact")}
                 className="text-gray-600 hover:text-orange-500 transition-all duration-300 hover:scale-105"
               >
-                Contact
+                {t("landing.nav.contact")}
               </button>
+              <LanguageSwitcher />
               <button
                 onClick={() => scrollToSection("contact")}
                 className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform"
               >
-                Book Demo
+                {t("landing.nav.bookDemo")}
               </button>
             </div>
 
@@ -203,32 +208,35 @@ const FiestaLanding = () => {
                 onClick={() => scrollToSection("products")}
                 className="block w-full text-left text-gray-600 hover:text-orange-500 py-2 transition-all duration-300 hover:translate-x-2"
               >
-                Products
+                {t("landing.nav.products")}
               </button>
               <button
                 onClick={() => scrollToSection("features")}
                 className="block w-full text-left text-gray-600 hover:text-orange-500 py-2 transition-all duration-300 hover:translate-x-2"
               >
-                Features
+                {t("landing.nav.features")}
               </button>
               <button
                 onClick={() => handleNavigation("/marketplace")}
                 className="block w-full text-left text-gray-600 hover:text-orange-500 py-2 transition-all duration-300 hover:translate-x-2 flex items-center gap-2"
               >
                 <Store className="w-4 h-4" />
-                Marketplace
+                {t("landing.nav.marketplace")}
               </button>
               <button
                 onClick={() => scrollToSection("contact")}
                 className="block w-full text-left text-gray-600 hover:text-orange-500 py-2 transition-all duration-300 hover:translate-x-2"
               >
-                Contact
+                {t("landing.nav.contact")}
               </button>
+              <div className="flex justify-center py-2">
+                <LanguageSwitcher />
+              </div>
               <button
                 onClick={() => scrollToSection("contact")}
                 className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
-                Book Demo
+                {t("landing.nav.bookDemo")}
               </button>
             </div>
           </div>
@@ -240,23 +248,23 @@ const FiestaLanding = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full mb-8 shadow-lg animate-in fade-in slide-in-from-top duration-700 border border-orange-100">
-              <Sparkles className="w-4 h-4 text-orange-500 mr-2 animate-pulse" />
+              <Sparkles
+                className={`w-4 h-4 text-orange-500 ${isRTL ? "ml-2" : "mr-2"} animate-pulse`}
+              />
               <span className="text-sm font-medium bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                Tunisia's Premier Event Management Platform
+                {t("landing.hero.badge")}
               </span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-in fade-in slide-in-from-bottom duration-700 delay-100">
-              Transform Your
+              {t("landing.hero.title")}
               <span className="block bg-gradient-to-r from-orange-500 via-orange-600 to-pink-500 bg-clip-text text-transparent animate-gradient">
-                Event Experience
+                {t("landing.hero.titleHighlight")}
               </span>
             </h1>
 
             <p className="text-xl text-gray-600 mb-12 leading-relaxed max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-              The complete three-sided marketplace connecting venue owners,
-              event planners, and service partners. Streamline your events from
-              booking to celebration.
+              {t("landing.hero.description")}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom duration-700 delay-300 mb-8">
@@ -264,15 +272,17 @@ const FiestaLanding = () => {
                 onClick={() => scrollToSection("contact")}
                 className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-4 rounded-lg hover:shadow-2xl transition-all duration-300 flex items-center text-lg font-medium transform hover:scale-105"
               >
-                Book a Demo
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                {t("landing.hero.bookDemo")}
+                <ArrowRight
+                  className={`w-5 h-5 ${isRTL ? "mr-2" : "ml-2"} group-hover:translate-x-1 transition-transform duration-300`}
+                />
               </button>
               <button
                 onClick={() => handleNavigation("/marketplace")}
                 className="group border-2 border-orange-500 text-orange-500 px-8 py-4 rounded-lg hover:bg-orange-500 hover:text-white transition-all duration-300 text-lg font-medium transform hover:scale-105 hover:shadow-lg bg-white/50 backdrop-blur-sm flex items-center gap-2"
               >
                 <Store className="w-5 h-5" />
-                Browse Marketplace
+                {t("landing.hero.browseMarketplace")}
               </button>
             </div>
 
@@ -282,10 +292,26 @@ const FiestaLanding = () => {
               className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 max-w-3xl mx-auto"
             >
               {[
-                { end: 500, suffix: "+", label: "Active Venues" },
-                { end: 10, suffix: "K+", label: "Events Hosted" },
-                { end: 250, suffix: "+", label: "Service Partners" },
-                { end: 98, suffix: "%", label: "Satisfaction Rate" },
+                {
+                  end: 500,
+                  suffix: "+",
+                  label: t("landing.hero.stats.activeVenues"),
+                },
+                {
+                  end: 10,
+                  suffix: "K+",
+                  label: t("landing.hero.stats.eventsHosted"),
+                },
+                {
+                  end: 250,
+                  suffix: "+",
+                  label: t("landing.hero.stats.servicePartners"),
+                },
+                {
+                  end: 98,
+                  suffix: "%",
+                  label: t("landing.hero.stats.satisfactionRate"),
+                },
               ].map((stat, index) => (
                 <div
                   key={index}
@@ -327,29 +353,31 @@ const FiestaLanding = () => {
             <div className="flex-1 text-center md:text-left text-white">
               {/* More Visible Coming Soon Badge */}
               <div className="inline-flex items-center px-8 py-4 bg-white rounded-full mb-8 border-4 border-orange-300 animate-in fade-in slide-in-from-left duration-700 shadow-2xl">
-                <Smartphone className="w-6 h-6 text-orange-500 mr-3 animate-bounce" />
+                <Smartphone
+                  className={`w-6 h-6 text-orange-500 ${isRTL ? "ml-3" : "mr-3"} animate-bounce`}
+                />
                 <span className="text-lg font-black text-orange-600 uppercase tracking-wider">
-                  Coming Soon
+                  {t("landing.mobileApp.comingSoon")}
                 </span>
               </div>
 
               <h2 className="text-4xl md:text-5xl font-bold mb-6 animate-in fade-in slide-in-from-left duration-700 delay-100">
-                Plan Your Dream Wedding
-                <span className="block mt-2">On The Go</span>
+                {t("landing.mobileApp.title")}
+                <span className="block mt-2">
+                  {t("landing.mobileApp.titleSub")}
+                </span>
               </h2>
               <p className="text-xl mb-8 leading-relaxed opacity-90 animate-in fade-in slide-in-from-left duration-700 delay-200">
-                Our mobile app is launching soon! Browse venues, book services,
-                and manage every detail of your perfect wedding day—all from
-                your smartphone.
+                {t("landing.mobileApp.description")}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start animate-in fade-in slide-in-from-left duration-700 delay-300">
                 <div className="group flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-lg border border-white/30 hover:bg-white/30 transition-all duration-300 transform hover:scale-105">
                   <Check className="w-5 h-5 text-white" />
-                  <span>Instant venue browsing</span>
+                  <span>{t("landing.mobileApp.instantBrowsing")}</span>
                 </div>
                 <div className="group flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-lg border border-white/30 hover:bg-white/30 transition-all duration-300 transform hover:scale-105">
                   <Check className="w-5 h-5 text-white" />
-                  <span>Real-time booking</span>
+                  <span>{t("landing.mobileApp.realtimeBooking")}</span>
                 </div>
               </div>
             </div>
@@ -375,10 +403,10 @@ const FiestaLanding = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Our Products
+              {t("landing.products.title")}
             </h2>
             <p className="text-xl text-gray-600">
-              Powerful solutions for every need
+              {t("landing.products.subtitle")}
             </p>
           </div>
 
@@ -391,21 +419,19 @@ const FiestaLanding = () => {
                   <Monitor className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-3xl font-bold mb-4 group-hover:text-orange-600 transition-colors duration-300">
-                  Web App Management System
+                  {t("landing.products.webApp.title")}
                 </h3>
                 <p className="text-gray-600 mb-6 text-lg leading-relaxed">
-                  Complete event management platform for venue owners and
-                  partners. Manage bookings, track finances, coordinate teams,
-                  and grow your business.
+                  {t("landing.products.webApp.description")}
                 </p>
 
                 <div className="space-y-3 mb-8">
                   {[
-                    "Booking Management",
-                    "Financial Reports",
-                    "Team Collaboration",
-                    "Client Database",
-                    "Invoice Generation",
+                    t("landing.products.webApp.features.booking"),
+                    t("landing.products.webApp.features.reports"),
+                    t("landing.products.webApp.features.collaboration"),
+                    t("landing.products.webApp.features.database"),
+                    t("landing.products.webApp.features.invoicing"),
                   ].map((item, idx) => (
                     <div
                       key={idx}
@@ -421,7 +447,7 @@ const FiestaLanding = () => {
                   onClick={() => handleNavigation("/products/web-app")}
                   className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-xl font-bold text-lg uppercase hover:shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-105"
                 >
-                  Learn More
+                  {t("landing.products.webApp.learnMore")}
                   <ExternalLink className="w-5 h-5" />
                 </button>
               </div>
@@ -435,21 +461,19 @@ const FiestaLanding = () => {
                   <Smartphone className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-3xl font-bold mb-4 group-hover:text-orange-600 transition-colors duration-300">
-                  Mobile App for Booking
+                  {t("landing.products.mobileApp.title")}
                 </h3>
                 <p className="text-gray-600 mb-6 text-lg leading-relaxed">
-                  Browse venues, plan events, and book services on-the-go.
-                  Perfect for event planners and clients organizing their
-                  special occasions.
+                  {t("landing.products.mobileApp.description")}
                 </p>
 
                 <div className="space-y-3 mb-8">
                   {[
-                    "Venue Discovery",
-                    "Instant Booking",
-                    "Event Planning Tools",
-                    "Service Partners",
-                    "Real-time Updates",
+                    t("landing.products.mobileApp.features.discovery"),
+                    t("landing.products.mobileApp.features.booking"),
+                    t("landing.products.mobileApp.features.tools"),
+                    t("landing.products.mobileApp.features.partners"),
+                    t("landing.products.mobileApp.features.updates"),
                   ].map((item, idx) => (
                     <div
                       key={idx}
@@ -465,7 +489,7 @@ const FiestaLanding = () => {
                   onClick={() => handleNavigation("/products/mobile-app")}
                   className="w-full bg-gradient-to-r from-pink-500 to-orange-500 text-white py-4 rounded-xl font-bold text-lg uppercase hover:shadow-2xl hover:shadow-pink-500/50 transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-105"
                 >
-                  Learn More
+                  {t("landing.products.mobileApp.learnMore")}
                   <ExternalLink className="w-5 h-5" />
                 </button>
               </div>
@@ -479,10 +503,10 @@ const FiestaLanding = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Everything You Need
+              {t("landing.features.title")}
             </h2>
             <p className="text-xl text-gray-600">
-              Comprehensive tools for every stakeholder
+              {t("landing.features.subtitle")}
             </p>
           </div>
 
@@ -495,23 +519,25 @@ const FiestaLanding = () => {
                   <MapPin className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 group-hover:text-orange-600 transition-colors duration-300">
-                  For Venue Owners
+                  {t("landing.features.venueOwners.title")}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Maximize your venue's potential with powerful management tools
+                  {t("landing.features.venueOwners.description")}
                 </p>
                 <ul className="space-y-3 mb-8">
                   {[
-                    "Smart booking calendar",
-                    "Financial reporting & analytics",
-                    "Team management system",
-                    "Automated invoicing",
+                    t("landing.features.venueOwners.features.calendar"),
+                    t("landing.features.venueOwners.features.analytics"),
+                    t("landing.features.venueOwners.features.team"),
+                    t("landing.features.venueOwners.features.invoicing"),
                   ].map((item, idx) => (
                     <li
                       key={idx}
                       className="flex items-start transform transition-all duration-300 hover:translate-x-2"
                     >
-                      <Check className="w-5 h-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                      <Check
+                        className={`w-5 h-5 text-orange-500 ${isRTL ? "ml-3" : "mr-3"} mt-0.5 flex-shrink-0`}
+                      />
                       <span className="text-gray-700">{item}</span>
                     </li>
                   ))}
@@ -520,7 +546,7 @@ const FiestaLanding = () => {
                   onClick={() => handleNavigation("/products/web-app")}
                   className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 flex items-center justify-center gap-2"
                 >
-                  View Web App
+                  {t("landing.features.venueOwners.viewApp")}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -537,23 +563,25 @@ const FiestaLanding = () => {
                     <Calendar className="w-7 h-7 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold mb-4">
-                    For Event Planners
+                    {t("landing.features.eventPlanners.title")}
                   </h3>
                   <p className="mb-6 opacity-90">
-                    Plan perfect events with seamless coordination
+                    {t("landing.features.eventPlanners.description")}
                   </p>
                   <ul className="space-y-3 mb-8">
                     {[
-                      "Browse & book venues instantly",
-                      "Connect with service partners",
-                      "Real-time event tracking",
-                      "Comprehensive event dashboard",
+                      t("landing.features.eventPlanners.features.browse"),
+                      t("landing.features.eventPlanners.features.connect"),
+                      t("landing.features.eventPlanners.features.tracking"),
+                      t("landing.features.eventPlanners.features.dashboard"),
                     ].map((item, idx) => (
                       <li
                         key={idx}
                         className="flex items-start transform transition-all duration-300 hover:translate-x-2"
                       >
-                        <Check className="w-5 h-5 text-white mr-3 mt-0.5 flex-shrink-0" />
+                        <Check
+                          className={`w-5 h-5 text-white ${isRTL ? "ml-3" : "mr-3"} mt-0.5 flex-shrink-0`}
+                        />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -562,7 +590,7 @@ const FiestaLanding = () => {
                     onClick={() => handleNavigation("/products/mobile-app")}
                     className="w-full bg-white/20 backdrop-blur-sm text-white py-3 rounded-xl font-semibold border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center justify-center gap-2"
                   >
-                    View Mobile App
+                    {t("landing.features.eventPlanners.viewApp")}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -577,23 +605,25 @@ const FiestaLanding = () => {
                   <Users className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 group-hover:text-orange-600 transition-colors duration-300">
-                  For Service Partners
+                  {t("landing.features.servicePartners.title")}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Grow your business through our marketplace
+                  {t("landing.features.servicePartners.description")}
                 </p>
                 <ul className="space-y-3 mb-8">
                   {[
-                    "Direct client connections",
-                    "Job management dashboard",
-                    "Review & rating system",
-                    "Payment processing",
+                    t("landing.features.servicePartners.features.connections"),
+                    t("landing.features.servicePartners.features.dashboard"),
+                    t("landing.features.servicePartners.features.reviews"),
+                    t("landing.features.servicePartners.features.payments"),
                   ].map((item, idx) => (
                     <li
                       key={idx}
                       className="flex items-start transform transition-all duration-300 hover:translate-x-2"
                     >
-                      <Check className="w-5 h-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                      <Check
+                        className={`w-5 h-5 text-orange-500 ${isRTL ? "ml-3" : "mr-3"} mt-0.5 flex-shrink-0`}
+                      />
                       <span className="text-gray-700">{item}</span>
                     </li>
                   ))}
@@ -602,7 +632,7 @@ const FiestaLanding = () => {
                   onClick={() => handleNavigation("/products/web-app")}
                   className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 flex items-center justify-center gap-2"
                 >
-                  View Web App
+                  {t("landing.features.servicePartners.viewApp")}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -624,10 +654,10 @@ const FiestaLanding = () => {
         <div className="relative max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              How Fiesta Works
+              {t("landing.howItWorks.title")}
             </h2>
             <p className="text-xl text-gray-600">
-              Simple, streamlined, and powerful
+              {t("landing.howItWorks.subtitle")}
             </p>
           </div>
 
@@ -635,26 +665,26 @@ const FiestaLanding = () => {
             {[
               {
                 num: 1,
-                title: "Create Account",
-                desc: "Sign up as a venue owner, event planner, or service partner",
+                title: t("landing.howItWorks.steps.createAccount.title"),
+                desc: t("landing.howItWorks.steps.createAccount.description"),
                 icon: Users,
               },
               {
                 num: 2,
-                title: "Set Up Profile",
-                desc: "Complete your profile with services, pricing, and availability",
+                title: t("landing.howItWorks.steps.setupProfile.title"),
+                desc: t("landing.howItWorks.steps.setupProfile.description"),
                 icon: Award,
               },
               {
                 num: 3,
-                title: "Connect & Book",
-                desc: "Browse, connect, and book through our marketplace",
+                title: t("landing.howItWorks.steps.connectBook.title"),
+                desc: t("landing.howItWorks.steps.connectBook.description"),
                 icon: Zap,
               },
               {
                 num: 4,
-                title: "Manage Events",
-                desc: "Track everything from planning to completion",
+                title: t("landing.howItWorks.steps.manageEvents.title"),
+                desc: t("landing.howItWorks.steps.manageEvents.description"),
                 icon: Calendar,
               },
             ].map((step, idx) => {
@@ -689,10 +719,10 @@ const FiestaLanding = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Trusted by the Best
+              {t("landing.testimonials.title")}
             </h2>
             <p className="text-xl text-gray-600">
-              See what our clients say about us
+              {t("landing.testimonials.subtitle")}
             </p>
           </div>
 
@@ -775,32 +805,38 @@ const FiestaLanding = () => {
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Custom Pricing For You
+              {t("landing.pricing.title")}
             </h2>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
-              Every business is unique. We offer flexible pricing plans tailored
-              to your specific needs. Contact our sales team to discuss the
-              perfect solution for you.
+              {t("landing.pricing.description")}
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-10">
               <div className="p-6 bg-gradient-to-br from-orange-50 to-white rounded-2xl border border-orange-100">
                 <Shield className="w-8 h-8 text-orange-500 mx-auto mb-3" />
-                <h3 className="font-bold mb-2">No Hidden Fees</h3>
+                <h3 className="font-bold mb-2">
+                  {t("landing.pricing.noHiddenFees")}
+                </h3>
                 <p className="text-sm text-gray-600">
-                  Transparent pricing structure
+                  {t("landing.pricing.noHiddenFeesDesc")}
                 </p>
               </div>
               <div className="p-6 bg-gradient-to-br from-orange-50 to-white rounded-2xl border border-orange-100">
                 <Zap className="w-8 h-8 text-orange-500 mx-auto mb-3" />
-                <h3 className="font-bold mb-2">Flexible Plans</h3>
-                <p className="text-sm text-gray-600">Scalable to your growth</p>
+                <h3 className="font-bold mb-2">
+                  {t("landing.pricing.flexiblePlans")}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {t("landing.pricing.flexiblePlansDesc")}
+                </p>
               </div>
               <div className="p-6 bg-gradient-to-br from-orange-50 to-white rounded-2xl border border-orange-100">
                 <Award className="w-8 h-8 text-orange-500 mx-auto mb-3" />
-                <h3 className="font-bold mb-2">Best Value</h3>
+                <h3 className="font-bold mb-2">
+                  {t("landing.pricing.bestValue")}
+                </h3>
                 <p className="text-sm text-gray-600">
-                  Competitive rates guaranteed
+                  {t("landing.pricing.bestValueDesc")}
                 </p>
               </div>
             </div>
@@ -810,14 +846,14 @@ const FiestaLanding = () => {
                 href="tel:+21612345678"
                 className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-4 rounded-xl hover:shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 flex items-center justify-center text-lg font-semibold"
               >
-                <Phone className="w-5 h-5 mr-2" />
-                Call Us Now
+                <Phone className={`w-5 h-5 ${isRTL ? "ml-2" : "mr-2"}`} />
+                {t("landing.pricing.callUs")}
               </a>
               <button
                 onClick={() => scrollToSection("contact")}
                 className="group border-2 border-orange-500 text-orange-500 px-8 py-4 rounded-xl hover:bg-orange-500 hover:text-white transition-all duration-300 text-lg font-semibold"
               >
-                Contact Sales
+                {t("landing.pricing.contactSales")}
               </button>
             </div>
           </div>
@@ -829,32 +865,32 @@ const FiestaLanding = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Frequently Asked Questions
+              {t("landing.faq.title")}
             </h2>
-            <p className="text-xl text-gray-600">Everything you need to know</p>
+            <p className="text-xl text-gray-600">{t("landing.faq.subtitle")}</p>
           </div>
 
           <div className="space-y-6">
             {[
               {
-                q: "How does the marketplace work?",
-                a: "Fiesta connects three key groups: venue owners who list their spaces, clients who book venues for events, and service partners (caterers, photographers, DJs, etc.) who provide event services. Our platform facilitates seamless communication, booking, and payment processing for all parties.",
+                q: t("landing.faq.questions.marketplace.q"),
+                a: t("landing.faq.questions.marketplace.a"),
               },
               {
-                q: "What event types are supported?",
-                a: "Fiesta supports all event types including weddings, birthdays, corporate events, conferences, parties, and more. Our flexible system adapts to any event size or complexity.",
+                q: t("landing.faq.questions.eventTypes.q"),
+                a: t("landing.faq.questions.eventTypes.a"),
               },
               {
-                q: "How do I get started?",
-                a: "Simply contact our sales team to discuss your needs. We'll create a custom package and get you onboarded quickly with full training and support.",
+                q: t("landing.faq.questions.getStarted.q"),
+                a: t("landing.faq.questions.getStarted.a"),
               },
               {
-                q: "Can I try before committing?",
-                a: "Yes! We offer personalized demos where you can explore all features. Contact us to schedule your demo session.",
+                q: t("landing.faq.questions.tryBefore.q"),
+                a: t("landing.faq.questions.tryBefore.a"),
               },
               {
-                q: "What support do you provide?",
-                a: "We provide comprehensive support including onboarding training, technical assistance, and dedicated account management. Our team is committed to your success.",
+                q: t("landing.faq.questions.support.q"),
+                a: t("landing.faq.questions.support.a"),
               },
             ].map((faq, idx) => (
               <div
@@ -862,10 +898,16 @@ const FiestaLanding = () => {
                 className="group bg-white/80 backdrop-blur-sm p-6 rounded-xl border-2 border-gray-100 hover:border-orange-200 hover:shadow-lg transition-all duration-500 transform hover:-translate-y-1"
               >
                 <h3 className="text-xl font-bold mb-3 group-hover:text-orange-600 transition-colors duration-300 flex items-start">
-                  <Heart className="w-5 h-5 mr-3 mt-1 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
+                  <Heart
+                    className={`w-5 h-5 ${isRTL ? "ml-3" : "mr-3"} mt-1 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}
+                  />
                   {faq.q}
                 </h3>
-                <p className="text-gray-600 leading-relaxed ml-8">{faq.a}</p>
+                <p
+                  className={`text-gray-600 leading-relaxed ${isRTL ? "mr-8" : "ml-8"}`}
+                >
+                  {faq.a}
+                </p>
               </div>
             ))}
           </div>
@@ -882,29 +924,29 @@ const FiestaLanding = () => {
 
         <div className="relative max-w-4xl mx-auto text-center text-white px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Ready to Transform Your Events?
+            {t("landing.contact.title")}
           </h2>
           <p className="text-xl mb-12 opacity-90">
-            Join hundreds of venues, planners, and partners already using Fiesta
+            {t("landing.contact.subtitle")}
           </p>
 
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             {[
               {
                 icon: Phone,
-                title: "CALL US",
-                value: "+216 12 345 678",
-                href: "tel:+21612345678",
+                title: t("landing.contact.callUs"),
+                value: "+216 29 130 770",
+                href: "tel:+21629130770",
               },
               {
                 icon: Mail,
-                title: "EMAIL US",
-                value: "contact@fiesta.tn",
-                href: "mailto:contact@fiesta.tn",
+                title: t("landing.contact.emailUs"),
+                value: "contact@fiesta.events",
+                href: "mailto:contact@fiesta.events",
               },
               {
                 icon: MapPin,
-                title: "VISIT US",
+                title: t("landing.contact.visitUs"),
                 value: "Tunis, Tunisia",
                 href: "#",
               },
@@ -929,16 +971,18 @@ const FiestaLanding = () => {
               href="tel:+21612345678"
               className="group bg-white text-orange-500 px-8 py-4 rounded-lg hover:shadow-2xl transition-all duration-300 text-lg font-medium flex items-center justify-center transform hover:scale-105"
             >
-              <Phone className="w-5 h-5 mr-2" />
-              Book a Demo
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+              <Phone className={`w-5 h-5 ${isRTL ? "ml-2" : "mr-2"}`} />
+              {t("landing.contact.bookDemo")}
+              <ArrowRight
+                className={`w-5 h-5 ${isRTL ? "mr-2" : "ml-2"} group-hover:translate-x-1 transition-transform duration-300`}
+              />
             </a>
             <button
               onClick={() => handleNavigation("/marketplace")}
               className="group border-2 border-white text-white px-8 py-4 rounded-lg hover:bg-white hover:text-orange-500 transition-all duration-300 text-lg font-medium transform hover:scale-105 flex items-center justify-center gap-2"
             >
               <Store className="w-5 h-5" />
-              Browse Marketplace
+              {t("landing.contact.browseMarketplace")}
             </button>
           </div>
         </div>
@@ -948,28 +992,26 @@ const FiestaLanding = () => {
       <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center space-x-3 mb-4 group cursor-pointer">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xl font-bold">Fiesta</span>
-              </div>
+            <div className="flex flex-col items-start gap-4">
+              <img
+                src="/fiesta logo-01.png"
+                alt="Fiesta Logo"
+                className="w-[100px] object-cover"
+              />
               <p className="text-gray-400 text-sm">
-                Tunisia's premier event management platform connecting venues,
-                planners, and service partners.
+                {t("landing.footer.description")}
               </p>
             </div>
 
             <div>
-              <h4 className="font-bold mb-4">Product</h4>
+              <h4 className="font-bold mb-4">{t("landing.footer.product")}</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <button
                     onClick={() => scrollToSection("products")}
                     className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block"
                   >
-                    Products
+                    {t("landing.nav.products")}
                   </button>
                 </li>
                 <li>
@@ -977,7 +1019,7 @@ const FiestaLanding = () => {
                     onClick={() => scrollToSection("features")}
                     className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block"
                   >
-                    Features
+                    {t("landing.nav.features")}
                   </button>
                 </li>
                 <li>
@@ -985,28 +1027,28 @@ const FiestaLanding = () => {
                     onClick={() => handleNavigation("/marketplace")}
                     className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block"
                   >
-                    Marketplace
+                    {t("landing.nav.marketplace")}
                   </button>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold mb-4">Company</h4>
+              <h4 className="font-bold mb-4">{t("landing.footer.company")}</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                    About Us
+                    {t("landing.footer.aboutUs")}
                   </button>
                 </li>
                 <li>
                   <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                    Careers
+                    {t("landing.footer.careers")}
                   </button>
                 </li>
                 <li>
                   <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                    Blog
+                    {t("landing.footer.blog")}
                   </button>
                 </li>
                 <li>
@@ -1014,28 +1056,28 @@ const FiestaLanding = () => {
                     onClick={() => scrollToSection("contact")}
                     className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block"
                   >
-                    Contact
+                    {t("landing.nav.contact")}
                   </button>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold mb-4">Legal</h4>
+              <h4 className="font-bold mb-4">{t("landing.footer.legal")}</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                    Privacy Policy
+                    {t("landing.footer.privacy")}
                   </button>
                 </li>
                 <li>
                   <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                    Terms of Service
+                    {t("landing.footer.terms")}
                   </button>
                 </li>
                 <li>
                   <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                    Cookie Policy
+                    {t("landing.footer.cookies")}
                   </button>
                 </li>
               </ul>
@@ -1044,9 +1086,9 @@ const FiestaLanding = () => {
 
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
             <p>
-              &copy; 2025 Fiesta. All rights reserved. Made with{" "}
+              {t("landing.footer.copyright")}{" "}
               <Heart className="w-4 h-4 inline text-orange-500 animate-pulse" />{" "}
-              in Tunisia
+              {t("landing.footer.inTunisia")}
             </p>
           </div>
         </div>
