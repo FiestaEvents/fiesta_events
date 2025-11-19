@@ -630,35 +630,37 @@ const TasksList = () => {
               `Showing ${tasks.length} of ${totalCount} tasks`}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowArchived(!showArchived)}
-            className="flex items-center gap-2"
-          >
-            {showArchived ? (
-              <>
-                <Archive className="h-4 w-4" />
-                Active Tasks
-              </>
-            ) : (
-              <>
-                <Archive className="h-4 w-4" />
-                Archived
-              </>
-            )}
-          </Button>
-          {!showArchived && (
-            <Button
-              variant="primary"
-              onClick={handleAddTask}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Create Task
-            </Button>
-          )}
-        </div>
+<div className="flex gap-2">
+  {!showEmptyState && (
+    <Button
+      variant="outline"
+      onClick={() => setShowArchived(!showArchived)}
+      className="flex items-center gap-2"
+    >
+      {showArchived ? (
+        <>
+          <Archive className="h-4 w-4" />
+          Active Tasks
+        </>
+      ) : (
+        <>
+          <Archive className="h-4 w-4" />
+          Archived
+        </>
+      )}
+    </Button>
+  )}
+  {!showArchived && !showEmptyState && (
+    <Button
+      variant="primary"
+      onClick={handleAddTask}
+      className="flex items-center gap-2"
+    >
+      <Plus className="h-4 w-4" />
+      Create Task
+    </Button>
+  )}
+</div>
       </div>
 
       {/* Stats Cards - Only show for active tasks */}

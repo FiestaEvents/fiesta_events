@@ -31,6 +31,11 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const dropdownRef = useRef();
   const notificationRef = useRef();
 
+  // Calculate positioning based on RTL and collapse state
+  const topBarOffset = isCollapsed 
+    ? (isRTL ? "lg:right-20" : "lg:left-20")
+    : (isRTL ? "lg:right-64" : "lg:left-64");
+
   // Fetch upcoming reminders as notifications
   useEffect(() => {
     let isMounted = true;
@@ -166,9 +171,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 h-16 bg-white z-20 transition-all duration-300 ${
-        isCollapsed ? "lg:left-16" : "lg:left-64"
-      } dark:bg-gray-900 dark:border-gray-700`}
+      className={`fixed top-0 ${isRTL ? 'left-0 right-0' : 'left-0 right-0'} h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${topBarOffset} dark:bg-gray-900 dark:border-gray-700`}
     >
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
         {/* Left Section */}
@@ -191,11 +194,11 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
           {/* Mobile Logo */}
           <Link to="/" className="flex items-center gap-2 lg:hidden">
-            <div className="relative h-22 w-15">
+            <div className="relative h-12 w-auto">
               <img
                 src="/fiesta logo-01.png"
                 alt="Fiesta Logo"
-                className="h-20 w-30 "
+                className="h-full w-auto object-contain"
                 onError={(e) => {
                   e.target.style.display = "none";
                 }}
@@ -207,7 +210,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
         {/* Center Section - Search */}
         <div className="hidden md:flex flex-1 max-w-2xl mx-8">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400`} />
             <input
               type="text"
               placeholder={
@@ -216,7 +219,8 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              className={`w-full ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
+              dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
         </div>
@@ -252,13 +256,13 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
             >
               <BellIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
               {notifications.length > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} w-2 h-2 bg-red-500 rounded-full`}></span>
               )}
             </button>
 
             {/* Notifications Dropdown */}
             {notificationDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-30">
+              <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -328,9 +332,9 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-3 pl-3 pr-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className={`flex items-center gap-3 ${isRTL ? 'pr-3 pl-2' : 'pl-3 pr-2'} py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors`}
             >
-              <div className="hidden sm:block text-right">
+              <div className={`hidden sm:block ${isRTL ? 'text-left' : 'text-right'}`}>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {user?.name || t("common.user")}
                 </p>
@@ -348,7 +352,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
             {/* User Dropdown */}
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-30">
+              <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {user?.name || t("common.user")}
@@ -365,7 +369,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                   )}
                 </div>
                 <button
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
                   onClick={() => {
                     navigate("/settings");
                     setDropdownOpen(false);
@@ -375,7 +379,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                   {t("common.profile")}
                 </button>
                 <button
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
                   onClick={() => {
                     navigate("/settings");
                     setDropdownOpen(false);
@@ -386,7 +390,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                 </button>
                 <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
                   <button
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                    className={`w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
                     onClick={() => {
                       logout();
                       setDropdownOpen(false);

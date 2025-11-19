@@ -818,54 +818,57 @@ const EventList = () => {
         />
       )}
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Event Calendar
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            View and manage your venue events{" "}
-            {hasInitialLoad &&
-              totalItems > 0 &&
-              `- Showing ${events.length} of ${totalItems} events`}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            <button
-              onClick={() => handleViewModeChange("list")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "list"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              <Table className="w-4 h-4" />
-              List
-            </button>
-            <button
-              onClick={() => handleViewModeChange("calendar")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "calendar"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              <Grid className="w-4 h-4" />
-              Calendar
-            </button>
-          </div>
-          <Button
-            variant="primary"
-            icon={Plus}
-            onClick={() => handleCreateEvent()}
-          >
-            <Plus className="h-4 w-4" />
-            Create Event
-          </Button>
-        </div>
-      </div>
+{/* Header */}
+<div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+  <div className="flex flex-col gap-4">
+    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+      Event Calendar
+    </h1>
+    <p className="text-gray-600 dark:text-gray-400 mt-1">
+      View and manage your venue events{" "}
+      {hasInitialLoad &&
+        totalItems > 0 &&
+        `- Showing ${events.length} of ${totalItems} events`}
+    </p>
+  </div>
+  <div className="flex items-center gap-3">
+    {/* View Mode Toggle */}
+    <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+      <button
+        onClick={() => handleViewModeChange("list")}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+          viewMode === "list"
+            ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+        }`}
+      >
+        <Table className="w-4 h-4" />
+        List
+      </button>
+      <button
+        onClick={() => handleViewModeChange("calendar")}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+          viewMode === "calendar"
+            ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+        }`}
+      >
+        <Grid className="w-4 h-4" />
+        Calendar
+      </button>
+    </div>
+    {!showEmptyState && (
+      <Button
+        variant="primary"
+        icon={Plus}
+        onClick={() => handleCreateEvent()}
+      >
+        <Plus className="h-4 w-4" />
+        Create Event
+      </Button>
+    )}
+  </div>
+</div>
       {/* Error Message */}
       {error && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">

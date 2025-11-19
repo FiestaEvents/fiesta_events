@@ -23,7 +23,7 @@ i18n
       },
     },
     fallbackLng: 'en',
-    debug: process.env.NODE_ENV === 'development',
+    debug: true, // ← Set this to true temporarily
     interpolation: {
       escapeValue: false,
     },

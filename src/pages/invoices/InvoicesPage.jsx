@@ -929,44 +929,46 @@ const handleDownloadInvoice = async (invoice) => {
         </div>
       )}
 
-      {/* Invoice Type Toggle */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-          <button
-            onClick={() => setInvoiceType("client")}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              invoiceType === "client"
-                ? "bg-orange-500 text-white shadow-sm"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>Client Invoices</span>
-            {invoiceType === "client" && stats && (
-              <Badge variant="white" className="ml-2">
-                {stats.totalInvoices}
-              </Badge>
-            )}
-          </button>
-
-          <button
-            onClick={() => setInvoiceType("partner")}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              invoiceType === "partner"
-                ? "bg-orange-600 text-white shadow-sm"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }`}
-          >
-            <Briefcase className="w-4 h-4" />
-            <span>Partner Bills</span>
-            {invoiceType === "partner" && stats && (
-              <Badge variant="white" className="ml-2">
-                {stats.totalInvoices}
-              </Badge>
-            )}
-          </button>
-        </div>
-      </div>
+{/* Header with Invoice Type Toggle on the right */}
+<div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+  <div className="flex flex-col gap-2">
+  </div> 
+  {/* Invoice Type Toggle - Right Side */}
+  <div className="flex items-center gap-2 flex-shrink-0">
+    <button
+      onClick={() => setInvoiceType("client")}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+        invoiceType === "client"
+          ? "bg-orange-500 text-white shadow-sm"
+          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+      }`}
+    >
+      <Users className="w-4 h-4" />
+      <span>Client Invoices</span>
+      {invoiceType === "client" && stats && (
+        <Badge variant="white" className="ml-1">
+          {stats.totalInvoices}
+        </Badge>
+      )}
+    </button>
+    <button
+      onClick={() => setInvoiceType("partner")}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+        invoiceType === "partner"
+          ? "bg-orange-500 text-white shadow-sm"
+          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+      }`}
+    >
+      <Briefcase className="w-4 h-4" />
+      <span>Partner Bills</span>
+      {invoiceType === "partner" && stats && (
+        <Badge variant="white" className="ml-1">
+          {stats.totalInvoices}
+        </Badge>
+      )}
+    </button>
+  </div>
+</div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

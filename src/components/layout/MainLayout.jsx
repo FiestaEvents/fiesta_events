@@ -2,10 +2,12 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import { useLanguage } from "../../context/LanguageContext";
 
 const MainLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isRTL } = useLanguage();
 
   // Load collapse state from localStorage on mount
   useEffect(() => {
@@ -31,6 +33,11 @@ const MainLayout = () => {
     });
   }, []);
 
+  // Calculate padding based on RTL and collapse state
+  const sidebarPadding = isCollapsed 
+    ? (isRTL ? "lg:pr-20" : "lg:pl-20")
+    : (isRTL ? "lg:pr-64" : "lg:pl-64");
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar
@@ -40,9 +47,7 @@ const MainLayout = () => {
         onToggleCollapse={handleToggleCollapse}
       />
       <div
-        className={`transition-all duration-300 ${
-          isCollapsed ? "lg:pl-20" : "lg:pl-64"
-        }`}
+        className={`transition-all duration-300 ${sidebarPadding}`}
       >
         <TopBar
           onMenuClick={handleMenuClick}
