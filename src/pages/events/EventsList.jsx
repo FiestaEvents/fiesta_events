@@ -22,7 +22,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { eventService } from "../../api/index";
-import EventForm from "./EventForm";
+import EventForm from "./EventForm/index";
 import EventDetailModal from "./EventDetailModal";
 import Button from "../../components/common/Button";
 import TitleCard from "../../components/common/TitleCard";
@@ -811,6 +811,7 @@ const EventList = () => {
         <EventForm
           isOpen={showEventModal}
           onClose={handleFormClose}
+          eventId={selectedEvent?._id}
           event={selectedEvent}
           onSuccess={handleFormSuccess}
           initialDate={prefilledDate}

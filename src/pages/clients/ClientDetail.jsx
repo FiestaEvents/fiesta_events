@@ -1,6 +1,6 @@
-// ClientDetail.jsx - UPDATED with cleaner prop-based approach
+// ClientDetail.jsx - UPDATED (only pass eventId)
 import { useCallback, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "../../hooks/useToast";
 
 // Components
@@ -20,11 +20,9 @@ import { useClientDetail } from "../../hooks/useClientDetail";
 
 const ClientDetail = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { id } = useParams();
   const { showSuccess, showError, showInfo, promise } = useToast();
 
-  // Use custom hook for client data
   const { clientData, events, eventsStats, loading, error, refreshData } =
     useClientDetail(id);
 
@@ -36,7 +34,7 @@ const ClientDetail = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  // NEW: EventForm modal state
+  // EventForm modal state - SIMPLIFIED: only store eventId
   const [isEventFormOpen, setIsEventFormOpen] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
 
@@ -71,28 +69,17 @@ const ClientDetail = () => {
 
   const getStatusColor = useCallback((status) => {
     const colors = {
-      active:
-        "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
-      inactive:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-      pending:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      confirmed:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      completed:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      cancelled:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+      active: "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
+      inactive: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+      pending: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      confirmed: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      completed: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      cancelled: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
       paid: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      partial:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      overdue:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+      partial: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      overdue: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
     };
-    return (
-      colors[status] ||
-      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-    );
+    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100";
   }, []);
 
   // Event handlers
@@ -101,9 +88,13 @@ const ClientDetail = () => {
     setIsEventModalOpen(true);
   }, []);
 
-  // MODIFIED: Open EventForm modal for editing
-  const handleEditEvent = useCallback((eventId) => {
+  // UPDATED: Only store eventId, not the full event object
+  const handleEditEvent = useCallback((event) => {
+    console.log("Edit event called with:", event);
     setIsEventModalOpen(false);
+    
+    // Extract just the ID
+    const eventId = typeof event === 'object' ? event._id : event;
     setEditingEventId(eventId);
     setIsEventFormOpen(true);
   }, []);
@@ -152,35 +143,30 @@ const ClientDetail = () => {
       navigate("/clients");
     } catch (err) {
       console.error("Delete client error:", err);
-      // Error is handled by the promise toast
     } finally {
       setDeleteLoading(false);
     }
   }, [id, navigate, promise, showError]);
 
-  // MODIFIED: Open EventForm modal instead of navigating (simplified with props)
   const handleCreateEvent = useCallback(() => {
     if (!id) {
       showError("Cannot create event: Client ID not found");
       return;
     }
 
-    setEditingEventId(null); // Clear any editing state
+    setEditingEventId(null);
     setIsEventFormOpen(true);
   }, [id, showError]);
 
-  // NEW: Handle EventForm modal close
+  // EventForm modal handlers
   const handleEventFormClose = useCallback(() => {
     setIsEventFormOpen(false);
     setEditingEventId(null);
   }, []);
 
-  // NEW: Handle EventForm success
   const handleEventFormSuccess = useCallback(async () => {
     setIsEventFormOpen(false);
     setEditingEventId(null);
-
-    // Refresh client data to show new/updated event
     await refreshData();
     showSuccess(
       editingEventId
@@ -389,21 +375,19 @@ const ClientDetail = () => {
         refreshData={refreshData}
       />
 
-      {/* NEW: EventForm Modal - Passes props directly */}
+      {/* UPDATED: Only pass eventId and prefillClient */}
       {isEventFormOpen && (
         <EventForm
           isOpen={isEventFormOpen}
           onClose={handleEventFormClose}
           onSuccess={handleEventFormSuccess}
-          eventId={editingEventId}
-          prefillClientProp={{
+          eventId={editingEventId}  // ✅ Only eventId
+          prefillClient={!editingEventId ? {  // ✅ Only for new events
             _id: id,
             name: clientData?.name,
             email: clientData?.email,
             phone: clientData?.phone,
-          }}
-          returnUrlProp={`/clients/${id}`}
-          fromClientProp={true}
+          } : null}
         />
       )}
     </div>

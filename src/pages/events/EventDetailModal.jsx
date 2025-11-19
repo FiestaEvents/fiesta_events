@@ -112,13 +112,13 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                 >
                   {event.title}
                 </h3>
-<button
-  onClick={onClose}
-  className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
-  title="Close"
->
-  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-</button>
+                <button
+                  onClick={onClose}
+                  className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                  title="Close"
+                >
+                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
               </div>
               <div className="mt-4 space-y-4">
                 <div className="flex justify-between items-center">
@@ -176,7 +176,7 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                 <Button
                   variant="outline"
                   icon={Edit}
-                  onClick={() => onEdit(event._id)}
+                  onClick={() => onEdit(event)}
                 >
                   Edit Event
                 </Button>

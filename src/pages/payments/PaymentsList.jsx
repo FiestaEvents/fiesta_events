@@ -8,6 +8,7 @@ import Select from "../../components/common/Select";
 import Pagination from "../../components/common/Pagination";
 import { paymentService } from "../../api/index";
 import { DollarSign } from "../../components/icons/IconComponents";
+import Card from "../../components/common/Card.tsx";
 import {
   Plus,
   Search,
@@ -368,22 +369,203 @@ const PaymentsList = () => {
     return type === "income" ? "green" : "red";
   };
 
-  // Calculate statistics
+  // ✅ ENHANCED: Calculate separate completed and pending amounts
   const stats = {
-    totalIncome: payments
-      .filter((p) => p.type === "income")
+    // Completed amounts (actual money received/paid)
+    completedIncome: payments
+      .filter((p) => p.type === "income" && ["completed", "paid"].includes((p.status || "").toLowerCase()))
+      .reduce((sum, p) => sum + (p.netAmount || p.amount || 0), 0),
+    
+    completedExpenses: payments
+      .filter((p) => p.type === "expense" && ["completed", "paid"].includes((p.status || "").toLowerCase()))
+      .reduce((sum, p) => sum + (p.netAmount || p.amount || 0), 0),
+    
+    // Pending amounts (money expected but not yet received/paid)
+    pendingIncome: payments
+      .filter((p) => p.type === "income" && (p.status || "").toLowerCase() === "pending")
       .reduce((sum, p) => sum + (p.amount || 0), 0),
-    totalExpenses: payments
-      .filter((p) => p.type === "expense")
+    
+    pendingExpenses: payments
+      .filter((p) => p.type === "expense" && (p.status || "").toLowerCase() === "pending")
       .reduce((sum, p) => sum + (p.amount || 0), 0),
+    
+    // Counts
     completedPayments: payments.filter((p) =>
       ["completed", "paid"].includes((p.status || "").toLowerCase())
     ).length,
+    
     pendingPayments: payments.filter(
       (p) => (p.status || "").toLowerCase() === "pending"
     ).length,
+    
+    failedPayments: payments.filter(
+      (p) => (p.status || "").toLowerCase() === "failed"
+    ).length,
   };
-  stats.netAmount = stats.totalIncome - stats.totalExpenses;
+
+  // Calculate net amounts
+  stats.netCompleted = stats.completedIncome - stats.completedExpenses;
+  stats.netPending = stats.pendingIncome - stats.pendingExpenses;
+  stats.netProjected = stats.netCompleted + stats.netPending;
+
+  // ✅ ENHANCED: New Stats Cards JSX
+  const StatsCardsSection = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Card 1: Total Income (Completed + Pending breakdown) */}
+      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm font-medium text-green-800 dark:text-green-300">
+            Income
+          </div>
+          <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div>
+            <div className="text-xs text-green-700 dark:text-green-400 mb-0.5">
+              Completed
+            </div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {formatCurrency(stats.completedIncome)}
+            </div>
+          </div>
+          {stats.pendingIncome > 0 && (
+            <div className="pt-2 border-t border-green-200 dark:border-green-800">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-green-700 dark:text-green-400">Pending</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">
+                  {formatCurrency(stats.pendingIncome)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Card 2: Total Expenses (Completed + Pending breakdown) */}
+      <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm font-medium text-red-800 dark:text-red-300">
+            Expenses
+          </div>
+          <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg">
+            <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div>
+            <div className="text-xs text-red-700 dark:text-red-400 mb-0.5">
+              Completed
+            </div>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+              {formatCurrency(stats.completedExpenses)}
+            </div>
+          </div>
+          {stats.pendingExpenses > 0 && (
+            <div className="pt-2 border-t border-red-200 dark:border-red-800">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-red-700 dark:text-red-400">Pending</span>
+                <span className="font-semibold text-red-600 dark:text-red-400">
+                  {formatCurrency(stats.pendingExpenses)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Card 3: Net Amount (Realized + Projected) */}
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
+            Net Amount
+          </div>
+          <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+            <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div>
+            <div className="text-xs text-blue-700 dark:text-blue-400 mb-0.5">
+              Realized
+            </div>
+            <div
+              className={`text-2xl font-bold ${
+                stats.netCompleted >= 0
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-red-600 dark:text-red-400"
+              }`}
+            >
+              {formatCurrency(stats.netCompleted)}
+            </div>
+          </div>
+          {(stats.pendingIncome > 0 || stats.pendingExpenses > 0) && (
+            <div className="pt-2 border-t border-blue-200 dark:border-blue-800">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-blue-700 dark:text-blue-400">
+                  Projected
+                </span>
+                <span
+                  className={`font-semibold ${
+                    stats.netProjected >= 0
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {formatCurrency(stats.netProjected)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Card 4: Payment Status Summary */}
+      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-3">
+          Payment Status
+        </div>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Completed
+              </span>
+            </div>
+            <span className="text-lg font-bold text-gray-900 dark:text-white">
+              {stats.completedPayments}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Pending
+              </span>
+            </div>
+            <span className="text-lg font-bold text-gray-900 dark:text-white">
+              {stats.pendingPayments}
+            </span>
+          </div>
+          {stats.failedPayments > 0 && (
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Failed
+                </span>
+              </div>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
+                {stats.failedPayments}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   const hasActiveFilters =
     search.trim() !== "" ||
@@ -599,84 +781,8 @@ const PaymentsList = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium text-green-800 dark:text-green-300">
-                Total Income
-              </div>
-              <div className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(stats.totalIncome)}
-              </div>
-            </div>
-            <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium text-red-800 dark:text-red-300">
-                Total Expenses
-              </div>
-              <div className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">
-                {formatCurrency(stats.totalExpenses)}
-              </div>
-            </div>
-            <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg">
-              <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                Net Amount
-              </div>
-              <div
-                className={`mt-1 text-2xl font-bold ${
-                  stats.netAmount >= 0
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {formatCurrency(stats.netAmount)}
-              </div>
-            </div>
-            <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg"></div>
-          </div>
-        </div>
-
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">
-            Payment Status
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Completed
-              </span>
-              <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                {stats.completedPayments}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Pending
-              </span>
-              <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-                {stats.pendingPayments}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ✅ ENHANCED: Stats Cards */}
+      <StatsCardsSection />
 
       {/* Error Message */}
       {error && (

@@ -1,4 +1,4 @@
-// PartnerDetail.jsx
+// PartnerDetail.jsx - UPDATED (only pass eventId)
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "../../hooks/useToast";
@@ -6,6 +6,7 @@ import { useToast } from "../../hooks/useToast";
 // Components
 import Modal, { ConfirmModal } from "../../components/common/Modal";
 import EventDetailModal from "../events/EventDetailModal";
+import EventForm from "../events/EventForm";
 import PartnerForm from "./PartnerForm";
 import PartnerHeader from "./components/PartnerHeader";
 import PartnerInfo from "./components/PartnerInfo";
@@ -22,7 +23,6 @@ const PartnerDetail = () => {
   const { id } = useParams();
   const { showSuccess, showError, showInfo, promise } = useToast();
 
-  // Use custom hook for partner data
   const { partnerData, events, eventsStats, loading, error, refreshData } =
     usePartnerDetail(id);
 
@@ -33,6 +33,10 @@ const PartnerDetail = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+
+  // EventForm modal state - SIMPLIFIED: only store eventId
+  const [isEventFormOpen, setIsEventFormOpen] = useState(false);
+  const [editingEventId, setEditingEventId] = useState(null);
 
   // Utility functions
   const formatDate = useCallback((date) => {
@@ -59,71 +63,41 @@ const PartnerDetail = () => {
 
   const getStatusColor = useCallback((status) => {
     const colors = {
-      active:
-        "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
-      inactive:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-      pending:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
+      active: "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
+      inactive: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+      pending: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
     };
-    return (
-      colors[status] ||
-      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-    );
+    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100";
   }, []);
 
   const getCategoryColor = useCallback((category) => {
     const colors = {
-      catering:
-        "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
-      decoration:
-        "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900 dark:border-pink-700",
-      photography:
-        "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:border-purple-700",
-      music:
-        "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900 dark:border-indigo-700",
-      security:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700",
-      cleaning:
-        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
-      audio_visual:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
-      floral:
-        "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900 dark:border-pink-700",
-      entertainment:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
-      vendor:
-        "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
-      supplier:
-        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
-      sponsor:
-        "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:border-purple-700",
-      contractor:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
+      catering: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
+      decoration: "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900 dark:border-pink-700",
+      photography: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:border-purple-700",
+      music: "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900 dark:border-indigo-700",
+      security: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700",
+      cleaning: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
+      audio_visual: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
+      floral: "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900 dark:border-pink-700",
+      entertainment: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
+      vendor: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
+      supplier: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
+      sponsor: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:border-purple-700",
+      contractor: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
     };
-    return (
-      colors[category] ||
-      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700"
-    );
+    return colors[category] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700";
   }, []);
 
   const getEventStatusColor = useCallback((status) => {
     const colors = {
-      pending:
-        "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:border-yellow-700",
-      confirmed:
-        "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
-      "in-progress":
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
-      completed:
-        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
-      cancelled:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700",
+      pending: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:border-yellow-700",
+      confirmed: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
+      "in-progress": "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
+      completed: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
+      cancelled: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700",
     };
-    return (
-      colors[status] ||
-      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700"
-    );
+    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700";
   }, []);
 
   // Event handlers
@@ -132,23 +106,16 @@ const PartnerDetail = () => {
     setIsEventModalOpen(true);
   }, []);
 
-  const handleEditEvent = useCallback(
-    (eventId) => {
-      setIsEventModalOpen(false);
-      navigate(`/events/${eventId}`, {
-        state: {
-          returnUrl: `/partners/${id}`,
-          prefillPartner: {
-            _id: id,
-            name: partnerData?.name,
-            category: partnerData?.category,
-          },
-          fromPartner: true,
-        },
-      });
-    },
-    [navigate, id, partnerData]
-  );
+  // UPDATED: Only store eventId, not the full event object
+  const handleEditEvent = useCallback((event) => {
+    console.log("Edit event called with:", event);
+    setIsEventModalOpen(false);
+    
+    // Extract just the ID
+    const eventId = typeof event === 'object' ? event._id : event;
+    setEditingEventId(eventId);
+    setIsEventFormOpen(true);
+  }, []);
 
   const handleNavigateToEvent = useCallback(
     (eventId, e) => {
@@ -197,11 +164,27 @@ const PartnerDetail = () => {
       navigate("/partners");
     } catch (err) {
       console.error("Delete partner error:", err);
-      // Error is handled by the promise toast
     } finally {
       setDeleteLoading(false);
     }
   }, [id, navigate, promise, showError]);
+
+  // EventForm modal handlers
+  const handleEventFormClose = useCallback(() => {
+    setIsEventFormOpen(false);
+    setEditingEventId(null);
+  }, []);
+
+  const handleEventFormSuccess = useCallback(async () => {
+    setIsEventFormOpen(false);
+    setEditingEventId(null);
+    await refreshData();
+    showSuccess(
+      editingEventId
+        ? "Event updated successfully!"
+        : "Event created successfully!"
+    );
+  }, [editingEventId, refreshData, showSuccess]);
 
   const handleRetry = useCallback(() => {
     refreshData();
@@ -389,6 +372,16 @@ const PartnerDetail = () => {
         onEdit={handleEditEvent}
         refreshData={refreshData}
       />
+
+      {/* UPDATED: Only pass eventId */}
+      {isEventFormOpen && (
+        <EventForm
+          isOpen={isEventFormOpen}
+          onClose={handleEventFormClose}
+          onSuccess={handleEventFormSuccess}
+          eventId={editingEventId}  // ✅ Only eventId, let EventForm fetch the rest
+        />
+      )}
     </div>
   );
 };
