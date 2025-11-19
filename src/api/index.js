@@ -1,8 +1,7 @@
-
 //fiesta_events/src/api/index.js
 /**
  * ============================================
- * FIESTA VENUE MANAGEMENT - CONSOLIDATED API SERVICES
+ * Fiesta Events - CONSOLIDATED API SERVICES
  * ============================================
  * *
  */
@@ -409,7 +408,10 @@ export const eventService = {
    */
   updatePartner: async (id, partnerId, partnerData) => {
     try {
-      const response = await api.put(`/events/${id}/partners/${partnerId}`, partnerData);
+      const response = await api.put(
+        `/events/${id}/partners/${partnerId}`,
+        partnerData
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -501,7 +503,7 @@ export const eventService = {
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // ============================================
@@ -643,8 +645,8 @@ export const clientService = {
    */
   search: async (query, params = {}) => {
     try {
-      const response = await api.get("/clients", { 
-        params: { ...params, search: query } 
+      const response = await api.get("/clients", {
+        params: { ...params, search: query },
       });
       return handleResponse(response);
     } catch (error) {
@@ -716,15 +718,15 @@ export const clientService = {
    */
   export: async (params = {}) => {
     try {
-      const response = await api.get("/clients/export", { 
+      const response = await api.get("/clients/export", {
         params,
-        responseType: 'blob'
+        responseType: "blob",
       });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // ============================================
@@ -2143,8 +2145,8 @@ export const reminderService = {
    */
   getByType: async (type, params = {}) => {
     try {
-      const response = await api.get("/reminders", { 
-        params: { ...params, type } 
+      const response = await api.get("/reminders", {
+        params: { ...params, type },
       });
       return handleResponse(response);
     } catch (error) {
@@ -2164,7 +2166,7 @@ export const reminderService = {
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // ============================================
@@ -3096,49 +3098,49 @@ export const invoiceService = {
    * @param {string} id - Invoice ID
    * @returns {Promise<Blob>}
    */
-download: async (id) => {
-  try {
-    const response = await api.get(`/invoices/${id}/download`, {
-      responseType: 'blob',
-      timeout: 30000, // 30 second timeout
-    });
-    
-    // Check if response is a blob
-    if (response.data instanceof Blob) {
-      return response.data;
-    }
-    throw new Error('Invalid response format');
-  } catch (error) {
-    console.error('Download API error:', error);
-    
-    // Handle blob errors - read the blob to get error message
-    if (error.response?.data instanceof Blob) {
-      try {
-        const errorText = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsText(error.response.data);
-        });
-        
-        const errorData = JSON.parse(errorText);
-        throw new Error(errorData.message || 'PDF generation failed');
-      } catch (parseError) {
-        throw new Error('Failed to generate PDF');
+  download: async (id) => {
+    try {
+      const response = await api.get(`/invoices/${id}/download`, {
+        responseType: "blob",
+        timeout: 30000, // 30 second timeout
+      });
+
+      // Check if response is a blob
+      if (response.data instanceof Blob) {
+        return response.data;
       }
+      throw new Error("Invalid response format");
+    } catch (error) {
+      console.error("Download API error:", error);
+
+      // Handle blob errors - read the blob to get error message
+      if (error.response?.data instanceof Blob) {
+        try {
+          const errorText = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsText(error.response.data);
+          });
+
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.message || "PDF generation failed");
+        } catch (parseError) {
+          throw new Error("Failed to generate PDF");
+        }
+      }
+
+      // Handle other errors
+      if (error.response?.status === 404) {
+        throw new Error("Invoice not found");
+      } else if (error.response?.status === 500) {
+        throw new Error("Server error generating PDF");
+      } else if (error.code === "ECONNABORTED") {
+        throw new Error("Request timeout - PDF generation taking too long");
+      }
+
+      throw new Error(error.message || "Failed to download invoice");
     }
-    
-    // Handle other errors
-    if (error.response?.status === 404) {
-      throw new Error('Invoice not found');
-    } else if (error.response?.status === 500) {
-      throw new Error('Server error generating PDF');
-    } else if (error.code === 'ECONNABORTED') {
-      throw new Error('Request timeout - PDF generation taking too long');
-    }
-    
-    throw new Error(error.message || 'Failed to download invoice');
-  }
-},
+  },
 
   /**
    * Mark invoice as paid
@@ -3336,7 +3338,7 @@ download: async (id) => {
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 // ============================================
 // USER SERVICE
