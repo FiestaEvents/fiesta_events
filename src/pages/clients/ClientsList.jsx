@@ -97,7 +97,7 @@ const ClientsList = () => {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Failed to load clients. Please try again.";
+        t("clients.errors.loadingDefault");
       setError(errorMessage);
       showError(errorMessage);
       setClients([]);
@@ -105,7 +105,7 @@ const ClientsList = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, status, page, limit, showError]);
+  }, [search, status, page, limit, showError, t]);
 
   // Show confirmation modal
   const showDeleteConfirmation = useCallback(
@@ -134,37 +134,31 @@ const ClientsList = () => {
   const handleDeleteConfirm = useCallback(
     async (clientId, clientName = "Client") => {
       if (!clientId) {
-        showError("Invalid client ID");
+        showError(t("clients.errors.invalidId"));
         return;
       }
 
       try {
-        // Use the promise toast for loading state
         await promise(clientService.delete(clientId), {
-          loading: `Deleting ${clientName}...`,
-          success: `${clientName} deleted successfully`,
-          error: `Failed to delete ${clientName}`,
-          _,
+          loading: t("clients.toast.deleting", { name: clientName }),
+          success: t("clients.toast.deleteSuccess", { name: clientName }),
+          error: t("clients.toast.deleteError", { name: clientName }),
         });
 
-        // Refresh the clients list
         fetchClients();
 
-        // Close detail modal if the deleted client is currently selected
         if (selectedClient?._id === clientId) {
           setSelectedClient(null);
           setIsDetailModalOpen(false);
         }
 
-        // Close confirmation modal
         closeConfirmationModal();
       } catch (err) {
-        // Error is already handled by the promise toast
         console.error("Delete client error:", err);
         closeConfirmationModal();
       }
     },
-    [fetchClients, selectedClient, promise, showError, closeConfirmationModal]
+    [fetchClients, selectedClient, promise, showError, closeConfirmationModal, t]
   );
 
   // Updated client deletion handler
@@ -181,7 +175,7 @@ const ClientsList = () => {
     setIsDetailModalOpen(true);
   }, []);
 
-  // Handle view client (alternative navigation)
+  // Handle view client
   const handleViewClient = useCallback(
     (client) => {
       navigate(`/clients/${client._id}`, { state: { client } });
@@ -209,10 +203,10 @@ const ClientsList = () => {
     setIsFormOpen(false);
     showSuccess(
       selectedClient
-        ? "Client updated successfully"
-        : "Client created successfully"
+        ? t("clients.toast.updateSuccess")
+        : t("clients.toast.createSuccess")
     );
-  }, [fetchClients, selectedClient, showSuccess]);
+  }, [fetchClients, selectedClient, showSuccess, t]);
 
   // Handle form close
   const handleFormClose = useCallback(() => {
@@ -231,14 +225,14 @@ const ClientsList = () => {
     setSearch("");
     setStatus("all");
     setPage(1);
-    showInfo("Filters cleared");
-  }, [showInfo]);
+    showInfo(t("clients.toast.filtersCleared"));
+  }, [showInfo, t]);
 
   // Retry loading
   const handleRetry = useCallback(() => {
     fetchClients();
-    showInfo("Retrying to load clients...");
-  }, [fetchClients, showInfo]);
+    showInfo(t("clients.loading.retrying"));
+  }, [fetchClients, showInfo, t]);
 
   useEffect(() => {
     fetchClients();
@@ -258,80 +252,75 @@ const ClientsList = () => {
     hasActiveFilters &&
     hasInitialLoad;
 
-  // Table columns configuration for the new Table component
+  // Table columns configuration
   const columns = [
     {
-      header: "Client Name",
+      header: t("clients.table.columns.name"),
       accessor: "name",
       sortable: true,
       width: "25%",
       render: (row) => (
         <div className="font-medium text-gray-900 dark:text-white">
-          {row.name || "Unnamed"}
+          {row.name || t("clients.table.defaultValues.unnamed")}
         </div>
       ),
     },
     {
-      header: "Email Address",
+      header: t("clients.table.columns.email"),
       accessor: "email",
       sortable: true,
       width: "25%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400 flex flex-col">
-          <span>{row.email || "No email"}</span>
+          <span>{row.email || t("clients.table.defaultValues.noEmail")}</span>
         </div>
       ),
     },
     {
-      header: "Phone Number",
+      header: t("clients.table.columns.phone"),
       accessor: "phone",
       sortable: true,
       width: "15%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.phone || "-"}
+          {row.phone || t("clients.table.defaultValues.noPhone")}
         </div>
       ),
     },
     {
-      header: "Status",
+      header: t("clients.table.columns.status"),
       accessor: "status",
       sortable: true,
       width: "15%",
-      render: (row) => {
-        const statusLabels = {
-          active: t("Active"),
-          inactive: t("Inactive"),
-        };
-
-        return (
-          <Badge
-            color={
-              row.status === "active"
-                ? "green"
-                : row.status === "inactive"
-                  ? "red"
-                  : "yellow"
-            }
-          >
-            {statusLabels[row.status] || "N/A"}
-          </Badge>
-        );
-      },
+      render: (row) => (
+        <Badge
+          color={
+            row.status === "active"
+              ? "green"
+              : row.status === "inactive"
+                ? "red"
+                : "yellow"
+          }
+        >
+          {t(`clients.status.${row.status}`) || "N/A"}
+        </Badge>
+      ),
     },
     {
-      header: "Date Created",
+      header: t("clients.table.columns.createdAt"),
       accessor: "createdAt",
       sortable: true,
       width: "15%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-"}
+          {row.createdAt 
+            ? new Date(row.createdAt).toLocaleDateString() 
+            : t("clients.table.defaultValues.noDate")}
         </div>
       ),
     },
     {
-      header: "Actions",
+      header: t("clients.table.columns.actions"),
       accessor: "actions",
       width: "10%",
       className: "text-center",
@@ -343,7 +332,7 @@ const ClientsList = () => {
               handleViewClient(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-            title="View Client"
+            title={t("clients.table.actions.view")}
           >
             <Eye className="h-4 w-4" />
           </button>
@@ -353,7 +342,7 @@ const ClientsList = () => {
               handleEditClient(row);
             }}
             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-            title="Edit Client"
+            title={t("clients.table.actions.edit")}
           >
             <Edit className="h-4 w-4" />
           </button>
@@ -363,7 +352,7 @@ const ClientsList = () => {
               handleDeleteClient(row._id, row.name || "Client");
             }}
             className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            title="Delete Client"
+            title={t("clients.table.actions.delete")}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -378,13 +367,13 @@ const ClientsList = () => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Clients
+            {t("clients.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage your client records and relationships.{" "}
+            {t("clients.description")}{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
-              `Showing ${clients.length} of ${totalCount} clients`}
+              t("clients.showingCount", { count: clients.length, total: totalCount })}
           </p>
         </div>
         {totalCount > 0 && (
@@ -394,7 +383,7 @@ const ClientsList = () => {
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Add Client
+            {t("clients.buttons.addClient")}
           </Button>
         )}
       </div>
@@ -405,14 +394,14 @@ const ClientsList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Clients
+                {t("clients.errors.loadingTitle")}
               </p>
               <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 {error}
               </p>
             </div>
             <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
+              {t("clients.buttons.retry")}
             </Button>
           </div>
         </div>
@@ -426,7 +415,7 @@ const ClientsList = () => {
               <Input
                 className="dark:bg-[#1f2937] dark:text-white"
                 icon={Search}
-                placeholder="Search clients by name, email, or phone..."
+                placeholder={t("clients.search.placeholder")}
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -444,9 +433,9 @@ const ClientsList = () => {
                   setStatus(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Status" },
-                  { value: "active", label: "Active" },
-                  { value: "inactive", label: "Inactive" },
+                  { value: "all", label: t("clients.filters.allStatus") },
+                  { value: "active", label: t("clients.status.active") },
+                  { value: "inactive", label: t("clients.status.inactive") },
                 ]}
               />
             </div>
@@ -457,19 +446,23 @@ const ClientsList = () => {
                 className="flex items-center gap-2"
               >
                 <X className="h-4 w-4" />
-                Clear
+                {t("clients.buttons.clear")}
               </Button>
             )}
           </div>
 
           {hasActiveFilters && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Active filters:</span>
+              <span>{t("clients.filters.activeFilters")}</span>
               {search.trim() && (
-                <Badge color="blue">Search: "{search.trim()}"</Badge>
+                <Badge color="blue">
+                  {t("clients.filters.searchLabel", { search: search.trim() })}
+                </Badge>
               )}
               {status !== "all" && (
-                <Badge color="purple">Status: {status}</Badge>
+                <Badge color="purple">
+                  {t("clients.filters.statusLabel", { status: t(`clients.status.${status}`) })}
+                </Badge>
               )}
             </div>
           )}
@@ -481,7 +474,7 @@ const ClientsList = () => {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
           <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading clients...
+            {t("clients.loading.initial")}
           </p>
         </div>
       )}
@@ -494,9 +487,7 @@ const ClientsList = () => {
               columns={columns}
               data={clients}
               loading={loading}
-              // Enable row clicking for detail modal
               onRowClick={handleRowClick}
-              // Enable pagination
               pagination={true}
               currentPage={page}
               totalPages={totalPages}
@@ -508,7 +499,6 @@ const ClientsList = () => {
                 setPage(1);
               }}
               pageSizeOptions={[10, 25, 50, 100]}
-              // Add hover and striped styling like EventList
               striped={true}
               hoverable={true}
             />
@@ -538,30 +528,30 @@ const ClientsList = () => {
         <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No clients found
+            {t("clients.search.noResults")}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No clients match your current search or filter criteria.
+            {t("clients.search.noResultsDescription")}
           </p>
           <Button onClick={handleClearFilters} variant="outline">
-            Clear All Filters
+            {t("clients.buttons.clearAllFilters")}
           </Button>
         </div>
       )}
 
-      {/* Empty State - No clients at all */}
+      {/* Empty State */}
       {showEmptyState && (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <UsersIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No clients yet
+            {t("clients.empty.title")}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Get started by adding your first client.
+            {t("clients.empty.description")}
           </p>
           <Button onClick={handleAddClient} variant="primary">
             <Plus className="h-4 w-4 mr-2" />
-            Add First Client
+            {t("clients.buttons.addFirstClient")}
           </Button>
         </div>
       )}
@@ -579,7 +569,7 @@ const ClientsList = () => {
       <Modal
         isOpen={isFormOpen}
         onClose={handleFormClose}
-        title={selectedClient ? "Edit Client" : "Add New Client"}
+        title={selectedClient ? t("clients.modal.editTitle") : t("clients.modal.addTitle")}
         size="lg"
       >
         <ClientForm
@@ -593,7 +583,7 @@ const ClientsList = () => {
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={closeConfirmationModal}
-        title="Confirm Deletion"
+        title={t("clients.modal.deleteTitle")}
         size="md"
       >
         <div className="p-6">
@@ -605,13 +595,10 @@ const ClientsList = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Client
+                {t("clients.buttons.deleteClient")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete{" "}
-                <strong>"{confirmationModal.clientName}"</strong>? This action
-                cannot be undone and all associated data will be permanently
-                removed.
+                {t("clients.modal.deleteMessage", { name: confirmationModal.clientName })}
               </p>
               <div className="flex justify-end gap-3">
                 <Button
@@ -619,7 +606,7 @@ const ClientsList = () => {
                   onClick={closeConfirmationModal}
                   className="px-4 py-2"
                 >
-                  Cancel
+                  {t("clients.buttons.cancel")}
                 </Button>
                 <Button
                   variant="danger"
@@ -627,7 +614,7 @@ const ClientsList = () => {
                   className="px-4 py-2 flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Client
+                  {t("clients.buttons.deleteClient")}
                 </Button>
               </div>
             </div>

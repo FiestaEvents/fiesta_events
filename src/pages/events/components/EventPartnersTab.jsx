@@ -3,8 +3,11 @@ import React from "react";
 import { Users, ExternalLink, Briefcase, DollarSign, CheckCircle } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import Badge from "../../../components/common/Badge";
+import { useTranslation } from "react-i18next";
 
 const EventPartnersTab = ({ partners, loading, onRefresh, onNavigateToPartner }) => {
+  const { t } = useTranslation();
+
   const getPartnerStatusColor = (status) => {
     const colors = {
       confirmed: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-100",
@@ -14,11 +17,22 @@ const EventPartnersTab = ({ partners, loading, onRefresh, onNavigateToPartner })
     return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:text-gray-100";
   };
 
+  const getStatusLabel = (status) => {
+    const labels = {
+      confirmed: t("eventPartnersTab.status.confirmed"),
+      pending: t("eventPartnersTab.status.pending"),
+      cancelled: t("eventPartnersTab.status.cancelled"),
+    };
+    return labels[status] || status;
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading partners...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">
+          {t("eventPartnersTab.loading")}
+        </p>
       </div>
     );
   }
@@ -27,9 +41,11 @@ const EventPartnersTab = ({ partners, loading, onRefresh, onNavigateToPartner })
     return (
       <div className="text-center py-12">
         <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-        <p className="text-gray-600 dark:text-gray-400">No partners assigned to this event</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          {t("eventPartnersTab.emptyState.title")}
+        </p>
         <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-          Edit the event to add service partners
+          {t("eventPartnersTab.emptyState.description")}
         </p>
       </div>
     );
@@ -45,10 +61,10 @@ const EventPartnersTab = ({ partners, loading, onRefresh, onNavigateToPartner })
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Service Partners ({partners.length})
+            {t("eventPartnersTab.title", { count: partners.length })}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Total Cost: {formatCurrency(totalPartnersCost)}
+            {t("eventPartnersTab.totalCost", { amount: formatCurrency(totalPartnersCost) })}
           </p>
         </div>
       </div>
@@ -63,15 +79,15 @@ const EventPartnersTab = ({ partners, loading, onRefresh, onNavigateToPartner })
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                    {(partner.partnerName || partner.partner?.name || "P").charAt(0).toUpperCase()}
+                    {(partner.partnerName || partner.partner?.name || t("eventPartnersTab.partner.unknown")).charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {partner.partnerName || partner.partner?.name || "Unknown Partner"}
+                      {partner.partnerName || partner.partner?.name || t("eventPartnersTab.partner.unknown")}
                     </h4>
                     {partner.status && (
                       <Badge className={`text-xs ${getPartnerStatusColor(partner.status)}`}>
-                        {partner.status}
+                        {getStatusLabel(partner.status)}
                       </Badge>
                     )}
                   </div>
@@ -103,7 +119,7 @@ const EventPartnersTab = ({ partners, loading, onRefresh, onNavigateToPartner })
                 <button
                   onClick={() => onNavigateToPartner(partner.partner._id)}
                   className="ml-2 p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition dark:text-orange-400 dark:hover:bg-orange-900/20"
-                  title="View Partner Details"
+                  title={t("eventPartnersTab.partner.viewDetails")}
                 >
                   <ExternalLink className="w-5 h-5" />
                 </button>

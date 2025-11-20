@@ -1,6 +1,6 @@
-// components/clients/ClientHeader.jsx
 import React from "react";
 import { Building2, Edit, Trash2, ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const getInitials = (name = "") =>
   name
@@ -20,6 +20,8 @@ const ClientHeader = ({
   getStatusColor,
   getStatusLabel,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
       {/* Action Buttons */}
@@ -30,21 +32,21 @@ const ClientHeader = ({
             className="flex items-center border border-gray-300 p-1 rounded-lg pr-2 gap-2 text-sm text-gray-600 hover:text-gray-900 transition dark:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Clients
+            {t("clientDetail.buttons.backToClients")}
           </button>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onEdit}
             className="p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition dark:text-gray-400 dark:hover:bg-blue-900 dark:hover:text-white"
-            title="Edit Client"
+            title={t("clientDetail.actions.edit")}
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={onDelete}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition dark:text-red-400 dark:hover:bg-red-900"
-            title="Delete Client"
+            title={t("clientDetail.actions.delete")}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -57,7 +59,7 @@ const ClientHeader = ({
           {getInitials(client.name) || "?"}
         </div>
         <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white">
-          {client.name || "Unnamed Client"}
+          {client.name || t("clients.table.defaultValues.unnamed")}
         </h1>
 
         {client.company && (

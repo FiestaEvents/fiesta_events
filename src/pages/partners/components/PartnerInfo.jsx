@@ -10,8 +10,11 @@ import {
   Tag,
   Star
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const PartnerInfo = ({ partner, formatDate, getCategoryColor }) => {
+  const { t } = useTranslation();
+
   const DetailItem = ({ label, value, icon: Icon }) => (
     <div className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
       <Icon className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
@@ -49,47 +52,67 @@ const PartnerInfo = ({ partner, formatDate, getCategoryColor }) => {
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Partner Information
+        {t("partnerInfo.title")}
       </h3>
       
       <div className="space-y-1">
         {partner.contactPerson && (
-          <DetailItem label="Contact Person" value={partner.contactPerson} icon={User} />
+          <DetailItem 
+            label={t("partnerInfo.fields.contactPerson")} 
+            value={partner.contactPerson} 
+            icon={User} 
+          />
         )}
         
         {partner.email && (
-          <DetailItem label="Email" value={partner.email} icon={Mail} />
+          <DetailItem 
+            label={t("partnerInfo.fields.email")} 
+            value={partner.email} 
+            icon={Mail} 
+          />
         )}
         
         {partner.phone && (
-          <DetailItem label="Phone" value={partner.phone} icon={Phone} />
+          <DetailItem 
+            label={t("partnerInfo.fields.phone")} 
+            value={partner.phone} 
+            icon={Phone} 
+          />
         )}
         
         {partner.address && (
           <DetailItem 
-            label="Address" 
+            label={t("partnerInfo.fields.address")} 
             value={formatAddress(partner.address)} 
             icon={MapPin} 
           />
         )}
         
         {partner.website && (
-          <DetailItem label="Website" value={partner.website} icon={Globe} />
+          <DetailItem 
+            label={t("partnerInfo.fields.website")} 
+            value={partner.website} 
+            icon={Globe} 
+          />
         )}
         
         {partner.company && (
-          <DetailItem label="Company" value={partner.company} icon={Building} />
+          <DetailItem 
+            label={t("partnerInfo.fields.company")} 
+            value={partner.company} 
+            icon={Building} 
+          />
         )}
         
         <DetailItem 
-          label="Joined Date" 
+          label={t("partnerInfo.fields.joinedDate")} 
           value={formatDate(partner.createdAt)} 
           icon={Calendar} 
         />
         
         {partner.category && (
           <DetailItem 
-            label="Category" 
+            label={t("partnerInfo.fields.category")} 
             value={partner.category.replace('_', ' ')} 
             icon={Tag} 
           />
@@ -97,15 +120,15 @@ const PartnerInfo = ({ partner, formatDate, getCategoryColor }) => {
         
         {partner.rating && (
           <DetailItem 
-            label="Rating" 
-            value={`${partner.rating.toFixed(1)} / 5.0`} 
+            label={t("partnerInfo.fields.rating")} 
+            value={t("common.rating", { value: partner.rating.toFixed(1) })} 
             icon={Star} 
           />
         )}
         
         {partner.specialization && (
           <DetailItem 
-            label="Specialization" 
+            label={t("partnerInfo.fields.specialization")} 
             value={partner.specialization} 
             icon={Star} 
           />
@@ -116,7 +139,7 @@ const PartnerInfo = ({ partner, formatDate, getCategoryColor }) => {
       {partner.notes && (
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
           <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            Additional Notes
+            {t("partnerInfo.notes")}
           </h4>
           <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
             {partner.notes}

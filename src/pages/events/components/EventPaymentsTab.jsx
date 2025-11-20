@@ -11,8 +11,11 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import Badge from "../../../components/common/Badge";
+import { useTranslation } from "react-i18next";
 
 const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
+  const { t } = useTranslation();
+
   const getPaymentStatusColor = (status) => {
     const colors = {
       completed: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-100",
@@ -25,13 +28,23 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
 
   const getPaymentMethodLabel = (method) => {
     const labels = {
-      cash: "Cash",
-      credit_card: "Credit Card",
-      bank_transfer: "Bank Transfer",
-      check: "Check",
-      mobile_payment: "Mobile Payment",
+      cash: t("eventPaymentsTab.payment.method.cash"),
+      credit_card: t("eventPaymentsTab.payment.method.credit_card"),
+      bank_transfer: t("eventPaymentsTab.payment.method.bank_transfer"),
+      check: t("eventPaymentsTab.payment.method.check"),
+      mobile_payment: t("eventPaymentsTab.payment.method.mobile_payment"),
     };
     return labels[method] || method;
+  };
+
+  const getPaymentStatusLabel = (status) => {
+    const labels = {
+      completed: t("eventPaymentsTab.payment.status.completed"),
+      pending: t("eventPaymentsTab.payment.status.pending"),
+      failed: t("eventPaymentsTab.payment.status.failed"),
+      refunded: t("eventPaymentsTab.payment.status.refunded"),
+    };
+    return labels[status] || status;
   };
 
   // Calculate payment summary
@@ -50,7 +63,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Payment History ({payments?.length || 0})
+            {t("eventPaymentsTab.title", { count: payments?.length || 0 })}
           </h3>
         </div>
         <button
@@ -58,7 +71,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
           className="px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
         >
           <Plus className="h-4 w-4" />
-          Record Payment
+          {t("eventPaymentsTab.actions.recordPayment")}
         </button>
       </div>
 
@@ -73,7 +86,9 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatCurrency(totalAmount)}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Amount</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {t("eventPaymentsTab.summary.totalAmount")}
+              </div>
             </div>
           </div>
         </div>
@@ -88,7 +103,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
                 {formatCurrency(totalPaid)}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Paid ({paymentPercentage.toFixed(0)}%)
+                {t("eventPaymentsTab.summary.paid")} ({paymentPercentage.toFixed(0)}%)
               </div>
             </div>
           </div>
@@ -103,7 +118,9 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatCurrency(remainingAmount)}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Remaining</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {t("eventPaymentsTab.summary.remaining")}
+              </div>
             </div>
           </div>
         </div>
@@ -113,7 +130,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Payment Progress
+            {t("eventPaymentsTab.summary.progress")}
           </span>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {paymentPercentage.toFixed(1)}%
@@ -131,12 +148,14 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
       {!payments || payments.length === 0 ? (
         <div className="text-center py-12">
           <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600 dark:text-gray-400">No payments recorded yet</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t("eventPaymentsTab.emptyState.title")}
+          </p>
           <button
             onClick={onRecordPayment}
             className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
           >
-            Record First Payment
+            {t("eventPaymentsTab.actions.recordFirstPayment")}
           </button>
         </div>
       ) : (
@@ -158,7 +177,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
                           {formatCurrency(payment.amount)}
                         </span>
                         <Badge className={`text-xs ${getPaymentStatusColor(payment.status)}`}>
-                          {payment.status}
+                          {getPaymentStatusLabel(payment.status)}
                         </Badge>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">

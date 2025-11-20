@@ -22,10 +22,12 @@ import {
 import PartnerForm from "./PartnerForm";
 import PartnerDetailModal from "./PartnerDetailModal";
 import { useToast } from "../../context/ToastContext";
+import { useTranslation } from "react-i18next";
 
 const PartnersList = () => {
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  const { t } = useTranslation();
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,7 +55,7 @@ const PartnersList = () => {
 
   // Category options from schema
   const categoryOptions = [
-    { value: "all", label: "All Categories" },
+    { value: "all", label: t("partners.actions.filters.allCategories") },
     { value: "driver", label: "Driver" },
     { value: "bakery", label: "Bakery" },
     { value: "catering", label: "Catering" },
@@ -91,21 +93,17 @@ const PartnersList = () => {
 
       // Handle response structure
       if (response?.partners && Array.isArray(response.partners)) {
-        // Validate and filter partners
         partnersData = response.partners.filter((partner, index) => {
-          // Check for null/undefined
           if (!partner) {
             console.warn(`⚠️ Partner at index ${index} is ${partner}`);
             return false;
           }
 
-          // Check for required fields
           if (!partner._id) {
             console.warn(`⚠️ Partner at index ${index} missing _id:`, partner);
             return false;
           }
 
-          // Check if it's a valid object
           if (typeof partner !== "object") {
             console.warn(
               `⚠️ Partner at index ${index} is not an object:`,
@@ -119,26 +117,12 @@ const PartnersList = () => {
 
         totalPages = response.pagination?.pages || 1;
         totalCount = response.pagination?.total || partnersData.length;
-
-        console.log("✅ Processed partners response:", {
-          received: response.partners.length,
-          valid: partnersData.length,
-          filtered: response.partners.length - partnersData.length,
-          totalPages,
-          totalCount,
-        });
       } else if (Array.isArray(response)) {
-        // Fallback for direct array response
         partnersData = response.filter(
           (partner) =>
             partner != null && typeof partner === "object" && partner._id
         );
         totalCount = partnersData.length;
-
-        console.log("✅ Processed array response:", {
-          received: response.length,
-          valid: partnersData.length,
-        });
       } else {
         console.error("❌ Unexpected response structure:", response);
         throw new Error("Invalid response format from server");
@@ -146,9 +130,6 @@ const PartnersList = () => {
 
       // Final validation
       if (partnersData.length > 0) {
-        console.log("✅ Sample partner:", partnersData[0]);
-
-        // Check for any remaining undefined values (shouldn't happen after filtering)
         const hasUndefined = partnersData.some((p) => !p);
         if (hasUndefined) {
           console.error("❌ Still have undefined partners after filtering!");
@@ -207,34 +188,28 @@ const PartnersList = () => {
       }
 
       try {
-        // Use the promise toast for loading state
         await promise(partnerService.delete(partnerId), {
-          loading: `Deleting ${partnerName}...`,
-          success: `${partnerName} deleted successfully`,
-          error: `Failed to delete ${partnerName}`,
+          loading: t("partners.deleteModal.deleting", { name: partnerName }),
+          success: t("partners.notifications.deleted"),
+          error: t("partners.deleteModal.errorDeleting", { name: partnerName }),
         });
 
-        // Refresh the partners list
         fetchPartners();
 
-        // Close detail modal if the deleted partner is currently selected
         if (selectedPartner?._id === partnerId) {
           setSelectedPartner(null);
           setIsDetailModalOpen(false);
         }
 
-        // Close confirmation modal
         closeConfirmationModal();
       } catch (err) {
-        // Error is already handled by the promise toast
         console.error("Delete partner error:", err);
         closeConfirmationModal();
       }
     },
-    [fetchPartners, selectedPartner, promise, showError, closeConfirmationModal]
+    [fetchPartners, selectedPartner, promise, showError, closeConfirmationModal, t]
   );
 
-  // Updated partner deletion handler
   const handleDeletePartner = useCallback(
     (partnerId, partnerName = "Partner") => {
       showDeleteConfirmation(partnerId, partnerName);
@@ -242,13 +217,11 @@ const PartnersList = () => {
     [showDeleteConfirmation]
   );
 
-  // Handle row click to open detail modal
   const handleRowClick = useCallback((partner) => {
     setSelectedPartner(partner);
     setIsDetailModalOpen(true);
   }, []);
 
-  // Handle detail modal close
   const handleDetailModalClose = useCallback(() => {
     setSelectedPartner(null);
     setIsDetailModalOpen(false);
@@ -282,10 +255,10 @@ const PartnersList = () => {
     setIsFormOpen(false);
     showSuccess(
       selectedPartner
-        ? "Partner updated successfully"
-        : "Partner added successfully"
+        ? t("partners.notifications.updated")
+        : t("partners.notifications.added")
     );
-  }, [fetchPartners, selectedPartner, showSuccess]);
+  }, [fetchPartners, selectedPartner, showSuccess, t]);
 
   const handleFormClose = useCallback(() => {
     setSelectedPartner(null);
@@ -297,13 +270,13 @@ const PartnersList = () => {
     setStatus("all");
     setCategory("all");
     setPage(1);
-    showInfo("Filters cleared");
-  }, [showInfo]);
+    showInfo(t("partners.notifications.filtersCleared"));
+  }, [showInfo, t]);
 
   const handleRetry = useCallback(() => {
     fetchPartners();
-    showInfo("Retrying to load partners...");
-  }, [fetchPartners, showInfo]);
+    showInfo(t("partners.errors.retrying"));
+  }, [fetchPartners, showInfo, t]);
 
   const hasActiveFilters =
     search.trim() !== "" || status !== "all" || category !== "all";
@@ -328,16 +301,12 @@ const PartnersList = () => {
   // Table columns configuration
   const columns = [
     {
-      header: "Partner Name",
+      header: t("partners.table.columns.name"),
       accessor: "name",
       sortable: true,
       width: "20%",
       render: (row) => {
-        console.log("🔍 Rendering Partner Name - row:", row);
-        if (!row) {
-          console.error("❌ Row is undefined in Partner Name column!");
-          return <div>-</div>;
-        }
+        if (!row) return <div>-</div>;
         return (
           <div>
             <div className="font-medium text-gray-900 dark:text-white">
@@ -353,7 +322,7 @@ const PartnersList = () => {
       },
     },
     {
-      header: "Contact",
+      header: t("partners.table.columns.contact"),
       accessor: "email",
       sortable: true,
       width: "20%",
@@ -372,7 +341,7 @@ const PartnersList = () => {
       },
     },
     {
-      header: "Category",
+      header: t("partners.table.columns.category"),
       accessor: "category",
       sortable: true,
       width: "15%",
@@ -382,7 +351,7 @@ const PartnersList = () => {
       },
     },
     {
-      header: "Rating",
+      header: t("partners.table.columns.rating"),
       accessor: "rating",
       sortable: true,
       width: "12%",
@@ -402,7 +371,7 @@ const PartnersList = () => {
       },
     },
     {
-      header: "Status",
+      header: t("partners.table.columns.status"),
       accessor: "status",
       sortable: true,
       width: "12%",
@@ -410,26 +379,31 @@ const PartnersList = () => {
         if (!row) return <div>-</div>;
         return (
           <Badge color={row.status === "active" ? "green" : "red"}>
-            {row.status === "active" ? "Active" : "Inactive"}
+            {row.status === "active" 
+              ? t("partners.actions.filters.active") 
+              : t("partners.actions.filters.inactive")}
           </Badge>
         );
       },
     },
-{
-  header: "Price",
-  accessor: "price",
-  sortable: true,
-  width: "10%",
-  render: (row) => {
- const Price = row.priceType === "hourly" ? `${row.hourlyRate} TND/hr` : `${row.fixedRate} TND`;    return (
-      <div className="text-sm text-gray-900 dark:text-white">
-        {Price }
-      </div>
-    );
-  },
-},
     {
-      header: "Actions",
+      header: t("partners.table.columns.price"),
+      accessor: "price",
+      sortable: true,
+      width: "10%",
+      render: (row) => {
+        const Price = row.priceType === "hourly" 
+          ? `${row.hourlyRate} TND/${t("common.hour")}` 
+          : `${row.fixedRate} TND`;
+        return (
+          <div className="text-sm text-gray-900 dark:text-white">
+            {Price}
+          </div>
+        );
+      },
+    },
+    {
+      header: t("partners.table.columns.actions"),
       accessor: "actions",
       width: "9%",
       className: "text-center",
@@ -443,7 +417,7 @@ const PartnersList = () => {
                 handleViewPartner(row);
               }}
               className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-              title="View Partner"
+              title={t("partners.actions.viewPartner")}
             >
               <Eye className="h-4 w-4" />
             </button>
@@ -453,7 +427,7 @@ const PartnersList = () => {
                 handleEditPartner(row);
               }}
               className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-              title="Edit Partner"
+              title={t("partners.actions.editPartner")}
             >
               <Edit className="h-4 w-4" />
             </button>
@@ -463,7 +437,7 @@ const PartnersList = () => {
                 handleDeletePartner(row._id, row.name || "Partner");
               }}
               className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-              title="Delete Partner"
+              title={t("partners.actions.deletePartner")}
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -479,13 +453,13 @@ const PartnersList = () => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Partners
+            {t("partners.title")}
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage your service partners and vendors.{" "}
+            {t("partners.subtitle")}{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
-              `Showing ${partners.length} of ${totalCount} partners`}
+              t("partners.showingResults", { count: partners.length, total: totalCount })}
           </p>
         </div>
         {totalCount > 0 && (
@@ -495,7 +469,7 @@ const PartnersList = () => {
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Add Partner
+            {t("partners.actions.addPartner")}
           </Button>
         )}
       </div>
@@ -506,14 +480,14 @@ const PartnersList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Partners
+                {t("partners.errors.loading")}
               </p>
               <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 {error}
               </p>
             </div>
             <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
+              {t("partners.actions.retry")}
             </Button>
           </div>
         </div>
@@ -527,7 +501,7 @@ const PartnersList = () => {
               <Input
                 className="dark:bg-[#1f2937] dark:text-white"
                 icon={Search}
-                placeholder="Search partners by name, email, or company..."
+                placeholder={t("partners.actions.search")}
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -556,9 +530,9 @@ const PartnersList = () => {
                   setStatus(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Status" },
-                  { value: "active", label: "Active" },
-                  { value: "inactive", label: "Inactive" },
+                  { value: "all", label: t("partners.actions.filters.allStatus") },
+                  { value: "active", label: t("partners.actions.filters.active") },
+                  { value: "inactive", label: t("partners.actions.filters.inactive") },
                 ]}
               />
             </div>
@@ -569,7 +543,7 @@ const PartnersList = () => {
                 className="flex items-center gap-2"
               >
                 <X className="h-4 w-4" />
-                Clear
+                {t("partners.actions.clearFilters")}
               </Button>
             )}
           </div>
@@ -609,7 +583,7 @@ const PartnersList = () => {
           columns={columns}
           data={partners}
           loading={loading}
-          emptyMessage="No partners found"
+          emptyMessage={t("partners.table.empty")}
           onRowClick={handleRowClick}
           striped
           hoverable
@@ -632,13 +606,13 @@ const PartnersList = () => {
         <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No partners found
+            {t("partners.table.noResults.title")}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No partners match your current search or filter criteria.
+            {t("partners.table.noResults.description")}
           </p>
           <Button onClick={handleClearFilters} variant="outline">
-            Clear All Filters
+            {t("partners.actions.clearFilters")}
           </Button>
         </div>
       )}
@@ -648,14 +622,14 @@ const PartnersList = () => {
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <Users className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No partners yet
+            {t("partners.emptyState.title")}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Get started by adding your first service partner.
+            {t("partners.emptyState.description")}
           </p>
           <Button onClick={handleAddPartner} variant="primary">
             <Plus className="h-4 w-4 mr-2" />
-            Add First Partner
+            {t("partners.emptyState.addFirst")}
           </Button>
         </div>
       )}
@@ -673,7 +647,7 @@ const PartnersList = () => {
       <Modal
         isOpen={isFormOpen}
         onClose={handleFormClose}
-        title={selectedPartner ? "Edit Partner" : "Add New Partner"}
+        title={selectedPartner ? t("partnerForm.editTitle") : t("partnerForm.addTitle")}
         size="lg"
       >
         <PartnerForm
@@ -687,7 +661,7 @@ const PartnersList = () => {
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={closeConfirmationModal}
-        title="Confirm Deletion"
+        title={t("partners.deleteModal.title")}
         size="md"
       >
         <div className="p-6">
@@ -699,13 +673,10 @@ const PartnersList = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Partner
+                {t("partners.deleteModal.title")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete{" "}
-                <strong>"{confirmationModal.partnerName}"</strong>? This action
-                cannot be undone and all associated data will be permanently
-                removed.
+                {t("partners.deleteModal.description", { name: confirmationModal.partnerName })}
               </p>
               <div className="flex justify-end gap-3">
                 <Button
@@ -713,7 +684,7 @@ const PartnersList = () => {
                   onClick={closeConfirmationModal}
                   className="px-4 py-2"
                 >
-                  Cancel
+                  {t("partners.deleteModal.cancel")}
                 </Button>
                 <Button
                   variant="danger"
@@ -721,7 +692,7 @@ const PartnersList = () => {
                   className="px-4 py-2 flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Partner
+                  {t("partners.deleteModal.confirm")}
                 </Button>
               </div>
             </div>

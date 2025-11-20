@@ -79,273 +79,969 @@
     "snoozed": "مؤجل",
     "blocked": "محظور"
   },
-  
   "dashboard": {
     "title": "لوحة التحكم",
-    "subtitle": "نظرة عامة على المقاييس الرئيسية والفعاليات القادمة",
-    "loading": "جاري تحميل لوحة التحكم",
-    "go_to_dashboard": "الذهاب إلى لوحة التحكم",
-    "finance_dashboard": "لوحة المالية",
-    "venue_utilization": "استخدام القاعة",
-    "client_satisfaction": "رضا العملاء",
-    "occupancy_rate": "معدل الإشغال",
-    "avg_rating": "متوسط التقييم",
-    "task_completion": "إنجاز المهام",
-    "payment_collection": "تحصيل المدفوعات",
-    "events_this_month": "الفعاليات هذا الشهر",
-    "vs_last_month": "مقارنة بالشهر الماضي",
-    "revenue_this_month": "الإيرادات هذا الشهر",
-    "total_upcoming": "المجموع القادم",
-    "pending_payments": "المدفوعات المعلقة",
-    "revenue_trend_last_6_months": "اتجاه الإيرادات (آخر 6 أشهر)",
-    "performance_metrics": "مقاييس الأداء",
-    "event_type_distribution": "توزيع أنواع الفعاليات",
-    "total_events": "إجمالي الفعاليات",
-    "most_popular": "الأكثر شعبية",
-    "recent_activity": "النشاط الأخير",
-    "view_all": "عرض الكل",
-    "event_status_breakdown": "تفصيل حالة الفعاليات"
-  },
+    "subtitle": "نظرة شاملة على أداء قاعتك",
+    "loading": "جاري تحميل لوحة التحكم...",
+    "viewAll": "عرض الكل",
 
+    "financialHealth": {
+      "profitMargin": "هامش الربح",
+      "cashFlow": "التدفق النقدي",
+      "clientRetention": "الاحتفاظ بالعملاء",
+      "expenseRatio": "نسبة المصروفات"
+    },
+
+    "quickStats": {
+      "occupancyRate": "معدل الإشغال",
+      "averageRating": "متوسط التقييم",
+      "taskCompletion": "إنجاز المهام",
+      "paymentCollection": "تحصيل المدفوعات"
+    },
+
+    "mainStats": {
+      "eventsThisMonth": "الفعاليات هذا الشهر",
+      "revenueThisMonth": "الإيرادات هذا الشهر",
+      "averageEventValue": "متوسط قيمة الفعالية",
+      "clientSatisfaction": "رضا العملاء",
+      "vsLastMonth": "مقارنة بالشهر الماضي"
+    },
+
+    "charts": {
+      "revenueTrend": "اتجاه الإيرادات (آخر 6 أشهر)",
+      "performanceMetrics": "مقاييس الأداء",
+      "venueUtilization": "استخدام القاعة",
+      "taskCompletion": "إنجاز المهام",
+      "paymentCollection": "تحصيل المدفوعات",
+      "clientSatisfaction": "رضا العملاء",
+      "eventTypeDistribution": "توزيع أنواع الفعاليات",
+      "totalEvents": "إجمالي الفعاليات",
+      "mostPopular": "الأكثر شعبية",
+      "recentActivity": "النشاط الأخير",
+      "revenue": "الإيرادات"
+    },
+
+    "eventStatus": {
+      "title": "تصنيف حالة الفعاليات",
+      "pending": "قيد الانتظار",
+      "confirmed": "مؤكد",
+      "completed": "مكتمل",
+      "cancelled": "ملغى"
+    },
+
+    "upcomingEvents": {
+      "title": "الفعاليات القادمة (30 يومًا)",
+      "event": "الفعالية",
+      "date": "التاريخ",
+      "client": "العميل",
+      "guests": "الضيوف",
+      "status": "الحالة",
+      "noEvents": "لا توجد فعاليات قادمة."
+    },
+
+    "recentPayments": {
+      "title": "المدفوعات الأخيرة",
+      "noPayments": "لا توجد مدفوعات حديثة."
+    },
+
+    "myTasks": {
+      "title": "مهامي",
+      "due": "الموعد النهائي",
+      "noDueDate": "لا يوجد موعد نهائي"
+    },
+
+    "reminders": {
+      "title": "التذكيرات القادمة",
+      "noDate": "لم يتم تحديد تاريخ"
+    },
+
+    "priority": {
+      "urgent": "عاجل",
+      "high": "عالية",
+      "medium": "متوسطة",
+      "low": "منخفضة"
+    },
+
+    "activity": {
+      "paymentReceived": "تم استلام دفعة",
+      "event": "فعالية",
+      "taskCompleted": "تم إنجاز المهمة",
+      "client": "العميل"
+    }
+  },
   "clients": {
     "title": "العملاء",
-    "add_client": "إضافة عميل",
-    "add_first_client": "إضافة أول عميل",
-    "edit_client": "تعديل العميل",
-    "delete_client": "حذف العميل",
-    "view_client": "عرض العميل",
-    "client_details": "تفاصيل العميل",
-    "create_client": "إنشاء عميل",
-    "update_client": "تحديث العميل",
-    "create_a_new_client_profile": "إنشاء ملف تعريف عميل جديد",
-    "update_client_information": "تحديث معلومات العميل",
-    "no_clients_yet": "لا يوجد عملاء بعد",
-    "no_clients_found": "لم يتم العثور على عملاء",
-    "no_clients_match_your_search": "لا يوجد عملاء تطابق البحث أو الفلاتر الحالية",
-    "get_started_adding_first_client": "ابدأ بإضافة عميلك الأول",
-    "client_not_found": "العميل غير موجود",
-    "cannot_edit_client": "لا يمكن تعديل العميل: معرف العميل غير موجود",
-    "cannot_delete_client": "لا يمكن حذف العميل: معرف العميل غير موجود",
-    "failed_to_delete_client": "فشل حذف العميل",
-    "cannot_create_event_client_not_found": "لا يمكن إنشاء الفعالية: معرف العميل غير موجود",
-    "cannot_record_payment_client_not_found": "لا يمكن تسجيل الدفع: معرف العميل غير موجود",
-    "personal_information": "المعلومات الشخصية",
-    "address_information": "معلومات العنوان",
-    "additional_information": "معلومات إضافية",
-    "company": "الشركة",
-    "client_notes": "ملاحظات العميل",
-    "contact_information": "معلومات الاتصال",
-    "search_clients_placeholder": "البحث عن العملاء بالاسم أو البريد الإلكتروني أو الهاتف",
-    "active_filters": "الفلاتر النشطة",
-    "clear_all_filters": "مسح جميع الفلاتر",
-    "filters_cleared": "تم مسح الفلاتر",
-    "date_created": "تاريخ الإنشاء",
-    "activity": "النشاط",
-    "payments": "المدفوعات",
-    "activity_timeline": "الجدول الزمني للنشاط",
-    "no_recent_activity": "لا يوجد نشاط حديث لهذا العميل",
-    "event_created": "تم إنشاء الفعالية",
-    "event_updated": "تم تحديث الفعالية",
-    "payment_received": "تم استلام الدفع",
-    "payment_pending": "الدفع معلق",
-    "upcoming_event": "فعالية قادمة",
-    "create_new_event": "إنشاء فعالية جديدة",
-    "total_revenue": "إجمالي الإيرادات",
-    "outstanding_balance": "الرصيد المستحق",
-    "payment_overview": "نظرة عامة على المدفوعات",
-    "record_payment": "تسجيل دفعة",
-    "total_paid": "إجمالي المدفوع",
-    "recent_payment_history": "سجل المدفوعات الأخيرة",
-    "no_payment_history": "لا يوجد سجل مدفوعات",
-    "record_first_payment": "تسجيل أول دفعة",
-    "unnamed_client": "عميل بدون اسم"
+    "description": "إدارة علاقات ومعلومات العملاء",
+    "showingCount": "عرض {{count}} من أصل {{total}} عميل",
+    
+    "buttons": {
+      "addClient": "إضافة عميل",
+      "addFirstClient": "إضافة أول عميل",
+      "retry": "إعادة المحاولة",
+      "clear": "مسح الفلاتر",
+      "clearAllFilters": "مسح كل الفلاتر",
+      "cancel": "إلغاء",
+      "deleteClient": "حذف العميل"
+    },
+    
+    "search": {
+      "placeholder": "البحث في العملاء...",
+      "noResults": "لم يتم العثور على عملاء",
+      "noResultsDescription": "حاول تعديل البحث أو الفلاتر للعثور على ما تبحث عنه"
+    },
+    
+    "filters": {
+      "allStatus": "جميع الحالات",
+      "activeFilters": "الفلاتر النشطة:",
+      "searchLabel": "بحث: {{search}}",
+      "statusLabel": "الحالة: {{status}}"
+    },
+    
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط"
+    },
+    
+    "table": {
+      "columns": {
+        "name": "الاسم",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "status": "الحالة",
+        "createdAt": "تاريخ الإنشاء",
+        "actions": "الإجراءات"
+      },
+      "defaultValues": {
+        "unnamed": "عميل بدون اسم",
+        "noEmail": "لا يوجد بريد إلكتروني",
+        "noPhone": "لا يوجد هاتف",
+        "noDate": "لا يوجد تاريخ"
+      },
+      "actions": {
+        "view": "عرض التفاصيل",
+        "edit": "تعديل العميل",
+        "delete": "حذف العميل"
+      }
+    },
+    
+    "loading": {
+      "initial": "جاري تحميل العملاء...",
+      "retrying": "جاري إعادة تحميل العملاء..."
+    },
+    
+    "empty": {
+      "title": "لا يوجد عملاء بعد",
+      "description": "ابدأ بإضافة أول عميل إلى النظام"
+    },
+    
+    "errors": {
+      "loadingTitle": "خطأ في تحميل العملاء",
+      "loadingDefault": "فشل تحميل العملاء. يرجى المحاولة مرة أخرى.",
+      "invalidId": "معرف العميل غير صالح"
+    },
+    
+    "toast": {
+      "deleting": "جاري حذف {{name}}...",
+      "deleteSuccess": "تم حذف {{name}} بنجاح",
+      "deleteError": "فشل حذف {{name}}",
+      "updateSuccess": "تم تحديث العميل بنجاح",
+      "createSuccess": "تم إنشاء العميل بنجاح",
+      "filtersCleared": "تم مسح الفلاتر"
+    },
+    
+    "modal": {
+      "addTitle": "إضافة عميل جديد",
+      "editTitle": "تعديل العميل",
+      "deleteTitle": "حذف العميل",
+      "deleteMessage": "هل أنت متأكد من رغبتك في حذف {{name}}؟ لا يمكن التراجع عن هذا الإجراء."
+    }
   },
-
+  
+  "clientForm": {
+    "title": {
+      "add": "إضافة عميل جديد",
+      "edit": "تعديل العميل"
+    },
+    "description": {
+      "add": "إنشاء ملف عميل جديد",
+      "edit": "تحديث معلومات العميل"
+    },
+    "sections": {
+      "personal": "المعلومات الشخصية",
+      "address": "معلومات العنوان",
+      "additional": "معلومات إضافية"
+    },
+    "fields": {
+      "name": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "company": "الشركة",
+      "street": "العنوان الكامل",
+      "city": "المدينة",
+      "state": "الولاية/المحافظة",
+      "zipCode": "الرمز البريدي",
+      "country": "البلد",
+      "notes": "ملاحظات العميل",
+      "status": "الحالة"
+    },
+    "placeholders": {
+      "name": "مثال: أحمد محمد",
+      "email": "name@company.com",
+      "phone": "مثال: 12345678",
+      "company": "الشركة أو المؤسسة",
+      "street": "123 الشارع الرئيسي",
+      "city": "الرياض",
+      "state": "المنطقة",
+      "zipCode": "12345",
+      "country": "المملكة العربية السعودية",
+      "notes": "ملاحظات أو تعليقات أو معلومات إضافية اختيارية حول هذا العميل..."
+    },
+    "errors": {
+      "nameRequired": "الاسم الكامل مطلوب",
+      "nameMinLength": "يجب أن يكون الاسم مكون من حرفين على الأقل",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صالح",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "phoneInvalid": "يجب أن يتكون رقم الهاتف من 8 أرقام بالضبط",
+      "loading": "خطأ في تحميل العميل",
+      "creating": "خطأ في إنشاء العميل",
+      "saving": "فشل حفظ العميل. يرجى المحاولة مرة أخرى."
+    },
+    "buttons": {
+      "cancel": "إلغاء",
+      "create": "إنشاء العميل",
+      "update": "تحديث العميل",
+      "creating": "جاري الإنشاء...",
+      "updating": "جاري التحديث..."
+    }
+  },
+  
+  "clientDetail": {
+    "title": "تفاصيل العميل",
+    "loading": "جاري تحميل تفاصيل العميل...",
+    "notFound": "العميل غير موجود",
+    "errorLoading": "خطأ في تحميل العميل",
+    "notFoundDescription": "العميل الذي تبحث عنه غير موجود.",
+    "buttons": {
+      "backToClients": "العودة إلى العملاء",
+      "tryAgain": "إعادة المحاولة",
+      "createEvent": "إنشاء فعالية جديدة",
+      "createFirstEvent": "إنشاء أول فعالية"
+    },
+    "tabs": {
+      "activity": "النشاط",
+      "events": "الفعاليات",
+      "payments": "المدفوعات"
+    },
+    "actions": {
+      "delete": "حذف",
+      "edit": "تعديل",
+      "moreDetails": "المزيد من التفاصيل",
+      "viewFullEvent": "عرض صفحة الفعالية الكاملة"
+    },
+    "sections": {
+      "contact": "معلومات الاتصال",
+      "address": "العنوان",
+      "additional": "معلومات إضافية",
+      "notes": "ملاحظات",
+      "tags": "الوسوم",
+      "accountInfo": "معلومات الحساب"
+    },
+    "labels": {
+      "created": "تم الإنشاء",
+      "notes": "ملاحظات",
+      "clientSince": "عميل منذ",
+      "lastUpdated": "آخر تحديث",
+      "createdBy": "تم الإنشاء بواسطة",
+      "totalEvents": "إجمالي الفعاليات",
+      "upcomingEvents": "القادمة",
+      "totalRevenue": "إجمالي الإيرادات",
+      "outstanding": "المستحقات",
+      "eventHistory": "سجل الفعاليات",
+      "activityTimeline": "الجدول الزمني للنشاط",
+      "guests": "{{count}} ضيوف"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "confirmed": "مؤكد",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "paid": "مدفوع",
+      "partial": "جزئي",
+      "overdue": "متأخر"
+    },
+    "activity": {
+      "eventCreated": "تم إنشاء الفعالية",
+      "eventUpdated": "تم تحديث الفعالية",
+      "paymentReceived": "تم استلام الدفع",
+      "paymentPending": "دفع معلق",
+      "eventUpcoming": "فعالية قادمة",
+      "noActivity": "لم يتم العثور على نشاط حديث لهذا العميل",
+      "descriptions": {
+        "eventCreated": "تم إنشاء {{title}}",
+        "eventUpdated": "تم تغيير حالة {{title}} إلى {{status}}",
+        "paymentReceived": "دفع بقيمة {{amount}} مقابل {{title}}",
+        "paymentPending": "دفع معلق بقيمة {{amount}} مقابل {{title}}",
+        "eventUpcoming": "{{title}} مجدولة لـ {{date}}"
+      }
+    },
+    "modals": {
+      "editClient": "تعديل العميل",
+      "deleteClient": "حذف العميل",
+      "deleteMessage": "هل أنت متأكد من رغبتك في حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء وسيتم إزالة جميع البيانات المرتبطة."
+    }
+  },
+  
+  "payments": {
+    "buttons": {
+      "recordPayment": "تسديد دفعة",
+      "recordFirstPayment": "تسديد أول دفعة"
+    },
+    "statistics": {
+      "totalRevenue": "إجمالي الإيرادات",
+      "totalPaid": "إجمالي المدفوع",
+      "outstanding": "المستحقات",
+      "totalEvents": "إجمالي الفعاليات"
+    },
+    "sections": {
+      "paymentBreakdown": "تفصيل المدفوعات حسب الفعالية",
+      "recentPaymentHistory": "سجل المدفوعات الحديث"
+    },
+    "labels": {
+      "totalAmount": "المبلغ الإجمالي",
+      "paidAmount": "المبلغ المدفوع",
+      "balanceDue": "الرصيد المستحق",
+      "noPaymentHistory": "لم يتم العثور على سجل مدفوعات",
+      "noEventsAvailable": "لا توجد فعاليات متاحة للدفع",
+      "selectSpecificEvent": "يرجى تحديد فعالية معينة لتسديد الدفعة"
+    },
+    "status": {
+      "paid": "مدفوع",
+      "partial": "جزئي",
+      "pending": "قيد الانتظار",
+      "completed": "مكتمل"
+    },
+    "methods": {
+      "cash": "نقدي",
+      "card": "بطاقة",
+      "bank_transfer": "تحويل بنكي",
+      "check": "شيك",
+      "other": "أخرى"
+    }
+  },
+  
   "events": {
-    "title": "الفعاليات",
-    "create_event": "إنشاء فعالية",
-    "update_event": "تحديث الفعالية",
-    "edit_event": "تعديل الفعالية",
-    "delete_event": "حذف الفعالية",
-    "view_event": "عرض الفعالية",
-    "event_details": "تفاصيل الفعالية",
-    "event_information": "معلومات الفعالية",
-    "event_calendar": "تقويم الفعاليات",
-    "no_events_yet": "لا توجد فعاليات بعد",
-    "no_events_found": "لم يتم العثور على فعاليات",
-    "no_events_match_your_search": "لا توجد فعاليات تطابق البحث أو الفلاتر الحالية",
-    "get_started_creating_first_event": "ابدأ بإنشاء فعاليتك الأولى",
-    "cannot_edit_event": "لا يمكن تعديل الفعالية: معرف الفعالية غير موجود",
-    "cannot_delete_event": "لا يمكن حذف الفعالية: معرف الفعالية غير موجود",
-    "failed_to_delete_event": "فشل حذف الفعالية",
-    "cannot_record_payment_event_not_found": "لا يمكن تسجيل الدفع: معرف الفعالية غير موجود",
-    "event_not_found": "الفعالية غير موجودة",
-    "no_event_id_provided": "لم يتم توفير معرف الفعالية",
-    "no_events_scheduled": "لا توجد فعاليات مجدولة",
-    "no_events_scheduled_for_date": "لا توجد فعاليات مجدولة لهذا التاريخ",
-    "create_event_on_this_date": "إنشاء فعالية في هذا التاريخ",
-    "back_to_events": "العودة إلى الفعاليات",
-    "view_full_event_page": "عرض صفحة الفعالية الكاملة",
-    "set_up_core_details": "إعداد التفاصيل الأساسية للفعالية",
-    "event_title": "عنوان الفعالية",
-    "event_type": "نوع الفعالية",
-    "event_date": "تاريخ الفعالية",
-    "start_date": "تاريخ البداية",
-    "end_date": "تاريخ النهاية",
-    "start_time": "وقت البداية",
-    "end_time": "وقت النهاية",
-    "guest_count": "عدد الضيوف",
-    "same_day_event": "فعالية في نفس اليوم",
-    "venue_space_selection": "اختيار مساحة القاعة",
-    "select_venue_space": "اختر مساحة القاعة",
-    "venue_space": "مساحة القاعة",
-    "selected_venue_space": "المساحة المختارة",
-    "change_space": "تغيير المساحة",
-    "capacity": "السعة",
-    "amenities": "المرافق",
-    "base_price": "السعر الأساسي",
-    "pricing": "التسعير",
-    "venue_price": "سعر القاعة",
-    "total_price": "السعر الإجمالي",
-    "discount": "الخصم",
-    "percentage_discount": "خصم نسبي",
-    "fixed_amount_discount": "خصم بمبلغ ثابت",
-    "service_partners": "شركاء الخدمة",
-    "select_partner": "اختر شريك",
-    "partner_preselected": "تم اختيار الشريك مسبقاً",
-    "autogenerate_invoice": "إنشاء فاتورة تلقائياً",
-    "create_draft_invoice": "إنشاء مسودة فاتورة لهذه الفعالية تلقائياً",
-    "additional_notes": "ملاحظات إضافية",
-    "event_summary": "ملخص الفعالية",
-    "financial_summary": "الملخص المالي",
-    "initial_payment": "الدفعة الأولية",
-    "remaining_balance": "الرصيد المتبقي",
-    "record_initial_payment": "تسجيل الدفعة الأولية (اختياري)",
-    "payment_amount": "مبلغ الدفع",
-    "payment_method": "طريقة الدفع",
-    "payment_date": "تاريخ الدفع",
-    "payment_status": "حالة الدفع",
-    "payment_notes": "ملاحظات الدفع",
-    "event_created_successfully": "تم إنشاء الفعالية بنجاح",
-    "event_updated_successfully": "تم تحديث الفعالية بنجاح",
-    "please_select_client": "الرجاء اختيار عميل",
-    "please_select_venue_space": "الرجاء اختيار مساحة قاعة",
-    "end_time_after_start_time": "يجب أن يكون وقت النهاية بعد وقت البداية",
-    "valid_base_price_required": "السعر الأساسي مطلوب",
-    "payment_cannot_exceed_total": "لا يمكن أن يتجاوز مبلغ الدفع السعر الإجمالي",
-    "payment_cannot_be_negative": "لا يمكن أن يكون مبلغ الدفع سالباً",
-    "draft_found": "تم العثور على مسودة",
-    "restore_draft": "استعادة المسودة",
-    "discard_draft": "تجاهل",
-    "new_event_booking": "حجز فعالية جديدة",
-    "event_confirmed": "تم تأكيد الفعالية",
-    "finalize_venue_setup": "إنهاء إعداد القاعة",
-    "upcoming_events": "الفعاليات القادمة",
-    "no_upcoming_events": "لا توجد فعاليات قادمة",
-    "recent_payments": "المدفوعات الأخيرة",
-    "no_recent_payments": "لا توجد مدفوعات حديثة",
-    "all_types": "جميع الأنواع",
-    "all_dates": "جميع التواريخ",
-    "event_types": "أنواع الفعاليات",
-    "social": "اجتماعية",
-    "wedding": "زفاف",
-    "corporate": "شركات",
-    "birthday": "عيد ميلاد",
-    "conference": "مؤتمر",
-    "party": "حفلة",
-    "unknown_client": "عميل غير معروف",
-    "unknown_partner": "شريك غير معروف",
-    "track_all_changes": "تتبع جميع التغييرات والتحديثات لهذه الفعالية",
-    "no_activity_recorded": "لا يوجد نشاط مسجل",
-    "event_metadata": "بيانات الفعالية",
-    "created": "تم الإنشاء",
-    "event_id": "معرف الفعالية",
-    "event_status_changed": "تم تغيير حالة الفعالية إلى مؤكدة",
-    "event_in_progress": "فعالية قيد التنفيذ",
-    "event_is_currently_in_progress": "الفعالية قيد التنفيذ حالياً",
-    "event_completed": "اكتملت الفعالية",
-    "event_has_been_completed": "تم إكمال الفعالية",
-    "pricing_configured": "تم تكوين التسعير",
-    "updated": "تم التحديث",
-    "event_details_modified": "تم تعديل تفاصيل الفعالية",
-    "payment_progress": "تقدم الدفع",
-    "no_payments_recorded_yet": "لم يتم تسجيل أي دفعات بعد",
-    "edit_the_event_to_add_partners": "عدل الفعالية لإضافة شركاء الخدمة"
+    "toast": {
+      "updateSuccess": "تم تحديث الفعالية بنجاح!",
+      "createSuccess": "تم إنشاء الفعالية بنجاح!"
+    }
+  },
+  "eventList": {
+    "title": "تقويم الفعاليات",
+    "subtitle": "عرض وإدارة فعاليات قاعتك",
+    "showingEvents": "عرض {{count}} من {{total}} فعالية",
+
+    "viewMode": {
+      "list": "قائمة",
+      "calendar": "تقويم"
+    },
+
+    "actions": {
+      "createEvent": "إنشاء فعالية",
+      "createFirstEvent": "إنشاء أول فعالية",
+      "createEventOnDate": "إنشاء فعالية في هذا التاريخ",
+      "retry": "إعادة المحاولة",
+      "clear": "مسح",
+      "clearAllFilters": "مسح جميع الفلاتر",
+      "today": "اليوم",
+      "viewEvent": "عرض الفعالية",
+      "editEvent": "تعديل الفعالية",
+      "deleteEvent": "حذف الفعالية",
+      "cancel": "إلغاء"
+    },
+
+    "error": {
+      "title": "خطأ في تحميل الفعاليات",
+      "message": "فشل تحميل الفعاليات. يرجى المحاولة مرة أخرى."
+    },
+
+    "search": {
+      "placeholder": "البحث عن الفعاليات حسب العنوان أو الوصف أو الموقع...",
+      "activeFilters": "الفلاتر النشطة:",
+      "search": "بحث",
+      "status": "الحالة",
+      "type": "النوع",
+      "date": "التاريخ"
+    },
+
+    "filters": {
+      "allStatus": "جميع الحالات",
+      "draft": "مسودة",
+      "pending": "قيد الانتظار",
+      "confirmed": "مؤكد",
+      "inProgress": "قيد التنفيذ",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+
+      "allTypes": "جميع الأنواع",
+      "wedding": "زفاف",
+      "corporate": "شركات",
+      "birthday": "عيد ميلاد",
+      "conference": "مؤتمر",
+      "party": "حفلة",
+      "social": "اجتماعي",
+      "other": "أخرى",
+
+      "allDates": "جميع التواريخ",
+      "today": "اليوم",
+      "tomorrow": "غداً",
+      "thisWeek": "هذا الأسبوع",
+      "nextWeek": "الأسبوع القادم",
+      "thisMonth": "هذا الشهر",
+      "pastEvents": "فعاليات سابقة",
+      "upcoming": "قادمة"
+    },
+
+    "table": {
+      "eventTitle": "عنوان الفعالية",
+      "client": "العميل",
+      "dateTime": "التاريخ والوقت",
+      "type": "النوع",
+      "status": "الحالة",
+      "guests": "الضيوف",
+      "actions": "الإجراءات",
+      "unknownClient": "عميل غير معروف",
+      "loading": "جاري التحميل...",
+      "noEvents": "لم يتم العثور على فعاليات"
+    },
+
+    "emptyState": {
+      "noEvents": "لا توجد فعاليات بعد",
+      "noEventsMessage": "ابدأ بإنشاء فعاليتك الأولى.",
+      "noResults": "لم يتم العثور على فعاليات",
+      "noResultsMessage": "لا توجد فعاليات تطابق معايير البحث أو الفلتر الحالية."
+    },
+
+    "calendar": {
+      "weekDays": {
+        "sun": "الأحد",
+        "mon": "الاثنين",
+        "tue": "الثلاثاء",
+        "wed": "الأربعاء",
+        "thu": "الخميس",
+        "fri": "الجمعة",
+        "sat": "السبت"
+      },
+      "eventTypes": "أنواع الفعاليات",
+      "events": "فعاليات",
+      "event": "فعالية",
+      "thisMonth": "هذا الشهر",
+      "totalEvents": "إجمالي الفعاليات",
+      "upcoming": "قادمة",
+      "selected": "محدد",
+      "eventsThisMonth": "فعاليات هذا الشهر",
+      "moreEvents": "+{{count}} المزيد"
+    },
+
+    "dateEventsModal": {
+      "noEventsScheduled": "لا توجد فعاليات مجدولة",
+      "noEventsMessage": "لا توجد فعاليات مجدولة لهذا التاريخ.",
+      "client": "العميل",
+      "guests": "ضيوف"
+    },
+
+    "deleteModal": {
+      "title": "تأكيد الحذف",
+      "deleteEvent": "حذف الفعالية",
+      "confirmMessage": "هل أنت متأكد من رغبتك في حذف",
+      "warningMessage": "لا يمكن التراجع عن هذا الإجراء وسيتم حذف جميع البيانات المرتبطة نهائياً."
+    },
+
+    "notifications": {
+      "filtersCleared": "تم مسح الفلاتر",
+      "retrying": "إعادة محاولة تحميل الفعاليات...",
+      "navigatedToToday": "الانتقال إلى اليوم",
+      "navigatedToYear": "الانتقال إلى {{year}}",
+      "filteringBy": "الفلترة حسب فعاليات {{type}}",
+      "eventUpdated": "تم تحديث الفعالية بنجاح",
+      "eventCreated": "تم إنشاء الفعالية بنجاح",
+      "eventDeleted": "تم حذف {{name}} بنجاح",
+      "deletingEvent": "جاري حذف {{name}}...",
+      "deleteError": "فشل حذف {{name}}"
+    }
+  },
+  "eventDetailModal": {
+    "title": "تفاصيل الفعالية",
+    "close": "إغلاق",
+    "description": "الوصف",
+    "noDescription": "لا يوجد وصف",
+    "client": "العميل",
+    "guests": "ضيف",
+    "actions": {
+      "delete": {
+        "button": "حذف",
+        "deleting": "جاري الحذف...",
+        "confirm": "هل أنت متأكد من أنك تريد حذف \"{{eventTitle}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+        "success": "تم حذف الفعالية بنجاح",
+        "error": "فشل في حذف الفعالية"
+      },
+      "edit": "تعديل الفعالية",
+      "viewFullDetails": "المزيد من التفاصيل",
+      "viewFullDetailsTitle": "عرض التفاصيل الكاملة"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "confirmed": "مؤكد",
+      "in-progress": "قيد التنفيذ",
+      "completed": "مكتمل",
+      "cancelled": "ملغى"
+    }
+  },
+  "eventDetail": {
+    "title": "تفاصيل الفعالية",
+    "loading": "جاري تحميل تفاصيل الفعالية...",
+    "errors": {
+      "notFound": "الفعالية غير موجودة",
+      "loading": "خطأ في تحميل الفعالية",
+      "notFoundDescription": "الفعالية التي تبحث عنها غير موجودة.",
+      "edit": "لا يمكن تعديل الفعالية: لم يتم العثور على معرف الفعالية",
+      "delete": "لا يمكن حذف الفعالية: لم يتم العثور على معرف الفعالية",
+      "payment": "لا يمكن تسجيل الدفع: لم يتم العثور على معرف الفعالية"
+    },
+    "actions": {
+      "backToEvents": "العودة إلى الفعاليات",
+      "tryAgain": "إعادة المحاولة",
+      "edit": "تعديل الفعالية",
+      "delete": "حذف الفعالية",
+      "recordPayment": "تسجيل الدفع",
+      "retry": "جاري إعادة تحميل تفاصيل الفعالية...",
+      "deleteLoading": "جاري حذف الفعالية...",
+      "deleteSuccess": "تم حذف الفعالية بنجاح",
+      "deleteError": "فشل في حذف الفعالية",
+      "editSuccess": "تم تحديث الفعالية بنجاح"
+    },
+    "tabs": {
+      "partners": "الشركاء",
+      "payments": "المدفوعات",
+      "activity": "النشاط"
+    },
+    "deleteModal": {
+      "title": "حذف الفعالية",
+      "message": "هل أنت متأكد من أنك تريد حذف \"{{eventTitle}}\"؟ لا يمكن التراجع عن هذا الإجراء وسيتم إزالة جميع البيانات المرتبطة.",
+      "confirmText": "حذف الفعالية",
+      "cancelText": "إلغاء"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "confirmed": "مؤكد",
+      "in-progress": "قيد التنفيذ",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "unknown": "غير معروف"
+    }
+  },
+  "eventActivityTab": {
+    "title": "الجدول الزمني للنشاط",
+    "subtitle": "تتبع جميع التغييرات والتحديثات على هذه الفعالية",
+    "noActivity": "لا توجد أنشطة مسجلة",
+    "metadata": {
+      "title": "بيانات وصفية للفعالية",
+      "created": "تم الإنشاء",
+      "lastUpdated": "آخر تحديث",
+      "eventId": "معرف الفعالية"
+    },
+    "activity": {
+      "created": {
+        "title": "تم إنشاء الفعالية",
+        "description": "تم إنشاء الفعالية \"{{eventTitle}}\""
+      },
+      "status": {
+        "confirmed": {
+          "title": "تم تأكيد الفعالية",
+          "description": "تم تغيير حالة الفعالية إلى مؤكد"
+        },
+        "in-progress": {
+          "title": "الفعالية قيد التنفيذ",
+          "description": "الفعالية قيد التنفيذ حالياً"
+        },
+        "completed": {
+          "title": "تم إكمال الفعالية",
+          "description": "تم إكمال الفعالية"
+        },
+        "cancelled": {
+          "title": "تم إلغاء الفعالية",
+          "description": "تم إلغاء الفعالية"
+        }
+      },
+      "partners": {
+        "title": "تم تعيين الشركاء",
+        "description": "تم تعيين {{count}} شريك في الفعالية"
+      },
+      "pricing": {
+        "title": "تم تكوين التسعير",
+        "description": "تم تعيين المبلغ الإجمالي إلى {{amount}} دينار تونسي"
+      },
+      "updated": {
+        "title": "تم تحديث الفعالية",
+        "description": "تم تعديل تفاصيل الفعالية"
+      }
+    }
+  },
+  "eventHeader": {
+    "backButton": "العودة إلى الفعاليات",
+    "actions": {
+      "edit": "تعديل",
+      "delete": "حذف"
+    }
+  },
+  "eventInfo": {
+    "title": "معلومات الفعالية",
+    "fields": {
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "time": "الوقت",
+      "venueSpace": "مساحة المكان",
+      "guestCount": "عدد الضيوف",
+      "client": "العميل",
+      "totalAmount": "المبلغ الإجمالي",
+      "basePrice": "السعر الأساسي",
+      "discount": "الخصم",
+      "description": "الوصف",
+      "notes": "ملاحظات"
+    },
+    "values": {
+      "guests": "ضيف",
+      "unknown": "غير معروف"
+    }
+  },
+  "eventPartnersTab": {
+    "title": "الشركاء الخدمات ({{count}})",
+    "totalCost": "التكلفة الإجمالية: {{amount}}",
+    "loading": "جاري تحميل الشركاء...",
+    "emptyState": {
+      "title": "لا يوجد شركاء معينون لهذه الفعالية",
+      "description": "قم بتعديل الفعالية لإضافة شركاء الخدمات"
+    },
+    "partner": {
+      "unknown": "شريك غير معروف",
+      "email": "البريد الإلكتروني",
+      "service": "الخدمة",
+      "hourlyRate": "السعر بالساعة",
+      "viewDetails": "عرض تفاصيل الشريك"
+    },
+    "status": {
+      "confirmed": "مؤكد",
+      "pending": "قيد الانتظار",
+      "cancelled": "ملغى"
+    }
+  },
+  "eventPaymentsTab": {
+    "title": "سجل المدفوعات ({{count}})",
+    "actions": {
+      "recordPayment": "تسجيل دفعة",
+      "recordFirstPayment": "تسجيل أول دفعة"
+    },
+    "summary": {
+      "totalAmount": "المبلغ الإجمالي",
+      "paid": "المدفوع",
+      "remaining": "المتبقي",
+      "progress": "تقدم الدفع"
+    },
+    "emptyState": {
+      "title": "لا توجد مدفوعات مسجلة بعد"
+    },
+    "payment": {
+      "method": {
+        "cash": "نقدي",
+        "credit_card": "بطاقة ائتمان",
+        "bank_transfer": "تحويل بنكي",
+        "check": "شيك",
+        "mobile_payment": "دفع عبر الجوال"
+      },
+      "status": {
+        "completed": "مكتمل",
+        "pending": "قيد الانتظار",
+        "failed": "فشل",
+        "refunded": "تم الاسترداد"
+      }
+    }
   },
 
   "partners": {
     "title": "الشركاء",
-    "add_partner": "إضافة شريك",
-    "add_first_partner": "إضافة أول شريك",
-    "edit_partner": "تعديل الشريك",
-    "delete_partner": "حذف الشريك",
-    "view_partner": "عرض الشريك",
-    "partner_details": "تفاصيل الشريك",
-    "create_partner": "إنشاء شريك",
-    "update_partner": "تحديث الشريك",
-    "no_partners_yet": "لا يوجد شركاء بعد",
-    "no_partners_found": "لم يتم العثور على شركاء",
-    "no_partners_match_your_search": "لا يوجد شركاء يطابقون البحث أو الفلاتر الحالية",
-    "get_started_adding_first_partner": "ابدأ بإضافة شريك الخدمة الأول",
-    "partner_not_found": "الشريك غير موجود",
-    "cannot_edit_partner": "لا يمكن تعديل الشريك: معرف الشريك غير موجود",
-    "cannot_delete_partner": "لا يمكن حذف الشريك: معرف الشريك غير موجود",
-    "failed_to_delete_partner": "فشل حذف الشريك",
-    "basic_information": "المعلومات الأساسية",
-    "professional_information": "المعلومات المهنية",
-    "partner_name": "اسم الشريك",
-    "company_name": "اسم الشركة",
-    "contact_information": "معلومات الاتصال",
-    "contact_person": "شخص الاتصال",
-    "contact_phone": "هاتف الاتصال",
-    "contact_email": "بريد الاتصال الإلكتروني",
+    "subtitle": "إدارة شركاء الخدمة والموردين.",
+    "showingResults": "عرض {{count}} من أصل {{total}} شريك",
+    
+    "actions": {
+      "addPartner": "إضافة شريك",
+      "editPartner": "تعديل الشريك",
+      "deletePartner": "حذف الشريك",
+      "viewPartner": "عرض الشريك",
+      "retry": "إعادة المحاولة",
+      "clearFilters": "مسح الفلاتر",
+      "search": "البحث عن الشركاء بالاسم، البريد الإلكتروني أو الشركة...",
+      "filters": {
+        "allCategories": "جميع الفئات",
+        "allStatus": "جميع الحالات",
+        "active": "نشط",
+        "inactive": "غير نشط"
+      }
+    },
+    
+    "table": {
+      "columns": {
+        "name": "اسم الشريك",
+        "contact": "جهة الاتصال",
+        "category": "الفئة",
+        "rating": "التقييم",
+        "status": "الحالة",
+        "price": "السعر",
+        "actions": "الإجراءات"
+      },
+      "empty": "لم يتم العثور على شركاء",
+      "noResults": {
+        "title": "لم يتم العثور على شركاء",
+        "description": "لا توجد شركاء تطابق معايير البحث الحالية."
+      }
+    },
+    
+    "emptyState": {
+      "title": "لا توجد شركاء بعد",
+      "description": "ابدأ بإضافة أول شريك خدمة لديك.",
+      "addFirst": "إضافة أول شريك"
+    },
+    
+    "errors": {
+      "loading": "خطأ في تحميل الشركاء",
+      "retrying": "جاري إعادة تحميل الشركاء..."
+    },
+    
+    "deleteModal": {
+      "title": "تأكيد الحذف",
+      "description": "هل أنت متأكد من رغبتك في حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء وستتم إزالة جميع البيانات المرتبطة بشكل دائم.",
+      "cancel": "إلغاء",
+      "confirm": "حذف الشريك"
+    },
+    
+    "notifications": {
+      "added": "تمت إضافة الشريك بنجاح",
+      "updated": "تم تحديث الشريك بنجاح",
+      "deleted": "تم حذف الشريك بنجاح",
+      "filtersCleared": "تم مسح الفلاتر"
+    }
+  },
+  
+  "partnerForm": {
+    "addTitle": "إضافة شريك جديد",
+    "editTitle": "تعديل الشريك",
+    "steps": {
+      "basicInfo": "المعلومات الأساسية",
+      "professional": "المهنية",
+      "address": "العنوان",
+      "notes": "الملاحظات"
+    },
+    
+    "fields": {
+      "name": "اسم الشريك",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "company": "اسم الشركة",
+      "status": "الحالة",
+      "category": "الفئة",
+      "location": "الموقع",
+      "specialties": "التخصصات",
+      "pricingType": "نوع التسعير",
+      "hourlyRate": "السعر بالساعة",
+      "fixedAmount": "مبلغ ثابت",
+      "rating": "التقييم (0-5)",
+      "street": "العنوان",
+      "city": "المدينة",
+      "state": "الولاية/المحافظة",
+      "zipCode": "الرمز البريدي",
+      "country": "البلد",
+      "notes": "الملاحظات"
+    },
+    
+    "placeholders": {
+      "name": "أدخل اسم الشريك",
+      "email": "شريك@example.com",
+      "phone": "12345678",
+      "company": "اسم الشركة (اختياري)",
+      "location": "المدينة، الولاية",
+      "specialties": "اذكر تخصصات وخبرات الشريك...",
+      "hourlyRate": "0.00",
+      "fixedAmount": "0.00",
+      "rating": "0.0",
+      "street": "123 الشارع الرئيسي",
+      "city": "تونس",
+      "state": "تونس",
+      "zipCode": "1001",
+      "country": "تونس",
+      "notes": "أضف أي ملاحظات إضافية حول هذا الشريك..."
+    },
+    
+    "options": {
+      "selectCategory": "اختر الفئة",
+      "hourly": "السعر بالساعة",
+      "fixed": "مبلغ ثابت"
+    },
+    
+    "actions": {
+      "previous": "السابق",
+      "next": "التالي",
+      "cancel": "إلغاء",
+      "create": "إنشاء الشريك",
+      "update": "تحديث الشريك",
+      "updateNow": "تحديث الآن"
+    },
+    
+    "errors": {
+      "required": "{{field}} مطلوب",
+      "invalidEmail": "يرجى تقديم بريد إلكتروني صالح",
+      "invalidPhone": "يجب أن يتكون رقم الهاتف من 8 أرقام بالضبط",
+      "invalidRating": "يجب أن يكون التقييم بين 0 و 5",
+      "positiveNumber": "يجب أن يكون {{field}} رقمًا موجبًا"
+    }
+  },
+  
+  "partnerDetail": {
+    "title": "تفاصيل الشريك",
+    "loading": "جاري تحميل تفاصيل الشريك...",
+    "performance": "الأداء",
     "location": "الموقع",
     "specialties": "التخصصات",
-    "category": "الفئة",
-    "select_category": "اختر الفئة",
-    "pricing_type": "نوع التسعير",
-    "hourly_rate": "السعر بالساعة",
-    "fixed_amount": "مبلغ ثابت",
-    "performance": "الأداء",
-    "performance_overview": "نظرة عامة على الأداء",
-    "events_completed": "الفعاليات المكتملة",
-    "revenue_generated": "الإيرادات المحققة",
-    "overall_rating": "التقييم العام",
-    "performance_score": "نقاط الأداء",
-    "based_on_partner_rating": "بناءً على تقييم الشريك",
-    "completion_rate": "معدل الإنجاز",
-    "average_revenue": "متوسط الإيرادات",
-    "service_quality": "جودة الخدمة",
-    "reliability": "الموثوقية",
-    "revenue_generation": "توليد الإيرادات",
-    "improvement_opportunity": "فرصة للتحسين",
-    "joined_date": "تاريخ الانضمام",
-    "specialization": "التخصص",
-    "event_history": "سجل الفعاليات",
-    "list_partners_specialties": "قائمة الشركاء والتخصصات والخبرات",
-    "categories": {
-      "driver": "سائق",
-      "bakery": "مخبز",
-      "catering": "تقديم الطعام",
-      "decoration": "ديكور",
-      "photography": "تصوير",
-      "music": "موسيقى",
-      "security": "أمن",
-      "cleaning": "تنظيف",
-      "audiovisual": "سمعي بصري",
-      "floral": "زهور",
-      "entertainment": "ترفيه",
-      "hair_styling": "تصفيف شعر"
+    "notes": "الملاحظات",
+    "created": "تم الإنشاء",
+    "hourlyRate": "السعر بالساعة",
+    "totalJobs": "إجمالي المهام",
+    "error": {
+      "notFound": "الشريك غير موجود",
+      "loading": "خطأ في تحميل الشريك",
+      "message": "الشريك الذي تبحث عنه غير موجود.",
+      "retry": "إعادة المحاولة"
     },
-    "unknown_partner": "شريك غير معروف",
-    "category_is_required": "الفئة مطلوبة",
-    "hourly_rate_is_required": "السعر بالساعة مطلوب",
-    "hourly_rate_must_be_positive": "يجب أن يكون السعر بالساعة رقماً موجباً",
-    "fixed_amount_is_required": "المبلغ الثابت مطلوب",
-    "fixed_amount_must_be_positive": "يجب أن يكون المبلغ الثابت رقماً موجباً",
-    "please_fix_required_fields": "الرجاء إصلاح جميع الحقول المطلوبة"
+    "backToPartners": "العودة إلى الشركاء",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "events": "الفعاليات",
+      "performance": "الأداء"
+    },
+    "actions": {
+      "edit": "تعديل الشريك",
+      "delete": "حذف الشريك",
+      "refresh": "تحديث",
+      "view": "عرض",
+      "open": "فتح",
+      "moreDetails": "المزيد من التفاصيل"
+    },
+    "modals": {
+      "editPartner": "تعديل الشريك",
+      "deletePartner": {
+        "title": "حذف الشريك",
+        "message": "هل أنت متأكد من رغبتك في حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء وسيتم إزالة جميع البيانات المرتبطة.",
+        "confirm": "حذف الشريك",
+        "cancel": "إلغاء"
+      }
+    },
+    "notifications": {
+      "updated": "تم تحديث الشريك بنجاح",
+      "deleted": "تم حذف الشريك بنجاح",
+      "eventCreated": "تم إنشاء الفعالية بنجاح!",
+      "eventUpdated": "تم تحديث الفعالية بنجاح!"
+    }
   },
-
+  "partnerHeader": {
+    "title": "معلومات الشريك",
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "pending": "قيد الانتظار"
+    }
+  },
+  "partnerInfo": {
+    "title": "معلومات الشريك",
+    "fields": {
+      "contactPerson": "الشخص المسؤول",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "address": "العنوان",
+      "website": "الموقع الإلكتروني",
+      "company": "الشركة",
+      "joinedDate": "تاريخ الانضمام",
+      "category": "الفئة",
+      "rating": "التقييم",
+      "specialization": "التخصص"
+    },
+    "notes": "ملاحظات إضافية"
+  },
+  "eventsTab": {
+    "title": "سجل الفعاليات",
+    "totalEvents": "{{count}} فعالية إجمالاً",
+    "noEvents": {
+      "title": "لم يتم العثور على فعاليات",
+      "description": "لم يتم تعيين هذا الشريك لأي فعاليات حتى الآن."
+    },
+    "summary": {
+      "title": "ملخص الفعاليات",
+      "totalEvents": "إجمالي الفعاليات",
+      "completed": "مكتمل",
+      "upcoming": "قادم",
+      "totalRevenue": "إجمالي الإيرادات"
+    },
+    "event": {
+      "status": {
+        "pending": "قيد الانتظار",
+        "confirmed": "مؤكد",
+        "in-progress": "قيد التنفيذ",
+        "completed": "مكتمل",
+        "cancelled": "ملغى"
+      }
+    }
+  },
+  "overviewTab": {
+    "stats": {
+      "totalEvents": "إجمالي الفعاليات",
+      "completedEvents": "الفعاليات المكتملة",
+      "upcomingEvents": "الفعاليات القادمة",
+      "totalRevenue": "إجمالي الإيرادات"
+    },
+    "metrics": {
+      "completionRate": "معدل الإكمال",
+      "performanceScore": "نتيجة الأداء",
+      "basedOnRating": "بناءً على تقييم الشريك"
+    },
+    "recentActivity": {
+      "title": "النشاط الأخير",
+      "noActivity": "لم يتم العثور على نشاط حديث"
+    }
+  },
+  "performanceTab": {
+    "metrics": {
+      "overallRating": "التقييم العام",
+      "completionRate": "معدل الإكمال",
+      "totalRevenue": "إجمالي الإيرادات",
+      "averagePerEvent": "المتوسط لكل فعالية",
+      "allTime": "جميع الأوقات",
+      "averageRevenue": "متوسط الإيرادات"
+    },
+    "performanceScore": {
+      "title": "نتيجة الأداء",
+      "serviceQuality": "جودة الخدمة",
+      "reliability": "الموثوقية",
+      "revenueGeneration": "توليد الإيرادات"
+    },
+    "performanceOverview": {
+      "title": "نظرة عامة على الأداء",
+      "eventsCompleted": "الفعاليات المكتملة",
+      "totalAssignments": "إجمالي المهام",
+      "revenueGenerated": "الإيرادات المُولدة"
+    },
+    "recommendations": {
+      "improvementOpportunity": "فرصة للتحسين",
+      "lowCompletion": "فكر في التركيز على إكمال المزيد من الفعاليات لتحسين نتائج الموثوقية.",
+      "goodProgress": "تقدم جيد! استمر في الحفاظ على معدلات إكمال فعاليات متسقة."
+    }
+  },
   "tasks": {
     "title": "المهام",
     "add_task": "إضافة مهمة",
@@ -1388,6 +2084,389 @@
     "notifications": "الإشعارات",
     "searchPlaceholder": "البحث في الفعاليات والعملاء والمهام...",
     "today": "اليوم",
-    "other": "أخرى"
+    "other": "أخرى",
+     "hour": "ساعة",
+    "total": "الإجمالي",
+    "rating": "التقييم",
+    "unknown": "غير معروف",
+     "currency": "{{amount}} د.ت",
+    "percentage": "{{value}}٪",
+    "rating": "{{value}} / 5.0",
+    "eventsCount": "{{completed}} من {{total}} فعالية مكتملة",
+    "notAvailable": "غير متوفر"
+  },
+
+  "landing": {
+    "nav": {
+      "products": "المنتجات",
+      "features": "المميزات",
+      "marketplace": "السوق",
+      "contact": "اتصل بنا",
+      "bookDemo": "احجز عرض توضيحي"
+    },
+    "hero": {
+      "badge": "منصة إدارة الفعاليات رقم 1 في تونس",
+      "title": "حوّل فعالياتك",
+      "titleHighlight": "إلى تجارب لا تُنسى",
+      "description": "المنصة الشاملة التي تربط أصحاب القاعات، منظمي الفعاليات، وشركاء الخدمات. قم بتبسيط الحجوزات، إدارة العمليات، وتنمية عملك في مجال الفعاليات في تونس.",
+      "bookDemo": "احجز عرض توضيحي",
+      "browseMarketplace": "تصفح السوق",
+      "stats": {
+        "activeVenues": "قاعة نشطة",
+        "eventsHosted": "فعالية مستضافة",
+        "servicePartners": "شريك خدمات",
+        "satisfactionRate": "رضا العملاء"
+      }
+    },
+    "mobileApp": {
+      "comingSoon": "قريباً",
+      "title": "احجز فعاليتك المثالية",
+      "titleSub": "في أي وقت، من أي مكان",
+      "description": "اكتشف القاعات، تواصل مع شركاء الخدمات، وأدِر فعالياتك أثناء التنقل. تطبيق الموبايل يجلب تجربة فييستا الكاملة إلى أطراف أصابعك.",
+      "instantBrowsing": "تصفح فوري للقاعات",
+      "realtimeBooking": "حجز في الوقت الفعلي"
+    },
+    "products": {
+      "title": "منتجان قويان، نظام واحد متكامل",
+      "subtitle": "اختر الحل المناسب لاحتياجاتك أو استخدم كليهما معاً",
+      "webApp": {
+        "title": "نظام الإدارة",
+        "description": "منصة شاملة عبر الويب لأصحاب القاعات وشركاء الخدمات لإدارة عملياتهم التجارية بكفاءة.",
+        "features": {
+          "booking": "حجز الفعاليات وإدارة التقويم",
+          "reports": "التقارير المالية والتحليلات",
+          "collaboration": "أدوات التعاون الجماعي",
+          "database": "قاعدة بيانات العملاء والشركاء",
+          "invoicing": "الفواتير والمدفوعات الآلية"
+        },
+        "learnMore": "استكشف نظام الإدارة"
+      },
+      "mobileApp": {
+        "title": "سوق الموبايل",
+        "description": "تطبيق موبايل سهل الاستخدام للعملاء لاكتشاف القاعات، تصفح الخدمات، وحجز الفعاليات أثناء التنقل.",
+        "features": {
+          "discovery": "اكتشاف وبحث القاعات",
+          "booking": "عملية حجز سريعة",
+          "tools": "أدوات تخطيط الفعاليات",
+          "partners": "ربط شركاء الخدمات",
+          "updates": "تحديثات في الوقت الفعلي"
+        },
+        "learnMore": "استكشف تطبيق الموبايل"
+      }
+    },
+    "features": {
+      "title": "مصمم للجميع في صناعة الفعاليات",
+      "subtitle": "مميزات قوية مصممة خصيصاً لاحتياجاتك",
+      "venueOwners": {
+        "title": "لأصحاب القاعات",
+        "description": "مجموعة إدارة أعمال كاملة مع رؤى فورية وعمليات آلية.",
+        "features": {
+          "calendar": "تقويم ذكي مع تتبع التوفر",
+          "analytics": "تحليلات مالية فورية",
+          "team": "إدارة الفريق والصلاحيات",
+          "invoicing": "الفواتير والمدفوعات الآلية"
+        },
+        "viewApp": "عرض نظام الإدارة"
+      },
+      "eventPlanners": {
+        "title": "لمنظمي الفعاليات",
+        "description": "كل ما تحتاجه لتخطيط وتنفيذ فعاليات مثالية، كل شيء في مكان واحد.",
+        "features": {
+          "browse": "تصفح أكثر من 500 قاعة موثقة",
+          "connect": "تواصل مع شركاء خدمات موثوقين",
+          "tracking": "تتبع الميزانية في الوقت الفعلي",
+          "dashboard": "لوحة تحكم مركزية للفعاليات"
+        },
+        "viewApp": "عرض تطبيق الموبايل"
+      },
+      "servicePartners": {
+        "title": "لشركاء الخدمات",
+        "description": "نمِّ عملك من خلال التواصل مع المزيد من العملاء وإدارة الوظائف بكفاءة.",
+        "features": {
+          "connections": "اتصالات مباشرة مع القاعات والعملاء",
+          "dashboard": "لوحة تحكم إدارة الوظائف",
+          "reviews": "بناء السمعة من خلال التقييمات",
+          "payments": "معالجة دفع آمنة"
+        },
+        "viewApp": "عرض نظام الإدارة"
+      }
+    },
+    "howItWorks": {
+      "title": "كيف تعمل فييستا",
+      "subtitle": "ابدأ في دقائق مع عملية التسجيل البسيطة",
+      "steps": {
+        "createAccount": {
+          "title": "إنشاء حساب",
+          "description": "سجّل كمالك قاعة، منظم فعاليات، أو شريك خدمات"
+        },
+        "setupProfile": {
+          "title": "إعداد الملف الشخصي",
+          "description": "أكمل ملفك بالصور، الخدمات، والتوفر"
+        },
+        "connectBook": {
+          "title": "تواصل واحجز",
+          "description": "تصفح، تواصل، واحجز مع شركاء موثقين"
+        },
+        "manageEvents": {
+          "title": "أدِر ونمِّ",
+          "description": "تتبع الفعاليات، حلل الأداء، ووسّع عملك"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "محبوب من قبل محترفي الفعاليات في جميع أنحاء تونس",
+      "subtitle": "انضم إلى آلاف المستخدمين الراضين الذين يحولون أعمال فعالياتهم"
+    },
+    "pricing": {
+      "title": "أسعار مخصصة لعملك",
+      "description": "لكل قاعة ومزود خدمة احتياجات فريدة. اتصل بفريق المبيعات للحصول على عرض أسعار مخصص يناسب حجم عملك ومتطلباتك.",
+      "noHiddenFees": "لا رسوم مخفية",
+      "noHiddenFeesDesc": "أسعار واضحة وشفافة مع كل شيء مشمول",
+      "flexiblePlans": "خطط مرنة",
+      "flexiblePlansDesc": "اختر دورات فوترة شهرية، سنوية، أو مخصصة",
+      "bestValue": "أفضل قيمة",
+      "bestValueDesc": "أسعار تنافسية مع مميزات متميزة",
+      "callUs": "اتصل للاستفسار عن الأسعار",
+      "contactSales": "تواصل مع فريق المبيعات"
+    },
+    "faq": {
+      "title": "الأسئلة الشائعة",
+      "subtitle": "كل ما تحتاج معرفته عن فييستا",
+      "questions": {
+        "marketplace": {
+          "q": "ما هو سوق فييستا؟",
+          "a": "سوق فييستا هو منصة موبايل حيث يمكن للعملاء اكتشاف وحجز القاعات، تصفح شركاء الخدمات (المصورون، مقدمو الطعام، الدي جي، إلخ)، وتخطيط فعاليات كاملة. يربط منظمي الفعاليات مع القاعات الموثقة ومقدمي الخدمات في جميع أنحاء تونس."
+        },
+        "eventTypes": {
+          "q": "ما أنواع الفعاليات التي يمكنني إدارتها مع فييستا؟",
+          "a": "تدعم فييستا جميع أنواع الفعاليات بما في ذلك حفلات الزفاف، أعياد الميلاد، الفعاليات الشركاتية، المؤتمرات، الحفلات، والمزيد. منصتنا مرنة ويمكن تخصيصها لأي نوع من الفعاليات."
+        },
+        "getStarted": {
+          "q": "كيف أبدأ؟",
+          "a": "ببساطة احجز عرض توضيحي مع فريقنا. سنرشدك خلال المنصة، نساعدك في إعداد حسابك، ونوفر التدريب لضمان حصولك على أقصى استفادة من فييستا."
+        },
+        "tryBefore": {
+          "q": "هل يمكنني تجربة فييستا قبل الالتزام؟",
+          "a": "نعم! نقدم جلسات توضيحية حيث يمكنك استكشاف جميع المميزات. اتصل بفريق المبيعات لجدولة عرض توضيحي شخصي ومعرفة كيف تناسب فييستا احتياجاتك."
+        },
+        "support": {
+          "q": "ما نوع الدعم الذي تقدمونه؟",
+          "a": "نقدم دعماً شاملاً بما في ذلك التدريب على التسجيل، الدعم الهاتفي، الدعم عبر البريد الإلكتروني، وقاعدة معرفة مفصلة. فريقنا هنا لضمان نجاحك."
+        }
+      }
+    },
+    "contact": {
+      "title": "هل أنت مستعد لتحويل عمل فعالياتك؟",
+      "subtitle": "تواصل مع فريقنا للحصول على عرض توضيحي شخصي",
+      "callUs": "اتصل بنا",
+      "emailUs": "راسلنا",
+      "visitUs": "زرنا",
+      "bookDemo": "احجز عرضك التوضيحي",
+      "browseMarketplace": "تصفح السوق"
+    },
+    "footer": {
+      "description": "منصة إدارة الفعاليات الرائدة في تونس التي تربط القاعات، المنظمين، وشركاء الخدمات.",
+      "product": "المنتج",
+      "company": "الشركة",
+      "legal": "القانونية",
+      "aboutUs": "عن فييستا",
+      "careers": "الوظائف",
+      "blog": "المدونة",
+      "privacy": "سياسة الخصوصية",
+      "terms": "شروط الخدمة",
+      "cookies": "سياسة ملفات تعريف الارتباط",
+      "copyright": "© 2024 فييستا للفعاليات. صُنع بـ",
+      "inTunisia": "في تونس"
+    }
+  },
+  "invoices": {
+    "title": "الفواتير",
+    "subtitle": {
+      "client": "إدارة فواتير العملاء والمستحقات",
+      "partner": "إدارة فواتير الشركاء والمدفوعات"
+    },
+    "types": {
+      "invoice": "فاتورة",
+      "bill": "فاتورة",
+      "client": "عميل",
+      "partner": "شريك",
+      "clientInvoices": "فواتير العملاء",
+      "partnerBills": "فواتير الشركاء"
+    },
+    "recipient": {
+      "client": "عميل",
+      "partner": "شريك"
+    },
+    "defaultInvoiceName": "فاتورة",
+    "errors": {
+      "title": "خطأ في تحميل الفواتير",
+      "loadStatsFailed": "فشل في تحميل إحصائيات الفواتير",
+      "loadInvoicesFailed": "فشل في تحميل الفواتير. يرجى المحاولة مرة أخرى.",
+      "invalidInvoiceId": "معرف فاتورة غير صالح",
+      "invalidInvoiceData": "بيانات الفاتورة غير صالحة",
+      "loadDetailsFailed": "فشل في تحميل تفاصيل الفاتورة"
+    },
+    "delete": {
+      "loading": "جاري حذف {{invoiceName}}...",
+      "success": "تم حذف {{invoiceName}} بنجاح",
+      "error": "فشل في حذف {{invoiceName}}",
+      "confirm": {
+        "title": "تأكيد الحذف",
+        "description": "هل أنت متأكد من أنك تريد حذف \"{{invoiceName}}\"؟ لا يمكن التراجع عن هذا الإجراء وستتم إزالة جميع البيانات المرتبطة بشكل دائم."
+      }
+    },
+    "cancel": {
+      "loading": "جاري إلغاء الفاتورة...",
+      "success": "تم إلغاء الفاتورة بنجاح",
+      "error": "فشل في إلغاء الفاتورة",
+      "modal": {
+        "title": "إلغاء الفاتورة",
+        "description": "هل أنت متأكد من أنك تريد إلغاء هذه الفاتورة؟",
+        "reasonLabel": "سبب الإلغاء (اختياري)",
+        "reasonPlaceholder": "قدم سببًا للإلغاء..."
+      }
+    },
+    "send": {
+      "loading": "جاري إرسال الفاتورة...",
+      "success": "تم إرسال الفاتورة بنجاح",
+      "error": "فشل في إرسال الفاتورة",
+      "message": "يرجى العثور على فاتورتك المرفقة. يجب سداد الدفع بحلول التاريخ المحدد."
+    },
+    "markAsPaid": {
+      "loading": "جاري تعليم الفاتورة كمُسددة...",
+      "success": "تم تعليم الفاتورة كمُسددة",
+      "error": "فشل في تعليم الفاتورة كمُسددة"
+    },
+    "download": {
+      "generating": "جاري إنشاء PDF... يرجى الانتظار",
+      "success": "تم تنزيل الفاتورة {{invoiceNumber}} بنجاح",
+      "errors": {
+        "generic": "فشل في تنزيل الفاتورة",
+        "invalidFile": "تم استلام ملف غير صالح من الخادم",
+        "emptyFile": "ملف PDF المُنشئ فارغ",
+        "serverError": "فشل إنشاء PDF على الخادم",
+        "generationFailed": "خدمة إنشاء PDF غير متاحة",
+        "timeout": "انتهت مهلة إنشاء PDF. يرجى المحاولة مرة أخرى",
+        "notFound": "الفاتورة غير موجودة"
+      }
+    },
+    "filters": {
+      "show": "إظهار الفلاتر",
+      "hide": "إخفاء الفلاتر",
+      "clearAll": "مسح الكل",
+      "cleared": "تم مسح الفلاتر",
+      "status": {
+        "label": "الحالة",
+        "all": "جميع الحالات"
+      },
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء"
+    },
+    "retry": {
+      "loading": "جاري إعادة تحميل الفواتير...",
+      "button": "إعادة المحاولة"
+    },
+    "bulkSend": {
+      "noSelection": "يرجى تحديد الفواتير المراد إرسالها",
+      "loading": "جاري إرسال {{count}} فاتورة...",
+      "success": "تم إرسال {{count}} فاتورة بنجاح",
+      "error": "فشل في إرسال بعض الفواتير",
+      "button": "إرسال المحدد ({{count}})"
+    },
+    "stats": {
+      "totalRevenue": "إجمالي الإيرادات",
+      "totalExpenses": "إجمالي المصروفات",
+      "paid": "المُسددة",
+      "pending": "قيد الانتظار",
+      "overdue": "متأخرة",
+      "invoiceCount": "{{count}} فواتير",
+      "amountDue": "{{amount}} مستحق",
+      "needsAttention": "تحتاج إلى اهتمام"
+    },
+    "status": {
+      "draft": "مسودة",
+      "sent": "مرسلة",
+      "paid": "مسددة",
+      "partial": "جزئي",
+      "overdue": "متأخرة",
+      "cancelled": "ملغاة"
+    },
+    "table": {
+      "headers": {
+        "invoiceNumber": "رقم الفاتورة",
+        "client": "العميل",
+        "partner": "الشريك",
+        "issueDate": "تاريخ الإصدار",
+        "dueDate": "تاريخ الاستحقاق",
+        "amount": "المبلغ",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "noNumber": "لا يوجد رقم",
+      "noRecipient": "لا يوجد مستلم",
+      "empty": {
+        "search": "لم يتم العثور على فواتير تطابق بحثك.",
+        "default": "لم يتم العثور على {{type}}. أنشئ {{type}} الأولى لتبدأ."
+      }
+    },
+    "search": {
+      "placeholder": "البحث برقم الفاتورة، اسم {{type}}، أو البريد الإلكتروني..."
+    },
+    "loading": "جاري تحميل الفواتير...",
+    "empty": {
+      "search": {
+        "title": "لم يتم العثور على فواتير",
+        "description": "لا توجد فواتير تطابق معايير البحث أو التصفية الحالية."
+      },
+      "default": {
+        "title": "لا توجد فواتير حتى الآن",
+        "description": "ابدأ بإنشاء {{type}} الأولى."
+      }
+    },
+    "create": {
+      "button": "إنشاء {{type}}",
+      "firstButton": "إنشاء أول {{type}}"
+    },
+    "detailModal": {
+      "title": "تفاصيل الفاتورة",
+      "invoiceNumber": "الفاتورة رقم {{number}}",
+      "issued": "صدرت في: {{date}}",
+      "sent": "أرسلت في: {{date}}",
+      "billTo": "فاتورة إلى:",
+      "payTo": "الدفع إلى:",
+      "invoiceDetails": "تفاصيل الفاتورة:",
+      "dueDate": "تاريخ الاستحقاق:",
+      "event": "الحدث:",
+      "currency": "العملة:",
+      "items": "العناصر",
+      "description": "الوصف",
+      "quantity": "الكمية",
+      "rate": "السعر",
+      "amount": "المبلغ",
+      "noDescription": "لا يوجد وصف",
+      "subtotal": "المجموع الفرعي:",
+      "tax": "الضريبة",
+      "discount": "الخصم:",
+      "total": "الإجمالي:",
+      "amountPaid": "المبلغ المدفوع:",
+      "amountDue": "المبلغ المستحق:",
+      "notes": "ملاحظات",
+      "terms": "الشروط والأحكام"
+    },
+    "actions": {
+      "view": "عرض الفاتورة",
+      "edit": "تعديل الفاتورة",
+      "download": "تحميل PDF",
+      "send": "إرسال الفاتورة",
+      "markAsPaid": "تعليم كمُسددة",
+      "delete": "حذف الفاتورة",
+      "close": "إغلاق",
+      "downloadPdf": "تحميل PDF",
+      "editInvoice": "تعديل الفاتورة",
+      "sendInvoice": "إرسال الفاتورة",
+      "cancel": "إلغاء",
+      "deleteInvoice": "حذف الفاتورة",
+      "cancelInvoice": "إلغاء الفاتورة"
+    }
   }
 }

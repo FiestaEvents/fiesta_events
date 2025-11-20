@@ -8,9 +8,12 @@ import {
   CheckCircle,
   AlertTriangle
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ProgressBar from '../../../components/common/ProgressBar';
 
 const PerformanceTab = ({ partner, events, eventsStats }) => {
+  const { t } = useTranslation();
+
   // Calculate performance metrics
   const totalEvents = events?.length || 0;
   const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
@@ -74,33 +77,33 @@ const PerformanceTab = ({ partner, events, eventsStats }) => {
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
-          title="Overall Rating"
-          value={partner?.rating ? partner.rating.toFixed(1) : 'N/A'}
-          description="/ 5.0"
+          title={t("performanceTab.metrics.overallRating")}
+          value={partner?.rating ? partner.rating.toFixed(1) : t("common.notAvailable")}
+          description={t("common.rating", { value: "5.0" })}
           icon={Star}
           color="bg-yellow-500"
         />
         
         <MetricCard
-          title="Completion Rate"
-          value={`${Math.round(completionRate)}%`}
-          description={`${completedEvents}/${totalEvents} events`}
+          title={t("performanceTab.metrics.completionRate")}
+          value={t("common.percentage", { value: Math.round(completionRate) })}
+          description={t("common.eventsCount", { completed: completedEvents, total: totalEvents })}
           icon={CheckCircle}
           color="bg-green-500"
         />
         
         <MetricCard
-          title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
-          description="All time"
+          title={t("performanceTab.metrics.totalRevenue")}
+          value={t("common.currency", { amount: totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}
+          description={t("performanceTab.metrics.allTime")}
           icon={DollarSign}
           color="bg-purple-500"
         />
         
         <MetricCard
-          title="Avg. per Event"
-          value={`$${averageRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-          description="Average revenue"
+          title={t("performanceTab.metrics.averagePerEvent")}
+          value={t("common.currency", { amount: averageRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}
+          description={t("performanceTab.metrics.averageRevenue")}
           icon={TrendingUp}
           color="bg-blue-500"
         />
@@ -111,25 +114,25 @@ const PerformanceTab = ({ partner, events, eventsStats }) => {
         <div className="flex items-center gap-3 mb-6">
           <Award className="w-6 h-6 text-orange-500" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Performance Score
+            {t("performanceTab.performanceScore.title")}
           </h3>
         </div>
         
         <div className="space-y-2">
           <PerformanceIndicator
-            label="Service Quality"
+            label={t("performanceTab.performanceScore.serviceQuality")}
             value={partner?.rating || 0}
             max={5}
             color="orange"
           />
           <PerformanceIndicator
-            label="Reliability"
+            label={t("performanceTab.performanceScore.reliability")}
             value={completionRate}
             color="green"
           />
           <PerformanceIndicator
-            label="Revenue Generation"
-            value={Math.min((totalRevenue / 10000) * 100, 100)} // Assuming 10k is excellent
+            label={t("performanceTab.performanceScore.revenueGeneration")}
+            value={Math.min((totalRevenue / 10000) * 100, 100)}
             color="purple"
           />
         </div>
@@ -138,7 +141,7 @@ const PerformanceTab = ({ partner, events, eventsStats }) => {
       {/* Monthly Performance */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-          Performance Overview
+          {t("performanceTab.performanceOverview.title")}
         </h3>
         
         <div className="space-y-6">
@@ -150,7 +153,9 @@ const PerformanceTab = ({ partner, events, eventsStats }) => {
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {completedEvents}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Events Completed</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t("performanceTab.performanceOverview.eventsCompleted")}
+              </p>
             </div>
             
             <div className="text-center">
@@ -160,7 +165,9 @@ const PerformanceTab = ({ partner, events, eventsStats }) => {
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {totalEvents}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Assignments</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t("performanceTab.performanceOverview.totalAssignments")}
+              </p>
             </div>
             
             <div className="text-center">
@@ -168,9 +175,11 @@ const PerformanceTab = ({ partner, events, eventsStats }) => {
                 <DollarSign className="w-8 h-8 text-purple-600 dark:text-purple-400" />
               </div>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                ${totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                {t("common.currency", { amount: totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Revenue Generated</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t("performanceTab.performanceOverview.revenueGenerated")}
+              </p>
             </div>
           </div>
         </div>
@@ -183,12 +192,12 @@ const PerformanceTab = ({ partner, events, eventsStats }) => {
             <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
             <div>
               <h4 className="font-semibold text-orange-800 dark:text-orange-300 mb-2">
-                Improvement Opportunity
+                {t("performanceTab.recommendations.improvementOpportunity")}
               </h4>
               <p className="text-orange-700 dark:text-orange-400 text-sm">
                 {completionRate < 60 
-                  ? "Consider focusing on completing more events to improve reliability scores."
-                  : "Good progress! Continue maintaining consistent event completion rates."
+                  ? t("performanceTab.recommendations.lowCompletion")
+                  : t("performanceTab.recommendations.goodProgress")
                 }
               </p>
             </div>

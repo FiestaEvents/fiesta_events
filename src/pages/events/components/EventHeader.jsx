@@ -2,8 +2,11 @@
 import React from "react";
 import { ArrowLeft, Edit, Trash2, Calendar } from "lucide-react";
 import Badge from "../../../components/common/Badge";
+import { useTranslation } from "react-i18next";
 
 const EventHeader = ({ event, onBack, onEdit, onDelete, getStatusColor, getStatusLabel }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="p-6">
       {/* Back Button */}
@@ -12,7 +15,9 @@ const EventHeader = ({ event, onBack, onEdit, onDelete, getStatusColor, getStatu
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 dark:text-gray-400 dark:hover:text-white transition"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span className="text-sm font-medium">Back to Events</span>
+        <span className="text-sm font-medium">
+          {t("eventHeader.backButton")}
+        </span>
       </button>
 
       {/* Event Icon & Title */}
@@ -46,11 +51,14 @@ const EventHeader = ({ event, onBack, onEdit, onDelete, getStatusColor, getStatu
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
         >
           <Edit className="w-4 h-4" />
-          <span className="font-medium">Edit</span>
+          <span className="font-medium">
+            {t("eventHeader.actions.edit")}
+          </span>
         </button>
         <button
           onClick={onDelete}
           className="flex items-center justify-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 transition"
+          title={t("eventHeader.actions.delete")}
         >
           <Trash2 className="w-4 h-4" />
         </button>

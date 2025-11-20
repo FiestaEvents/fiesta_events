@@ -1,4 +1,3 @@
-// components/clients/PaymentsTab.jsx
 import React from "react";
 import {
   DollarSign,
@@ -10,16 +9,27 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
+  const { t } = useTranslation();
+
   const handleRecordPaymentClick = () => {
     if (events.length === 0) {
-      toast.error("No events available for payment");
+      toast.error(t("payments.labels.noEventsAvailable"));
     } else if (events.length === 1) {
       onRecordPayment(events[0]._id);
     } else {
-      toast.error("Please select a specific event to record payment");
+      toast.error(t("payments.labels.selectSpecificEvent"));
     }
+  };
+
+  const getPaymentMethodLabel = (method) => {
+    return t(`payments.methods.${method}`) || method;
+  };
+
+  const getPaymentStatusLabel = (status) => {
+    return t(`payments.status.${status}`) || status;
   };
 
   return (
@@ -31,7 +41,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
             className="px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition dark:bg-orange-700 dark:hover:bg-green-600"
           >
             <Plus className="h-4 w-4" />
-            Record Payment
+            {t("payments.buttons.recordPayment")}
           </button>
         </div>
       )}
@@ -49,7 +59,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                   {formatCurrency(eventsStats.totalRevenue)}
                 </div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Total Revenue
+                  {t("payments.statistics.totalRevenue")}
                 </div>
               </div>
             </div>
@@ -64,7 +74,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                   {formatCurrency(eventsStats.totalPaid)}
                 </div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Total Paid
+                  {t("payments.statistics.totalPaid")}
                 </div>
               </div>
             </div>
@@ -79,7 +89,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                   {formatCurrency(eventsStats.pendingAmount)}
                 </div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Outstanding
+                  {t("payments.statistics.outstanding")}
                 </div>
               </div>
             </div>
@@ -94,7 +104,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                   {eventsStats.totalEvents}
                 </div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Total Events
+                  {t("payments.statistics.totalEvents")}
                 </div>
               </div>
             </div>
@@ -106,7 +116,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
       {events.length > 0 && (
         <div className="mb-8">
           <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-white">
-            Payment Breakdown by Event
+            {t("payments.sections.paymentBreakdown")}
           </h4>
           <div className="space-y-4">
             {events.map((event) => {
@@ -134,15 +144,14 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                             : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
                       }`}
                     >
-                      {paymentStatus.charAt(0).toUpperCase() +
-                        paymentStatus.slice(1)}
+                      {getPaymentStatusLabel(paymentStatus)}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <div className="text-gray-600 dark:text-gray-400">
-                        Total Amount
+                        {t("payments.labels.totalAmount")}
                       </div>
                       <div className="font-semibold text-gray-900 dark:text-white">
                         {formatCurrency(totalAmount)}
@@ -150,7 +159,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                     </div>
                     <div>
                       <div className="text-gray-600 dark:text-gray-400">
-                        Paid Amount
+                        {t("payments.labels.paidAmount")}
                       </div>
                       <div className="font-semibold text-green-600 dark:text-green-400">
                         {formatCurrency(paidAmount)}
@@ -158,7 +167,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                     </div>
                     <div>
                       <div className="text-gray-600 dark:text-gray-400">
-                        Balance Due
+                        {t("payments.labels.balanceDue")}
                       </div>
                       <div
                         className={`font-semibold ${
@@ -178,7 +187,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                         onClick={() => onRecordPayment(event._id)}
                         className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition"
                       >
-                        Record Payment
+                        {t("payments.buttons.recordPayment")}
                       </button>
                     </div>
                   )}
@@ -192,7 +201,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
       {/* Payment History */}
       <div>
         <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-white">
-          Recent Payment History
+          {t("payments.sections.recentPaymentHistory")}
         </h4>
 
         {/* Extract recent payments from all events */}
@@ -235,10 +244,10 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {payment.method &&
-                          `${payment.method.charAt(0).toUpperCase() + payment.method.slice(1)} • `}
+                          `${getPaymentMethodLabel(payment.method)} • `}
                         {payment.paidDate
                           ? new Date(payment.paidDate).toLocaleDateString()
-                          : "No date"}
+                          : t("clients.table.defaultValues.noDate")}
                       </div>
                     </div>
                   </div>
@@ -253,7 +262,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                           : "text-yellow-600 dark:text-yellow-400"
                       }`}
                     >
-                      {payment.status}
+                      {getPaymentStatusLabel(payment.status)}
                     </div>
                   </div>
                 </div>
@@ -263,14 +272,14 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
             <div className="text-center py-12 flex justify-center items-center flex-col">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 dark:text-gray-400">
-                No payment history found
+                {t("payments.labels.noPaymentHistory")}
               </p>
               <button
                 onClick={handleRecordPaymentClick}
                 className="mt-4 px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
               >
                 <Plus className="h-4 w-4" />
-                Record First Payment
+                {t("payments.buttons.recordFirstPayment")}
               </button>
             </div>
           );

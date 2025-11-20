@@ -9,6 +9,7 @@ import {
   Plus,
   AlertCircle
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Button from '../../../components/common/Button';
 import EmptyState from '../../../components/common/EmptyState';
 
@@ -23,16 +24,15 @@ const EventsTab = ({
   getEventStatusColor,
   getStatusLabel
 }) => {
+  const { t } = useTranslation();
+
   const formatCurrency = (amount) => {
-    if (!amount) return '$0.00';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+    if (!amount) return t('common.currency', { amount: '0.00' });
+    return t('common.currency', { amount: amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) });
   };
 
   const getPartnerCost = (event) => {
-    const partnerData = event.partners?.[0]; // Assuming first partner is the current one
+    const partnerData = event.partners?.[0];
     return partnerData?.cost || partnerData?.hourlyRate || 0;
   };
 
@@ -42,10 +42,10 @@ const EventsTab = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Event History
+            {t('eventsTab.title')}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {events?.length || 0} events total
+            {t('eventsTab.totalEvents', { count: events?.length || 0 })}
           </p>
         </div>
         
@@ -57,7 +57,7 @@ const EventsTab = ({
             onClick={onRefresh}
             loading={loading}
           >
-            Refresh
+            {t('partnerDetail.actions.refresh')}
           </Button>
         </div>
       </div>
@@ -119,7 +119,7 @@ const EventsTab = ({
                         onViewEvent(event);
                       }}
                     >
-                      View
+                      {t('partnerDetail.actions.view')}
                     </Button>
                     <Button
                       variant="outline"
@@ -130,7 +130,7 @@ const EventsTab = ({
                         onNavigateToEvent(event._id, e);
                       }}
                     >
-                      Open
+                      {t('partnerDetail.actions.open')}
                     </Button>
                   </div>
                 </div>
@@ -140,8 +140,8 @@ const EventsTab = ({
         ) : (
           <EmptyState
             icon={Calendar}
-            title="No Events Found"
-            description="This partner hasn't been assigned to any events yet."
+            title={t('eventsTab.noEvents.title')}
+            description={t('eventsTab.noEvents.description')}
             size="lg"
           />
         )}
@@ -151,20 +151,24 @@ const EventsTab = ({
       {events && events.length > 0 && (
         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
           <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
-            Events Summary
+            {t('eventsTab.summary.title')}
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {eventsStats?.total || events.length}
               </p>
-              <p className="text-gray-600 dark:text-gray-400">Total Events</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('eventsTab.summary.totalEvents')}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {eventsStats?.completed || events.filter(e => e.status === 'completed').length}
               </p>
-              <p className="text-gray-600 dark:text-gray-400">Completed</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('eventsTab.summary.completed')}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
@@ -172,13 +176,17 @@ const EventsTab = ({
                   ['confirmed', 'pending', 'in-progress'].includes(e.status)
                 ).length}
               </p>
-              <p className="text-gray-600 dark:text-gray-400">Upcoming</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('eventsTab.summary.upcoming')}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {formatCurrency(events.reduce((sum, event) => sum + getPartnerCost(event), 0))}
               </p>
-              <p className="text-gray-600 dark:text-gray-400">Total Revenue</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('eventsTab.summary.totalRevenue')}
+              </p>
             </div>
           </div>
         </div>

@@ -7,9 +7,12 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ProgressBar from '../../../components/common/ProgressBar';
 
 const OverviewTab = ({ partner, events, eventsStats, formatDate }) => {
+  const { t } = useTranslation();
+
   // Calculate stats
   const totalEvents = events?.length || 0;
   const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
@@ -56,29 +59,29 @@ const OverviewTab = ({ partner, events, eventsStats, formatDate }) => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Total Events"
+          title={t('overviewTab.stats.totalEvents')}
           value={totalEvents}
           icon={Calendar}
           color="bg-blue-500"
         />
         
         <StatCard
-          title="Completed Events"
+          title={t('overviewTab.stats.completedEvents')}
           value={completedEvents}
           icon={CheckCircle}
           color="bg-green-500"
         />
         
         <StatCard
-          title="Upcoming Events"
+          title={t('overviewTab.stats.upcomingEvents')}
           value={upcomingEvents}
           icon={Clock}
           color="bg-orange-500"
         />
         
         <StatCard
-          title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
+          title={t('overviewTab.stats.totalRevenue')}
+          value={t('common.currency', { amount: totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}
           icon={DollarSign}
           color="bg-purple-500"
         />
@@ -89,16 +92,16 @@ const OverviewTab = ({ partner, events, eventsStats, formatDate }) => {
         {/* Completion Rate */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Completion Rate
+            {t('overviewTab.metrics.completionRate')}
           </h3>
           <div className="space-y-4">
             <ProgressBar value={completionRate} size="lg" />
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
-                {completedEvents} of {totalEvents} events completed
+                {t('common.eventsCount', { completed: completedEvents, total: totalEvents })}
               </span>
               <span className="font-semibold text-gray-900 dark:text-white">
-                {Math.round(completionRate)}%
+                {t('common.percentage', { value: Math.round(completionRate) })}
               </span>
             </div>
           </div>
@@ -107,16 +110,16 @@ const OverviewTab = ({ partner, events, eventsStats, formatDate }) => {
         {/* Performance Score */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Performance Score
+            {t('overviewTab.metrics.performanceScore')}
           </h3>
           <div className="space-y-4">
             <ProgressBar value={performanceScore} size="lg" />
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
-                Based on partner rating
+                {t('overviewTab.metrics.basedOnRating')}
               </span>
               <span className="font-semibold text-gray-900 dark:text-white">
-                {partner?.rating ? partner.rating.toFixed(1) : 'N/A'} / 5.0
+                {partner?.rating ? t('common.rating', { value: partner.rating.toFixed(1) }) : t('common.notAvailable')}
               </span>
             </div>
           </div>
@@ -127,7 +130,7 @@ const OverviewTab = ({ partner, events, eventsStats, formatDate }) => {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Recent Activity
+            {t('overviewTab.recentActivity.title')}
           </h3>
         </div>
         
@@ -146,10 +149,12 @@ const OverviewTab = ({ partner, events, eventsStats, formatDate }) => {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      ${event.partners?.find(p => {
-                        const partnerId = p.partner?._id?.$oid || p.partner?._id || p.partner;
-                        return partnerId === partner?._id;
-                      })?.cost || 0}
+                      {t('common.currency', { 
+                        amount: (event.partners?.find(p => {
+                          const partnerId = p.partner?._id?.$oid || p.partner?._id || p.partner;
+                          return partnerId === partner?._id;
+                        })?.cost || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })
+                      })}
                     </p>
                   </div>
                 </div>
@@ -159,7 +164,7 @@ const OverviewTab = ({ partner, events, eventsStats, formatDate }) => {
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-400">
-                No recent activity found
+                {t('overviewTab.recentActivity.noActivity')}
               </p>
             </div>
           )}

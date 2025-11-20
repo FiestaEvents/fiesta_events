@@ -11,8 +11,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { useTranslation } from "react-i18next";
 
 const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) => {
+  const { t } = useTranslation();
+
   const InfoRow = ({ icon: Icon, label, value, onClick, isLink }) => (
     <div className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
       <Icon className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -40,20 +43,20 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
   return (
     <div>
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Event Information
+        {t("eventInfo.title")}
       </h2>
       <div className="space-y-0">
         {/* Date & Time */}
         <InfoRow
           icon={Calendar}
-          label="Start Date"
+          label={t("eventInfo.fields.startDate")}
           value={formatDate(event.startDate)}
         />
         
         {event.endDate && event.endDate !== event.startDate && (
           <InfoRow
             icon={Calendar}
-            label="End Date"
+            label={t("eventInfo.fields.endDate")}
             value={formatDate(event.endDate)}
           />
         )}
@@ -61,7 +64,7 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {(event.startTime || event.endTime) && (
           <InfoRow
             icon={Clock}
-            label="Time"
+            label={t("eventInfo.fields.time")}
             value={`${event.startTime || "00:00"} - ${event.endTime || "23:59"}`}
           />
         )}
@@ -70,7 +73,7 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {event.venueSpace?.name && (
           <InfoRow
             icon={MapPin}
-            label="Venue Space"
+            label={t("eventInfo.fields.venueSpace")}
             value={event.venueSpace.name}
           />
         )}
@@ -79,8 +82,8 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {event.guestCount && (
           <InfoRow
             icon={Users}
-            label="Guest Count"
-            value={`${event.guestCount} guests`}
+            label={t("eventInfo.fields.guestCount")}
+            value={`${event.guestCount} ${t("eventInfo.values.guests")}`}
           />
         )}
 
@@ -88,8 +91,8 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {event.clientId && (
           <InfoRow
             icon={User}
-            label="Client"
-            value={event.clientId.name || event.clientId.email || "Unknown"}
+            label={t("eventInfo.fields.client")}
+            value={event.clientId.name || event.clientId.email || t("eventInfo.values.unknown")}
             onClick={onNavigateToClient}
             isLink={true}
           />
@@ -99,7 +102,7 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {event.pricing?.totalAmount !== undefined && (
           <InfoRow
             icon={DollarSign}
-            label="Total Amount"
+            label={t("eventInfo.fields.totalAmount")}
             value={formatCurrency(event.pricing.totalAmount)}
           />
         )}
@@ -107,7 +110,7 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {event.pricing?.basePrice !== undefined && (
           <InfoRow
             icon={DollarSign}
-            label="Base Price"
+            label={t("eventInfo.fields.basePrice")}
             value={formatCurrency(event.pricing.basePrice)}
           />
         )}
@@ -115,7 +118,7 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {event.pricing?.discount > 0 && (
           <InfoRow
             icon={DollarSign}
-            label="Discount"
+            label={t("eventInfo.fields.discount")}
             value={
               event.pricing.discountType === "percentage"
                 ? `${event.pricing.discount}%`
@@ -128,7 +131,7 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {event.description && (
           <InfoRow
             icon={FileText}
-            label="Description"
+            label={t("eventInfo.fields.description")}
             value={event.description}
           />
         )}
@@ -137,7 +140,7 @@ const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) =>
         {event.notes && (
           <InfoRow
             icon={FileText}
-            label="Notes"
+            label={t("eventInfo.fields.notes")}
             value={event.notes}
           />
         )}

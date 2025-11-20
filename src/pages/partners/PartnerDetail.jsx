@@ -1,7 +1,7 @@
-// PartnerDetail.jsx - UPDATED (only pass eventId)
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "../../hooks/useToast";
+import { useTranslation } from "react-i18next";
 
 // Components
 import Modal, { ConfirmModal } from "../../components/common/Modal";
@@ -22,6 +22,7 @@ const PartnerDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  const { t } = useTranslation();
 
   const { partnerData, events, eventsStats, loading, error, refreshData } =
     usePartnerDetail(id);
@@ -34,7 +35,7 @@ const PartnerDetail = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  // EventForm modal state - SIMPLIFIED: only store eventId
+  // EventForm modal state
   const [isEventFormOpen, setIsEventFormOpen] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
 
@@ -54,12 +55,12 @@ const PartnerDetail = () => {
 
   const getStatusLabel = useCallback((status) => {
     const labels = {
-      active: "Active",
-      inactive: "Inactive",
-      pending: "Pending",
+      active: t("partnerHeader.status.active"),
+      inactive: t("partnerHeader.status.inactive"),
+      pending: t("partnerHeader.status.pending"),
     };
-    return labels[status] || status || "Unknown";
-  }, []);
+    return labels[status] || status || t("common.unknown");
+  }, [t]);
 
   const getStatusColor = useCallback((status) => {
     const colors = {
@@ -106,12 +107,10 @@ const PartnerDetail = () => {
     setIsEventModalOpen(true);
   }, []);
 
-  // UPDATED: Only store eventId, not the full event object
   const handleEditEvent = useCallback((event) => {
     console.log("Edit event called with:", event);
     setIsEventModalOpen(false);
     
-    // Extract just the ID
     const eventId = typeof event === 'object' ? event._id : event;
     setEditingEventId(eventId);
     setIsEventFormOpen(true);
@@ -141,8 +140,8 @@ const PartnerDetail = () => {
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
     await refreshData();
-    showSuccess("Partner updated successfully");
-  }, [refreshData, showSuccess]);
+    showSuccess(t("partnerDetail.notifications.updated"));
+  }, [refreshData, showSuccess, t]);
 
   const handleDeletePartner = useCallback(async () => {
     if (!id) {
@@ -155,9 +154,9 @@ const PartnerDetail = () => {
       await promise(
         partnerService.delete(id),
         {
-          loading: "Deleting partner...",
-          success: "Partner deleted successfully",
-          error: "Failed to delete partner"
+          loading: t("partnerDetail.modals.deletePartner.deleting"),
+          success: t("partnerDetail.notifications.deleted"),
+          error: t("partnerDetail.modals.deletePartner.errorDeleting")
         }
       );
       setIsDeleteModalOpen(false);
@@ -167,7 +166,7 @@ const PartnerDetail = () => {
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError]);
+  }, [id, navigate, promise, showError, t]);
 
   // EventForm modal handlers
   const handleEventFormClose = useCallback(() => {
@@ -181,15 +180,15 @@ const PartnerDetail = () => {
     await refreshData();
     showSuccess(
       editingEventId
-        ? "Event updated successfully!"
-        : "Event created successfully!"
+        ? t("partnerDetail.notifications.eventUpdated")
+        : t("partnerDetail.notifications.eventCreated")
     );
-  }, [editingEventId, refreshData, showSuccess]);
+  }, [editingEventId, refreshData, showSuccess, t]);
 
   const handleRetry = useCallback(() => {
     refreshData();
-    showInfo("Retrying to load partner details...");
-  }, [refreshData, showInfo]);
+    showInfo(t("partnerDetail.error.retrying"));
+  }, [refreshData, showInfo, t]);
 
   // Loading state
   if (loading && !partnerData) {
@@ -198,7 +197,7 @@ const PartnerDetail = () => {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading partner details...
+            {t("partnerDetail.loading")}
           </p>
         </div>
       </div>
@@ -212,24 +211,24 @@ const PartnerDetail = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!partnerData ? "Partner Not Found" : "Error Loading Partner"}
+              {!partnerData ? t("partnerDetail.error.notFound") : t("partnerDetail.error.loading")}
             </h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || "The partner you're looking for doesn't exist."}
+              {error?.message || t("partnerDetail.error.message")}
             </p>
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => navigate("/partners")}
                 className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
               >
-                Back to Partners
+                {t("partnerDetail.backToPartners")}
               </button>
               {error && (
                 <button
                   onClick={handleRetry}
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
                 >
-                  Try Again
+                  {t("partnerDetail.error.retry")}
                 </button>
               )}
             </div>
@@ -275,9 +274,9 @@ const PartnerDetail = () => {
               <div className="border-b border-gray-200 dark:border-orange-800">
                 <nav className="flex -mb-px">
                   {[
-                    { id: "overview", label: "Overview" },
-                    { id: "events", label: "Events" },
-                    { id: "performance", label: "Performance" },
+                    { id: "overview", label: t("partnerDetail.tabs.overview") },
+                    { id: "events", label: t("partnerDetail.tabs.events") },
+                    { id: "performance", label: t("partnerDetail.tabs.performance") },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -340,7 +339,7 @@ const PartnerDetail = () => {
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Partner"
+        title={t("partnerDetail.modals.editPartner")}
         size="lg"
       >
         <PartnerForm
@@ -354,10 +353,10 @@ const PartnerDetail = () => {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeletePartner}
-        title="Delete Partner"
-        message={`Are you sure you want to delete "${partnerData?.name}"? This action cannot be undone and will remove all associated data.`}
-        confirmText="Delete Partner"
-        cancelText="Cancel"
+        title={t("partnerDetail.modals.deletePartner.title")}
+        message={t("partnerDetail.modals.deletePartner.message", { name: partnerData?.name })}
+        confirmText={t("partnerDetail.modals.deletePartner.confirm")}
+        cancelText={t("partnerDetail.modals.deletePartner.cancel")}
         variant="danger"
         loading={deleteLoading}
       />
@@ -373,13 +372,13 @@ const PartnerDetail = () => {
         refreshData={refreshData}
       />
 
-      {/* UPDATED: Only pass eventId */}
+      {/* Event Form Modal */}
       {isEventFormOpen && (
         <EventForm
           isOpen={isEventFormOpen}
           onClose={handleEventFormClose}
           onSuccess={handleEventFormSuccess}
-          eventId={editingEventId}  // ✅ Only eventId, let EventForm fetch the rest
+          eventId={editingEventId}
         />
       )}
     </div>

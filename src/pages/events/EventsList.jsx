@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   Calendar as CalendarIcon,
@@ -129,7 +130,10 @@ const DateEventsModal = ({
   onEventClick,
   onCreateEvent,
 }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen || !selectedDate) return null;
+  
   const dateEvents = events.filter((event) => {
     const eventDate = new Date(event.startDate);
     return (
@@ -138,6 +142,7 @@ const DateEventsModal = ({
       eventDate.getFullYear() === selectedDate.getFullYear()
     );
   });
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full">
@@ -148,7 +153,7 @@ const DateEventsModal = ({
               {formatDateLong(selectedDate)}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {dateEvents.length} event{dateEvents.length !== 1 ? "s" : ""}
+              {dateEvents.length} {dateEvents.length !== 1 ? t("eventList.calendar.events") : t("eventList.calendar.event")}
             </p>
           </div>
           <button
@@ -198,13 +203,13 @@ const DateEventsModal = ({
                     {event.client && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Users className="w-4 h-4" />
-                        Client: {event.client.name || "Unknown"}
+                        {t("eventList.dateEventsModal.client")}: {event.client.name || t("eventList.table.unknownClient")}
                       </div>
                     )}
                     {event.guestCount && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <MapPin className="w-4 h-4" />
-                        {event.guestCount} guests
+                        {event.guestCount} {t("eventList.dateEventsModal.guests")}
                       </div>
                     )}
                     {event.description && (
@@ -220,10 +225,10 @@ const DateEventsModal = ({
             <div className="text-center py-8">
               <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                No events scheduled
+                {t("eventList.dateEventsModal.noEventsScheduled")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                There are no events scheduled for this date.
+                {t("eventList.dateEventsModal.noEventsMessage")}
               </p>
             </div>
           )}
@@ -236,7 +241,7 @@ const DateEventsModal = ({
               className="w-full"
             >
               <Plus className="h-4 w-4" />
-              Create Event on This Date
+              {t("eventList.actions.createEventOnDate")}
             </Button>
           </div>
         </div>
@@ -247,6 +252,7 @@ const DateEventsModal = ({
 
 // --- MAIN EVENT LIST COMPONENT ---
 const EventList = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo, promise } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -338,7 +344,7 @@ const EventList = () => {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Failed to load events. Please try again.";
+        t("eventList.error.message");
       setError(errorMessage);
       showError(errorMessage);
       setEvents([]);
@@ -346,7 +352,7 @@ const EventList = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, search, status, eventType, dateRange, showError]);
+  }, [currentPage, pageSize, search, status, eventType, dateRange, showError, t]);
 
   const fetchEventsForCalendarView = useCallback(async () => {
     try {
@@ -393,7 +399,7 @@ const EventList = () => {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Failed to load events. Please try again.";
+        t("eventList.error.message");
       setError(errorMessage);
       showError(errorMessage);
       setEvents([]);
@@ -401,7 +407,7 @@ const EventList = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentDate, search, status, eventType, dateRange, showError]);
+  }, [currentDate, search, status, eventType, dateRange, showError, t]);
 
   // Combined refresh function
   const refreshAllData = useCallback(() => {
@@ -431,14 +437,14 @@ const EventList = () => {
     setEventType("all");
     setDateRange("all");
     setCurrentPage(1);
-    showInfo("Filters cleared");
-  }, [showInfo]);
+    showInfo(t("eventList.notifications.filtersCleared"));
+  }, [showInfo, t]);
 
   const handleRetry = useCallback(() => {
     setError(null);
     refreshAllData();
-    showInfo("Retrying to load events...");
-  }, [refreshAllData, showInfo]);
+    showInfo(t("eventList.notifications.retrying"));
+  }, [refreshAllData, showInfo, t]);
 
   const hasActiveFilters =
     search.trim() !== "" ||
@@ -472,14 +478,14 @@ const EventList = () => {
   const handleDeleteConfirm = useCallback(
     async (eventId, eventName = "Event") => {
       if (!eventId) {
-        showError("Invalid event ID");
+        showError(t("eventList.notifications.deleteError", { name: eventName }));
         return;
       }
       try {
         await promise(eventService.delete(eventId), {
-          loading: `Deleting ${eventName}...`,
-          success: `${eventName} deleted successfully`,
-          error: `Failed to delete ${eventName}`,
+          loading: t("eventList.notifications.deletingEvent", { name: eventName }),
+          success: t("eventList.notifications.eventDeleted", { name: eventName }),
+          error: t("eventList.notifications.deleteError", { name: eventName }),
         });
         refreshAllData();
         if (selectedEvent?._id === eventId) {
@@ -492,7 +498,7 @@ const EventList = () => {
         closeConfirmationModal();
       }
     },
-    [refreshAllData, selectedEvent, promise, showError, closeConfirmationModal]
+    [refreshAllData, selectedEvent, promise, showError, closeConfirmationModal, t]
   );
 
   const handleDeleteEvent = useCallback(
@@ -522,10 +528,10 @@ const EventList = () => {
     setPrefilledDate(null);
     showSuccess(
       selectedEvent
-        ? "Event updated successfully"
-        : "Event created successfully"
+        ? t("eventList.notifications.eventUpdated")
+        : t("eventList.notifications.eventCreated")
     );
-  }, [refreshAllData, selectedEvent, showSuccess]);
+  }, [refreshAllData, selectedEvent, showSuccess, t]);
 
   const handleFormClose = useCallback(() => {
     setShowEventModal(false);
@@ -585,8 +591,8 @@ const EventList = () => {
     const today = new Date();
     setCurrentDate(today);
     setSelectedDate(today);
-    showInfo("Navigated to today");
-  }, [showInfo]);
+    showInfo(t("eventList.notifications.navigatedToToday"));
+  }, [showInfo, t]);
 
   const formatMonthYear = (date) => {
     return date.toLocaleDateString("en-US", {
@@ -624,9 +630,9 @@ const EventList = () => {
     (year) => {
       setCurrentDate(new Date(year, currentDate.getMonth(), 1));
       setShowYearSelector(false);
-      showInfo(`Navigated to ${year}`);
+      showInfo(t("eventList.notifications.navigatedToYear", { year }));
     },
-    [currentDate, showInfo]
+    [currentDate, showInfo, t]
   );
 
   const calendarDays = useMemo(() => {
@@ -642,17 +648,26 @@ const EventList = () => {
     return days;
   }, [currentDate, daysInMonth, startingDayOfWeek]);
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  // Week days with translations
+  const weekDays = [
+    t("eventList.calendar.weekDays.sun"),
+    t("eventList.calendar.weekDays.mon"),
+    t("eventList.calendar.weekDays.tue"),
+    t("eventList.calendar.weekDays.wed"),
+    t("eventList.calendar.weekDays.thu"),
+    t("eventList.calendar.weekDays.fri"),
+    t("eventList.calendar.weekDays.sat"),
+  ];
 
   // Event type colors for legend
   const eventTypeColors = [
-    { type: "wedding", color: "bg-purple-500", label: "Wedding" },
-    { type: "corporate", color: "bg-blue-500", label: "Corporate" },
-    { type: "birthday", color: "bg-pink-500", label: "Birthday" },
-    { type: "conference", color: "bg-green-500", label: "Conference" },
-    { type: "party", color: "bg-orange-500", label: "Party" },
-    { type: "social", color: "bg-orange-500", label: "Social" },
-    { type: "other", color: "bg-gray-500", label: "Other" },
+    { type: "wedding", color: "bg-purple-500", label: t("eventList.filters.wedding") },
+    { type: "corporate", color: "bg-blue-500", label: t("eventList.filters.corporate") },
+    { type: "birthday", color: "bg-pink-500", label: t("eventList.filters.birthday") },
+    { type: "conference", color: "bg-green-500", label: t("eventList.filters.conference") },
+    { type: "party", color: "bg-orange-500", label: t("eventList.filters.party") },
+    { type: "social", color: "bg-orange-500", label: t("eventList.filters.social") },
+    { type: "other", color: "bg-gray-500", label: t("eventList.filters.other") },
   ];
 
   // Handle view mode change
@@ -668,7 +683,7 @@ const EventList = () => {
   // Table columns for list view
   const tableColumns = [
     {
-      header: "Event Title",
+      header: t("eventList.table.eventTitle"),
       accessor: "title",
       sortable: true,
       width: "25%",
@@ -679,23 +694,23 @@ const EventList = () => {
       ),
     },
     {
-      header: "Client",
+      header: t("eventList.table.client"),
       accessor: "client",
       sortable: true,
       width: "20%",
       render: (row) => {
         // Enhanced client name extraction
         const getClientName = (event) => {
-          if (!event) return "Unknown Client";
+          if (!event) return t("eventList.table.unknownClient");
 
           // Try different possible client data structures
           if (event.client?.name) return event.client.name;
           if (event.clientId?.name) return event.clientId.name;
           if (event.clientName) return event.clientName;
           if (typeof event.client === "string") return event.client;
-          if (typeof event.clientId === "string") return "Loading...";
+          if (typeof event.clientId === "string") return t("eventList.table.loading");
 
-          return "Unknown Client";
+          return t("eventList.table.unknownClient");
         };
 
         return (
@@ -706,7 +721,7 @@ const EventList = () => {
       },
     },
     {
-      header: "Date & Time",
+      header: t("eventList.table.dateTime"),
       accessor: "startDate",
       sortable: true,
       width: "15%",
@@ -717,16 +732,16 @@ const EventList = () => {
       ),
     },
     {
-      header: "Type",
+      header: t("eventList.table.type"),
       accessor: "type",
       sortable: true,
       width: "12%",
       render: (row) => (
-        <Badge color={getTypeColor(row.type)}>{row.type || "Other"}</Badge>
+        <Badge color={getTypeColor(row.type)}>{row.type || t("eventList.filters.other")}</Badge>
       ),
     },
     {
-      header: "Status",
+      header: t("eventList.table.status"),
       accessor: "status",
       sortable: true,
       width: "12%",
@@ -735,7 +750,7 @@ const EventList = () => {
       ),
     },
     {
-      header: "Guests",
+      header: t("eventList.table.guests"),
       accessor: "guestCount",
       sortable: true,
       width: "8%",
@@ -746,7 +761,7 @@ const EventList = () => {
       ),
     },
     {
-      header: "Actions",
+      header: t("eventList.table.actions"),
       accessor: "actions",
       width: "10%",
       className: "text-center",
@@ -758,7 +773,7 @@ const EventList = () => {
               onEventClick(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-            title="View Event"
+            title={t("eventList.actions.viewEvent")}
           >
             <Eye className="h-4 w-4" />
           </button>
@@ -768,7 +783,7 @@ const EventList = () => {
               handleEditEvent(row);
             }}
             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-            title="Edit Event"
+            title={t("eventList.actions.editEvent")}
           >
             <Edit className="h-4 w-4" />
           </button>
@@ -778,7 +793,7 @@ const EventList = () => {
               handleDeleteEvent(row._id, row.title || "Event");
             }}
             className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            title="Delete Event"
+            title={t("eventList.actions.deleteEvent")}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -818,75 +833,76 @@ const EventList = () => {
         />
       )}
       {/* Header */}
-{/* Header */}
-<div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-  <div className="flex flex-col gap-4">
-    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-      Event Calendar
-    </h1>
-    <p className="text-gray-600 dark:text-gray-400 mt-1">
-      View and manage your venue events{" "}
-      {hasInitialLoad &&
-        totalItems > 0 &&
-        `- Showing ${events.length} of ${totalItems} events`}
-    </p>
-  </div>
-  <div className="flex items-center gap-3">
-    {/* View Mode Toggle */}
-    <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-      <button
-        onClick={() => handleViewModeChange("list")}
-        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-          viewMode === "list"
-            ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-        }`}
-      >
-        <Table className="w-4 h-4" />
-        List
-      </button>
-      <button
-        onClick={() => handleViewModeChange("calendar")}
-        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-          viewMode === "calendar"
-            ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-        }`}
-      >
-        <Grid className="w-4 h-4" />
-        Calendar
-      </button>
-    </div>
-    {!showEmptyState && (
-      <Button
-        variant="primary"
-        icon={Plus}
-        onClick={() => handleCreateEvent()}
-      >
-        <Plus className="h-4 w-4" />
-        Create Event
-      </Button>
-    )}
-  </div>
-</div>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div className="flex flex-col gap-4">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {t("eventList.title")}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            {t("eventList.subtitle")}{" "}
+            {hasInitialLoad &&
+              totalItems > 0 &&
+              `- ${t("eventList.showingEvents", { count: events.length, total: totalItems })}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <button
+              onClick={() => handleViewModeChange("list")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === "list"
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              <Table className="w-4 h-4" />
+              {t("eventList.viewMode.list")}
+            </button>
+            <button
+              onClick={() => handleViewModeChange("calendar")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === "calendar"
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              <Grid className="w-4 h-4" />
+              {t("eventList.viewMode.calendar")}
+            </button>
+          </div>
+          {!showEmptyState && (
+            <Button
+              variant="primary"
+              icon={Plus}
+              onClick={() => handleCreateEvent()}
+            >
+              <Plus className="h-4 w-4" />
+              {t("eventList.actions.createEvent")}
+            </Button>
+          )}
+        </div>
+      </div>
+      
       {/* Error Message */}
       {error && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Events
+                {t("eventList.error.title")}
               </p>
               <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 {error}
               </p>
             </div>
             <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
+              {t("eventList.actions.retry")}
             </Button>
           </div>
         </div>
       )}
+      
       {/* Search & Filters */}
       {hasInitialLoad && !showEmptyState && (
         <div className="p-4 bg-white dark:bg-gray-800 rounded-lg mb-6">
@@ -895,7 +911,7 @@ const EventList = () => {
               <Input
                 className="dark:bg-[#1f2937] dark:text-white"
                 icon={Search}
-                placeholder="Search events by title, description, or location..."
+                placeholder={t("eventList.search.placeholder")}
                 value={search}
                 onChange={(e) => {
                   setCurrentPage(1);
@@ -913,13 +929,13 @@ const EventList = () => {
                   setStatus(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Status" },
-                  { value: "draft", label: "Draft" },
-                  { value: "pending", label: "Pending" },
-                  { value: "confirmed", label: "Confirmed" },
-                  { value: "in-progress", label: "In Progress" },
-                  { value: "completed", label: "Completed" },
-                  { value: "cancelled", label: "Cancelled" },
+                  { value: "all", label: t("eventList.filters.allStatus") },
+                  { value: "draft", label: t("eventList.filters.draft") },
+                  { value: "pending", label: t("eventList.filters.pending") },
+                  { value: "confirmed", label: t("eventList.filters.confirmed") },
+                  { value: "in-progress", label: t("eventList.filters.inProgress") },
+                  { value: "completed", label: t("eventList.filters.completed") },
+                  { value: "cancelled", label: t("eventList.filters.cancelled") },
                 ]}
               />
             </div>
@@ -932,14 +948,14 @@ const EventList = () => {
                   setEventType(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Types" },
-                  { value: "wedding", label: "Wedding" },
-                  { value: "corporate", label: "Corporate" },
-                  { value: "birthday", label: "Birthday" },
-                  { value: "conference", label: "Conference" },
-                  { value: "party", label: "Party" },
-                  { value: "social", label: "Social" },
-                  { value: "other", label: "Other" },
+                  { value: "all", label: t("eventList.filters.allTypes") },
+                  { value: "wedding", label: t("eventList.filters.wedding") },
+                  { value: "corporate", label: t("eventList.filters.corporate") },
+                  { value: "birthday", label: t("eventList.filters.birthday") },
+                  { value: "conference", label: t("eventList.filters.conference") },
+                  { value: "party", label: t("eventList.filters.party") },
+                  { value: "social", label: t("eventList.filters.social") },
+                  { value: "other", label: t("eventList.filters.other") },
                 ]}
               />
             </div>
@@ -952,14 +968,14 @@ const EventList = () => {
                   setDateRange(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Dates" },
-                  { value: "today", label: "Today" },
-                  { value: "tomorrow", label: "Tomorrow" },
-                  { value: "thisWeek", label: "This Week" },
-                  { value: "nextWeek", label: "Next Week" },
-                  { value: "thisMonth", label: "This Month" },
-                  { value: "past", label: "Past Events" },
-                  { value: "upcoming", label: "Upcoming" },
+                  { value: "all", label: t("eventList.filters.allDates") },
+                  { value: "today", label: t("eventList.filters.today") },
+                  { value: "tomorrow", label: t("eventList.filters.tomorrow") },
+                  { value: "thisWeek", label: t("eventList.filters.thisWeek") },
+                  { value: "nextWeek", label: t("eventList.filters.nextWeek") },
+                  { value: "thisMonth", label: t("eventList.filters.thisMonth") },
+                  { value: "past", label: t("eventList.filters.pastEvents") },
+                  { value: "upcoming", label: t("eventList.filters.upcoming") },
                 ]}
               />
             </div>
@@ -970,29 +986,30 @@ const EventList = () => {
                 className="flex items-center gap-2"
               >
                 <X className="h-4 w-4" />
-                Clear
+                {t("eventList.actions.clear")}
               </Button>
             )}
           </div>
           {hasActiveFilters && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Active filters:</span>
+              <span>{t("eventList.search.activeFilters")}</span>
               {search.trim() && (
-                <Badge color="blue">Search: "{search.trim()}"</Badge>
+                <Badge color="blue">{t("eventList.search.search")}: "{search.trim()}"</Badge>
               )}
               {status !== "all" && (
-                <Badge color="purple">Status: {status}</Badge>
+                <Badge color="purple">{t("eventList.search.status")}: {status}</Badge>
               )}
               {eventType !== "all" && (
-                <Badge color="green">Type: {eventType}</Badge>
+                <Badge color="green">{t("eventList.search.type")}: {eventType}</Badge>
               )}
               {dateRange !== "all" && (
-                <Badge color="orange">Date: {dateRange}</Badge>
+                <Badge color="orange">{t("eventList.search.date")}: {dateRange}</Badge>
               )}
             </div>
           )}
         </div>
       )}
+      
       {viewMode === "list" ? (
         /* LIST VIEW */
         <div className="space-y-6">
@@ -1003,13 +1020,13 @@ const EventList = () => {
                 <div className="text-center py-12">
                   <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No events found
+                    {t("eventList.emptyState.noResults")}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    No events match your current search or filter criteria.
+                    {t("eventList.emptyState.noResultsMessage")}
                   </p>
                   <Button onClick={handleClearFilters} variant="outline">
-                    Clear All Filters
+                    {t("eventList.actions.clearAllFilters")}
                   </Button>
                 </div>
               )}
@@ -1018,14 +1035,14 @@ const EventList = () => {
                 <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No events yet
+                    {t("eventList.emptyState.noEvents")}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Get started by creating your first event.
+                    {t("eventList.emptyState.noEventsMessage")}
                   </p>
                   <Button onClick={() => handleCreateEvent()} variant="primary">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create First Event
+                    {t("eventList.actions.createFirstEvent")}
                   </Button>
                 </div>
               )}
@@ -1035,7 +1052,7 @@ const EventList = () => {
                   columns={tableColumns}
                   data={events}
                   loading={loading}
-                  emptyMessage="No events found"
+                  emptyMessage={t("eventList.table.noEvents")}
                   onRowClick={onEventClick}
                   striped={true}
                   hoverable={true}
@@ -1097,7 +1114,7 @@ const EventList = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" onClick={goToToday}>
-                  Today
+                  {t("eventList.actions.today")}
                 </Button>
                 <div className="flex items-center gap-1 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-1">
                   <button
@@ -1121,7 +1138,7 @@ const EventList = () => {
                 <div className="bg-white dark:bg-gray-700 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-6 sticky top-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    Event Types
+                    {t("eventList.calendar.eventTypes")}
                   </h3>
                   <div className="space-y-3">
                     {eventTypeColors.map((item) => {
@@ -1139,7 +1156,7 @@ const EventList = () => {
                               item.type === "all" ? "all" : item.type
                             );
                             setCurrentPage(1);
-                            showInfo(`Filtering by ${item.label} events`);
+                            showInfo(t("eventList.notifications.filteringBy", { type: item.label }));
                           }}
                         >
                           <div
@@ -1150,7 +1167,7 @@ const EventList = () => {
                               {item.label}
                             </span>
                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {eventsByType.length} events
+                              {eventsByType.length} {t("eventList.calendar.events")}
                             </div>
                           </div>
                         </div>
@@ -1160,12 +1177,12 @@ const EventList = () => {
                   {/* Quick Stats */}
                   <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                      This Month
+                      {t("eventList.calendar.thisMonth")}
                     </h4>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Total Events
+                          {t("eventList.calendar.totalEvents")}
                         </span>
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {
@@ -1184,7 +1201,7 @@ const EventList = () => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Upcoming
+                          {t("eventList.calendar.upcoming")}
                         </span>
                         <span className="font-semibold text-orange-600">
                           {
@@ -1292,7 +1309,7 @@ const EventList = () => {
                                       cursor-pointer hover:shadow-sm
                                       px-2 py-1 rounded text-[10px] font-medium border
                                     `}
-                                    title={`${event.title} (${event.type || "Other"})`}
+                                    title={`${event.title} (${event.type || t("eventList.filters.other")})`}
                                   >
                                     <div className="flex items-center gap-1.5">
                                       <div className="w-1.5 h-1.5 rounded-full bg-current opacity-70 flex-shrink-0"></div>
@@ -1304,7 +1321,7 @@ const EventList = () => {
                                 ))}
                                 {dayEvents.length > 3 && (
                                   <div className="text-[10px] text-gray-500 dark:text-gray-400 px-1 font-medium text-center bg-gray-100 dark:bg-gray-600 rounded py-0.5">
-                                    +{dayEvents.length - 3} more
+                                    {t("eventList.calendar.moreEvents", { count: dayEvents.length - 3 })}
                                   </div>
                                 )}
                               </div>
@@ -1321,11 +1338,11 @@ const EventList = () => {
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-orange-500 rounded"></div>
-                            <span>Today</span>
+                            <span>{t("eventList.filters.today")}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-orange-200 dark:bg-orange-900 rounded"></div>
-                            <span>Selected</span>
+                            <span>{t("eventList.calendar.selected")}</span>
                           </div>
                         </div>
                         <div>
@@ -1341,7 +1358,7 @@ const EventList = () => {
                               );
                             }).length
                           }{" "}
-                          events this month
+                          {t("eventList.calendar.eventsThisMonth")}
                         </div>
                       </div>
                     </div>
@@ -1357,7 +1374,7 @@ const EventList = () => {
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={closeConfirmationModal}
-        title="Confirm Deletion"
+        title={t("eventList.deleteModal.title")}
         size="md"
       >
         <div className="p-6">
@@ -1369,13 +1386,11 @@ const EventList = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Event
+                {t("eventList.deleteModal.deleteEvent")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete{" "}
-                <strong>"{confirmationModal.eventName}"</strong>? This action
-                cannot be undone and all associated data will be permanently
-                removed.
+                {t("eventList.deleteModal.confirmMessage")}{" "}
+                <strong>"{confirmationModal.eventName}"</strong>? {t("eventList.deleteModal.warningMessage")}
               </p>
               <div className="flex justify-end gap-3">
                 <Button
@@ -1383,7 +1398,7 @@ const EventList = () => {
                   onClick={closeConfirmationModal}
                   className="px-4 py-2"
                 >
-                  Cancel
+                  {t("eventList.actions.cancel")}
                 </Button>
                 <Button
                   variant="danger"
@@ -1391,7 +1406,7 @@ const EventList = () => {
                   className="px-4 py-2 flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Event
+                  {t("eventList.actions.deleteEvent")}
                 </Button>
               </div>
             </div>

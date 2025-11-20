@@ -79,271 +79,837 @@
     "snoozed": "Snoozed",
     "blocked": "Blocked"
   },
-  
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Overview of key metrics and upcoming events",
-    "loading": "Loading Dashboard",
-    "go_to_dashboard": "Go to Dashboard",
-    "finance_dashboard": "Finance Dashboard",
-    "venue_utilization": "Venue Utilization",
-    "client_satisfaction": "Client Satisfaction",
-    "occupancy_rate": "Occupancy Rate",
-    "avg_rating": "Average Rating",
-    "task_completion": "Task Completion",
-    "payment_collection": "Payment Collection",
-    "events_this_month": "Events This Month",
-    "vs_last_month": "vs Last Month",
-    "revenue_this_month": "Revenue This Month",
-    "total_upcoming": "Total Upcoming",
-    "pending_payments": "Pending Payments",
-    "revenue_trend_last_6_months": "Revenue Trend (Last 6 Months)",
-    "performance_metrics": "Performance Metrics",
-    "event_type_distribution": "Event Type Distribution",
-    "total_events": "Total Events",
-    "most_popular": "Most Popular",
-    "recent_activity": "Recent Activity",
-    "view_all": "View All",
-    "event_status_breakdown": "Event Status Breakdown"
-  },
+    "subtitle": "Comprehensive overview of your venue performance",
+    "loading": "Loading dashboard...",
+    "viewAll": "View All",
 
+    "financialHealth": {
+      "profitMargin": "Profit Margin",
+      "cashFlow": "Cash Flow",
+      "clientRetention": "Client Retention",
+      "expenseRatio": "Expense Ratio"
+    },
+
+    "quickStats": {
+      "occupancyRate": "Occupancy Rate",
+      "averageRating": "Avg. Rating",
+      "taskCompletion": "Task Completion",
+      "paymentCollection": "Payment Collection"
+    },
+
+    "mainStats": {
+      "eventsThisMonth": "Events This Month",
+      "revenueThisMonth": "Revenue This Month",
+      "averageEventValue": "Avg. Event Value",
+      "clientSatisfaction": "Client Satisfaction",
+      "vsLastMonth": "vs last month"
+    },
+
+    "charts": {
+      "revenueTrend": "Revenue Trend (Last 6 Months)",
+      "performanceMetrics": "Performance Metrics",
+      "venueUtilization": "Venue Utilization",
+      "taskCompletion": "Task Completion",
+      "paymentCollection": "Payment Collection",
+      "clientSatisfaction": "Client Satisfaction",
+      "eventTypeDistribution": "Event Type Distribution",
+      "totalEvents": "Total Events",
+      "mostPopular": "Most Popular",
+      "recentActivity": "Recent Activity",
+      "revenue": "Revenue"
+    },
+
+    "eventStatus": {
+      "title": "Event Status Breakdown",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+
+    "upcomingEvents": {
+      "title": "Upcoming Events (30 Days)",
+      "event": "Event",
+      "date": "Date",
+      "client": "Client",
+      "guests": "Guests",
+      "status": "Status",
+      "noEvents": "No upcoming events."
+    },
+
+    "recentPayments": {
+      "title": "Recent Payments",
+      "noPayments": "No recent payments."
+    },
+
+    "myTasks": {
+      "title": "My Tasks",
+      "due": "Due",
+      "noDueDate": "No due date"
+    },
+
+    "reminders": {
+      "title": "Upcoming Reminders",
+      "noDate": "No date set"
+    },
+
+    "priority": {
+      "urgent": "urgent",
+      "high": "high",
+      "medium": "medium",
+      "low": "low"
+    },
+
+    "activity": {
+      "paymentReceived": "Payment received",
+      "event": "Event",
+      "taskCompleted": "Task completed",
+      "client": "Client"
+    }
+  },
   "clients": {
     "title": "Clients",
-    "add_client": "Add Client",
-    "add_first_client": "Add First Client",
-    "edit_client": "Edit Client",
-    "delete_client": "Delete Client",
-    "view_client": "View Client",
-    "client_details": "Client Details",
-    "create_client": "Create Client",
-    "update_client": "Update Client",
-    "create_a_new_client_profile": "Create a new client profile",
-    "update_client_information": "Update client information",
-    "no_clients_yet": "No clients yet",
-    "no_clients_found": "No clients found",
-    "no_clients_match_your_search": "No clients match your current search or filters",
-    "get_started_adding_first_client": "Get started by adding your first client",
-    "client_not_found": "Client not found",
-    "cannot_edit_client": "Cannot edit client: Client ID not found",
-    "cannot_delete_client": "Cannot delete client: Client ID not found",
-    "failed_to_delete_client": "Failed to delete client",
-    "cannot_create_event_client_not_found": "Cannot create event: Client ID not found",
-    "cannot_record_payment_client_not_found": "Cannot record payment: Client ID not found",
-    "personal_information": "Personal Information",
-    "address_information": "Address Information",
-    "additional_information": "Additional Information",
-    "company": "Company",
-    "client_notes": "Client Notes",
-    "contact_information": "Contact Information",
-    "search_clients_placeholder": "Search clients by name, email, or phone",
-    "active_filters": "Active Filters",
-    "clear_all_filters": "Clear All Filters",
-    "filters_cleared": "Filters cleared",
-    "date_created": "Date Created",
-    "activity": "Activity",
-    "payments": "Payments",
-    "activity_timeline": "Activity Timeline",
-    "no_recent_activity": "No recent activity found for this client",
-    "event_created": "Event Created",
-    "event_updated": "Event Updated",
-    "payment_received": "Payment Received",
-    "payment_pending": "Payment Pending",
-    "upcoming_event": "Upcoming Event",
-    "create_new_event": "Create New Event",
-    "total_revenue": "Total Revenue",
-    "outstanding_balance": "Outstanding Balance",
-    "payment_overview": "Payment Overview",
-    "record_payment": "Record Payment",
-    "total_paid": "Total Paid",
-    "recent_payment_history": "Recent Payment History",
-    "no_payment_history": "No payment history found",
-    "record_first_payment": "Record First Payment",
-    "unnamed_client": "Unnamed Client"
+    "description": "Manage your client relationships and information",
+    "showingCount": "Showing {{count}} of {{total}} clients",
+    
+    "buttons": {
+      "addClient": "Add Client",
+      "addFirstClient": "Add First Client",
+      "retry": "Retry",
+      "clear": "Clear Filters",
+      "clearAllFilters": "Clear All Filters",
+      "cancel": "Cancel",
+      "deleteClient": "Delete Client"
+    },
+    
+    "search": {
+      "placeholder": "Search clients...",
+      "noResults": "No clients found",
+      "noResultsDescription": "Try adjusting your search or filters to find what you're looking for"
+    },
+    
+    "filters": {
+      "allStatus": "All Status",
+      "activeFilters": "Active filters:",
+      "searchLabel": "Search: {{search}}",
+      "statusLabel": "Status: {{status}}"
+    },
+    
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    
+    "table": {
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "status": "Status",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "defaultValues": {
+        "unnamed": "Unnamed Client",
+        "noEmail": "No email",
+        "noPhone": "No phone",
+        "noDate": "No date"
+      },
+      "actions": {
+        "view": "View Details",
+        "edit": "Edit Client",
+        "delete": "Delete Client"
+      }
+    },
+    
+    "loading": {
+      "initial": "Loading clients...",
+      "retrying": "Retrying to load clients..."
+    },
+    
+    "empty": {
+      "title": "No clients yet",
+      "description": "Get started by adding your first client to the system"
+    },
+    
+    "errors": {
+      "loadingTitle": "Error loading clients",
+      "loadingDefault": "Failed to load clients. Please try again.",
+      "invalidId": "Invalid client ID"
+    },
+    
+    "toast": {
+      "deleting": "Deleting {{name}}...",
+      "deleteSuccess": "{{name}} deleted successfully",
+      "deleteError": "Failed to delete {{name}}",
+      "updateSuccess": "Client updated successfully",
+      "createSuccess": "Client created successfully",
+      "filtersCleared": "Filters cleared"
+    },
+    
+    "modal": {
+      "addTitle": "Add New Client",
+      "editTitle": "Edit Client",
+      "deleteTitle": "Delete Client",
+      "deleteMessage": "Are you sure you want to delete {{name}}? This action cannot be undone."
+    }
   },
-
+  
+  "clientForm": {
+    "title": {
+      "add": "Add New Client",
+      "edit": "Edit Client"
+    },
+    "description": {
+      "add": "Create a new client profile",
+      "edit": "Update client information"
+    },
+    "sections": {
+      "personal": "Personal Information",
+      "address": "Address Information",
+      "additional": "Additional Information"
+    },
+    "fields": {
+      "name": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "company": "Company",
+      "street": "Full Address",
+      "city": "City",
+      "state": "State/Province",
+      "zipCode": "ZIP/Postal Code",
+      "country": "Country",
+      "notes": "Client Notes",
+      "status": "Status"
+    },
+    "placeholders": {
+      "name": "e.g. Jane Doe",
+      "email": "name@company.com",
+      "phone": "e.g. 12345678",
+      "company": "Company or organization",
+      "street": "123 Main Street",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001",
+      "country": "United States",
+      "notes": "Optional notes, comments, or additional information about this client..."
+    },
+    "errors": {
+      "nameRequired": "Full name is required",
+      "nameMinLength": "Name must be at least 2 characters",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Phone number must be exactly 8 digits",
+      "loading": "Error Loading Client",
+      "creating": "Error Creating Client",
+      "saving": "Failed to save client. Please try again."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create Client",
+      "update": "Update Client",
+      "creating": "Creating...",
+      "updating": "Updating..."
+    }
+  },
+  
+  "clientDetail": {
+    "title": "Client Details",
+    "loading": "Loading client details...",
+    "notFound": "Client Not Found",
+    "errorLoading": "Error Loading Client",
+    "notFoundDescription": "The client you're looking for doesn't exist.",
+    "buttons": {
+      "backToClients": "Back to Clients",
+      "tryAgain": "Try Again",
+      "createEvent": "Create New Event",
+      "createFirstEvent": "Create First Event"
+    },
+    "tabs": {
+      "activity": "Activity",
+      "events": "Events",
+      "payments": "Payments"
+    },
+    "actions": {
+      "delete": "Delete",
+      "edit": "Edit",
+      "moreDetails": "More Details",
+      "viewFullEvent": "View Full Event Page"
+    },
+    "sections": {
+      "contact": "Contact Information",
+      "address": "Address",
+      "additional": "Additional Information",
+      "notes": "Notes",
+      "tags": "Tags",
+      "accountInfo": "Account Information"
+    },
+    "labels": {
+      "created": "Created",
+      "notes": "Notes",
+      "clientSince": "Client Since",
+      "lastUpdated": "Last Updated",
+      "createdBy": "Created By",
+      "totalEvents": "Total Events",
+      "upcomingEvents": "Upcoming",
+      "totalRevenue": "Total Revenue",
+      "outstanding": "Outstanding",
+      "eventHistory": "Event History",
+      "activityTimeline": "Activity Timeline",
+      "guests": "{{count}} guests"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "paid": "Paid",
+      "partial": "Partial",
+      "overdue": "Overdue"
+    },
+    "activity": {
+      "eventCreated": "Event Created",
+      "eventUpdated": "Event Updated",
+      "paymentReceived": "Payment Received",
+      "paymentPending": "Payment Pending",
+      "eventUpcoming": "Upcoming Event",
+      "noActivity": "No recent activity found for this client",
+      "descriptions": {
+        "eventCreated": "{{title}} was created",
+        "eventUpdated": "{{title}} status changed to {{status}}",
+        "paymentReceived": "Payment of {{amount}} for {{title}}",
+        "paymentPending": "Pending payment of {{amount}} for {{title}}",
+        "eventUpcoming": "{{title}} is scheduled for {{date}}"
+      }
+    },
+    "modals": {
+      "editClient": "Edit Client",
+      "deleteClient": "Delete Client",
+      "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and will remove all associated data."
+    }
+  },
+  
+  "payments": {
+    "buttons": {
+      "recordPayment": "Record Payment",
+      "recordFirstPayment": "Record First Payment"
+    },
+    "statistics": {
+      "totalRevenue": "Total Revenue",
+      "totalPaid": "Total Paid",
+      "outstanding": "Outstanding",
+      "totalEvents": "Total Events"
+    },
+    "sections": {
+      "paymentBreakdown": "Payment Breakdown by Event",
+      "recentPaymentHistory": "Recent Payment History"
+    },
+    "labels": {
+      "totalAmount": "Total Amount",
+      "paidAmount": "Paid Amount",
+      "balanceDue": "Balance Due",
+      "noPaymentHistory": "No payment history found",
+      "noEventsAvailable": "No events available for payment",
+      "selectSpecificEvent": "Please select a specific event to record payment"
+    },
+    "status": {
+      "paid": "Paid",
+      "partial": "Partial",
+      "pending": "Pending",
+      "completed": "Completed"
+    },
+    "methods": {
+      "cash": "Cash",
+      "card": "Card",
+      "bank_transfer": "Bank Transfer",
+      "check": "Check",
+      "other": "Other"
+    }
+  },
+  
   "events": {
-    "title": "Events",
-    "create_event": "Create Event",
-    "update_event": "Update Event",
-    "edit_event": "Edit Event",
-    "delete_event": "Delete Event",
-    "view_event": "View Event",
-    "event_details": "Event Details",
-    "event_information": "Event Information",
-    "event_calendar": "Event Calendar",
-    "no_events_yet": "No events yet",
-    "no_events_found": "No events found",
-    "no_events_match_your_search": "No events match your current search or filters",
-    "get_started_creating_first_event": "Get started by creating your first event",
-    "cannot_edit_event": "Cannot edit event: Event ID not found",
-    "cannot_delete_event": "Cannot delete event: Event ID not found",
-    "failed_to_delete_event": "Failed to delete event",
-    "cannot_record_payment_event_not_found": "Cannot record payment: Event ID not found",
-    "event_not_found": "Event not found",
-    "no_event_id_provided": "No event ID provided",
-    "no_events_scheduled": "No events scheduled",
-    "no_events_scheduled_for_date": "There are no events scheduled for this date",
-    "create_event_on_this_date": "Create event on this date",
-    "back_to_events": "Back to Events",
-    "view_full_event_page": "View Full Event Page",
-    "set_up_core_details": "Set up the core details of your event",
-    "event_title": "Event Title",
-    "event_type": "Event Type",
-    "event_date": "Event Date",
-    "start_date": "Start Date",
-    "end_date": "End Date",
-    "start_time": "Start Time",
-    "end_time": "End Time",
-    "guest_count": "Guest Count",
-    "same_day_event": "Same Day Event",
-    "venue_space_selection": "Venue Space Selection",
-    "select_venue_space": "Select Venue Space",
-    "venue_space": "Venue Space",
-    "selected_venue_space": "Selected Venue Space",
-    "change_space": "Change Space",
-    "capacity": "Capacity",
-    "amenities": "Amenities",
-    "base_price": "Base Price",
-    "pricing": "Pricing",
-    "venue_price": "Venue Price",
-    "total_price": "Total Price",
-    "discount": "Discount",
-    "percentage_discount": "Percentage Discount",
-    "fixed_amount_discount": "Fixed Amount Discount",
-    "service_partners": "Service Partners",
-    "select_partner": "Select Partner",
-    "partner_preselected": "Partner preselected",
-    "autogenerate_invoice": "Auto-generate Invoice",
-    "create_draft_invoice": "Create a draft invoice for this event automatically",
-    "additional_notes": "Additional Notes",
-    "event_summary": "Event Summary",
-    "financial_summary": "Financial Summary",
-    "initial_payment": "Initial Payment",
-    "remaining_balance": "Remaining",
-    "record_initial_payment": "Record Initial Payment (Optional)",
-    "payment_amount": "Payment Amount",
-    "payment_method": "Payment Method",
-    "payment_date": "Payment Date",
-    "payment_status": "Payment Status",
-    "payment_notes": "Payment Notes",
-    "event_created_successfully": "Event created successfully",
-    "event_updated_successfully": "Event updated successfully",
-    "please_select_client": "Please select a client",
-    "please_select_venue_space": "Please select a venue space",
-    "end_time_after_start_time": "End time must be after start time",
-    "valid_base_price_required": "Valid base price is required",
-    "payment_cannot_exceed_total": "Payment amount cannot exceed total price",
-    "payment_cannot_be_negative": "Payment amount cannot be negative",
-    "draft_found": "Draft Found",
-    "restore_draft": "Restore Draft",
-    "discard_draft": "Discard",
-    "new_event_booking": "New Event Booking",
-    "event_confirmed": "Event Confirmed",
-    "finalize_venue_setup": "Finalize Venue Setup",
-    "upcoming_events": "Upcoming Events",
-    "no_upcoming_events": "No upcoming events",
-    "recent_payments": "Recent Payments",
-    "no_recent_payments": "No recent payments",
-    "all_types": "All Types",
-    "all_dates": "All Dates",
-    "event_types": "Event Types",
-    "social": "Social",
-    "wedding": "Wedding",
-    "corporate": "Corporate",
-    "birthday": "Birthday",
-    "conference": "Conference",
-    "party": "Party",
-    "unknown_client": "Unknown Client",
-    "unknown_partner": "Unknown Partner",
-    "track_all_changes": "Track all changes and updates to this event",
-    "no_activity_recorded": "No activity recorded",
-    "event_metadata": "Event Metadata",
-    "created": "Created",
-    "event_id": "Event ID",
-    "event_status_changed": "Event status changed to confirmed",
-    "event_in_progress": "Event in progress",
-    "event_is_currently_in_progress": "Event is currently in progress",
-    "event_completed": "Event Completed",
-    "event_has_been_completed": "Event has been completed",
-    "pricing_configured": "Pricing Configured",
-    "updated": "Updated",
-    "event_details_modified": "Event details were modified",
-    "payment_progress": "Payment Progress",
-    "no_payments_recorded_yet": "No payments recorded yet",
-    "edit_the_event_to_add_partners": "Edit the event to add service partners"
+    "toast": {
+      "updateSuccess": "Event updated successfully!",
+      "createSuccess": "Event created successfully!"
+    }
   },
-
+  "eventDetailModal": {
+    "title": "Event Details",
+    "close": "Close",
+    "description": "Description",
+    "noDescription": "No description provided",
+    "client": "Client",
+    "guests": "guests",
+    "actions": {
+      "delete": {
+        "button": "Delete",
+        "deleting": "Deleting...",
+        "confirm": "Are you sure you want to delete \"{{eventTitle}}\"? This action cannot be undone.",
+        "success": "Event deleted successfully",
+        "error": "Failed to delete event"
+      },
+      "edit": "Edit Event",
+      "viewFullDetails": "More Details",
+      "viewFullDetailsTitle": "View Full Details"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "in-progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "eventDetail": {
+    "title": "Détails de l'événement",
+    "loading": "Chargement des détails de l'événement...",
+    "errors": {
+      "notFound": "Événement non trouvé",
+      "loading": "Erreur de chargement de l'événement",
+      "notFoundDescription": "L'événement que vous recherchez n'existe pas.",
+      "edit": "Impossible de modifier l'événement : ID d'événement non trouvé",
+      "delete": "Impossible de supprimer l'événement : ID d'événement non trouvé",
+      "payment": "Impossible d'enregistrer le paiement : ID d'événement non trouvé"
+    },
+    "actions": {
+      "backToEvents": "Retour aux événements",
+      "tryAgain": "Réessayer",
+      "edit": "Modifier l'événement",
+      "delete": "Supprimer l'événement",
+      "recordPayment": "Enregistrer le paiement",
+      "retry": "Nouvelle tentative de chargement des détails de l'événement...",
+      "deleteLoading": "Suppression de l'événement...",
+      "deleteSuccess": "Événement supprimé avec succès",
+      "deleteError": "Échec de la suppression de l'événement",
+      "editSuccess": "Événement mis à jour avec succès"
+    },
+    "tabs": {
+      "partners": "Partenaires",
+      "payments": "Paiements",
+      "activity": "Activité"
+    },
+    "deleteModal": {
+      "title": "Supprimer l'événement",
+      "message": "Êtes-vous sûr de vouloir supprimer \"{{eventTitle}}\" ? Cette action ne peut pas être annulée et supprimera toutes les données associées.",
+      "confirmText": "Supprimer l'événement",
+      "cancelText": "Annuler"
+    },
+    "status": {
+      "pending": "En attente",
+      "confirmed": "Confirmé",
+      "in-progress": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "unknown": "Inconnu"
+    }
+  },
+  "eventActivityTab": {
+    "title": "Activity Timeline",
+    "subtitle": "Track all changes and updates to this event",
+    "noActivity": "No activity recorded",
+    "metadata": {
+      "title": "Event Metadata",
+      "created": "Created",
+      "lastUpdated": "Last Updated",
+      "eventId": "Event ID"
+    },
+    "activity": {
+      "created": {
+        "title": "Event Created",
+        "description": "Event \"{{eventTitle}}\" was created"
+      },
+      "status": {
+        "confirmed": {
+          "title": "Event Confirmed",
+          "description": "Event status changed to confirmed"
+        },
+        "in-progress": {
+          "title": "Event In Progress",
+          "description": "Event is currently in progress"
+        },
+        "completed": {
+          "title": "Event Completed",
+          "description": "Event has been completed"
+        },
+        "cancelled": {
+          "title": "Event Cancelled",
+          "description": "Event was cancelled"
+        }
+      },
+      "partners": {
+        "title": "Partners Assigned",
+        "description": "{{count}} partner(s) assigned to event"
+      },
+      "pricing": {
+        "title": "Pricing Configured",
+        "description": "Total amount set to {{amount}} TND"
+      },
+      "updated": {
+        "title": "Event Updated",
+        "description": "Event details were modified"
+      }
+    }
+  },
+  "eventHeader": {
+    "backButton": "Back to Events",
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    }
+  },
+  "eventPartnersTab": {
+    "title": "Service Partners ({{count}})",
+    "totalCost": "Total Cost: {{amount}}",
+    "loading": "Loading partners...",
+    "emptyState": {
+      "title": "No partners assigned to this event",
+      "description": "Edit the event to add service partners"
+    },
+    "partner": {
+      "unknown": "Unknown Partner",
+      "email": "Email",
+      "service": "Service",
+      "hourlyRate": "Hourly Rate",
+      "viewDetails": "View Partner Details"
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "pending": "Pending",
+      "cancelled": "Cancelled"
+    }
+  },
+  "eventInfo": {
+    "title": "Event Information",
+    "fields": {
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "time": "Time",
+      "venueSpace": "Venue Space",
+      "guestCount": "Guest Count",
+      "client": "Client",
+      "totalAmount": "Total Amount",
+      "basePrice": "Base Price",
+      "discount": "Discount",
+      "description": "Description",
+      "notes": "Notes"
+    },
+    "values": {
+      "guests": "guests",
+      "unknown": "Unknown"
+    }
+  },
+  "eventPaymentsTab": {
+    "title": "Payment History ({{count}})",
+    "actions": {
+      "recordPayment": "Record Payment",
+      "recordFirstPayment": "Record First Payment"
+    },
+    "summary": {
+      "totalAmount": "Total Amount",
+      "paid": "Paid",
+      "remaining": "Remaining",
+      "progress": "Payment Progress"
+    },
+    "emptyState": {
+      "title": "No payments recorded yet"
+    },
+    "payment": {
+      "method": {
+        "cash": "Cash",
+        "credit_card": "Credit Card",
+        "bank_transfer": "Bank Transfer",
+        "check": "Check",
+        "mobile_payment": "Mobile Payment"
+      },
+      "status": {
+        "completed": "Completed",
+        "pending": "Pending",
+        "failed": "Failed",
+        "refunded": "Refunded"
+      }
+    }
+  },
+  
   "partners": {
     "title": "Partners",
-    "add_partner": "Add Partner",
-    "add_first_partner": "Add First Partner",
-    "edit_partner": "Edit Partner",
-    "delete_partner": "Delete Partner",
-    "view_partner": "View Partner",
-    "partner_details": "Partner Details",
-    "create_partner": "Create Partner",
-    "update_partner": "Update Partner",
-    "no_partners_yet": "No partners yet",
-    "no_partners_found": "No partners found",
-    "no_partners_match_your_search": "No partners match your current search or filters",
-    "get_started_adding_first_partner": "Get started by adding your first service partner",
-    "partner_not_found": "Partner not found",
-    "cannot_edit_partner": "Cannot edit partner: Partner ID not found",
-    "cannot_delete_partner": "Cannot delete partner: Partner ID not found",
-    "failed_to_delete_partner": "Failed to delete partner",
-    "basic_information": "Basic Information",
-    "professional_information": "Professional Information",
-    "partner_name": "Partner Name",
-    "company_name": "Company Name",
-    "contact_information": "Contact Information",
-    "contact_person": "Contact Person",
-    "contact_phone": "Contact Phone",
-    "contact_email": "Contact Email",
+    "subtitle": "Manage your service partners and vendors.",
+    "showingResults": "Showing {{count}} of {{total}} partners",
+    
+    "actions": {
+      "addPartner": "Add Partner",
+      "editPartner": "Edit Partner",
+      "deletePartner": "Delete Partner",
+      "viewPartner": "View Partner",
+      "retry": "Retry",
+      "clearFilters": "Clear Filters",
+      "search": "Search partners by name, email, or company...",
+      "filters": {
+        "allCategories": "All Categories",
+        "allStatus": "All Status",
+        "active": "Active",
+        "inactive": "Inactive"
+      }
+    },
+    
+    "table": {
+      "columns": {
+        "name": "Partner Name",
+        "contact": "Contact",
+        "category": "Category",
+        "rating": "Rating",
+        "status": "Status",
+        "price": "Price",
+        "actions": "Actions"
+      },
+      "empty": "No partners found",
+      "noResults": {
+        "title": "No partners found",
+        "description": "No partners match your current search or filter criteria."
+      }
+    },
+    
+    "emptyState": {
+      "title": "No partners yet",
+      "description": "Get started by adding your first service partner.",
+      "addFirst": "Add First Partner"
+    },
+    
+    "errors": {
+      "loading": "Error Loading Partners",
+      "retrying": "Retrying to load partners..."
+    },
+    
+    "deleteModal": {
+      "title": "Confirm Deletion",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and all associated data will be permanently removed.",
+      "cancel": "Cancel",
+      "confirm": "Delete Partner"
+    },
+    
+    "notifications": {
+      "added": "Partner added successfully",
+      "updated": "Partner updated successfully",
+      "deleted": "Partner deleted successfully",
+      "filtersCleared": "Filters cleared"
+    }
+  },
+  
+  "partnerForm": {
+    "addTitle": "Add New Partner",
+    "editTitle": "Edit Partner",
+    "steps": {
+      "basicInfo": "Basic Info",
+      "professional": "Professional",
+      "address": "Address",
+      "notes": "Notes"
+    },
+    
+    "fields": {
+      "name": "Partner Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "company": "Company Name",
+      "status": "Status",
+      "category": "Category",
+      "location": "Location",
+      "specialties": "Specialties",
+      "pricingType": "Pricing Type",
+      "hourlyRate": "Hourly Rate",
+      "fixedAmount": "Fixed Amount",
+      "rating": "Rating (0-5)",
+      "street": "Street Address",
+      "city": "City",
+      "state": "State/Province",
+      "zipCode": "ZIP/Postal Code",
+      "country": "Country",
+      "notes": "Notes"
+    },
+    
+    "placeholders": {
+      "name": "Enter partner name",
+      "email": "partner@example.com",
+      "phone": "12345678",
+      "company": "Company name (optional)",
+      "location": "City, State",
+      "specialties": "List partner's specialties and expertise...",
+      "hourlyRate": "0.00",
+      "fixedAmount": "0.00",
+      "rating": "0.0",
+      "street": "123 Main Street",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001",
+      "country": "United States",
+      "notes": "Add any additional notes about this partner..."
+    },
+    
+    "options": {
+      "selectCategory": "Select Category",
+      "hourly": "Hourly Rate",
+      "fixed": "Fixed Amount"
+    },
+    
+    "actions": {
+      "previous": "Previous",
+      "next": "Next",
+      "cancel": "Cancel",
+      "create": "Create Partner",
+      "update": "Update Partner",
+      "updateNow": "Update Now"
+    },
+    
+    "errors": {
+      "required": "{{field}} is required",
+      "invalidEmail": "Please provide a valid email",
+      "invalidPhone": "Phone number must be exactly 8 digits",
+      "invalidRating": "Rating must be between 0 and 5",
+      "positiveNumber": "{{field}} must be a positive number"
+    }
+  },
+  
+  "partnerDetail": {
+    "title": "Partner Details",
+    "loading": "Loading partner details...",
+    "performance": "Performance",
     "location": "Location",
     "specialties": "Specialties",
-    "category": "Category",
-    "select_category": "Select Category",
-    "pricing_type": "Pricing Type",
-    "hourly_rate": "Hourly Rate",
-    "fixed_amount": "Fixed Amount",
-    "performance": "Performance",
-    "performance_overview": "Performance Overview",
-    "events_completed": "Events Completed",
-    "revenue_generated": "Revenue Generated",
-    "overall_rating": "Overall Rating",
-    "performance_score": "Performance Score",
-    "based_on_partner_rating": "Based on partner rating",
-    "completion_rate": "Completion Rate",
-    "average_revenue": "Average Revenue",
-    "service_quality": "Service Quality",
-    "reliability": "Reliability",
-    "revenue_generation": "Revenue Generation",
-    "improvement_opportunity": "Improvement Opportunity",
-    "joined_date": "Joined Date",
-    "specialization": "Specialization",
-    "event_history": "Event History",
-    "list_partners_specialties": "List partners, specialties, and expertise",
-    "categories": {
-      "driver": "Driver",
-      "bakery": "Bakery",
-      "catering": "Catering",
-      "decoration": "Decoration",
-      "photography": "Photography",
-      "music": "Music",
-      "security": "Security",
-      "cleaning": "Cleaning",
-      "audiovisual": "Audio-Visual",
-      "floral": "Floral",
-      "entertainment": "Entertainment",
-      "hair_styling": "Hair Styling"
+    "notes": "Notes",
+    "created": "Created",
+    "hourlyRate": "Hourly Rate",
+    "totalJobs": "Total Jobs",
+    "error": {
+      "notFound": "Partner Not Found",
+      "loading": "Error Loading Partner",
+      "message": "The partner you're looking for doesn't exist.",
+      "retry": "Try Again"
     },
-    "unknown_partner": "Unknown Partner",
-    "category_is_required": "Category is required",
-    "hourly_rate_is_required": "Hourly rate is required",
-    "hourly_rate_must_be_positive": "Hourly rate must be a positive number",
-    "fixed_amount_is_required": "Fixed amount is required",
-    "fixed_amount_must_be_positive": "Fixed amount must be a positive number",
-    "please_fix_required_fields": "Please fix all required fields"
+    "backToPartners": "Back to Partners",
+    "tabs": {
+      "overview": "Overview",
+      "events": "Events",
+      "performance": "Performance"
+    },
+    "actions": {
+      "edit": "Edit Partner",
+      "delete": "Delete Partner",
+      "refresh": "Refresh",
+      "view": "View",
+      "open": "Open",
+      "moreDetails": "More Details"
+
+    },
+    "modals": {
+      "editPartner": "Edit Partner",
+      "deletePartner": {
+        "title": "Delete Partner",
+        "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and will remove all associated data.",
+        "confirm": "Delete Partner",
+        "cancel": "Cancel"
+      }
+    },
+    "notifications": {
+      "updated": "Partner updated successfully",
+      "deleted": "Partner deleted successfully",
+      "eventCreated": "Event created successfully!",
+      "eventUpdated": "Event updated successfully!"
+    }
+  },
+  "partnerHeader": {
+    "title": "Partner Information",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending"
+    }
+  },
+  "partnerInfo": {
+    "title": "Partner Information",
+    "fields": {
+      "contactPerson": "Contact Person",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "website": "Website",
+      "company": "Company",
+      "joinedDate": "Joined Date",
+      "category": "Category",
+      "rating": "Rating",
+      "specialization": "Specialization"
+    },
+    "notes": "Additional Notes"
+  },
+  "eventsTab": {
+    "title": "Event History",
+    "totalEvents": "{{count}} events total",
+    "noEvents": {
+      "title": "No Events Found",
+      "description": "This partner hasn't been assigned to any events yet."
+    },
+    "summary": {
+      "title": "Events Summary",
+      "totalEvents": "Total Events",
+      "completed": "Completed",
+      "upcoming": "Upcoming",
+      "totalRevenue": "Total Revenue"
+    },
+    "event": {
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "in-progress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    }
+  },
+  "overviewTab": {
+    "stats": {
+      "totalEvents": "Total Events",
+      "completedEvents": "Completed Events",
+      "upcomingEvents": "Upcoming Events",
+      "totalRevenue": "Total Revenue"
+    },
+    "metrics": {
+      "completionRate": "Completion Rate",
+      "performanceScore": "Performance Score",
+      "basedOnRating": "Based on partner rating"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "noActivity": "No recent activity found"
+    }
+  },
+  "performanceTab": {
+    "metrics": {
+      "overallRating": "Overall Rating",
+      "completionRate": "Completion Rate",
+      "totalRevenue": "Total Revenue",
+      "averagePerEvent": "Avg. per Event",
+      "allTime": "All time",
+      "averageRevenue": "Average revenue"
+    },
+    "performanceScore": {
+      "title": "Performance Score",
+      "serviceQuality": "Service Quality",
+      "reliability": "Reliability",
+      "revenueGeneration": "Revenue Generation"
+    },
+    "performanceOverview": {
+      "title": "Performance Overview",
+      "eventsCompleted": "Events Completed",
+      "totalAssignments": "Total Assignments",
+      "revenueGenerated": "Revenue Generated"
+    },
+    "recommendations": {
+      "improvementOpportunity": "Improvement Opportunity",
+      "lowCompletion": "Consider focusing on completing more events to improve reliability scores.",
+      "goodProgress": "Good progress! Continue maintaining consistent event completion rates."
+    }
   },
 
   "tasks": {
@@ -1135,22 +1701,31 @@
     "profile": "Profile",
     "logout": "Logout",
     "login": "Login",
-    "signup": "Sign Up"
+    "signup": "Sign Up",
+    "hour": "hour",
+    "total": "total",
+    "rating": "Rating",
+    "unknown": "Unknown",
+    "currency": "${{amount}}",
+    "percentage": "{{value}}%",
+    "rating": "{{value}} / 5.0",
+    "eventsCount": "{{completed}} of {{total}} events completed",
+    "notAvailable": "N/A"
   },
-    "sidebar": {
+  "sidebar": {
     "overview": "Overview",
     "operations": "Operations",
     "financial": "Financial",
     "management": "Management"
   },
-    "footer": {
+  "footer": {
     "add_notes_and_terms": "Add any additional notes, terms, or conditions",
     "payment_terms_and_conditions": "Payment terms and conditions",
     "terms_conditions": "Terms & Conditions",
     "terms": "Terms",
     "all_rights_reserved": "All Rights Reserved"
   },
-  
+
   "notifications": {
     "title": "Notifications",
     "notifications": "Notifications",
@@ -1358,5 +1933,378 @@
     "descending": "Descending",
     "asc": "ASC",
     "desc": "DESC"
+  },
+  "landing": {
+    "nav": {
+      "products": "Products",
+      "features": "Features",
+      "marketplace": "Marketplace",
+      "contact": "Contact",
+      "bookDemo": "Book Demo"
+    },
+    "hero": {
+      "badge": "Tunisia's #1 Event Management Platform",
+      "title": "Transform Your Events",
+      "titleHighlight": "Into Unforgettable Experiences",
+      "description": "The all-in-one platform connecting venue owners, event planners, and service partners. Streamline bookings, manage operations, and grow your event business in Tunisia.",
+      "bookDemo": "Book a Demo",
+      "browseMarketplace": "Browse Marketplace",
+      "stats": {
+        "activeVenues": "Active Venues",
+        "eventsHosted": "Events Hosted",
+        "servicePartners": "Service Partners",
+        "satisfactionRate": "Satisfaction"
+      }
+    },
+    "mobileApp": {
+      "comingSoon": "Coming Soon",
+      "title": "Book Your Dream Event",
+      "titleSub": "Anytime, Anywhere",
+      "description": "Discover venues, connect with service partners, and manage your events on the go. Our mobile app brings the complete Fiesta experience to your fingertips.",
+      "instantBrowsing": "Instant Venue Browsing",
+      "realtimeBooking": "Real-time Booking"
+    },
+    "products": {
+      "title": "Two Powerful Products, One Ecosystem",
+      "subtitle": "Choose the right solution for your needs or use both together",
+      "webApp": {
+        "title": "Management System",
+        "description": "Comprehensive web-based platform for venue owners and service partners to manage their business operations efficiently.",
+        "features": {
+          "booking": "Event Booking & Calendar Management",
+          "reports": "Financial Reports & Analytics",
+          "collaboration": "Team Collaboration Tools",
+          "database": "Client & Partner Database",
+          "invoicing": "Automated Invoicing & Payments"
+        },
+        "learnMore": "Explore Management System"
+      },
+      "mobileApp": {
+        "title": "Mobile Marketplace",
+        "description": "Easy-to-use mobile app for clients to discover venues, browse services, and book events on the go.",
+        "features": {
+          "discovery": "Venue Discovery & Search",
+          "booking": "Quick Booking Process",
+          "tools": "Event Planning Tools",
+          "partners": "Service Partner Connections",
+          "updates": "Real-time Updates"
+        },
+        "learnMore": "Explore Mobile App"
+      }
+    },
+    "features": {
+      "title": "Built for Everyone in the Event Industry",
+      "subtitle": "Powerful features tailored to your specific needs",
+      "venueOwners": {
+        "title": "For Venue Owners",
+        "description": "Complete business management suite with real-time insights and automated workflows.",
+        "features": {
+          "calendar": "Smart calendar with availability tracking",
+          "analytics": "Real-time financial analytics",
+          "team": "Team management & permissions",
+          "invoicing": "Automated invoicing & payments"
+        },
+        "viewApp": "View Management System"
+      },
+      "eventPlanners": {
+        "title": "For Event Planners",
+        "description": "Everything you need to plan and execute perfect events, all in one place.",
+        "features": {
+          "browse": "Browse 500+ verified venues",
+          "connect": "Connect with trusted service partners",
+          "tracking": "Real-time budget tracking",
+          "dashboard": "Centralized event dashboard"
+        },
+        "viewApp": "View Mobile App"
+      },
+      "servicePartners": {
+        "title": "For Service Partners",
+        "description": "Grow your business by connecting with more clients and managing jobs efficiently.",
+        "features": {
+          "connections": "Direct venue & client connections",
+          "dashboard": "Job management dashboard",
+          "reviews": "Build reputation with reviews",
+          "payments": "Secure payment processing"
+        },
+        "viewApp": "View Management System"
+      }
+    },
+    "howItWorks": {
+      "title": "How Fiesta Works",
+      "subtitle": "Get started in minutes with our simple onboarding process",
+      "steps": {
+        "createAccount": {
+          "title": "Create Account",
+          "description": "Sign up as a venue owner, event planner, or service partner"
+        },
+        "setupProfile": {
+          "title": "Setup Profile",
+          "description": "Complete your profile with photos, services, and availability"
+        },
+        "connectBook": {
+          "title": "Connect & Book",
+          "description": "Browse, connect, and book with verified partners"
+        },
+        "manageEvents": {
+          "title": "Manage & Grow",
+          "description": "Track events, analyze performance, and scale your business"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "Loved by Event Professionals Across Tunisia",
+      "subtitle": "Join thousands of satisfied users transforming their event businesses"
+    },
+    "pricing": {
+      "title": "Custom Pricing for Your Business",
+      "description": "Every venue and service provider has unique needs. Contact our sales team to get a personalized quote that fits your business size and requirements.",
+      "noHiddenFees": "No Hidden Fees",
+      "noHiddenFeesDesc": "Clear, transparent pricing with everything included",
+      "flexiblePlans": "Flexible Plans",
+      "flexiblePlansDesc": "Choose monthly, annual, or custom billing cycles",
+      "bestValue": "Best Value",
+      "bestValueDesc": "Competitive pricing with premium features",
+      "callUs": "Call for Pricing",
+      "contactSales": "Contact Sales Team"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know about Fiesta",
+      "questions": {
+        "marketplace": {
+          "q": "What is the Fiesta marketplace?",
+          "a": "The Fiesta marketplace is a mobile platform where clients can discover and book venues, browse service partners (photographers, caterers, DJs, etc.), and plan complete events. It connects event planners with verified venues and service providers across Tunisia."
+        },
+        "eventTypes": {
+          "q": "What types of events can I manage with Fiesta?",
+          "a": "Fiesta supports all types of events including weddings, birthdays, corporate events, conferences, parties, and more. Our platform is flexible and can be customized for any event type."
+        },
+        "getStarted": {
+          "q": "How do I get started?",
+          "a": "Simply book a demo with our team. We'll walk you through the platform, help you set up your account, and provide training to ensure you get the most out of Fiesta."
+        },
+        "tryBefore": {
+          "q": "Can I try Fiesta before committing?",
+          "a": "Yes! We offer demo sessions where you can explore all features. Contact our sales team to schedule a personalized demo and see how Fiesta fits your needs."
+        },
+        "support": {
+          "q": "What kind of support do you provide?",
+          "a": "We provide comprehensive support including onboarding training, phone support, email support, and a detailed knowledge base. Our team is here to ensure your success."
+        }
+      }
+    },
+    "contact": {
+      "title": "Ready to Transform Your Event Business?",
+      "subtitle": "Get in touch with our team for a personalized demo",
+      "callUs": "Call Us",
+      "emailUs": "Email Us",
+      "visitUs": "Visit Us",
+      "bookDemo": "Book Your Demo",
+      "browseMarketplace": "Browse Marketplace"
+    },
+    "footer": {
+      "description": "Tunisia's leading event management platform connecting venues, planners, and service partners.",
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "blog": "Blog",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "copyright": "© 2024 Fiesta Events. Made with",
+      "inTunisia": "in Tunisia"
+    }
+  },
+  "invoices": {
+    "title": "Invoices",
+    "subtitle": {
+      "client": "Manage client invoices and receivables",
+      "partner": "Manage partner bills and payables"
+    },
+    "types": {
+      "invoice": "Invoice",
+      "bill": "Bill",
+      "client": "Client",
+      "partner": "Partner",
+      "clientInvoices": "Client Invoices",
+      "partnerBills": "Partner Bills"
+    },
+    "recipient": {
+      "client": "Client",
+      "partner": "Partner"
+    },
+    "defaultInvoiceName": "Invoice",
+    "errors": {
+      "title": "Error Loading Invoices",
+      "loadStatsFailed": "Failed to load invoice statistics",
+      "loadInvoicesFailed": "Failed to load invoices. Please try again.",
+      "invalidInvoiceId": "Invalid invoice ID",
+      "invalidInvoiceData": "Invalid invoice data",
+      "loadDetailsFailed": "Failed to load invoice details"
+    },
+    "delete": {
+      "loading": "Deleting {{invoiceName}}...",
+      "success": "{{invoiceName}} deleted successfully",
+      "error": "Failed to delete {{invoiceName}}",
+      "confirm": {
+        "title": "Confirm Deletion",
+        "description": "Are you sure you want to delete \"{{invoiceName}}\"? This action cannot be undone and all associated data will be permanently removed."
+      }
+    },
+    "cancel": {
+      "loading": "Cancelling invoice...",
+      "success": "Invoice cancelled successfully",
+      "error": "Failed to cancel invoice",
+      "modal": {
+        "title": "Cancel Invoice",
+        "description": "Are you sure you want to cancel this invoice?",
+        "reasonLabel": "Cancellation Reason (optional)",
+        "reasonPlaceholder": "Provide a reason for cancellation..."
+      }
+    },
+    "send": {
+      "loading": "Sending invoice...",
+      "success": "Invoice sent successfully",
+      "error": "Failed to send invoice",
+      "message": "Please find your invoice attached. Payment is due by the date specified."
+    },
+    "markAsPaid": {
+      "loading": "Marking invoice as paid...",
+      "success": "Invoice marked as paid",
+      "error": "Failed to mark invoice as paid"
+    },
+    "download": {
+      "generating": "Generating PDF... Please wait",
+      "success": "Invoice {{invoiceNumber}} downloaded successfully",
+      "errors": {
+        "generic": "Failed to download invoice",
+        "invalidFile": "Invalid file received from server",
+        "emptyFile": "Generated PDF is empty",
+        "serverError": "PDF generation failed on server",
+        "generationFailed": "PDF generation service unavailable",
+        "timeout": "PDF generation timed out. Please try again",
+        "notFound": "Invoice not found"
+      }
+    },
+    "filters": {
+      "show": "Show Filters",
+      "hide": "Hide Filters",
+      "clearAll": "Clear All",
+      "cleared": "Filters cleared",
+      "status": {
+        "label": "Status",
+        "all": "All Status"
+      },
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "retry": {
+      "loading": "Retrying to load invoices...",
+      "button": "Retry"
+    },
+    "bulkSend": {
+      "noSelection": "Please select invoices to send",
+      "loading": "Sending {{count}} invoice(s)...",
+      "success": "Sent {{count}} invoice(s) successfully",
+      "error": "Failed to send some invoices",
+      "button": "Send Selected ({{count}})"
+    },
+    "stats": {
+      "totalRevenue": "Total Revenue",
+      "totalExpenses": "Total Expenses",
+      "paid": "Paid",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "invoiceCount": "{{count}} invoices",
+      "amountDue": "{{amount}} due",
+      "needsAttention": "Needs attention"
+    },
+    "status": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "paid": "Paid",
+      "partial": "Partial",
+      "overdue": "Overdue",
+      "cancelled": "Cancelled"
+    },
+    "table": {
+      "headers": {
+        "invoiceNumber": "Invoice #",
+        "client": "Client",
+        "partner": "Partner",
+        "issueDate": "Issue Date",
+        "dueDate": "Due Date",
+        "amount": "Amount",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "noNumber": "No Number",
+      "noRecipient": "No Recipient",
+      "empty": {
+        "search": "No invoices found matching your search.",
+        "default": "No {{type}} invoices found. Create your first {{type}} to get started."
+      }
+    },
+    "search": {
+      "placeholder": "Search by invoice number, {{type}} name, or email..."
+    },
+    "loading": "Loading invoices...",
+    "empty": {
+      "search": {
+        "title": "No invoices found",
+        "description": "No invoices match your current search or filter criteria."
+      },
+      "default": {
+        "title": "No invoices yet",
+        "description": "Get started by creating your first {{type}}."
+      }
+    },
+    "create": {
+      "button": "Create {{type}}",
+      "firstButton": "Create First {{type}}"
+    },
+    "detailModal": {
+      "title": "Invoice Details",
+      "invoiceNumber": "Invoice #{{number}}",
+      "issued": "Issued: {{date}}",
+      "sent": "Sent: {{date}}",
+      "billTo": "Bill To:",
+      "payTo": "Pay To:",
+      "invoiceDetails": "Invoice Details:",
+      "dueDate": "Due Date:",
+      "event": "Event:",
+      "currency": "Currency:",
+      "items": "Items",
+      "description": "Description",
+      "quantity": "Qty",
+      "rate": "Rate",
+      "amount": "Amount",
+      "noDescription": "No description",
+      "subtotal": "Subtotal:",
+      "tax": "Tax",
+      "discount": "Discount:",
+      "total": "Total:",
+      "amountPaid": "Amount Paid:",
+      "amountDue": "Amount Due:",
+      "notes": "Notes",
+      "terms": "Terms & Conditions"
+    },
+    "actions": {
+      "view": "View Invoice",
+      "edit": "Edit Invoice",
+      "download": "Download PDF",
+      "send": "Send Invoice",
+      "markAsPaid": "Mark as Paid",
+      "delete": "Delete Invoice",
+      "close": "Close",
+      "downloadPdf": "Download PDF",
+      "editInvoice": "Edit Invoice",
+      "sendInvoice": "Send Invoice",
+      "cancel": "Cancel",
+      "deleteInvoice": "Delete Invoice",
+      "cancelInvoice": "Cancel Invoice"
+    }
   }
 }

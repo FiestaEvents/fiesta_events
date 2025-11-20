@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../components/common/Button";
 import Badge from "../components/common/Badge";
 import { 
@@ -73,6 +74,7 @@ ChartJS.register(
 );
 
 const DashboardPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   
   const [stats, setStats] = useState({
@@ -235,7 +237,7 @@ const DashboardPage = () => {
         upcomingEvents,
         recentPayments: payments.slice(0, 5).map(payment => ({
           id: payment._id,
-          clientName: payment.clientId?.name || payment.description || "Payment",
+          clientName: payment.clientId?.name || payment.description || t("dashboard.activity.client"),
           date: payment.paidDate || payment.createdAt,
           amount: payment.amount || 0,
         })),
@@ -338,7 +340,7 @@ const DashboardPage = () => {
       const revenueTrend = Array.from({ length: 6 }, (_, i) => {
         const date = new Date();
         date.setMonth(date.getMonth() - (5 - i));
-        const month = date.toLocaleDateString('tn-TN', { month: 'short' });
+        const month = date.toLocaleDateString('en-US', { month: 'short' });
         
         const monthRevenue = payments
           .filter(payment => {
@@ -360,7 +362,7 @@ const DashboardPage = () => {
       const financialHealth = {
         profitMargin,
         cashFlow: (financeSummary.cashFlow?.currentBalance || 0),
-        revenueGrowth: stats.monthlyComparison.revenue.change,
+        revenueGrowth: stats.monthlyComparison?.revenue?.change || 0,
         expenseRatio: totalRevenue > 0 ? Math.round((totalExpenses / totalRevenue) * 100) : 0,
       };
 
@@ -374,24 +376,24 @@ const DashboardPage = () => {
       // Calculate client satisfaction (simplified - based on ratings)
       const ratedClients = clients.filter(client => client.rating);
       const clientSatisfaction = ratedClients.length > 0 ? 
-        Math.round((ratedClients.reduce((sum, client) => sum + (client.rating || 0), 0) / ratedClients.length) * 20):0;
+        Math.round((ratedClients.reduce((sum, client) => sum + (client.rating || 0), 0) / ratedClients.length) * 20) : 0;
 
       // Get recent activity from multiple sources with proper error handling
       const recentActivity = [
         ...payments.slice(0, 2).map(payment => ({
-          action: 'Payment received',
-          details: `${payment.clientId?.name || 'Client'} - ${formatCurrency(payment.amount)}`,
+          action: t("dashboard.activity.paymentReceived"),
+          details: `${payment.clientId?.name || t("dashboard.activity.client")} - ${formatCurrency(payment.amount)}`,
           time: new Date(payment.paidDate || payment.createdAt).toLocaleDateString(),
           type: 'payment'
         })),
         ...events.slice(0, 2).map(event => ({
-          action: `Event ${event.status}`,
+          action: `${t("dashboard.activity.event")} ${event.status}`,
           details: `${event.title} - ${new Date(event.startDate).toLocaleDateString()}`,
           time: new Date(event.updatedAt || event.createdAt).toLocaleDateString(),
           type: 'event'
         })),
         ...allTasks.slice(0, 1).filter(task => task.status === 'completed').map(task => ({
-          action: 'Task completed',
+          action: t("dashboard.activity.taskCompleted"),
           details: task.title,
           time: new Date(task.completedAt || task.updatedAt).toLocaleDateString(),
           type: 'task'
@@ -418,14 +420,39 @@ const DashboardPage = () => {
         clientSatisfaction,
         averageEventValue,
         recentActivity,
-        teamPerformance: [], // This would come from a team API
+        teamPerformance: [],
       };
 
     } catch (error) {
       console.error("Error fetching enhanced data:", error);
-      return getFallbackEnhancedData();
+      return {
+        occupancyRate: 0,
+        averageRating: 0,
+        taskCompletion: 0,
+        paymentCollection: 0,
+        revenueTrend: [],
+        eventTypeDistribution: [],
+        performanceMetrics: {
+          venueUtilization: 0,
+          taskCompletion: 0,
+          paymentCollection: 0,
+          clientSatisfaction: 0,
+        },
+        financialHealth: {
+          profitMargin: 0,
+          cashFlow: 0,
+          revenueGrowth: 0,
+          expenseRatio: 0,
+        },
+        clientRetention: 0,
+        clientSatisfaction: 0,
+        averageEventValue: 0,
+        recentActivity: [],
+        teamPerformance: [],
+      };
     }
   };
+
   // Prepare chart data
   const eventTypeChartData = {
     labels: enhancedStats.eventTypeDistribution.map(item => item.type),
@@ -444,7 +471,7 @@ const DashboardPage = () => {
     labels: enhancedStats.revenueTrend.map(item => item.month),
     datasets: [
       {
-        label: 'Revenue',
+        label: t("dashboard.charts.revenue"),
         data: enhancedStats.revenueTrend.map(item => item.revenue),
         borderColor: '#10B981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -488,16 +515,16 @@ const DashboardPage = () => {
 
   const getFinancialHealthColor = (metric, value) => {
     if (metric === 'profitMargin') {
-      if (value >= 30) return 'text-green-600';
-      if (value >= 15) return 'text-yellow-600';
-      return 'text-red-600';
+      if (value >= 30) return 'text-green-600 dark:text-green-400';
+      if (value >= 15) return 'text-yellow-600 dark:text-yellow-400';
+      return 'text-red-600 dark:text-red-400';
     }
     if (metric === 'expenseRatio') {
-      if (value <= 60) return 'text-green-600';
-      if (value <= 75) return 'text-yellow-600';
-      return 'text-red-600';
+      if (value <= 60) return 'text-green-600 dark:text-green-400';
+      if (value <= 75) return 'text-yellow-600 dark:text-yellow-400';
+      return 'text-red-600 dark:text-red-400';
     }
-    return 'text-gray-600';
+    return 'text-gray-600 dark:text-gray-400';
   };
 
   const getStatusColor = (status) => {
@@ -516,7 +543,7 @@ const DashboardPage = () => {
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t("dashboard.loading")}</p>
         </div>
       </div>
     );
@@ -529,10 +556,10 @@ const DashboardPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <FileText className="w-8 h-8" />
-            Dashboard
+            {t("dashboard.title")}
           </h1>
           <p className="mt-1 text-base text-gray-600 dark:text-gray-300">
-            Comprehensive overview of your venue performance
+            {t("dashboard.subtitle")}
           </p>
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -550,7 +577,9 @@ const DashboardPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Profit Margin</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {t("dashboard.financialHealth.profitMargin")}
+              </div>
               <div className={`text-2xl font-bold ${getFinancialHealthColor('profitMargin', enhancedStats.financialHealth.profitMargin)}`}>
                 {enhancedStats.financialHealth.profitMargin}%
               </div>
@@ -562,7 +591,9 @@ const DashboardPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Cash Flow</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {t("dashboard.financialHealth.cashFlow")}
+              </div>
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {formatCurrency(enhancedStats.financialHealth.cashFlow)}
               </div>
@@ -574,7 +605,9 @@ const DashboardPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Client Retention</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {t("dashboard.financialHealth.clientRetention")}
+              </div>
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {enhancedStats.clientRetention}%
               </div>
@@ -586,7 +619,9 @@ const DashboardPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Expense Ratio</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {t("dashboard.financialHealth.expenseRatio")}
+              </div>
               <div className={`text-2xl font-bold ${getFinancialHealthColor('expenseRatio', enhancedStats.financialHealth.expenseRatio)}`}>
                 {enhancedStats.financialHealth.expenseRatio}%
               </div>
@@ -600,19 +635,27 @@ const DashboardPage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{enhancedStats.occupancyRate}%</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Occupancy Rate</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {t("dashboard.quickStats.occupancyRate")}
+          </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">{enhancedStats.averageRating}/5</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Avg. Rating</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {t("dashboard.quickStats.averageRating")}
+          </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{enhancedStats.taskCompletion}%</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Task Completion</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {t("dashboard.quickStats.taskCompletion")}
+          </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{enhancedStats.paymentCollection}%</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Payment Collection</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {t("dashboard.quickStats.paymentCollection")}
+          </div>
         </div>
       </div>
 
@@ -624,7 +667,7 @@ const DashboardPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Events This Month
+                  {t("dashboard.mainStats.eventsThisMonth")}
                 </div>
                 <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
                   {stats.totalEvents}
@@ -644,7 +687,7 @@ const DashboardPage = () => {
                       {Math.abs(stats.monthlyComparison.events.change)}%
                     </span>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      vs last month
+                      {t("dashboard.mainStats.vsLastMonth")}
                     </span>
                   </div>
                 )}
@@ -662,7 +705,7 @@ const DashboardPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Revenue This Month
+                  {t("dashboard.mainStats.revenueThisMonth")}
                 </div>
                 <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
                   {formatCurrency(stats.revenue)}
@@ -682,7 +725,7 @@ const DashboardPage = () => {
                       {Math.abs(stats.monthlyComparison.revenue.change)}%
                     </span>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      vs last month
+                      {t("dashboard.mainStats.vsLastMonth")}
                     </span>
                   </div>
                 )}
@@ -700,7 +743,7 @@ const DashboardPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Avg. Event Value
+                  {t("dashboard.mainStats.averageEventValue")}
                 </div>
                 <div className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
                   {formatCurrency(enhancedStats.averageEventValue)}
@@ -719,7 +762,7 @@ const DashboardPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Client Satisfaction
+                  {t("dashboard.mainStats.clientSatisfaction")}
                 </div>
                 <div className="mt-2 text-3xl font-bold text-pink-600 dark:text-pink-400">
                   {enhancedStats.clientSatisfaction}%
@@ -740,7 +783,7 @@ const DashboardPage = () => {
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              Revenue Trend (Last 6 Months)
+              {t("dashboard.charts.revenueTrend")}
             </h3>
             <div className="h-64">
               <Line data={revenueTrendChartData} options={revenueChartOptions} />
@@ -753,14 +796,26 @@ const DashboardPage = () => {
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5" />
-              Performance Metrics
+              {t("dashboard.charts.performanceMetrics")}
             </h3>
             <div className="space-y-4">
               {[
-                { label: 'Venue Utilization', value: enhancedStats.performanceMetrics.venueUtilization  },
-                { label: 'Task Completion', value: enhancedStats.performanceMetrics.taskCompletion  },
-                { label: 'Payment Collection', value: enhancedStats.performanceMetrics.paymentCollection },
-                { label: 'Client Satisfaction', value: enhancedStats.performanceMetrics.clientSatisfaction  },
+                { 
+                  label: t("dashboard.charts.venueUtilization"), 
+                  value: enhancedStats.performanceMetrics.venueUtilization  
+                },
+                { 
+                  label: t("dashboard.charts.taskCompletion"), 
+                  value: enhancedStats.performanceMetrics.taskCompletion  
+                },
+                { 
+                  label: t("dashboard.charts.paymentCollection"), 
+                  value: enhancedStats.performanceMetrics.paymentCollection 
+                },
+                { 
+                  label: t("dashboard.charts.clientSatisfaction"), 
+                  value: enhancedStats.performanceMetrics.clientSatisfaction  
+                },
               ].map((metric, index) => (
                 <div key={index}>
                   <div className="flex justify-between text-sm mb-1">
@@ -784,7 +839,7 @@ const DashboardPage = () => {
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <PieChart className="w-5 h-5" />
-              Event Type Distribution
+              {t("dashboard.charts.eventTypeDistribution")}
             </h3>
             <div className="h-64 relative">
               <Doughnut data={eventTypeChartData} options={chartOptions} />
@@ -792,13 +847,17 @@ const DashboardPage = () => {
             {/* Additional summary stats */}
             <div className="mt-4 grid grid-cols-2 gap-2 text-center">
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                <div className="text-sm text-gray-600 dark:text-gray-400">Total Events</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("dashboard.charts.totalEvents")}
+                </div>
                 <div className="text-lg font-bold text-gray-900 dark:text-white">
                   {enhancedStats.eventTypeDistribution.reduce((sum, item) => sum + item.count, 0)}
                 </div>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                <div className="text-sm text-gray-600 dark:text-gray-400">Most Popular</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("dashboard.charts.mostPopular")}
+                </div>
                 <div className="text-lg font-bold text-gray-900 dark:text-white">
                   {enhancedStats.eventTypeDistribution.length > 0 
                     ? enhancedStats.eventTypeDistribution.reduce((prev, current) => 
@@ -818,14 +877,14 @@ const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Zap className="w-5 h-5" />
-                Recent Activity
+                {t("dashboard.charts.recentActivity")}
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => navigate("/activity")}
               >
-                View All
+                {t("dashboard.viewAll")}
               </Button>
             </div>
             <div className="space-y-4">
@@ -854,7 +913,7 @@ const DashboardPage = () => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <BarChart3 className="w-5 h-5" />
-              Event Status Breakdown
+              {t("dashboard.eventStatus.title")}
             </h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -862,7 +921,9 @@ const DashboardPage = () => {
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("dashboard.eventStatus.pending")}
+                  </p>
                   <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                     {stats.eventsByStatus.pending}
                   </p>
@@ -873,7 +934,9 @@ const DashboardPage = () => {
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Confirmed</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("dashboard.eventStatus.confirmed")}
+                  </p>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {stats.eventsByStatus.confirmed}
                   </p>
@@ -884,7 +947,9 @@ const DashboardPage = () => {
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("dashboard.eventStatus.completed")}
+                  </p>
                   <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {stats.eventsByStatus.completed}
                   </p>
@@ -895,7 +960,9 @@ const DashboardPage = () => {
               <div className="flex items-center gap-3">
                 <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Cancelled</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("dashboard.eventStatus.cancelled")}
+                  </p>
                   <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {stats.eventsByStatus.cancelled}
                   </p>
@@ -913,7 +980,7 @@ const DashboardPage = () => {
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Upcoming Events (30 Days)
+                {t("dashboard.upcomingEvents.title")}
               </h2>
               <Button
                 variant="outline"
@@ -921,7 +988,7 @@ const DashboardPage = () => {
                 icon={ArrowRight}
                 onClick={() => navigate("/events")}
               >
-                View All
+                {t("dashboard.viewAll")}
               </Button>
             </div>
             <div className="overflow-x-auto">
@@ -929,19 +996,19 @@ const DashboardPage = () => {
                 <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Event
+                      {t("dashboard.upcomingEvents.event")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Date
+                      {t("dashboard.upcomingEvents.date")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Client
+                      {t("dashboard.upcomingEvents.client")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Guests
+                      {t("dashboard.upcomingEvents.guests")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
+                      {t("dashboard.upcomingEvents.status")}
                     </th>
                   </tr>
                 </thead>
@@ -952,7 +1019,7 @@ const DashboardPage = () => {
                         colSpan={5}
                         className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                       >
-                        No upcoming events.
+                        {t("dashboard.upcomingEvents.noEvents")}
                       </td>
                     </tr>
                   ) : (
@@ -999,7 +1066,7 @@ const DashboardPage = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Recent Payments
+                  {t("dashboard.recentPayments.title")}
                 </h2>
                 <Button
                   variant="outline"
@@ -1007,13 +1074,13 @@ const DashboardPage = () => {
                   icon={ArrowRight}
                   onClick={() => navigate("/payments")}
                 >
-                  View All
+                  {t("dashboard.viewAll")}
                 </Button>
               </div>
               <ul className="space-y-3">
                 {stats.recentPayments.length === 0 ? (
                   <li className="text-gray-500 dark:text-gray-400 text-center py-6">
-                    No recent payments.
+                    {t("dashboard.recentPayments.noPayments")}
                   </li>
                 ) : (
                   stats.recentPayments.map((payment) => (
@@ -1049,7 +1116,7 @@ const DashboardPage = () => {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    My Tasks
+                    {t("dashboard.myTasks.title")}
                   </h2>
                   <Button
                     variant="outline"
@@ -1057,7 +1124,7 @@ const DashboardPage = () => {
                     icon={ArrowRight}
                     onClick={() => navigate("/tasks")}
                   >
-                    View All
+                    {t("dashboard.viewAll")}
                   </Button>
                 </div>
                 <ul className="space-y-3">
@@ -1088,10 +1155,10 @@ const DashboardPage = () => {
                             {task.title}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-US", {
+                            {t("dashboard.myTasks.due")}: {task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
-                            }) : 'No due date'}
+                            }) : t("dashboard.myTasks.noDueDate")}
                           </p>
                         </div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -1099,7 +1166,7 @@ const DashboardPage = () => {
                           task.priority === 'high' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400' :
                           'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
                         }`}>
-                          {task.priority}
+                          {t(`dashboard.priority.${task.priority}`)}
                         </span>
                       </div>
                     </li>
@@ -1115,7 +1182,7 @@ const DashboardPage = () => {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Upcoming Reminders
+                    {t("dashboard.reminders.title")}
                   </h2>
                   <Button
                     variant="outline"
@@ -1123,7 +1190,7 @@ const DashboardPage = () => {
                     icon={ArrowRight}
                     onClick={() => navigate("/reminders")}
                   >
-                    View All
+                    {t("dashboard.viewAll")}
                   </Button>
                 </div>
                 <ul className="space-y-3">
@@ -1143,7 +1210,7 @@ const DashboardPage = () => {
                             {reminder.reminderDate ? new Date(reminder.reminderDate).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
-                            }) : 'No date set'}
+                            }) : t("dashboard.reminders.noDate")}
                           </p>
                         </div>
                       </div>

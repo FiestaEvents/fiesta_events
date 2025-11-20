@@ -15,10 +15,12 @@ import { toast } from "react-hot-toast";
 import { eventService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
+import { useTranslation } from "react-i18next";
 
 const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   if (!isOpen || !event) return null;
 
@@ -55,19 +57,19 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
   const handleDelete = async () => {
     if (
       window.confirm(
-        `Are you sure you want to delete "${event.title}"? This action cannot be undone.`
+        t("eventDetailModal.actions.delete.confirm", { eventTitle: event.title })
       )
     ) {
       setIsDeleting(true);
       try {
         await eventService.deleteEvent(event._id);
-        toast.success("Event deleted successfully");
+        toast.success(t("eventDetailModal.actions.delete.success"));
         console.log(`Event ${event._id} deleted successfully`);
         onClose();
         refreshData(); // Refresh the data after deletion
       } catch (error) {
         console.error("Failed to delete event:", error);
-        toast.error("Failed to delete event");
+        toast.error(t("eventDetailModal.actions.delete.error"));
       } finally {
         setIsDeleting(false);
       }
@@ -115,7 +117,7 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                 <button
                   onClick={onClose}
                   className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
-                  title="Close"
+                  title={t("eventDetailModal.close")}
                 >
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
@@ -123,14 +125,14 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
               <div className="mt-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <Badge color={getStatusColor(event.status)}>
-                    {event.status}
+                    {t(`eventDetailModal.status.${event.status}`)}
                   </Badge>
                 </div>
 
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-semibold">Description:</span>{" "}
-                    {event.description || "No description provided."}
+                    <span className="font-semibold">{t("eventDetailModal.description")}:</span>{" "}
+                    {event.description || t("eventDetailModal.noDescription")}
                   </p>
                   <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
                     <CalendarIcon className="w-5 h-5 text-orange-500 flex-shrink-0" />
@@ -147,7 +149,7 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                     <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
                       <Users className="w-5 h-5 text-orange-500 flex-shrink-0" />
                       <span>
-                        Client:{" "}
+                        {t("eventDetailModal.client")}:{" "}
                         <span className="font-medium">
                           {event.clientId.name}
                         </span>
@@ -157,7 +159,7 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                   {event.guestCount && (
                     <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
                       <MapPin className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span>{event.guestCount} guests</span>
+                      <span>{event.guestCount} {t("eventDetailModal.guests")}</span>
                     </div>
                   )}
                 </div>
@@ -170,7 +172,7 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? t("eventDetailModal.actions.delete.deleting") : t("eventDetailModal.actions.delete.button")}
               </Button>
               <div className="flex gap-3">
                 <Button
@@ -178,7 +180,7 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                   icon={Edit}
                   onClick={() => onEdit(event)}
                 >
-                  Edit Event
+                  {t("eventDetailModal.actions.edit")}
                 </Button>
                 {/* Small square button for View Full Details */}
                 <Button
@@ -186,9 +188,9 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                   size="sm"
                   onClick={handleViewFullDetails}
                   className="gap-3 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title="View Full Details"
+                  title={t("eventDetailModal.actions.viewFullDetailsTitle")}
                 >
-                  More Details
+                  {t("eventDetailModal.actions.viewFullDetails")}
                   <ArrowRight className="w-5 h-5 text-white" />
                 </Button>
               </div>

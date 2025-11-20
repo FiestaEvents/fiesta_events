@@ -34,9 +34,12 @@ import Pagination from "../../components/common/Pagination";
 import Select from "../../components/common/Select";
 import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
+import { useTranslation } from "react-i18next"; // Add this import
+
 const InvoicesPage = () => {
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  const { t } = useTranslation(); // Add translation hook
 
   // State
   const [invoices, setInvoices] = useState([]);
@@ -52,6 +55,7 @@ const InvoicesPage = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
@@ -93,13 +97,12 @@ const InvoicesPage = () => {
     let recipientPhone = "";
 
     if (invoice.invoiceType === "client") {
-      recipientName = invoice.client?.name || invoice.recipientName || "Client";
+      recipientName = invoice.client?.name || invoice.recipientName || t("invoices.recipient.client");
       recipientEmail = invoice.client?.email || invoice.recipientEmail;
       recipientCompany = invoice.client?.company || invoice.recipientCompany;
       recipientPhone = invoice.client?.phone || invoice.recipientPhone;
     } else {
-      recipientName =
-        invoice.partner?.name || invoice.recipientName || "Partner";
+      recipientName = invoice.partner?.name || invoice.recipientName || t("invoices.recipient.partner");
       recipientEmail = invoice.partner?.email || invoice.recipientEmail;
       recipientCompany = invoice.partner?.company || invoice.recipientCompany;
       recipientPhone = invoice.partner?.phone || invoice.recipientPhone;
@@ -113,17 +116,13 @@ const InvoicesPage = () => {
 
     return {
       _id: invoice._id || invoice.id,
-      invoiceNumber:
-        invoice.invoiceNumber || `INV-${(invoice._id || "").substring(0, 8)}`,
+      invoiceNumber: invoice.invoiceNumber || `INV-${(invoice._id || "").substring(0, 8)}`,
       invoiceType: invoice.invoiceType || "client",
       recipientName,
       recipientEmail,
       recipientCompany,
       recipientPhone,
-      recipientAddress:
-        invoice.recipientAddress ||
-        invoice.client?.address ||
-        invoice.partner?.address,
+      recipientAddress: invoice.recipientAddress || invoice.client?.address || invoice.partner?.address,
       totalAmount: invoice.totalAmount || 0,
       subtotal: invoice.subtotal || 0,
       tax: invoice.tax || 0,
@@ -132,9 +131,7 @@ const InvoicesPage = () => {
       discountType: invoice.discountType || "fixed",
       status: invoice.status || "draft",
       issueDate: invoice.issueDate || new Date().toISOString(),
-      dueDate:
-        invoice.dueDate ||
-        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      dueDate: invoice.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       sentAt: invoice.sentAt,
       paidAt: invoice.paidAt,
       items: invoice.items || [],
@@ -182,11 +179,11 @@ const InvoicesPage = () => {
       setStats(typeStats);
     } catch (error) {
       console.error("Error fetching stats:", error);
-      showError("Failed to load invoice statistics");
+      showError(t("invoices.errors.loadStatsFailed"));
     } finally {
       setStatsLoading(false);
     }
-  }, [filters.startDate, filters.endDate, invoiceType, showError]);
+  }, [filters.startDate, filters.endDate, invoiceType, showError, t]);
 
   // Fetch invoices with enhanced data validation
   const fetchInvoices = useCallback(async () => {
@@ -198,10 +195,8 @@ const InvoicesPage = () => {
         search: searchTerm || undefined,
         invoiceType: invoiceType,
         status: filters.status || undefined,
-        client:
-          invoiceType === "client" ? filters.client || undefined : undefined,
-        partner:
-          invoiceType === "partner" ? filters.partner || undefined : undefined,
+        client: invoiceType === "client" ? filters.client || undefined : undefined,
+        partner: invoiceType === "partner" ? filters.partner || undefined : undefined,
         event: filters.event || undefined,
         startDate: filters.startDate || undefined,
         endDate: filters.endDate || undefined,
@@ -237,7 +232,7 @@ const InvoicesPage = () => {
       setHasInitialLoad(true);
     } catch (error) {
       console.error("Error fetching invoices:", error);
-      const errorMessage = error.message || "Failed to load invoices. Please try again.";
+      const errorMessage = error.message || t("invoices.errors.loadInvoicesFailed");
       setError(errorMessage);
       showError(errorMessage);
       setInvoices([]);
@@ -245,7 +240,7 @@ const InvoicesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters, currentPage, pageSize, invoiceType, showError]);
+  }, [searchTerm, filters, currentPage, pageSize, invoiceType, showError, t]);
 
   useEffect(() => {
     fetchInvoices();
@@ -262,14 +257,14 @@ const InvoicesPage = () => {
   }, [invoiceType]);
 
   // Show confirmation modal
-  const showDeleteConfirmation = useCallback((invoiceId, invoiceName = "Invoice") => {
+  const showDeleteConfirmation = useCallback((invoiceId, invoiceName = t("invoices.defaultInvoiceName")) => {
     setConfirmationModal({
       isOpen: true,
       invoiceId,
       invoiceName,
       onConfirm: () => handleDeleteConfirm(invoiceId, invoiceName)
     });
-  }, []);
+  }, [t]);
 
   // Close confirmation modal
   const closeConfirmationModal = useCallback(() => {
@@ -282,9 +277,9 @@ const InvoicesPage = () => {
   }, []);
 
   // Handle confirmed deletion
-  const handleDeleteConfirm = useCallback(async (invoiceId, invoiceName = "Invoice") => {
+  const handleDeleteConfirm = useCallback(async (invoiceId, invoiceName = t("invoices.defaultInvoiceName")) => {
     if (!invoiceId) {
-      showError("Invalid invoice ID");
+      showError(t("invoices.errors.invalidInvoiceId"));
       return;
     }
 
@@ -293,9 +288,9 @@ const InvoicesPage = () => {
       await promise(
         invoiceService.delete(invoiceId),
         {
-          loading: `Deleting ${invoiceName}...`,
-          success: `${invoiceName} deleted successfully`,
-          error: `Failed to delete ${invoiceName}`
+          loading: t("invoices.delete.loading", { invoiceName }),
+          success: t("invoices.delete.success", { invoiceName }),
+          error: t("invoices.delete.error", { invoiceName })
         }
       );
 
@@ -316,10 +311,10 @@ const InvoicesPage = () => {
       console.error("Delete invoice error:", err);
       closeConfirmationModal();
     }
-  }, [fetchInvoices, fetchStats, selectedInvoice, promise, showError, closeConfirmationModal]);
+  }, [fetchInvoices, fetchStats, selectedInvoice, promise, showError, closeConfirmationModal, t]);
 
   // Updated invoice deletion handler
-  const handleDeleteClick = useCallback((invoiceId, invoiceName = "Invoice") => {
+  const handleDeleteClick = useCallback((invoiceId, invoiceName = t("invoices.defaultInvoiceName")) => {
     showDeleteConfirmation(invoiceId, invoiceName);
   }, [showDeleteConfirmation]);
 
@@ -346,40 +341,40 @@ const InvoicesPage = () => {
   const handleCreateInvoice = () => {
     navigate(`/invoices/new?type=${invoiceType}`);
   };
-const handleRowClick = useCallback((invoice) => {
-  setSelectedInvoice(invoice);
-  setIsDetailModalOpen(true);
-}, []);
 
-const handleDetailModalClose = useCallback(() => {
-  setSelectedInvoice(null);
-  setIsDetailModalOpen(false);
-}, []);
+  const handleRowClick = useCallback((invoice) => {
+    setSelectedInvoice(invoice);
+    setIsDetailModalOpen(true);
+  }, []);
 
-const handleEditInvoice = (invoice) => {
-  if (!invoice || !invoice._id) {
-    showError("Invalid invoice data");
-    return;
-  }
-  setIsDetailModalOpen(false);
-  navigate(`/invoices/${invoice._id}/edit`);
-};
+  const handleDetailModalClose = useCallback(() => {
+    setSelectedInvoice(null);
+    setIsDetailModalOpen(false);
+  }, []);
+
+  const handleEditInvoice = (invoice) => {
+    if (!invoice || !invoice._id) {
+      showError(t("invoices.errors.invalidInvoiceData"));
+      return;
+    }
+    setIsDetailModalOpen(false);
+    navigate(`/invoices/${invoice._id}/edit`);
+  };
 
   const handleViewInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
-      showError("Invalid invoice data");
+      showError(t("invoices.errors.invalidInvoiceData"));
       return;
     }
 
     try {
       const response = await invoiceService.getById(invoice._id);
-      const invoiceData =
-        response?.invoice || response?.data?.invoice || response?.data;
+      const invoiceData = response?.invoice || response?.data?.invoice || response?.data;
       setSelectedInvoice(normalizeInvoiceData(invoiceData) || invoice);
       setIsDetailModalOpen(true);
     } catch (error) {
       console.error("Error fetching invoice details:", error);
-      showError("Failed to load invoice details");
+      showError(t("invoices.errors.loadDetailsFailed"));
     }
   };
 
@@ -390,7 +385,7 @@ const handleEditInvoice = (invoice) => {
 
   const handleCancelClick = (invoice) => {
     if (!invoice || !invoice._id) {
-      showError("Invalid invoice data");
+      showError(t("invoices.errors.invalidInvoiceData"));
       return;
     }
     setSelectedInvoice(invoice);
@@ -404,9 +399,9 @@ const handleEditInvoice = (invoice) => {
       await promise(
         invoiceService.cancel(selectedInvoice._id, cancelReason),
         {
-          loading: "Cancelling invoice...",
-          success: "Invoice cancelled successfully",
-          error: "Failed to cancel invoice"
+          loading: t("invoices.cancel.loading"),
+          success: t("invoices.cancel.success"),
+          error: t("invoices.cancel.error")
         }
       );
       setIsCancelModalOpen(false);
@@ -422,20 +417,19 @@ const handleEditInvoice = (invoice) => {
 
   const handleSendInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
-      showError("Invalid invoice data");
+      showError(t("invoices.errors.invalidInvoiceData"));
       return;
     }
 
     try {
       await promise(
         invoiceService.send(invoice._id, {
-          message:
-            "Please find your invoice attached. Payment is due by the date specified.",
+          message: t("invoices.send.message"),
         }),
         {
-          loading: "Sending invoice...",
-          success: "Invoice sent successfully",
-          error: "Failed to send invoice"
+          loading: t("invoices.send.loading"),
+          success: t("invoices.send.success"),
+          error: t("invoices.send.error")
         }
       );
       fetchInvoices();
@@ -448,7 +442,7 @@ const handleEditInvoice = (invoice) => {
 
   const handleMarkAsPaid = async (invoice) => {
     if (!invoice || !invoice._id) {
-      showError("Invalid invoice data");
+      showError(t("invoices.errors.invalidInvoiceData"));
       return;
     }
 
@@ -458,9 +452,9 @@ const handleEditInvoice = (invoice) => {
           paymentMethod: "cash",
         }),
         {
-          loading: "Marking invoice as paid...",
-          success: "Invoice marked as paid",
-          error: "Failed to mark invoice as paid"
+          loading: t("invoices.markAsPaid.loading"),
+          success: t("invoices.markAsPaid.success"),
+          error: t("invoices.markAsPaid.error")
         }
       );
       fetchInvoices();
@@ -471,92 +465,88 @@ const handleEditInvoice = (invoice) => {
     }
   };
 
-const handleDownloadInvoice = async (invoice) => {
-  if (!invoice || !invoice._id) {
-    showError("Invalid invoice data");
-    return;
-  }
-
-  try {
-    // Show loading state
-    showInfo("Generating PDF... Please wait");
-
-    console.log("Starting download for invoice:", invoice._id);
-    
-    const blob = await invoiceService.download(invoice._id);
-    
-    console.log("Received blob:", blob);
-    
-    // Validate blob
-    if (!blob || !(blob instanceof Blob)) {
-      throw new Error('Invalid file received from server');
+  const handleDownloadInvoice = async (invoice) => {
+    if (!invoice || !invoice._id) {
+      showError(t("invoices.errors.invalidInvoiceData"));
+      return;
     }
 
-    if (blob.size === 0) {
-      throw new Error('Generated PDF is empty');
-    }
+    try {
+      // Show loading state
+      showInfo(t("invoices.download.generating"));
 
-    // Check if it's actually a PDF
-    if (blob.type && blob.type !== 'application/pdf') {
-      console.warn('Unexpected file type:', blob.type);
-      // Try to read the blob as text to see if it's an error message
-      const text = await blob.text();
-      if (text.includes('error') || text.includes('Error')) {
-        throw new Error('Server returned an error instead of PDF');
+      console.log("Starting download for invoice:", invoice._id);
+      
+      const blob = await invoiceService.download(invoice._id);
+      
+      console.log("Received blob:", blob);
+      
+      // Validate blob
+      if (!blob || !(blob instanceof Blob)) {
+        throw new Error(t("invoices.download.errors.invalidFile"));
       }
-      // If it's not text error, continue with download
+
+      if (blob.size === 0) {
+        throw new Error(t("invoices.download.errors.emptyFile"));
+      }
+
+      // Check if it's actually a PDF
+      if (blob.type && blob.type !== 'application/pdf') {
+        console.warn('Unexpected file type:', blob.type);
+        // Try to read the blob as text to see if it's an error message
+        const text = await blob.text();
+        if (text.includes('error') || text.includes('Error')) {
+          throw new Error(t("invoices.download.errors.serverError"));
+        }
+        // If it's not text error, continue with download
+      }
+
+      // Create filename
+      const invoiceNumber = invoice.invoiceNumber || `INV-${invoice._id.substring(0, 8)}`;
+      const filename = `${invoiceNumber}.pdf`;
+
+      // Download the file
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.style.display = "none";
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+
+      showSuccess(t("invoices.download.success", { invoiceNumber }));
+      
+    } catch (err) {
+      console.error("Download invoice error details:", err);
+      
+      let errorMessage = t("invoices.download.errors.generic");
+      
+      // Provide specific error messages
+      if (err.message.includes('PDF generation failed')) {
+        errorMessage = t("invoices.download.errors.generationFailed");
+      } else if (err.message.includes('Server error')) {
+        errorMessage = t("invoices.download.errors.serverError");
+      } else if (err.message.includes('timeout')) {
+        errorMessage = t("invoices.download.errors.timeout");
+      } else if (err.message.includes('not found')) {
+        errorMessage = t("invoices.download.errors.notFound");
+      } else if (err.message.includes('empty')) {
+        errorMessage = t("invoices.download.errors.emptyFile");
+      } else if (err.message.includes('Server returned an error')) {
+        errorMessage = t("invoices.download.errors.serverError");
+      }
+      
+      showError(errorMessage);
     }
+  };
 
-    // Create filename
-    const invoiceNumber = invoice.invoiceNumber || `INV-${invoice._id.substring(0, 8)}`;
-    const filename = `${invoiceNumber}.pdf`;
-
-    // Download the file
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.style.display = "none";
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up
-    setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-    }, 1000);
-
-    showSuccess(`Invoice ${invoiceNumber} downloaded successfully`);
-    
-  } catch (err) {
-    console.error("Download invoice error details:", err);
-    
-    let errorMessage = "Failed to download invoice";
-    
-    // Provide specific error messages
-    if (err.message.includes('PDF generation failed')) {
-      errorMessage = "PDF generation service unavailable";
-    } else if (err.message.includes('Server error')) {
-      errorMessage = "Server error while generating PDF";
-    } else if (err.message.includes('timeout')) {
-      errorMessage = "PDF generation timed out. Please try again";
-    } else if (err.message.includes('not found')) {
-      errorMessage = "Invoice not found";
-    } else if (err.message.includes('empty')) {
-      errorMessage = "Generated PDF is empty";
-    } else if (err.message.includes('Server returned an error')) {
-      errorMessage = "PDF generation failed on server";
-    }
-    
-    showError(errorMessage);
-    
-    // If PDF generation fails, offer alternative
-    setTimeout(() => {
-      showAlternativeDownloadOption(invoice);
-    }, 2000);
-  }
-};
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
@@ -573,17 +563,17 @@ const handleDownloadInvoice = async (invoice) => {
     });
     setSearchTerm("");
     setCurrentPage(1);
-    showInfo("Filters cleared");
+    showInfo(t("invoices.filters.cleared"));
   };
 
   const handleRetry = useCallback(() => {
     fetchInvoices();
-    showInfo("Retrying to load invoices...");
-  }, [fetchInvoices, showInfo]);
+    showInfo(t("invoices.retry.loading"));
+  }, [fetchInvoices, showInfo, t]);
 
   const handleBulkSend = async () => {
     if (selectedRows.length === 0) {
-      showError("Please select invoices to send");
+      showError(t("invoices.bulkSend.noSelection"));
       return;
     }
 
@@ -598,9 +588,9 @@ const handleDownloadInvoice = async (invoice) => {
       await promise(
         Promise.all(promises),
         {
-          loading: `Sending ${selectedRows.length} invoice(s)...`,
-          success: `Sent ${selectedRows.length} invoice(s) successfully`,
-          error: "Failed to send some invoices"
+          loading: t("invoices.bulkSend.loading", { count: selectedRows.length }),
+          success: t("invoices.bulkSend.success", { count: selectedRows.length }),
+          error: t("invoices.bulkSend.error")
         }
       );
       setSelectedRows([]);
@@ -625,7 +615,7 @@ const handleDownloadInvoice = async (invoice) => {
   const columns = [
     {
       accessor: "invoiceNumber",
-      header: "Invoice #",
+      header: t("invoices.table.headers.invoiceNumber"),
       sortable: true,
       width: "15%",
       render: (row) =>
@@ -636,12 +626,12 @@ const handleDownloadInvoice = async (invoice) => {
             </div>
           ),
           row,
-          "No Number"
+          t("invoices.table.noNumber")
         ),
     },
     {
       accessor: "recipientName",
-      header: invoiceType === "client" ? "Client" : "Partner",
+      header: invoiceType === "client" ? t("invoices.table.headers.client") : t("invoices.table.headers.partner"),
       sortable: true,
       width: "25%",
       render: (row) =>
@@ -649,7 +639,7 @@ const handleDownloadInvoice = async (invoice) => {
           (row) => (
             <div className="min-w-0">
               <p className="text-gray-900 dark:text-white font-medium">
-                {row.recipientName || "No Recipient"}
+                {row.recipientName || t("invoices.table.noRecipient")}
               </p>
               {row.recipientEmail && (
                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -664,12 +654,12 @@ const handleDownloadInvoice = async (invoice) => {
             </div>
           ),
           row,
-          "No Recipient"
+          t("invoices.table.noRecipient")
         ),
     },
     {
       accessor: "issueDate",
-      header: "Issue Date",
+      header: t("invoices.table.headers.issueDate"),
       sortable: true,
       width: "12%",
       render: (row) =>
@@ -686,7 +676,7 @@ const handleDownloadInvoice = async (invoice) => {
     },
     {
       accessor: "dueDate",
-      header: "Due Date",
+      header: t("invoices.table.headers.dueDate"),
       sortable: true,
       width: "12%",
       render: (row) =>
@@ -701,7 +691,7 @@ const handleDownloadInvoice = async (invoice) => {
     },
     {
       accessor: "totalAmount",
-      header: "Amount",
+      header: t("invoices.table.headers.amount"),
       sortable: true,
       width: "12%",
       render: (row) =>
@@ -716,7 +706,7 @@ const handleDownloadInvoice = async (invoice) => {
     },
     {
       accessor: "status",
-      header: "Status",
+      header: t("invoices.table.headers.status"),
       sortable: true,
       width: "12%",
       render: (row) =>
@@ -738,28 +728,24 @@ const handleDownloadInvoice = async (invoice) => {
               }
             >
               {row.status
-                ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
-                : "Draft"}
+                ? t(`invoices.status.${row.status}`)
+                : t("invoices.status.draft")}
             </Badge>
           ),
           row
         ),
     },
     {
-      header: "Actions",
+      header: t("invoices.table.headers.actions"),
       accessor: "actions",
-      width: "15%", // Increased width to accommodate more actions
+      width: "15%",
       className: "text-center",
       render: (row) => {
         if (!row || !row._id) return <span className="text-gray-400">-</span>;
 
         // Determine which actions are available based on invoice status
-        const canEdit = ["draft", "sent", "partial", "overdue"].includes(
-          row.status
-        );
-        const canDelete =
-          ["draft"].includes(row.status) ||
-          (row.status === "sent" && row.paymentStatus?.amountPaid === 0);
+        const canEdit = ["draft", "sent", "partial", "overdue"].includes(row.status);
+        const canDelete = ["draft"].includes(row.status) || (row.status === "sent" && row.paymentStatus?.amountPaid === 0);
         const canSend = row.status === "draft";
         const canMarkPaid = ["sent", "partial", "overdue"].includes(row.status);
 
@@ -772,19 +758,19 @@ const handleDownloadInvoice = async (invoice) => {
                 handleViewInvoice(row);
               }}
               className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-              title="View Invoice"
+              title={t("invoices.actions.view")}
             >
               <Eye className="h-4 w-4" />
             </button>
 
-            {/* Edit Action - Now always visible for editable statuses */}
+            {/* Edit Action */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleEditInvoice(row);
               }}
               className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-              title="Edit Invoice"
+              title={t("invoices.actions.edit")}
             >
               <Edit className="h-4 w-4" />
             </button>
@@ -796,7 +782,7 @@ const handleDownloadInvoice = async (invoice) => {
                 handleDownloadInvoice(row);
               }}
               className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-1 rounded hover:bg-green-50 dark:hover:bg-green-900/20 transition"
-              title="Download PDF"
+              title={t("invoices.actions.download")}
             >
               <Download className="h-4 w-4" />
             </button>
@@ -809,7 +795,7 @@ const handleDownloadInvoice = async (invoice) => {
                   handleSendInvoice(row);
                 }}
                 className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 p-1 rounded hover:bg-purple-50 dark:hover:bg-purple-900/20 transition"
-                title="Send Invoice"
+                title={t("invoices.actions.send")}
               >
                 <Send className="h-4 w-4" />
               </button>
@@ -823,7 +809,7 @@ const handleDownloadInvoice = async (invoice) => {
                   handleMarkAsPaid(row);
                 }}
                 className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 p-1 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
-                title="Mark as Paid"
+                title={t("invoices.actions.markAsPaid")}
               >
                 <Check className="h-4 w-4" />
               </button>
@@ -834,10 +820,10 @@ const handleDownloadInvoice = async (invoice) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteClick(row._id, row.invoiceNumber || "Invoice");
+                  handleDeleteClick(row._id, row.invoiceNumber || t("invoices.defaultInvoiceName"));
                 }}
                 className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-                title="Delete Invoice"
+                title={t("invoices.actions.delete")}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -849,21 +835,9 @@ const handleDownloadInvoice = async (invoice) => {
   ];
 
   // Helper variables for empty states
-  const hasActiveFilters =
-    searchTerm.trim() !== "" ||
-    Object.values(filters).some((value) => value !== "");
-  const showEmptyState =
-    !loading &&
-    !error &&
-    invoices.length === 0 &&
-    !hasActiveFilters &&
-    hasInitialLoad;
-  const showNoResults =
-    !loading &&
-    !error &&
-    invoices.length === 0 &&
-    hasActiveFilters &&
-    hasInitialLoad;
+  const hasActiveFilters = searchTerm.trim() !== "" || Object.values(filters).some((value) => value !== "");
+  const showEmptyState = !loading && !error && invoices.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !loading && !error && invoices.length === 0 && hasActiveFilters && hasInitialLoad;
 
   if (loading && !hasInitialLoad) {
     return (
@@ -881,12 +855,12 @@ const handleDownloadInvoice = async (invoice) => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            Invoices
+            {t("invoices.title")}
           </h1>
           <p className="text-base text-gray-600 dark:text-gray-400">
-            {invoiceType === "client"
-              ? "Manage client invoices and receivables"
-              : "Manage partner bills and payables"}
+            {invoiceType === "client" 
+              ? t("invoices.subtitle.client") 
+              : t("invoices.subtitle.partner")}
           </p>
         </div>
         {invoices.length > 0 && (
@@ -898,13 +872,17 @@ const handleDownloadInvoice = async (invoice) => {
                 onClick={handleBulkSend}
                 loading={loading}
               >
-                Send Selected ({selectedRows.length})
+                {t("invoices.bulkSend.button", { count: selectedRows.length })}
               </Button>
             )}
 
             <Button variant="primary" icon={Plus} onClick={handleCreateInvoice}>
               <Plus className="w-4 h-4 mr-2" />
-              Create {invoiceType === "client" ? "Invoice" : "Bill"}
+              {t("invoices.create.button", { 
+                type: invoiceType === "client" 
+                  ? t("invoices.types.invoice") 
+                  : t("invoices.types.bill") 
+              })}
             </Button>
           </div>
         )}
@@ -916,59 +894,59 @@ const handleDownloadInvoice = async (invoice) => {
           <div className="p-4 flex items-center justify-between">
             <div>
               <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Invoices
+                {t("invoices.errors.title")}
               </p>
               <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 {error}
               </p>
             </div>
             <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
+              {t("invoices.retry.button")}
             </Button>
           </div>
         </div>
       )}
 
-{/* Header with Invoice Type Toggle on the right */}
-<div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-  <div className="flex flex-col gap-2">
-  </div> 
-  {/* Invoice Type Toggle - Right Side */}
-  <div className="flex items-center gap-2 flex-shrink-0">
-    <button
-      onClick={() => setInvoiceType("client")}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-        invoiceType === "client"
-          ? "bg-orange-500 text-white shadow-sm"
-          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-      }`}
-    >
-      <Users className="w-4 h-4" />
-      <span>Client Invoices</span>
-      {invoiceType === "client" && stats && (
-        <Badge variant="white" className="ml-1">
-          {stats.totalInvoices}
-        </Badge>
-      )}
-    </button>
-    <button
-      onClick={() => setInvoiceType("partner")}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-        invoiceType === "partner"
-          ? "bg-orange-500 text-white shadow-sm"
-          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-      }`}
-    >
-      <Briefcase className="w-4 h-4" />
-      <span>Partner Bills</span>
-      {invoiceType === "partner" && stats && (
-        <Badge variant="white" className="ml-1">
-          {stats.totalInvoices}
-        </Badge>
-      )}
-    </button>
-  </div>
-</div>
+      {/* Header with Invoice Type Toggle on the right */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div className="flex flex-col gap-2">
+        </div> 
+        {/* Invoice Type Toggle - Right Side */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => setInvoiceType("client")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+              invoiceType === "client"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>{t("invoices.types.clientInvoices")}</span>
+            {invoiceType === "client" && stats && (
+              <Badge variant="white" className="ml-1">
+                {stats.totalInvoices}
+              </Badge>
+            )}
+          </button>
+          <button
+            onClick={() => setInvoiceType("partner")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+              invoiceType === "partner"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <Briefcase className="w-4 h-4" />
+            <span>{t("invoices.types.partnerBills")}</span>
+            {invoiceType === "partner" && stats && (
+              <Badge variant="white" className="ml-1">
+                {stats.totalInvoices}
+              </Badge>
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -978,8 +956,8 @@ const handleDownloadInvoice = async (invoice) => {
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   {invoiceType === "client"
-                    ? "Total Revenue"
-                    : "Total Expenses"}
+                    ? t("invoices.stats.totalRevenue")
+                    : t("invoices.stats.totalExpenses")}
                 </div>
                 <div className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
                   {statsLoading ? (
@@ -989,7 +967,7 @@ const handleDownloadInvoice = async (invoice) => {
                   )}
                 </div>
                 <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {stats?.totalInvoices || 0} invoices
+                  {t("invoices.stats.invoiceCount", { count: stats?.totalInvoices || 0 })}
                 </div>
               </div>
               <div
@@ -1016,7 +994,7 @@ const handleDownloadInvoice = async (invoice) => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Paid
+                  {t("invoices.stats.paid")}
                 </div>
                 <div className="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
                   {statsLoading ? (
@@ -1041,7 +1019,7 @@ const handleDownloadInvoice = async (invoice) => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Pending
+                  {t("invoices.stats.pending")}
                 </div>
                 <div className="mt-2 text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                   {statsLoading ? (
@@ -1051,7 +1029,7 @@ const handleDownloadInvoice = async (invoice) => {
                   )}
                 </div>
                 <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {formatCurrency(stats?.totalDue || 0)} due
+                  {t("invoices.stats.amountDue", { amount: formatCurrency(stats?.totalDue || 0) })}
                 </div>
               </div>
               <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
@@ -1066,7 +1044,7 @@ const handleDownloadInvoice = async (invoice) => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Overdue
+                  {t("invoices.stats.overdue")}
                 </div>
                 <div className="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
                   {statsLoading ? (
@@ -1076,7 +1054,7 @@ const handleDownloadInvoice = async (invoice) => {
                   )}
                 </div>
                 <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Needs attention
+                  {t("invoices.stats.needsAttention")}
                 </div>
               </div>
               <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
@@ -1096,7 +1074,9 @@ const handleDownloadInvoice = async (invoice) => {
               <div className="flex-1">
                 <Input
                   icon={Search}
-                  placeholder={`Search by invoice number, ${invoiceType === "client" ? "client" : "partner"} name, or email...`}
+                  placeholder={t("invoices.search.placeholder", { 
+                    type: invoiceType === "client" ? "client" : "partner" 
+                  })}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -1107,7 +1087,7 @@ const handleDownloadInvoice = async (invoice) => {
                 onClick={() => setShowFilters(!showFilters)}
                 className="whitespace-nowrap"
               >
-                {showFilters ? "Hide" : "Show"} Filters
+                {showFilters ? t("invoices.filters.hide") : t("invoices.filters.show")}
                 {activeFiltersCount > 0 && (
                   <Badge variant="primary" className="ml-2">
                     {activeFiltersCount}
@@ -1121,37 +1101,31 @@ const handleDownloadInvoice = async (invoice) => {
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Select
-                    label="Status"
+                    label={t("invoices.filters.status.label")}
                     value={filters.status}
-                    onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
-                    }
+                    onChange={(e) => handleFilterChange("status", e.target.value)}
                   >
-                    <option value="">All Status</option>
-                    <option value="draft">Draft</option>
-                    <option value="sent">Sent</option>
-                    <option value="paid">Paid</option>
-                    <option value="partial">Partial</option>
-                    <option value="overdue">Overdue</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="">{t("invoices.filters.status.all")}</option>
+                    <option value="draft">{t("invoices.status.draft")}</option>
+                    <option value="sent">{t("invoices.status.sent")}</option>
+                    <option value="paid">{t("invoices.status.paid")}</option>
+                    <option value="partial">{t("invoices.status.partial")}</option>
+                    <option value="overdue">{t("invoices.status.overdue")}</option>
+                    <option value="cancelled">{t("invoices.status.cancelled")}</option>
                   </Select>
 
                   <Input
-                    label="Start Date"
+                    label={t("invoices.filters.startDate")}
                     type="date"
                     value={filters.startDate}
-                    onChange={(e) =>
-                      handleFilterChange("startDate", e.target.value)
-                    }
+                    onChange={(e) => handleFilterChange("startDate", e.target.value)}
                   />
 
                   <Input
-                    label="End Date"
+                    label={t("invoices.filters.endDate")}
                     type="date"
                     value={filters.endDate}
-                    onChange={(e) =>
-                      handleFilterChange("endDate", e.target.value)
-                    }
+                    onChange={(e) => handleFilterChange("endDate", e.target.value)}
                     min={filters.startDate}
                   />
 
@@ -1163,7 +1137,7 @@ const handleDownloadInvoice = async (invoice) => {
                       className="w-full"
                       disabled={activeFiltersCount === 0}
                     >
-                      Clear All
+                      {t("invoices.filters.clearAll")}
                     </Button>
                   </div>
                 </div>
@@ -1178,7 +1152,7 @@ const handleDownloadInvoice = async (invoice) => {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
           <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading invoices...
+            {t("invoices.loading")}
           </p>
         </div>
       )}
@@ -1187,30 +1161,32 @@ const handleDownloadInvoice = async (invoice) => {
       {!loading && hasInitialLoad && invoices.length > 0 && (
         <>
           <div className="overflow-x-auto">
-<Table
-  columns={columns}
-  data={invoices}
-  loading={loading}
-  emptyMessage={
-    searchTerm || filters.status
-      ? "No invoices found matching your search."
-      : `No ${invoiceType} invoices found. Create your first ${invoiceType === "client" ? "invoice" : "bill"} to get started.`
-  }
-  onRowClick={handleRowClick} 
-  selectable={true}
-  onSelectionChange={setSelectedRows}
-  selectedRows={selectedRows}
-  striped={true}
-  hoverable={true}
-  pagination={true}
-  currentPage={currentPage}
-  totalPages={totalPages}
-  pageSize={pageSize}
-  totalItems={totalItems}
-  onPageChange={setCurrentPage}
-  onPageSizeChange={setPageSize}
-  pageSizeOptions={[10, 25, 50, 100]}
-/>
+            <Table
+              columns={columns}
+              data={invoices}
+              loading={loading}
+              emptyMessage={
+                searchTerm || filters.status
+                  ? t("invoices.table.empty.search")
+                  : t("invoices.table.empty.default", { 
+                      type: invoiceType === "client" ? "invoice" : "bill" 
+                    })
+              }
+              onRowClick={handleRowClick} 
+              selectable={true}
+              onSelectionChange={setSelectedRows}
+              selectedRows={selectedRows}
+              striped={true}
+              hoverable={true}
+              pagination={true}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={totalItems}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
           </div>
 
           {/* Pagination */}
@@ -1237,13 +1213,13 @@ const handleDownloadInvoice = async (invoice) => {
         <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No invoices found
+            {t("invoices.empty.search.title")}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No invoices match your current search or filter criteria.
+            {t("invoices.empty.search.description")}
           </p>
           <Button onClick={handleClearFilters} variant="outline">
-            Clear All Filters
+            {t("invoices.filters.clearAll")}
           </Button>
         </div>
       )}
@@ -1253,15 +1229,20 @@ const handleDownloadInvoice = async (invoice) => {
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No invoices yet
+            {t("invoices.empty.default.title")}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Get started by creating your first{" "}
-            {invoiceType === "client" ? "invoice" : "bill"}.
+            {t("invoices.empty.default.description", { 
+              type: invoiceType === "client" ? "invoice" : "bill" 
+            })}
           </p>
           <Button onClick={handleCreateInvoice} variant="primary">
             <Plus className="h-4 w-4 mr-2" />
-            Create First {invoiceType === "client" ? "Invoice" : "Bill"}
+            {t("invoices.create.firstButton", { 
+              type: invoiceType === "client" 
+                ? t("invoices.types.invoice") 
+                : t("invoices.types.bill") 
+            })}
           </Button>
         </div>
       )}
@@ -1271,7 +1252,7 @@ const handleDownloadInvoice = async (invoice) => {
         <Modal
           isOpen={isDetailModalOpen}
           onClose={handleCloseModal}
-          title="Invoice Details"
+          title={t("invoices.detailModal.title")}
           size="lg"
         >
           <div className="p-6 space-y-6">
@@ -1280,33 +1261,29 @@ const handleDownloadInvoice = async (invoice) => {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Invoice #{selectedInvoice.invoiceNumber}
+                    {t("invoices.detailModal.invoiceNumber", { number: selectedInvoice.invoiceNumber })}
                   </h3>
                   <Badge
-                    variant={
-                      selectedInvoice.invoiceType === "client"
-                        ? "info"
-                        : "purple"
-                    }
+                    variant={selectedInvoice.invoiceType === "client" ? "info" : "purple"}
                     className="ml-2"
                   >
                     {selectedInvoice.invoiceType === "client" ? (
                       <>
-                        <Users className="w-3 h-3 mr-1" /> Client
+                        <Users className="w-3 h-3 mr-1" /> {t("invoices.types.client")}
                       </>
                     ) : (
                       <>
-                        <Briefcase className="w-3 h-3 mr-1" /> Partner
+                        <Briefcase className="w-3 h-3 mr-1" /> {t("invoices.types.partner")}
                       </>
                     )}
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Issued: {formatDate(selectedInvoice.issueDate)}
+                  {t("invoices.detailModal.issued", { date: formatDate(selectedInvoice.issueDate) })}
                 </p>
                 {selectedInvoice.sentAt && (
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Sent: {formatDate(selectedInvoice.sentAt)}
+                    {t("invoices.detailModal.sent", { date: formatDate(selectedInvoice.sentAt) })}
                   </p>
                 )}
               </div>
@@ -1326,7 +1303,7 @@ const handleDownloadInvoice = async (invoice) => {
                 }
                 size="lg"
               >
-                {selectedInvoice.status || "Draft"}
+                {t(`invoices.status.${selectedInvoice.status}`) || t("invoices.status.draft")}
               </Badge>
             </div>
 
@@ -1335,8 +1312,8 @@ const handleDownloadInvoice = async (invoice) => {
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                   {selectedInvoice.invoiceType === "client"
-                    ? "Bill To:"
-                    : "Pay To:"}
+                    ? t("invoices.detailModal.billTo")
+                    : t("invoices.detailModal.payTo")}
                 </h4>
                 <p className="text-gray-700 dark:text-gray-300 font-medium">
                   {selectedInvoice.recipientName}
@@ -1361,14 +1338,11 @@ const handleDownloadInvoice = async (invoice) => {
                     {selectedInvoice.recipientAddress.street && (
                       <p>{selectedInvoice.recipientAddress.street}</p>
                     )}
-                    {(selectedInvoice.recipientAddress.city ||
-                      selectedInvoice.recipientAddress.state) && (
+                    {(selectedInvoice.recipientAddress.city || selectedInvoice.recipientAddress.state) && (
                       <p>
                         {selectedInvoice.recipientAddress.city}
-                        {selectedInvoice.recipientAddress.state &&
-                          `, ${selectedInvoice.recipientAddress.state}`}
-                        {selectedInvoice.recipientAddress.zipCode &&
-                          ` ${selectedInvoice.recipientAddress.zipCode}`}
+                        {selectedInvoice.recipientAddress.state && `, ${selectedInvoice.recipientAddress.state}`}
+                        {selectedInvoice.recipientAddress.zipCode && ` ${selectedInvoice.recipientAddress.zipCode}`}
                       </p>
                     )}
                   </div>
@@ -1377,12 +1351,12 @@ const handleDownloadInvoice = async (invoice) => {
 
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                  Invoice Details:
+                  {t("invoices.detailModal.invoiceDetails")}
                 </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500 dark:text-gray-400">
-                      Due Date:
+                      {t("invoices.detailModal.dueDate")}
                     </span>
                     <span className="text-gray-900 dark:text-white font-medium">
                       {formatDate(selectedInvoice.dueDate)}
@@ -1391,7 +1365,7 @@ const handleDownloadInvoice = async (invoice) => {
                   {selectedInvoice.event && (
                     <div className="flex justify-between">
                       <span className="text-gray-500 dark:text-gray-400">
-                        Event:
+                        {t("invoices.detailModal.event")}
                       </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {selectedInvoice.event.title}
@@ -1401,7 +1375,7 @@ const handleDownloadInvoice = async (invoice) => {
                   {selectedInvoice.currency && (
                     <div className="flex justify-between">
                       <span className="text-gray-500 dark:text-gray-400">
-                        Currency:
+                        {t("invoices.detailModal.currency")}
                       </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {selectedInvoice.currency}
@@ -1416,23 +1390,23 @@ const handleDownloadInvoice = async (invoice) => {
             {selectedInvoice.items && selectedInvoice.items.length > 0 && (
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  Items
+                  {t("invoices.detailModal.items")}
                 </h4>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
                         <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
-                          Description
+                          {t("invoices.detailModal.description")}
                         </th>
                         <th className="px-4 py-2 text-right text-gray-700 dark:text-gray-300">
-                          Qty
+                          {t("invoices.detailModal.quantity")}
                         </th>
                         <th className="px-4 py-2 text-right text-gray-700 dark:text-gray-300">
-                          Rate
+                          {t("invoices.detailModal.rate")}
                         </th>
                         <th className="px-4 py-2 text-right text-gray-700 dark:text-gray-300">
-                          Amount
+                          {t("invoices.detailModal.amount")}
                         </th>
                       </tr>
                     </thead>
@@ -1442,7 +1416,7 @@ const handleDownloadInvoice = async (invoice) => {
                           <td className="px-4 py-3">
                             <div>
                               <p className="text-gray-900 dark:text-white font-medium">
-                                {item.description || "No description"}
+                                {item.description || t("invoices.detailModal.noDescription")}
                               </p>
                               {item.category && (
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -1474,7 +1448,7 @@ const handleDownloadInvoice = async (invoice) => {
                 <div className="w-72 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Subtotal:
+                      {t("invoices.detailModal.subtotal")}
                     </span>
                     <span className="text-gray-900 dark:text-white">
                       {formatCurrency(selectedInvoice.subtotal || 0)}
@@ -1483,11 +1457,8 @@ const handleDownloadInvoice = async (invoice) => {
                   {selectedInvoice.tax > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">
-                        Tax{" "}
-                        {selectedInvoice.taxRate
-                          ? `(${selectedInvoice.taxRate}%)`
-                          : ""}
-                        :
+                        {t("invoices.detailModal.tax")}
+                        {selectedInvoice.taxRate ? ` (${selectedInvoice.taxRate}%)` : ""}:
                       </span>
                       <span className="text-gray-900 dark:text-white">
                         {formatCurrency(selectedInvoice.tax)}
@@ -1497,7 +1468,7 @@ const handleDownloadInvoice = async (invoice) => {
                   {selectedInvoice.discount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">
-                        Discount:
+                        {t("invoices.detailModal.discount")}
                       </span>
                       <span className="text-gray-900 dark:text-white">
                         -{formatCurrency(selectedInvoice.discount)}
@@ -1506,7 +1477,7 @@ const handleDownloadInvoice = async (invoice) => {
                   )}
                   <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
                     <span className="text-gray-900 dark:text-white">
-                      Total:
+                      {t("invoices.detailModal.total")}
                     </span>
                     <span className="text-gray-900 dark:text-white">
                       {formatCurrency(selectedInvoice.totalAmount)}
@@ -1515,21 +1486,17 @@ const handleDownloadInvoice = async (invoice) => {
                   {selectedInvoice.paymentStatus?.amountPaid > 0 && (
                     <>
                       <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span>Amount Paid:</span>
+                        <span>{t("invoices.detailModal.amountPaid")}</span>
                         <span>
-                          {formatCurrency(
-                            selectedInvoice.paymentStatus.amountPaid
-                          )}
+                          {formatCurrency(selectedInvoice.paymentStatus.amountPaid)}
                         </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold">
                         <span className="text-gray-900 dark:text-white">
-                          Amount Due:
+                          {t("invoices.detailModal.amountDue")}
                         </span>
                         <span className="text-gray-900 dark:text-white">
-                          {formatCurrency(
-                            selectedInvoice.paymentStatus.amountDue
-                          )}
+                          {formatCurrency(selectedInvoice.paymentStatus.amountDue)}
                         </span>
                       </div>
                     </>
@@ -1544,7 +1511,7 @@ const handleDownloadInvoice = async (invoice) => {
                 {selectedInvoice.notes && (
                   <div>
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                      Notes
+                      {t("invoices.detailModal.notes")}
                     </h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {selectedInvoice.notes}
@@ -1554,7 +1521,7 @@ const handleDownloadInvoice = async (invoice) => {
                 {selectedInvoice.terms && (
                   <div>
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                      Terms & Conditions
+                      {t("invoices.detailModal.terms")}
                     </h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {selectedInvoice.terms}
@@ -1567,14 +1534,14 @@ const handleDownloadInvoice = async (invoice) => {
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
               <Button variant="outline" onClick={handleCloseModal}>
-                Close
+                {t("invoices.actions.close")}
               </Button>
               <Button
                 variant="outline"
                 icon={Download}
                 onClick={() => handleDownloadInvoice(selectedInvoice)}
               >
-                Download PDF
+                {t("invoices.actions.downloadPdf")}
               </Button>
               {selectedInvoice.status === "draft" && (
                 <>
@@ -1586,7 +1553,7 @@ const handleDownloadInvoice = async (invoice) => {
                       handleCloseModal();
                     }}
                   >
-                    Edit Invoice
+                    {t("invoices.actions.editInvoice")}
                   </Button>
                   <Button
                     variant="primary"
@@ -1596,13 +1563,11 @@ const handleDownloadInvoice = async (invoice) => {
                       handleCloseModal();
                     }}
                   >
-                    Send Invoice
+                    {t("invoices.actions.sendInvoice")}
                   </Button>
                 </>
               )}
-              {(selectedInvoice.status === "sent" ||
-                selectedInvoice.status === "partial" ||
-                selectedInvoice.status === "overdue") && (
+              {(selectedInvoice.status === "sent" || selectedInvoice.status === "partial" || selectedInvoice.status === "overdue") && (
                 <>
                   <Button
                     variant="outline"
@@ -1612,7 +1577,7 @@ const handleDownloadInvoice = async (invoice) => {
                       handleCloseModal();
                     }}
                   >
-                    Edit Invoice
+                    {t("invoices.actions.editInvoice")}
                   </Button>
                   <Button
                     variant="success"
@@ -1622,7 +1587,7 @@ const handleDownloadInvoice = async (invoice) => {
                       handleCloseModal();
                     }}
                   >
-                    Mark as Paid
+                    {t("invoices.actions.markAsPaid")}
                   </Button>
                 </>
               )}
@@ -1635,7 +1600,7 @@ const handleDownloadInvoice = async (invoice) => {
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={closeConfirmationModal}
-        title="Confirm Deletion"
+        title={t("invoices.delete.confirm.title")}
         size="md"
       >
         <div className="p-6">
@@ -1647,11 +1612,10 @@ const handleDownloadInvoice = async (invoice) => {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Invoice
+                {t("invoices.delete.confirm.title")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.invoiceName}"</strong>? 
-                This action cannot be undone and all associated data will be permanently removed.
+                {t("invoices.delete.confirm.description", { invoiceName: confirmationModal.invoiceName })}
               </p>
               <div className="flex justify-end gap-3">
                 <Button
@@ -1659,7 +1623,7 @@ const handleDownloadInvoice = async (invoice) => {
                   onClick={closeConfirmationModal}
                   className="px-4 py-2"
                 >
-                  Cancel
+                  {t("invoices.actions.cancel")}
                 </Button>
                 <Button
                   variant="danger"
@@ -1667,7 +1631,7 @@ const handleDownloadInvoice = async (invoice) => {
                   className="px-4 py-2 flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Invoice
+                  {t("invoices.actions.deleteInvoice")}
                 </Button>
               </div>
             </div>
@@ -1683,20 +1647,20 @@ const handleDownloadInvoice = async (invoice) => {
           setSelectedInvoice(null);
           setCancelReason("");
         }}
-        title="Cancel Invoice"
+        title={t("invoices.cancel.modal.title")}
         size="md"
       >
         <div className="p-6">
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Are you sure you want to cancel this invoice?
+            {t("invoices.cancel.modal.description")}
           </p>
           <Input
-            label="Cancellation Reason (optional)"
+            label={t("invoices.cancel.modal.reasonLabel")}
             type="textarea"
             rows={3}
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
-            placeholder="Provide a reason for cancellation..."
+            placeholder={t("invoices.cancel.modal.reasonPlaceholder")}
           />
           <div className="flex justify-end gap-3 mt-6">
             <Button
@@ -1707,10 +1671,10 @@ const handleDownloadInvoice = async (invoice) => {
                 setCancelReason("");
               }}
             >
-              Cancel
+              {t("invoices.actions.cancel")}
             </Button>
             <Button variant="danger" onClick={handleCancelConfirm}>
-              Cancel Invoice
+              {t("invoices.actions.cancelInvoice")}
             </Button>
           </div>
         </div>

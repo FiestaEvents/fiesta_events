@@ -1,15 +1,17 @@
-// components/clients/ClientInfo.jsx
 import React from "react";
 import { Mail, Phone, MapPin, Tag, Calendar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const ClientInfo = ({ client, formatDate }) => {
+  const { t } = useTranslation();
   console.log("client", client);
+  
   return (
     <div className="space-y-6">
       {/* Contact Information */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide dark:text-white">
-          Contact Information
+          {t("clientDetail.sections.contact")}
         </h3>
         <div className="space-y-3">
           {client.email && (
@@ -69,7 +71,7 @@ const ClientInfo = ({ client, formatDate }) => {
       {client.notes && (
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide dark:text-white">
-            Notes
+            {t("clientDetail.sections.notes")}
           </h3>
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
             <p className="text-gray-700 text-sm leading-relaxed dark:text-gray-300">
@@ -83,7 +85,7 @@ const ClientInfo = ({ client, formatDate }) => {
       {client.tags && client.tags.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide dark:text-white">
-            Tags
+            {t("clientDetail.sections.tags")}
           </h3>
           <div className="flex flex-wrap gap-2">
             {client.tags.map((tag, index) => (
@@ -101,10 +103,13 @@ const ClientInfo = ({ client, formatDate }) => {
 
       {/* Account Info */}
       <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide dark:text-white">
+          {t("clientDetail.sections.accountInfo")}
+        </h3>
         <div className="space-y-2 text-xs">
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">
-              Client Since:
+              {t("clientDetail.labels.clientSince")}:
             </span>
             <span className="font-medium text-gray-900 dark:text-white">
               {formatDate(client.createdAt)}
@@ -112,7 +117,7 @@ const ClientInfo = ({ client, formatDate }) => {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">
-              Last Updated:
+              {t("clientDetail.labels.lastUpdated")}:
             </span>
             <span className="font-medium text-gray-900 dark:text-white">
               {formatDate(client.updatedAt)}
@@ -121,7 +126,7 @@ const ClientInfo = ({ client, formatDate }) => {
           {client.createdBy && (
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">
-                Created By:
+                {t("clientDetail.labels.createdBy")}:
               </span>
               <span className="font-medium text-gray-900 dark:text-white">
                 {client.createdBy.name || "System"}

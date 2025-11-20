@@ -1,4 +1,3 @@
-// components/clients/EventsTab.jsx
 import React from "react";
 import {
   Calendar,
@@ -13,6 +12,7 @@ import {
   Clock,
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { useTranslation } from "react-i18next";
 
 const EventsTab = ({
   events,
@@ -26,15 +26,17 @@ const EventsTab = ({
   getStatusColor,
   getStatusLabel,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Event History ({events.length})
+            {t("clientDetail.labels.eventHistory")} ({events.length})
           </h3>
           {loading && (
-            <p className="text-sm text-gray-500 mt-1">Loading events...</p>
+            <p className="text-sm text-gray-500 mt-1">{t("clientDetail.loading")}</p>
           )}
         </div>
         {events.length > 0 && (
@@ -44,7 +46,7 @@ const EventsTab = ({
               className="px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
             >
               <Plus className="h-4 w-4" />
-              Create New Event
+              {t("clientDetail.buttons.createEvent")}
             </button>
           </div>
         )}
@@ -62,7 +64,7 @@ const EventsTab = ({
                   {eventsStats.totalEvents}
                 </div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Total Events
+                  {t("clientDetail.labels.totalEvents")}
                 </div>
               </div>
             </div>
@@ -77,7 +79,7 @@ const EventsTab = ({
                   {eventsStats.upcomingEvents}
                 </div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Upcoming
+                  {t("clientDetail.labels.upcomingEvents")}
                 </div>
               </div>
             </div>
@@ -92,7 +94,7 @@ const EventsTab = ({
                   {formatCurrency(eventsStats.totalRevenue)}
                 </div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Total Revenue
+                  {t("clientDetail.labels.totalRevenue")}
                 </div>
               </div>
             </div>
@@ -107,7 +109,7 @@ const EventsTab = ({
                   {formatCurrency(eventsStats.pendingAmount)}
                 </div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Outstanding
+                  {t("clientDetail.labels.outstanding")}
                 </div>
               </div>
             </div>
@@ -119,14 +121,14 @@ const EventsTab = ({
         <div className="text-center py-12 flex justify-center items-center flex-col">
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-600 dark:text-gray-400">
-            No events found for this client
+            {t("clients.search.noResults")}
           </p>
           <button
             onClick={onCreateEvent}
             className="mt-4 px-4 py-2 flex items-center gap-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
           >
             <Plus className="h-4 w-4" />
-            Create First Event
+            {t("clientDetail.buttons.createFirstEvent")}
           </button>
         </div>
       ) : (
@@ -157,7 +159,7 @@ const EventsTab = ({
                     {event.guestCount && (
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        {event.guestCount} guests
+                        {event.guestCount} {t("clientDetail.labels.guests", { count: event.guestCount })}
                       </div>
                     )}
                     <div className="flex items-center gap-2">
@@ -185,7 +187,7 @@ const EventsTab = ({
                 <button
                   onClick={(e) => onNavigateToEvent(event._id, e)}
                   className="ml-2 p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition dark:text-orange-400 dark:hover:bg-orange-900"
-                  title="View Full Event Page"
+                  title={t("clientDetail.actions.viewFullEvent")}
                 >
                   <ExternalLink className="w-5 h-5" />
                 </button>

@@ -1,4 +1,3 @@
-// components/clients/ActivityTab.jsx
 import React from "react";
 import {
   Activity,
@@ -12,6 +11,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency.js";
+import { useTranslation } from "react-i18next";
 
 const ActivityTab = ({
   events,
@@ -20,6 +20,8 @@ const ActivityTab = ({
   getStatusColor,
   getStatusLabel,
 }) => {
+  const { t } = useTranslation();
+
   // Generate activity timeline from events and payments
   const activityTimeline = React.useMemo(() => {
     const activities = [];
@@ -29,8 +31,8 @@ const ActivityTab = ({
       activities.push({
         id: `${event._id}-created`,
         type: "event_created",
-        title: "Event Created",
-        description: `${event.title} was created`,
+        title: t("clientDetail.activity.eventCreated"),
+        description: t("clientDetail.activity.descriptions.eventCreated", { title: event.title }),
         event,
         date: event.createdAt,
         icon: Calendar,
@@ -42,8 +44,11 @@ const ActivityTab = ({
         activities.push({
           id: `${event._id}-updated`,
           type: "event_updated",
-          title: "Event Updated",
-          description: `${event.title} status changed to ${event.status}`,
+          title: t("clientDetail.activity.eventUpdated"),
+          description: t("clientDetail.activity.descriptions.eventUpdated", { 
+            title: event.title, 
+            status: getStatusLabel(event.status) 
+          }),
           event,
           date: event.updatedAt,
           icon: Activity,
@@ -58,8 +63,11 @@ const ActivityTab = ({
             activities.push({
               id: `${payment._id}-payment`,
               type: "payment_received",
-              title: "Payment Received",
-              description: `Payment of ${formatCurrency(payment.amount)} for ${event.title}`,
+              title: t("clientDetail.activity.paymentReceived"),
+              description: t("clientDetail.activity.descriptions.paymentReceived", { 
+                amount: formatCurrency(payment.amount), 
+                title: event.title 
+              }),
               event,
               payment,
               date: payment.paidDate,
@@ -70,8 +78,11 @@ const ActivityTab = ({
             activities.push({
               id: `${payment._id}-payment-pending`,
               type: "payment_pending",
-              title: "Payment Pending",
-              description: `Pending payment of ${formatCurrency(payment.amount)} for ${event.title}`,
+              title: t("clientDetail.activity.paymentPending"),
+              description: t("clientDetail.activity.descriptions.paymentPending", { 
+                amount: formatCurrency(payment.amount), 
+                title: event.title 
+              }),
               event,
               payment,
               date: payment.createdAt,
@@ -87,8 +98,11 @@ const ActivityTab = ({
         activities.push({
           id: `${event._id}-upcoming`,
           type: "event_upcoming",
-          title: "Upcoming Event",
-          description: `${event.title} is scheduled for ${formatDate(event.startDate)}`,
+          title: t("clientDetail.activity.eventUpcoming"),
+          description: t("clientDetail.activity.descriptions.eventUpcoming", { 
+            title: event.title, 
+            date: formatDate(event.startDate) 
+          }),
           event,
           date: event.startDate,
           icon: Star,
@@ -99,7 +113,7 @@ const ActivityTab = ({
 
     // Sort by date (newest first)
     return activities.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [events, formatDate]);
+  }, [events, formatDate, getStatusLabel, t]);
 
   const getActivityIcon = (activity) => {
     const IconComponent = activity.icon;
@@ -139,11 +153,11 @@ const ActivityTab = ({
     };
 
     const labels = {
-      event_created: "Event Created",
-      event_updated: "Event Updated",
-      payment_received: "Payment",
-      payment_pending: "Pending Payment",
-      event_upcoming: "Upcoming",
+      event_created: t("clientDetail.activity.eventCreated"),
+      event_updated: t("clientDetail.activity.eventUpdated"),
+      payment_received: t("clientDetail.activity.paymentReceived"),
+      payment_pending: t("clientDetail.activity.paymentPending"),
+      event_upcoming: t("clientDetail.activity.eventUpcoming"),
     };
 
     return (
@@ -162,25 +176,25 @@ const ActivityTab = ({
             {[
               {
                 status: "pending",
-                label: "Pending",
+                label: t("clientDetail.status.pending"),
                 icon: Clock,
                 color: "yellow",
               },
               {
                 status: "confirmed",
-                label: "Confirmed",
+                label: t("clientDetail.status.confirmed"),
                 icon: CheckCircle2,
                 color: "blue",
               },
               {
                 status: "completed",
-                label: "Completed",
+                label: t("clientDetail.status.completed"),
                 icon: CheckCircle2,
                 color: "green",
               },
               {
                 status: "cancelled",
-                label: "Cancelled",
+                label: t("clientDetail.status.cancelled"),
                 icon: AlertCircle,
                 color: "red",
               },
@@ -226,7 +240,7 @@ const ActivityTab = ({
       {/* Recent Activity Timeline */}
       <div>
         <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-white">
-          Activity Timeline
+          {t("clientDetail.labels.activityTimeline")}
         </h4>
 
         {activityTimeline.length > 0 ? (
@@ -262,7 +276,7 @@ const ActivityTab = ({
                       {activity.event.guestCount && (
                         <span className="flex items-center gap-1">
                           <User className="w-3 h-3" />
-                          {activity.event.guestCount} guests
+                          {activity.event.guestCount} {t("clientDetail.labels.guests", { count: activity.event.guestCount })}
                         </span>
                       )}
                       <span className="flex items-center gap-1">
@@ -291,7 +305,7 @@ const ActivityTab = ({
           <div className="text-center py-12">
             <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-600 dark:text-gray-400">
-              No recent activity found for this client
+              {t("clientDetail.activity.noActivity")}
             </p>
           </div>
         )}

@@ -9,8 +9,11 @@ import {
   Users,
   DollarSign,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const EventActivityTab = ({ event, formatDateTime }) => {
+  const { t } = useTranslation();
+
   // Generate activity timeline from event data
   const generateTimeline = () => {
     const timeline = [];
@@ -20,8 +23,8 @@ const EventActivityTab = ({ event, formatDateTime }) => {
       timeline.push({
         id: "created",
         type: "created",
-        title: "Event Created",
-        description: `Event "${event.title}" was created`,
+        title: t("eventActivityTab.activity.created.title"),
+        description: t("eventActivityTab.activity.created.description", { eventTitle: event.title }),
         timestamp: event.createdAt,
         icon: Calendar,
         color: "blue",
@@ -32,26 +35,26 @@ const EventActivityTab = ({ event, formatDateTime }) => {
     if (event.status) {
       const statusMap = {
         confirmed: {
-          title: "Event Confirmed",
-          description: "Event status changed to confirmed",
+          title: t("eventActivityTab.activity.status.confirmed.title"),
+          description: t("eventActivityTab.activity.status.confirmed.description"),
           icon: CheckCircle,
           color: "green",
         },
         "in-progress": {
-          title: "Event In Progress",
-          description: "Event is currently in progress",
+          title: t("eventActivityTab.activity.status.in-progress.title"),
+          description: t("eventActivityTab.activity.status.in-progress.description"),
           icon: Clock,
           color: "purple",
         },
         completed: {
-          title: "Event Completed",
-          description: "Event has been completed",
+          title: t("eventActivityTab.activity.status.completed.title"),
+          description: t("eventActivityTab.activity.status.completed.description"),
           icon: CheckCircle,
           color: "green",
         },
         cancelled: {
-          title: "Event Cancelled",
-          description: "Event was cancelled",
+          title: t("eventActivityTab.activity.status.cancelled.title"),
+          description: t("eventActivityTab.activity.status.cancelled.description"),
           icon: XCircle,
           color: "red",
         },
@@ -72,8 +75,8 @@ const EventActivityTab = ({ event, formatDateTime }) => {
       timeline.push({
         id: "partners",
         type: "partners",
-        title: "Partners Assigned",
-        description: `${event.partners.length} partner(s) assigned to event`,
+        title: t("eventActivityTab.activity.partners.title"),
+        description: t("eventActivityTab.activity.partners.description", { count: event.partners.length }),
         timestamp: event.createdAt,
         icon: Users,
         color: "blue",
@@ -85,8 +88,8 @@ const EventActivityTab = ({ event, formatDateTime }) => {
       timeline.push({
         id: "pricing",
         type: "pricing",
-        title: "Pricing Configured",
-        description: `Total amount set to ${event.pricing.totalAmount} TND`,
+        title: t("eventActivityTab.activity.pricing.title"),
+        description: t("eventActivityTab.activity.pricing.description", { amount: event.pricing.totalAmount }),
         timestamp: event.updatedAt || event.createdAt,
         icon: DollarSign,
         color: "green",
@@ -98,8 +101,8 @@ const EventActivityTab = ({ event, formatDateTime }) => {
       timeline.push({
         id: "updated",
         type: "updated",
-        title: "Event Updated",
-        description: "Event details were modified",
+        title: t("eventActivityTab.activity.updated.title"),
+        description: t("eventActivityTab.activity.updated.description"),
         timestamp: event.updatedAt,
         icon: Edit,
         color: "orange",
@@ -129,17 +132,19 @@ const EventActivityTab = ({ event, formatDateTime }) => {
     <div>
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Activity Timeline
+          {t("eventActivityTab.title")}
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Track all changes and updates to this event
+          {t("eventActivityTab.subtitle")}
         </p>
       </div>
 
       {timeline.length === 0 ? (
         <div className="text-center py-12">
           <Clock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600 dark:text-gray-400">No activity recorded</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t("eventActivityTab.noActivity")}
+          </p>
         </div>
       ) : (
         <div className="relative">
@@ -185,24 +190,30 @@ const EventActivityTab = ({ event, formatDateTime }) => {
       {/* Event Metadata */}
       <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
         <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-          Event Metadata
+          {t("eventActivityTab.metadata.title")}
         </h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-500 dark:text-gray-400">Created:</span>
+            <span className="text-gray-500 dark:text-gray-400">
+              {t("eventActivityTab.metadata.created")}:
+            </span>
             <p className="font-medium text-gray-900 dark:text-white mt-1">
               {formatDateTime(event.createdAt)}
             </p>
           </div>
           <div>
-            <span className="text-gray-500 dark:text-gray-400">Last Updated:</span>
+            <span className="text-gray-500 dark:text-gray-400">
+              {t("eventActivityTab.metadata.lastUpdated")}:
+            </span>
             <p className="font-medium text-gray-900 dark:text-white mt-1">
               {formatDateTime(event.updatedAt)}
             </p>
           </div>
           {event._id && (
             <div className="col-span-2">
-              <span className="text-gray-500 dark:text-gray-400">Event ID:</span>
+              <span className="text-gray-500 dark:text-gray-400">
+                {t("eventActivityTab.metadata.eventId")}:
+              </span>
               <p className="font-mono text-xs text-gray-900 dark:text-white mt-1 break-all">
                 {event._id}
               </p>

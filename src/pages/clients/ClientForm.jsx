@@ -15,8 +15,10 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Textarea from "../../components/common/Textarea";
+import { useTranslation } from "react-i18next";
 
 const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -81,11 +83,8 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
         if (!isMounted) return;
 
-        // Simplified response handling - use the handleResponse utility from your API
         let clientData = null;
 
-        // Your API service uses handleResponse which returns response.data?.data || response.data
-        // So we should get the data directly
         if (response) {
           clientData = response.client;
         }
@@ -96,14 +95,12 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
         console.log("👤 Extracted client data:", clientData);
 
-        console.log("clientData", clientData);
         // Format the data for the form
         const formData = {
           name: clientData.name || "",
           email: clientData.email || "",
           phone: clientData.phone || "",
           company: clientData.company || "",
-          // Handle address object safely
           street: clientData.address?.street || "",
           city: clientData.address?.city || "",
           state: clientData.address?.state || "",
@@ -120,7 +117,6 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
         console.error("❌ Error fetching client data:", err);
 
-        // Handle abort errors differently
         if (err.name === "AbortError") {
           console.log("Client fetch cancelled");
           return;
@@ -129,7 +125,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
         const errorMessage =
           err.response?.data?.message ||
           err.message ||
-          "Failed to load client data. Please try again.";
+          t("clientForm.errors.loading");
 
         setError(errorMessage);
       } finally {
@@ -147,7 +143,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
       isMounted = false;
       abortController.abort();
     };
-  }, [client, reset, isOpen]);
+  }, [client, reset, isOpen, t]);
 
   const onSubmit = async (data) => {
     try {
@@ -156,19 +152,19 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
       // Validate required fields
       if (!data.name.trim()) {
-        setError("Full name is required");
+        setError(t("clientForm.errors.nameRequired"));
         return;
       }
 
       if (!data.email.trim()) {
-        setError("Email is required");
+        setError(t("clientForm.errors.emailRequired"));
         return;
       }
 
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(data.email)) {
-        setError("Please enter a valid email address");
+        setError(t("clientForm.errors.emailInvalid"));
         return;
       }
 
@@ -180,7 +176,6 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
         company: data.company?.trim() || "",
         status: data.status,
         notes: data.notes?.trim() || "",
-        // Create address object from individual fields
         address: {
           street: data.street?.trim() || "",
           city: data.city?.trim() || "",
@@ -201,7 +196,6 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
         console.log("✅ Create response:", response);
       }
 
-      // Check if response indicates success
       if (response) {
         onSuccess?.(response);
       } else {
@@ -212,7 +206,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Failed to save client. Please try again.";
+        t("clientForm.errors.saving");
       setError(errorMessage);
     }
   };
@@ -252,12 +246,12 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {client?._id ? "Edit Client" : "Add New Client"}
+                {client?._id ? t("clientForm.title.edit") : t("clientForm.title.add")}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {client?._id
-                  ? "Update client information"
-                  : "Create a new client profile"}
+                  ? t("clientForm.description.edit")
+                  : t("clientForm.description.add")}
               </p>
             </div>
           </div>
@@ -291,8 +285,8 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                   <div className="flex-1">
                     <p className="text-red-800 dark:text-red-200 font-medium">
                       {client?._id
-                        ? "Error Loading Client"
-                        : "Error Creating Client"}
+                        ? t("clientForm.errors.loading")
+                        : t("clientForm.errors.creating")}
                     </p>
                     <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                       {error}
@@ -315,19 +309,19 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
               <div className="bg-white dark:bg-gray-700/50 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <User className="w-5 h-5 text-orange-500" />
-                  Personal Information
+                  {t("clientForm.sections.personal")}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
                     defaultValue={client?.name}
-                    label="Full Name"
-                    placeholder="e.g. Jane Doe"
+                    label={t("clientForm.fields.name")}
+                    placeholder={t("clientForm.placeholders.name")}
                     autoFocus
                     {...register("name", {
-                      required: "Full name is required",
+                      required: t("clientForm.errors.nameRequired"),
                       minLength: {
                         value: 2,
-                        message: "Name must be at least 2 characters",
+                        message: t("clientForm.errors.nameMinLength"),
                       },
                     })}
                     error={errors.name?.message}
@@ -338,14 +332,14 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                   />
 
                   <Input
-                    label="Email Address"
-                    placeholder="name@company.com"
+                    label={t("clientForm.fields.email")}
+                    placeholder={t("clientForm.placeholders.email")}
                     type="email"
                     {...register("email", {
-                      required: "Email is required",
+                      required: t("clientForm.errors.emailRequired"),
                       pattern: {
                         value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Please enter a valid email address",
+                        message: t("clientForm.errors.emailInvalid"),
                       },
                     })}
                     error={errors.email?.message}
@@ -356,23 +350,20 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                   />
 
                   <Input
-                    label="Phone Number"
-                    placeholder="e.g. 12345678"
+                    label={t("clientForm.fields.phone")}
+                    placeholder={t("clientForm.placeholders.phone")}
                     {...register("phone", {
-                      required: "Phone number is required",
+                      required: t("clientForm.errors.phoneRequired"),
                       pattern: {
                         value: /^[0-9]{8}$/,
-                        message: "Phone number must be exactly 8 digits",
+                        message: t("clientForm.errors.phoneInvalid"),
                       },
                     })}
                     onChange={(e) => {
-                      // Remove any non-digit characters and limit to 8 digits
                       const numbersOnly = e.target.value
                         .replace(/\D/g, "")
                         .slice(0, 8);
                       e.target.value = numbersOnly;
-
-                      // Trigger react-hook-form's onChange
                       const { onChange } = register("phone");
                       onChange(e);
                     }}
@@ -385,8 +376,8 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                   />
 
                   <Input
-                    label="Company"
-                    placeholder="Company or organization"
+                    label={t("clientForm.fields.company")}
+                    placeholder={t("clientForm.placeholders.company")}
                     {...register("company")}
                     fullWidth
                     icon={Building2}
@@ -399,12 +390,12 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
               <div className="bg-white dark:bg-gray-700/50 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-orange-500" />
-                  Address Information
+                  {t("clientForm.sections.address")}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Full Address"
-                    placeholder="123 Main Street"
+                    label={t("clientForm.fields.street")}
+                    placeholder={t("clientForm.placeholders.street")}
                     {...register("street")}
                     fullWidth
                     icon={MapPin}
@@ -412,32 +403,32 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                   />
 
                   <Input
-                    label="City"
-                    placeholder="New York"
+                    label={t("clientForm.fields.city")}
+                    placeholder={t("clientForm.placeholders.city")}
                     {...register("city")}
                     fullWidth
                     className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                   />
 
                   <Input
-                    label="State/Province"
-                    placeholder="NY"
+                    label={t("clientForm.fields.state")}
+                    placeholder={t("clientForm.placeholders.state")}
                     {...register("state")}
                     fullWidth
                     className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                   />
 
                   <Input
-                    label="ZIP/Postal Code"
-                    placeholder="10001"
+                    label={t("clientForm.fields.zipCode")}
+                    placeholder={t("clientForm.placeholders.zipCode")}
                     {...register("zipCode")}
                     fullWidth
                     className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                   />
 
                   <Input
-                    label="Country"
-                    placeholder="United States"
+                    label={t("clientForm.fields.country")}
+                    placeholder={t("clientForm.placeholders.country")}
                     {...register("country")}
                     fullWidth
                     className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
@@ -449,7 +440,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
               <div className="bg-white dark:bg-gray-700/50 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-orange-500" />
-                  Additional Information
+                  {t("clientForm.sections.additional")}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Controller
@@ -457,10 +448,10 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                     control={control}
                     render={({ field }) => (
                       <Select
-                        label="Status"
+                        label={t("clientForm.fields.status")}
                         options={[
-                          { value: "active", label: "Active" },
-                          { value: "inactive", label: "Inactive" },
+                          { value: "active", label: t("clients.status.active") },
+                          { value: "inactive", label: t("clients.status.inactive") },
                         ]}
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
@@ -472,8 +463,8 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
 
                   <div className="md:col-span-2">
                     <Textarea
-                      label="Client Notes"
-                      placeholder="Optional notes, comments, or additional information about this client..."
+                      label={t("clientForm.fields.notes")}
+                      placeholder={t("clientForm.placeholders.notes")}
                       rows={4}
                       {...register("notes")}
                       fullWidth
@@ -492,7 +483,7 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                   disabled={isSubmitting || loading}
                   className="min-w-24"
                 >
-                  Cancel
+                  {t("clientForm.buttons.cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -502,12 +493,12 @@ const ClientForm = ({ client, onSuccess, onCancel, isOpen = true }) => {
                   {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      {client?._id ? "Updating..." : "Creating..."}
+                      {client?._id ? t("clientForm.buttons.updating") : t("clientForm.buttons.creating")}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      {client?._id ? "Update Client" : "Create Client"}
+                      {client?._id ? t("clientForm.buttons.update") : t("clientForm.buttons.create")}
                     </>
                   )}
                 </Button>

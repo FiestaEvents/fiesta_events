@@ -1,7 +1,7 @@
-// ClientDetail.jsx - UPDATED (only pass eventId)
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "../../hooks/useToast";
+import { useTranslation } from "react-i18next";
 
 // Components
 import Modal, { ConfirmModal } from "../../components/common/Modal";
@@ -19,6 +19,7 @@ import { clientService } from "../../api/index";
 import { useClientDetail } from "../../hooks/useClientDetail";
 
 const ClientDetail = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { showSuccess, showError, showInfo, promise } = useToast();
@@ -53,19 +54,8 @@ const ClientDetail = () => {
   }, []);
 
   const getStatusLabel = useCallback((status) => {
-    const labels = {
-      active: "Active",
-      inactive: "Inactive",
-      pending: "Pending",
-      confirmed: "Confirmed",
-      completed: "Completed",
-      cancelled: "Cancelled",
-      paid: "Paid",
-      partial: "Partial",
-      overdue: "Overdue",
-    };
-    return labels[status] || status || "Unknown";
-  }, []);
+    return t(`clientDetail.status.${status}`) || status || t("clients.table.defaultValues.unnamed");
+  }, [t]);
 
   const getStatusColor = useCallback((status) => {
     const colors = {
@@ -114,30 +104,30 @@ const ClientDetail = () => {
 
   const handleEditClient = useCallback(() => {
     if (!id) {
-      showError("Cannot edit client: Client ID not found");
+      showError(t("clients.errors.invalidId"));
       return;
     }
     setIsEditModalOpen(true);
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
     await refreshData();
-    showSuccess("Client updated successfully");
-  }, [refreshData, showSuccess]);
+    showSuccess(t("clients.toast.updateSuccess"));
+  }, [refreshData, showSuccess, t]);
 
   const handleDeleteClient = useCallback(async () => {
     if (!id) {
-      showError("Cannot delete client: Client ID not found");
+      showError(t("clients.errors.invalidId"));
       return;
     }
 
     try {
       setDeleteLoading(true);
       await promise(clientService.delete(id), {
-        loading: "Deleting client...",
-        success: "Client deleted successfully",
-        error: "Failed to delete client",
+        loading: t("clients.toast.deleting", { name: clientData?.name || "Client" }),
+        success: t("clients.toast.deleteSuccess", { name: clientData?.name || "Client" }),
+        error: t("clients.toast.deleteError", { name: clientData?.name || "Client" }),
       });
       setIsDeleteModalOpen(false);
       navigate("/clients");
@@ -146,17 +136,17 @@ const ClientDetail = () => {
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError]);
+  }, [id, navigate, promise, showError, clientData, t]);
 
   const handleCreateEvent = useCallback(() => {
     if (!id) {
-      showError("Cannot create event: Client ID not found");
+      showError(t("clients.errors.invalidId"));
       return;
     }
 
     setEditingEventId(null);
     setIsEventFormOpen(true);
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   // EventForm modal handlers
   const handleEventFormClose = useCallback(() => {
@@ -170,10 +160,10 @@ const ClientDetail = () => {
     await refreshData();
     showSuccess(
       editingEventId
-        ? "Event updated successfully!"
-        : "Event created successfully!"
+        ? t("events.toast.updateSuccess")
+        : t("events.toast.createSuccess")
     );
-  }, [editingEventId, refreshData, showSuccess]);
+  }, [editingEventId, refreshData, showSuccess, t]);
 
   const handleRecordPayment = useCallback(
     (eventId) => {
@@ -183,7 +173,7 @@ const ClientDetail = () => {
       }
 
       if (!id) {
-        showError("Cannot record payment: Client ID not found");
+        showError(t("clients.errors.invalidId"));
         return;
       }
 
@@ -197,13 +187,13 @@ const ClientDetail = () => {
         },
       });
     },
-    [navigate, id, clientData, showError]
+    [navigate, id, clientData, showError, t]
   );
 
   const handleRetry = useCallback(() => {
     refreshData();
-    showInfo("Retrying to load client details...");
-  }, [refreshData, showInfo]);
+    showInfo(t("clientDetail.loading"));
+  }, [refreshData, showInfo, t]);
 
   // Loading state
   if (loading && !clientData) {
@@ -212,7 +202,7 @@ const ClientDetail = () => {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading client details...
+            {t("clientDetail.loading")}
           </p>
         </div>
       </div>
@@ -226,24 +216,24 @@ const ClientDetail = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!clientData ? "Client Not Found" : "Error Loading Client"}
+              {!clientData ? t("clientDetail.notFound") : t("clientDetail.errorLoading")}
             </h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || "The client you're looking for doesn't exist."}
+              {error?.message || t("clientDetail.notFoundDescription")}
             </p>
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => navigate("/clients")}
                 className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
               >
-                Back to Clients
+                {t("clientDetail.buttons.backToClients")}
               </button>
               {error && (
                 <button
                   onClick={handleRetry}
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
                 >
-                  Try Again
+                  {t("clientDetail.buttons.tryAgain")}
                 </button>
               )}
             </div>
@@ -293,7 +283,7 @@ const ClientDetail = () => {
                           : "border-transparent text-gray-600 hover:text-gray-900 hover:border-orange-300 dark:text-gray-400 dark:hover:text-white"
                       }`}
                     >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {t(`clientDetail.tabs.${tab}`)}
                     </button>
                   ))}
                 </nav>
@@ -342,7 +332,7 @@ const ClientDetail = () => {
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Client"
+        title={t("clientDetail.modals.editClient")}
         size="lg"
       >
         <ClientForm
@@ -356,10 +346,10 @@ const ClientDetail = () => {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteClient}
-        title="Delete Client"
-        message={`Are you sure you want to delete "${clientData?.name}"? This action cannot be undone and will remove all associated data.`}
-        confirmText="Delete Client"
-        cancelText="Cancel"
+        title={t("clientDetail.modals.deleteClient")}
+        message={t("clientDetail.modals.deleteMessage", { name: clientData?.name })}
+        confirmText={t("clients.buttons.deleteClient")}
+        cancelText={t("clients.buttons.cancel")}
         variant="danger"
         loading={deleteLoading}
       />

@@ -1,4 +1,3 @@
-// ClientDetailModal.jsx
 import React, { useState } from "react";
 import {
   X,
@@ -17,8 +16,10 @@ import { useToast } from "../../context/ToastContext";
 import { clientService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
+import { useTranslation } from "react-i18next";
 
 const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => {
+  const { t } = useTranslation();
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError, promise } = useToast();
@@ -51,9 +52,9 @@ const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => 
       await promise(
         clientService.delete(client._id),
         {
-          loading: `Deleting ${client.name || "Client"}...`,
-          success: `${client.name || "Client"} deleted successfully`,
-          error: `Failed to delete ${client.name || "Client"}`
+          loading: t("clients.toast.deleting", { name: client.name || "Client" }),
+          success: t("clients.toast.deleteSuccess", { name: client.name || "Client" }),
+          error: t("clients.toast.deleteError", { name: client.name || "Client" })
         }
       );
       onClose();
@@ -65,7 +66,6 @@ const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => 
     }
   };
 
-  // Handle viewing full client details
   const handleViewFullDetails = () => {
     onClose();
     navigate(`/clients/${client._id}`, { state: { client } });
@@ -102,11 +102,11 @@ const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => 
                     className="text-2xl font-bold leading-6 text-gray-900 dark:text-white"
                     id="modal-title"
                   >
-                    {client.name || "Unnamed Client"}
+                    {client.name || t("clients.table.defaultValues.unnamed")}
                   </h3>
                   <div className="mt-1">
                     <Badge color={getStatusColor(client.status)}>
-                      {client.status || "Unknown"}
+                      {t(`clients.status.${client.status}`) || "Unknown"}
                     </Badge>
                   </div>
                 </div>
@@ -149,7 +149,7 @@ const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => 
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-orange-500" />
-                      Address
+                      {t("clientDetail.sections.address")}
                     </h4>
                     <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                       {client.address.street && <div>{client.address.street}</div>}
@@ -168,7 +168,7 @@ const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => 
                   {client.createdAt && (
                     <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
                       <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span>Created: {formatDateLong(client.createdAt)}</span>
+                      <span>{t("clientDetail.labels.created")}: {formatDateLong(client.createdAt)}</span>
                     </div>
                   )}
                   
@@ -188,7 +188,7 @@ const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => 
                   {client.notes && (
                     <div>
                       <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                        Notes
+                        {t("clientDetail.labels.notes")}
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                         {client.notes}
@@ -208,7 +208,7 @@ const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => 
                 disabled={isDeleting}
                 size="sm"
               >
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? t("clients.toast.deleting", { name: "" }).trim() : t("clientDetail.actions.delete")}
               </Button>
               <div className="flex gap-3">
                 <Button
@@ -217,16 +217,16 @@ const ClientDetailModal = ({ isOpen, onClose, client, onEdit, refreshData }) => 
                   onClick={() => onEdit(client)}
                   size="sm"
                 >
-                  Edit
+                  {t("clientDetail.actions.edit")}
                 </Button>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={handleViewFullDetails}
                   className="gap-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title="View Full Details"
+                  title={t("clientDetail.actions.moreDetails")}
                 >
-                  More Details
+                  {t("clientDetail.actions.moreDetails")}
                   <ArrowRight className="w-4 h-4 text-white" />
                 </Button>
               </div>

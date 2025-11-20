@@ -18,11 +18,13 @@ import { useToast } from "../../context/ToastContext";
 import { partnerService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
+import { useTranslation } from "react-i18next";
 
 const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError, promise } = useToast();
+  const { t } = useTranslation();
 
   if (!isOpen || !partner) return null;
 
@@ -71,9 +73,9 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
       await promise(
         partnerService.delete(partner._id),
         {
-          loading: `Deleting ${partner.name || "Partner"}...`,
-          success: `${partner.name || "Partner"} deleted successfully`,
-          error: `Failed to delete ${partner.name || "Partner"}`
+          loading: t("partners.deleteModal.deleting", { name: partner.name || "Partner" }),
+          success: t("partners.notifications.deleted"),
+          error: t("partners.deleteModal.errorDeleting", { name: partner.name || "Partner" })
         }
       );
       onClose();
@@ -121,11 +123,11 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                     className="text-2xl font-bold leading-6 text-gray-900 dark:text-white"
                     id="modal-title"
                   >
-                    {partner.name || "Unnamed Partner"}
+                    {partner.name || t("common.unknown")}
                   </h3>
                   <div className="mt-1 flex items-center gap-2">
                     <Badge color={getStatusColor(partner.status)}>
-                      {partner.status || "Unknown"}
+                      {partner.status || t("common.unknown")}
                     </Badge>
                     <Badge color="blue">
                       {formatCategory(partner.category)}
@@ -169,7 +171,7 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                 {/* Rating and Performance */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Performance
+                    {t("partnerDetail.performance")}
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
@@ -179,7 +181,7 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                           {partner.rating?.toFixed(1) || "0.0"}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Rating
+                          {t("common.rating")}
                         </div>
                       </div>
                     </div>
@@ -190,7 +192,7 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                           {partner.totalJobs || 0}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Total Jobs
+                          {t("partnerDetail.totalJobs")}
                         </div>
                       </div>
                     </div>
@@ -198,7 +200,7 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                   {partner.hourlyRate && (
                     <div className="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                       <Tag className="w-5 h-5 text-orange-500" />
-                      <span>Hourly Rate: ${partner.hourlyRate}/hr</span>
+                      <span>{t("partnerDetail.hourlyRate")}: ${partner.hourlyRate}/hr</span>
                     </div>
                   )}
                 </div>
@@ -208,7 +210,7 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-orange-500" />
-                      Location
+                      {t("partnerDetail.location")}
                     </h4>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {partner.location}
@@ -221,14 +223,14 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                   {partner.createdAt && (
                     <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
                       <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span>Created: {formatDateLong(partner.createdAt)}</span>
+                      <span>{t("partnerDetail.created")}: {formatDateLong(partner.createdAt)}</span>
                     </div>
                   )}
                   
                   {partner.specialties && (
                     <div>
                       <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                        Specialties
+                        {t("partnerDetail.specialties")}
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                         {partner.specialties}
@@ -239,7 +241,7 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                   {partner.notes && (
                     <div>
                       <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                        Notes
+                        {t("partnerDetail.notes")}
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                         {partner.notes}
@@ -259,7 +261,7 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                 disabled={isDeleting}
                 size="sm"
               >
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? t("partnerDetail.actions.deleting") : t("partnerDetail.actions.delete")}
               </Button>
               <div className="flex gap-3">
                 <Button
@@ -268,16 +270,16 @@ const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) =
                   onClick={() => onEdit(partner)}
                   size="sm"
                 >
-                  Edit
+                  {t("partnerDetail.actions.edit")}
                 </Button>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={handleViewFullDetails}
                   className="gap-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title="View Full Details"
+                  title={t("partnerDetail.actions.moreDetails")}
                 >
-                  More Details
+                  {t("partnerDetail.actions.moreDetails")}
                   <ArrowRight className="w-4 h-4 text-white" />
                 </Button>
               </div>

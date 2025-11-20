@@ -15,11 +15,13 @@ import EventActivityTab from "./components/EventActivityTab.jsx";
 // Hooks and Services
 import { eventService } from "../../api/index";
 import { useEventDetail } from "../../hooks/useEventDetail";
+import { useTranslation } from "react-i18next";
 
 const EventDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  const { t } = useTranslation();
 
   // Use custom hook for event data
   const { eventData, payments, loading, error, refreshData } = useEventDetail(id);
@@ -61,14 +63,14 @@ const EventDetail = () => {
 
   const getStatusLabel = useCallback((status) => {
     const labels = {
-      pending: "Pending",
-      confirmed: "Confirmed",
-      "in-progress": "In Progress",
-      completed: "Completed",
-      cancelled: "Cancelled",
+      pending: t("eventDetail.status.pending"),
+      confirmed: t("eventDetail.status.confirmed"),
+      "in-progress": t("eventDetail.status.in-progress"),
+      completed: t("eventDetail.status.completed"),
+      cancelled: t("eventDetail.status.cancelled"),
     };
-    return labels[status] || status || "Unknown";
-  }, []);
+    return labels[status] || status || t("eventDetail.status.unknown");
+  }, [t]);
 
   const getStatusColor = useCallback((status) => {
     const colors = {
@@ -92,21 +94,21 @@ const EventDetail = () => {
   // Event handlers
   const handleEditEvent = useCallback(() => {
     if (!id) {
-      showError("Cannot edit event: Event ID not found");
+      showError(t("eventDetail.errors.edit"));
       return;
     }
     setIsEditModalOpen(true);
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
     await refreshData();
-    showSuccess("Event updated successfully");
-  }, [refreshData, showSuccess]);
+    showSuccess(t("eventDetail.actions.editSuccess"));
+  }, [refreshData, showSuccess, t]);
 
   const handleDeleteEvent = useCallback(async () => {
     if (!id) {
-      showError("Cannot delete event: Event ID not found");
+      showError(t("eventDetail.errors.delete"));
       return;
     }
 
@@ -115,9 +117,9 @@ const EventDetail = () => {
       await promise(
         eventService.delete(id),
         {
-          loading: "Deleting event...",
-          success: "Event deleted successfully",
-          error: "Failed to delete event"
+          loading: t("eventDetail.actions.deleteLoading"),
+          success: t("eventDetail.actions.deleteSuccess"),
+          error: t("eventDetail.actions.deleteError")
         }
       );
       setIsDeleteModalOpen(false);
@@ -127,7 +129,7 @@ const EventDetail = () => {
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError]);
+  }, [id, navigate, promise, showError, t]);
 
   const handleNavigateToClient = useCallback(() => {
     if (eventData?.clientId?._id) {
@@ -143,7 +145,7 @@ const EventDetail = () => {
 
   const handleRecordPayment = useCallback(() => {
     if (!id) {
-      showError("Cannot record payment: Event ID not found");
+      showError(t("eventDetail.errors.payment"));
       return;
     }
 
@@ -157,12 +159,12 @@ const EventDetail = () => {
         },
       },
     });
-  }, [navigate, id, eventData, showError]);
+  }, [navigate, id, eventData, showError, t]);
 
   const handleRetry = useCallback(() => {
     refreshData();
-    showInfo("Retrying to load event details...");
-  }, [refreshData, showInfo]);
+    showInfo(t("eventDetail.actions.retry"));
+  }, [refreshData, showInfo, t]);
 
   // Loading state
   if (loading && !eventData) {
@@ -171,7 +173,7 @@ const EventDetail = () => {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading event details...
+            {t("eventDetail.loading")}
           </p>
         </div>
       </div>
@@ -185,24 +187,24 @@ const EventDetail = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!eventData ? "Event Not Found" : "Error Loading Event"}
+              {!eventData ? t("eventDetail.errors.notFound") : t("eventDetail.errors.loading")}
             </h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || "The event you're looking for doesn't exist."}
+              {error?.message || t("eventDetail.errors.notFoundDescription")}
             </p>
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => navigate("/events")}
                 className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
               >
-                Back to Events
+                {t("eventDetail.actions.backToEvents")}
               </button>
               {error && (
                 <button
                   onClick={handleRetry}
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
                 >
-                  Try Again
+                  {t("eventDetail.actions.tryAgain")}
                 </button>
               )}
             </div>
@@ -257,7 +259,7 @@ const EventDetail = () => {
                           : "border-transparent text-gray-600 hover:text-gray-900 hover:border-orange-300 dark:text-gray-400 dark:hover:text-white"
                       }`}
                     >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {t(`eventDetail.tabs.${tab}`)}
                     </button>
                   ))}
                 </nav>
@@ -308,10 +310,10 @@ const EventDetail = () => {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteEvent}
-        title="Delete Event"
-        message={`Are you sure you want to delete "${eventData?.title}"? This action cannot be undone and will remove all associated data.`}
-        confirmText="Delete Event"
-        cancelText="Cancel"
+        title={t("eventDetail.deleteModal.title")}
+        message={t("eventDetail.deleteModal.message", { eventTitle: eventData?.title })}
+        confirmText={t("eventDetail.deleteModal.confirmText")}
+        cancelText={t("eventDetail.deleteModal.cancelText")}
         variant="danger"
         loading={deleteLoading}
       />
