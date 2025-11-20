@@ -213,10 +213,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
             <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400`} />
             <input
               type="text"
-              placeholder={
-                t("common.searchPlaceholder") ||
-                "Search events, clients, tasks..."
-              }
+              placeholder={t("common.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}

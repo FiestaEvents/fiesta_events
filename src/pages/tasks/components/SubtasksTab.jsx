@@ -1,17 +1,20 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckSquare } from 'lucide-react';
 import ProgressBar from '../../../components/common/ProgressBar';
 import EmptyState from '../../../components/common/EmptyState';
 
 const SubtasksTab = ({ task, progress, completedSubtasks, totalSubtasks, formatShortDate }) => {
+  const { t } = useTranslation();
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Subtasks
+          {t('tasks.detail.subtasks.title')}
         </h3>
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          {completedSubtasks} of {totalSubtasks} completed
+          {t('tasks.detail.subtasks.completed', { completed: completedSubtasks, total: totalSubtasks })}
         </span>
       </div>
 
@@ -50,8 +53,13 @@ const SubtasksTab = ({ task, progress, completedSubtasks, totalSubtasks, formatS
                   )}
                   {subtask.completedAt && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      Completed {formatShortDate(subtask.completedAt)}
-                      {subtask.completedBy && ` by ${subtask.completedBy.name || subtask.completedBy}`}
+                      {subtask.completedBy 
+                        ? t('tasks.detail.subtasks.completedBy', { 
+                            date: formatShortDate(subtask.completedAt), 
+                            user: subtask.completedBy.name || subtask.completedBy 
+                          })
+                        : t('tasks.detail.subtasks.completedDate', { date: formatShortDate(subtask.completedAt) })
+                      }
                     </p>
                   )}
                 </div>
@@ -62,8 +70,8 @@ const SubtasksTab = ({ task, progress, completedSubtasks, totalSubtasks, formatS
       ) : (
         <EmptyState
           icon={CheckSquare}
-          title="No subtasks"
-          description="Add subtasks to break down this task into smaller steps."
+          title={t('tasks.detail.subtasks.noSubtasks')}
+          description={t('tasks.detail.subtasks.noSubtasksDescription')}
           size="lg"
         />
       )}

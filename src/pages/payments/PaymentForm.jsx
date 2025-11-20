@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { paymentService, eventService, clientService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
@@ -23,6 +24,7 @@ import { toast } from "react-hot-toast";
 const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { t } = useTranslation();
   const isEditMode = !!payment || Boolean(id);
 
   // Multi-step state
@@ -88,13 +90,13 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
         setFilteredEvents(clientEvents);
       } catch (error) {
         console.error("Error fetching client events:", error);
-        toast.error("Failed to load client events");
+        toast.error(t('payments.notifications.loadEventsError'));
         setFilteredEvents(events);
       } finally {
         setLoadingOptions(false);
       }
     },
-    [events]
+    [events, t]
   );
 
   // Set client when event is selected
@@ -122,7 +124,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
       loadPaymentData(response.payment || response);
     } catch (error) {
       console.error("Error fetching payment:", error);
-      toast.error(error.message || "Failed to load payment");
+      toast.error(error.message || t('payments.notifications.loadError'));
       navigate("/payments");
     } finally {
       setLoading(false);
@@ -186,7 +188,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
       setClients(clientsData);
     } catch (error) {
       console.error("Error fetching options:", error);
-      toast.error("Failed to load form options");
+      toast.error(t('payments.notifications.loadOptionsError'));
     } finally {
       setLoadingOptions(false);
     }
@@ -196,25 +198,25 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   const steps = [
     {
       number: 1,
-      title: "Basic Info",
+      title: t('payments.steps.basicInfo'),
       icon: DollarSign,
       color: "orange",
     },
     {
       number: 2,
-      title: "Related Info",
+      title: t('payments.steps.relatedInfo'),
       icon: Users,
       color: "orange",
     },
     {
       number: 3,
-      title: "Dates",
+      title: t('payments.steps.dates'),
       icon: Calendar,
       color: "orange",
     },
     {
       number: 4,
-      title: "Fees & Review",
+      title: t('payments.steps.feesReview'),
       icon: FileText,
       color: "orange",
     },
@@ -282,13 +284,13 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
 
     if (step === 1) {
       if (!formData.amount || parseFloat(formData.amount) <= 0) {
-        newErrors.amount = "Please enter a valid amount";
+        newErrors.amount = t('payments.form.errors.amountRequired');
       }
       if (!formData.method) {
-        newErrors.method = "Please select a payment method";
+        newErrors.method = t('payments.form.errors.methodRequired');
       }
       if (!formData.type) {
-        newErrors.type = "Please select a payment type";
+        newErrors.type = t('payments.form.errors.typeRequired');
       }
     }
 
@@ -302,7 +304,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
         const paidDate = new Date(formData.paidDate);
         const dueDate = new Date(formData.dueDate);
         if (paidDate < dueDate) {
-          newErrors.paidDate = "Paid date cannot be before due date";
+          newErrors.paidDate = t('payments.form.errors.paidDateBeforeDue');
         }
       }
     }
@@ -315,11 +317,11 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
       const totalAmount = parseFloat(formData.amount) || 0;
 
       if (processingFee < 0 || platformFee < 0 || otherFees < 0) {
-        newErrors.fees = "Fees cannot be negative";
+        newErrors.fees = t('payments.form.errors.feesNegative');
       }
 
       if (processingFee + platformFee + otherFees > totalAmount) {
-        newErrors.fees = "Total fees cannot exceed payment amount";
+        newErrors.fees = t('payments.form.errors.feesExceedAmount');
       }
     }
 
@@ -333,13 +335,13 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
 
     // Step 1 validations
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = "Please enter a valid amount";
+      newErrors.amount = t('payments.form.errors.amountRequired');
     }
     if (!formData.method) {
-      newErrors.method = "Please select a payment method";
+      newErrors.method = t('payments.form.errors.methodRequired');
     }
     if (!formData.type) {
-      newErrors.type = "Please select a payment type";
+      newErrors.type = t('payments.form.errors.typeRequired');
     }
 
     setErrors(newErrors);
@@ -353,7 +355,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     } else {
-      toast.error("Please fix the errors before proceeding");
+      toast.error(t('payments.form.errors.fixErrors'));
     }
   };
 
@@ -389,7 +391,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     e.stopPropagation();
 
     if (!validateAllRequired()) {
-      toast.error("Please fix all required fields before updating");
+      toast.error(t('payments.form.errors.fixAllErrors'));
       setCurrentStep(1);
       return;
     }
@@ -403,7 +405,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     // For create mode on non-final steps, validate current step only
     if (!isEditMode && currentStep < totalSteps) {
       if (!validateStep(currentStep)) {
-        toast.error("Please fix the errors in the form");
+        toast.error(t('payments.form.errors.fixErrors'));
         return;
       }
       handleNext(e);
@@ -412,7 +414,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
 
     // For final step or edit mode, validate all
     if (!validateAllRequired()) {
-      toast.error("Please fix all required fields");
+      toast.error(t('payments.form.errors.fixAllErrors'));
       return;
     }
 
@@ -440,10 +442,10 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
       if (isEditMode) {
         const paymentId = payment?._id || id;
         await paymentService.update(paymentId, paymentData);
-        toast.success("Payment updated successfully");
+        toast.success(t('payments.notifications.updateSuccess'));
       } else {
         await paymentService.create(paymentData);
-        toast.success("Payment created successfully");
+        toast.success(t('payments.notifications.createSuccess'));
       }
 
       if (onSuccess) {
@@ -453,7 +455,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
       }
     } catch (error) {
       console.error("Error saving payment:", error);
-      toast.error(error.message || "Failed to save payment");
+      toast.error(error.message || t('payments.notifications.saveError'));
     } finally {
       setSaving(false);
     }
@@ -514,7 +516,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                     {step.title}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Step {step.number} of {totalSteps}
+                    {t('payments.steps.step', { current: step.number, total: totalSteps })}
                   </div>
                 </div>
               </button>
@@ -546,11 +548,11 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <DollarSign className="w-5 h-5 text-white" />
               </div>
-              Basic Information
+              {t('payments.modals.paymentForm.basicInfo')}
             </h3>
 
             <Select
-              label="Payment Type"
+              label={t('payments.form.type')}
               name="type"
               value={formData.type}
               onChange={handleChange}
@@ -558,13 +560,13 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               required
               className="w-full"
             >
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
+              <option value="income">{t('payments.types.income')}</option>
+              <option value="expense">{t('payments.types.expense')}</option>
             </Select>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Amount"
+                label={t('payments.form.amount')}
                 name="amount"
                 type="number"
                 step="0.01"
@@ -579,7 +581,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               />
 
               <Select
-                label="Payment Method"
+                label={t('payments.form.method')}
                 name="method"
                 value={formData.method}
                 onChange={handleChange}
@@ -588,32 +590,32 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                 icon={CreditCard}
                 className="w-full"
               >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="credit_card">Credit Card</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="check">Check</option>
-                <option value="mobile_payment">Mobile Payment</option>
+                <option value="cash">{t('payments.methods.cash')}</option>
+                <option value="card">{t('payments.methods.card')}</option>
+                <option value="credit_card">{t('payments.methods.credit_card')}</option>
+                <option value="bank_transfer">{t('payments.methods.bank_transfer')}</option>
+                <option value="check">{t('payments.methods.check')}</option>
+                <option value="mobile_payment">{t('payments.methods.mobile_payment')}</option>
               </Select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
-                label="Status"
+                label={t('payments.form.status')}
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
                 required
                 className="w-full"
               >
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-                <option value="refunded">Refunded</option>
+                <option value="pending">{t('payments.statuses.pending')}</option>
+                <option value="completed">{t('payments.statuses.completed')}</option>
+                <option value="failed">{t('payments.statuses.failed')}</option>
+                <option value="refunded">{t('payments.statuses.refunded')}</option>
               </Select>
 
               <Input
-                label="Reference Number"
+                label={t('payments.form.reference')}
                 name="reference"
                 value={formData.reference}
                 onChange={handleChange}
@@ -623,12 +625,12 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             </div>
 
             <Textarea
-              label="Description"
+              label={t('payments.form.description')}
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              placeholder="Brief description of the payment..."
+              placeholder={t('payments.form.descriptionPlaceholder')}
               maxLength={500}
               className="w-full dark:bg-gray-800"
             />
@@ -642,22 +644,22 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <Users className="w-5 h-5 text-white" />
               </div>
-              Related Information
+              {t('payments.modals.paymentForm.relatedInfo')}
               <span className="text-sm text-gray-500 dark:text-gray-400 font-normal ml-auto">
-                Optional
+                {t('payments.modals.paymentForm.optional')}
               </span>
             </h3>
 
             <div className="grid grid-cols-1 gap-4">
               <Select
-                label="Client"
+                label={t('payments.form.client')}
                 name="client"
                 value={formData.client}
                 onChange={handleClientChange}
                 disabled={loadingOptions}
                 className="w-full"
               >
-                <option value="">Select a client</option>
+                <option value="">{t('payments.form.selectClient')}</option>
                 {clients.map((client) => (
                   <option
                     key={client._id || client.id}
@@ -669,14 +671,14 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               </Select>
 
               <Select
-                label="Related Event"
+                label={t('payments.form.event')}
                 name="event"
                 value={formData.event}
                 onChange={handleEventChange}
                 disabled={loadingOptions}
                 className="w-full"
               >
-                <option value="">Select an event</option>
+                <option value="">{t('payments.form.selectEvent')}</option>
                 {filteredEvents.map((event) => (
                   <option
                     key={event._id || event.id}
@@ -697,15 +699,15 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <Calendar className="w-5 h-5 text-white" />
               </div>
-              Payment Dates
+              {t('payments.modals.paymentForm.dates')}
               <span className="text-sm text-gray-500 dark:text-gray-400 font-normal ml-auto">
-                Optional
+                {t('payments.modals.paymentForm.optional')}
               </span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Due Date"
+                label={t('payments.form.dueDate')}
                 name="dueDate"
                 type="date"
                 value={formData.dueDate}
@@ -714,7 +716,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               />
 
               <Input
-                label="Paid Date"
+                label={t('payments.form.paidDate')}
                 name="paidDate"
                 type="date"
                 value={formData.paidDate}
@@ -733,15 +735,15 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <FileText className="w-5 h-5 text-white" />
               </div>
-              Fees & Review
+              {t('payments.modals.paymentForm.feesReview')}
               <span className="text-sm text-gray-500 dark:text-gray-400 font-normal ml-auto">
-                Optional
+                {t('payments.modals.paymentForm.optional')}
               </span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
-                label="Processing Fee"
+                label={t('payments.form.fees.processingFee')}
                 name="fees.processingFee"
                 type="number"
                 step="0.01"
@@ -753,7 +755,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               />
 
               <Input
-                label="Platform Fee"
+                label={t('payments.form.fees.platformFee')}
                 name="fees.platformFee"
                 type="number"
                 step="0.01"
@@ -765,7 +767,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               />
 
               <Input
-                label="Other Fees"
+                label={t('payments.form.fees.otherFees')}
                 name="fees.otherFees"
                 type="number"
                 step="0.01"
@@ -787,12 +789,12 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             {formData.amount && (
               <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-3">
-                  Payment Summary
+                  {t('payments.form.summary')}
                 </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Amount:
+                      {t('payments.form.amount')}:
                     </span>
                     <span className="font-medium">
                       {formatCurrency(parseFloat(formData.amount) || 0)}
@@ -800,7 +802,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Processing Fee:
+                      {t('payments.form.fees.processingFee')}:
                     </span>
                     <span className="text-red-600 dark:text-red-400">
                       -
@@ -811,7 +813,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Platform Fee:
+                      {t('payments.form.fees.platformFee')}:
                     </span>
                     <span className="text-red-600 dark:text-red-400">
                       -
@@ -822,7 +824,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Other Fees:
+                      {t('payments.form.fees.otherFees')}:
                     </span>
                     <span className="text-red-600 dark:text-red-400">
                       -
@@ -832,7 +834,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                   <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
                     <div className="flex justify-between font-semibold">
                       <span className="text-blue-900 dark:text-blue-300">
-                        Net Amount:
+                        {t('payments.form.netAmount')}:
                       </span>
                       <span className="text-blue-600 dark:text-blue-400">
                         {formatCurrency(calculateNetAmount())}
@@ -882,7 +884,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                 disabled={saving}
               >
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                Previous
+                {t('common.previous')}
               </Button>
             )}
           </div>
@@ -895,7 +897,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               disabled={saving}
             >
               <X className="w-4 h-4 mr-2" />
-              Cancel
+              {t('common.cancel')}
             </Button>
 
             {/* Quick Update button - only show in edit mode and not on last step */}
@@ -909,7 +911,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                 className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
               >
                 <Save className="w-4 h-4 mr-2" />
-                Update Now
+                {t('payments.form.updateNow')}
               </Button>
             )}
 
@@ -920,7 +922,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                 onClick={handleNext}
                 disabled={saving}
               >
-                Next
+                {t('common.next')}
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
@@ -931,7 +933,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                 disabled={saving}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isEditMode ? "Update Payment" : "Create Payment"}
+                {isEditMode ? t('payments.form.update') : t('payments.form.create')}
               </Button>
             )}
           </div>

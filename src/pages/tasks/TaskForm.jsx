@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { 
   Save,
@@ -30,6 +31,7 @@ import Badge from '../../components/common/Badge';
 const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // Determine if we're in edit mode
   const isEditMode = Boolean(id || taskProp?._id || taskProp?.id);
@@ -106,57 +108,57 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
   // Constants
   const TASK_PRIORITIES = [
-    { value: 'low', label: 'Low', color: 'gray' },
-    { value: 'medium', label: 'Medium', color: 'blue' },
-    { value: 'high', label: 'High', color: 'orange' },
-    { value: 'urgent', label: 'Urgent', color: 'red' }
+    { value: 'low', label: t('tasks.priority.low'), color: 'gray' },
+    { value: 'medium', label: t('tasks.priority.medium'), color: 'blue' },
+    { value: 'high', label: t('tasks.priority.high'), color: 'orange' },
+    { value: 'urgent', label: t('tasks.priority.urgent'), color: 'red' }
   ];
 
   const TASK_STATUSES = [
-    { value: 'pending', label: 'Pending', color: 'yellow' },
-    { value: 'todo', label: 'To Do', color: 'blue' },
-    { value: 'in_progress', label: 'In Progress', color: 'purple' },
-    { value: 'blocked', label: 'Blocked', color: 'red' },
-    { value: 'completed', label: 'Completed', color: 'green' },
-    { value: 'cancelled', label: 'Cancelled', color: 'gray' }
+    { value: 'pending', label: t('tasks.status.pending'), color: 'yellow' },
+    { value: 'todo', label: t('tasks.status.todo'), color: 'blue' },
+    { value: 'in_progress', label: t('tasks.status.in_progress'), color: 'purple' },
+    { value: 'blocked', label: t('tasks.status.blocked'), color: 'red' },
+    { value: 'completed', label: t('tasks.status.completed'), color: 'green' },
+    { value: 'cancelled', label: t('tasks.status.cancelled'), color: 'gray' }
   ];
 
   const TASK_CATEGORIES = [
-    { value: 'event_preparation', label: 'Event Preparation' },
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'client_followup', label: 'Client Follow-up' },
-    { value: 'partner_coordination', label: 'Partner Coordination' },
-    { value: 'administrative', label: 'Administrative' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'setup', label: 'Setup' },
-    { value: 'cleanup', label: 'Cleanup' },
-    { value: 'other', label: 'Other' }
+    { value: 'event_preparation', label: t('tasks.category.event_preparation') },
+    { value: 'marketing', label: t('tasks.category.marketing') },
+    { value: 'maintenance', label: t('tasks.category.maintenance') },
+    { value: 'client_followup', label: t('tasks.category.client_followup') },
+    { value: 'partner_coordination', label: t('tasks.category.partner_coordination') },
+    { value: 'administrative', label: t('tasks.category.administrative') },
+    { value: 'finance', label: t('tasks.category.finance') },
+    { value: 'setup', label: t('tasks.category.setup') },
+    { value: 'cleanup', label: t('tasks.category.cleanup') },
+    { value: 'other', label: t('tasks.category.other') }
   ];
 
   // Step configuration
   const steps = [
     {
       number: 1,
-      title: "Basic Info",
+      title: t('tasks.form.steps.basicInfo'),
       icon: ClipboardList,
       color: "orange",
     },
     {
       number: 2,
-      title: "Scheduling",
+      title: t('tasks.form.steps.scheduling'),
       icon: Calendar,
       color: "orange",
     },
     {
       number: 3,
-      title: "Assignment",
+      title: t('tasks.form.steps.assignment'),
       icon: User,
       color: "orange",
     },
     {
       number: 4,
-      title: "Details",
+      title: t('tasks.form.steps.details'),
       icon: CheckSquare,
       color: "orange",
     },
@@ -201,12 +203,12 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       setFilteredEvents(clientEvents);
     } catch (error) {
       console.error('Error fetching client events:', error);
-      toast.error('Failed to load client events');
+      toast.error(t('tasks.messages.error.loadEvents'));
       setFilteredEvents(events);
     } finally {
       setFetchLoading(false);
     }
-  }, [events]);
+  }, [events, t]);
 
   // Set client when event is selected
   const setClientFromEvent = useCallback((eventId) => {
@@ -234,14 +236,14 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       loadTaskData(taskData);
     } catch (error) {
       console.error('Error fetching task:', error);
-      toast.error(error.message || 'Failed to load task');
+      toast.error(error.message || t('tasks.messages.error.load'));
       if (!isModalMode) {
         navigate('/tasks');
       }
     } finally {
       setFetchLoading(false);
     }
-  }, [taskId, isEditMode, taskProp, loadTaskData, isModalMode, navigate]);
+  }, [taskId, isEditMode, taskProp, loadTaskData, isModalMode, navigate, t]);
 
   // Fetch related data
   const fetchRelatedData = useCallback(async () => {
@@ -267,11 +269,11 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       setPartners(partnersData);
     } catch (error) {
       console.error('Error fetching related data:', error);
-      toast.error('Failed to load form data');
+      toast.error(t('tasks.messages.error.loadFormData'));
     } finally {
       setFetchLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Effects
   useEffect(() => {
@@ -376,32 +378,32 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
     if (step === 1) {
       if (!formData.title.trim()) {
-        newErrors.title = 'Task title is required';
+        newErrors.title = t('tasks.form.validation.titleRequired');
       }
       if (!formData.category) {
-        newErrors.category = 'Category is required';
+        newErrors.category = t('tasks.form.validation.categoryRequired');
       }
     }
 
     if (step === 2) {
       if (!formData.dueDate) {
-        newErrors.dueDate = 'Due date is required';
+        newErrors.dueDate = t('tasks.form.validation.dueDateRequired');
       }
 
       if (formData.startDate && formData.dueDate) {
         if (new Date(formData.startDate) > new Date(formData.dueDate)) {
-          newErrors.startDate = 'Start date must be before due date';
+          newErrors.startDate = t('tasks.form.validation.startDateBeforeDue');
         }
       }
 
       if (formData.reminderDate && formData.dueDate) {
         if (new Date(formData.reminderDate) > new Date(formData.dueDate)) {
-          newErrors.reminderDate = 'Reminder date must be before due date';
+          newErrors.reminderDate = t('tasks.form.validation.reminderBeforeDue');
         }
       }
 
       if (formData.estimatedHours && (formData.estimatedHours < 0 || formData.estimatedHours > 1000)) {
-        newErrors.estimatedHours = 'Estimated hours must be between 0 and 1000';
+        newErrors.estimatedHours = t('tasks.form.validation.estimatedHoursRange');
       }
     }
 
@@ -423,15 +425,15 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
     // Step 1 validations
     if (!formData.title.trim()) {
-      newErrors.title = 'Task title is required';
+      newErrors.title = t('tasks.form.validation.titleRequired');
     }
     if (!formData.category) {
-      newErrors.category = 'Category is required';
+      newErrors.category = t('tasks.form.validation.categoryRequired');
     }
 
     // Step 2 validations
     if (!formData.dueDate) {
-      newErrors.dueDate = 'Due date is required';
+      newErrors.dueDate = t('tasks.form.validation.dueDateRequired');
     }
 
     setErrors(newErrors);
@@ -445,7 +447,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     } else {
-      toast.error('Please fix the errors before proceeding');
+      toast.error(t('tasks.form.validation.fixErrors'));
     }
   };
 
@@ -480,7 +482,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     e.stopPropagation();
 
     if (!validateAllRequired()) {
-      toast.error('Please fix all required fields before updating');
+      toast.error(t('tasks.form.validation.fixAllErrors'));
       setCurrentStep(1);
       return;
     }
@@ -495,7 +497,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     // For create mode on non-final steps, validate current step only
     if (!isEditMode && currentStep < totalSteps) {
       if (!validateStep(currentStep)) {
-        toast.error('Please fix the errors in the form');
+        toast.error(t('tasks.form.validation.fixErrors'));
         return;
       }
       handleNext(e);
@@ -504,7 +506,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
     // For final step or edit mode, validate all
     if (!validateAllRequired()) {
-      toast.error('Please fix all required fields');
+      toast.error(t('tasks.form.validation.fixAllErrors'));
       return;
     }
 
@@ -535,10 +537,10 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
       if (isEditMode) {
         await taskService.update(taskId, submitData);
-        toast.success('Task updated successfully');
+        toast.success(t('tasks.messages.success.updated'));
       } else {
         await taskService.create(submitData);
-        toast.success('Task created successfully');
+        toast.success(t('tasks.messages.success.created'));
       }
 
       // Handle success based on mode
@@ -554,9 +556,9 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
         if (error.errors) {
           setErrors(error.errors);
         }
-        toast.error(error.message || 'Please fix the validation errors');
+        toast.error(error.message || t('tasks.form.validation.fixValidationErrors'));
       } else {
-        const errorMessage = error.message || `Failed to ${isEditMode ? 'update' : 'create'} task`;
+        const errorMessage = error.message || t(isEditMode ? 'tasks.messages.error.update' : 'tasks.messages.error.create');
         toast.error(errorMessage);
       }
     } finally {
@@ -619,7 +621,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                     {step.title}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Step {step.number} of {totalSteps}
+                    {t('tasks.form.step')} {step.number} {t('tasks.form.of')} {totalSteps}
                   </div>
                 </div>
               </button>
@@ -651,34 +653,34 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <ClipboardList className="w-5 h-5 text-white" />
               </div>
-              Basic Information
+              {t('tasks.form.steps.basicInfo')}
             </h3>
 
             <Input
-              label="Task Title"
+              label={t('tasks.form.fields.title')}
               name="title"
               value={formData.title}
               onChange={handleChange}
               error={errors.title}
               required
-              placeholder="Enter a clear, descriptive task title"
+              placeholder={t('tasks.form.fields.titlePlaceholder')}
               className="w-full"
             />
 
             <Textarea
-              label="Description"
+              label={t('tasks.form.fields.description')}
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows={4}
-              placeholder="Provide detailed information about the task, requirements, or instructions..."
+              placeholder={t('tasks.form.fields.descriptionPlaceholder')}
               error={errors.description}
               className="w-full dark:bg-gray-800"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Select
-                label="Priority"
+                label={t('tasks.form.fields.priority')}
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
@@ -687,7 +689,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               />
 
               <Select
-                label="Status"
+                label={t('tasks.form.fields.status')}
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
@@ -696,7 +698,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               />
 
               <Select
-                label="Category"
+                label={t('tasks.form.fields.category')}
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
@@ -716,13 +718,13 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <Calendar className="w-5 h-5 text-white" />
               </div>
-              Scheduling & Time Tracking
+              {t('tasks.form.steps.scheduling')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
                 type="date"
-                label="Start Date"
+                label={t('tasks.form.fields.startDate')}
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
@@ -732,7 +734,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
               <Input
                 type="date"
-                label="Due Date"
+                label={t('tasks.form.fields.dueDate')}
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
@@ -743,7 +745,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
               <Input
                 type="date"
-                label="Reminder Date"
+                label={t('tasks.form.fields.reminderDate')}
                 name="reminderDate"
                 value={formData.reminderDate}
                 onChange={handleChange}
@@ -755,7 +757,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 type="number"
-                label="Estimated Hours"
+                label={t('tasks.form.fields.estimatedHours')}
                 name="estimatedHours"
                 value={formData.estimatedHours}
                 onChange={handleChange}
@@ -763,13 +765,13 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 min="0"
                 max="1000"
                 step="0.5"
-                placeholder="0.0"
+                placeholder={t('tasks.form.fields.estimatedHoursPlaceholder')}
                 className="w-full"
               />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Progress (%)
+                  {t('tasks.form.fields.progress')} (%)
                 </label>
                 <input
                   type="range"
@@ -797,16 +799,16 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <User className="w-5 h-5 text-white" />
               </div>
-              Assignment & Collaboration
+              {t('tasks.form.steps.assignment')}
             </h3>
 
             <Select
-              label="Assign To"
+              label={t('tasks.form.fields.assignedTo')}
               name="assignedTo"
               value={formData.assignedTo}
               onChange={handleChange}
               options={[
-                { value: '', label: 'Unassigned' },
+                { value: '', label: t('tasks.form.fields.unassigned') },
                 ...teamMembers.map(member => ({
                   value: member._id,
                   label: member.name || member.email,
@@ -818,7 +820,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Watchers
+                {t('tasks.form.fields.watchers')}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {teamMembers.map(member => (
@@ -839,12 +841,12 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Select
-                label="Related Client"
+                label={t('tasks.form.fields.relatedClient')}
                 name="relatedClient"
                 value={formData.relatedClient}
                 onChange={handleClientChange}
                 options={[
-                  { value: '', label: 'No client' },
+                  { value: '', label: t('tasks.form.fields.noClient') },
                   ...clients.map(client => ({
                     value: client._id,
                     label: client.name,
@@ -855,12 +857,12 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               />
 
               <Select
-                label="Related Event"
+                label={t('tasks.form.fields.relatedEvent')}
                 name="relatedEvent"
                 value={formData.relatedEvent}
                 onChange={handleEventChange}
                 options={[
-                  { value: '', label: 'No event' },
+                  { value: '', label: t('tasks.form.fields.noEvent') },
                   ...filteredEvents.map(event => ({
                     value: event._id,
                     label: event.title,
@@ -871,12 +873,12 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               />
 
               <Select
-                label="Related Partner"
+                label={t('tasks.form.fields.relatedPartner')}
                 name="relatedPartner"
                 value={formData.relatedPartner}
                 onChange={handleChange}
                 options={[
-                  { value: '', label: 'No partner' },
+                  { value: '', label: t('tasks.form.fields.noPartner') },
                   ...partners.map(partner => ({
                     value: partner._id,
                     label: partner.name,
@@ -896,13 +898,13 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <CheckSquare className="w-5 h-5 text-white" />
               </div>
-              Additional Details
+              {t('tasks.form.steps.details')}
             </h3>
 
             {/* Tags */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tags
+                {t('tasks.form.fields.tags')}
               </label>
               <div className="flex gap-2 mb-2">
                 <input
@@ -910,11 +912,11 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                  placeholder="Add tag and press Enter"
+                  placeholder={t('tasks.form.fields.tagPlaceholder')}
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
                 />
                 <Button type="button" variant="outline" onClick={handleAddTag}>
-                  Add
+                  {t('tasks.form.buttons.add')}
                 </Button>
               </div>
 
@@ -936,25 +938,25 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
             {/* Subtasks */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Subtasks
+                {t('tasks.form.fields.subtasks')}
               </label>
               <div className="space-y-2 mb-3">
                 <Input
-                  label="Subtask Title"
+                  label={t('tasks.form.fields.subtaskTitle')}
                   value={newSubtask.title}
                   onChange={(e) => setNewSubtask(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter subtask title"
+                  placeholder={t('tasks.form.fields.subtaskTitlePlaceholder')}
                   className="w-full"
                 />
                 <Input
-                  label="Subtask Description (optional)"
+                  label={t('tasks.form.fields.subtaskDescription')}
                   value={newSubtask.description}
                   onChange={(e) => setNewSubtask(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brief description"
+                  placeholder={t('tasks.form.fields.subtaskDescPlaceholder')}
                   className="w-full"
                 />
                 <Button type="button" variant="outline" icon={Plus} onClick={handleAddSubtask}>
-                  Add Subtask
+                  {t('tasks.form.buttons.addSubtask')}
                 </Button>
               </div>
 
@@ -993,7 +995,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400 font-medium mt-4">Loading task form...</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium mt-4">{t('tasks.form.loading')}</p>
         </div>
       </div>
     );
@@ -1006,10 +1008,10 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {isEditMode ? 'Edit Task' : 'Create New Task'}
+              {isEditMode ? t('tasks.form.editTitle') : t('tasks.form.createTitle')}
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              {isEditMode ? 'Update task details' : 'Fill in the details to create a new task'}
+              {isEditMode ? t('tasks.form.editDescription') : t('tasks.form.createDescription')}
             </p>
           </div>
         </div>
@@ -1037,7 +1039,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 disabled={loading}
               >
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                Previous
+                {t('tasks.form.buttons.previous')}
               </Button>
             )}
           </div>
@@ -1050,7 +1052,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               disabled={loading}
             >
               <X className="w-4 h-4 mr-2" />
-              Cancel
+              {t('tasks.form.buttons.cancel')}
             </Button>
 
             {/* Quick Update button - only show in edit mode and not on last step */}
@@ -1064,7 +1066,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
               >
                 <Save className="w-4 h-4 mr-2" />
-                Update Now
+                {t('tasks.form.buttons.updateNow')}
               </Button>
             )}
 
@@ -1075,7 +1077,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 onClick={handleNext}
                 disabled={loading}
               >
-                Next
+                {t('tasks.form.buttons.next')}
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
@@ -1086,7 +1088,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 disabled={loading}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isEditMode ? 'Update Task' : 'Create Task'}
+                {isEditMode ? t('tasks.form.buttons.update') : t('tasks.form.buttons.create')}
               </Button>
             )}
           </div>

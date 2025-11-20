@@ -1,6 +1,7 @@
 // TaskDetail.jsx
 import { useCallback, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../../hooks/useToast";
 
 // Components
@@ -21,6 +22,7 @@ import { useTaskDetail } from "../../hooks/useTaskDetail";
 const TaskDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo, promise } = useToast();
 
   // Use custom hook for task data
@@ -68,16 +70,8 @@ const TaskDetail = () => {
   }, []);
 
   const getStatusLabel = useCallback((status) => {
-    const labels = {
-      todo: "To Do",
-      "in_progress": "In Progress",
-      completed: "Completed",
-      cancelled: "Cancelled",
-      blocked: "Blocked",
-      archived: "Archived",
-    };
-    return labels[status] || status || "Unknown";
-  }, []);
+    return t(`tasks.detail.status.${status}`) || status || t('tasks.detail.status.unknown');
+  }, [t]);
 
   const getStatusColor = useCallback((status) => {
     const colors = {
@@ -120,21 +114,21 @@ const TaskDetail = () => {
   // Event handlers
   const handleEditTask = useCallback(() => {
     if (!id) {
-      showError("Cannot edit task: Task ID not found");
+      showError(t('tasks.detail.errors.edit'));
       return;
     }
     setIsEditModalOpen(true);
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
     await refreshData();
-    showSuccess("Task updated successfully");
-  }, [refreshData, showSuccess]);
+    showSuccess(t('tasks.detail.toasts.edit.success'));
+  }, [refreshData, showSuccess, t]);
 
   const handleDeleteTask = useCallback(async () => {
     if (!id) {
-      showError("Cannot delete task: Task ID not found");
+      showError(t('tasks.detail.errors.delete'));
       return;
     }
 
@@ -143,9 +137,9 @@ const TaskDetail = () => {
       await promise(
         taskService.delete(id),
         {
-          loading: "Deleting task...",
-          success: "Task deleted successfully",
-          error: "Failed to delete task"
+          loading: t('tasks.detail.toasts.delete.loading'),
+          success: t('tasks.detail.toasts.delete.success'),
+          error: t('tasks.detail.toasts.delete.error')
         }
       );
       setIsDeleteModalOpen(false);
@@ -156,11 +150,11 @@ const TaskDetail = () => {
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError]);
+  }, [id, navigate, promise, showError, t]);
 
   const handleStatusChange = useCallback(async (newStatus) => {
     if (!id) {
-      showError("Cannot update task status: Task ID not found");
+      showError(t('tasks.detail.errors.status'));
       return;
     }
 
@@ -169,9 +163,9 @@ const TaskDetail = () => {
       await promise(
         taskService.updateStatus(id, newStatus),
         {
-          loading: "Updating task status...",
-          success: `Status updated to ${newStatus.replace('_', ' ')}`,
-          error: "Failed to update task status"
+          loading: t('tasks.detail.toasts.status.loading'),
+          success: t('tasks.detail.toasts.status.success', { status: newStatus.replace('_', ' ') }),
+          error: t('tasks.detail.toasts.status.error')
         }
       );
       await refreshData();
@@ -181,11 +175,11 @@ const TaskDetail = () => {
     } finally {
       setActionLoading(false);
     }
-  }, [id, refreshData, promise, showError]);
+  }, [id, refreshData, promise, showError, t]);
 
   const handleComplete = useCallback(async () => {
     if (!id) {
-      showError("Cannot complete task: Task ID not found");
+      showError(t('tasks.detail.errors.complete'));
       return;
     }
 
@@ -194,9 +188,9 @@ const TaskDetail = () => {
       await promise(
         taskService.complete(id),
         {
-          loading: "Completing task...",
-          success: "Task marked as completed",
-          error: "Failed to complete task"
+          loading: t('tasks.detail.toasts.complete.loading'),
+          success: t('tasks.detail.toasts.complete.success'),
+          error: t('tasks.detail.toasts.complete.error')
         }
       );
       await refreshData();
@@ -206,11 +200,11 @@ const TaskDetail = () => {
     } finally {
       setActionLoading(false);
     }
-  }, [id, refreshData, promise, showError]);
+  }, [id, refreshData, promise, showError, t]);
 
   const handleArchive = useCallback(async () => {
     if (!id) {
-      showError("Cannot archive task: Task ID not found");
+      showError(t('tasks.detail.errors.archive'));
       return;
     }
 
@@ -219,9 +213,9 @@ const TaskDetail = () => {
       await promise(
         taskService.archive(id),
         {
-          loading: "Archiving task...",
-          success: "Task archived successfully",
-          error: "Failed to archive task"
+          loading: t('tasks.detail.toasts.archive.loading'),
+          success: t('tasks.detail.toasts.archive.success'),
+          error: t('tasks.detail.toasts.archive.error')
         }
       );
       setIsDeleteModalOpen(false);
@@ -232,12 +226,12 @@ const TaskDetail = () => {
     } finally {
       setActionLoading(false);
     }
-  }, [id, navigate, promise, showError]);
+  }, [id, navigate, promise, showError, t]);
 
   const handleRetry = useCallback(() => {
     refreshData();
-    showInfo("Retrying to load task details...");
-  }, [refreshData, showInfo]);
+    showInfo(t('tasks.detail.toasts.retry'));
+  }, [refreshData, showInfo, t]);
 
   const isOverdue = useCallback((date, status) => {
     if (!date) return false;
@@ -251,7 +245,7 @@ const TaskDetail = () => {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading task details...
+            {t('tasks.detail.loading')}
           </p>
         </div>
       </div>
@@ -265,24 +259,24 @@ const TaskDetail = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!taskData ? "Task Not Found" : "Error Loading Task"}
+              {!taskData ? t('tasks.detail.notFound') : t('tasks.detail.errorLoading')}
             </h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || "The task you're looking for doesn't exist."}
+              {error?.message || t('tasks.detail.errorMessage')}
             </p>
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => navigate("/tasks")}
                 className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
               >
-                Back to Tasks
+                {t('tasks.detail.backToTasks')}
               </button>
               {error && (
                 <button
                   onClick={handleRetry}
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
                 >
-                  Try Again
+                  {t('tasks.detail.tryAgain')}
                 </button>
               )}
             </div>
@@ -296,6 +290,15 @@ const TaskDetail = () => {
   const completedSubtasks = taskData?.subtasks?.filter(st => st.completed).length || 0;
   const totalSubtasks = taskData?.subtasks?.length || 0;
   const progress = taskData?.progress || (totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0);
+
+  // Tabs configuration
+  const tabs = [
+    { id: "overview", label: t('tasks.detail.tabs.overview') },
+    { id: "subtasks", label: t('tasks.detail.tabs.subtasks') },
+    { id: "comments", label: t('tasks.detail.tabs.comments') },
+    { id: "attachments", label: t('tasks.detail.tabs.attachments') },
+    { id: "timeline", label: t('tasks.detail.tabs.timeline') },
+  ];
 
   // Main render
   return (
@@ -342,13 +345,7 @@ const TaskDetail = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
               <div className="border-b border-gray-200 dark:border-orange-800">
                 <nav className="flex -mb-px">
-                  {[
-                    { id: "overview", label: "Overview" },
-                    { id: "subtasks", label: "Subtasks" },
-                    { id: "comments", label: "Comments" },
-                    { id: "attachments", label: "Attachments" },
-                    { id: "timeline", label: "Timeline" },
-                  ].map((tab) => (
+                  {tabs.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
@@ -427,28 +424,29 @@ const TaskDetail = () => {
         </div>
       </div>
 
-<Modal
-  isOpen={isEditModalOpen}
-  onClose={() => setIsEditModalOpen(false)}
-  title="Edit Task"
-  size="lg"
->
-  <TaskForm
-    task={taskData}
-    onSuccess={handleEditSuccess}
-    onCancel={() => setIsEditModalOpen(false)}
-    isOpen={isEditModalOpen}
-    onClose={() => setIsEditModalOpen(false)}
-  />
-</Modal>
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title={t('tasks.detail.modals.edit.title')}
+        size="lg"
+      >
+        <TaskForm
+          task={taskData}
+          onSuccess={handleEditSuccess}
+          onCancel={() => setIsEditModalOpen(false)}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+        />
+      </Modal>
+
       <ConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteTask}
-        title="Delete Task"
-        message={`Are you sure you want to delete "${taskData?.title}"? This action cannot be undone and will remove all associated data.`}
-        confirmText="Delete Task"
-        cancelText="Cancel"
+        title={t('tasks.detail.modals.delete.title')}
+        message={t('tasks.detail.modals.delete.message', { title: taskData?.title })}
+        confirmText={t('tasks.detail.modals.delete.confirm')}
+        cancelText={t('tasks.detail.modals.delete.cancel')}
         variant="danger"
         loading={deleteLoading}
       />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -24,12 +25,12 @@ import {
   TrendingUp,
   TrendingDown,
   RotateCcw,
-  Download,
 } from "lucide-react";
 
 const PaymentDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { t } = useTranslation();
 
   // State
   const [payment, setPayment] = useState(null);
@@ -52,7 +53,7 @@ const PaymentDetail = () => {
       setPayment(response.payment || response);
     } catch (error) {
       console.error("Error fetching payment:", error);
-      toast.error(error.message || "Failed to load payment");
+      toast.error(error.message || t('payments.notifications.loadError'));
       navigate("/payments");
     } finally {
       setLoading(false);
@@ -66,23 +67,23 @@ const PaymentDetail = () => {
   const handleDelete = async () => {
     try {
       await paymentService.delete(id);
-      toast.success("Payment deleted successfully");
+      toast.success(t('payments.notifications.deleteSuccess'));
       navigate("/payments");
     } catch (error) {
       console.error("Error deleting payment:", error);
-      toast.error(error.message || "Failed to delete payment");
+      toast.error(error.message || t('payments.notifications.deleteError'));
     }
   };
 
   const handleRefund = async () => {
     try {
       if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
-        toast.error("Please enter a valid refund amount");
+        toast.error(t('payments.modals.refund.invalidAmount'));
         return;
       }
 
       if (parseFloat(refundData.amount) > payment.amount) {
-        toast.error("Refund amount cannot exceed payment amount");
+        toast.error(t('payments.modals.refund.amountExceeded'));
         return;
       }
 
@@ -91,35 +92,35 @@ const PaymentDetail = () => {
         refundReason: refundData.reason,
       });
 
-      toast.success("Payment refunded successfully");
+      toast.success(t('payments.notifications.refundSuccess'));
       setIsRefundModalOpen(false);
       setRefundData({ amount: "", reason: "" });
       fetchPayment(); // Refresh payment data
     } catch (error) {
       console.error("Error refunding payment:", error);
-      toast.error(error.message || "Failed to refund payment");
+      toast.error(error.message || t('payments.notifications.refundError'));
     }
   };
 
-const formatDate = (date) => {
-  if (!date) return '-';
-  const d = new Date(date);
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+  const formatDate = (date) => {
+    if (!date) return '-';
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
-const formatDateTime = (dateString) => {
-  if (!dateString) return "";
-  const d = new Date(dateString);
-  const day = d.getDate();
-  const month = d.toLocaleString("en-GB", { month: "short" });
-  const year = d.getFullYear();
-  const hours = d.getHours().toString().padStart(2, "0");
-  const minutes = d.getMinutes().toString().padStart(2, "0");
-  return `${day} ${month} ${year}, ${hours}:${minutes}`;
-};
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const day = d.getDate();
+    const month = d.toLocaleString("en-GB", { month: "short" });
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    return `${day} ${month} ${year}, ${hours}:${minutes}`;
+  };
 
   const getStatusVariant = (status) => {
     const statusLower = (status || "").toLowerCase();
@@ -166,7 +167,7 @@ const formatDateTime = (dateString) => {
   if (!payment) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600 dark:text-gray-400">Payment not found</p>
+        <p className="text-gray-600 dark:text-gray-400">{t('payments.notFound')}</p>
       </div>
     );
   }
@@ -182,16 +183,17 @@ const formatDateTime = (dateString) => {
           <button
             onClick={() => navigate("/payments")}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            title={t('common.back')}
           >
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <DollarSign className="w-8 h-8" />
-              Payment Details
+              {t('payments.detail.title')}
             </h1>
             <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-              {payment.reference || `Payment #${id.slice(-8)}`}
+              {payment.reference || `${t('payments.payment')} #${id.slice(-8)}`}
             </p>
           </div>
         </div>
@@ -205,7 +207,7 @@ const formatDateTime = (dateString) => {
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                Payment Overview
+                {t('payments.detail.overview')}
               </h3>
 
               <div className="space-y-6">
@@ -229,17 +231,19 @@ const formatDateTime = (dateString) => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Payment Type
+                        {t('payments.form.type')}
                       </p>
                       <p className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                        {payment.type}
+                        {t(`payments.types.${payment.type}`)}
                       </p>
                     </div>
                   </div>
                   <Badge variant={getStatusVariant(payment.status)}>
                     <div className="flex items-center gap-1">
                       <StatusIcon className="w-3 h-3" />
-                      <span className="capitalize">{payment.status}</span>
+                      <span className="capitalize">
+                        {t(`payments.statuses.${payment.status}`)}
+                      </span>
                     </div>
                   </Badge>
                 </div>
@@ -247,7 +251,7 @@ const formatDateTime = (dateString) => {
                 {/* Amount */}
                 <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Total Amount
+                    {t('payments.totalAmount')}
                   </p>
                   <p
                     className={`text-4xl font-bold ${
@@ -265,7 +269,7 @@ const formatDateTime = (dateString) => {
                 {payment.description && (
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      Description
+                      {t('payments.form.description')}
                     </p>
                     <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
                       {payment.description}
@@ -277,19 +281,19 @@ const formatDateTime = (dateString) => {
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Payment Method
+                      {t('payments.detail.paymentMethod')}
                     </p>
                     <div className="flex items-center gap-2">
                       <CreditCard className="w-4 h-4 text-gray-400" />
                       <p className="text-gray-900 dark:text-white font-medium capitalize">
-                        {(payment.method || "N/A").replace(/_/g, " ")}
+                        {t(`payments.methods.${payment.method}`) || "N/A"}
                       </p>
                     </div>
                   </div>
 
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Reference Number
+                      {t('payments.form.reference')}
                     </p>
                     <p className="text-gray-900 dark:text-white font-medium">
                       {payment.reference || "—"}
@@ -299,7 +303,7 @@ const formatDateTime = (dateString) => {
                   {payment.dueDate && (
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Due Date
+                        {t('payments.form.dueDate')}
                       </p>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
@@ -313,7 +317,7 @@ const formatDateTime = (dateString) => {
                   {payment.paidDate && (
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Paid Date
+                        {t('payments.form.paidDate')}
                       </p>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
@@ -335,13 +339,13 @@ const formatDateTime = (dateString) => {
             <div>
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Fees & Charges
+                  {t('payments.feesCharges')}
                 </h3>
                 <div className="space-y-3">
                   {payment.fees.processingFee > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
-                        Processing Fee
+                        {t('payments.form.fees.processingFee')}
                       </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {formatCurrency(payment.fees.processingFee)}
@@ -351,7 +355,7 @@ const formatDateTime = (dateString) => {
                   {payment.fees.platformFee > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
-                        Platform Fee
+                        {t('payments.form.fees.platformFee')}
                       </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {formatCurrency(payment.fees.platformFee)}
@@ -361,7 +365,7 @@ const formatDateTime = (dateString) => {
                   {payment.fees.otherFees > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
-                        Other Fees
+                        {t('payments.form.fees.otherFees')}
                       </span>
                       <span className="text-gray-900 dark:text-white font-medium">
                         {formatCurrency(payment.fees.otherFees)}
@@ -371,7 +375,7 @@ const formatDateTime = (dateString) => {
                   <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-900 dark:text-white font-semibold">
-                        Net Amount
+                        {t('payments.form.netAmount')}
                       </span>
                       <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                         {formatCurrency(payment.netAmount)}
@@ -389,12 +393,12 @@ const formatDateTime = (dateString) => {
               <div className="p-6 bg-orange-50 dark:bg-orange-900/20">
                 <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-300 mb-4 flex items-center gap-2">
                   <AlertCircle className="w-5 h-5" />
-                  Refund Information
+                  {t('payments.refundInformation')}
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-700 dark:text-gray-300">
-                      Refund Amount
+                      {t('payments.detail.refundAmount')}
                     </span>
                     <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
                       {formatCurrency(payment.refundAmount)}
@@ -403,7 +407,7 @@ const formatDateTime = (dateString) => {
                   {payment.refundDate && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700 dark:text-gray-300">
-                        Refund Date
+                        {t('payments.refundDate')}
                       </span>
                       <span className="text-gray-900 dark:text-white">
                         {formatDate(payment.refundDate)}
@@ -413,7 +417,7 @@ const formatDateTime = (dateString) => {
                   {payment.refundReason && (
                     <div className="pt-3 border-t border-orange-200 dark:border-orange-800">
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                        Reason
+                        {t('payments.detail.refundReason')}
                       </p>
                       <p className="text-gray-900 dark:text-white">
                         {payment.refundReason}
@@ -431,13 +435,13 @@ const formatDateTime = (dateString) => {
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  Related Information
+                  {t('payments.detail.relatedInformation')}
                 </h3>
                 <div className="space-y-4">
                   {payment.event && (
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Event
+                        {t('payments.form.event')}
                       </p>
                       <button
                         onClick={() =>
@@ -447,14 +451,14 @@ const formatDateTime = (dateString) => {
                         }
                         className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                       >
-                        {payment.event.title || "View Event"}
+                        {payment.event.title || t('payments.viewEvent')}
                       </button>
                     </div>
                   )}
                   {payment.client && (
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Client
+                        {t('payments.form.client')}
                       </p>
                       <button
                         onClick={() =>
@@ -464,7 +468,7 @@ const formatDateTime = (dateString) => {
                         }
                         className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                       >
-                        {payment.client.name || "View Client"}
+                        {payment.client.name || t('payments.viewClient')}
                       </button>
                     </div>
                   )}
@@ -480,7 +484,7 @@ const formatDateTime = (dateString) => {
           <div>
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Quick Actions
+                {t('payments.quickActions')}
               </h3>
               <div className="space-y-2">
                 <Button
@@ -489,7 +493,7 @@ const formatDateTime = (dateString) => {
                   icon={Edit}
                   onClick={handleEdit}
                 >
-                  Edit Payment
+                  {t('payments.editPayment')}
                 </Button>
                 {payment.type === "income" &&
                   ["completed", "paid"].includes(
@@ -508,7 +512,7 @@ const formatDateTime = (dateString) => {
                         setIsRefundModalOpen(true);
                       }}
                     >
-                      Process Refund
+                      {t('payments.processRefund')}
                     </Button>
                   )}
                 <Button
@@ -517,7 +521,7 @@ const formatDateTime = (dateString) => {
                   icon={Trash2}
                   onClick={() => setIsDeleteModalOpen(true)}
                 >
-                  Delete Payment
+                  {t('payments.deletePayment')}
                 </Button>
               </div>
             </div>
@@ -527,18 +531,20 @@ const formatDateTime = (dateString) => {
           <div>
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Metadata
+                {t('payments.detail.metadata')}
               </h3>
               <div className="space-y-3 text-sm">
                 <div>
-                  <p className="text-gray-600 dark:text-gray-400">Created</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t('payments.detail.created')}
+                  </p>
                   <p className="text-gray-900 dark:text-white">
                     {formatDateTime(payment.createdAt)}
                   </p>
                 </div>
                 <div>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Last Updated
+                    {t('payments.detail.lastUpdated')}
                   </p>
                   <p className="text-gray-900 dark:text-white">
                     {formatDateTime(payment.updatedAt)}
@@ -547,10 +553,10 @@ const formatDateTime = (dateString) => {
                 {payment.processedBy && (
                   <div>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Processed By
+                      {t('payments.detail.processedBy')}
                     </p>
                     <p className="text-gray-900 dark:text-white">
-                      {payment.processedBy.name || "System"}
+                      {payment.processedBy.name || t('payments.system')}
                     </p>
                   </div>
                 )}
@@ -567,13 +573,13 @@ const formatDateTime = (dateString) => {
           setIsRefundModalOpen(false);
           setRefundData({ amount: "", reason: "" });
         }}
-        title="Process Refund"
+        title={t('payments.modals.refund.title')}
         size="sm"
       >
         <div className="p-6">
           <div className="space-y-4 mb-6">
             <Input
-              label="Refund Amount"
+              label={t('payments.modals.refund.amount')}
               type="number"
               value={refundData.amount}
               onChange={(e) =>
@@ -586,18 +592,18 @@ const formatDateTime = (dateString) => {
               icon={DollarSign}
             />
             <Input
-              label="Reason for Refund"
+              label={t('payments.modals.refund.reason')}
               value={refundData.reason}
               onChange={(e) =>
                 setRefundData((prev) => ({ ...prev, reason: e.target.value }))
               }
-              placeholder="Enter refund reason (optional)"
+              placeholder={t('payments.modals.refund.reasonPlaceholder')}
             />
             <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                This will refund{" "}
-                {formatCurrency(parseFloat(refundData.amount) || 0)} to the
-                client. This action cannot be undone.
+                {t('payments.refundWarning', { 
+                  amount: formatCurrency(parseFloat(refundData.amount) || 0)
+                })}
               </p>
             </div>
           </div>
@@ -609,10 +615,10 @@ const formatDateTime = (dateString) => {
                 setRefundData({ amount: "", reason: "" });
               }}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleRefund}>
-              Confirm Refund
+              {t('payments.modals.refund.confirm')}
             </Button>
           </div>
         </div>
@@ -622,23 +628,22 @@ const formatDateTime = (dateString) => {
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Payment"
+        title={t('payments.modals.delete.title')}
         size="sm"
       >
         <div className="p-6">
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this payment? This action cannot be
-            undone.
+            {t('payments.deleteConfirmation')}
           </p>
           <div className="flex justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => setIsDeleteModalOpen(false)}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete Payment
+              {t('payments.modals.delete.confirm')}
             </Button>
           </div>
         </div>

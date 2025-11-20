@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { venueService, authService, venueSpacesService } from "../../api/index";
 import { useToast } from "../../context/ToastContext.jsx";
+import { useTranslation } from "react-i18next";
 import {
   Upload,
   Image as ImageIcon,
@@ -98,6 +99,7 @@ const Input = ({
     {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
   </div>
 );
+
 const Textarea = ({ label, error, className = "", ...props }) => (
   <div className="space-y-1">
     {label && (
@@ -392,6 +394,7 @@ const VenueSettings = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [spaceImages, setSpaceImages] = useState({});
   const toast = useToast();
+  const { t } = useTranslation();
 
   // User state
   const [user, setUser] = useState(null);
@@ -437,27 +440,16 @@ const VenueSettings = () => {
 
   const [errors, setErrors] = useState({});
 
-  // Add these new handler functions
-  const handleAddDefaultAmenity = (amenity) => {
-    if (!amenities.includes(amenity)) {
-      setAmenities((prev) => [...prev, amenity]);
-      toast.success(`Added ${amenity}`);
-    } else {
-      toast.info(`${amenity} is already added`);
-    }
-  };
+  // Tab definitions with translations
+  const tabs = [
+    { id: "personal", label: t('venueSettings.tabs.personal'), icon: User },
+    { id: "security", label: t('venueSettings.tabs.security'), icon: Lock },
+    { id: "venue", label: t('venueSettings.tabs.venue'), icon: Building2 },
+    { id: "amenities", label: t('venueSettings.tabs.amenities'), icon: Clock },
+    { id: "spaces", label: t('venueSettings.tabs.spaces'), icon: Grid3x3 },
+  ];
 
-  const handleAddCustomAmenity = () => {
-    if (newAmenity.trim() && !amenities.includes(newAmenity.trim())) {
-      setAmenities((prev) => [...prev, newAmenity.trim()]);
-      setNewAmenity("");
-      toast.success("Custom amenity added");
-    } else if (amenities.includes(newAmenity.trim())) {
-      toast.error("This amenity already exists");
-    }
-  };
-
-  // Fetch data - IMPROVED VERSION
+  // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -474,7 +466,7 @@ const VenueSettings = () => {
         console.log("✅ User response:", userResponse);
         console.log("✅ Venue response:", venueResponse);
 
-        // Handle user data - FIXED: Properly extract user data from API response
+        // Handle user data
         let userData = null;
         if (userResponse?.data?.user) {
           userData = userResponse.data.user;
@@ -495,7 +487,7 @@ const VenueSettings = () => {
           });
         }
 
-        // Handle venue data - FIXED: Properly extract venue data from API response
+        // Handle venue data
         let venueData = null;
         if (venueResponse?.data?.venue) {
           venueData = venueResponse.data.venue;
@@ -592,7 +584,7 @@ const VenueSettings = () => {
         }
       } catch (error) {
         console.error("❌ Error fetching data:", error);
-        const errorMessage = error.message || "Failed to load settings";
+        const errorMessage = error.message || t('venueSettings.notifications.error.loadFailed');
         setFetchError(errorMessage);
         toast.error(errorMessage);
       } finally {
@@ -601,16 +593,7 @@ const VenueSettings = () => {
     };
 
     fetchData();
-  }, []);
-
-  // Tab definitions
-  const tabs = [
-    { id: "personal", label: "Personal Info", icon: User },
-    { id: "security", label: "Security", icon: Lock },
-    { id: "venue", label: "Venue Details", icon: Building2 },
-    { id: "amenities", label: "Amenities & Hours", icon: Clock },
-    { id: "spaces", label: "Venue Spaces", icon: Grid3x3 },
-  ];
+  }, [t]);
 
   // Handlers
   const handleUserChange = (e) => {
@@ -645,12 +628,22 @@ const VenueSettings = () => {
     }
   };
 
-  const handleAddAmenity = () => {
+  const handleAddDefaultAmenity = (amenity) => {
+    if (!amenities.includes(amenity)) {
+      setAmenities((prev) => [...prev, amenity]);
+      toast.success(t('venueSettings.notifications.success.amenityAdded'));
+    } else {
+      toast.info(t('venueSettings.notifications.error.amenityExists'));
+    }
+  };
+
+  const handleAddCustomAmenity = () => {
     if (newAmenity.trim() && !amenities.includes(newAmenity.trim())) {
       setAmenities((prev) => [...prev, newAmenity.trim()]);
       setNewAmenity("");
+      toast.success(t('venueSettings.notifications.success.customAmenityAdded'));
     } else if (amenities.includes(newAmenity.trim())) {
-      toast.error("This amenity already exists");
+      toast.error(t('venueSettings.notifications.error.amenityExists'));
     }
   };
 
@@ -686,24 +679,22 @@ const VenueSettings = () => {
 
   const handleAddSpace = async () => {
     if (!spaceForm.name.trim()) {
-      toast.error("Space name is required");
+      toast.error(t('venueSettings.notifications.error.spaceNameRequired'));
       return;
     }
 
     if (!spaceForm.capacity.min || !spaceForm.capacity.max) {
-      toast.error("Capacity range is required");
+      toast.error(t('venueSettings.notifications.error.capacityRequired'));
       return;
     }
 
     if (Number(spaceForm.capacity.max) < Number(spaceForm.capacity.min)) {
-      toast.error(
-        "Maximum capacity must be greater than or equal to minimum capacity"
-      );
+      toast.error(t('venueSettings.validation.capacityRange'));
       return;
     }
 
     if (!spaceForm.basePrice) {
-      toast.error("Price is required");
+      toast.error(t('venueSettings.notifications.error.priceRequired'));
       return;
     }
 
@@ -725,11 +716,11 @@ const VenueSettings = () => {
       if (editingSpace) {
         // Update existing space
         response = await venueSpacesService.update(editingSpace._id, spaceData);
-        toast.success("Space updated successfully");
+        toast.success(t('venueSettings.notifications.success.spaceUpdated'));
       } else {
         // Create new space
         response = await venueSpacesService.create(spaceData);
-        toast.success("Space created successfully");
+        toast.success(t('venueSettings.notifications.success.spaceCreated'));
       }
 
       // Refresh spaces list
@@ -755,7 +746,7 @@ const VenueSettings = () => {
       setEditingSpace(null);
     } catch (error) {
       console.error("Error saving space:", error);
-      toast.error(error.message || "Failed to save space");
+      toast.error(error.message || t('venueSettings.notifications.error.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -776,14 +767,14 @@ const VenueSettings = () => {
   };
 
   const handleDeleteSpace = async (spaceId) => {
-    if (window.confirm("Are you sure you want to delete this space?")) {
+    if (window.confirm(t('venueSettings.notifications.confirm.deleteSpace'))) {
       try {
         await venueService.deleteVenueSpace(spaceId);
         setSpaces((prev) => prev.filter((s) => s._id !== spaceId));
-        toast.success("Space deleted successfully");
+        toast.success(t('venueSettings.notifications.success.spaceDeleted'));
       } catch (error) {
         console.error("Error deleting space:", error);
-        toast.error(error.message || "Failed to delete space");
+        toast.error(error.message || t('venueSettings.notifications.error.deleteFailed'));
       }
     }
   };
@@ -801,17 +792,17 @@ const VenueSettings = () => {
 
   const handleSavePersonal = async () => {
     if (!userForm.name.trim()) {
-      toast.error("Name is required");
+      toast.error(t('venueSettings.validation.required'));
       return;
     }
 
     setSaving(true);
     try {
       await authService.updateProfile(userForm);
-      toast.success("Profile updated successfully!");
+      toast.success(t('venueSettings.notifications.success.profileUpdated'));
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error(error.message || "Failed to update profile");
+      toast.error(error.message || t('venueSettings.notifications.error.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -819,17 +810,17 @@ const VenueSettings = () => {
 
   const handleChangePassword = async () => {
     if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-      toast.error("Please fill in all password fields");
+      toast.error(t('venueSettings.validation.required'));
       return;
     }
 
     if (passwordForm.newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters");
+      toast.error(t('venueSettings.validation.minLength', { min: 6 }));
       return;
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("New passwords do not match");
+      toast.error(t('venueSettings.validation.passwordsMatch'));
       return;
     }
 
@@ -839,7 +830,7 @@ const VenueSettings = () => {
         passwordForm.currentPassword,
         passwordForm.newPassword
       );
-      toast.success("Password changed successfully!");
+      toast.success(t('venueSettings.notifications.success.passwordChanged'));
       setPasswordForm({
         currentPassword: "",
         newPassword: "",
@@ -847,34 +838,30 @@ const VenueSettings = () => {
       });
     } catch (error) {
       console.error("Error changing password:", error);
-      toast.error(error.message || "Failed to change password");
+      toast.error(error.message || t('venueSettings.notifications.error.saveFailed'));
     } finally {
       setSaving(false);
     }
   };
 
-  // FIXED: Save venue with proper API integration
   const handleSaveVenue = async () => {
     // Validation
     const newErrors = {};
 
-    if (!venueForm.name.trim()) newErrors.name = "Venue name is required";
-    if (!venueForm.description.trim())
-      newErrors.description = "Description is required";
-    if (!venueForm.address.city.trim())
-      newErrors["address.city"] = "City is required";
-    if (!venueForm.contact.phone.trim())
-      newErrors["contact.phone"] = "Phone is required";
+    if (!venueForm.name.trim()) newErrors.name = t('venueSettings.validation.required');
+    if (!venueForm.description.trim()) newErrors.description = t('venueSettings.validation.required');
+    if (!venueForm.address.city.trim()) newErrors["address.city"] = t('venueSettings.validation.required');
+    if (!venueForm.contact.phone.trim()) newErrors["contact.phone"] = t('venueSettings.validation.required');
     if (!venueForm.contact.email.trim()) {
-      newErrors["contact.email"] = "Email is required";
+      newErrors["contact.email"] = t('venueSettings.validation.required');
     } else if (!/^\S+@\S+\.\S+$/.test(venueForm.contact.email)) {
-      newErrors["contact.email"] = "Please provide a valid email";
+      newErrors["contact.email"] = t('venueSettings.validation.email');
     }
 
     if (Object.keys(newErrors).length > 0) {
       console.log("newErrors", newErrors);
       setErrors(newErrors);
-      toast.error("Please fix the errors in the form");
+      toast.error(t('venueSettings.notifications.error.generic'));
       return;
     }
 
@@ -920,7 +907,7 @@ const VenueSettings = () => {
 
       if (updatedVenue) {
         setVenue(updatedVenue);
-        toast.success("Venue settings updated successfully!");
+        toast.success(t('venueSettings.notifications.success.venueUpdated'));
         setErrors({});
       } else {
         throw new Error("No venue data in response");
@@ -931,13 +918,13 @@ const VenueSettings = () => {
       // Enhanced error handling
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
-        toast.error("Please fix the validation errors");
+        toast.error(t('venueSettings.notifications.error.generic'));
       } else if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error.message) {
         toast.error(error.message);
       } else {
-        toast.error("Failed to update venue settings");
+        toast.error(t('venueSettings.notifications.error.saveFailed'));
       }
     } finally {
       setSaving(false);
@@ -1001,10 +988,10 @@ const VenueSettings = () => {
               : img
           )
         );
-        toast.success("Image uploaded successfully");
+        toast.success(t('venueSettings.notifications.success.imageUploaded'));
       } catch (error) {
         console.error("❌ Error uploading image:", error);
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(t('venueSettings.notifications.error.uploadFailed'));
         // Remove failed upload
         setVenueImages((prev) => prev.filter((img) => img.id !== imageId));
       }
@@ -1016,7 +1003,7 @@ const VenueSettings = () => {
   // Handle space image upload
   const handleSpaceImageUpload = async (files, spaceId) => {
     if (!spaceId || spaceId === "new-space") {
-      toast.error("Please save the space first before uploading images");
+      toast.error(t('venueSettings.notifications.error.saveSpaceFirst'));
       return;
     }
 
@@ -1078,10 +1065,10 @@ const VenueSettings = () => {
               : img
           ),
         }));
-        toast.success("Space image uploaded successfully");
+        toast.success(t('venueSettings.notifications.success.imageUploaded'));
       } catch (error) {
         console.error("Error uploading space image:", error);
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(t('venueSettings.notifications.error.uploadFailed'));
         setSpaceImages((prev) => ({
           ...prev,
           [spaceId]: (prev[spaceId] || []).filter((img) => img.id !== imageId),
@@ -1104,10 +1091,10 @@ const VenueSettings = () => {
       // For uploaded images, call the API to delete
       // await venueService.deleteVenueImage(imageId);
       setVenueImages((prev) => prev.filter((img) => img.id !== imageId));
-      toast.success("Image removed successfully");
+      toast.success(t('venueSettings.notifications.success.imageRemoved'));
     } catch (error) {
       console.error("Error removing image:", error);
-      toast.error("Failed to remove image");
+      toast.error(t('venueSettings.notifications.error.deleteFailed'));
     }
   };
 
@@ -1129,10 +1116,10 @@ const VenueSettings = () => {
         ...prev,
         [spaceId]: (prev[spaceId] || []).filter((img) => img.id !== imageId),
       }));
-      toast.success("Space image removed successfully");
+      toast.success(t('venueSettings.notifications.success.imageRemoved'));
     } catch (error) {
       console.error("Error removing space image:", error);
-      toast.error("Failed to remove space image");
+      toast.error(t('venueSettings.notifications.error.deleteFailed'));
     }
   };
 
@@ -1163,7 +1150,7 @@ const VenueSettings = () => {
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">
-            Loading settings...
+            {t('venueSettings.common.loading')}
           </p>
         </div>
       </div>
@@ -1176,7 +1163,7 @@ const VenueSettings = () => {
         <div className="max-w-2xl mx-auto">
           <ErrorAlert message={fetchError} />
           <Button onClick={() => window.location.reload()} variant="outline">
-            Try Again
+            {t('venueSettings.common.tryAgain')}
           </Button>
         </div>
       </div>
@@ -1199,10 +1186,10 @@ const VenueSettings = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Settings
+            {t('venueSettings.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Manage your profile, venue details, and preferences
+            {t('venueSettings.subtitle')}
           </p>
         </div>
 
@@ -1237,16 +1224,16 @@ const VenueSettings = () => {
               <div className="space-y-6">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    Personal Information
+                    {t('venueSettings.personal.title')}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    Update your personal details and profile picture
+                    {t('venueSettings.personal.description')}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label="Full Name"
+                    label={t('venueSettings.personal.fields.fullName')}
                     name="name"
                     value={userForm.name}
                     onChange={handleUserChange}
@@ -1254,13 +1241,13 @@ const VenueSettings = () => {
                   />
 
                   <Input
-                    label="Email Address (Read-only)"
+                    label={t('venueSettings.personal.fields.email')}
                     value={user?.email || ""}
                     disabled
                   />
 
                   <Input
-                    label="Phone Number"
+                    label={t('venueSettings.personal.fields.phone')}
                     name="phone"
                     value={userForm.phone}
                     onChange={handleUserChange}
@@ -1268,7 +1255,7 @@ const VenueSettings = () => {
                   />
 
                   <Input
-                    label="Avatar URL"
+                    label={t('venueSettings.personal.fields.avatar')}
                     name="avatar"
                     type="url"
                     value={userForm.avatar}
@@ -1289,10 +1276,10 @@ const VenueSettings = () => {
                     />
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        Profile Picture
+                        {t('venueSettings.personal.avatarPreview.title')}
                       </p>
                       <p className="text-xs text-gray-600 dark:text-gray-400">
-                        Preview of your avatar
+                        {t('venueSettings.personal.avatarPreview.description')}
                       </p>
                     </div>
                   </div>
@@ -1304,7 +1291,7 @@ const VenueSettings = () => {
                     loading={saving}
                     icon={Save}
                   >
-                    Save Changes
+                    {t('venueSettings.personal.save')}
                   </Button>
                 </div>
               </div>
@@ -1316,39 +1303,39 @@ const VenueSettings = () => {
                 <div className="space-y-6 max-w-2xl">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                      Change Password
+                      {t('venueSettings.security.title')}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                      Ensure your account is using a strong password
+                      {t('venueSettings.security.description')}
                     </p>
                   </div>
 
                   <Input
-                    label="Current Password"
+                    label={t('venueSettings.security.fields.currentPassword')}
                     name="currentPassword"
                     type={currentPassword ? "text" : "password"}
                     value={passwordForm.currentPassword}
                     iconRight={currentPassword ? EyeOff : Eye}
                     onIconClick={() => setCurrentPassword(!currentPassword)}
                     onChange={handlePasswordChange}
-                    placeholder="Enter current password"
+                    placeholder={t('venueSettings.security.fields.currentPassword')}
                     autoComplete="current-password"
                   />
 
                   <Input
-                    label="New Password"
+                    label={t('venueSettings.security.fields.newPassword')}
                     name="newPassword"
                     type={showPassword ? "text" : "password"}
                     value={passwordForm.newPassword}
                     iconRight={showPassword ? EyeOff : Eye}
                     onIconClick={() => setShowPassword(!showPassword)}
                     onChange={handlePasswordChange}
-                    placeholder="Enter new password (min 6 characters)"
+                    placeholder={t('venueSettings.security.fields.newPassword')}
                     autoComplete="new-password"
                   />
 
                   <Input
-                    label="Confirm New Password"
+                    label={t('venueSettings.security.fields.confirmPassword')}
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     iconRight={showConfirmPassword ? EyeOff : Eye}
@@ -1357,18 +1344,18 @@ const VenueSettings = () => {
                     }
                     value={passwordForm.confirmPassword}
                     onChange={handlePasswordChange}
-                    placeholder="Confirm new password"
+                    placeholder={t('venueSettings.security.fields.confirmPassword')}
                     autoComplete="new-password"
                   />
 
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
-                      Password Requirements:
+                      {t('venueSettings.security.requirements.title')}
                     </h3>
                     <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
-                      <li>At least 6 characters long</li>
-                      <li>Mix of letters, numbers, and symbols recommended</li>
-                      <li>Avoid common passwords</li>
+                      {t('venueSettings.security.requirements.items', { returnObjects: true }).map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -1378,7 +1365,7 @@ const VenueSettings = () => {
                     loading={saving}
                     icon={Lock}
                   >
-                    Change Password
+                    {t('venueSettings.security.changePassword')}
                   </Button>
                 </div>
               </div>
@@ -1390,11 +1377,11 @@ const VenueSettings = () => {
                 {/* Basic Information */}
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    Basic Information
+                    {t('venueSettings.venue.basicInfo.title')}
                   </h2>
                   <div className="space-y-6">
                     <Input
-                      label="Venue Name"
+                      label={t('venueSettings.venue.basicInfo.fields.venueName')}
                       name="name"
                       value={venueForm.name}
                       onChange={handleVenueChange}
@@ -1403,13 +1390,13 @@ const VenueSettings = () => {
                     />
 
                     <Textarea
-                      label="Description"
+                      label={t('venueSettings.venue.basicInfo.fields.description')}
                       name="description"
                       value={venueForm.description}
                       onChange={handleVenueChange}
                       error={errors.description}
                       rows={4}
-                      placeholder="Describe your venue..."
+                      placeholder={t('venueSettings.venue.basicInfo.fields.description')}
                     />
                   </div>
                 </div>
@@ -1417,12 +1404,12 @@ const VenueSettings = () => {
                 {/* Address */}
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Address
+                    {t('venueSettings.venue.address.title')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
                       <Input
-                        label="Street Address"
+                        label={t('venueSettings.venue.address.fields.street')}
                         name="address.street"
                         value={venueForm.address.street}
                         onChange={handleVenueChange}
@@ -1431,7 +1418,7 @@ const VenueSettings = () => {
                       />
                     </div>
                     <Input
-                      label="City"
+                      label={t('venueSettings.venue.address.fields.city')}
                       name="address.city"
                       value={venueForm.address.city}
                       onChange={handleVenueChange}
@@ -1439,7 +1426,7 @@ const VenueSettings = () => {
                       placeholder="New York"
                     />
                     <Input
-                      label="State/Province"
+                      label={t('venueSettings.venue.address.fields.state')}
                       name="address.state"
                       value={venueForm.address.state}
                       onChange={handleVenueChange}
@@ -1447,7 +1434,7 @@ const VenueSettings = () => {
                       placeholder="NY"
                     />
                     <Input
-                      label="ZIP/Postal Code"
+                      label={t('venueSettings.venue.address.fields.zipCode')}
                       name="address.zipCode"
                       value={venueForm.address.zipCode}
                       onChange={handleVenueChange}
@@ -1455,7 +1442,7 @@ const VenueSettings = () => {
                       placeholder="10001"
                     />
                     <Input
-                      label="Country"
+                      label={t('venueSettings.venue.address.fields.country')}
                       name="address.country"
                       value={venueForm.address.country}
                       onChange={handleVenueChange}
@@ -1468,11 +1455,11 @@ const VenueSettings = () => {
                 {/* Contact */}
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Contact Information
+                    {t('venueSettings.venue.contact.title')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Input
-                      label="Phone"
+                      label={t('venueSettings.venue.contact.fields.phone')}
                       name="contact.phone"
                       type="tel"
                       value={venueForm.contact.phone}
@@ -1481,7 +1468,7 @@ const VenueSettings = () => {
                       placeholder="12345678"
                     />
                     <Input
-                      label="Email"
+                      label={t('venueSettings.venue.contact.fields.email')}
                       name="contact.email"
                       type="email"
                       value={venueForm.contact.email}
@@ -1498,7 +1485,7 @@ const VenueSettings = () => {
                     loading={saving}
                     icon={Save}
                   >
-                    Save Venue Details
+                    {t('venueSettings.venue.save')}
                   </Button>
                 </div>
               </div>
@@ -1511,22 +1498,20 @@ const VenueSettings = () => {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                      Venue Amenities
+                      {t('venueSettings.amenities.title')}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                      Add amenities that your venue offers. Select from common
-                      options or add custom ones.
+                      {t('venueSettings.amenities.description')}
                     </p>
                   </div>
 
                   {/* Quick Add Section */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      Quick Add Common Amenities
+                      {t('venueSettings.amenities.quickAdd.title')}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Click to add frequently used amenities for wedding and
-                      event venues
+                      {t('venueSettings.amenities.quickAdd.description')}
                     </p>
 
                     <div className="flex flex-wrap gap-2">
@@ -1577,12 +1562,12 @@ const VenueSettings = () => {
                   {/* Custom Amenity Input */}
                   <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                      Add Custom Amenity
+                      {t('venueSettings.amenities.customAmenity.title')}
                     </h3>
                     <div className="flex gap-2 justify-between">
                       <Input
                         fullWidth={true}
-                        placeholder="Enter custom amenity (e.g., Vintage Furniture, Fire Pit, etc.)"
+                        placeholder={t('venueSettings.amenities.customAmenity.placeholder')}
                         value={newAmenity}
                         onChange={(e) => setNewAmenity(e.target.value)}
                         onKeyPress={(e) => {
@@ -1599,7 +1584,7 @@ const VenueSettings = () => {
                         onClick={handleAddCustomAmenity}
                         disabled={!newAmenity.trim()}
                       >
-                        Add Custom
+                        {t('venueSettings.amenities.customAmenity.add')}
                       </Button>
                     </div>
                   </div>
@@ -1608,21 +1593,21 @@ const VenueSettings = () => {
                   <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                        Selected Amenities ({amenities.length})
+                        {t('venueSettings.amenities.selectedAmenities.title', { count: amenities.length })}
                       </h3>
                       {amenities.length > 0 && (
                         <Button
                           variant="ghost"
                           icon={Trash2}
                           onClick={() => {
-                            if (window.confirm("Remove all amenities?")) {
+                            if (window.confirm(t('venueSettings.notifications.confirm.clearAllAmenities'))) {
                               setAmenities([]);
-                              toast.success("All amenities removed");
+                              toast.success(t('venueSettings.notifications.success.amenityAdded'));
                             }
                           }}
                           className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                         >
-                          Clear All
+                          {t('venueSettings.amenities.selectedAmenities.clearAll')}
                         </Button>
                       )}
                     </div>
@@ -1645,21 +1630,20 @@ const VenueSettings = () => {
                           <Plus className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                         </div>
                         <p className="text-gray-500 dark:text-gray-400">
-                          No amenities added yet. Select from common options
-                          above or add custom ones.
+                          {t('venueSettings.amenities.selectedAmenities.empty.description')}
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Operating Hours section remains the same */}
+                {/* Operating Hours section */}
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    Operating Hours
+                    {t('venueSettings.amenities.operatingHours.title')}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    Set your venue's weekly schedule
+                    {t('venueSettings.amenities.operatingHours.description')}
                   </p>
 
                   <div className="space-y-4">
@@ -1670,7 +1654,7 @@ const VenueSettings = () => {
                       >
                         <div className="w-32">
                           <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
-                            {day}
+                            {t(`venueSettings.amenities.operatingHours.days.${day}`)}
                           </span>
                         </div>
 
@@ -1689,7 +1673,7 @@ const VenueSettings = () => {
                             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <span className="text-gray-500 dark:text-gray-400">
-                            to
+                            {t('venueSettings.amenities.operatingHours.labels.to')}
                           </span>
                           <input
                             type="time"
@@ -1720,7 +1704,7 @@ const VenueSettings = () => {
                             className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 border-gray-300 dark:border-gray-600"
                           />
                           <span className="text-sm text-gray-600 dark:text-gray-400">
-                            Closed
+                            {t('venueSettings.amenities.operatingHours.labels.closed')}
                           </span>
                         </label>
                       </div>
@@ -1734,7 +1718,7 @@ const VenueSettings = () => {
                     loading={saving}
                     icon={Save}
                   >
-                    Save Amenities & Hours
+                    {t('venueSettings.amenities.save')}
                   </Button>
                 </div>
               </div>
@@ -1745,10 +1729,10 @@ const VenueSettings = () => {
               <div className="space-y-8">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    Venue Spaces
+                    {t('venueSettings.spaces.title')}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    Manage different spaces within your venue
+                    {t('venueSettings.spaces.description')}
                   </p>
                 </div>
 
@@ -1756,7 +1740,7 @@ const VenueSettings = () => {
                 {spaces.length > 0 ? (
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      Existing Spaces ({spaces.length})
+                      {t('venueSettings.spaces.existingSpaces.title', { count: spaces.length })}
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1780,14 +1764,14 @@ const VenueSettings = () => {
                               <button
                                 onClick={() => handleEditSpace(space)}
                                 className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                title="Edit space"
+                                title={t('venueSettings.spaces.existingSpaces.actions.edit')}
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteSpace(space._id)}
                                 className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                title="Delete space"
+                                title={t('venueSettings.spaces.existingSpaces.actions.delete')}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -1797,16 +1781,16 @@ const VenueSettings = () => {
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <span className="text-gray-500 dark:text-gray-400 block mb-1">
-                                Capacity
+                                {t('venueSettings.spaces.existingSpaces.capacity')}
                               </span>
                               <p className="font-medium text-gray-900 dark:text-white">
                                 {space.capacity.min} - {space.capacity.max}{" "}
-                                guests
+                                {t('venueSettings.spaces.existingSpaces.capacity')}
                               </p>
                             </div>
                             <div>
                               <span className="text-gray-500 dark:text-gray-400 block mb-1">
-                                Price
+                                {t('venueSettings.spaces.existingSpaces.price')}
                               </span>
                               <p className="font-medium text-gray-900 dark:text-white">
                                 ${space.basePrice?.toLocaleString() || "0"}
@@ -1821,7 +1805,10 @@ const VenueSettings = () => {
                             <span
                               className={`text-xs font-medium ${space.isActive ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}
                             >
-                              {space.isActive ? "Active" : "Inactive"}
+                              {space.isActive 
+                                ? t('venueSettings.spaces.existingSpaces.status.active')
+                                : t('venueSettings.spaces.existingSpaces.status.inactive')
+                              }
                             </span>
                           </div>
                         </div>
@@ -1831,28 +1818,31 @@ const VenueSettings = () => {
                 ) : (
                   <EmptyState
                     icon={Grid3x3}
-                    title="No Spaces Yet"
-                    description="Add different spaces within your venue to offer more booking options to your clients."
+                    title={t('venueSettings.spaces.emptyState.title')}
+                    description={t('venueSettings.spaces.emptyState.description')}
                   />
                 )}
 
                 {/* Add/Edit Space Form */}
                 <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    {editingSpace ? "Edit Space" : "Add New Space"}
+                    {editingSpace 
+                      ? t('venueSettings.spaces.form.editTitle')
+                      : t('venueSettings.spaces.form.addTitle')
+                    }
                   </h3>
 
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
-                        label="Space Name"
+                        label={t('venueSettings.spaces.form.fields.spaceName')}
                         name="name"
                         value={spaceForm.name}
                         onChange={handleSpaceChange}
                         placeholder="Main Hall"
                       />
                       <Input
-                        label="Base Price ($)"
+                        label={t('venueSettings.spaces.form.fields.basePrice')}
                         name="basePrice"
                         type="number"
                         step="0.01"
@@ -1864,17 +1854,17 @@ const VenueSettings = () => {
                     </div>
 
                     <Textarea
-                      label="Description"
+                      label={t('venueSettings.spaces.form.fields.description')}
                       name="description"
                       value={spaceForm.description}
                       onChange={handleSpaceChange}
                       rows={3}
-                      placeholder="Describe this space..."
+                      placeholder={t('venueSettings.spaces.form.fields.description')}
                     />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
-                        label="Min Capacity"
+                        label={t('venueSettings.spaces.form.fields.minCapacity')}
                         name="capacity.min"
                         type="number"
                         min="1"
@@ -1883,7 +1873,7 @@ const VenueSettings = () => {
                         placeholder="30"
                       />
                       <Input
-                        label="Max Capacity"
+                        label={t('venueSettings.spaces.form.fields.maxCapacity')}
                         name="capacity.max"
                         type="number"
                         min="1"
@@ -1906,38 +1896,9 @@ const VenueSettings = () => {
                         htmlFor="isActive"
                         className="text-sm text-gray-700 dark:text-gray-300"
                       >
-                        Active (available for bookings)
+                        {t('venueSettings.spaces.form.activeLabel')}
                       </label>
                     </div>
-
-                    {/* Space Images */}
-                    {/* <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">
-                        Space Images
-                      </h4>
-
-                      <ImageUpload
-                        onUpload={(files) =>
-                          handleSpaceImageUpload(
-                            editingSpace?._id || "new-space",
-                            files
-                          )
-                        }
-                        multiple={true}
-                        className="mb-4"
-                      />
-
-                      <ImageGrid
-                        images={spaceImages[editingSpace?._id] || []}
-                        onRemove={(imageId) =>
-                          handleRemoveSpaceImage(editingSpace?._id, imageId)
-                        }
-                        onReorder={(from, to) =>
-                          handleReorderSpaceImages(editingSpace?._id, from, to)
-                        }
-                        editable={true}
-                      />
-                    </div> */}
 
                     <div className="flex gap-2 w-full justify-end">
                       <Button
@@ -1945,14 +1906,17 @@ const VenueSettings = () => {
                         loading={saving}
                         icon={editingSpace ? Save : Plus}
                       >
-                        {editingSpace ? "Update Space" : "Add Space"}
+                        {editingSpace 
+                          ? t('venueSettings.spaces.form.actions.update')
+                          : t('venueSettings.spaces.form.actions.add')
+                        }
                       </Button>
                       {editingSpace && (
                         <Button
                           variant="outline"
                           onClick={handleCancelEditSpace}
                         >
-                          Cancel
+                          {t('venueSettings.spaces.form.actions.cancel')}
                         </Button>
                       )}
                     </div>
@@ -1964,7 +1928,7 @@ const VenueSettings = () => {
                     loading={saving}
                     icon={Save}
                   >
-                    Save All Changes
+                    {t('venueSettings.spaces.save')}
                   </Button>
                 </div>
               </div>

@@ -79,7 +79,6 @@
     "snoozed": "Reporté",
     "blocked": "Bloqué"
   },
-
   "dashboard": {
     "title": "Tableau de Bord",
     "subtitle": "Vue d'ensemble complète des performances de votre salle",
@@ -174,7 +173,7 @@
     "title": "Clients",
     "description": "Gérez vos relations et informations clients",
     "showingCount": "Affichage de {{count}} sur {{total}} clients",
-    
+
     "buttons": {
       "addClient": "Ajouter un Client",
       "addFirstClient": "Ajouter le Premier Client",
@@ -184,25 +183,25 @@
       "cancel": "Annuler",
       "deleteClient": "Supprimer le Client"
     },
-    
+
     "search": {
       "placeholder": "Rechercher des clients...",
       "noResults": "Aucun client trouvé",
       "noResultsDescription": "Essayez d'ajuster votre recherche ou vos filtres pour trouver ce que vous cherchez"
     },
-    
+
     "filters": {
       "allStatus": "Tous les Statuts",
       "activeFilters": "Filtres actifs :",
       "searchLabel": "Recherche : {{search}}",
       "statusLabel": "Statut : {{status}}"
     },
-    
+
     "status": {
       "active": "Actif",
       "inactive": "Inactif"
     },
-    
+
     "table": {
       "columns": {
         "name": "Nom",
@@ -224,23 +223,23 @@
         "delete": "Supprimer le Client"
       }
     },
-    
+
     "loading": {
       "initial": "Chargement des clients...",
       "retrying": "Nouvelle tentative de chargement..."
     },
-    
+
     "empty": {
       "title": "Aucun client pour l'instant",
       "description": "Commencez par ajouter votre premier client au système"
     },
-    
+
     "errors": {
       "loadingTitle": "Erreur de chargement des clients",
       "loadingDefault": "Échec du chargement des clients. Veuillez réessayer.",
       "invalidId": "ID client invalide"
     },
-    
+
     "toast": {
       "deleting": "Suppression de {{name}}...",
       "deleteSuccess": "{{name}} supprimé avec succès",
@@ -249,7 +248,7 @@
       "createSuccess": "Client créé avec succès",
       "filtersCleared": "Filtres effacés"
     },
-    
+
     "modal": {
       "addTitle": "Ajouter un Nouveau Client",
       "editTitle": "Modifier le Client",
@@ -257,7 +256,6 @@
       "deleteMessage": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action ne peut pas être annulée."
     }
   },
-  
   "clientForm": {
     "title": {
       "add": "Ajouter un Nouveau Client",
@@ -316,7 +314,6 @@
       "updating": "Mise à jour..."
     }
   },
-  
   "clientDetail": {
     "title": "Détails du Client",
     "loading": "Chargement des détails du client...",
@@ -392,43 +389,6 @@
       "editClient": "Modifier le Client",
       "deleteClient": "Supprimer le Client",
       "deleteMessage": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action ne peut pas être annulée et supprimera toutes les données associées."
-    }
-  },
-  "payments": {
-    "buttons": {
-      "recordPayment": "Enregistrer un Paiement",
-      "recordFirstPayment": "Enregistrer le Premier Paiement"
-    },
-    "statistics": {
-      "totalRevenue": "Revenu Total",
-      "totalPaid": "Total Payé",
-      "outstanding": "En Attente",
-      "totalEvents": "Événements Totaux"
-    },
-    "sections": {
-      "paymentBreakdown": "Répartition des Paiements par Événement",
-      "recentPaymentHistory": "Historique Récent des Paiements"
-    },
-    "labels": {
-      "totalAmount": "Montant Total",
-      "paidAmount": "Montant Payé",
-      "balanceDue": "Solde Dû",
-      "noPaymentHistory": "Aucun historique de paiement trouvé",
-      "noEventsAvailable": "Aucun événement disponible pour le paiement",
-      "selectSpecificEvent": "Veuillez sélectionner un événement spécifique pour enregistrer le paiement"
-    },
-    "status": {
-      "paid": "Payé",
-      "partial": "Partiel",
-      "pending": "En Attente",
-      "completed": "Terminé"
-    },
-    "methods": {
-      "cash": "Espèces",
-      "card": "Carte",
-      "bank_transfer": "Virement Bancaire",
-      "check": "Chèque",
-      "other": "Autre"
     }
   },
   "events": {
@@ -541,7 +501,7 @@
     "payment_progress": "Progression du paiement",
     "no_payments_recorded_yet": "Aucun paiement enregistré pour le moment",
     "edit_the_event_to_add_partners": "Modifiez l'événement pour ajouter des partenaires de service",
-      "toast": {
+    "toast": {
       "updateSuccess": "Événement mis à jour avec succès !",
       "createSuccess": "Événement créé avec succès !"
     }
@@ -876,11 +836,259 @@
       }
     }
   },
+  "eventForm": {
+    "currency": "TND",
+    "totalAmount": "Montant Total",
+    
+    "steps": {
+      "eventDetails": "Détails de l'Événement",
+      "clientSelection": "Sélection du Client",
+      "venuePricing": "Lieu et Tarification",
+      "payment": "Paiement",
+      "review": "Révision"
+    },
+    
+    "header": {
+      "editEvent": "Modifier l'Événement",
+      "createNewEvent": "Créer un Nouvel Événement",
+      "stepProgress": "Étape {{current}} sur {{total}}: {{title}}",
+      "prefillClient": "Client Présélectionné: {{name}}",
+      "prefillPartner": "Partenaire Présélectionné: {{name}}"
+    },
+    
+    "buttons": {
+      "previous": "Précédent",
+      "continue": "Continuer",
+      "saveChanges": "Enregistrer les Modifications",
+      "updateEvent": "Mettre à Jour l'Événement",
+      "createEvent": "Créer l'Événement",
+      "createForClient": "Créer un Événement pour {{name}}",
+      "createWithPartner": "Créer un Événement avec {{name}}"
+    },
+    
+    "messages": {
+      "loading": "Chargement...",
+      "draftRestored": "Brouillon restauré avec succès",
+      "clientPreselected": "Le client {{name}} a été présélectionné",
+      "partnerPreselected": "Le partenaire {{name}} a été présélectionné",
+      "datePreselected": "La date {{date}} a été présélectionnée",
+      "clientNameRequired": "Le nom du client est requis",
+      "validEmailRequired": "Veuillez entrer une adresse e-mail valide",
+      "clientCreated": "Client {{name}} créé avec succès",
+      "clientCreationFailed": "Échec de la création du client",
+      "partnerNotFound": "Partenaire introuvable",
+      "partnerAdded": "Partenaire {{name}} ajouté avec succès",
+      "partnerRemoved": "Partenaire {{name}} supprimé avec succès",
+      "fixErrors": "Veuillez corriger les erreurs avant de continuer",
+      "quickSaveEditOnly": "La sauvegarde rapide n'est disponible que lors de la modification d'un événement",
+      "fixStepErrors": "Veuillez corriger les erreurs de cette étape avant d'enregistrer",
+      "eventUpdated": "Événement mis à jour avec succès",
+      "updateFailed": "Échec de la mise à jour de l'événement",
+      "fixFormErrors": "Veuillez corriger toutes les erreurs du formulaire avant de soumettre",
+      "eventCreated": "Événement créé avec succès",
+      "createFailed": "Échec de la création de l'événement",
+      "paymentRecorded": "Paiement enregistré avec succès",
+      "paymentFailed": "Échec de l'enregistrement du paiement"
+    },
+    
+    "step1": {
+      "eventDetails": "Détails de l'Événement",
+      "dateTime": "Date et Heure",
+      "eventTitle": "Titre de l'Événement",
+      "eventTitlePlaceholder": "Entrez le titre de l'événement...",
+      "eventType": "Type d'Événement",
+      "selectEventType": "Sélectionnez le Type d'Événement",
+      "status": "Statut",
+      "eventDescription": "Description de l'Événement",
+      "eventDescriptionPlaceholder": "Décrivez l'événement, exigences spéciales, etc...",
+      "sameDayEvent": "Événement sur une Journée",
+      "eventDate": "Date de l'Événement",
+      "startDate": "Date de Début",
+      "endDate": "Date de Fin",
+      "startTime": "Heure de Début",
+      "endTime": "Heure de Fin",
+      "guestCount": "Nombre d'Invités",
+      "guestCountPlaceholder": "Nombre d'invités prévu",
+      
+      "eventTypes": {
+        "wedding": "Mariage",
+        "birthday": "Anniversaire",
+        "corporate": "Entreprise",
+        "conference": "Conférence",
+        "party": "Fête",
+        "other": "Autre"
+      },
+      
+      "statusOptions": {
+        "pending": "En Attente",
+        "confirmed": "Confirmé",
+        "inProgress": "En Cours",
+        "completed": "Terminé",
+        "cancelled": "Annulé"
+      }
+    },
+    
+    "step2": {
+      "clientSelection": "Sélection du Client",
+      "newClient": "Nouveau Client",
+      "cancel": "Annuler",
+      "createNewClient": "Créer un Nouveau Client",
+      "clientNamePlaceholder": "Nom du Client *",
+      "emailPlaceholder": "E-mail",
+      "phonePlaceholder": "Numéro de Téléphone (8 chiffres)",
+      "createAndSelect": "Créer et Sélectionner le Client",
+      
+      "errors": {
+        "clientNameRequired": "Le nom du client est requis",
+        "validEmail": "Veuillez entrer un e-mail valide",
+        "phoneLength": "Le numéro de téléphone doit contenir 8 chiffres"
+      }
+    },
+    
+    "step3": {
+      "venueSpaceSelection": "Sélection de l'Espace",
+      "selectVenueSpace": "Sélectionnez l'Espace",
+      "selectVenueSpacePlaceholder": "Sélectionnez un Espace",
+      "selectedVenueSpace": "Espace Sélectionné",
+      "changeSpace": "Changer l'Espace",
+      "basePrice": "Prix de Base",
+      "capacity": "Capacité",
+      "status": "Statut",
+      "reserved": "Réservé",
+      "available": "Disponible",
+      "amenities": "Commodités",
+      "guests": "invités",
+      "pricing": "Tarification",
+      "basePriceLabel": "Prix de Base (depuis l'espace du lieu)",
+      "discount": "Réduction (Optionnel)",
+      "finalPrice": "Final",
+      "servicePartners": "Partenaires de Service",
+      
+      "discountTypes": {
+        "percentage": "Pourcentage",
+        "fixed": "Montant Fixe"
+      },
+      
+      "warnings": {
+        "guestCountExceeds": "Le nombre d'invités ({{count}}) dépasse la capacité maximale ({{max}})",
+        "guestCountBelow": "Le nombre d'invités ({{count}}) est inférieur à la capacité minimale ({{min}})",
+        "dateConflict": "Cet espace a {{count}} événement(s) en conflit à cette heure"
+      }
+    },
+    
+    "step4": {
+      "infoBanner": "Cette étape est facultative. Vous pouvez enregistrer les paiements plus tard depuis la section des paiements.",
+      "recordPayment": "Enregistrer le Paiement Initial (Optionnel)",
+      "paymentAmount": "Montant du Paiement",
+      "totalAmount": "Montant Total",
+      "payment": "Paiement",
+      "remaining": "Restant",
+      "paymentMethod": "Méthode de Paiement",
+      "paymentDate": "Date de Paiement",
+      "paymentStatusLabel": "Statut du Paiement",
+      "paymentNotes": "Notes de Paiement",
+      "paymentNotesPlaceholder": "Notes concernant ce paiement...",
+      
+      "paymentMethods": {
+        "cash": "Espèces",
+        "creditCard": "Carte de Crédit",
+        "bankTransfer": "Virement Bancaire",
+        "check": "Chèque",
+        "mobilePayment": "Paiement Mobile"
+      },
+      
+      "paymentStatus": {
+        "pending": "En Attente",
+        "completed": "Terminé",
+        "failed": "Échoué",
+        "refunded": "Remboursé"
+      }
+    },
+    
+    "step5": {
+      "eventSummary": "Résumé de l'Événement",
+      "financialSummary": "Résumé Financier",
+      "additionalNotes": "Notes Supplémentaires",
+      "additionalNotesPlaceholder": "Ajoutez des notes supplémentaires sur cet événement...",
+      "autoGenerateInvoice": "Générer une Facture Automatiquement",
+      "autoGenerateInvoiceDesc": "Créer un brouillon de facture pour cet événement automatiquement",
+      "title": "Titre",
+      "type": "Type",
+      "status": "Statut",
+      "date": "Date",
+      "to": "à",
+      "time": "Heure",
+      "venueSpace": "Espace du Lieu",
+      "client": "Client",
+      "guests": "Invités",
+      "notAvailable": "N/A",
+      "venuePrice": "Prix du Lieu",
+      "partners": "Partenaires",
+      "discount": "Réduction",
+      "total": "Total",
+      "initialPayment": "Paiement Initial",
+      "remaining": "Restant"
+    },
+    
+    "components": {
+      "clientSelector": {
+        "preSelected": "Client Présélectionné",
+        "searchPlaceholder": "Rechercher des clients par nom, e-mail ou téléphone...",
+        "selected": "Sélectionné",
+        "noClients": "Aucun client trouvé",
+        "noClientsDesc": "Essayez une recherche différente ou créez un nouveau client"
+      },
+      
+      "draftModal": {
+        "title": "Brouillon Trouvé!",
+        "description": "Vous avez un brouillon non enregistré datant de {{time}}",
+        "hoursAgo": "il y a {{count}} heure",
+        "hoursAgo_plural": "il y a {{count}} heures",
+        "minutesAgo": "il y a {{count}} minute",
+        "minutesAgo_plural": "il y a {{count}} minutes",
+        "eventTitle": "Titre de l'Événement",
+        "eventType": "Type d'Événement",
+        "lastSaved": "Dernière Sauvegarde",
+        "untitled": "Événement Sans Titre",
+        "warning": "Si vous supprimez ce brouillon, toutes les modifications non enregistrées seront définitivement perdues.",
+        "discard": "Supprimer le Brouillon",
+        "restore": "Restaurer le Brouillon"
+      },
+      
+      "partnerSelector": {
+        "preSelected": "Partenaire Présélectionné",
+        "autoAdded": "a été automatiquement ajouté",
+        "selectPartner": "Sélectionnez un Partenaire à Ajouter",
+        "generalService": "Service Général",
+        "hour": "heure",
+        "hourShort": "h",
+        "fixedRate": "Tarif fixe",
+        "hourly": "Horaire",
+        "fixed": "Fixe",
+        "addedPartners": "Partenaires Ajoutés ({{count}})",
+        "removePartner": "Retirer le partenaire",
+        "noPartners": "Aucun partenaire ajouté pour le moment. Sélectionnez dans la liste déroulante ci-dessus pour ajouter des partenaires."
+      },
+      
+      "priceSummary": {
+        "title": "Résumé des Prix",
+        "venue": "Lieu",
+        "partners": "Partenaires",
+        "partner": "Partenaire",
+        "discount": "Réduction",
+        "total": "Total",
+        "fixed": "Fixe",
+        "hourly": "Horaire",
+        "hours": "heures",
+        "note": "Calcul en temps réel. Les coûts des partenaires sont calculés en fonction de leur type de tarification (tarif fixe ou tarif horaire)."
+      }
+    }
+  },
   "partners": {
     "title": "Partenaires",
     "subtitle": "Gérez vos partenaires et fournisseurs de services.",
     "showingResults": "Affichage de {{count}} sur {{total}} partenaires",
-    
+
     "actions": {
       "addPartner": "Ajouter un Partenaire",
       "editPartner": "Modifier le Partenaire",
@@ -896,7 +1104,7 @@
         "inactive": "Inactif"
       }
     },
-    
+
     "table": {
       "columns": {
         "name": "Nom du Partenaire",
@@ -913,25 +1121,25 @@
         "description": "Aucun partenaire ne correspond à vos critères de recherche."
       }
     },
-    
+
     "emptyState": {
       "title": "Aucun partenaire pour l'instant",
       "description": "Commencez par ajouter votre premier partenaire de service.",
       "addFirst": "Ajouter le Premier Partenaire"
     },
-    
+
     "errors": {
       "loading": "Erreur de Chargement des Partenaires",
       "retrying": "Nouvelle tentative de chargement des partenaires..."
     },
-    
+
     "deleteModal": {
       "title": "Confirmer la Suppression",
       "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible et toutes les données associées seront définitivement supprimées.",
       "cancel": "Annuler",
       "confirm": "Supprimer le Partenaire"
     },
-    
+
     "notifications": {
       "added": "Partenaire ajouté avec succès",
       "updated": "Partenaire modifié avec succès",
@@ -939,7 +1147,6 @@
       "filtersCleared": "Filtres effacés"
     }
   },
-  
   "partnerForm": {
     "addTitle": "Ajouter un Nouveau Partenaire",
     "editTitle": "Modifier le Partenaire",
@@ -949,7 +1156,7 @@
       "address": "Adresse",
       "notes": "Notes"
     },
-    
+
     "fields": {
       "name": "Nom du Partenaire",
       "email": "Adresse Email",
@@ -970,7 +1177,7 @@
       "country": "Pays",
       "notes": "Notes"
     },
-    
+
     "placeholders": {
       "name": "Entrez le nom du partenaire",
       "email": "partenaire@exemple.com",
@@ -988,13 +1195,13 @@
       "country": "France",
       "notes": "Ajoutez des notes supplémentaires sur ce partenaire..."
     },
-    
+
     "options": {
       "selectCategory": "Sélectionnez une Catégorie",
       "hourly": "Taux Horaire",
       "fixed": "Montant Fixe"
     },
-    
+
     "actions": {
       "previous": "Précédent",
       "next": "Suivant",
@@ -1003,7 +1210,7 @@
       "update": "Modifier le Partenaire",
       "updateNow": "Mettre à Jour"
     },
-    
+
     "errors": {
       "required": "{{field}} est requis",
       "invalidEmail": "Veuillez fournir un email valide",
@@ -1012,7 +1219,6 @@
       "positiveNumber": "{{field}} doit être un nombre positif"
     }
   },
-  
   "partnerDetail": {
     "title": "Détails du Partenaire",
     "loading": "Chargement des détails du partenaire...",
@@ -1042,7 +1248,6 @@
       "view": "Voir",
       "open": "Ouvrir",
       "moreDetails": "Plus de Détails"
-
     },
     "modals": {
       "editPartner": "Modifier le Partenaire",
@@ -1154,483 +1359,1085 @@
   },
   "tasks": {
     "title": "Tâches",
-    "add_task": "Ajouter une tâche",
-    "create_task": "Créer une tâche",
-    "edit_task": "Modifier la tâche",
-    "delete_task": "Supprimer la tâche",
-    "archive_task": "Archiver la tâche",
-    "restore_task": "Restaurer la tâche",
-    "view_task": "Voir la tâche",
-    "task_details": "Détails de la tâche",
-    "active_tasks": "Tâches actives",
-    "archived_tasks": "Tâches archivées",
-    "no_tasks_yet": "Pas encore de tâches",
-    "no_archived_tasks": "Aucune tâche archivée",
-    "create_first_task": "Créez votre première tâche",
-    "cannot_edit_task": "Impossible de modifier la tâche: ID tâche introuvable",
-    "cannot_delete_task": "Impossible de supprimer la tâche: ID tâche introuvable",
-    "failed_to_delete_task": "Échec de la suppression de la tâche",
-    "cannot_archive_task": "Impossible d'archiver la tâche: ID tâche introuvable",
-    "failed_to_archive_task": "Échec de l'archivage de la tâche",
-    "cannot_complete_task": "Impossible de terminer la tâche: ID tâche introuvable",
-    "task_marked_complete": "Tâche marquée comme terminée",
-    "failed_to_complete_task": "Échec de la tâche terminée",
-    "task_restored": "Tâche restaurée avec succès",
-    "failed_to_restore_task": "Échec de la restauration de la tâche",
-    "task_deleted_permanently": "Tâche supprimée définitivement",
-    "task_created": "Tâche créée",
-    "task_updated": "Tâche mise à jour avec succès",
-    "task_deleted": "Tâche supprimée avec succès",
-    "task_archived": "Tâche archivée avec succès",
-    "create_new_task": "Créer une nouvelle tâche",
-    "update_task_details": "Mettre à jour les détails de la tâche",
-    "fill_details_to_create_task": "Remplissez les détails pour créer une nouvelle tâche",
-    "task_title": "Titre de la tâche",
-    "task_description": "Description de la tâche",
-    "brief_description": "Brève description",
-    "task_type": "Type de tâche",
-    "task_priority": "Priorité",
-    "task_status": "Statut",
-    "statuses": {
-      "pending": "En attente",
-      "to_do": "À faire",
-      "in_progress": "En cours",
-      "completed": "Terminée",
-      "blocked": "Bloquée"
+    "archivedTasks": "Tâches Archivées",
+    "subtitle": "Gérer les tâches et affectations de l'équipe",
+    "archivedSubtitle": "Voir et gérer les tâches archivées",
+    "showingTasks": "Affichage de {{current}} sur {{total}} tâches",
+    "createTask": "Créer une Tâche",
+    "createFirstTask": "Créer la Première Tâche",
+    "editTask": "Modifier la Tâche",
+    "viewTask": "Voir la Tâche",
+    "archiveTask": "Archiver la Tâche",
+    "restoreTask": "Restaurer la Tâche",
+    "deleteTask": "Supprimer la Tâche",
+    "deletePermanently": "Supprimer Définitivement",
+    "activeTasks": "Tâches Actives",
+    "archived": "Archivées",
+    "searchPlaceholder": "Rechercher des tâches par titre ou description...",
+    "searchArchivedPlaceholder": "Rechercher des tâches archivées par titre ou description...",
+    "filters": {
+      "allStatus": "Tous les Statuts",
+      "allPriorities": "Toutes les Priorités",
+      "allCategories": "Toutes les Catégories",
+      "clearFilters": "Effacer les Filtres",
+      "activeFilters": "Filtres actifs"
     },
-    "status_descriptions": {
-      "pending": "La tâche attend d'être commencée",
-      "to_do": "La tâche est prête à être travaillée",
-      "in_progress": "La tâche est actuellement en cours",
-      "completed": "La tâche a été terminée",
-      "blocked": "La tâche est bloquée et ne peut pas continuer"
+    "status": {
+      "pending": "En Attente",
+      "todo": "À Faire",
+      "in_progress": "En Cours",
+      "blocked": "Bloqué",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "unknown": "Inconnu"
     },
-    "related_client": "Client associé",
-    "related_event": "Événement associé",
-    "related_partner": "Partenaire associé",
-    "no_client": "Aucun client",
-    "no_event": "Aucun événement",
-    "no_partner": "Aucun partenaire",
-    "estimated_hours": "Heures estimées",
-    "actual_hours": "Heures réelles",
-    "estimated": "Estimé",
-    "actual": "Réel",
-    "range": "Plage",
-    "progress": "Progrès",
-    "progress_": "Progrès:",
-    "start_date": "Date de début",
-    "due_date": "Date d'échéance",
-    "reminder_date": "Date de rappel",
-    "start_date_before_due_date": "La date de début doit être avant la date d'échéance",
-    "reminder_date_before_due_date": "La date de rappel doit être avant la date d'échéance",
-    "subtasks": "Sous-tâches",
-    "add_subtask": "Ajouter une sous-tâche",
-    "enter_subtask_title": "Entrez le titre de la sous-tâche",
-    "no_subtasks": "Aucune sous-tâche",
-    "comments": "Commentaires",
-    "no_comments_yet": "Pas encore de commentaires",
-    "attachments": "Pièces jointes",
-    "no_attachments": "Aucune pièce jointe",
-    "watchers": "Observateurs",
-    "tags": "Tags",
-    "add_tag_and_press_enter": "Ajoutez un tag et appuyez sur Entrée",
-    "assignment": "Attribution",
-    "assign_to": "Attribuer à",
-    "unassigned": "Non attribué",
-    "assigned_to": "Attribué à",
-    "assign_tasks": "Attribuer des tâches",
-    "manage_team_assignments": "Gérer les attributions de l'équipe",
-    "assign": "Attribuer",
-    "task_assigned": "Tâche attribuée avec succès",
-    "start_working": "Commencer à travailler",
-    "pause_task": "Mettre en pause la tâche",
-    "timeline": "Chronologie",
-    "scheduling_time_tracking": "Planification et suivi du temps",
-    "additional_details": "Détails supplémentaires",
-    "untitled_task": "Tâche sans titre",
-    "task_types": {
-      "todo": "À faire",
-      "event_preparation": "Préparation de l'événement",
-      "client_followup": "Suivi client",
-      "partner_coordination": "Coordination partenaire",
+    "priority": {
+      "low": "Basse",
+      "medium": "Moyenne",
+      "high": "Haute",
+      "urgent": "Urgente"
+    },
+    "category": {
+      "event_preparation": "Préparation d'Événement",
+      "marketing": "Marketing",
+      "maintenance": "Maintenance",
+      "client_followup": "Suivi Client",
+      "partner_coordination": "Coordination Partenaire",
       "administrative": "Administratif",
       "finance": "Finance",
-      "setup": "Configuration",
+      "setup": "Installation",
       "cleanup": "Nettoyage",
-      "scheduling": "Planification"
+      "other": "Autre"
     },
-    "task_is_cancelled": "La tâche a été annulée",
-    "failed_to_load_task": "Échec du chargement de la tâche",
-    "error_loading_tasks": "Erreur lors du chargement des tâches",
-    "loading_task_details": "Chargement des détails de la tâche"
-  },
-
-  "reminders": {
-    "title": "Rappels",
-    "add_reminder": "Ajouter un rappel",
-    "create_reminder": "Créer un rappel",
-    "edit_reminder": "Modifier le rappel",
-    "delete_reminder": "Supprimer le rappel",
-    "view_reminder": "Voir le rappel",
-    "reminder_details": "Détails du rappel",
-    "snooze_reminder": "Reporter le rappel",
-    "unsnooze_reminder": "Annuler le report du rappel",
-    "reminder_information": "Informations sur le rappel",
-    "reminder_date": "Date du rappel",
-    "reminder_time": "Heure du rappel",
-    "create_new_reminder": "Créer un nouveau rappel",
-    "update_reminder_details": "Mettre à jour les détails du rappel",
-    "set_up_notifications": "Configurer les notifications pour les échéances importantes",
-    "no_reminders_yet": "Pas encore de rappels",
-    "no_reminders_found": "Aucun rappel trouvé",
-    "no_reminders_match_your_search": "Aucun rappel ne correspond à votre recherche ou filtres actuels",
-    "create_first_reminder": "Créez votre premier rappel",
-    "reminder_created": "Rappel créé avec succès",
-    "reminder_updated": "Rappel mis à jour avec succès",
-    "reminder_deleted": "Rappel supprimé avec succès",
-    "reminder_activated": "Rappel activé avec succès",
-    "cannot_edit_reminder": "Impossible de modifier le rappel: ID rappel introuvable",
-    "cannot_delete_reminder": "Impossible de supprimer le rappel: ID rappel introuvable",
-    "failed_to_delete_reminder": "Échec de la suppression du rappel",
-    "cannot_complete_reminder": "Impossible de terminer le rappel: ID rappel introuvable",
-    "reminder_marked_completed": "Rappel marqué comme terminé",
-    "failed_to_complete_reminder": "Échec de la fin du rappel",
-    "cannot_snooze_reminder": "Impossible de reporter le rappel: ID rappel introuvable",
-    "reminder_snoozed_1_hour": "Rappel reporté d'1 heure",
-    "failed_to_snooze_reminder": "Échec du report du rappel",
-    "cannot_cancel_reminder": "Impossible d'annuler le rappel: ID rappel introuvable",
-    "reminder_cancelled": "Rappel annulé",
-    "failed_to_cancel_reminder": "Échec de l'annulation du rappel",
-    "cancel_reminder": "Annuler le rappel",
-    "title_required": "Le titre est requis",
-    "date_required": "La date est requise",
-    "date_must_be_future": "La date doit être aujourd'hui ou dans le futur",
-    "time_required": "L'heure est requise",
-    "task_required": "La tâche est requise",
-    "priority": "Priorité",
-    "notification_methods": "Méthodes de notification",
-    "select_notification_methods": "Sélectionner les méthodes de notification",
-    "recurrence_settings": "Paramètres de récurrence",
-    "enable_recurrence": "Activer la récurrence",
-    "frequency": "Fréquence",
-    "interval": "Intervalle",
-    "recurrence_frequency": "Fréquence de récurrence",
-    "recurrence_interval": "Intervalle de récurrence",
-    "recurrence_days_of_week": "Jours de la semaine",
-    "daily": "Quotidien",
-    "weekly": "Hebdomadaire",
-    "monthly": "Mensuel",
-    "yearly": "Annuel",
-    "days_of_week": "Jours de la semaine",
-    "sunday": "Dimanche",
-    "monday": "Lundi",
-    "tuesday": "Mardi",
-    "wednesday": "Mercredi",
-    "thursday": "Jeudi",
-    "friday": "Vendredi",
-    "saturday": "Samedi",
-    "at_least_one_day_for_weekly": "Au moins un jour doit être sélectionné pour la récurrence hebdomadaire",
-    "frequency_required_for_recurring": "La fréquence est requise pour les rappels récurrents",
-    "notification_method_required": "Au moins une méthode de notification est requise",
-    "related_items": "Éléments associés",
-    "select_a_task": "Sélectionner une tâche",
-    "select_a_payment": "Sélectionner un paiement",
-    "related_client": "Client associé",
-    "related_task": "Tâche associée",
-    "related_payment": "Paiement associé",
-    "general": "Général",
-    "recurring": "Récurrent",
-    "this_is_onetime_reminder": "Ceci est un rappel unique, non récurrent",
-    "untitled_reminder": "Rappel sans titre",
-    "search_reminders": "Rechercher des rappels par titre ou description",
-    "invalid_reminder_id": "ID de rappel invalide",
-    "invalid_reminder_data": "Données de rappel invalides",
-    "failed_to_load_reminder": "Échec du chargement du rappel",
-    "error_loading_reminders": "Erreur lors du chargement des rappels",
-    "loading_reminder_details": "Chargement des détails du rappel",
-    "how_long_snooze": "Combien de temps souhaitez-vous reporter ce rappel?",
-    "hours": "Heures",
-    "days": "Jours",
-    "1_hour": "1 heure",
-    "2_hours": "2 heures",
-    "4_hours": "4 heures",
-    "8_hours": "8 heures",
-    "1_day": "1 jour",
-    "2_days": "2 jours",
-    "invalid_snooze_date": "Date de report invalide",
-    "failed_to_activate_reminder": "Échec de l'activation du rappel",
-    "cannot_view_reminder": "Impossible de voir le rappel: Données invalides",
-    "no_notification_methods_configured": "Aucune méthode de notification configurée",
-    "activity_history": "Historique d'activité",
-    "activity_history_will_be_implemented": "L'historique d'activité sera implémenté dans une future mise à jour"
-  },
-
-  "financial": {
-    "title": "Finance",
-    "overview": "Aperçu financier",
-    "complete_overview": "Aperçu complet des finances de votre salle",
-    "handle_payments_invoices": "Gérer les paiements, factures et enregistrements financiers",
-    "invoices": "Factures",
-    "payments": "Paiements",
-    "transactions": "Transactions",
-    "analytics": "Analyses",
-    "reports": "Rapports",
-    "financial_reports": "Rapports financiers",
-    "generate_reports": "Générer des rapports financiers complets",
-    "create_client_invoice": "Créer une facture client",
-    "create_partner_bill": "Créer une facture partenaire",
-    "edit_client_invoice": "Modifier la facture client",
-    "edit_partner_bill": "Modifier la facture partenaire",
-    "client_invoices": "Factures clients",
-    "partner_bills": "Factures partenaires",
-    "manage_client_invoices": "Gérer les factures et créances clients",
-    "manage_partner_bills": "Gérer les factures et dettes partenaires",
-    "no_invoices_found": "Aucune facture trouvée",
-    "no_invoices_yet": "Pas encore de factures",
-    "no_invoices_match_search": "Aucune facture ne correspond à votre recherche ou filtres actuels",
-    "invoice_not_found": "Facture non trouvée",
-    "payment_not_found": "Paiement non trouvé",
-    "invoice_details": "Détails de la facture",
-    "payment_details": "Détails du paiement",
-    "invoice_items": "Articles de la facture",
-    "add_item": "Ajouter un article",
-    "at_least_one_item_required": "Au moins un article est requis",
-    "description_required": "La description est requise",
-    "quantity": "Quantité",
-    "rate": "Tarif",
-    "rate_cannot_be_negative": "Le tarif ne peut pas être négatif",
-    "item_total": "Total de l'article",
-    "remove": "Retirer",
-    "subtotal": "Sous-total",
-    "tax_discount": "Taxe et remise",
-    "invoice_dates": "Dates de facturation",
-    "issue_date": "Date d'émission",
-    "issue_date_required": "La date d'émission est requise",
-    "due_date": "Date d'échéance",
-    "due_date_required": "La date d'échéance est requise",
-    "due_date_after_issue_date": "La date d'échéance doit être après la date d'émission",
-    "set_issue_and_due_dates": "Définir les dates d'émission et d'échéance",
-    "payment_settings": "Paramètres de paiement",
-    "configure_payment_method_currency": "Configurer la méthode de paiement et la devise",
-    "payment_method": "Méthode de paiement",
-    "payment_type": "Type de paiement",
-    "payment_status": "Statut du paiement",
-    "payment_date": "Date de paiement",
-    "payment_amount": "Montant du paiement",
-    "payment_notes": "Notes de paiement",
-    "brief_description": "Brève description du paiement",
-    "payment_summary": "Résumé du paiement",
-    "final_review": "Révision finale",
-    "review_confirm": "Réviser et confirmer",
-    "bill_to": "Facturer à",
-    "pay_to": "Payer à",
-    "related_event": "Événement associé",
-    "link_to_event_optional": "Lien vers l'événement (optionnel)",
-    "connect_to_event": "Se connecter à un événement pour remplir automatiquement les articles",
-    "no_event_selected_add_manually": "Aucun événement sélectionné - ajouter les articles manuellement",
-    "recipient": "Destinataire",
-    "client_invoice": "Facture client",
-    "partner_bill": "Facture partenaire",
-    "download_pdf": "Télécharger PDF",
-    "send_invoice": "Envoyer la facture",
-    "mark_as_paid": "Marquer comme payé",
-    "delete_invoice": "Supprimer la facture",
-    "view_invoice": "Voir la facture",
-    "invoice_marked_paid": "Facture marquée comme payée",
-    "failed_to_mark_invoice_paid": "Échec du marquage de la facture comme payée",
-    "generating_pdf": "Génération du PDF... Veuillez patienter",
-    "generated_pdf_empty": "Le PDF généré est vide",
-    "pdf_generation_service_unavailable": "Service de génération PDF indisponible",
-    "pdf_generation_timed_out": "Délai de génération PDF dépassé - veuillez réessayer",
-    "server_error_generating_pdf": "Erreur serveur lors de la génération du PDF",
-    "please_select_invoices_to_send": "Veuillez sélectionner les factures à envoyer",
-    "failed_to_send_some_invoices": "Échec de l'envoi de certaines factures",
-    "no_number": "Aucun numéro",
-    "no_recipient": "Aucun destinataire",
-    "no_description": "Aucune description",
-    "client_event": "Événement client",
-    "invalid_invoice_id": "ID de facture invalide",
-    "failed_to_load_invoice": "Échec du chargement de la facture",
-    "failed_to_load_invoice_details": "Échec du chargement des détails de la facture",
-    "failed_to_load_invoice_statistics": "Échec du chargement des statistiques de la facture",
-    "failed_to_send_invoice": "Échec de l'envoi de la facture",
-    "please_allow_popups_to_print": "Veuillez autoriser les popups pour imprimer la facture",
-    "failed_to_print_invoice": "Échec de l'impression de la facture",
-    "need_attention": "Nécessite une attention",
-    "items": "Articles",
-    "qty": "Qté",
-    "amount_paid": "Montant payé",
-    "amount_due": "Montant dû",
-    "draft": "Brouillon",
-    "sent": "Envoyé",
-    "updating": "Mise à jour",
-    "creating": "Création",
-    "payment_recorded": "Paiement enregistré avec succès",
-    "payment_created": "Paiement créé avec succès",
-    "payment_updated": "Paiement mis à jour avec succès",
-    "payment_deleted": "Paiement supprimé avec succès",
-    "payment_refunded": "Paiement remboursé avec succès",
-    "no_payments_yet": "Pas encore de paiements",
-    "no_payments_found": "Aucun paiement trouvé",
-    "no_payments_match_search": "Aucun paiement ne correspond à votre recherche ou filtres actuels",
-    "get_started_recording_payment": "Commencez par enregistrer votre premier paiement",
-    "record_payment": "Enregistrer un paiement",
-    "add_payment": "Ajouter un paiement",
-    "edit_payment": "Modifier le paiement",
-    "delete_payment": "Supprimer le paiement",
-    "process_refund": "Traiter le remboursement",
-    "refund_payment": "Rembourser le paiement",
-    "payment_type": "Type de paiement",
-    "select_payment_type": "Sélectionner le type de paiement",
-    "select_payment_method": "Sélectionner la méthode de paiement",
-    "payment_methods": {
-      "cash": "Espèces",
-      "credit_card": "Carte de crédit",
-      "bank_transfer": "Virement bancaire",
-      "check": "Chèque",
-      "mobile_payment": "Paiement mobile"
+    "stats": {
+      "total": "Total",
+      "pending": "En Attente",
+      "todo": "À Faire",
+      "inProgress": "En Cours",
+      "blocked": "Bloqué",
+      "completed": "Terminé",
+      "overdue": "En Retard"
     },
-    "reference_number": "Numéro de référence",
-    "paid_date": "Date de paiement",
-    "paid_date_cannot_be_before_due": "La date de paiement ne peut pas être avant la date d'échéance",
-    "fees_charges": "Frais et charges",
-    "processing_fee": "Frais de traitement",
-    "platform_fee": "Frais de plateforme",
-    "other_fees": "Autres frais",
-    "fees_cannot_be_negative": "Les frais ne peuvent pas être négatifs",
-    "total_fees_cannot_exceed_payment": "Les frais totaux ne peuvent pas dépasser le montant du paiement",
-    "refund_information": "Informations de remboursement",
-    "refund_amount": "Montant du remboursement",
-    "refund_date": "Date de remboursement",
-    "enter_refund_reason": "Entrez la raison du remboursement (optionnel)",
-    "confirm_refund": "Confirmer le remboursement",
-    "are_you_sure_delete_payment": "Êtes-vous sûr de vouloir supprimer ce paiement?",
-    "please_enter_valid_refund_amount": "Veuillez entrer un montant de remboursement valide",
-    "refund_amount_cannot_exceed_payment": "Le montant du remboursement ne peut pas dépasser le montant du paiement",
-    "failed_to_refund_payment": "Échec du remboursement du paiement",
-    "failed_to_delete_payment": "Échec de la suppression du paiement",
-    "failed_to_load_payment": "Échec du chargement du paiement",
-    "cannot_view_payment_invalid_data": "Impossible de voir le paiement: Données invalides",
-    "all_methods": "Toutes les méthodes",
-    "all_categories": "Toutes les catégories",
-    "category": "Catégorie",
-    "expense": "Dépense",
-    "income": "Revenu",
-    "partner_payment": "Paiement partenaire",
-    "utilities": "Services publics",
-    "maintenance": "Maintenance",
-    "marketing": "Marketing",
-    "staff_salary": "Salaire du personnel",
-    "equipment": "Équipement",
-    "insurance": "Assurance",
-    "taxes": "Taxes",
-    "transactions": "Transactions",
-    "view_manage_transactions": "Voir et gérer toutes les transactions financières",
-    "transaction_deleted": "Transaction supprimée avec succès",
-    "add_transaction": "Ajouter une transaction",
-    "are_you_sure_delete_transaction": "Êtes-vous sûr de vouloir supprimer cette transaction?",
-    "failed_to_delete_transaction": "Échec de la suppression de la transaction",
-    "failed_to_load_transactions": "Échec du chargement des transactions",
-    "search_transactions_placeholder": "Rechercher par description, catégorie ou référence",
-    "no_transactions_found": "Aucune transaction trouvée",
-    "no_transactions_to_export": "Aucune transaction à exporter",
-    "get_started_adding_transaction": "Commencez par ajouter votre première transaction",
-    "total_transactions": "Total des transactions",
-    "reference": "Référence",
-    "no_description": "Aucune description",
-    "net_amount": "Montant net",
-    "min_amount": "Montant minimum",
-    "max_amount": "Montant maximum",
-    "clear_filters": "Effacer les filtres",
-    "export": "Exporter",
-    "currencies": {
-      "tnd": "TND - Dinar Tunisien",
-      "eur": "EUR - Euro",
-      "usd": "USD - Dollar Américain"
+    "table": {
+      "title": "Titre",
+      "status": "Statut",
+      "priority": "Priorité",
+      "dueDate": "Date d'Échéance",
+      "assignedTo": "Assigné à",
+      "progress": "Progression",
+      "actions": "Actions"
+    },
+    "view": {
+      "list": "Liste",
+      "kanban": "Kanban"
+    },
+    "messages": {
+      "loading": "Chargement des tâches...",
+      "loadingArchived": "Chargement des tâches archivées...",
+      "noTasks": "Aucune tâche pour le moment",
+      "noArchivedTasks": "Aucune tâche archivée",
+      "noTasksDescription": "Commencez par créer votre première tâche.",
+      "noArchivedDescription": "Les tâches archivées apparaîtront ici",
+      "noResults": "Aucune tâche trouvée",
+      "noResultsDescription": "Aucune tâche ne correspond à vos critères de recherche.",
+      "noArchivedResults": "Aucune tâche archivée trouvée",
+      "noArchivedResultsDescription": "Aucune tâche archivée ne correspond à vos critères de recherche.",
+      "errorLoading": "Erreur de Chargement des Tâches",
+      "archiveConfirm": {
+        "title": "Archiver la Tâche",
+        "message": "Êtes-vous sûr de vouloir archiver \"{{title}}\" ?",
+        "confirm": "Archiver la Tâche"
+      },
+      "thisTask": "cette tâche",
+      "loadEvents": "Échec du chargement des événements du client",
+      "loadFormData": "Échec du chargement des données du formulaire",
+      "restoreConfirm": {
+        "title": "Restaurer la Tâche",
+        "message": "Êtes-vous sûr de vouloir restaurer \"{{title}}\" ?",
+        "confirm": "Restaurer la Tâche"
+      },
+      "deleteConfirm": {
+        "title": "Supprimer la Tâche",
+        "message": "Êtes-vous sûr de vouloir supprimer définitivement \"{{title}}\" ? Cette action ne peut pas être annulée.",
+        "confirm": "Supprimer Définitivement"
+      },
+      "success": {
+        "archived": "Tâche archivée avec succès",
+        "restored": "Tâche restaurée avec succès",
+        "deleted": "Tâche supprimée définitivement",
+        "created": "Tâche créée avec succès",
+        "updated": "Tâche mise à jour avec succès"
+      },
+      "error": {
+        "archive": "Échec de l'archivage de la tâche",
+        "restore": "Échec de la restauration de la tâche",
+        "delete": "Échec de la suppression de la tâche",
+        "create": "Échec de la création de la tâche",
+        "update": "Échec de la mise à jour de la tâche",
+        "load": "Échec du chargement des tâches"
+      }
+    },
+    "retry": "Réessayer",
+    "search": "Recherche",
+    "estimated": "estimé",
+    "unknown": "Inconnu",
+    "close": "Fermer",
+    "archiving": "Archivage...",
+    "restoring": "Restauration...",
+    "deleting": "Suppression...",
+    "event": "Événement",
+    "client": "Client",
+    "partner": "Partenaire",
+    "form": {
+      "createTitle": "Créer une Nouvelle Tâche",
+      "editTitle": "Modifier la Tâche",
+      "createDescription": "Remplissez les détails pour créer une nouvelle tâche",
+      "editDescription": "Mettre à jour les détails de la tâche",
+      "step": "Step",
+      "of": "of",
+      "steps": {
+        "basicInfo": "Informations de Base",
+        "scheduling": "Planification & Suivi du Temps",
+        "assignment": "Affectation & Collaboration",
+        "details": "Détails Supplémentaires",
+        "step": "Étape",
+        "of": "sur",
+        "loading": "Chargement du formulaire de tâche..."
+      },
+      "fields": {
+        "title": "Titre de la Tâche",
+        "titlePlaceholder": "Entrez un titre de tâche clair et descriptif",
+        "description": "Description",
+        "descriptionPlaceholder": "Fournissez des informations détaillées sur la tâche, les exigences ou les instructions...",
+        "priority": "Priorité",
+        "status": "Statut",
+        "category": "Catégorie",
+        "dueDate": "Date d'Échéance",
+        "startDate": "Date de Début",
+        "reminderDate": "Date de Rappel",
+        "estimatedHours": "Heures Estimées",
+        "estimatedHoursPlaceholder": "0.0",
+        "progress": "Progression",
+        "assignedTo": "Assigner à",
+        "unassigned": "Non assigné",
+        "watchers": "Observateurs",
+        "relatedClient": "Client Associé",
+        "relatedEvent": "Événement Associé",
+        "relatedPartner": "Partenaire Associé",
+        "noClient": "Aucun client",
+        "noEvent": "Aucun événement",
+        "noPartner": "Aucun partenaire",
+        "tags": "Étiquettes",
+        "tagPlaceholder": "Ajouter une étiquette et appuyer sur Entrée",
+        "subtasks": "Sous-tâches",
+        "subtaskTitle": "Titre de la Sous-tâche",
+        "subtaskDescription": "Description de la Sous-tâche (optionnel)",
+        "subtaskTitlePlaceholder": "Entrez le titre de la sous-tâche",
+        "subtaskDescPlaceholder": "Brève description"
+      },
+      "validation": {
+        "titleRequired": "Le titre de la tâche est requis",
+        "categoryRequired": "La catégorie est requise",
+        "dueDateRequired": "La date d'échéance est requise",
+        "startDateBeforeDue": "La date de début doit être avant la date d'échéance",
+        "reminderBeforeDue": "La date de rappel doit être avant la date d'échéance",
+        "estimatedHoursRange": "Les heures estimées doivent être entre 0 et 1000",
+        "fixErrors": "Veuillez corriger les erreurs avant de continuer",
+        "fixAllErrors": "Veuillez corriger tous les champs obligatoires avant la mise à jour",
+        "fixValidationErrors": "Veuillez corriger les erreurs de validation",
+        "loadEvents": "Échec du chargement des événements du client",
+        "loadFormData": "Échec du chargement des données du formulaire"
+      },
+      "buttons": {
+        "cancel": "Annuler",
+        "previous": "Précédent",
+        "next": "Suivant",
+        "create": "Créer la Tâche",
+        "update": "Mettre à Jour",
+        "updateNow": "Mettre à Jour Maintenant",
+        "add": "Ajouter",
+        "addSubtask": "Ajouter une Sous-tâche"
+      }
+    },
+    "detail": {
+      "description": "Description",
+      "taskDetails": "Détails de la Tâche",
+      "assignedTo": "Assigné à",
+      "dueDate": "Date d'Échéance",
+      "startDate": "Date de Début",
+      "progress": "Progression",
+      "time": "Temps",
+      "createdBy": "Créé par",
+      "relatedTo": "Associé à",
+      "tags": "Étiquettes",
+      "blockedReason": "Raison du Blocage",
+      "moreDetails": "Plus de Détails",
+      "overdue": "En Retard",
+      "notSet": "Non défini",
+      "noRelated": "Aucune entité associée",
+      "loading": "Chargement des détails de la tâche...",
+      "notFound": "Tâche Non Trouvée",
+      "errorLoading": "Erreur de Chargement de la Tâche",
+      "errorMessage": "La tâche que vous recherchez n'existe pas.",
+      "backToTasks": "Retour aux Tâches",
+      "tryAgain": "Réessayer",
+      "tabs": {
+        "overview": "Aperçu",
+        "subtasks": "Sous-tâches",
+        "comments": "Commentaires",
+        "attachments": "Pièces jointes",
+        "timeline": "Chronologie"
+      },
+      "overview": {
+        "title": "Aperçu",
+        "progress": "Progression",
+        "subtasks": "Sous-tâches",
+        "estimated": "Estimé",
+        "actual": "Réel",
+        "description": "Description",
+        "noDescription": "Aucune description fournie pour cette tâche."
+      },
+      "subtasks": {
+        "title": "Sous-tâches",
+        "completed": "{{completed}} sur {{total}} terminées",
+        "noSubtasks": "Aucune sous-tâche",
+        "noSubtasksDescription": "Ajoutez des sous-tâches pour décomposer cette tâche en étapes plus petites.",
+        "completedBy": "Terminé le {{date}} par {{user}}",
+        "completedDate": "Terminé le {{date}}"
+      },
+      "comments": {
+        "title": "Commentaires",
+        "noComments": "Aucun commentaire pour le moment",
+        "noCommentsDescription": "Soyez le premier à commenter cette tâche.",
+        "unknownUser": "Utilisateur Inconnu",
+        "edited": "modifié"
+      },
+      "attachments": {
+        "title": "Pièces jointes",
+        "noAttachments": "Aucune pièce jointe",
+        "noAttachmentsDescription": "Téléchargez des fichiers pour les organiser avec cette tâche.",
+        "download": "Télécharger"
+      },
+      "timeline": {
+        "title": "Chronologie",
+        "noEvents": "Aucun événement dans la chronologie",
+        "noEventsDescription": "Les événements de la chronologie apparaîtront ici au fur et à mesure de l'avancement de la tâche.",
+        "events": {
+          "created": "Tâche Créée",
+          "assigned": "Tâche Assignée",
+          "completed": "Tâche Terminée",
+          "cancelled": "Tâche Annulée",
+          "statusChanged": "Statut changé en {{status}}"
+        },
+        "by": "par",
+        "to": "à",
+        "noReason": "Aucune raison fournie"
+      },
+      "header": {
+        "backToTasks": "Retour aux Tâches",
+        "editTask": "Modifier la Tâche",
+        "deleteTask": "Supprimer la Tâche",
+        "priority": "Priorité {{priority}}",
+        "actions": {
+          "starting": "Démarrage...",
+          "startWorking": "Commencer à Travailler",
+          "pausing": "Mise en pause...",
+          "pauseTask": "Mettre en Pause",
+          "completing": "Finalisation...",
+          "markComplete": "Marquer comme Terminé",
+          "archiving": "Archivage...",
+          "archiveTask": "Archiver la Tâche"
+        }
+      },
+      "info": {
+        "title": "Informations sur la Tâche",
+        "dueDate": "Date d'Échéance",
+        "startDate": "Date de Début",
+        "assignedTo": "Assigné à",
+        "category": "Catégorie",
+        "estimatedHours": "Heures Estimées",
+        "actualHours": "Heures Réelles",
+        "taskBlocked": "Tâche Bloquée"
+      },
+      "modals": {
+        "edit": {
+          "title": "Modifier la Tâche"
+        },
+        "delete": {
+          "title": "Supprimer la Tâche",
+          "message": "Êtes-vous sûr de vouloir supprimer \"{{title}}\" ? Cette action ne peut pas être annulée et supprimera toutes les données associées.",
+          "confirm": "Supprimer la Tâche",
+          "cancel": "Annuler"
+        }
+      },
+      "status": {
+        "todo": "À Faire",
+        "in_progress": "En Cours",
+        "completed": "Terminé",
+        "cancelled": "Annulé",
+        "blocked": "Bloqué",
+        "archived": "Archivé",
+        "unknown": "Inconnu"
+      },
+      "toasts": {
+        "edit": {
+          "success": "Tâche mise à jour avec succès"
+        },
+        "delete": {
+          "loading": "Suppression de la tâche...",
+          "success": "Tâche supprimée avec succès",
+          "error": "Échec de la suppression de la tâche"
+        },
+        "status": {
+          "loading": "Mise à jour du statut de la tâche...",
+          "success": "Statut mis à jour en {{status}}",
+          "error": "Échec de la mise à jour du statut de la tâche"
+        },
+        "complete": {
+          "loading": "Finalisation de la tâche...",
+          "success": "Tâche marquée comme terminée",
+          "error": "Échec de la finalisation de la tâche"
+        },
+        "archive": {
+          "loading": "Archivage de la tâche...",
+          "success": "Tâche archivée avec succès",
+          "error": "Échec de l'archivage de la tâche"
+        },
+        "retry": "Nouvelle tentative de chargement des détails de la tâche..."
+      },
+      "errors": {
+        "edit": "Impossible de modifier la tâche : ID de tâche non trouvé",
+        "delete": "Impossible de supprimer la tâche : ID de tâche non trouvé",
+        "status": "Impossible de mettre à jour le statut de la tâche : ID de tâche non trouvé",
+        "complete": "Impossible de terminer la tâche : ID de tâche non trouvé",
+        "archive": "Impossible d'archiver la tâche : ID de tâche non trouvé"
+      }
     }
   },
+  "reminders": {
+    "title": "Rappels",
+    "subtitle": "Gérez les notifications, alertes et rappels de suivi.",
+    "showing": "Affichage de {count} sur {total} rappels",
+    "noReminders": "Aucun rappel pour le moment",
+    "noRemindersDesc": "Commencez par créer votre premier rappel.",
+    "noResults": "Aucun rappel trouvé",
+    "noResultsDesc": "Aucun rappel ne correspond à vos critères de recherche ou de filtrage.",
+    "createFirst": "Créer le premier rappel",
+    "addReminder": "Ajouter un rappel",
+    "searchPlaceholder": "Rechercher des rappels par titre ou description...",
+    "clearFilters": "Effacer les filtres",
+    "activeFilters": "Filtres actifs",
+    "loading": "Chargement des rappels...",
+    "errorLoading": "Erreur de chargement des rappels",
+    "retry": "Réessayer",
+    "untitled": "Rappel sans titre",
+    "noDescription": "Aucune description",
+    "noDate": "Aucune date",
+    "unknown": "Inconnu",
+    "noRelatedEntities": "Aucune entité associée",
+    "noNotificationMethods": "Aucune méthode de notification configurée",
+    "close": "Fermer",
+    "every": "chaque",
+    "days": "jour(s)",
+    "weeks": "semaine(s)",
+    "months": "mois",
+    "years": "année(s)",
+    "hour": "heure",
+    "hours": "heures",
+    "day": "jour",
+    "backToReminders": "Retour aux rappels",
+    "tryAgain": "Réessayer",
+    "snooze1Hour": "Reporter 1 heure",
+    "markComplete": "Marquer comme terminé",
+    "cancelReminder": "Annuler le rappel",
+    "snoozing": "Report en cours...",
+    "completing": "Marquage comme terminé...",
+    "cancelling": "Annulation en cours...",
+    "deleting": "Suppression en cours...",
+    "loadingDetails": "Chargement des détails du rappel...",
+    "notFound": "Rappel non trouvé",
+    "notFoundDescription": "Le rappel que vous recherchez n'existe pas.",
 
-  "analytics": {
-    "title": "Analyses",
-    "subtitle": "Informations approfondies",
-    "financial_analytics": "Analyses financières",
-    "comprehensive_analysis": "Analyse complète de votre performance financière",
-    "revenue_vs_expenses_trend": "Tendance revenus vs dépenses",
-    "revenue": "Revenus",
-    "expenses": "Dépenses",
-    "no_trend_data": "Aucune donnée de tendance disponible",
-    "revenue_sources": "Sources de revenus",
-    "no_revenue_data": "Aucune donnée de revenus",
-    "expense_breakdown": "Répartition des dépenses",
-    "no_expense_data": "Aucune donnée de dépenses",
-    "profit_loss_overview": "Aperçu des profits et pertes",
-    "total_expenses": "Total des dépenses",
-    "net_profit": "Bénéfice net",
-    "profit_margin": "Marge bénéficiaire",
-    "cash_flow_summary": "Résumé du flux de trésorerie",
-    "no_cash_flow_data": "Aucune donnée de flux de trésorerie",
-    "event_financials": "Finances des événements",
-    "event_revenue": "Revenus des événements",
-    "partner_costs": "Coûts des partenaires",
-    "event_profit": "Bénéfice de l'événement",
-    "venue_operating_expenses": "Dépenses d'exploitation de la salle",
-    "fixed_and_recurring_costs": "Coûts fixes et récurrents",
-    "total_venue_expenses": "Total des dépenses de la salle",
-    "cash_flow": "Flux de trésorerie",
-    "net": "Net",
-    "current_balance": "Solde actuel",
-    "recent_transactions": "Transactions récentes",
-    "no_recent_transactions": "Aucune transaction récente",
-    "upcoming_payments": "Paiements à venir",
-    "profitability": "Rentabilité",
-    "by_event": "Par événement",
-    "overall_profitability": "Rentabilité globale",
-    "all_income_sources": "Toutes les sources de revenus",
-    "event_venue_costs": "Coûts des événements et de la salle",
-    "after_all_expenses": "Après toutes les dépenses",
-    "failed_to_load_analytics": "Échec du chargement des analyses",
-    "failed_to_load_financial_data": "Échec du chargement des données financières",
-    "report_generation": "Génération de rapports",
-    "configure_report": "Configurer le rapport",
-    "available_reports": "Rapports disponibles",
-    "quick_reports": "Rapports rapides",
-    "generate_commonly_used": "Générer les rapports couramment utilisés en un clic",
-    "monthly_pl": "P&L mensuel",
-    "quarterly_cash_flow": "Flux de trésorerie trimestriel",
-    "annual_expenses": "Dépenses annuelles",
-    "tax_summary": "Résumé fiscal",
-    "profit_loss_statement": "État des profits et pertes",
-    "revenue_expenses_net_profit_overview": "Aperçu des revenus, dépenses et bénéfice net",
-    "cash_flow_statement": "État des flux de trésorerie",
-    "cash_inflows_outflows_analysis": "Analyse des entrées et sorties de trésorerie",
-    "expense_breakdown_report": "Répartition des dépenses",
-    "detailed_categorization": "Catégorisation détaillée de toutes les dépenses",
-    "revenue_analysis": "Analyse des revenus",
-    "income_sources_trends": "Sources de revenus et tendances",
-    "tax_summary_report": "Résumé fiscal",
-    "tax_obligations_deductions": "Obligations fiscales et déductions",
-    "report_type": "Type de rapport",
-    "select_report_type": "Sélectionner le type de rapport",
-    "generate_report": "Générer le rapport",
-    "report_preview": "Aperçu du rapport",
-    "period": "Période",
-    "inflow": "Entrée",
-    "outflow": "Sortie",
-    "net_flow": "Flux net",
-    "total_income": "Revenu total",
-    "taxable_income": "Revenu imposable",
-    "total_tax_paid": "Total des taxes payées",
-    "summary": "Résumé",
-    "export_to_csv": "Exporter en CSV",
-    "csv_exported_successfully": "CSV exporté avec succès",
-    "transactions_exported": "Transactions exportées avec succès",
-    "payments_exported": "Paiements exportés avec succès",
-    "invalid_report_type": "Type de rapport invalide",
-    "failed_to_generate_report": "Échec de la génération du rapport",
-    "please_generate_report_first": "Veuillez d'abord générer un rapport",
-    "please_select_both_dates": "Veuillez sélectionner les deux dates pour la plage personnalisée"
+    "status": {
+      "all": "Tous les statuts",
+      "active": "Actif",
+      "completed": "Terminé",
+      "snoozed": "Reporté",
+      "cancelled": "Annulé",
+      "label": "Statut"
+    },
+
+    "type": {
+      "all": "Tous les types",
+      "event": "Événement",
+      "payment": "Paiement",
+      "task": "Tâche",
+      "maintenance": "Maintenance",
+      "followup": "Suivi",
+      "other": "Autre",
+      "client": "Client",
+      "general": "Général",
+      "label": "Type"
+    },
+
+    "priority": {
+      "all": "Toutes les priorités",
+      "urgent": "Urgent",
+      "high": "Élevée",
+      "medium": "Moyenne",
+      "low": "Basse",
+      "label": "Priorité"
+    },
+
+    "columns": {
+      "title": "Titre",
+      "description": "Description",
+      "dateTime": "Date et heure",
+      "type": "Type",
+      "priority": "Priorité",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+
+    "actions": {
+      "view": "Voir le rappel",
+      "edit": "Modifier le rappel",
+      "delete": "Supprimer le rappel",
+      "snooze": "Reporter le rappel",
+      "unsnooze": "Activer le rappel",
+      "viewDetails": "Voir les détails",
+      "moreDetails": "Plus de détails"
+    },
+
+    "form": {
+      "createTitle": "Créer un nouveau rappel",
+      "editTitle": "Modifier le rappel",
+      "createSubtitle": "Configurez des notifications pour les délais importants",
+      "editSubtitle": "Mettre à jour les détails du rappel",
+      "basicInfo": "Informations de base",
+      "relatedItems": "Éléments associés",
+      "notifications": "Notifications",
+      "recurrence": "Paramètres de récurrence",
+      "enableRecurrence": "Activer la récurrence",
+      "intervalPlaceholder": "ex. 1",
+      "loadingForm": "Chargement du formulaire de rappel...",
+      "steps": {
+        "step1": "Étape 1 sur 4",
+        "step2": "Étape 2 sur 4",
+        "step3": "Étape 3 sur 4",
+        "step4": "Étape 4 sur 4"
+      },
+      "fields": {
+        "title": "Titre",
+        "description": "Description",
+        "type": "Type",
+        "priority": "Priorité",
+        "date": "Date",
+        "time": "Heure",
+        "notificationMethods": "Méthodes de notification",
+        "frequency": "Fréquence",
+        "interval": "Intervalle",
+        "daysOfWeek": "Jours de la semaine",
+        "notes": "Notes",
+        "relatedEvent": "Événement associé",
+        "relatedClient": "Client associé",
+        "relatedTask": "Tâche associée",
+        "relatedPayment": "Paiement associé"
+      },
+      "placeholders": {
+        "title": "Entrez le titre du rappel...",
+        "description": "Ajoutez une description pour ce rappel...",
+        "notes": "Ajoutez des notes supplémentaires sur ce rappel...",
+        "selectEvent": "Sélectionnez un événement...",
+        "selectClient": "Sélectionnez un client...",
+        "selectTask": "Sélectionnez une tâche...",
+        "selectPayment": "Sélectionnez un paiement..."
+      },
+      "buttons": {
+        "cancel": "Annuler",
+        "previous": "Précédent",
+        "next": "Suivant",
+        "create": "Créer le rappel",
+        "update": "Mettre à jour le rappel",
+        "updateNow": "Mettre à jour maintenant"
+      }
+    },
+
+    "details": {
+      "description": "Description",
+      "reminderDetails": "Détails du rappel",
+      "dateTime": "Date et heure",
+      "snoozedUntil": "Reporté jusqu'au",
+      "createdBy": "Créé par",
+      "relatedTo": "Associé à",
+      "recurrence": "Récurrence",
+      "notificationMethods": "Méthodes de notification",
+      "activityHistory": "Historique d'activité",
+      "recurrenceSettings": "Paramètres de récurrence",
+      "tab": "Détails",
+      "reminderInfo": "Informations du rappel"
+    },
+
+    "modals": {
+      "snooze": {
+        "title": "Reporter le rappel",
+        "description": "Combien de temps souhaitez-vous reporter ce rappel ?"
+      },
+      "delete": {
+        "title": "Supprimer le rappel",
+        "description": "Êtes-vous sûr de vouloir supprimer \"{name}\" ? Cette action ne peut pas être annulée et toutes les données associées seront définitivement supprimées.",
+        "confirm": "Supprimer le rappel",
+        "cancel": "Annuler"
+      }
+    },
+
+    "notifications": {
+      "created": "Rappel créé avec succès",
+      "updated": "Rappel mis à jour avec succès",
+      "deleted": "Rappel supprimé avec succès",
+      "snoozed": "Rappel reporté de {duration} {unit}",
+      "unsnoozed": "Rappel activé avec succès",
+      "completed": "Rappel marqué comme terminé",
+      "cancelled": "Rappel annulé",
+      "filtersCleared": "Filtres effacés",
+      "loadingReminders": "Nouvelle tentative de chargement des rappels...",
+      "loadingDetails": "Nouvelle tentative de chargement des détails du rappel...",
+      "loadError": "Échec du chargement du rappel",
+      "loadFormError": "Échec du chargement des données du formulaire",
+      "saveError": "Échec de la sauvegarde du rappel",
+      "deleting": "Suppression...",
+      "snoozing": "Report...",
+      "activating": "Activation...",
+      "completing": "Marquage comme terminé...",
+      "cancelling": "Annulation...",
+      "activateError": "Échec de l'activation du rappel",
+      "completeError": "Échec du marquage comme terminé",
+      "cancelError": "Échec de l'annulation du rappel",
+      "snoozeError": "Échec du report du rappel",
+      "deleteError": "Échec de la suppression du rappel"
+    },
+
+    "validation": {
+      "titleRequired": "Le titre est requis",
+      "dateRequired": "La date est requise",
+      "timeRequired": "L'heure est requise",
+      "taskRequired": "La tâche est requise",
+      "notificationMethodsRequired": "Au moins une méthode de notification est requise",
+      "frequencyRequired": "La fréquence est requise pour les rappels récurrents",
+      "intervalRequired": "L'intervalle doit être d'au moins 1",
+      "daysRequired": "Au moins un jour doit être sélectionné pour la récurrence hebdomadaire",
+      "futureDate": "La date doit être aujourd'hui ou dans le futur",
+      "invalidId": "ID de rappel invalide",
+      "invalidData": "Données de rappel invalides",
+      "fixErrors": "Veuillez corriger les erreurs avant de continuer",
+      "fixAllErrors": "Veuillez corriger tous les champs obligatoires avant la mise à jour",
+      "validationErrors": "Veuillez corriger les erreurs de validation"
+    },
+
+    "recurrence": {
+      "label": "Récurrent",
+      "endDate": "Date de fin",
+      "dayOfMonth": "Jour du mois",
+      "day": "Jour",
+      "oneTime": "Ceci est un rappel ponctuel (non récurrent)",
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel",
+      "yearly": "Annuel"
+    },
+
+    "history": {
+      "comingSoon": "L'historique d'activité sera implémenté dans la prochaine phase"
+    },
+
+    "weekdays": {
+      "sunday": "Dimanche",
+      "monday": "Lundi",
+      "tuesday": "Mardi",
+      "wednesday": "Mercredi",
+      "thursday": "Jeudi",
+      "friday": "Vendredi",
+      "saturday": "Samedi"
+    },
+
+    "search": "Recherche",
+    "yes": "Oui"
   },
-
+  "payments": {
+    "title": "Paiements",
+    "subtitle": "Suivez tous les paiements de revenus et de dépenses",
+    "addPayment": "Ajouter un Paiement",
+    "recordFirstPayment": "Enregistrer le Premier Paiement",
+    "editPayment": "Modifier le Paiement",
+    "viewPayment": "Voir le Paiement",
+    "deletePayment": "Supprimer le Paiement",
+    "refundPayment": "Rembourser le Paiement",
+    "processRefund": "Traiter le Remboursement",
+    "exportPayments": "Exporter",
+    "searchPlaceholder": "Rechercher par description, référence ou client...",
+    "payment": "Paiement",
+    "unknown": "Inconnu",
+    "partner": "Partenaire",
+    "event": "Événement",
+    "system": "Système",
+    "notFound": "Paiement non trouvé",
+    "getStarted": "Commencez par enregistrer votre premier paiement",
+    "showing": "Affichage de {{count}} sur {{total}} paiements",
+    "paymentsSummary": "Affichage de {{count}} sur {{total}} paiements",
+   "trackPayments": "Suivre tous les paiements de revenus et dépenses",
+    "filters": {
+      "allTypes": "Tous les Types",
+      "allStatus": "Tous les Statuts",
+      "allMethods": "Toutes les Méthodes",
+      "type": "Type",
+      "status": "Statut",
+      "method": "Méthode",
+      "clearFilters": "Effacer les Filtres",
+      "activeFilters": "Filtres actifs"
+    },
+    "types": {
+      "income": "Revenu",
+      "expense": "Dépense"
+    },
+    "statuses": {
+      "pending": "En Attente",
+      "completed": "Terminé",
+      "failed": "Échoué",
+      "refunded": "Remboursé"
+    },
+    "methods": {
+      "cash": "Espèces",
+      "card": "Carte",
+      "credit_card": "Carte de Crédit",
+      "bank_transfer": "Virement Bancaire",
+      "check": "Chèque",
+      "mobile_payment": "Paiement Mobile"
+    },
+    "table": {
+      "type": "Type",
+      "description": "Description",
+      "client": "Client",
+      "date": "Date",
+      "method": "Méthode",
+      "amount": "Montant",
+      "actions": "Actions",
+      "reference": "Ref",
+      "noPayments": "Aucun paiement pour le moment",
+      "noResults": "Aucun paiement trouvé",
+      "status": "Statut",
+      "noResultsDescription": "Aucun paiement ne correspond à vos critères de recherche ou de filtre"
+    },
+    "stats": {
+      "income": "Revenus",
+      "expenses": "Dépenses",
+      "netAmount": "Montant Net",
+      "paymentStatus": "Statut des Paiements",
+      "completed": "Terminé",
+      "pending": "En Attente",
+      "realized": "Réalisé",
+      "projected": "Projeté"
+    },
+    "modals": {
+      "delete": {
+        "title": "Confirmer la Suppression",
+        "description": "Êtes-vous sûr de vouloir supprimer \"{paymentName}\" ? Cette action ne peut pas être annulée et toutes les données associées seront définitivement supprimées.",
+        "cancel": "Annuler",
+        "confirm": "Supprimer le Paiement"
+      },
+      "refund": {
+        "title": "Rembourser le Paiement",
+        "amount": "Montant du Remboursement",
+        "reason": "Raison (Optionnel)",
+        "reasonPlaceholder": "Entrez la raison du remboursement",
+        "invalidAmount": "Veuillez saisir un montant de remboursement valide",
+        "amountExceeded": "Le montant du remboursement ne peut pas dépasser le montant du paiement",
+        "cancel": "Annuler",
+        "confirm": "Confirmer le Remboursement"
+      },
+      "paymentForm": {
+        "newTitle": "Enregistrer un Nouveau Paiement",
+        "editTitle": "Modifier le Paiement",
+        "basicInfo": "Informations de Base",
+        "relatedInfo": "Informations Connexes",
+        "dates": "Dates de Paiement",
+        "feesReview": "Frais & Revue",
+        "optional": "Optionnel"
+      }
+    },
+    "form": {
+      "type": "Type de Paiement",
+      "amount": "Montant",
+      "method": "Méthode de Paiement",
+      "status": "Statut",
+      "reference": "Numéro de Référence",
+      "description": "Description",
+      "dueDate": "Date d'Échéance",
+      "paidDate": "Date de Paiement",
+      "client": "Client",
+      "event": "Événement Associé",
+      "fees": {
+        "processingFee": "Frais de Traitement",
+        "platformFee": "Frais de Plateforme",
+        "otherFees": "Autres Frais"
+      },
+      "summary": "Résumé du Paiement",
+      "netAmount": "Montant Net",
+      "selectClient": "Sélectionner un client",
+      "selectEvent": "Sélectionner un événement",
+      "descriptionPlaceholder": "Brève description du paiement...",
+      "create": "Créer le Paiement",
+      "update": "Mettre à Jour le Paiement",
+      "updateNow": "Mettre à Jour Maintenant",
+      "errors": {
+        "amountRequired": "Veuillez saisir un montant valide",
+        "methodRequired": "Veuillez sélectionner une méthode de paiement",
+        "typeRequired": "Veuillez sélectionner un type de paiement",
+        "paidDateBeforeDue": "La date de paiement ne peut pas être antérieure à la date d'échéance",
+        "feesNegative": "Les frais ne peuvent pas être négatifs",
+        "feesExceedAmount": "Le total des frais ne peut pas dépasser le montant du paiement",
+        "fixErrors": "Veuillez corriger les erreurs avant de continuer",
+        "fixAllErrors": "Veuillez corriger tous les champs obligatoires"
+      }
+    },
+    "steps": {
+      "basicInfo": "Infos de Base",
+      "relatedInfo": "Infos Connexes",
+      "dates": "Dates",
+      "feesReview": "Frais & Revue",
+      "step": "Étape {current} sur {total}"
+    },
+    "notifications": {
+      "loading": "Chargement des paiements...",
+      "error": "Erreur de Chargement des Paiements",
+      "retry": "Réessayer",
+      "filtersCleared": "Filtres effacés",
+      "retrying": "Nouvelle tentative de chargement des paiements...",
+      "exportSuccess": "Paiements exportés avec succès",
+      "exportError": "Échec de l'exportation des paiements",
+      "noPaymentsExport": "Aucun paiement à exporter",
+      "createSuccess": "Paiement enregistré avec succès",
+      "updateSuccess": "Paiement mis à jour avec succès",
+      "deleteSuccess": "Paiement supprimé avec succès",
+      "refundSuccess": "Paiement remboursé avec succès",
+      "loadError": "Échec du chargement du paiement",
+      "saveError": "Échec de l'enregistrement du paiement",
+      "deleteError": "Échec de la suppression du paiement",
+      "refundError": "Échec du remboursement du paiement",
+      "deleting": "Suppression en cours...",
+      "refunding": "Traitement du remboursement...",
+      "invalidData": "Impossible d'afficher le paiement : Données invalides",
+      "loadEventsError": "Échec du chargement des événements du client",
+      "loadOptionsError": "Échec du chargement des options du formulaire"
+    },
+    "detail": {
+      "title": "Détails du Paiement",
+      "overview": "Aperçu du Paiement",
+      "paymentInformation": "Informations de Paiement",
+      "relatedTo": "Lié à",
+      "feesRefunds": "Frais & Remboursements",
+      "paymentMethod": "Méthode de Paiement",
+      "paymentDate": "Date de Paiement",
+      "refundAmount": "Montant du Remboursement",
+      "refundReason": "Raison du Remboursement",
+      "moreDetails": "Plus de Détails",
+      "metadata": "Métadonnées",
+      "created": "Créé",
+      "lastUpdated": "Dernière Mise à Jour",
+      "processedBy": "Traité par",
+      "relatedInformation": "Informations Connexes"
+    },
+    "totalAmount": "Montant Total",
+    "feesCharges": "Frais et Charges",
+    "refundInformation": "Informations de Remboursement",
+    "refundDate": "Date de Remboursement",
+    "quickActions": "Actions Rapides",
+    "viewEvent": "Voir l'Événement",
+    "viewClient": "Voir le Client",
+    "deleting": "Suppression...",
+    "refunding": "Remboursement...",
+    "refundWarning": "Cela remboursera {amount} au client. Cette action ne peut pas être annulée.",
+    "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action ne peut pas être annulée.",
+    "refund": {
+      "defaultReason": "Remboursement demandé depuis les détails du paiement"
+    }
+  },
+  "finance": {
+    "dashboard": "Tableau de Bord Financier",
+    "overview": "Aperçu complet de la performance financière de votre établissement",
+    "period": {
+      "week": "Cette Semaine",
+      "month": "Ce Mois",
+      "quarter": "Ce Trimestre",
+      "year": "Cette Année"
+    },
+    "metrics": {
+      "totalRevenue": "Revenu Total",
+      "totalExpenses": "Dépenses Totales",
+      "netProfit": "Bénéfice Net",
+      "profitMargin": "Marge Bénéficiaire",
+      "allIncomeSources": "Toutes les sources de revenus",
+      "eventVenueCosts": "Coûts événement + lieu",
+      "afterAllExpenses": "Après toutes les dépenses",
+      "overallProfitability": "Rentabilité globale"
+    },
+    "eventFinancials": {
+      "title": "Finances des Événements",
+      "description": "Revenus et coûts des événements",
+      "eventRevenue": "Revenus des Événements",
+      "partnerCosts": "Coûts Partenaires",
+      "eventProfit": "Bénéfice Événement"
+    },
+    "venueExpenses": {
+      "title": "Frais d'Exploitation du Lieu",
+      "description": "Coûts fixes et récurrents",
+      "totalVenueExpenses": "Dépenses Totales du Lieu",
+      "percentageOfExpenses": "{{percentage}}% des dépenses du lieu"
+    },
+    "cashFlow": {
+      "title": "Flux de Trésorerie",
+      "net": "Net",
+      "currentBalance": "Solde Actuel",
+      "noData": "Aucune donnée de flux de trésorerie"
+    },
+    "recentTransactions": {
+      "title": "Transactions Récentes",
+      "viewAll": "Voir Tout",
+      "noData": "Aucune transaction récente",
+      "transaction": "Transaction"
+    },
+    "upcomingPayments": {
+      "title": "Paiements à Venir",
+      "viewAll": "Voir Tout",
+      "dueToday": "Dû aujourd'hui",
+      "dueTomorrow": "Dû demain",
+      "dueInDays": "{{days}} jours",
+      "payment": "Paiement"
+    },
+    "quickActions": {
+      "transactions": {
+        "title": "Transactions",
+        "description": "Voir tout"
+      },
+      "analytics": {
+        "title": "Analytique",
+        "description": "Analyses approfondies"
+      },
+      "reports": {
+        "title": "Rapports",
+        "description": "Générer"
+      },
+      "profitability": {
+        "title": "Rentabilité",
+        "description": "Par événement"
+      }
+    },
+    "buttons": {
+      "reports": "Rapports"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des données financières"
+    }
+  },
+  "analytics": {
+    "title": "Analytique Financière",
+    "description": "Analyse complète de votre performance financière",
+    "period": {
+      "week": "Cette Semaine",
+      "month": "Ce Mois",
+      "quarter": "Ce Trimestre",
+      "year": "Cette Année"
+    },
+    "metrics": {
+      "totalRevenue": "Revenu Total",
+      "totalExpenses": "Dépenses Totales",
+      "netProfit": "Bénéfice Net",
+      "profitMargin": "Marge Bénéficiaire"
+    },
+    "trends": {
+      "title": "Tendance Revenus vs Dépenses",
+      "revenue": "Revenus",
+      "expenses": "Dépenses",
+      "noData": "Aucune donnée de tendance disponible"
+    },
+    "revenue": {
+      "title": "Sources de Revenus",
+      "noData": "Aucune donnée de revenus",
+      "percentage": "{{percentage}}% du revenu total"
+    },
+    "expenses": {
+      "title": "Répartition des Dépenses",
+      "noData": "Aucune donnée de dépenses",
+      "percentage": "{{percentage}}% des dépenses totales"
+    },
+    "profitLoss": {
+      "title": "Aperçu Bénéfices et Pertes",
+      "totalRevenue": "Revenu Total",
+      "totalExpenses": "Dépenses Totales",
+      "netProfit": "Bénéfice Net",
+      "margin": "Marge : {{percentage}}%"
+    },
+    "cashFlow": {
+      "title": "Résumé du Flux de Trésorerie",
+      "in": "Entrée",
+      "out": "Sortie",
+      "noData": "Aucune donnée de flux de trésorerie"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement de l'analytique"
+    }
+  },
+  "reports": {
+    "title": "Rapports Financiers",
+    "description": "Générez des rapports financiers complets pour votre entreprise",
+    "notice": {
+      "title": "Génération de Rapports",
+      "description": "Les rapports sont générés à partir de vos données financières et peuvent être prévisualisés à l'écran ou exportés en CSV. Tous les rapports utilisent les points de terminaison API réels."
+    },
+    "configuration": {
+      "title": "Configurer le Rapport",
+      "reportType": "Type de Rapport",
+      "period": "Période",
+      "startDate": "Date de Début",
+      "endDate": "Date de Fin",
+      "generate": "Générer le Rapport",
+      "generating": "Génération en cours...",
+      "export": "Exporter en CSV"
+    },
+    "preview": {
+      "title": "Aperçu du Rapport",
+      "close": "Fermer",
+      "totalRevenue": "Revenu Total",
+      "totalExpenses": "Dépenses Totales",
+      "netProfit": "Bénéfice Net",
+      "currentBalance": "Solde Actuel",
+      "taxableIncome": "Revenu Imposable",
+      "totalTaxPaid": "Total des Impôts Payés",
+      "period": "Période",
+      "inflow": "Entrée",
+      "outflow": "Sortie",
+      "netFlow": "Flux Net",
+      "category": "Catégorie",
+      "amount": "Montant",
+      "percentage": "Pourcentage"
+    },
+    "types": {
+      "available": "Rapports Disponibles",
+      "profitLoss": {
+        "name": "État des Résultats",
+        "description": "Aperçu des revenus, dépenses et bénéfice net"
+      },
+      "cashFlow": {
+        "name": "État des Flux de Trésorerie",
+        "description": "Analyse des entrées et sorties de trésorerie"
+      },
+      "expenseBreakdown": {
+        "name": "Répartition des Dépenses",
+        "description": "Catégorisation détaillée de toutes les dépenses"
+      },
+      "taxSummary": {
+        "name": "Résumé Fiscal",
+        "description": "Obligations fiscales et déductions"
+      }
+    },
+    "quickReports": {
+      "title": "Rapports Rapides",
+      "description": "Générez des rapports couramment utilisés en un clic",
+      "monthlyPL": "Résultats Mensuels",
+      "quarterlyCashFlow": "Flux Trésorerie Trimestriel",
+      "annualExpenses": "Dépenses Annuelles",
+      "taxSummary": "Résumé Fiscal"
+    },
+    "periods": {
+      "week": "Cette Semaine",
+      "month": "Ce Mois",
+      "quarter": "Ce Trimestre",
+      "year": "Cette Année",
+      "lastMonth": "Le Mois Dernier",
+      "lastQuarter": "Le Trimestre Dernier",
+      "lastYear": "L'Année Dernière",
+      "custom": "Plage Personnalisée"
+    },
+    "errors": {
+      "selectDates": "Veuillez sélectionner les dates de début et de fin pour la plage personnalisée",
+      "generateFailed": "Échec de la génération du rapport",
+      "exportFailed": "Échec de l'exportation CSV",
+      "generateFirst": "Veuillez d'abord générer un rapport"
+    },
+    "success": {
+      "generated": "Rapport généré avec succès",
+      "exported": "CSV exporté avec succès"
+    }
+  },
+  "transactions": {
+    "title": "Transactions",
+    "description": "Afficher et gérer toutes les transactions financières",
+    "stats": {
+      "totalIncome": "Revenu Total",
+      "totalExpenses": "Dépenses Totales",
+      "netAmount": "Montant Net",
+      "totalTransactions": "Total des Transactions"
+    },
+    "actions": {
+      "export": "Exporter",
+      "addTransaction": "Ajouter une Transaction",
+      "search": "Rechercher par description, catégorie ou référence...",
+      "filters": "Filtres",
+      "clearFilters": "Effacer les Filtres",
+      "view": "Voir",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "cancel": "Annuler"
+    },
+    "filters": {
+      "type": "Type",
+      "category": "Catégorie",
+      "startDate": "Date de Début",
+      "endDate": "Date de Fin",
+      "minAmount": "Montant Minimum",
+      "maxAmount": "Montant Maximum",
+      "allTypes": "Tous les Types",
+      "income": "Revenu",
+      "expense": "Dépense",
+      "allCategories": "Toutes les Catégories"
+    },
+    "table": {
+      "date": "Date",
+      "description": "Description",
+      "type": "Type",
+      "amount": "Montant",
+      "paymentMethod": "Méthode de Paiement",
+      "reference": "Référence",
+      "actions": "Actions",
+      "noDescription": "Aucune description",
+      "emptyMessage": "Aucune transaction trouvée. Commencez par ajouter votre première transaction."
+    },
+    "deleteModal": {
+      "title": "Supprimer la Transaction",
+      "message": "Êtes-vous sûr de vouloir supprimer cette transaction ? Cette action ne peut pas être annulée."
+    },
+    "categories": {
+      "event_revenue": "Revenus d'Événement",
+      "partner_payment": "Paiement Partenaire",
+      "utilities": "Services Publics",
+      "maintenance": "Maintenance",
+      "marketing": "Marketing",
+      "staff_salary": "Salaire du Personnel",
+      "equipment": "Équipement",
+      "insurance": "Assurance",
+      "taxes": "Impôts",
+      "other": "Autre"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des transactions",
+      "deleteFailed": "Échec de la suppression de la transaction",
+      "exportFailed": "Échec de l'exportation des transactions",
+      "noData": "Aucune transaction à exporter"
+    },
+    "success": {
+      "deleted": "Transaction supprimée avec succès",
+      "exported": "Transactions exportées avec succès"
+    }
+  },
   "team": {
     "title": "Équipe",
     "manage_team": "Gérer votre équipe",
@@ -1700,7 +2507,6 @@
       "venue_manage": "Salle: Gérer"
     }
   },
-
   "settings": {
     "title": "Paramètres",
     "manage_venue_profile": "Gérer le profil de votre salle, l'équipe et l'abonnement",
@@ -1844,7 +2650,6 @@
     "custom_amenity_added": "Équipement personnalisé ajouté avec succès",
     "this_amenity_already_exists": "Cet équipement existe déjà"
   },
-
   "login": {
     "title": "Connexion",
     "sign_in": "Se connecter",
@@ -1922,7 +2727,6 @@
     "new_york": "New York",
     "united_states": "États-Unis"
   },
-
   "navigation": {
     "home": "Accueil",
     "dashboard": "Tableau de bord",
@@ -1948,41 +2752,6 @@
     "signup": "S'inscrire",
     "all_rights_reserved": "Tous droits réservés"
   },
-
-  "notifications": {
-    "title": "Notifications",
-    "notifications": "Notifications",
-    "mark_read": "Marquer comme lu",
-    "mark_all_read": "Tout marquer comme lu",
-    "clear_all": "Tout effacer",
-    "view_all": "Voir toutes les notifications",
-    "youre_all_caught_up": "Vous êtes à jour",
-    "no_notifications": "Aucune notification",
-    "just_now": "À l'instant",
-    "notification_types": {
-      "event": "Événement",
-      "payment": "Paiement",
-      "reminder": "Rappel",
-      "task": "Tâche",
-      "alert": "Alerte",
-      "team": "Équipe"
-    },
-    "new_event_booking": "Nouvelle réservation d'événement",
-    "payment_received": "Paiement reçu",
-    "event_reminder": "Rappel d'événement",
-    "setup_audio_equipment": "Installer l'équipement audio",
-    "payment_overdue": "Paiement en retard",
-    "new_team_member": "Nouveau membre de l'équipe",
-    "johnson_event_overdue": "Le paiement pour l'événement Johnson a 2 jours de retard",
-    "sarah_joined_team": "Sarah Wilson a rejoint votre équipe en tant que coordinatrice du personnel",
-    "setup_starts_2_hours": "L'installation de la fête d'anniversaire commence dans 2 heures",
-    "search_notifications": "Rechercher des notifications",
-    "upcoming_reminders": "Rappels à venir",
-    "untitled_reminder": "Rappel sans titre",
-    "no_reminders": "Aucun rappel",
-    "notifications_count": "Notifications"
-  },
-
   "errors": {
     "an_error_occurred": "Une erreur s'est produite",
     "request_failed": "Échec de la demande",
@@ -2000,7 +2769,6 @@
     "server_error": "Erreur serveur",
     "server_returned_error": "Le serveur a renvoyé une erreur"
   },
-
   "common_actions": {
     "save_changes": "Enregistrer les modifications",
     "save_draft": "Enregistrer le brouillon",
@@ -2031,7 +2799,6 @@
     "send": "Envoyer",
     "export": "Exporter"
   },
-
   "form_validation": {
     "field_required": "Ce champ est requis",
     "invalid_email": "Veuillez entrer une adresse e-mail valide",
@@ -2051,7 +2818,6 @@
     "please_fix_errors": "Veuillez corriger toutes les erreurs avant de soumettre",
     "please_fix_validation_errors": "Veuillez corriger les erreurs de validation"
   },
-
   "status_labels": {
     "active": "Actif",
     "inactive": "Inactif",
@@ -2076,7 +2842,6 @@
     "upcoming": "À venir",
     "past": "Passé"
   },
-
   "priorities": {
     "low": "Faible",
     "medium": "Moyenne",
@@ -2096,14 +2861,12 @@
     "indigo": "Indigo",
     "white": "Blanc"
   },
-
   "footer": {
     "add_notes_and_terms": "Ajoutez des notes, termes ou conditions supplémentaires",
     "payment_terms_and_conditions": "Termes et conditions de paiement",
     "terms_conditions": "Termes et conditions",
     "terms": "Termes"
   },
-
   "messages": {
     "success": "Succès",
     "error": "Erreur",
@@ -2139,7 +2902,6 @@
     "auto_saved": "Enregistré automatiquement",
     "unsaved_changes": "Vous avez des modifications non enregistrées"
   },
-
   "search_and_filter": {
     "search": "Rechercher",
     "search_placeholder": "Rechercher...",
@@ -2165,14 +2927,33 @@
     "asc": "Croissant",
     "desc": "Décroissant"
   },
-
   "sidebar": {
     "overview": "Aperçu",
     "operations": "Opérations",
     "financial": "Financier",
-    "management": "Gestion"
+    "management": "Gestion",
+    "allRightsReserved": "Tous droits réservés."
   },
-
+  "table": {
+    "loading": "Chargement...",
+    "noData": "Aucune donnée disponible",
+    "pagination": {
+      "showing": "Affichage",
+      "to": "à",
+      "of": "sur",
+      "results": "résultats",
+      "perPage": "Par page :",
+      "firstPage": "Première page",
+      "previousPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "lastPage": "Dernière page"
+    },
+    "sorting": {
+      "asc": "↑",
+      "desc": "↓",
+      "neutral": "↕"
+    }
+  },
   "common": {
     "dashboard": "Tableau de bord",
     "events": "Événements",
@@ -2189,7 +2970,6 @@
     "profile": "Profil",
     "logout": "Déconnexion",
     "user": "Utilisateur",
-    "allRightsReserved": "Tous droits réservés",
     "toggleTheme": "Basculer le thème",
     "notifications": "Notifications",
     "searchPlaceholder": "Rechercher des événements, clients, tâches...",
@@ -2203,7 +2983,31 @@
     "rating": "{{value}} / 5.0",
     "eventsCount": "{{completed}} sur {{total}} événements terminés",
     "notAvailable": "N/D",
-    "unknown": "Inconnu"
+    "unknown": "Inconnu",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "save": "Sauvegarder",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Avertissement",
+    "info": "Information",
+    "errors": {
+    "loadDataFailed": "Échec du chargement des données"
+  }
+  },
+    "notifications": {
+    "upcomingReminders": "Rappels à venir",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain",
+    "untitledReminder": "Rappel sans titre",
+    "noReminders": "Aucun rappel à venir"
   },
   "landing": {
     "nav": {
@@ -2390,38 +3194,56 @@
   },
   "invoices": {
     "title": "Factures",
+    "createClientInvoice": "Créer une Facture Client",
+    "createPartnerBill": "Créer une Facture Partenaire", 
+    "editClientInvoice": "Modifier la Facture Client",
+    "editPartnerBill": "Modifier la Facture Partenaire",
+    "backToInvoices": "Retour aux Factures",
+    "priceSummary": "Récapitulatif des Prix",
+    "subtotal": "Sous-total",
+    "tax": "Taxe",
+    "discount": "Remise",
+    "total": "Total",
     "subtitle": {
       "client": "Gérer les factures clients et les créances",
-      "partner": "Gérer les factures fournisseurs et les dettes"
+      "partner": "Gérer les factures partenaires et les dettes"
     },
     "types": {
       "invoice": "Facture",
-      "bill": "Facture",
+      "bill": "Facture", 
       "client": "Client",
       "partner": "Partenaire",
       "clientInvoices": "Factures Clients",
-      "partnerBills": "Factures Fournisseurs"
+      "partnerBills": "Factures Partenaires"
     },
     "recipient": {
       "client": "Client",
-      "partner": "Partenaire"
+      "partner": "Partenaire",
+      "searchPlaceholder": "Rechercher des {{recipient}}s...",
+      "selectRecipient": "Sélectionner {{recipient}}",
+      "chooseRecipient": "Choisissez à qui cette {{type}} est destinée",
+      "billTo": "Facturer à",
+      "payTo": "Payer à", 
+      "noRecipients": "Aucun {recipient} trouvé"
+
     },
     "defaultInvoiceName": "Facture",
     "errors": {
-      "title": "Erreur de chargement des factures",
-      "loadStatsFailed": "Échec du chargement des statistiques des factures",
+      "title": "Erreur de Chargement des Factures",
+      "loadStatsFailed": "Échec du chargement des statistiques de facturation",
       "loadInvoicesFailed": "Échec du chargement des factures. Veuillez réessayer.",
       "invalidInvoiceId": "ID de facture invalide",
       "invalidInvoiceData": "Données de facture invalides",
-      "loadDetailsFailed": "Échec du chargement des détails de la facture"
+      "loadDetailsFailed": "Échec du chargement des détails de la facture",
+      "saveFailed": "Échec de l'enregistrement de la facture"
     },
     "delete": {
       "loading": "Suppression de {{invoiceName}}...",
       "success": "{{invoiceName}} supprimée avec succès",
       "error": "Échec de la suppression de {{invoiceName}}",
       "confirm": {
-        "title": "Confirmer la suppression",
-        "description": "Êtes-vous sûr de vouloir supprimer \"{{invoiceName}}\" ? Cette action ne peut pas être annulée et toutes les données associées seront définitivement supprimées."
+        "title": "Confirmer la Suppression",
+        "description": "Êtes-vous sûr de vouloir supprimer \"{{invoiceName}}\" ? Cette action est irréversible et toutes les données associées seront définitivement supprimées."
       }
     },
     "cancel": {
@@ -2429,7 +3251,7 @@
       "success": "Facture annulée avec succès",
       "error": "Échec de l'annulation de la facture",
       "modal": {
-        "title": "Annuler la facture",
+        "title": "Annuler la Facture",
         "description": "Êtes-vous sûr de vouloir annuler cette facture ?",
         "reasonLabel": "Raison d'annulation (optionnelle)",
         "reasonPlaceholder": "Indiquez une raison pour l'annulation..."
@@ -2453,23 +3275,23 @@
         "generic": "Échec du téléchargement de la facture",
         "invalidFile": "Fichier invalide reçu du serveur",
         "emptyFile": "Le PDF généré est vide",
-        "serverError": "Échec de la génération du PDF sur le serveur",
+        "serverError": "La génération du PDF a échoué sur le serveur",
         "generationFailed": "Service de génération PDF indisponible",
         "timeout": "Délai de génération du PDF dépassé. Veuillez réessayer",
         "notFound": "Facture non trouvée"
       }
     },
     "filters": {
-      "show": "Afficher les filtres",
-      "hide": "Masquer les filtres",
-      "clearAll": "Tout effacer",
+      "show": "Afficher les Filtres",
+      "hide": "Masquer les Filtres",
+      "clearAll": "Tout Effacer",
       "cleared": "Filtres effacés",
       "status": {
         "label": "Statut",
-        "all": "Tous les statuts"
+        "all": "Tous les Statuts"
       },
-      "startDate": "Date de début",
-      "endDate": "Date de fin"
+      "startDate": "Date de Début",
+      "endDate": "Date de Fin"
     },
     "retry": {
       "loading": "Nouvelle tentative de chargement des factures...",
@@ -2480,14 +3302,14 @@
       "loading": "Envoi de {{count}} facture(s)...",
       "success": "{{count}} facture(s) envoyée(s) avec succès",
       "error": "Échec de l'envoi de certaines factures",
-      "button": "Envoyer la sélection ({{count}})"
+      "button": "Envoyer la Sélection ({{count}})"
     },
     "stats": {
-      "totalRevenue": "Revenu total",
-      "totalExpenses": "Dépenses totales",
-      "paid": "Payées",
-      "pending": "En attente",
-      "overdue": "En retard",
+      "totalRevenue": "Revenu Total",
+      "totalExpenses": "Dépenses Totales",
+      "paid": "Payé",
+      "pending": "En Attente",
+      "overdue": "En Retard",
       "invoiceCount": "{{count}} factures",
       "amountDue": "{{amount}} dû",
       "needsAttention": "Nécessite une attention"
@@ -2496,30 +3318,30 @@
       "draft": "Brouillon",
       "sent": "Envoyée",
       "paid": "Payée",
-      "partial": "Partielle",
-      "overdue": "En retard",
+      "partial": "Partiel",
+      "overdue": "En Retard",
       "cancelled": "Annulée"
     },
     "table": {
       "headers": {
-        "invoiceNumber": "N° Facture",
+        "invoiceNumber": "Facture #",
         "client": "Client",
         "partner": "Partenaire",
-        "issueDate": "Date d'émission",
-        "dueDate": "Date d'échéance",
+        "issueDate": "Date d'Émission",
+        "dueDate": "Date d'Échéance",
         "amount": "Montant",
         "status": "Statut",
         "actions": "Actions"
       },
-      "noNumber": "Aucun numéro",
-      "noRecipient": "Aucun destinataire",
+      "noNumber": "Aucun Numéro",
+      "noRecipient": "Aucun Destinataire",
       "empty": {
         "search": "Aucune facture trouvée correspondant à votre recherche.",
-        "default": "Aucune {{type}} trouvée. Créez votre première {{type}} pour commencer."
+        "default": "Aucune facture {{type}} trouvée. Créez votre première facture {{type}} pour commencer."
       }
     },
     "search": {
-      "placeholder": "Rechercher par numéro de facture, nom du {{type}} ou email..."
+      "placeholder": "Rechercher par numéro de facture, nom de {{type}}, ou email..."
     },
     "loading": "Chargement des factures...",
     "empty": {
@@ -2529,22 +3351,22 @@
       },
       "default": {
         "title": "Aucune facture pour le moment",
-        "description": "Commencez par créer votre première {{type}}."
+        "description": "Commencez par créer votre première facture {{type}}."
       }
     },
     "create": {
-      "button": "Créer {{type}}",
-      "firstButton": "Créer la première {{type}}"
+      "button": "Créer une {{type}}",
+      "firstButton": "Créer la Première {{type}}"
     },
     "detailModal": {
-      "title": "Détails de la facture",
-      "invoiceNumber": "Facture n°{{number}}",
+      "title": "Détails de la Facture",
+      "invoiceNumber": "Facture #{{number}}",
       "issued": "Émise le : {{date}}",
       "sent": "Envoyée le : {{date}}",
       "billTo": "Facturer à :",
       "payTo": "Payer à :",
-      "invoiceDetails": "Détails de la facture :",
-      "dueDate": "Date d'échéance :",
+      "invoiceDetails": "Détails de la Facture :",
+      "dueDate": "Date d'Échéance :",
       "event": "Événement :",
       "currency": "Devise :",
       "items": "Articles",
@@ -2557,25 +3379,340 @@
       "tax": "Taxe",
       "discount": "Remise :",
       "total": "Total :",
-      "amountPaid": "Montant payé :",
-      "amountDue": "Montant dû :",
+      "amountPaid": "Montant Payé :",
+      "amountDue": "Montant Dû :",
       "notes": "Notes",
-      "terms": "Conditions générales"
+      "terms": "Conditions Générales"
     },
     "actions": {
-      "view": "Voir la facture",
-      "edit": "Modifier la facture",
+      "view": "Voir la Facture",
+      "edit": "Modifier la Facture",
       "download": "Télécharger PDF",
-      "send": "Envoyer la facture",
-      "markAsPaid": "Marquer comme payée",
-      "delete": "Supprimer la facture",
+      "send": "Envoyer la Facture",
+      "markAsPaid": "Marquer comme Payée",
+      "delete": "Supprimer la Facture",
       "close": "Fermer",
       "downloadPdf": "Télécharger PDF",
-      "editInvoice": "Modifier la facture",
-      "sendInvoice": "Envoyer la facture",
-      "cancel": "Annuler",
-      "deleteInvoice": "Supprimer la facture",
-      "cancelInvoice": "Annuler la facture"
+      "editInvoice": "Modifier la Facture",
+      "sendInvoice": "Envoyer la Facture",
+      "deleteInvoice": "Supprimer la Facture",
+      "cancelInvoice": "Annuler la Facture",
+      "previous": "Précédent",
+      "continue": "Continuer",
+      "create": "Créer {{type}}",
+      "update": "Modifier {{type}}",
+      "save": "Sauvegarder",
+      "cancel": "Annuler"
+    },
+    "steps": {
+      "recipient": "Destinataire",
+      "itemsPricing": "Articles & Prix",
+      "details": "Détails",
+      "review": "Vérification"
+    },
+    "stepDescriptions": {
+      "selectRecipient": "Sélectionner {{recipient}}",
+      "addServices": "Ajouter services et articles",
+      "invoiceDetails": "Détails de la facture",
+      "finalReview": "Vérification finale"
+    },
+    "items": {
+      "title": "Articles de Facture",
+      "description": "Ajouter services et articles avec prix",
+      "addItem": "Ajouter Article",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Entrer la description du service",
+      "quantity": "Quantité",
+      "rate": "Taux",
+      "amount": "Montant",
+      "itemTotal": "Total Article",
+      "remove": "Supprimer",
+      "atLeastOne": "Au moins un article est requis",
+      "descriptionRequired": "La description est requise",
+      "quantityPositive": "La quantité doit être supérieure à 0",
+      "rateNonNegative": "Le taux ne peut pas être négatif"
+    },
+    "events": {
+      "linkEvent": "Lier à un Événement (Optionnel)",
+      "linkDescription": "Connecter à un événement pour pré-remplir les articles",
+      "selectEvent": "Sélectionner un Événement",
+      "noEvent": "Aucun événement sélectionné - Ajouter articles manuellement",
+      "noEvents": "Aucun événement trouvé",
+      "noEventsDescription": "Aucun événement trouvé pour ce {{recipient}}. Vous pouvez ajouter des articles manuellement à l'étape suivante.",
+          "itemsLoaded": "{{count}} article(s) chargé(s) depuis l'événement",
+    "noItemsFound": "Aucun article trouvé pour cet événement",
+    "loadFailed": "Échec du chargement des détails de l'événement"
+    },
+    "dates": {
+      "title": "Dates de Facture",
+      "description": "Définir dates d'émission et d'échéance",
+      "issueDate": "Date d'Émission",
+      "dueDate": "Date d'Échéance",
+      "issueDateRequired": "La date d'émission est requise",
+      "dueDateRequired": "La date d'échéance est requise",
+      "dueDateAfterIssue": "La date d'échéance doit être après la date d'émission"
+    },
+    "payment": {
+      "title": "Paramètres de Paiement",
+      "description": "Configurer méthode de paiement et devise",
+      "currency": "Devise",
+      "paymentMethod": "Méthode de Paiement",
+      "status": "Statut"
+    },
+    "additionalInfo": {
+      "title": "Informations Supplémentaires",
+      "description": "Ajouter notes et conditions",
+      "notes": "Notes",
+      "notesPlaceholder": "Ajouter des notes supplémentaires...",
+      "terms": "Conditions Générales",
+      "termsPlaceholder": "Conditions de paiement..."
+    },
+    "review": {
+      "title": "Vérifier & Confirmer",
+      "description": "Veuillez vérifier tous les détails avant de {{action} la {{type}}",
+      "recipientInfo": "Informations {recipient}",
+      "eventInfo": "Informations sur l'Événement",
+      "invoiceDetails": "Détails de la Facture",
+      "itemsSummary": "Récapitulatif des Articles ({{count}})",
+      "finalAmount": "Montant Final"
+    },
+    "success": {
+      "created": "Facture Créée avec Succès !",
+      "updated": "Facture Modifiée !",
+      "createdMessage": "Votre facture a été créée avec succès.",
+      "updatedMessage": "Votre facture a été modifiée avec succès.",
+      "viewAll": "Voir Tous",
+      "invoices": "Factures",
+      "download": "Télécharger",
+      "pdf": "PDF",
+      "print": "Imprimer",
+      "invoice": "Facture",
+      "sendTo": "Envoyer à",
+      "close": "Fermer",
+      "editInvoice": "Modifier la Facture",
+      "success": "Facture créée avec succès"
+
+    }, 
+
+  "update": {
+    "success": "Facture mise à jour avec succès"
+  },
+    "draft": {
+      "title": "Brouillon non sauvegardé disponible",
+      "restore": "Restaurer",
+      "discard": "Supprimer"
+    },
+    "validation": {
+      "selectClient": "Veuillez sélectionner un client",
+      "selectPartner": "Veuillez sélectionner un partenaire",
+      "fixErrors": "Veuillez corriger les erreurs avant de continuer"
     }
-  }
+  },
+ "venueSettings": {
+    "title": "Paramètres",
+    "subtitle": "Gérez votre profil, les détails de votre lieu et vos préférences",
+    "tabs": {
+      "personal": "Informations Personnelles",
+      "security": "Sécurité",
+      "venue": "Détails du Lieu",
+      "amenities": "Équipements & Horaires",
+      "spaces": "Espaces du Lieu"
+    },
+    "personal": {
+      "title": "Informations Personnelles",
+      "description": "Mettez à jour vos informations personnelles et votre photo de profil",
+      "fields": {
+        "fullName": "Nom Complet",
+        "email": "Adresse Email (Lecture seule)",
+        "phone": "Numéro de Téléphone",
+        "avatar": "URL de l'Avatar"
+      },
+      "avatarPreview": {
+        "title": "Photo de Profil",
+        "description": "Aperçu de votre avatar"
+      },
+      "save": "Sauvegarder les Modifications"
+    },
+    "security": {
+      "title": "Changer le Mot de Passe",
+      "description": "Assurez-vous que votre compte utilise un mot de passe fort",
+      "fields": {
+        "currentPassword": "Mot de Passe Actuel",
+        "newPassword": "Nouveau Mot de Passe",
+        "confirmPassword": "Confirmer le Nouveau Mot de Passe"
+      },
+      "requirements": {
+        "title": "Exigences du Mot de Passe :",
+        "items": [
+          "Au moins 6 caractères",
+          "Mélange de lettres, chiffres et symboles recommandé",
+          "Évitez les mots de passe courants"
+        ]
+      },
+      "changePassword": "Changer le Mot de Passe"
+    },
+    "venue": {
+      "basicInfo": {
+        "title": "Informations de Base",
+        "fields": {
+          "venueName": "Nom du Lieu",
+          "description": "Description"
+        }
+      },
+      "address": {
+        "title": "Adresse",
+        "fields": {
+          "street": "Adresse",
+          "city": "Ville",
+          "state": "État/Province",
+          "zipCode": "Code Postal",
+          "country": "Pays"
+        }
+      },
+      "contact": {
+        "title": "Informations de Contact",
+        "fields": {
+          "phone": "Téléphone",
+          "email": "Email"
+        }
+      },
+      "save": "Sauvegarder les Détails du Lieu"
+    },
+    "amenities": {
+      "title": "Équipements du Lieu",
+      "description": "Ajoutez les équipements que votre lieu propose. Sélectionnez parmi les options courantes ou ajoutez des équipements personnalisés.",
+      "quickAdd": {
+        "title": "Ajout Rapide d'Équipements Courants",
+        "description": "Cliquez pour ajouter les équipements fréquemment utilisés pour les mariages et événements"
+      },
+      "customAmenity": {
+        "title": "Ajouter un Équipement Personnalisé",
+        "placeholder": "Entrez un équipement personnalisé (ex: Mobilier Vintage, Feu de Camp, etc.)",
+        "add": "Ajouter Personnalisé"
+      },
+      "selectedAmenities": {
+        "title": "Équipements Sélectionnés ({{count}})",
+        "clearAll": "Tout Effacer",
+        "empty": {
+          "title": "Aucun équipement ajouté",
+          "description": "Sélectionnez parmi les options courantes ci-dessus ou ajoutez des équipements personnalisés."
+        }
+      },
+      "operatingHours": {
+        "title": "Heures d'Ouverture",
+        "description": "Définissez l'horaire hebdomadaire de votre lieu",
+        "days": {
+          "monday": "lundi",
+          "tuesday": "mardi",
+          "wednesday": "mercredi",
+          "thursday": "jeudi",
+          "friday": "vendredi",
+          "saturday": "samedi",
+          "sunday": "dimanche"
+        },
+        "labels": {
+          "to": "à",
+          "closed": "Fermé"
+        }
+      },
+      "save": "Sauvegarder les Équipements & Horaires"
+    },
+    "spaces": {
+      "title": "Espaces du Lieu",
+      "description": "Gérez les différents espaces dans votre lieu",
+      "existingSpaces": {
+        "title": "Espaces Existants ({{count}})",
+        "capacity": "Capacité",
+        "price": "Prix",
+        "status": {
+          "active": "Actif",
+          "inactive": "Inactif"
+        },
+        "actions": {
+          "edit": "Modifier l'espace",
+          "delete": "Supprimer l'espace"
+        }
+      },
+      "emptyState": {
+        "title": "Aucun Espace pour le Moment",
+        "description": "Ajoutez différents espaces dans votre lieu pour offrir plus d'options de réservation à vos clients."
+      },
+      "form": {
+        "addTitle": "Ajouter un Nouvel Espace",
+        "editTitle": "Modifier l'Espace",
+        "fields": {
+          "spaceName": "Nom de l'Espace",
+          "basePrice": "Prix de Base ($)",
+          "description": "Description",
+          "minCapacity": "Capacité Minimum",
+          "maxCapacity": "Capacité Maximum"
+        },
+        "activeLabel": "Actif (disponible pour les réservations)",
+        "images": {
+          "title": "Images de l'Espace"
+        },
+        "actions": {
+          "add": "Ajouter l'Espace",
+          "update": "Mettre à Jour l'Espace",
+          "cancel": "Annuler"
+        }
+      },
+      "save": "Sauvegarder Tous les Changements"
+    },
+    "common": {
+      "loading": "Chargement des paramètres...",
+      "tryAgain": "Réessayer",
+      "save": "Sauvegarder",
+      "cancel": "Annuler",
+      "add": "Ajouter",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "confirm": "Confirmer",
+      "yes": "Oui",
+      "no": "Non"
+    },
+    "validation": {
+      "required": "Ce champ est requis",
+      "email": "Veuillez fournir un email valide",
+      "minLength": "Doit contenir au moins {min} caractères",
+      "passwordsMatch": "Les mots de passe doivent correspondre",
+      "capacityRange": "La capacité maximale doit être supérieure ou égale à la capacité minimale"
+    },
+    "notifications": {
+      "success": {
+        "profileUpdated": "Profil mis à jour avec succès !",
+        "passwordChanged": "Mot de passe changé avec succès !",
+        "venueUpdated": "Paramètres du lieu mis à jour avec succès !",
+        "spaceCreated": "Espace créé avec succès",
+        "spaceUpdated": "Espace mis à jour avec succès",
+        "spaceDeleted": "Espace supprimé avec succès",
+        "amenityAdded": "Équipement ajouté",
+        "customAmenityAdded": "Équipement personnalisé ajouté",
+        "imageUploaded": "Image téléchargée avec succès",
+        "imageRemoved": "Image supprimée avec succès"
+      },
+      "error": {
+        "generic": "Une erreur est survenue",
+        "loadFailed": "Échec du chargement des paramètres",
+        "saveFailed": "Échec de la sauvegarde",
+        "deleteFailed": "Échec de la suppression",
+        "uploadFailed": "Échec du téléchargement",
+        "spaceNameRequired": "Le nom de l'espace est requis",
+        "capacityRequired": "La plage de capacité est requise",
+        "priceRequired": "Le prix est requis",
+        "amenityExists": "Cet équipement existe déjà",
+        "saveSpaceFirst": "Veuillez d'abord sauvegarder l'espace avant de télécharger des images"
+      },
+      "confirm": {
+        "deleteSpace": "Êtes-vous sûr de vouloir supprimer cet espace ?",
+        "clearAllAmenities": "Supprimer tous les équipements ?"
+      }
+    }
+  },
+ "notFound": {
+      "title": "404",
+      "message": "Page non trouvée",
+      "goToDashboard": "Aller au Tableau de Bord"
+    }
+
 }

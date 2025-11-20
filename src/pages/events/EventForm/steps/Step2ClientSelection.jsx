@@ -1,6 +1,7 @@
 // src/components/events/EventForm/steps/Step2ClientSelection.jsx
 import React, { useState } from "react";
 import { UserPlus, Plus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import ClientSelector from "../components/ClientSelector";
 import Button from "../../../../components/common/Button";
 import Input from "../../../../components/common/Input";
@@ -14,23 +15,24 @@ const Step2ClientSelection = ({
   errors,
   onCreateClient,
 }) => {
+  const { t } = useTranslation();
   const [showClientForm, setShowClientForm] = useState(false);
   const [newClient, setNewClient] = useState({ name: "", email: "", phone: "" });
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateClient = async () => {
     if (!newClient.name.trim()) {
-      toast.error("Client name is required");
+      toast.error(t('eventForm.step2.errors.clientNameRequired'));
       return;
     }
 
     if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
-      toast.error("Please enter a valid email");
+      toast.error(t('eventForm.step2.errors.validEmail'));
       return;
     }
 
     if (newClient.phone && newClient.phone.length !== 8) {
-      toast.error("Phone number must be 8 digits");
+      toast.error(t('eventForm.step2.errors.phoneLength'));
       return;
     }
 
@@ -52,7 +54,7 @@ const Step2ClientSelection = ({
       <div className="flex items-center justify-between mb-4">
         <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <UserPlus className="w-5 h-5 text-blue-500" />
-          Client Selection
+          {t('eventForm.step2.clientSelection')}
         </h4>
         <Button
           type="button"
@@ -61,7 +63,7 @@ const Step2ClientSelection = ({
           icon={showClientForm ? X : Plus}
           onClick={() => setShowClientForm(!showClientForm)}
         >
-          {showClientForm ? "Cancel" : "New Client"}
+          {showClientForm ? t('eventForm.step2.cancel') : t('eventForm.step2.newClient')}
         </Button>
       </div>
 
@@ -70,18 +72,18 @@ const Step2ClientSelection = ({
         <div className="mb-6 p-4 bg-white dark:bg-gray-900/20 border-2 border-gray-200 dark:border-gray-800 rounded-lg animate-in slide-in-from-top-2 duration-300">
           <h5 className="font-semibold text-gray-800 dark:text-gray-300 mb-3 flex items-center gap-2">
             <Plus className="w-4 h-4" />
-            Create New Client
+            {t('eventForm.step2.createNewClient')}
           </h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
             <Input
-              placeholder="Client Name *"
+              placeholder={t('eventForm.step2.clientNamePlaceholder')}
               value={newClient.name}
               onChange={(e) =>
                 setNewClient((prev) => ({ ...prev, name: e.target.value }))
               }
             />
             <Input
-              placeholder="Email"
+              placeholder={t('eventForm.step2.emailPlaceholder')}
               type="email"
               value={newClient.email}
               onChange={(e) =>
@@ -89,7 +91,7 @@ const Step2ClientSelection = ({
               }
             />
             <Input
-              placeholder="Phone Number (8 digits)"
+              placeholder={t('eventForm.step2.phonePlaceholder')}
               type="tel"
               pattern="[0-9]{8}"
               maxLength={8}
@@ -108,7 +110,7 @@ const Step2ClientSelection = ({
               onClick={handleCreateClient}
               loading={isCreating}
             >
-              Create & Select Client
+              {t('eventForm.step2.createAndSelect')}
             </Button>
           </div>
         </div>

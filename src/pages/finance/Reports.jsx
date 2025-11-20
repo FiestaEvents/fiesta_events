@@ -17,8 +17,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const FinanceReports = () => {
+  const { t } = useTranslation();
   const [reportType, setReportType] = useState("profit-loss");
   const [period, setPeriod] = useState("month");
   const [customRange, setCustomRange] = useState({
@@ -63,7 +65,7 @@ const FinanceReports = () => {
         break;
       case "custom":
         if (!customRange.startDate || !customRange.endDate) {
-          toast.error("Please select both start and end dates for custom range");
+          toast.error(t("reports.errors.selectDates"));
           return null;
         }
         return {
@@ -116,10 +118,10 @@ const FinanceReports = () => {
 
       setReportData(data);
       setShowPreview(true);
-      toast.success("Report generated successfully");
+      toast.success(t("reports.success.generated"));
     } catch (error) {
       console.error("Error generating report:", error);
-      toast.error(error.response?.data?.error || error.message || "Failed to generate report");
+      toast.error(error.response?.data?.error || error.message || t("reports.errors.generateFailed"));
     } finally {
       setIsGenerating(false);
     }
@@ -128,7 +130,7 @@ const FinanceReports = () => {
   // FIXED: Client-side CSV export for available reports only
   const handleExportCSV = () => {
     if (!reportData) {
-      toast.error("Please generate a report first");
+      toast.error(t("reports.errors.generateFirst"));
       return;
     }
 
@@ -168,10 +170,10 @@ const FinanceReports = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success("CSV exported successfully");
+      toast.success(t("reports.success.exported"));
     } catch (error) {
       console.error("Error exporting CSV:", error);
-      toast.error("Failed to export CSV");
+      toast.error(t("reports.errors.exportFailed"));
     }
   };
 
@@ -300,32 +302,32 @@ const FinanceReports = () => {
   const reportTypes = [
     {
       id: "profit-loss",
-      name: "Profit & Loss Statement",
-      description: "Revenue, expenses, and net profit overview",
+      name: t("reports.types.profitLoss.name"),
+      description: t("reports.types.profitLoss.description"),
       icon: TrendingUp,
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
       iconColor: "text-blue-600 dark:text-blue-400",
     },
     {
       id: "cash-flow",
-      name: "Cash Flow Statement",
-      description: "Cash inflows and outflows analysis",
+      name: t("reports.types.cashFlow.name"),
+      description: t("reports.types.cashFlow.description"),
       icon: DollarSign,
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
       iconColor: "text-purple-600 dark:text-purple-400",
     },
     {
       id: "expense-breakdown",
-      name: "Expense Breakdown",
-      description: "Detailed categorization of all expenses",
+      name: t("reports.types.expenseBreakdown.name"),
+      description: t("reports.types.expenseBreakdown.description"),
       icon: PieChart,
       bgColor: "bg-red-50 dark:bg-red-900/20",
       iconColor: "text-red-600 dark:text-red-400",
     },
     {
       id: "tax-summary",
-      name: "Tax Summary",
-      description: "Tax obligations and deductions",
+      name: t("reports.types.taxSummary.name"),
+      description: t("reports.types.taxSummary.description"),
       icon: FileText,
       bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
       iconColor: "text-yellow-600 dark:text-yellow-400",
@@ -337,10 +339,10 @@ const FinanceReports = () => {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Financial Reports
+          {t("reports.title")}
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Generate comprehensive financial reports for your business
+          {t("reports.description")}
         </p>
       </div>
 
@@ -350,11 +352,10 @@ const FinanceReports = () => {
           <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
-              Report Generation
+              {t("reports.notice.title")}
             </h4>
             <p className="text-sm text-blue-700 dark:text-blue-400">
-              Reports are generated from your financial data and can be
-              previewed on-screen or exported as CSV. All reports use actual API endpoints.
+              {t("reports.notice.description")}
             </p>
           </div>
         </div>
@@ -364,12 +365,12 @@ const FinanceReports = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Configure Report
+            {t("reports.configuration.title")}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Select
-              label="Report Type"
+              label={t("reports.configuration.reportType")}
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
             >
@@ -381,24 +382,24 @@ const FinanceReports = () => {
             </Select>
 
             <Select
-              label="Period"
+              label={t("reports.configuration.period")}
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
             >
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
-              <option value="year">This Year</option>
-              <option value="last-month">Last Month</option>
-              <option value="last-quarter">Last Quarter</option>
-              <option value="last-year">Last Year</option>
-              <option value="custom">Custom Range</option>
+              <option value="week">{t("reports.periods.week")}</option>
+              <option value="month">{t("reports.periods.month")}</option>
+              <option value="quarter">{t("reports.periods.quarter")}</option>
+              <option value="year">{t("reports.periods.year")}</option>
+              <option value="last-month">{t("reports.periods.lastMonth")}</option>
+              <option value="last-quarter">{t("reports.periods.lastQuarter")}</option>
+              <option value="last-year">{t("reports.periods.lastYear")}</option>
+              <option value="custom">{t("reports.periods.custom")}</option>
             </Select>
 
             {period === "custom" && (
               <>
                 <Input
-                  label="Start Date"
+                  label={t("reports.configuration.startDate")}
                   type="date"
                   value={customRange.startDate}
                   onChange={(e) =>
@@ -410,7 +411,7 @@ const FinanceReports = () => {
                 />
 
                 <Input
-                  label="End Date"
+                  label={t("reports.configuration.endDate")}
                   type="date"
                   value={customRange.endDate}
                   onChange={(e) =>
@@ -433,7 +434,7 @@ const FinanceReports = () => {
               loading={isGenerating}
               disabled={isGenerating}
             >
-              {isGenerating ? "Generating..." : "Generate Report"}
+              {isGenerating ? t("reports.configuration.generating") : t("reports.configuration.generate")}
             </Button>
             {reportData && (
               <Button
@@ -441,7 +442,7 @@ const FinanceReports = () => {
                 icon={Download}
                 onClick={handleExportCSV}
               >
-                Export to CSV
+                {t("reports.configuration.export")}
               </Button>
             )}
           </div>
@@ -454,14 +455,14 @@ const FinanceReports = () => {
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Report Preview
+                {t("reports.preview.title")}
               </h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowPreview(false)}
               >
-                Close
+                {t("reports.preview.close")}
               </Button>
             </div>
 
@@ -471,7 +472,7 @@ const FinanceReports = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Revenue
+                        {t("reports.preview.totalRevenue")}
                       </p>
                       <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {formatCurrency(reportData?.revenue || 0)}
@@ -479,7 +480,7 @@ const FinanceReports = () => {
                     </div>
                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Expenses
+                        {t("reports.preview.totalExpenses")}
                       </p>
                       <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {formatCurrency(reportData?.expenses || 0)}
@@ -487,7 +488,7 @@ const FinanceReports = () => {
                     </div>
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Net Profit
+                        {t("reports.preview.netProfit")}
                       </p>
                       <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {formatCurrency(reportData?.profitability || (reportData?.revenue || 0) - (reportData?.expenses || 0))}
@@ -502,7 +503,7 @@ const FinanceReports = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Current Balance
+                        {t("reports.preview.currentBalance")}
                       </p>
                       <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {formatCurrency(reportData?.currentBalance || 0)}
@@ -514,16 +515,16 @@ const FinanceReports = () => {
                       <thead className="bg-gray-50 dark:bg-gray-800">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                            Period
+                            {t("reports.preview.period")}
                           </th>
                           <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                            Inflow
+                            {t("reports.preview.inflow")}
                           </th>
                           <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                            Outflow
+                            {t("reports.preview.outflow")}
                           </th>
                           <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                            Net Flow
+                            {t("reports.preview.netFlow")}
                           </th>
                         </tr>
                       </thead>
@@ -554,7 +555,10 @@ const FinanceReports = () => {
                 <div className="space-y-4">
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Total {reportType === "expense-breakdown" ? "Expenses" : "Income"}
+                      {reportType === "expense-breakdown" 
+                        ? t("reports.preview.totalExpenses")
+                        : t("reports.preview.totalRevenue")
+                      }
                     </p>
                     <p className={`text-2xl font-bold ${
                       reportType === "expense-breakdown" 
@@ -573,13 +577,13 @@ const FinanceReports = () => {
                     <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                          Category
+                          {t("reports.preview.category")}
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                          Amount
+                          {t("reports.preview.amount")}
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                          Percentage
+                          {t("reports.preview.percentage")}
                         </th>
                       </tr>
                     </thead>
@@ -614,7 +618,7 @@ const FinanceReports = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Income
+                        {t("reports.preview.totalRevenue")}
                       </p>
                       <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {formatCurrency(reportData?.totalIncome || 0)}
@@ -622,7 +626,7 @@ const FinanceReports = () => {
                     </div>
                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Expenses
+                        {t("reports.preview.totalExpenses")}
                       </p>
                       <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {formatCurrency(reportData?.totalExpense || 0)}
@@ -630,7 +634,7 @@ const FinanceReports = () => {
                     </div>
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Taxable Income
+                        {t("reports.preview.taxableIncome")}
                       </p>
                       <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {formatCurrency(reportData?.taxableIncome || 0)}
@@ -638,45 +642,10 @@ const FinanceReports = () => {
                     </div>
                     <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Tax Paid
+                        {t("reports.preview.totalTaxPaid")}
                       </p>
                       <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                         {formatCurrency(reportData?.totalTaxPaid || 0)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {reportType === "summary" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Income
-                      </p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(reportData?.summary?.totalIncome || reportData?.totalIncome || 0)}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Total Expenses
-                      </p>
-                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {formatCurrency(reportData?.summary?.totalExpenses || reportData?.totalExpenses || 0)}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Net Profit
-                      </p>
-                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {formatCurrency(
-                          reportData?.summary?.netProfit || 
-                          (reportData?.summary?.totalIncome || reportData?.totalIncome || 0)
-                          (reportData?.summary?.totalExpenses || reportData?.totalExpenses || 0)
-                        )}
                       </p>
                     </div>
                   </div>
@@ -686,11 +655,12 @@ const FinanceReports = () => {
           </div>
         </div>
       )}
-        {/* Report Types Grid */}
+
+      {/* Report Types Grid */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Available Reports
+            {t("reports.types.available")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {reportTypes.map((type) => {
@@ -729,10 +699,10 @@ const FinanceReports = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Quick Reports
+            {t("reports.quickReports.title")}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Generate commonly used reports with one click
+            {t("reports.quickReports.description")}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -746,7 +716,7 @@ const FinanceReports = () => {
               className="h-auto py-4 flex-col gap-2"
             >
               <Calendar className="w-5 h-5" />
-              <span>Monthly P&L</span>
+              <span>{t("reports.quickReports.monthlyPL")}</span>
             </Button>
 
             <Button
@@ -759,7 +729,7 @@ const FinanceReports = () => {
               className="h-auto py-4 flex-col gap-2"
             >
               <DollarSign className="w-5 h-5" />
-              <span>Quarterly Cash Flow</span>
+              <span>{t("reports.quickReports.quarterlyCashFlow")}</span>
             </Button>
 
             <Button
@@ -772,7 +742,7 @@ const FinanceReports = () => {
               className="h-auto py-4 flex-col gap-2"
             >
               <PieChart className="w-5 h-5" />
-              <span>Annual Expenses</span>
+              <span>{t("reports.quickReports.annualExpenses")}</span>
             </Button>
 
             <Button
@@ -785,7 +755,7 @@ const FinanceReports = () => {
               className="h-auto py-4 flex-col gap-2"
             >
               <FileText className="w-5 h-5" />
-              <span>Tax Summary</span>
+              <span>{t("reports.quickReports.taxSummary")}</span>
             </Button>
           </div>
         </div>

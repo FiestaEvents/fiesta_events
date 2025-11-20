@@ -1,13 +1,16 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { MessageSquare } from 'lucide-react';
 import Badge from '../../../components/common/Badge';
 import EmptyState from '../../../components/common/EmptyState';
 
 const CommentsTab = ({ task, formatDateTime }) => {
+  const { t } = useTranslation();
+
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-        Comments ({task.comments?.length || 0})
+        {t('tasks.detail.comments.title')} ({task.comments?.length || 0})
       </h3>
       
       {task.comments?.length > 0 ? (
@@ -22,13 +25,15 @@ const CommentsTab = ({ task, formatDateTime }) => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {comment.author?.name || "Unknown User"}
+                    {comment.author?.name || t('tasks.detail.comments.unknownUser')}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {formatDateTime(comment.createdAt)}
                   </span>
                   {comment.isEdited && (
-                    <Badge variant="gray" size="sm">edited</Badge>
+                    <Badge variant="gray" size="sm">
+                      {t('tasks.detail.comments.edited')}
+                    </Badge>
                   )}
                 </div>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
@@ -41,8 +46,8 @@ const CommentsTab = ({ task, formatDateTime }) => {
       ) : (
         <EmptyState
           icon={MessageSquare}
-          title="No comments yet"
-          description="Be the first to comment on this task."
+          title={t('tasks.detail.comments.noComments')}
+          description={t('tasks.detail.comments.noCommentsDescription')}
           size="lg"
         />
       )}

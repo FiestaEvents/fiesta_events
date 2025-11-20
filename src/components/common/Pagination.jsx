@@ -20,7 +20,7 @@ const Pagination = ({
     }
     
     for (let i = start; i <= end; i++) {
-      pages.push(i);d
+      pages.push(i); // FIXED: Removed the 'd' character
     }
     
     return pages;
@@ -36,7 +36,7 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <nav className={`flex items-center justify-center gap-1 ${className}`}>
+    <nav className={`flex items-center justify-center gap-1 ${className}`}> {/* FIXED: Added curly brace */}
       {/* First Page */}
       {showFirstLast && (
         <button

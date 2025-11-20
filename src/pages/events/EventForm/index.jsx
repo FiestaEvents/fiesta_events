@@ -1,4 +1,4 @@
-// src/components/events/EventForm/index.jsx - FIXED 403 Error
+// src/components/events/EventForm/index.jsx - With Complete Translations
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -26,6 +26,7 @@ import {
 // Hooks
 import { useEventForm } from "../../../hooks/useEventForm";
 import { useFormValidation } from "../../../hooks/useFormValidation";
+import { useTranslation } from "react-i18next";
 
 const TOTAL_STEPS = 5;
 
@@ -40,6 +41,7 @@ const EventForm = ({
   const { id: urlEventId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const isModal = location.pathname === "/events/new" ? true : isOpen !== undefined;
   const eventId = isModal ? modalEventId : urlEventId;
@@ -55,8 +57,6 @@ const EventForm = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState(null);
-
-  // ✅ NEW: Store original event data to preserve venueId
   const [originalEventData, setOriginalEventData] = useState(null);
 
   // Custom hooks
@@ -83,7 +83,7 @@ const EventForm = ({
 
   const { validateStep } = useFormValidation();
 
-  // ✅ NEW: Fetch and store original event data when editing
+  // Fetch and store original event data when editing
   useEffect(() => {
     if (isEditMode && eventId && !originalEventData) {
       const fetchEventData = async () => {
@@ -100,7 +100,7 @@ const EventForm = ({
     }
   }, [isEditMode, eventId, originalEventData]);
 
-  // Draft management (unchanged)
+  // Draft management
   useEffect(() => {
     if (!isEditMode && !eventId) {
       const draft = localStorage.getItem("eventFormDraft");
@@ -143,18 +143,18 @@ const EventForm = ({
       setFormData(draftData.savedData);
       setCurrentStep(draftData.savedStep);
       clearDraft();
-      toast.success("Draft restored successfully!");
+      toast.success(t('eventForm.messages.draftRestored'));
     }
-  }, [draftData, setFormData, clearDraft]);
+  }, [draftData, setFormData, clearDraft, t]);
 
-  // Prefill effects (unchanged)
+  // Prefill effects
   useEffect(() => {
     if (!isEditMode && prefillClient && prefillClient._id) {
       setSelectedClient(prefillClient._id);
       setFormData((prev) => ({ ...prev, clientId: prefillClient._id }));
-      toast.success(`Client "${prefillClient.name}" pre-selected`);
+      toast.success(t('eventForm.messages.clientPreselected', { name: prefillClient.name }));
     }
-  }, [prefillClient, isEditMode, setFormData, setSelectedClient]);
+  }, [prefillClient, isEditMode, setFormData, setSelectedClient, t]);
 
   useEffect(() => {
     if (!isEditMode && prefillPartner && prefillPartner._id && partners.length > 0) {
@@ -163,7 +163,7 @@ const EventForm = ({
         const newPartner = {
           partner: partner._id,
           partnerName: partner.name,
-          service: partner.category || "General Service",
+          service: partner.category || t('eventForm.step3.servicePartners'),
           category: partner.category,
           priceType: partner.priceType || "fixed",
           rate: partner.priceType === "fixed" ? partner.fixedRate : partner.hourlyRate,
@@ -176,10 +176,10 @@ const EventForm = ({
           ...prev,
           partners: [newPartner],
         }));
-        toast.success(`Partner "${partner.name}" pre-selected`);
+        toast.success(t('eventForm.messages.partnerPreselected', { name: partner.name }));
       }
     }
-  }, [prefillPartner, partners, isEditMode, setFormData]);
+  }, [prefillPartner, partners, isEditMode, setFormData, t]);
 
   useEffect(() => {
     if (initialDate && !isEditMode) {
@@ -199,11 +199,11 @@ const EventForm = ({
         startDate: dateString,
         endDate: dateString,
       }));
-      toast.success(`Date ${dateString} pre-selected`);
+      toast.success(t('eventForm.messages.datePreselected', { date: dateString }));
     }
-  }, [initialDate, isEditMode, setFormData]);
+  }, [initialDate, isEditMode, setFormData, t]);
 
-  // Auto-update venue base price (unchanged)
+  // Auto-update venue base price
   useEffect(() => {
     if (!formData.venueSpaceId || !venueSpaces.length) return;
 
@@ -221,7 +221,7 @@ const EventForm = ({
     });
   }, [formData.venueSpaceId, venueSpaces, setFormData]);
 
-  // Validation warnings (unchanged - keeping for brevity)
+  // Validation warnings
   useEffect(() => {
     if (!formData.venueSpaceId || !formData.guestCount || !venueSpaces.length) {
       setWarnings((prev) => {
@@ -261,12 +261,18 @@ const EventForm = ({
       if (capacityMax && guestCount > capacityMax) {
         newWarnings.guestCount = {
           type: "error",
-          message: `Guest count (${guestCount}) exceeds venue capacity (max: ${capacityMax})`,
+          message: t('eventForm.step3.warnings.guestCountExceeds', { 
+            count: guestCount, 
+            max: capacityMax 
+          }),
         };
       } else if (capacityMin && guestCount < capacityMin) {
         newWarnings.guestCount = {
           type: "warning",
-          message: `Guest count (${guestCount}) is below venue minimum (min: ${capacityMin})`,
+          message: t('eventForm.step3.warnings.guestCountBelow', { 
+            count: guestCount, 
+            min: capacityMin 
+          }),
         };
       } else {
         delete newWarnings.guestCount;
@@ -274,9 +280,9 @@ const EventForm = ({
 
       return newWarnings;
     });
-  }, [formData.venueSpaceId, formData.guestCount, venueSpaces, setWarnings]);
+  }, [formData.venueSpaceId, formData.guestCount, venueSpaces, setWarnings, t]);
 
-  // Date conflict check (unchanged)
+  // Date conflict check
   useEffect(() => {
     if (
       !formData.venueSpaceId ||
@@ -320,7 +326,7 @@ const EventForm = ({
       if (conflictingEvents.length > 0) {
         newWarnings.dateConflict = {
           type: "error",
-          message: `Venue space has ${conflictingEvents.length} conflicting event(s) at this time`,
+          message: t('eventForm.step3.warnings.dateConflict', { count: conflictingEvents.length }),
           conflicts: conflictingEvents,
         };
       } else {
@@ -338,9 +344,10 @@ const EventForm = ({
     existingEvents,
     eventId,
     setWarnings,
+    t,
   ]);
 
-  // Price calculations (unchanged)
+  // Price calculations
   const calculateEventHours = useCallback(() => {
     try {
       if (!formData.startDate || !formData.endDate) return 1;
@@ -415,16 +422,16 @@ const EventForm = ({
     calculateEventHours,
   ]);
 
-  // Handlers (unchanged)
+  // Handlers
   const handleCreateClient = useCallback(
     async (newClient) => {
       if (!newClient.name.trim()) {
-        toast.error("Client name is required");
+        toast.error(t('eventForm.messages.clientNameRequired'));
         return;
       }
 
       if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
-        toast.error("Please enter a valid email");
+        toast.error(t('eventForm.messages.validEmailRequired'));
         return;
       }
 
@@ -440,14 +447,14 @@ const EventForm = ({
         setSelectedClient(createdClient._id);
         setFormData((prev) => ({ ...prev, clientId: createdClient._id }));
 
-        toast.success(`Client "${createdClient.name}" created successfully!`);
+        toast.success(t('eventForm.messages.clientCreated', { name: createdClient.name }));
       } catch (error) {
         console.error("Error creating client:", error);
-        toast.error(error.response?.data?.message || "Failed to create client");
+        toast.error(error.response?.data?.message || t('eventForm.messages.clientCreationFailed'));
         throw error;
       }
     },
-    [setClients, setSelectedClient, setFormData]
+    [setClients, setSelectedClient, setFormData, t]
   );
 
   const handleAddPartner = useCallback(
@@ -455,7 +462,7 @@ const EventForm = ({
       const fullPartner = partners.find((p) => p._id === partnerData.partner);
       
       if (!fullPartner) {
-        toast.error("Partner not found");
+        toast.error(t('eventForm.messages.partnerNotFound'));
         return;
       }
 
@@ -480,9 +487,9 @@ const EventForm = ({
         partners: [...prev.partners, newPartner],
       }));
       
-      toast.success(`${fullPartner.name} added to event`);
+      toast.success(t('eventForm.messages.partnerAdded', { name: fullPartner.name }));
     },
-    [partners, setFormData]
+    [partners, setFormData, t]
   );
 
   const handleUpdatePartner = useCallback(
@@ -516,12 +523,12 @@ const EventForm = ({
         ...prev,
         partners: prev.partners.filter((_, i) => i !== index),
       }));
-      toast.success(`${partner.partnerName} removed`);
+      toast.success(t('eventForm.messages.partnerRemoved', { name: partner.partnerName }));
     },
-    [formData.partners, setFormData]
+    [formData.partners, setFormData, t]
   );
 
-  // Navigation (unchanged)
+  // Navigation
   const nextStep = useCallback(() => {
     const validationErrors = validateStep(currentStep, formData, selectedClient);
     setErrors(validationErrors);
@@ -529,9 +536,9 @@ const EventForm = ({
     if (Object.keys(validationErrors).length === 0) {
       setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
     } else {
-      toast.error("Please fix the errors before continuing");
+      toast.error(t('eventForm.messages.fixErrors'));
     }
-  }, [currentStep, formData, selectedClient, validateStep, setErrors]);
+  }, [currentStep, formData, selectedClient, validateStep, setErrors, t]);
 
   const prevStep = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
@@ -548,13 +555,13 @@ const EventForm = ({
     [currentStep, nextStep]
   );
 
-  // ✅ FIXED: Include venueId in submission
+  // Quick save handler
   const handleQuickSave = useCallback(
     async (e) => {
       e.preventDefault();
 
       if (!isEditMode) {
-        toast.error("Quick save is only available in edit mode");
+        toast.error(t('eventForm.messages.quickSaveEditOnly'));
         return;
       }
 
@@ -562,17 +569,16 @@ const EventForm = ({
       setErrors(validationErrors);
 
       if (Object.keys(validationErrors).length > 0) {
-        toast.error("Please fix the errors on this step before saving");
+        toast.error(t('eventForm.messages.fixStepErrors'));
         return;
       }
 
       try {
         setLoading(true);
 
-        // ✅ FIX: Include venueId from original event data
         const submitData = {
           ...formData,
-          venueId: originalEventData?.venueId, // ✅ Add this
+          venueId: originalEventData?.venueId,
           guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined,
           pricing: {
             basePrice: venuePrice,
@@ -599,7 +605,7 @@ const EventForm = ({
         console.log("📤 Quick Save Submission:", submitData);
 
         const response = await eventService.update(eventId, submitData);
-        toast.success("Event updated successfully");
+        toast.success(t('eventForm.messages.eventUpdated'));
 
         if (onSuccess) {
           onSuccess(response);
@@ -614,7 +620,7 @@ const EventForm = ({
         }
       } catch (error) {
         console.error("Error updating event:", error);
-        toast.error(error.response?.data?.message || "Failed to update event");
+        toast.error(error.response?.data?.message || t('eventForm.messages.updateFailed'));
       } finally {
         setLoading(false);
       }
@@ -635,10 +641,11 @@ const EventForm = ({
       onClose,
       returnUrl,
       navigate,
+      t,
     ]
   );
 
-  // ✅ FIXED: Include venueId in submission
+  // Main submit handler
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -652,17 +659,16 @@ const EventForm = ({
       setErrors(validationErrors);
 
       if (Object.keys(validationErrors).length > 0) {
-        toast.error("Please fix the form errors");
+        toast.error(t('eventForm.messages.fixFormErrors'));
         return;
       }
 
       try {
         setLoading(true);
 
-        // ✅ FIX: Include venueId for updates
         const submitData = {
           ...formData,
-          venueId: isEditMode ? originalEventData?.venueId : undefined, // ✅ Add for edit mode
+          venueId: isEditMode ? originalEventData?.venueId : undefined,
           guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined,
           pricing: {
             basePrice: venuePrice,
@@ -691,17 +697,17 @@ const EventForm = ({
         let response;
         if (isEditMode) {
           response = await eventService.update(eventId, submitData);
-          toast.success("Event updated successfully");
+          toast.success(t('eventForm.messages.eventUpdated'));
         } else {
           response = await eventService.create(submitData);
-          toast.success("Event created successfully");
+          toast.success(t('eventForm.messages.eventCreated'));
           clearDraft();
         }
 
         const createdEvent = response.event || response.data || response;
         const finalEventId = createdEvent._id || eventId;
 
-        // Payment and invoice logic (unchanged for brevity)
+        // Payment logic
         if (formData.payment.amount && parseFloat(formData.payment.amount) > 0) {
           try {
             const paymentData = {
@@ -716,10 +722,10 @@ const EventForm = ({
             };
 
             await paymentService.create(paymentData);
-            toast.success("Payment recorded successfully");
+            toast.success(t('eventForm.messages.paymentRecorded'));
           } catch (paymentError) {
             console.error("Error creating payment:", paymentError);
-            toast.error("Event saved but failed to record payment");
+            toast.error(t('eventForm.messages.paymentFailed'));
           }
         }
 
@@ -734,10 +740,9 @@ const EventForm = ({
         if (onClose) onClose();
       } catch (error) {
         console.error("Error saving event:", error);
-        toast.error(
-          error.response?.data?.message ||
-            `Failed to ${isEditMode ? "update" : "create"} event`
-        );
+        const errorMessage = error.response?.data?.message || 
+          t(isEditMode ? 'eventForm.messages.updateFailed' : 'eventForm.messages.createFailed');
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -760,6 +765,7 @@ const EventForm = ({
       returnUrl,
       navigate,
       onClose,
+      t,
     ]
   );
 
@@ -803,7 +809,7 @@ const EventForm = ({
     }
   }, [isModal, onClose, returnUrl, navigate, setFormData, setErrors, setWarnings, setSelectedClient]);
 
-  // Render step content (unchanged)
+  // Render step content
   const renderStepContent = useCallback(() => {
     switch (currentStep) {
       case 1:
@@ -895,7 +901,7 @@ const EventForm = ({
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading event data...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('eventForm.messages.loading')}</p>
         </div>
       </div>
     );
@@ -926,7 +932,7 @@ const EventForm = ({
               icon={ChevronLeft}
               onClick={prevStep}
             >
-              Previous
+              {t('eventForm.buttons.previous')}
             </Button>
           )}
         </div>
@@ -934,9 +940,11 @@ const EventForm = ({
         <div className="flex items-center gap-4">
           {currentStep >= 3 && (
             <div className="text-right px-4 py-2 bg-white dark:bg-gray-600 rounded-lg shadow">
-              <div className="text-xs text-gray-600 dark:text-gray-400">Total Amount</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                {t('eventForm.totalAmount')}
+              </div>
               <div className="text-2xl font-bold text-orange-600">
-                {totalPrice.toFixed(2)} TND
+                {totalPrice.toFixed(2)} {t('eventForm.currency')}
               </div>
             </div>
           )}
@@ -949,13 +957,13 @@ const EventForm = ({
               loading={loading}
               onClick={handleQuickSave}
             >
-              Save Changes
+              {t('eventForm.buttons.saveChanges')}
             </Button>
           )}
           
           {currentStep < TOTAL_STEPS ? (
             <Button type="button" variant="primary" icon={ChevronRight} onClick={nextStep}>
-              Continue
+              {t('eventForm.buttons.continue')}
             </Button>
           ) : (
             <Button
@@ -966,12 +974,12 @@ const EventForm = ({
               onClick={handleSubmit}
             >
               {isEditMode
-                ? "Update Event"
+                ? t('eventForm.buttons.updateEvent')
                 : fromClient
-                ? `Create for ${prefillClient?.name}`
+                ? t('eventForm.buttons.createForClient', { name: prefillClient?.name })
                 : fromPartner
-                ? `Create with ${prefillPartner?.name}`
-                : "Create Event"}
+                ? t('eventForm.buttons.createWithPartner', { name: prefillPartner?.name })
+                : t('eventForm.buttons.createEvent')}
             </Button>
           )}
         </div>

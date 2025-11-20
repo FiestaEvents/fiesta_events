@@ -1,14 +1,7 @@
 // src/components/events/EventForm/FormHeader.jsx
 import React from "react";
 import { Check, Calendar, UserPlus, Building, CreditCard, FileText } from "lucide-react";
-
-const stepConfigs = {
-  1: { title: "Event Details", icon: Calendar, color: "blue" },
-  2: { title: "Client Selection", icon: UserPlus, color: "green" },
-  3: { title: "Venue & Pricing", icon: Building, color: "purple" },
-  4: { title: "Payment", icon: CreditCard, color: "indigo" },
-  5: { title: "Review", icon: FileText, color: "orange" },
-};
+import { useTranslation } from "react-i18next";
 
 const FormHeader = ({ 
   currentStep, 
@@ -17,8 +10,18 @@ const FormHeader = ({
   prefillClient, 
   prefillPartner, 
   returnUrl,
-  onStepClick  // New prop for handling step clicks
+  onStepClick
 }) => {
+  const { t } = useTranslation();
+
+  const stepConfigs = {
+    1: { title: t('eventForm.steps.eventDetails'), icon: Calendar, color: "blue" },
+    2: { title: t('eventForm.steps.clientSelection'), icon: UserPlus, color: "green" },
+    3: { title: t('eventForm.steps.venuePricing'), icon: Building, color: "purple" },
+    4: { title: t('eventForm.steps.payment'), icon: CreditCard, color: "indigo" },
+    5: { title: t('eventForm.steps.review'), icon: FileText, color: "orange" },
+  };
+
   const currentStepConfig = stepConfigs[currentStep];
 
   return (
@@ -31,11 +34,18 @@ const FormHeader = ({
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isEditMode ? "Edit Event" : "Create New Event"}
+              {isEditMode 
+                ? t('eventForm.header.editEvent')
+                : t('eventForm.header.createNewEvent')
+              }
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
               <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-              Step {currentStep} of {totalSteps}: {currentStepConfig.title}
+              {t('eventForm.header.stepProgress', { 
+                current: currentStep, 
+                total: totalSteps, 
+                title: currentStepConfig.title 
+              })}
             </p>
           </div>
         </div>
@@ -46,26 +56,26 @@ const FormHeader = ({
             {prefillClient && (
               <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
                 <Check className="w-3 h-3" />
-                Client: {prefillClient.name}
+                {t('eventForm.header.prefillClient', { name: prefillClient.name })}
               </span>
             )}
             {prefillPartner && (
               <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full flex items-center gap-1">
                 <Check className="w-3 h-3" />
-                Partner: {prefillPartner.name}
+                {t('eventForm.header.prefillPartner', { name: prefillPartner.name })}
               </span>
             )}
           </div>
         )}
 
-        {/* Step Indicator - Now clickable for previous steps */}
+        {/* Step Indicator */}
         <div className="flex items-center justify-center">
           <div className="flex items-center w-full max-w-3xl">
-            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step, index) => {
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => {
               const config = stepConfigs[step];
               const isActive = step === currentStep;
               const isComplete = step < currentStep;
-              const isClickable = step < currentStep; // Can click on previous steps
+              const isClickable = step < currentStep;
 
               return (
                 <div key={step} className="flex items-center flex-1">

@@ -8,6 +8,7 @@ import {
   MapPin,
   Percent,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Select from "../../../../components/common/Select";
 import Input from "../../../../components/common/Input";
 import Badge from "../../../../components/common/Badge";
@@ -24,6 +25,7 @@ const Step3VenuePricing = ({
   onAddPartner,
   onRemovePartner,
 }) => {
+  const { t } = useTranslation();
   const selectedSpace = venueSpaces.find(
     (s) => s._id === formData.venueSpaceId
   );
@@ -46,13 +48,13 @@ const Step3VenuePricing = ({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
+    <div className="space-y-6 animate-in fade-in-from-right-5 duration-300">
       {/* Venue Space Selection */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <Building className="w-5 h-5 text-purple-500" />
           <h4 className="font-semibold text-gray-900 dark:text-white">
-            Venue Space Selection
+            {t('eventForm.step3.venueSpaceSelection')}
           </h4>
         </div>
 
@@ -79,18 +81,18 @@ const Step3VenuePricing = ({
 
         <Select
           name="venueSpaceId"
-          label="Select Venue Space"
+          label={t('eventForm.step3.selectVenueSpace')}
           value={formData.venueSpaceId}
           onChange={handleChange}
           error={errors.venueSpaceId}
           required
           options={[
-            { value: "", label: "Select a Venue Space" },
+            { value: "", label: t('eventForm.step3.selectVenueSpacePlaceholder') },
             ...venueSpaces
               .filter((space) => space.isActive && !space.isArchived)
               .map((space) => ({
                 value: space._id,
-                label: `${space.name} - ${space.basePrice} TND (${space.capacity?.min || 0}-${space.capacity?.max || 0} guests)`,
+                label: `${space.name} - ${space.basePrice} ${t('eventForm.currency')} (${space.capacity?.min || 0}-${space.capacity?.max || 0} ${t('eventForm.step3.guests')})`,
               })),
           ]}
         />
@@ -100,7 +102,7 @@ const Step3VenuePricing = ({
           <div className="mt-4 p-4 bg-white dark:bg-gray-900/20 border rounded-lg">
             <div className="flex justify-between items-start gap-3 mb-3">
               <h5 className="font-semibold text-gray-700 dark:text-gray-300">
-                Selected Venue Space
+                {t('eventForm.step3.selectedVenueSpace')}
               </h5>
               <Button
                 type="button"
@@ -110,7 +112,7 @@ const Step3VenuePricing = ({
                   handleChange({ target: { name: "venueSpaceId", value: "" } })
                 }
               >
-                Change Space
+                {t('eventForm.step3.changeSpace')}
               </Button>
             </div>
             <div className="space-y-2">
@@ -123,15 +125,15 @@ const Step3VenuePricing = ({
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600 dark:text-gray-400">
-                    Base Price:
+                    {t('eventForm.step3.basePrice')}:
                   </span>
                   <p className="font-bold text-orange-600">
-                    {selectedSpace.basePrice} TND
+                    {selectedSpace.basePrice} {t('eventForm.currency')}
                   </p>
                 </div>
                 <div>
                   <span className="text-gray-600 dark:text-gray-400">
-                    Capacity:
+                    {t('eventForm.step3.capacity')}:
                   </span>
                   <p className="font-semibold text-gray-900 dark:text-white">
                     {selectedSpace.capacity?.min || 0}-
@@ -140,17 +142,19 @@ const Step3VenuePricing = ({
                 </div>
                 <div>
                   <span className="text-gray-600 dark:text-gray-400">
-                    Status:
+                    {t('eventForm.step3.status')}:
                   </span>
                   <p className="font-semibold text-gray-900 dark:text-white capitalize">
-                    {selectedSpace.isReserved ? "Reserved" : "Available"}
+                    {selectedSpace.isReserved 
+                      ? t('eventForm.step3.reserved') 
+                      : t('eventForm.step3.available')}
                   </p>
                 </div>
               </div>
               {selectedSpace.amenities?.length > 0 && (
                 <div className="mt-2">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Amenities:
+                    {t('eventForm.step3.amenities')}:
                   </span>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedSpace.amenities.map((amenity, idx) => (
@@ -201,12 +205,12 @@ const Step3VenuePricing = ({
           <div className="flex items-center gap-2 mb-4">
             <DollarSign className="w-5 h-5 text-green-500" />
             <h4 className="font-semibold text-gray-900 dark:text-white">
-              Pricing
+              {t('eventForm.step3.pricing')}
             </h4>
           </div>
           <div className="space-y-4">
             <Input
-              label="Base Price (from venue space)"
+              label={t('eventForm.step3.basePriceLabel')}
               name="pricing.basePrice"
               type="number"
               step="0.01"
@@ -215,211 +219,195 @@ const Step3VenuePricing = ({
               error={errors["pricing.basePrice"]}
               leftElement={
                 <span className="text-sm font-semibold text-gray-500 pointer-events-none">
-                  TND
+                  {t('eventForm.currency')}
                 </span>
               }
               disabled
             />
             
-            {/* Discoutns */}
-<div className="space-y-3">
-  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-    Discount (Optional)
-  </label>
-  
-  {/* Minimal Tab Toggle */}
-  <div className="flex items-center gap-1 border-b-2 border-gray-200 dark:border-gray-700">
-    <button
-      type="button"
-      onClick={() =>
-        handleChange({
-          target: {
-            name: "pricing.discountType",
-            value: "percentage",
-          },
-        })
-      }
-      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-all ${
-        formData.pricing.discountType === "percentage"
-          ? "text-orange-600 border-b-2 border-orange-600 -mb-0.5 dark:text-orange-400 dark:border-orange-400"
-          : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-      }`}
-    >
-      <Percent className="w-4 h-4" />
-      <span>Percentage</span>
-    </button>
-    <button
-      type="button"
-      onClick={() =>
-        handleChange({
-          target: { name: "pricing.discountType", value: "fixed" },
-        })
-      }
-      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-all ${
-        formData.pricing.discountType === "fixed"
-          ? "text-orange-600 border-b-2 border-orange-600 -mb-0.5 dark:text-orange-400 dark:border-orange-400"
-          : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-      }`}
-    >
-      <DollarSign className="w-4 h-4" />
-      <span>Fixed Amount</span>
-    </button>
-  </div>
+            {/* Discounts */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('eventForm.step3.discount')}
+              </label>
+              
+              {/* Minimal Tab Toggle */}
+              <div className="flex items-center gap-1 border-b-2 border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleChange({
+                      target: {
+                        name: "pricing.discountType",
+                        value: "percentage",
+                      },
+                    })
+                  }
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-all ${
+                    formData.pricing.discountType === "percentage"
+                      ? "text-orange-600 border-b-2 border-orange-600 -mb-0.5 dark:text-orange-400 dark:border-orange-400"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  }`}
+                >
+                  <Percent className="w-4 h-4" />
+                  <span>{t('eventForm.step3.discountTypes.percentage')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleChange({
+                      target: { name: "pricing.discountType", value: "fixed" },
+                    })
+                  }
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-all ${
+                    formData.pricing.discountType === "fixed"
+                      ? "text-orange-600 border-b-2 border-orange-600 -mb-0.5 dark:text-orange-400 dark:border-orange-400"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  }`}
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span>{t('eventForm.step3.discountTypes.fixed')}</span>
+                </button>
+              </div>
 
-  {/* Custom input with enhanced positive number validation */}
-  <div className="relative">
-    <input
-      name="pricing.discount"
-      type="number"
-      step="0.01"
-      min="0"
-      max={
-        formData.pricing.discountType === "percentage"
-          ? "100"
-          : undefined
-      }
-      value={formData.pricing.discount}
-      onChange={(e) => {
-        const value = e.target.value;
+              {/* Discount Input */}
+              <div className="relative">
+                <input
+                  name="pricing.discount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max={
+                    formData.pricing.discountType === "percentage"
+                      ? "100"
+                      : undefined
+                  }
+                  value={formData.pricing.discount}
+                  onChange={(e) => {
+                    const value = e.target.value;
 
-        // Allow empty string (for clearing the input)
-        if (value === "") {
-          handleChange(e);
-          return;
-        }
+                    if (value === "") {
+                      handleChange(e);
+                      return;
+                    }
 
-        // Convert to number and validate
-        const numValue = parseFloat(value);
+                    const numValue = parseFloat(value);
 
-        // Enhanced positive number validation
-        if (!isNaN(numValue) && numValue >= 0) {
-          // Check max limit for percentage
-          if (
-            formData.pricing.discountType === "percentage" &&
-            numValue > 100
-          ) {
-            return; // Don't update if percentage exceeds 100
-          }
-          
-          // Ensure only 2 decimal places
-          const formattedValue = Math.round(numValue * 100) / 100;
-          e.target.value = formattedValue.toString();
-          handleChange(e);
-        } else if (numValue < 0) {
-          // Reset to empty if negative number
-          e.target.value = "";
-          handleChange({
-            target: {
-              name: "pricing.discount",
-              value: ""
-            }
-          });
-        }
-      }}
-      onBlur={(e) => {
-        // Format the value on blur to ensure proper decimal places
-        const value = e.target.value;
-        if (value && !isNaN(parseFloat(value)) && parseFloat(value) >= 0) {
-          const formattedValue = parseFloat(value).toFixed(2);
-          if (formattedValue !== value) {
-            e.target.value = formattedValue;
-            handleChange({
-              target: {
-                name: "pricing.discount",
-                value: formattedValue
-              }
-            });
-          }
-        }
-      }}
-      onKeyDown={(e) => {
-        // Prevent negative sign, 'e' (scientific notation), and multiple decimal points
-        const invalidKeys = ['-', 'e', 'E', '+'];
-        if (invalidKeys.includes(e.key)) {
-          e.preventDefault();
-          return;
-        }
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      if (
+                        formData.pricing.discountType === "percentage" &&
+                        numValue > 100
+                      ) {
+                        return;
+                      }
+                      
+                      const formattedValue = Math.round(numValue * 100) / 100;
+                      e.target.value = formattedValue.toString();
+                      handleChange(e);
+                    } else if (numValue < 0) {
+                      e.target.value = "";
+                      handleChange({
+                        target: {
+                          name: "pricing.discount",
+                          value: ""
+                        }
+                      });
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const value = e.target.value;
+                    if (value && !isNaN(parseFloat(value)) && parseFloat(value) >= 0) {
+                      const formattedValue = parseFloat(value).toFixed(2);
+                      if (formattedValue !== value) {
+                        e.target.value = formattedValue;
+                        handleChange({
+                          target: {
+                            name: "pricing.discount",
+                            value: formattedValue
+                          }
+                        });
+                      }
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    const invalidKeys = ['-', 'e', 'E', '+'];
+                    if (invalidKeys.includes(e.key)) {
+                      e.preventDefault();
+                      return;
+                    }
 
-        // Prevent multiple decimal points
-        if (e.key === '.' && e.target.value.includes('.')) {
-          e.preventDefault();
-          return;
-        }
+                    if (e.key === '.' && e.target.value.includes('.')) {
+                      e.preventDefault();
+                      return;
+                    }
 
-        // Allow only numbers, decimal point, and control keys
-        if (
-          !/[\d.]/.test(e.key) &&
-          !['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
-        ) {
-          e.preventDefault();
-        }
-      }}
-      onPaste={(e) => {
-        // Get pasted text
-        const pastedText = e.clipboardData.getData("text");
-        const numValue = parseFloat(pastedText);
+                    if (
+                      !/[\d.]/.test(e.key) &&
+                      !['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onPaste={(e) => {
+                    const pastedText = e.clipboardData.getData("text");
+                    const numValue = parseFloat(pastedText);
 
-        // Enhanced paste validation
-        if (isNaN(numValue) || numValue < 0) {
-          e.preventDefault();
-          return;
-        }
+                    if (isNaN(numValue) || numValue < 0) {
+                      e.preventDefault();
+                      return;
+                    }
 
-        // Prevent paste if percentage exceeds 100
-        if (
-          formData.pricing.discountType === "percentage" &&
-          numValue > 100
-        ) {
-          e.preventDefault();
-          return;
-        }
+                    if (
+                      formData.pricing.discountType === "percentage" &&
+                      numValue > 100
+                    ) {
+                      e.preventDefault();
+                      return;
+                    }
 
-        // Format pasted value to 2 decimal places
-        const formattedValue = Math.round(numValue * 100) / 100;
-        if (formattedValue.toString() !== pastedText) {
-          e.preventDefault();
-          handleChange({
-            target: {
-              name: "pricing.discount",
-              value: formattedValue.toString()
-            }
-          });
-        }
-      }}
-      onWheel={(e) => {
-        // Prevent number change on scroll
-        e.target.blur();
-      }}
-      placeholder={
-        formData.pricing.discountType === "percentage"
-          ? "0"
-          : "0.00"
-      }
-      className="w-full px-3 py-2 pr-14 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-    />
-    
-    {/* Currency/Percentage indicator */}
-    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500 pointer-events-none">
-      {formData.pricing.discountType === "percentage" ? "%" : "TND"}
-    </span>
-  </div>
+                    const formattedValue = Math.round(numValue * 100) / 100;
+                    if (formattedValue.toString() !== pastedText) {
+                      e.preventDefault();
+                      handleChange({
+                        target: {
+                          name: "pricing.discount",
+                          value: formattedValue.toString()
+                        }
+                      });
+                    }
+                  }}
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                  placeholder={
+                    formData.pricing.discountType === "percentage"
+                      ? "0"
+                      : "0.00"
+                  }
+                  className="w-full px-3 py-2 pr-14 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500 pointer-events-none">
+                  {formData.pricing.discountType === "percentage" ? "%" : t('eventForm.currency')}
+                </span>
+              </div>
 
-  {/* Inline Preview */}
-  {formData.pricing.discount > 0 &&
-    formData.pricing.basePrice > 0 && (
-      <div className="flex items-baseline gap-2 text-sm">
-        <span className="text-gray-500 dark:text-gray-400">
-          Final:
-        </span>
-        <span className="font-bold text-lg text-gray-900 dark:text-white">
-          {calculateFinalPrice()} TND
-        </span>
-        <span className="text-xs text-green-600 dark:text-green-400">
-          (-{calculateDiscount()} TND)
-        </span>
-      </div>
-    )}
-</div>
+              {/* Inline Preview */}
+              {formData.pricing.discount > 0 &&
+                formData.pricing.basePrice > 0 && (
+                  <div className="flex items-baseline gap-2 text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {t('eventForm.step3.finalPrice')}:
+                    </span>
+                    <span className="font-bold text-lg text-gray-900 dark:text-white">
+                      {calculateFinalPrice()} {t('eventForm.currency')}
+                    </span>
+                    <span className="text-xs text-green-600 dark:text-green-400">
+                      (-{calculateDiscount()} {t('eventForm.currency')})
+                    </span>
+                  </div>
+                )}
+            </div>
           </div>
         </div>
 
@@ -428,7 +416,7 @@ const Step3VenuePricing = ({
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-5 h-5 text-blue-500" />
             <h4 className="font-semibold text-gray-900 dark:text-white">
-              Service Partners
+              {t('eventForm.step3.servicePartners')}
             </h4>
           </div>
           <PartnerSelector

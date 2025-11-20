@@ -5,6 +5,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Professional Reusable Table Component with Pagination
@@ -50,6 +51,7 @@ const Table = ({
   onPageSizeChange,
   pageSizeOptions = [10, 25, 50, 100],
 }) => {
+  const { t } = useTranslation();
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
@@ -146,11 +148,23 @@ const Table = ({
     return pages;
   };
 
+  // Get sort indicator
+  const getSortIndicator = (column) => {
+    if (sortConfig.key === column.accessor) {
+      return sortConfig.direction === "asc" 
+        ? t("table.sorting.asc") 
+        : t("table.sorting.desc");
+    }
+    return t("table.sorting.neutral");
+  };
+
   if (loading) {
     return (
       <div className="w-full p-8 text-center">
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">Loading...</p>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
+          {t("table.loading")}
+        </p>
       </div>
     );
   }
@@ -189,11 +203,7 @@ const Table = ({
                     {column.header}
                     {column.sortable && (
                       <span className="text-gray-400">
-                        {sortConfig.key === column.accessor
-                          ? sortConfig.direction === "asc"
-                            ? "↑"
-                            : "↓"
-                          : "↕"}
+                        {getSortIndicator(column)}
                       </span>
                     )}
                   </div>
@@ -208,7 +218,7 @@ const Table = ({
                   colSpan={columns.length + (selectable ? 1 : 0)}
                   className="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
                 >
-                  {emptyMessage}
+                  {emptyMessage || t("table.noData")}
                 </td>
               </tr>
             ) : (
@@ -264,16 +274,20 @@ const Table = ({
           {/* Items info */}
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-700 dark:text-gray-300">
-              Showing <span className="font-medium">{startItem}</span> to{" "}
-              <span className="font-medium">{endItem}</span> of{" "}
-              <span className="font-medium">{totalItems}</span> results
+              {t("table.pagination.showing")}{" "}
+              <span className="font-medium">{startItem}</span>{" "}
+              {t("table.pagination.to")}{" "}
+              <span className="font-medium">{endItem}</span>{" "}
+              {t("table.pagination.of")}{" "}
+              <span className="font-medium">{totalItems}</span>{" "}
+              {t("table.pagination.results")}
             </div>
 
             {/* Page size selector */}
             {onPageSizeChange && (
               <div className="flex items-center gap-2">
                 <label className="text-sm text-gray-700 dark:text-gray-300">
-                  Per page:
+                  {t("table.pagination.perPage")}
                 </label>
                 <select
                   value={pageSize}
@@ -297,7 +311,7 @@ const Table = ({
               onClick={() => onPageChange?.(1)}
               disabled={!canGoPrevious}
               className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="First page"
+              title={t("table.pagination.firstPage")}
             >
               <ChevronsLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -307,7 +321,7 @@ const Table = ({
               onClick={() => onPageChange?.(currentPage - 1)}
               disabled={!canGoPrevious}
               className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Previous page"
+              title={t("table.pagination.previousPage")}
             >
               <ChevronLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -340,7 +354,7 @@ const Table = ({
               onClick={() => onPageChange?.(currentPage + 1)}
               disabled={!canGoNext}
               className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Next page"
+              title={t("table.pagination.nextPage")}
             >
               <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -350,7 +364,7 @@ const Table = ({
               onClick={() => onPageChange?.(totalPages)}
               disabled={!canGoNext}
               className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Last page"
+              title={t("table.pagination.lastPage")}
             >
               <ChevronsRight className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>

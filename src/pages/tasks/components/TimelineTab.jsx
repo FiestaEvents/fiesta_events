@@ -1,8 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Calendar, User, CheckSquare, AlertCircle, Clock } from 'lucide-react';
 import EmptyState from '../../../components/common/EmptyState';
 
 const TimelineTab = ({ task, formatDateTime }) => {
+  const { t } = useTranslation();
+
   const TimelineItem = ({ date, title, description, icon }) => {
     const getIcon = () => {
       switch (icon) {
@@ -23,7 +26,7 @@ const TimelineTab = ({ task, formatDateTime }) => {
           <p className="font-medium text-gray-900 dark:text-white">{title}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{description}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {date ? formatDateTime(date) : 'Unknown date'}
+            {date ? formatDateTime(date) : t('tasks.detail.timeline.unknownDate')}
           </p>
         </div>
       </div>
@@ -36,8 +39,8 @@ const TimelineTab = ({ task, formatDateTime }) => {
   if (task.createdAt) {
     timelineEvents.push({
       date: task.createdAt,
-      title: "Task Created",
-      description: `by ${task.createdBy?.name || "System"}`,
+      title: t('tasks.detail.timeline.events.created'),
+      description: `${t('tasks.detail.timeline.by')} ${task.createdBy?.name || "System"}`,
       icon: "create"
     });
   }
@@ -46,8 +49,8 @@ const TimelineTab = ({ task, formatDateTime }) => {
   if (task.assignedAt && task.assignedTo) {
     timelineEvents.push({
       date: task.assignedAt,
-      title: "Task Assigned",
-      description: `to ${task.assignedTo.name}`,
+      title: t('tasks.detail.timeline.events.assigned'),
+      description: `${t('tasks.detail.timeline.to')} ${task.assignedTo.name}`,
       icon: "assign"
     });
   }
@@ -56,8 +59,10 @@ const TimelineTab = ({ task, formatDateTime }) => {
   if (task.completedAt) {
     timelineEvents.push({
       date: task.completedAt,
-      title: "Task Completed",
-      description: task.completedBy ? `by ${task.completedBy.name}` : "Task completed",
+      title: t('tasks.detail.timeline.events.completed'),
+      description: task.completedBy 
+        ? `${t('tasks.detail.timeline.by')} ${task.completedBy.name}` 
+        : t('tasks.detail.timeline.events.completed'),
       icon: "complete"
     });
   }
@@ -66,8 +71,8 @@ const TimelineTab = ({ task, formatDateTime }) => {
   if (task.cancelledAt) {
     timelineEvents.push({
       date: task.cancelledAt,
-      title: "Task Cancelled",
-      description: task.cancellationReason || "No reason provided",
+      title: t('tasks.detail.timeline.events.cancelled'),
+      description: task.cancellationReason || t('tasks.detail.timeline.noReason'),
       icon: "cancel"
     });
   }
@@ -78,8 +83,8 @@ const TimelineTab = ({ task, formatDateTime }) => {
       if (historyItem.type === 'status_change') {
         timelineEvents.push({
           date: historyItem.timestamp,
-          title: `Status Changed to ${historyItem.newStatus}`,
-          description: historyItem.notes || `Changed by ${historyItem.user?.name || 'System'}`,
+          title: t('tasks.detail.timeline.events.statusChanged', { status: historyItem.newStatus }),
+          description: historyItem.notes || `${t('tasks.detail.timeline.by')} ${historyItem.user?.name || 'System'}`,
           icon: "status"
         });
       }
@@ -92,7 +97,7 @@ const TimelineTab = ({ task, formatDateTime }) => {
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-        Timeline
+        {t('tasks.detail.timeline.title')}
       </h3>
 
       {sortedTimelineEvents.length > 0 ? (
@@ -110,8 +115,8 @@ const TimelineTab = ({ task, formatDateTime }) => {
       ) : (
         <EmptyState
           icon={Clock}
-          title="No timeline events"
-          description="Timeline events will appear here as the task progresses."
+          title={t('tasks.detail.timeline.noEvents')}
+          description={t('tasks.detail.timeline.noEventsDescription')}
           size="lg"
         />
       )}

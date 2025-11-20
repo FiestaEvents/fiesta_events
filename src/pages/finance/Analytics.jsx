@@ -14,8 +14,10 @@ import {
   Activity,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const Analytics = () => {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState("month");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -65,7 +67,7 @@ const Analytics = () => {
       });
     } catch (error) {
       console.error("Error fetching analytics:", error);
-      toast.error("Failed to load analytics");
+      toast.error(t("analytics.errors.loadFailed"));
       // Set empty data on error
       setAnalyticsData({
         summary: {},
@@ -119,28 +121,28 @@ const Analytics = () => {
 
   const keyMetrics = [
     {
-      label: "Total Revenue",
+      label: t("analytics.metrics.totalRevenue"),
       value: formatCurrency(totalIncome),
       icon: TrendingUp,
       bgColor: "bg-green-50 dark:bg-green-900/20",
       iconColor: "text-green-600 dark:text-green-400",
     },
     {
-      label: "Total Expenses",
+      label: t("analytics.metrics.totalExpenses"),
       value: formatCurrency(totalExpenses),
       icon: TrendingDown,
       bgColor: "bg-red-50 dark:bg-red-900/20",
       iconColor: "text-red-600 dark:text-red-400",
     },
     {
-      label: "Net Profit",
+      label: t("analytics.metrics.netProfit"),
       value: formatCurrency(netProfit),
       icon: DollarSign,
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
       iconColor: "text-blue-600 dark:text-blue-400",
     },
     {
-      label: "Profit Margin",
+      label: t("analytics.metrics.profitMargin"),
       value: `${profitMargin}%`,
       icon: Target,
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
@@ -180,10 +182,10 @@ const Analytics = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Financial Analytics
+            {t("analytics.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Comprehensive analysis of your financial performance
+            {t("analytics.description")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -192,10 +194,10 @@ const Analytics = () => {
             onChange={(e) => setPeriod(e.target.value)}
             className="min-w-[140px]"
           >
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="quarter">This Quarter</option>
-            <option value="year">This Year</option>
+            <option value="week">{t("analytics.period.week")}</option>
+            <option value="month">{t("analytics.period.month")}</option>
+            <option value="quarter">{t("analytics.period.quarter")}</option>
+            <option value="year">{t("analytics.period.year")}</option>
           </Select>
         </div>
       </div>
@@ -230,19 +232,19 @@ const Analytics = () => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Revenue vs Expenses Trend
+              {t("analytics.trends.title")}
             </h3>
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-green-500" />
                 <span className="text-gray-600 dark:text-gray-400">
-                  Revenue
+                  {t("analytics.trends.revenue")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-red-500" />
                 <span className="text-gray-600 dark:text-gray-400">
-                  Expenses
+                  {t("analytics.trends.expenses")}
                 </span>
               </div>
             </div>
@@ -297,7 +299,7 @@ const Analytics = () => {
             <div className="text-center py-8">
               <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 dark:text-gray-400">
-                No trend data available
+                {t("analytics.trends.noData")}
               </p>
             </div>
           )}
@@ -310,7 +312,7 @@ const Analytics = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-              Revenue Sources
+              {t("analytics.revenue.title")}
             </h3>
 
             {incomeBreakdown.length > 0 ? (
@@ -336,7 +338,7 @@ const Analytics = () => {
                         />
                       </div>
                       <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {source.percentage}% of total revenue
+                        {t("analytics.revenue.percentage", { percentage: source.percentage })}
                       </span>
                     </div>
                   );
@@ -346,7 +348,7 @@ const Analytics = () => {
               <div className="text-center py-8">
                 <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-600 dark:text-gray-400">
-                  No revenue data
+                  {t("analytics.revenue.noData")}
                 </p>
               </div>
             )}
@@ -357,7 +359,7 @@ const Analytics = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-              Expense Breakdown
+              {t("analytics.expenses.title")}
             </h3>
 
             {expensesBreakdown.length > 0 ? (
@@ -383,7 +385,7 @@ const Analytics = () => {
                         />
                       </div>
                       <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {category.percentage}% of total expenses
+                        {t("analytics.expenses.percentage", { percentage: category.percentage })}
                       </span>
                     </div>
                   );
@@ -393,7 +395,7 @@ const Analytics = () => {
               <div className="text-center py-8">
                 <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-600 dark:text-gray-400">
-                  No expense data
+                  {t("analytics.expenses.noData")}
                 </p>
               </div>
             )}
@@ -405,13 +407,13 @@ const Analytics = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            Profit & Loss Overview
+            {t("analytics.profitLoss.title")}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                Total Revenue
+                {t("analytics.profitLoss.totalRevenue")}
               </p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {formatCurrency(totalIncome)}
@@ -420,7 +422,7 @@ const Analytics = () => {
 
             <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                Total Expenses
+                {t("analytics.profitLoss.totalExpenses")}
               </p>
               <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                 {formatCurrency(totalExpenses)}
@@ -429,13 +431,13 @@ const Analytics = () => {
 
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                Net Profit
+                {t("analytics.profitLoss.netProfit")}
               </p>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {formatCurrency(netProfit)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                Margin: {profitMargin}%
+                {t("analytics.profitLoss.margin", { percentage: profitMargin })}
               </p>
             </div>
           </div>
@@ -448,7 +450,7 @@ const Analytics = () => {
           <div className="flex items-center gap-2 mb-6">
             <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Cash Flow Summary
+              {t("analytics.cashFlow.title")}
             </h3>
           </div>
 
@@ -471,10 +473,10 @@ const Analytics = () => {
                       </p>
                       <div className="flex items-center gap-4 mt-1 text-xs">
                         <span className="text-green-600 dark:text-green-400">
-                          In: {formatCurrency(income)}
+                          {t("analytics.cashFlow.in")}: {formatCurrency(income)}
                         </span>
                         <span className="text-red-600 dark:text-red-400">
-                          Out: {formatCurrency(expense)}
+                          {t("analytics.cashFlow.out")}: {formatCurrency(expense)}
                         </span>
                       </div>
                     </div>
@@ -497,7 +499,7 @@ const Analytics = () => {
             <div className="text-center py-8">
               <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 dark:text-gray-400">
-                No cash flow data
+                {t("analytics.cashFlow.noData")}
               </p>
             </div>
           )}

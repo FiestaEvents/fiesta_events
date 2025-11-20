@@ -1,9 +1,11 @@
 // src/components/events/EventForm/components/ClientSelector.jsx
 import React, { useState } from "react";
 import { Search, Check, User, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Input from "../../../../components/common/Input";
 
 const ClientSelector = ({ clients, selectedClient, onSelectClient, error, prefilledClient }) => {
+  const { t } = useTranslation();
   const [clientSearch, setClientSearch] = useState("");
 
   const filteredClients = clients.filter(
@@ -26,7 +28,7 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error, prefil
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 text-green-800 dark:text-green-300 font-semibold mb-1">
-                <span>Client Pre-selected</span>
+                <span>{t('eventForm.components.clientSelector.preSelected')}</span>
               </div>
               <p className="text-sm text-green-700 dark:text-green-400">
                 <strong>{prefilledClient.name}</strong>
@@ -42,7 +44,7 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error, prefil
       {/* Search Input */}
       <Input
         icon={Search}
-        placeholder="Search clients by name, email, or phone..."
+        placeholder={t('eventForm.components.clientSelector.searchPlaceholder')}
         value={clientSearch}
         onChange={(e) => setClientSearch(e.target.value)}
         className="mb-4"
@@ -82,7 +84,9 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error, prefil
                 {selectedClient === client._id && (
                   <div className="flex items-center gap-2 text-green-600">
                     <Check className="w-5 h-5 text-green-500" />
-                    <span className="text-xs font-semibold">Selected</span>
+                    <span className="text-xs font-semibold">
+                      {t('eventForm.components.clientSelector.selected')}
+                    </span>
                   </div>
                 )}
               </div>
@@ -91,8 +95,8 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error, prefil
         ) : (
           <div className="text-center py-12 text-gray-500">
             <User className="w-16 h-16 mx-auto mb-3 opacity-30" />
-            <p className="font-medium">No clients found</p>
-            <p className="text-sm mt-1">Try a different search or create a new client</p>
+            <p className="font-medium">{t('eventForm.components.clientSelector.noClients')}</p>
+            <p className="text-sm mt-1">{t('eventForm.components.clientSelector.noClientsDesc')}</p>
           </div>
         )}
       </div>

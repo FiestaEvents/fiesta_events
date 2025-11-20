@@ -18,6 +18,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../../hooks/useToast";
 import { taskService } from "../../api/index";
 import Button from "../../components/common/Button";
@@ -26,6 +27,7 @@ import Badge from "../../components/common/Badge";
 const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchived = false }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
 
   if (!isOpen || !task) return null;
@@ -85,11 +87,11 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
     try {
       setIsProcessing(true);
       await taskService.archive(task._id);
-      showSuccess("Task archived successfully");
+      showSuccess(t('tasks.messages.success.archived'));
       onClose();
       refreshData();
     } catch (error) {
-      showError(error.response?.data?.message || "Failed to archive task");
+      showError(error.response?.data?.message || t('tasks.messages.error.archive'));
     } finally {
       setIsProcessing(false);
     }
@@ -101,11 +103,11 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
     try {
       setIsProcessing(true);
       await taskService.unarchive(task._id);
-      showSuccess("Task restored successfully");
+      showSuccess(t('tasks.messages.success.restored'));
       onClose();
       refreshData();
     } catch (error) {
-      showError(error.response?.data?.message || "Failed to restore task");
+      showError(error.response?.data?.message || t('tasks.messages.error.restore'));
     } finally {
       setIsProcessing(false);
     }
@@ -117,11 +119,11 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
     try {
       setIsProcessing(true);
       await taskService.delete(task._id);
-      showSuccess("Task deleted permanently");
+      showSuccess(t('tasks.messages.success.deleted'));
       onClose();
       refreshData();
     } catch (error) {
-      showError(error.response?.data?.message || "Failed to delete task");
+      showError(error.response?.data?.message || t('tasks.messages.error.delete'));
     } finally {
       setIsProcessing(false);
     }
@@ -167,19 +169,19 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                   </h3>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Badge color={getStatusColor(task.status)}>
-                      {task.status ? task.status.replace("_", " ") : "Unknown"}
+                      {task.status ? t(`tasks.status.${task.status}`) : t('tasks.status.unknown')}
                     </Badge>
                     <Badge color={getPriorityColor(task.priority)}>
-                      {task.priority || "Medium"}
+                      {task.priority ? t(`tasks.priority.${task.priority}`) : t('tasks.priority.medium')}
                     </Badge>
                     {task.category && (
                       <Badge color="blue">
-                        {task.category}
+                        {t(`tasks.category.${task.category}`)}
                       </Badge>
                     )}
                     {isOverdue(task.dueDate, task.status) && (
                       <Badge color="red">
-                        Overdue
+                        {t('tasks.detail.overdue')}
                       </Badge>
                     )}
                   </div>
@@ -187,7 +189,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                 <button
                   onClick={onClose}
                   className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors ml-4 flex-shrink-0"
-                  title="Close"
+                  title={t('tasks.close')}
                 >
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
@@ -199,7 +201,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                       <FileText className="w-4 h-4 text-orange-500" />
-                      Description
+                      {t('tasks.detail.description')}
                     </h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                       {task.description}
@@ -210,7 +212,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                 {/* Task Details Grid */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Task Details
+                    {t('tasks.detail.taskDetails')}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Left Column */}
@@ -219,9 +221,9 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                       <div className="flex items-center gap-3 text-sm">
                         <User className="w-5 h-5 text-orange-500 flex-shrink-0" />
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400">Assigned To</div>
+                          <div className="text-gray-500 dark:text-gray-400">{t('tasks.detail.assignedTo')}</div>
                           <div className="font-medium text-gray-900 dark:text-white">
-                            {task.assignedTo?.name || "Unassigned"}
+                            {task.assignedTo?.name || t('tasks.form.fields.unassigned')}
                           </div>
                         </div>
                       </div>
@@ -230,9 +232,9 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                       <div className="flex items-center gap-3 text-sm">
                         <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400">Due Date</div>
+                          <div className="text-gray-500 dark:text-gray-400">{t('tasks.detail.dueDate')}</div>
                           <div className={`font-medium ${isOverdue(task.dueDate, task.status) ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"}`}>
-                            {task.dueDate ? formatDateLong(task.dueDate) : "Not set"}
+                            {task.dueDate ? formatDateLong(task.dueDate) : t('tasks.detail.notSet')}
                           </div>
                         </div>
                       </div>
@@ -242,7 +244,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                         <div className="flex items-center gap-3 text-sm">
                           <Clock className="w-5 h-5 text-orange-500 flex-shrink-0" />
                           <div>
-                            <div className="text-gray-500 dark:text-gray-400">Start Date</div>
+                            <div className="text-gray-500 dark:text-gray-400">{t('tasks.detail.startDate')}</div>
                             <div className="font-medium text-gray-900 dark:text-white">
                               {formatDateLong(task.startDate)}
                             </div>
@@ -258,7 +260,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                         <CheckCircle className="w-5 h-5 text-orange-500 flex-shrink-0" />
                         <div className="flex-1">
                           <div className="flex justify-between text-gray-500 dark:text-gray-400 mb-1">
-                            <span>Progress</span>
+                            <span>{t('tasks.detail.progress')}</span>
                             <span>{task.progress || 0}%</span>
                           </div>
                           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -275,13 +277,13 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                         <div className="flex items-center gap-3 text-sm">
                           <Clock className="w-5 h-5 text-orange-500 flex-shrink-0" />
                           <div>
-                            <div className="text-gray-500 dark:text-gray-400">Time</div>
+                            <div className="text-gray-500 dark:text-gray-400">{t('tasks.detail.time')}</div>
                             <div className="font-medium text-gray-900 dark:text-white">
                               {task.actualHours ? `${task.actualHours}h` : ""}
                               {task.estimatedHours && (
                                 <span className="text-gray-500">
                                   {task.actualHours ? " / " : ""}
-                                  {task.estimatedHours}h estimated
+                                  {task.estimatedHours}h {t('tasks.estimated')}
                                 </span>
                               )}
                             </div>
@@ -294,9 +296,9 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                         <div className="flex items-center gap-3 text-sm">
                           <Users className="w-5 h-5 text-orange-500 flex-shrink-0" />
                           <div>
-                            <div className="text-gray-500 dark:text-gray-400">Created By</div>
+                            <div className="text-gray-500 dark:text-gray-400">{t('tasks.detail.createdBy')}</div>
                             <div className="font-medium text-gray-900 dark:text-white">
-                              {task.createdBy.name || "Unknown"}
+                              {task.createdBy.name || t('tasks.unknown')}
                             </div>
                           </div>
                         </div>
@@ -308,29 +310,29 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                 {/* Related Entities */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Related To
+                    {t('tasks.detail.relatedTo')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {task.relatedEvent && (
                       <Badge color="purple" className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        Event
+                        {t('tasks.event')}
                       </Badge>
                     )}
                     {task.relatedClient && (
                       <Badge color="blue" className="flex items-center gap-1">
                         <User className="w-3 h-3" />
-                        Client
+                        {t('tasks.client')}
                       </Badge>
                     )}
                     {task.relatedPartner && (
                       <Badge color="green" className="flex items-center gap-1">
                         <Users className="w-3 h-3" />
-                        Partner
+                        {t('tasks.partner')}
                       </Badge>
                     )}
                     {!task.relatedEvent && !task.relatedClient && !task.relatedPartner && (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">No related entities</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('tasks.detail.noRelated')}</span>
                     )}
                   </div>
                 </div>
@@ -340,7 +342,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                       <Tag className="w-4 h-4 text-orange-500" />
-                      Tags
+                      {t('tasks.detail.tags')}
                     </h4>
                     <div className="flex flex-wrap gap-1">
                       {task.tags.map((tag, index) => (
@@ -357,7 +359,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-red-500" />
-                      Blocked Reason
+                      {t('tasks.detail.blockedReason')}
                     </h4>
                     <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
                       {task.blockedReason}
@@ -379,7 +381,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                       disabled={isProcessing}
                       size="sm"
                     >
-                      {isProcessing ? "Archiving..." : "Archive"}
+                      {isProcessing ? t('tasks.archiving') : t('tasks.archiveTask')}
                     </Button>
                   </>
                 ) : (
@@ -391,7 +393,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                       disabled={isProcessing}
                       size="sm"
                     >
-                      {isProcessing ? "Restoring..." : "Restore"}
+                      {isProcessing ? t('tasks.restoring') : t('tasks.restoreTask')}
                     </Button>
                     <Button
                       variant="danger"
@@ -400,7 +402,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                       disabled={isProcessing}
                       size="sm"
                     >
-                      {isProcessing ? "Deleting..." : "Delete"}
+                      {isProcessing ? t('tasks.deleting') : t('tasks.deleteTask')}
                     </Button>
                   </>
                 )}
@@ -413,7 +415,7 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                     onClick={() => onEdit(task)}
                     size="sm"
                   >
-                    Edit
+                    {t('tasks.editTask')}
                   </Button>
                 )}
                 <Button
@@ -421,9 +423,9 @@ const TaskDetailModal = ({ isOpen, onClose, task, onEdit, refreshData, showArchi
                   size="sm"
                   onClick={handleViewFullDetails}
                   className="gap-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title="View Full Details"
+                  title={t('tasks.detail.moreDetails')}
                 >
-                  More Details
+                  {t('tasks.detail.moreDetails')}
                   <ArrowRight className="w-4 h-4 text-white" />
                 </Button>
               </div>

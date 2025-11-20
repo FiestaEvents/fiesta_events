@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Mail, 
   MessageSquare, 
@@ -12,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 
 const DetailsTab = ({ reminder, formatDate, getStatusColor, getPriorityColor }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const getNotificationIcon = (method) => {
     const icons = {
@@ -39,7 +41,7 @@ const DetailsTab = ({ reminder, formatDate, getStatusColor, getPriorityColor }) 
       {/* Notification Methods */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Notification Methods
+          {t('reminders.details.notificationMethods')}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {reminder.notificationMethods?.map((method, index) => {
@@ -59,7 +61,7 @@ const DetailsTab = ({ reminder, formatDate, getStatusColor, getPriorityColor }) 
         </div>
         {(!reminder.notificationMethods || reminder.notificationMethods.length === 0) && (
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            No notification methods configured
+            {t('reminders.noNotificationMethods')}
           </p>
         )}
       </div>
@@ -68,7 +70,7 @@ const DetailsTab = ({ reminder, formatDate, getStatusColor, getPriorityColor }) 
       {(reminder.relatedEvent || reminder.relatedClient || reminder.relatedTask) && (
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Related Items
+            {t('reminders.details.relatedTo')}
           </h3>
           <div className="space-y-3">
             {reminder.relatedEvent && (
@@ -79,7 +81,7 @@ const DetailsTab = ({ reminder, formatDate, getStatusColor, getPriorityColor }) 
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {reminder.relatedEvent.title}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Event</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('reminders.type.event')}</p>
                   </div>
                 </div>
                 <button
@@ -99,7 +101,7 @@ const DetailsTab = ({ reminder, formatDate, getStatusColor, getPriorityColor }) 
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {reminder.relatedClient.name}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Client</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('reminders.type.client')}</p>
                   </div>
                 </div>
                 <button
@@ -119,7 +121,7 @@ const DetailsTab = ({ reminder, formatDate, getStatusColor, getPriorityColor }) 
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {reminder.relatedTask.title}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Task</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('reminders.type.task')}</p>
                   </div>
                 </div>
                 <button

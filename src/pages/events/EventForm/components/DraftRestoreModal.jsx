@@ -1,10 +1,13 @@
 // src/components/events/EventForm/components/DraftRestoreModal.jsx
 import React from "react";
 import { History, Check, Trash2, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Button from "../../../../components/common/Button";
 import Badge from "../../../../components/common/Badge";
 
 const DraftRestoreModal = ({ draftData, onRestore, onDiscard }) => {
+  const { t } = useTranslation();
+  
   if (!draftData) return null;
 
   const { timestamp, savedData } = draftData;
@@ -27,32 +30,37 @@ const DraftRestoreModal = ({ draftData, onRestore, onDiscard }) => {
           {/* Content */}
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Draft Found!
+              {t('eventForm.components.draftModal.title')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              You have an unsaved draft from{" "}
-              {hours > 0 ? `${hours} hour${hours > 1 ? "s" : ""}` : `${minutes} minute${minutes > 1 ? "s" : ""}`} ago
+              {t('eventForm.components.draftModal.description', {
+                time: hours > 0 
+                  ? t('eventForm.components.draftModal.hoursAgo', { count: hours })
+                  : t('eventForm.components.draftModal.minutesAgo', { count: minutes })
+              })}
             </p>
 
             {/* Draft Info */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-left mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Event Title:
+                  {t('eventForm.components.draftModal.eventTitle')}:
                 </span>
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {savedData.title || "Untitled Event"}
+                  {savedData.title || t('eventForm.components.draftModal.untitled')}
                 </span>
               </div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Event Type:
+                  {t('eventForm.components.draftModal.eventType')}:
                 </span>
-                <Badge className="capitalize">{savedData.type || "N/A"}</Badge>
+                <Badge className="capitalize">
+                  {savedData.type || t('eventForm.step5.notAvailable')}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Last Saved:
+                  {t('eventForm.components.draftModal.lastSaved')}:
                 </span>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   {new Date(timestamp).toLocaleString()}
@@ -64,7 +72,7 @@ const DraftRestoreModal = ({ draftData, onRestore, onDiscard }) => {
             <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-yellow-800 dark:text-yellow-300 text-left">
-                If you discard this draft, all unsaved changes will be permanently lost.
+                {t('eventForm.components.draftModal.warning')}
               </p>
             </div>
           </div>
@@ -77,10 +85,10 @@ const DraftRestoreModal = ({ draftData, onRestore, onDiscard }) => {
               onClick={onDiscard}
               className="w-full hover:bg-red-50 hover:border-red-300 hover:text-red-600"
             >
-              Discard Draft
+              {t('eventForm.components.draftModal.discard')}
             </Button>
             <Button variant="primary" icon={Check} onClick={onRestore} className="w-full">
-              Restore Draft
+              {t('eventForm.components.draftModal.restore')}
             </Button>
           </div>
         </div>

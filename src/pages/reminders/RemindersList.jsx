@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
@@ -18,6 +19,7 @@ import { useToast } from "../../context/ToastContext";
 const RemindersList = () => {
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  const { t } = useTranslation();
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,7 +100,7 @@ const RemindersList = () => {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Failed to load reminders. Please try again.";
+        t('reminders.errorLoading');
       setError(errorMessage);
       showError(errorMessage);
       setReminders([]);
@@ -106,7 +108,7 @@ const RemindersList = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, status, type, priority, page, limit, showError]);
+  }, [search, status, type, priority, page, limit, showError, t]);
 
   // Show confirmation modal
   const showDeleteConfirmation = useCallback((reminderId, reminderName = "Reminder") => {
@@ -131,38 +133,33 @@ const RemindersList = () => {
   // Handle confirmed deletion
   const handleDeleteConfirm = useCallback(async (reminderId, reminderName = "Reminder") => {
     if (!reminderId) {
-      showError("Invalid reminder ID");
+      showError(t('reminders.validation.invalidId'));
       return;
     }
 
     try {
-      // Use the promise toast for loading state
       await promise(
         reminderService.delete(reminderId),
         {
-          loading: `Deleting ${reminderName}...`,
-          success: `${reminderName} deleted successfully`,
-          error: `Failed to delete ${reminderName}`
+          loading: t('reminders.notifications.deleting', { name: reminderName }),
+          success: t('reminders.notifications.deleted'),
+          error: t('reminders.notifications.deleteError')
         }
       );
 
-      // Refresh the reminders list
       fetchReminders();
       
-      // Close detail modal if the deleted reminder is currently selected
       if (selectedReminder?._id === reminderId) {
         setSelectedReminder(null);
         setIsDetailModalOpen(false);
       }
       
-      // Close confirmation modal
       closeConfirmationModal();
     } catch (err) {
-      // Error is already handled by the promise toast
       console.error("Delete reminder error:", err);
       closeConfirmationModal();
     }
-  }, [fetchReminders, selectedReminder, promise, showError, closeConfirmationModal]);
+  }, [fetchReminders, selectedReminder, promise, showError, closeConfirmationModal, t]);
 
   // Updated reminder deletion handler
   const handleDeleteReminder = useCallback((reminderId, reminderName = "Reminder") => {
@@ -184,25 +181,24 @@ const RemindersList = () => {
   // Handle snooze with options
   const handleSnoozeClick = useCallback((reminder) => {
     if (!reminder?._id) {
-      showError("Invalid reminder data");
+      showError(t('reminders.validation.invalidData'));
       return;
     }
     setSnoozeOptionsModal({ isOpen: true, reminder });
-  }, [showError]);
+  }, [showError, t]);
 
   // Handle snooze action with specific duration
   const handleSnoozeAction = useCallback(async (duration, unit = 'hours') => {
     const { reminder } = snoozeOptionsModal;
     
     if (!reminder?._id) {
-      showError("Invalid reminder data");
+      showError(t('reminders.validation.invalidData'));
       return;
     }
 
     try {
       setSnoozingReminders(prev => new Set(prev).add(reminder._id));
 
-      // Calculate snooze until date based on duration and unit
       const now = new Date();
       let snoozeUntil;
       
@@ -217,7 +213,6 @@ const RemindersList = () => {
           snoozeUntil = addHours(now, duration);
       }
 
-      // Format the date for the backend (ISO string)
       const snoozeData = {
         snoozeUntil: snoozeUntil.toISOString(),
         duration: duration,
@@ -227,22 +222,19 @@ const RemindersList = () => {
       await promise(
         reminderService.snooze(reminder._id, snoozeData),
         {
-          loading: `Snoozing reminder for ${duration} ${unit}...`,
-          success: `Reminder snoozed for ${duration} ${unit}`,
-          error: `Failed to snooze reminder`
+          loading: t('reminders.notifications.snoozing', { duration, unit }),
+          success: t('reminders.notifications.snoozed', { duration, unit }),
+          error: t('reminders.notifications.snoozeError')
         }
       );
       
-      // Refresh the list
       await fetchReminders();
       setSnoozeOptionsModal({ isOpen: false, reminder: null });
     } catch (err) {
       console.error("Error snoozing reminder:", err);
       
-      // Try alternative approach if the first one fails
       if (err.response?.data?.message?.includes("Invalid snooze date")) {
         try {
-          // Try with just the date string without additional fields
           const snoozeUntil = addHours(new Date(), duration);
           const alternativeData = {
             snoozeUntil: snoozeUntil.toISOString()
@@ -251,9 +243,9 @@ const RemindersList = () => {
           await promise(
             reminderService.snooze(reminder._id, alternativeData),
             {
-              loading: `Snoozing reminder for ${duration} ${unit}...`,
-              success: `Reminder snoozed for ${duration} ${unit}`,
-              error: `Failed to snooze reminder`
+              loading: t('reminders.notifications.snoozing', { duration, unit }),
+              success: t('reminders.notifications.snoozed', { duration, unit }),
+              error: t('reminders.notifications.snoozeError')
             }
           );
           await fetchReminders();
@@ -270,28 +262,27 @@ const RemindersList = () => {
         return newSet;
       });
     }
-  }, [snoozeOptionsModal, fetchReminders, promise, showError]);
+  }, [snoozeOptionsModal, fetchReminders, promise, showError, t]);
 
   // Handle unsnooze
   const handleUnsnooze = useCallback(async (reminder) => {
     if (!reminder?._id) {
-      showError("Invalid reminder data");
+      showError(t('reminders.validation.invalidData'));
       return;
     }
 
     try {
       setSnoozingReminders(prev => new Set(prev).add(reminder._id));
       
-      // Update status back to active and clear snooze fields
       await promise(
         reminderService.update(reminder._id, { 
           status: "active",
           snoozeUntil: null
         }),
         {
-          loading: "Activating reminder...",
-          success: "Reminder activated successfully",
-          error: "Failed to activate reminder"
+          loading: t('reminders.notifications.activating'),
+          success: t('reminders.notifications.unsnoozed'),
+          error: t('reminders.notifications.activateError')
         }
       );
       
@@ -305,7 +296,7 @@ const RemindersList = () => {
         return newSet;
       });
     }
-  }, [fetchReminders, promise, showError]);
+  }, [fetchReminders, promise, showError, t]);
 
   useEffect(() => {
     fetchReminders();
@@ -327,9 +318,9 @@ const RemindersList = () => {
       navigate(`/reminders/${reminder._id}`);
     } else {
       console.error('Invalid reminder data:', reminder);
-      showError('Cannot view reminder: Invalid data');
+      showError(t('reminders.validation.invalidData'));
     }
-  }, [navigate, showError]);
+  }, [navigate, showError, t]);
 
   const handleFormSuccess = useCallback(() => {
     fetchReminders();
@@ -337,10 +328,10 @@ const RemindersList = () => {
     setIsFormOpen(false);
     showSuccess(
       selectedReminder 
-        ? "Reminder updated successfully" 
-        : "Reminder created successfully"
+        ? t('reminders.notifications.updated')
+        : t('reminders.notifications.created')
     );
-  }, [fetchReminders, selectedReminder, showSuccess]);
+  }, [fetchReminders, selectedReminder, showSuccess, t]);
 
   const handleFormClose = useCallback(() => {
     setSelectedReminder(null);
@@ -353,13 +344,13 @@ const RemindersList = () => {
     setType("all");
     setPriority("all");
     setPage(1);
-    showInfo("Filters cleared");
-  }, [showInfo]);
+    showInfo(t('reminders.notifications.filtersCleared'));
+  }, [showInfo, t]);
 
   const handleRetry = useCallback(() => {
     fetchReminders();
-    showInfo("Retrying to load reminders...");
-  }, [fetchReminders, showInfo]);
+    showInfo(t('reminders.notifications.loadingReminders'));
+  }, [fetchReminders, showInfo, t]);
 
   // Helper functions for badges
   const getStatusBadgeColor = (status) => {
@@ -423,32 +414,32 @@ const RemindersList = () => {
     hasActiveFilters &&
     hasInitialLoad;
 
-  // Table columns configuration for the new Table component
+  // Table columns configuration
   const columns = [
     {
-      header: "Title",
+      header: t('reminders.columns.title'),
       accessor: "title",
       sortable: true,
       width: "20%",
       render: (row) => (
         <div className="font-medium text-gray-900 dark:text-white">
-          {row.title || "Untitled Reminder"}
+          {row.title || t('reminders.untitled')}
         </div>
       ),
     },
     {
-      header: "Description",
+      header: t('reminders.columns.description'),
       accessor: "description",
       sortable: true,
       width: "18%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.description ? `${row.description.substring(0, 50)}${row.description.length > 50 ? '...' : ''}` : "No description"}
+          {row.description ? `${row.description.substring(0, 50)}${row.description.length > 50 ? '...' : ''}` : t('reminders.noDescription')}
         </div>
       ),
     },
     {
-      header: "Date & Time",
+      header: t('reminders.columns.dateTime'),
       accessor: "reminderDate",
       sortable: true,
       width: "15%",
@@ -456,46 +447,46 @@ const RemindersList = () => {
         <div className="text-gray-600 dark:text-gray-400">
           {row.reminderDate 
             ? `${format(new Date(row.reminderDate), "MMM dd, yyyy")} ${row.reminderTime || ""}`
-            : "No date"
+            : t('reminders.noDate')
           }
         </div>
       ),
     },
     {
-      header: "Type",
+      header: t('reminders.columns.type'),
       accessor: "type",
       sortable: true,
       width: "10%",
       render: (row) => (
         <Badge color={getTypeBadgeColor(row.type)}>
-          {row.type ? row.type.charAt(0).toUpperCase() + row.type.slice(1) : "Other"}
+          {row.type ? row.type.charAt(0).toUpperCase() + row.type.slice(1) : t('reminders.type.other')}
         </Badge>
       ),
     },
     {
-      header: "Priority",
+      header: t('reminders.columns.priority'),
       accessor: "priority",
       sortable: true,
       width: "10%",
       render: (row) => (
         <Badge color={getPriorityBadgeColor(row.priority)}>
-          {row.priority ? row.priority.charAt(0).toUpperCase() + row.priority.slice(1) : "Medium"}
+          {row.priority ? row.priority.charAt(0).toUpperCase() + row.priority.slice(1) : t('reminders.priority.medium')}
         </Badge>
       ),
     },
     {
-      header: "Status",
+      header: t('reminders.columns.status'),
       accessor: "status",
       sortable: true,
       width: "10%",
       render: (row) => (
         <Badge color={getStatusBadgeColor(row.status)}>
-          {row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : "Active"}
+          {row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : t('reminders.status.active')}
         </Badge>
       ),
     },
     {
-      header: "Actions",
+      header: t('reminders.columns.actions'),
       accessor: "actions",
       width: "17%",
       className: "text-center",
@@ -521,7 +512,7 @@ const RemindersList = () => {
                   ? "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50" 
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
               } ${isSnoozing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-              title={isSnoozed ? "Unsnooze Reminder" : "Snooze Reminder"}
+              title={isSnoozed ? t('reminders.actions.unsnooze') : t('reminders.actions.snooze')}
             >
               {isSnoozing ? (
                 <Clock className="h-4 w-4 animate-spin" />
@@ -539,7 +530,7 @@ const RemindersList = () => {
                 handleRowClick(row);
               }}
               className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-              title="View Reminder"
+              title={t('reminders.actions.view')}
             >
               <Eye className="h-4 w-4" />
             </button>
@@ -551,7 +542,7 @@ const RemindersList = () => {
                 handleEditReminder(row);
               }}
               className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-2 rounded hover:bg-green-50 dark:hover:bg-green-900/20 transition"
-              title="Edit Reminder"
+              title={t('reminders.actions.edit')}
             >
               <Edit className="h-4 w-4" />
             </button>
@@ -563,7 +554,7 @@ const RemindersList = () => {
                 handleDeleteReminder(row._id, row.title || "Reminder");
               }}
               className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-              title="Delete Reminder"
+              title={t('reminders.actions.delete')}
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -579,13 +570,13 @@ const RemindersList = () => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Reminders
+            {t('reminders.title')}
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage notifications, alerts, and follow-up reminders.{" "}
+            {t('reminders.subtitle')}{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
-              `Showing ${reminders.length} of ${totalCount} reminders`}
+              t('reminders.showing', { count: reminders.length, total: totalCount })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -596,7 +587,7 @@ const RemindersList = () => {
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Reminder
+              {t('reminders.addReminder')}
             </Button>
           )}
         </div>
@@ -608,14 +599,14 @@ const RemindersList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Reminders
+                {t('reminders.errorLoading')}
               </p>
               <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 {error}
               </p>
             </div>
             <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
+              {t('reminders.retry')}
             </Button>
           </div>
         </div>
@@ -629,7 +620,7 @@ const RemindersList = () => {
               <Input
                 className="dark:bg-[#1f2937] dark:text-white"
                 icon={Search}
-                placeholder="Search reminders by title or description..."
+                placeholder={t('reminders.searchPlaceholder')}
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -647,11 +638,11 @@ const RemindersList = () => {
                   setStatus(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Status" },
-                  { value: "active", label: "Active" },
-                  { value: "completed", label: "Completed" },
-                  { value: "snoozed", label: "Snoozed" },
-                  { value: "cancelled", label: "Cancelled" },
+                  { value: "all", label: t('reminders.status.all') },
+                  { value: "active", label: t('reminders.status.active') },
+                  { value: "completed", label: t('reminders.status.completed') },
+                  { value: "snoozed", label: t('reminders.status.snoozed') },
+                  { value: "cancelled", label: t('reminders.status.cancelled') },
                 ]}
               />
             </div>
@@ -664,12 +655,12 @@ const RemindersList = () => {
                   setType(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Types" },
-                  { value: "event", label: "Event" },
-                  { value: "payment", label: "Payment" },
-                  { value: "task", label: "Task" },
-                  { value: "maintenance", label: "Maintenance" },
-                  { value: "followup", label: "Follow-up" },
+                  { value: "all", label: t('reminders.type.all') },
+                  { value: "event", label: t('reminders.type.event') },
+                  { value: "payment", label: t('reminders.type.payment') },
+                  { value: "task", label: t('reminders.type.task') },
+                  { value: "maintenance", label: t('reminders.type.maintenance') },
+                  { value: "followup", label: t('reminders.type.followup') },
                 ]}
               />
             </div>
@@ -682,11 +673,11 @@ const RemindersList = () => {
                   setPriority(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Priorities" },
-                  { value: "urgent", label: "Urgent" },
-                  { value: "high", label: "High" },
-                  { value: "medium", label: "Medium" },
-                  { value: "low", label: "Low" },
+                  { value: "all", label: t('reminders.priority.all') },
+                  { value: "urgent", label: t('reminders.priority.urgent') },
+                  { value: "high", label: t('reminders.priority.high') },
+                  { value: "medium", label: t('reminders.priority.medium') },
+                  { value: "low", label: t('reminders.priority.low') },
                 ]}
               />
             </div>
@@ -697,25 +688,25 @@ const RemindersList = () => {
                 className="flex items-center gap-2"
               >
                 <X className="h-4 w-4" />
-                Clear
+                {t('reminders.clearFilters')}
               </Button>
             )}
           </div>
 
           {hasActiveFilters && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Active filters:</span>
+              <span>{t('reminders.activeFilters')}:</span>
               {search.trim() && (
-                <Badge color="blue">Search: "{search.trim()}"</Badge>
+                <Badge color="blue">{t('reminders.search')}: "{search.trim()}"</Badge>
               )}
               {status !== "all" && (
-                <Badge color="purple">Status: {status}</Badge>
+                <Badge color="purple">{t('reminders.status.label')}: {t(`reminders.status.${status}`)}</Badge>
               )}
               {type !== "all" && (
-                <Badge color="green">Type: {type}</Badge>
+                <Badge color="green">{t('reminders.type.label')}: {t(`reminders.type.${type}`)}</Badge>
               )}
               {priority !== "all" && (
-                <Badge color="orange">Priority: {priority}</Badge>
+                <Badge color="orange">{t('reminders.priority.label')}: {t(`reminders.priority.${priority}`)}</Badge>
               )}
             </div>
           )}
@@ -727,7 +718,7 @@ const RemindersList = () => {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
           <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading reminders...
+            {t('reminders.loading')}
           </p>
         </div>
       )}
@@ -779,13 +770,13 @@ const RemindersList = () => {
         <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No reminders found
+            {t('reminders.noResults')}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No reminders match your current search or filter criteria.
+            {t('reminders.noResultsDesc')}
           </p>
           <Button onClick={handleClearFilters} variant="outline">
-            Clear All Filters
+            {t('reminders.clearFilters')}
           </Button>
         </div>
       )}
@@ -795,14 +786,14 @@ const RemindersList = () => {
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <BellIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No reminders yet
+            {t('reminders.noReminders')}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Get started by creating your first reminder.
+            {t('reminders.noRemindersDesc')}
           </p>
           <Button onClick={handleAddReminder} variant="primary">
             <Plus className="h-4 w-4 mr-2" />
-            Create First Reminder
+            {t('reminders.createFirst')}
           </Button>
         </div>
       )}
@@ -821,7 +812,7 @@ const RemindersList = () => {
         <Modal
           isOpen={isFormOpen}
           onClose={handleFormClose}
-          title={selectedReminder ? "Edit Reminder" : "Create New Reminder"}
+          title={selectedReminder ? t('reminders.form.editTitle') : t('reminders.form.createTitle')}
           size="lg"
         >
           <ReminderForm
@@ -836,12 +827,12 @@ const RemindersList = () => {
       <Modal
         isOpen={snoozeOptionsModal.isOpen}
         onClose={() => setSnoozeOptionsModal({ isOpen: false, reminder: null })}
-        title="Snooze Reminder"
+        title={t('reminders.modals.snooze.title')}
         size="sm"
       >
         <div className="p-6">
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            How long would you like to snooze this reminder?
+            {t('reminders.modals.snooze.description')}
           </p>
           <div className="grid grid-cols-2 gap-3">
             <Button
@@ -849,42 +840,42 @@ const RemindersList = () => {
               onClick={() => handleSnoozeAction(1, 'hours')}
               className="justify-center"
             >
-              1 Hour
+              1 {t('reminders.hour')}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleSnoozeAction(2, 'hours')}
               className="justify-center"
             >
-              2 Hours
+              2 {t('reminders.hours')}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleSnoozeAction(4, 'hours')}
               className="justify-center"
             >
-              4 Hours
+              4 {t('reminders.hours')}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleSnoozeAction(8, 'hours')}
               className="justify-center"
             >
-              8 Hours
+              8 {t('reminders.hours')}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleSnoozeAction(1, 'days')}
               className="justify-center"
             >
-              1 Day
+              1 {t('reminders.day')}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleSnoozeAction(2, 'days')}
               className="justify-center"
             >
-              2 Days
+              2 {t('reminders.days')}
             </Button>
           </div>
         </div>
@@ -894,7 +885,7 @@ const RemindersList = () => {
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={closeConfirmationModal}
-        title="Confirm Deletion"
+        title={t('reminders.modals.delete.title')}
         size="md"
       >
         <div className="p-6">
@@ -906,11 +897,10 @@ const RemindersList = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Reminder
+                {t('reminders.modals.delete.title')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.reminderName}"</strong>? 
-                This action cannot be undone and all associated data will be permanently removed.
+                {t('reminders.modals.delete.description', { name: confirmationModal.reminderName })}
               </p>
               <div className="flex justify-end gap-3">
                 <Button
@@ -918,7 +908,7 @@ const RemindersList = () => {
                   onClick={closeConfirmationModal}
                   className="px-4 py-2"
                 >
-                  Cancel
+                  {t('reminders.modals.delete.cancel')}
                 </Button>
                 <Button
                   variant="danger"
@@ -926,7 +916,7 @@ const RemindersList = () => {
                   className="px-4 py-2 flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Reminder
+                  {t('reminders.modals.delete.confirm')}
                 </Button>
               </div>
             </div>

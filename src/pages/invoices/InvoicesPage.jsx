@@ -34,12 +34,13 @@ import Pagination from "../../components/common/Pagination";
 import Select from "../../components/common/Select";
 import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
-import { useTranslation } from "react-i18next"; // Add this import
+import { useTranslation } from "react-i18next";
+import InvoiceFormPage from "./InvoiceFormPage";
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo, promise } = useToast();
-  const { t } = useTranslation(); // Add translation hook
+  const { t } = useTranslation();
 
   // State
   const [invoices, setInvoices] = useState([]);
@@ -55,6 +56,11 @@ const InvoicesPage = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  
+  // Invoice Form Modal State
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [formMode, setFormMode] = useState("create"); // "create" or "edit"
+  const [editingInvoice, setEditingInvoice] = useState(null);
   
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState({
@@ -337,9 +343,11 @@ const InvoicesPage = () => {
     }
   };
 
-  // Handlers
+  // Handlers - Modified for Modal
   const handleCreateInvoice = () => {
-    navigate(`/invoices/new?type=${invoiceType}`);
+    setFormMode("create");
+    setEditingInvoice(null);
+    setIsFormModalOpen(true);
   };
 
   const handleRowClick = useCallback((invoice) => {
@@ -352,13 +360,26 @@ const InvoicesPage = () => {
     setIsDetailModalOpen(false);
   }, []);
 
-  const handleEditInvoice = (invoice) => {
+  const handleEditInvoice = async (invoice) => {
     if (!invoice || !invoice._id) {
       showError(t("invoices.errors.invalidInvoiceData"));
       return;
     }
-    setIsDetailModalOpen(false);
-    navigate(`/invoices/${invoice._id}/edit`);
+    
+    // Fetch the full invoice data
+    try {
+      const response = await invoiceService.getById(invoice._id);
+      const invoiceData = response?.invoice || response?.data?.invoice || response?.data;
+      const normalizedData = normalizeInvoiceData(invoiceData);
+      
+      setFormMode("edit");
+      setEditingInvoice(normalizedData || invoice);
+      setIsDetailModalOpen(false);
+      setIsFormModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching invoice for edit:", error);
+      showError(t("invoices.errors.loadDetailsFailed"));
+    }
   };
 
   const handleViewInvoice = async (invoice) => {
@@ -381,6 +402,42 @@ const InvoicesPage = () => {
   const handleCloseModal = () => {
     setIsDetailModalOpen(false);
     setSelectedInvoice(null);
+  };
+
+  const handleFormModalClose = () => {
+    setIsFormModalOpen(false);
+    setEditingInvoice(null);
+    setFormMode("create");
+  };
+
+  const handleFormSubmit = async (invoiceData) => {
+    try {
+      if (formMode === "create") {
+        await promise(
+          invoiceService.create(invoiceData),
+          {
+            loading: t("invoices.create.loading"),
+            success: t("invoices.create.success"),
+            error: t("invoices.create.error")
+          }
+        );
+      } else {
+        await promise(
+          invoiceService.update(editingInvoice._id, invoiceData),
+          {
+            loading: t("invoices.update.loading"),
+            success: t("invoices.update.success"),
+            error: t("invoices.update.error")
+          }
+        );
+      }
+      
+      handleFormModalClose();
+      fetchInvoices();
+      fetchStats();
+    } catch (err) {
+      console.error("Form submit error:", err);
+    }
   };
 
   const handleCancelClick = (invoice) => {
@@ -1210,7 +1267,7 @@ const InvoicesPage = () => {
 
       {/* No Results from Search/Filter */}
       {showNoResults && (
-        <div className="text-center py-12">
+        <div>
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t("invoices.empty.search.title")}
@@ -1246,6 +1303,26 @@ const InvoicesPage = () => {
           </Button>
         </div>
       )}
+
+      {/* Invoice Form Modal */}
+      <Modal
+        isOpen={isFormModalOpen}
+        onClose={handleFormModalClose}
+        size="xl"
+      >
+        <div className="p-6">
+          {/* Replace this with your actual invoice form component */}
+          <div className="text-center py-8 text-gray-500">
+              <InvoiceFormPage
+                mode={formMode}
+                invoiceType={invoiceType}
+                invoice={editingInvoice}
+                onSubmit={handleFormSubmit}
+                onCancel={handleFormModalClose}
+              />
+          </div>
+        </div>
+      </Modal>
 
       {/* Invoice Detail Modal */}
       {isDetailModalOpen && selectedInvoice && (

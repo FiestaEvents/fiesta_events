@@ -1,33 +1,36 @@
 // src/components/events/EventForm/steps/Step4Payment.jsx
 import React from "react";
 import { CreditCard, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Input from "../../../../components/common/Input";
 import Select from "../../../../components/common/Select";
-import Textarea from "../../../../components//common/Textarea";
-
-const paymentMethodOptions = [
-  { value: "cash", label: "Cash" },
-  { value: "credit_card", label: "Credit Card" },
-  { value: "bank_transfer", label: "Bank Transfer" },
-  { value: "check", label: "Check" },
-  { value: "mobile_payment", label: "Mobile Payment" },
-];
-
-const paymentStatusOptions = [
-  { value: "pending", label: "Pending" },
-  { value: "completed", label: "Completed" },
-  { value: "failed", label: "Failed" },
-  { value: "refunded", label: "Refunded" },
-];
+import Textarea from "../../../../components/common/Textarea";
 
 const Step4Payment = ({ formData, handleChange, errors, totalPrice }) => {
+  const { t } = useTranslation();
+
+  const paymentMethodOptions = [
+    { value: "cash", label: t('eventForm.step4.paymentMethods.cash') },
+    { value: "credit_card", label: t('eventForm.step4.paymentMethods.creditCard') },
+    { value: "bank_transfer", label: t('eventForm.step4.paymentMethods.bankTransfer') },
+    { value: "check", label: t('eventForm.step4.paymentMethods.check') },
+    { value: "mobile_payment", label: t('eventForm.step4.paymentMethods.mobilePayment') },
+  ];
+
+  const paymentStatusOptions = [
+    { value: "pending", label: t('eventForm.step4.paymentStatus.pending') },
+    { value: "completed", label: t('eventForm.step4.paymentStatus.completed') },
+    { value: "failed", label: t('eventForm.step4.paymentStatus.failed') },
+    { value: "refunded", label: t('eventForm.step4.paymentStatus.refunded') },
+  ];
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
       {/* Info Banner */}
       <div className="flex items-center justify-center gap-2 text-gray-500 text-sm p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
         <AlertCircle className="w-5 h-5" />
         <p>
-          This step is optional. You can record payments later from the payments section.
+          {t('eventForm.step4.infoBanner')}
         </p>
       </div>
 
@@ -36,7 +39,7 @@ const Step4Payment = ({ formData, handleChange, errors, totalPrice }) => {
         <div className="flex items-center gap-2 mb-4">
           <CreditCard className="w-5 h-5 text-indigo-500" />
           <h4 className="font-semibold text-gray-900 dark:text-white">
-            Record Initial Payment (Optional)
+            {t('eventForm.step4.recordPayment')}
           </h4>
         </div>
 
@@ -44,7 +47,7 @@ const Step4Payment = ({ formData, handleChange, errors, totalPrice }) => {
           {/* Left Column */}
           <div className="space-y-4">
             <Input
-              label="Payment Amount"
+              label={t('eventForm.step4.paymentAmount')}
               name="payment.amount"
               type="number"
               step="0.01"
@@ -53,7 +56,7 @@ const Step4Payment = ({ formData, handleChange, errors, totalPrice }) => {
               error={errors["payment.amount"]}
               leftElement={
                 <span className="text-sm font-semibold text-gray-500 pointer-events-none">
-                  TND
+                  {t('eventForm.currency')}
                 </span>
               }
               placeholder="0.00"
@@ -62,26 +65,34 @@ const Step4Payment = ({ formData, handleChange, errors, totalPrice }) => {
             {totalPrice && formData.payment?.amount && (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
-                  <span className="font-semibold">{totalPrice.toFixed(2)} TND</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {t('eventForm.step4.totalAmount')}:
+                  </span>
+                  <span className="font-semibold">
+                    {totalPrice.toFixed(2)} {t('eventForm.currency')}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600 dark:text-gray-400">Payment:</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {t('eventForm.step4.payment')}:
+                  </span>
                   <span className="font-semibold text-green-600">
-                    {parseFloat(formData.payment.amount).toFixed(2)} TND
+                    {parseFloat(formData.payment.amount).toFixed(2)} {t('eventForm.currency')}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm pt-2 border-t border-blue-300 dark:border-blue-700">
-                  <span className="font-semibold text-gray-900 dark:text-white">Remaining:</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {t('eventForm.step4.remaining')}:
+                  </span>
                   <span className="font-bold text-orange-600">
-                    {(totalPrice - parseFloat(formData.payment.amount)).toFixed(2)} TND
+                    {(totalPrice - parseFloat(formData.payment.amount)).toFixed(2)} {t('eventForm.currency')}
                   </span>
                 </div>
               </div>
             )}
 
             <Select
-              label="Payment Method"
+              label={t('eventForm.step4.paymentMethod')}
               name="payment.paymentMethod"
               value={formData.payment?.paymentMethod || "cash"}
               onChange={handleChange}
@@ -89,7 +100,7 @@ const Step4Payment = ({ formData, handleChange, errors, totalPrice }) => {
             />
 
             <Input
-              label="Payment Date"
+              label={t('eventForm.step4.paymentDate')}
               name="payment.paymentDate"
               type="date"
               value={formData.payment?.paymentDate || new Date().toISOString().split("T")[0]}
@@ -100,7 +111,7 @@ const Step4Payment = ({ formData, handleChange, errors, totalPrice }) => {
           {/* Right Column */}
           <div className="space-y-4">
             <Select
-              label="Payment Status"
+              label={t('eventForm.step4.paymentStatusLabel')}
               name="payment.status"
               value={formData.payment?.status || "pending"}
               onChange={handleChange}
@@ -108,12 +119,12 @@ const Step4Payment = ({ formData, handleChange, errors, totalPrice }) => {
             />
 
             <Textarea
-              label="Payment Notes"
+              label={t('eventForm.step4.paymentNotes')}
               name="payment.notes"
               value={formData.payment?.notes || ""}
               onChange={handleChange}
               rows={6}
-              placeholder="Any notes about this payment..."
+              placeholder={t('eventForm.step4.paymentNotesPlaceholder')}
             />
           </div>
         </div>

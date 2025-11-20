@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { 
   Save, 
   X,
@@ -75,6 +75,7 @@ const DAYS_OF_WEEK = [
 const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // Determine if we're in edit mode
   const isEditMode = Boolean(id || reminderProp?._id || reminderProp?.id);
@@ -124,25 +125,25 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
   const steps = [
     {
       number: 1,
-      title: "Basic Info",
+      title: t('reminders.form.basicInfo'),
       icon: Bell,
       color: "orange",
     },
     {
       number: 2,
-      title: "Related Items",
+      title: t('reminders.form.relatedItems'),
       icon: Link2,
       color: "orange",
     },
     {
       number: 3,
-      title: "Notifications",
+      title: t('reminders.form.notifications'),
       icon: BellRing,
       color: "orange",
     },
     {
       number: 4,
-      title: "Recurrence",
+      title: t('reminders.form.recurrence'),
       icon: Repeat,
       color: "orange",
     },
@@ -189,14 +190,14 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
       loadReminderData(reminderData);
     } catch (error) {
       console.error('Error fetching reminder:', error);
-      toast.error(error.message || 'Failed to load reminder');
+      toast.error(error.message || t('reminders.notifications.loadError'));
       if (!isModalMode) {
         navigate('/reminders');
       }
     } finally {
       setIsLoading(false);
     }
-  }, [reminderId, isEditMode, reminderProp, loadReminderData, isModalMode, navigate]);
+  }, [reminderId, isEditMode, reminderProp, loadReminderData, isModalMode, navigate, t]);
 
   // Fetch related data
   const fetchRelatedData = useCallback(async () => {
@@ -217,11 +218,11 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
 
     } catch (error) {
       console.error('Failed to fetch related data:', error);
-      toast.error('Failed to load form data');
+      toast.error(t('reminders.notifications.loadFormError'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Effects
   useEffect(() => {
@@ -296,48 +297,48 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
 
     if (step === 1) {
       if (!formData.title.trim()) {
-        newErrors.title = 'Title is required';
+        newErrors.title = t('reminders.validation.titleRequired');
       }
       if (!formData.reminderDate) {
-        newErrors.reminderDate = 'Date is required';
+        newErrors.reminderDate = t('reminders.validation.dateRequired');
       } else {
         const reminderDate = new Date(formData.reminderDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
         if (reminderDate < today) {
-          newErrors.reminderDate = 'Date must be today or in the future';
+          newErrors.reminderDate = t('reminders.validation.futureDate');
         }
       }
       if (!formData.reminderTime) {
-        newErrors.reminderTime = 'Time is required';
+        newErrors.reminderTime = t('reminders.validation.timeRequired');
       }
     }
 
     if (step === 2) {
       if (!formData.relatedTask) {
-        newErrors.relatedTask = 'Task is required';
+        newErrors.relatedTask = t('reminders.validation.taskRequired');
       }
     }
 
     if (step === 3) {
       if (formData.notificationMethods.length === 0) {
-        newErrors.notificationMethods = 'At least one notification method is required';
+        newErrors.notificationMethods = t('reminders.validation.notificationMethodsRequired');
       }
     }
 
     if (step === 4 && formData.isRecurring) {
       if (!formData.recurrence.frequency) {
-        newErrors['recurrence.frequency'] = 'Frequency is required for recurring reminders';
+        newErrors['recurrence.frequency'] = t('reminders.validation.frequencyRequired');
       }
       
       if (!formData.recurrence.interval || formData.recurrence.interval < 1) {
-        newErrors['recurrence.interval'] = 'Interval must be at least 1';
+        newErrors['recurrence.interval'] = t('reminders.validation.intervalRequired');
       }
 
       if (formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY && 
           formData.recurrence.daysOfWeek.length === 0) {
-        newErrors['recurrence.daysOfWeek'] = 'At least one day must be selected for weekly recurrence';
+        newErrors['recurrence.daysOfWeek'] = t('reminders.validation.daysRequired');
       }
     }
 
@@ -351,23 +352,23 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
 
     // Step 1 validations
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = t('reminders.validation.titleRequired');
     }
     if (!formData.reminderDate) {
-      newErrors.reminderDate = 'Date is required';
+      newErrors.reminderDate = t('reminders.validation.dateRequired');
     }
     if (!formData.reminderTime) {
-      newErrors.reminderTime = 'Time is required';
+      newErrors.reminderTime = t('reminders.validation.timeRequired');
     }
 
     // Step 2 validations
     if (!formData.relatedTask) {
-      newErrors.relatedTask = 'Task is required';
+      newErrors.relatedTask = t('reminders.validation.taskRequired');
     }
 
     // Step 3 validations
     if (formData.notificationMethods.length === 0) {
-      newErrors.notificationMethods = 'At least one notification method is required';
+      newErrors.notificationMethods = t('reminders.validation.notificationMethodsRequired');
     }
 
     setErrors(newErrors);
@@ -381,7 +382,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     } else {
-      toast.error('Please fix the errors before proceeding');
+      toast.error(t('reminders.validation.fixErrors'));
     }
   };
 
@@ -416,7 +417,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
     e.stopPropagation();
 
     if (!validateAllRequired()) {
-      toast.error('Please fix all required fields before updating');
+      toast.error(t('reminders.validation.fixAllErrors'));
       setCurrentStep(1);
       return;
     }
@@ -431,7 +432,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
     // For create mode on non-final steps, validate current step only
     if (!isEditMode && currentStep < totalSteps) {
       if (!validateStep(currentStep)) {
-        toast.error('Please fix the errors in the form');
+        toast.error(t('reminders.validation.fixErrors'));
         return;
       }
       handleNext(e);
@@ -440,7 +441,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
 
     // For final step or edit mode, validate all
     if (!validateAllRequired()) {
-      toast.error('Please fix all required fields');
+      toast.error(t('reminders.validation.fixAllErrors'));
       return;
     }
 
@@ -483,10 +484,10 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
 
       if (isEditMode) {
         await reminderService.update(reminderId, submitData);
-        toast.success('Reminder updated successfully');
+        toast.success(t('reminders.notifications.updated'));
       } else {
         await reminderService.create(submitData);
-        toast.success('Reminder created successfully');
+        toast.success(t('reminders.notifications.created'));
       }
 
       // Handle success based on mode
@@ -502,9 +503,9 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
         if (error.errors) {
           setErrors(error.errors);
         }
-        toast.error(error.message || 'Please fix the validation errors');
+        toast.error(error.message || t('reminders.validation.validationErrors'));
       } else {
-        const errorMessage = error.message || `Failed to ${isEditMode ? 'update' : 'create'} reminder`;
+        const errorMessage = error.message || t('reminders.notifications.saveError');
         toast.error(errorMessage);
       }
     } finally {
@@ -567,7 +568,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                     {step.title}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Step {step.number} of {totalSteps}
+                    {t(`reminders.form.steps.step${step.number}`)}
                   </div>
                 </div>
               </button>
@@ -599,63 +600,63 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <Bell className="w-5 h-5 text-white" />
               </div>
-              Basic Information
+              {t('reminders.form.basicInfo')}
             </h3>
 
             <Input
-              label="Title"
+              label={t('reminders.form.fields.title')}
               name="title"
               value={formData.title}
               onChange={handleChange}
               error={errors.title}
               required
-              placeholder="Enter reminder title..."
+              placeholder={t('reminders.form.placeholders.title')}
               className="w-full"
             />
 
             <Textarea
-              label="Description"
+              label={t('reminders.form.fields.description')}
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              placeholder="Add a description for this reminder..."
+              placeholder={t('reminders.form.placeholders.description')}
               className="w-full dark:bg-gray-800"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
-                label="Type"
+                label={t('reminders.form.fields.type')}
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
                 className="w-full"
               >
-                <option value={REMINDER_TYPES.EVENT}>Event</option>
-                <option value={REMINDER_TYPES.PAYMENT}>Payment</option>
-                <option value={REMINDER_TYPES.TASK}>Task</option>
-                <option value={REMINDER_TYPES.MAINTENANCE}>Maintenance</option>
-                <option value={REMINDER_TYPES.FOLLOWUP}>Follow-up</option>
-                <option value={REMINDER_TYPES.OTHER}>Other</option>
+                <option value={REMINDER_TYPES.EVENT}>{t('reminders.type.event')}</option>
+                <option value={REMINDER_TYPES.PAYMENT}>{t('reminders.type.payment')}</option>
+                <option value={REMINDER_TYPES.TASK}>{t('reminders.type.task')}</option>
+                <option value={REMINDER_TYPES.MAINTENANCE}>{t('reminders.type.maintenance')}</option>
+                <option value={REMINDER_TYPES.FOLLOWUP}>{t('reminders.type.followup')}</option>
+                <option value={REMINDER_TYPES.OTHER}>{t('reminders.type.other')}</option>
               </Select>
 
               <Select
-                label="Priority"
+                label={t('reminders.form.fields.priority')}
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
                 className="w-full"
               >
-                <option value={REMINDER_PRIORITIES.LOW}>Low</option>
-                <option value={REMINDER_PRIORITIES.MEDIUM}>Medium</option>
-                <option value={REMINDER_PRIORITIES.HIGH}>High</option>
-                <option value={REMINDER_PRIORITIES.URGENT}>Urgent</option>
+                <option value={REMINDER_PRIORITIES.LOW}>{t('reminders.priority.low')}</option>
+                <option value={REMINDER_PRIORITIES.MEDIUM}>{t('reminders.priority.medium')}</option>
+                <option value={REMINDER_PRIORITIES.HIGH}>{t('reminders.priority.high')}</option>
+                <option value={REMINDER_PRIORITIES.URGENT}>{t('reminders.priority.urgent')}</option>
               </Select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Date"
+                label={t('reminders.form.fields.date')}
                 name="reminderDate"
                 type="date"
                 value={formData.reminderDate}
@@ -667,7 +668,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
               />
 
               <Input
-                label="Time"
+                label={t('reminders.form.fields.time')}
                 name="reminderTime"
                 type="time"
                 value={formData.reminderTime}
@@ -687,17 +688,17 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <Link2 className="w-5 h-5 text-white" />
               </div>
-              Related Items
+              {t('reminders.form.relatedItems')}
             </h3>
 
             <Select
-              label="Related Event"
+              label={t('reminders.form.fields.relatedEvent')}
               name="relatedEvent"
               value={formData.relatedEvent}
               onChange={handleChange}
               className="w-full"
             >
-              <option value="">Select an event...</option>
+              <option value="">{t('reminders.form.placeholders.selectEvent')}</option>
               {events.map((event) => (
                 <option key={event._id} value={event._id}>
                   {event.title} - {new Date(event.startDate).toLocaleDateString()}
@@ -706,13 +707,13 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             </Select>
 
             <Select
-              label="Related Client"
+              label={t('reminders.form.fields.relatedClient')}
               name="relatedClient"
               value={formData.relatedClient}
               onChange={handleChange}
               className="w-full"
             >
-              <option value="">Select a client...</option>
+              <option value="">{t('reminders.form.placeholders.selectClient')}</option>
               {clients.map((client) => (
                 <option key={client._id} value={client._id}>
                   {client.name} {client.company ? `(${client.company})` : ''}
@@ -721,7 +722,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             </Select>
 
             <Select
-              label="Related Task"
+              label={t('reminders.form.fields.relatedTask')}
               name="relatedTask"
               value={formData.relatedTask}
               onChange={handleChange}
@@ -729,7 +730,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
               required
               className="w-full"
             >
-              <option value="">Select a task...</option>
+              <option value="">{t('reminders.form.placeholders.selectTask')}</option>
               {tasks.map((task) => (
                 <option key={task._id} value={task._id}>
                   {task.title} - {task.status} ({task.priority})
@@ -738,13 +739,13 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             </Select>
 
             <Select
-              label="Related Payment"
+              label={t('reminders.form.fields.relatedPayment')}
               name="relatedPayment"
               value={formData.relatedPayment}
               onChange={handleChange}
               className="w-full"
             >
-              <option value="">Select a payment...</option>
+              <option value="">{t('reminders.form.placeholders.selectPayment')}</option>
               {payments.map((payment) => (
                 <option key={payment._id} value={payment._id}>
                   Payment #{payment._id?.slice(-6)} - ${payment.amount} ({payment.status})
@@ -761,12 +762,12 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <BellRing className="w-5 h-5 text-white" />
               </div>
-              Notification Methods
+              {t('reminders.form.notifications')}
             </h3>
 
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Notification Methods <span className="text-red-500">*</span>
+                {t('reminders.form.fields.notificationMethods')} <span className="text-red-500">*</span>
               </label>
               
               {[
@@ -807,7 +808,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
               <div className="p-2 bg-orange-600 rounded-lg">
                 <Repeat className="w-5 h-5 text-white" />
               </div>
-              Recurrence Settings
+              {t('reminders.form.recurrence')}
             </h3>
 
             <div className="flex items-center gap-3 mb-6">
@@ -818,35 +819,35 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                 onChange={handleChange}
                 className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
               />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Recurrence</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('reminders.form.enableRecurrence')}</span>
             </div>
             
             {formData.isRecurring && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Select
-                    label="Frequency"
+                    label={t('reminders.form.fields.frequency')}
                     name="recurrence.frequency"
                     value={formData.recurrence.frequency}
                     onChange={handleChange}
                     error={errors['recurrence.frequency']}
                     className="w-full"
                   >
-                    <option value={RECURRENCE_FREQUENCIES.DAILY}>Daily</option>
-                    <option value={RECURRENCE_FREQUENCIES.WEEKLY}>Weekly</option>
-                    <option value={RECURRENCE_FREQUENCIES.MONTHLY}>Monthly</option>
-                    <option value={RECURRENCE_FREQUENCIES.YEARLY}>Yearly</option>
+                    <option value={RECURRENCE_FREQUENCIES.DAILY}>{t('reminders.recurrence.daily')}</option>
+                    <option value={RECURRENCE_FREQUENCIES.WEEKLY}>{t('reminders.recurrence.weekly')}</option>
+                    <option value={RECURRENCE_FREQUENCIES.MONTHLY}>{t('reminders.recurrence.monthly')}</option>
+                    <option value={RECURRENCE_FREQUENCIES.YEARLY}>{t('reminders.recurrence.yearly')}</option>
                   </Select>
 
                   <Input
-                    label="Interval"
+                    label={t('reminders.form.fields.interval')}
                     name="recurrence.interval"
                     type="number"
                     value={formData.recurrence.interval}
                     onChange={handleChange}
                     error={errors['recurrence.interval']}
                     min="1"
-                    placeholder="e.g., 1"
+                    placeholder={t('reminders.form.intervalPlaceholder')}
                     className="w-full"
                   />
                 </div>
@@ -854,7 +855,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                 {formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Days of Week <span className="text-red-500">*</span>
+                      {t('reminders.form.fields.daysOfWeek')} <span className="text-red-500">*</span>
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {DAYS_OF_WEEK.map((day) => (
@@ -872,8 +873,10 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                             onChange={() => handleDayOfWeekToggle(day.value)}
                             className="sr-only"
                           />
-                          <span className="text-sm font-medium">{day.label}</span>
-                        </label>
+<span className="text-sm font-medium">
+  {t(`reminders.weekdays.${day.label.toLowerCase()}`)}
+</span>                      
+  </label>
                       ))}
                     </div>
                     {errors['recurrence.daysOfWeek'] && (
@@ -886,12 +889,12 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                 )}
 
                 <Textarea
-                  label="Notes"
+                  label={t('reminders.form.fields.notes')}
                   name="notes"
                   value={formData.notes}
                   onChange={handleChange}
                   rows={3}
-                  placeholder="Add any additional notes about this reminder..."
+                  placeholder={t('reminders.form.placeholders.notes')}
                   className="w-full dark:bg-gray-800"
                 />
               </div>
@@ -909,7 +912,9 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400 font-medium mt-4">Loading reminder form...</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium mt-4">
+            {t('reminders.loadingForm')}
+          </p>
         </div>
       </div>
     );
@@ -922,10 +927,10 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {isEditMode ? 'Edit Reminder' : 'Create New Reminder'}
+              {isEditMode ? t('reminders.form.editTitle') : t('reminders.form.createTitle')}
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              {isEditMode ? 'Update reminder details' : 'Set up notifications for important deadlines'}
+              {isEditMode ? t('reminders.form.editSubtitle') : t('reminders.form.createSubtitle')}
             </p>
           </div>
         </div>
@@ -953,7 +958,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                 disabled={isSaving}
               >
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                Previous
+                {t('reminders.form.buttons.previous')}
               </Button>
             )}
           </div>
@@ -966,7 +971,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
               disabled={isSaving}
             >
               <X className="w-4 h-4 mr-2" />
-              Cancel
+              {t('reminders.form.buttons.cancel')}
             </Button>
 
             {/* Quick Update button - only show in edit mode and not on last step */}
@@ -980,7 +985,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                 className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
               >
                 <Save className="w-4 h-4 mr-2" />
-                Update Now
+                {t('reminders.form.buttons.updateNow')}
               </Button>
             )}
 
@@ -991,7 +996,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                 onClick={handleNext}
                 disabled={isSaving}
               >
-                Next
+                {t('reminders.form.buttons.next')}
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
@@ -1002,7 +1007,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
                 disabled={isSaving}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isEditMode ? 'Update Reminder' : 'Create Reminder'}
+                {isEditMode ? t('reminders.form.buttons.update') : t('reminders.form.buttons.create')}
               </Button>
             )}
           </div>

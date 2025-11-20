@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
@@ -36,6 +37,7 @@ import { useToast } from "../../hooks/useToast";
 
 const TasksList = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { showSuccess, showError, showLoading, dismiss, showInfo } = useToast();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -119,14 +121,14 @@ const TasksList = () => {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Failed to load tasks. Please try again.";
+        t('tasks.messages.error.load');
       setError(errorMessage);
       setTasks([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [search, status, priority, category, page, limit, showArchived]);
+  }, [search, status, priority, category, page, limit, showArchived, t]);
 
   // Show confirmation modal
   const showConfirmation = useCallback(
@@ -177,17 +179,17 @@ const TasksList = () => {
 
       try {
         await taskService.archive(taskId);
-        showSuccess("Task archived successfully");
+        showSuccess(t('tasks.messages.success.archived'));
         fetchTasks();
         if (selectedTask?._id === taskId) {
           setSelectedTask(null);
           setIsDetailModalOpen(false);
         }
       } catch (err) {
-        showError(err.response?.data?.message || "Failed to archive task");
+        showError(err.response?.data?.message || t('tasks.messages.error.archive'));
       }
     },
-    [fetchTasks, selectedTask, showSuccess, showError]
+    [fetchTasks, selectedTask, showSuccess, showError, t]
   );
 
   // Restore task (for archived tasks)
@@ -197,17 +199,17 @@ const TasksList = () => {
 
       try {
         await taskService.unarchive(taskId);
-        showSuccess("Task restored successfully");
+        showSuccess(t('tasks.messages.success.restored'));
         fetchTasks();
         if (selectedTask?._id === taskId) {
           setSelectedTask(null);
           setIsDetailModalOpen(false);
         }
       } catch (err) {
-        showError(err.response?.data?.message || "Failed to restore task");
+        showError(err.response?.data?.message || t('tasks.messages.error.restore'));
       }
     },
-    [fetchTasks, selectedTask, showSuccess, showError]
+    [fetchTasks, selectedTask, showSuccess, showError, t]
   );
 
   // Delete task permanently (for archived tasks)
@@ -217,41 +219,43 @@ const TasksList = () => {
 
       try {
         await taskService.delete(taskId);
-        showSuccess("Task deleted permanently");
+        showSuccess(t('tasks.messages.success.deleted'));
         fetchTasks();
         if (selectedTask?._id === taskId) {
           setSelectedTask(null);
           setIsDetailModalOpen(false);
         }
       } catch (err) {
-        showError(err.response?.data?.message || "Failed to delete task");
+        showError(err.response?.data?.message || t('tasks.messages.error.delete'));
       }
     },
-    [fetchTasks, selectedTask, showSuccess, showError]
+    [fetchTasks, selectedTask, showSuccess, showError, t]
   );
 
   // Handle task action with confirmation
   const handleTaskAction = useCallback(
     (task, action) => {
+      const taskTitle = task.title || t('tasks.messages.thisTask');
+      
       const actionMessages = {
         archive: {
-          title: "Archive Task",
-          message: `Are you sure you want to archive "${task.title || "this task"}"?`,
-          confirmText: "Archive Task",
+          title: t('tasks.messages.archiveConfirm.title'),
+          message: t('tasks.messages.archiveConfirm.message', { title: taskTitle }),
+          confirmText: t('tasks.messages.archiveConfirm.confirm'),
           type: "danger",
           action: () => handleArchiveTask(task._id),
         },
         restore: {
-          title: "Restore Task",
-          message: `Are you sure you want to restore "${task.title || "this task"}"?`,
-          confirmText: "Restore Task",
+          title: t('tasks.messages.restoreConfirm.title'),
+          message: t('tasks.messages.restoreConfirm.message', { title: taskTitle }),
+          confirmText: t('tasks.messages.restoreConfirm.confirm'),
           type: "info",
           action: () => handleRestoreTask(task._id),
         },
         delete: {
-          title: "Delete Task",
-          message: `Are you sure you want to permanently delete "${task.title || "this task"}"? This action cannot be undone.`,
-          confirmText: "Delete Permanently",
+          title: t('tasks.messages.deleteConfirm.title'),
+          message: t('tasks.messages.deleteConfirm.message', { title: taskTitle }),
+          confirmText: t('tasks.messages.deleteConfirm.confirm'),
           type: "danger",
           action: () => handleDeleteTask(task._id),
         },
@@ -267,7 +271,7 @@ const TasksList = () => {
 
       showConfirmation(title, message, confirmText, type, performAction);
     },
-    [handleArchiveTask, handleRestoreTask, handleDeleteTask, showConfirmation]
+    [handleArchiveTask, handleRestoreTask, handleDeleteTask, showConfirmation, t]
   );
 
   useEffect(() => {
@@ -393,7 +397,7 @@ const TasksList = () => {
   const getColumns = () => {
     const baseColumns = [
       {
-        header: "Title",
+        header: t('tasks.table.title'),
         accessor: "title",
         sortable: true,
         width: "25%",
@@ -404,29 +408,29 @@ const TasksList = () => {
         ),
       },
       {
-        header: "Status",
+        header: t('tasks.table.status'),
         accessor: "status",
         sortable: true,
         width: "12%",
         render: (row) => (
           <Badge color={getStatusColor(row.status)}>
-            {row.status ? row.status.replace("_", " ") : "Unknown"}
+            {row.status ? t(`tasks.status.${row.status}`) : t('tasks.status.unknown')}
           </Badge>
         ),
       },
       {
-        header: "Priority",
+        header: t('tasks.table.priority'),
         accessor: "priority",
         sortable: true,
         width: "12%",
         render: (row) => (
           <Badge color={getPriorityColor(row.priority)}>
-            {row.priority || "Medium"}
+            {row.priority ? t(`tasks.priority.${row.priority}`) : t('tasks.priority.medium')}
           </Badge>
         ),
       },
       {
-        header: "Due Date",
+        header: t('tasks.table.dueDate'),
         accessor: "dueDate",
         sortable: true,
         width: "12%",
@@ -439,18 +443,18 @@ const TasksList = () => {
         ),
       },
       {
-        header: "Assigned To",
+        header: t('tasks.table.assignedTo'),
         accessor: "assignedTo",
         sortable: true,
         width: "15%",
         render: (row) => (
           <div className="text-gray-600 dark:text-gray-400">
-            {row.assignedTo?.name || "Unassigned"}
+            {row.assignedTo?.name || t('tasks.form.fields.unassigned')}
           </div>
         ),
       },
       {
-        header: "Progress",
+        header: t('tasks.table.progress'),
         accessor: "progress",
         sortable: true,
         width: "12%",
@@ -471,7 +475,7 @@ const TasksList = () => {
     ];
 
     const actionColumn = {
-      header: "Actions",
+      header: t('tasks.table.actions'),
       accessor: "actions",
       width: showArchived ? "15%" : "12%",
       className: "text-center",
@@ -483,7 +487,7 @@ const TasksList = () => {
               handleRowClick(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-            title="View Task"
+            title={t('tasks.viewTask')}
           >
             <Eye className="h-4 w-4" />
           </button>
@@ -496,7 +500,7 @@ const TasksList = () => {
                   handleEditTask(row);
                 }}
                 className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-                title="Edit Task"
+                title={t('tasks.editTask')}
               >
                 <Edit className="h-4 w-4" />
               </button>
@@ -506,7 +510,7 @@ const TasksList = () => {
                   handleTaskAction(row, "archive");
                 }}
                 className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 p-1 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition"
-                title="Archive Task"
+                title={t('tasks.archiveTask')}
               >
                 <Archive className="h-4 w-4" />
               </button>
@@ -519,7 +523,7 @@ const TasksList = () => {
                   handleTaskAction(row, "restore");
                 }}
                 className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-1 rounded hover:bg-green-50 dark:hover:bg-green-900/20 transition"
-                title="Restore Task"
+                title={t('tasks.restoreTask')}
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
@@ -529,7 +533,7 @@ const TasksList = () => {
                   handleTaskAction(row, "delete");
                 }}
                 className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-                title="Delete Task Permanently"
+                title={t('tasks.deletePermanently')}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -599,7 +603,7 @@ const TasksList = () => {
 
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={closeConfirmationModal}>
-              Cancel
+              {t('tasks.form.buttons.cancel')}
             </Button>
             <Button
               variant={getButtonVariant()}
@@ -619,48 +623,48 @@ const TasksList = () => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {showArchived ? "Archived Tasks" : "Tasks"}
+            {showArchived ? t('tasks.archivedTasks') : t('tasks.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             {showArchived
-              ? "View and manage archived tasks"
-              : "Manage team tasks and assignments"}{" "}
+              ? t('tasks.archivedSubtitle')
+              : t('tasks.subtitle')}{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
-              `Showing ${tasks.length} of ${totalCount} tasks`}
+              t('tasks.showingTasks', { current: tasks.length, total: totalCount })}
           </p>
         </div>
-<div className="flex gap-2">
-  {!showEmptyState && (
-    <Button
-      variant="outline"
-      onClick={() => setShowArchived(!showArchived)}
-      className="flex items-center gap-2"
-    >
-      {showArchived ? (
-        <>
-          <Archive className="h-4 w-4" />
-          Active Tasks
-        </>
-      ) : (
-        <>
-          <Archive className="h-4 w-4" />
-          Archived
-        </>
-      )}
-    </Button>
-  )}
-  {!showArchived && !showEmptyState && (
-    <Button
-      variant="primary"
-      onClick={handleAddTask}
-      className="flex items-center gap-2"
-    >
-      <Plus className="h-4 w-4" />
-      Create Task
-    </Button>
-  )}
-</div>
+        <div className="flex gap-2">
+          {!showEmptyState && (
+            <Button
+              variant="outline"
+              onClick={() => setShowArchived(!showArchived)}
+              className="flex items-center gap-2"
+            >
+              {showArchived ? (
+                <>
+                  <Archive className="h-4 w-4" />
+                  {t('tasks.activeTasks')}
+                </>
+              ) : (
+                <>
+                  <Archive className="h-4 w-4" />
+                  {t('tasks.archived')}
+                </>
+              )}
+            </Button>
+          )}
+          {!showArchived && !showEmptyState && (
+            <Button
+              variant="primary"
+              onClick={handleAddTask}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              {t('tasks.createTask')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards - Only show for active tasks */}
@@ -668,43 +672,43 @@ const TasksList = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
           {[
             {
-              label: "Total",
+              label: t('tasks.stats.total'),
               value: stats.total,
               color: "purple",
               icon: CheckSquare,
             },
             {
-              label: "Pending",
+              label: t('tasks.stats.pending'),
               value: stats.pending,
               color: "yellow",
               icon: Clock,
             },
             {
-              label: "To Do",
+              label: t('tasks.stats.todo'),
               value: stats.todo,
               color: "blue",
               icon: ListIcon,
             },
             {
-              label: "In Progress",
+              label: t('tasks.stats.inProgress'),
               value: stats.inProgress,
               color: "orange",
               icon: Clock,
             },
             {
-              label: "Blocked",
+              label: t('tasks.stats.blocked'),
               value: stats.blocked,
               color: "red",
               icon: AlertCircle,
             },
             {
-              label: "Completed",
+              label: t('tasks.stats.completed'),
               value: stats.completed,
               color: "green",
               icon: CheckSquare,
             },
             {
-              label: "Overdue",
+              label: t('tasks.stats.overdue'),
               value: stats.overdue,
               color: "red",
               icon: AlertCircle,
@@ -746,7 +750,7 @@ const TasksList = () => {
               icon={ListIcon}
               onClick={() => setViewMode("list")}
             >
-              List
+              {t('tasks.view.list')}
             </Button>
             <Button
               variant={viewMode === "kanban" ? "primary" : "ghost"}
@@ -754,7 +758,7 @@ const TasksList = () => {
               icon={KanbanIcon}
               onClick={() => setViewMode("kanban")}
             >
-              Kanban
+              {t('tasks.view.kanban')}
             </Button>
           </div>
         </div>
@@ -766,14 +770,14 @@ const TasksList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Tasks
+                {t('tasks.messages.errorLoading')}
               </p>
               <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 {error}
               </p>
             </div>
             <Button onClick={fetchTasks} size="sm" variant="outline">
-              Retry
+              {t('tasks.retry')}
             </Button>
           </div>
         </div>
@@ -787,7 +791,7 @@ const TasksList = () => {
               <Input
                 className="dark:bg-[#1f2937] dark:text-white"
                 icon={Search}
-                placeholder={`Search ${showArchived ? "archived" : ""} tasks by title or description...`}
+                placeholder={showArchived ? t('tasks.searchArchivedPlaceholder') : t('tasks.searchPlaceholder')}
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -805,12 +809,12 @@ const TasksList = () => {
                   setStatus(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Status" },
-                  { value: "pending", label: "Pending" },
-                  { value: "todo", label: "To Do" },
-                  { value: "in_progress", label: "In Progress" },
-                  { value: "blocked", label: "Blocked" },
-                  { value: "completed", label: "Completed" },
+                  { value: "all", label: t('tasks.filters.allStatus') },
+                  { value: "pending", label: t('tasks.status.pending') },
+                  { value: "todo", label: t('tasks.status.todo') },
+                  { value: "in_progress", label: t('tasks.status.in_progress') },
+                  { value: "blocked", label: t('tasks.status.blocked') },
+                  { value: "completed", label: t('tasks.status.completed') },
                 ]}
               />
             </div>
@@ -823,11 +827,11 @@ const TasksList = () => {
                   setPriority(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Priorities" },
-                  { value: "low", label: "Low" },
-                  { value: "medium", label: "Medium" },
-                  { value: "high", label: "High" },
-                  { value: "urgent", label: "Urgent" },
+                  { value: "all", label: t('tasks.filters.allPriorities') },
+                  { value: "low", label: t('tasks.priority.low') },
+                  { value: "medium", label: t('tasks.priority.medium') },
+                  { value: "high", label: t('tasks.priority.high') },
+                  { value: "urgent", label: t('tasks.priority.urgent') },
                 ]}
               />
             </div>
@@ -840,16 +844,16 @@ const TasksList = () => {
                   setCategory(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Categories" },
-                  { value: "event_preparation", label: "Event Preparation" },
-                  { value: "marketing", label: "Marketing" },
-                  { value: "maintenance", label: "Maintenance" },
-                  { value: "client_followup", label: "Client Follow-up" },
+                  { value: "all", label: t('tasks.filters.allCategories') },
+                  { value: "event_preparation", label: t('tasks.category.event_preparation') },
+                  { value: "marketing", label: t('tasks.category.marketing') },
+                  { value: "maintenance", label: t('tasks.category.maintenance') },
+                  { value: "client_followup", label: t('tasks.category.client_followup') },
                   {
                     value: "partner_coordination",
-                    label: "Partner Coordination",
+                    label: t('tasks.category.partner_coordination'),
                   },
-                  { value: "administrative", label: "Administrative" },
+                  { value: "administrative", label: t('tasks.category.administrative') },
                 ]}
               />
             </div>
@@ -860,25 +864,25 @@ const TasksList = () => {
                 className="flex items-center gap-2"
               >
                 <X className="h-4 w-4" />
-                Clear
+                {t('tasks.filters.clearFilters')}
               </Button>
             )}
           </div>
 
           {hasActiveFilters && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Active filters:</span>
+              <span>{t('tasks.filters.activeFilters')}:</span>
               {search.trim() && (
-                <Badge color="blue">Search: "{search.trim()}"</Badge>
+                <Badge color="blue">{t('tasks.search')}: "{search.trim()}"</Badge>
               )}
               {status !== "all" && (
-                <Badge color="purple">Status: {status}</Badge>
+                <Badge color="purple">{t('tasks.table.status')}: {t(`tasks.status.${status}`)}</Badge>
               )}
               {priority !== "all" && (
-                <Badge color="orange">Priority: {priority}</Badge>
+                <Badge color="orange">{t('tasks.table.priority')}: {t(`tasks.priority.${priority}`)}</Badge>
               )}
               {category !== "all" && (
-                <Badge color="green">Category: {category}</Badge>
+                <Badge color="green">{t('tasks.form.fields.category')}: {t(`tasks.category.${category}`)}</Badge>
               )}
             </div>
           )}
@@ -890,7 +894,7 @@ const TasksList = () => {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
           <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading {showArchived ? "archived " : ""}tasks...
+            {showArchived ? t('tasks.messages.loadingArchived') : t('tasks.messages.loading')}
           </p>
         </div>
       )}
@@ -950,26 +954,26 @@ const TasksList = () => {
             {[
               {
                 id: "pending",
-                label: "Pending",
+                label: t('tasks.status.pending'),
                 status: "pending",
                 icon: Clock,
               },
-              { id: "todo", label: "To Do", status: "todo", icon: ListIcon },
+              { id: "todo", label: t('tasks.status.todo'), status: "todo", icon: ListIcon },
               {
                 id: "in_progress",
-                label: "In Progress",
+                label: t('tasks.status.in_progress'),
                 status: "in_progress",
                 icon: Clock,
               },
               {
                 id: "blocked",
-                label: "Blocked",
+                label: t('tasks.status.blocked'),
                 status: "blocked",
                 icon: AlertCircle,
               },
               {
                 id: "completed",
-                label: "Completed",
+                label: t('tasks.status.completed'),
                 status: "completed",
                 icon: CheckSquare,
               },
@@ -1009,7 +1013,7 @@ const TasksList = () => {
                               color={getPriorityColor(task.priority)}
                               size="sm"
                             >
-                              {task.priority}
+                              {t(`tasks.priority.${task.priority}`)}
                             </Badge>
                           </div>
 
@@ -1057,14 +1061,13 @@ const TasksList = () => {
         <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No {showArchived ? "archived " : ""}tasks found
+            {showArchived ? t('tasks.messages.noArchivedResults') : t('tasks.messages.noResults')}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No {showArchived ? "archived " : ""}tasks match your current search
-            or filter criteria.
+            {showArchived ? t('tasks.messages.noArchivedResultsDescription') : t('tasks.messages.noResultsDescription')}
           </p>
           <Button onClick={handleClearFilters} variant="outline">
-            Clear All Filters
+            {t('tasks.filters.clearFilters')}
           </Button>
         </div>
       )}
@@ -1074,17 +1077,17 @@ const TasksList = () => {
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <CheckSquare className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {showArchived ? "No archived tasks" : "No tasks yet"}
+            {showArchived ? t('tasks.messages.noArchivedTasks') : t('tasks.messages.noTasks')}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             {showArchived
-              ? "Archived tasks will appear here"
-              : "Get started by creating your first task."}
+              ? t('tasks.messages.noArchivedDescription')
+              : t('tasks.messages.noTasksDescription')}
           </p>
           {!showArchived && (
             <Button onClick={handleAddTask} variant="primary">
               <Plus className="h-4 w-4 mr-2" />
-              Create First Task
+              {t('tasks.createFirstTask')}
             </Button>
           )}
         </div>
@@ -1105,7 +1108,7 @@ const TasksList = () => {
         <Modal
           isOpen={isFormOpen}
           onClose={handleFormClose}
-          title={selectedTask ? "Edit Task" : "Create New Task"}
+          title={selectedTask ? t('tasks.form.editTitle') : t('tasks.form.createTitle')}
           size="lg"
         >
           <TaskForm

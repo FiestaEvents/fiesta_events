@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Calendar, 
   Clock, 
@@ -9,6 +10,8 @@ import {
 } from 'lucide-react';
 
 const ReminderInfo = ({ reminder, formatDate, getStatusColor, getPriorityColor }) => {
+  const { t } = useTranslation();
+
   const DetailItem = ({ label, value, icon: Icon }) => (
     <div className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
       <Icon className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
@@ -35,30 +38,30 @@ const ReminderInfo = ({ reminder, formatDate, getStatusColor, getPriorityColor }
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Reminder Information
+        {t('reminders.details.reminderInfo')}
       </h3>
       
       <div className="space-y-1">
-        <DetailItem label="Reminder Date" value={formatDate(reminder.reminderDate || reminder.dueDate)} icon={Calendar} />
+        <DetailItem label={t('reminders.form.fields.date')} value={formatDate(reminder.reminderDate || reminder.dueDate)} icon={Calendar} />
         
         {reminder.reminderTime && (
-          <DetailItem label="Reminder Time" value={formatTime(reminder.reminderTime)} icon={Clock} />
+          <DetailItem label={t('reminders.form.fields.time')} value={formatTime(reminder.reminderTime)} icon={Clock} />
         )}
         
-        <DetailItem label="Type" value={reminder.type?.replace('_', ' ') || 'General'} icon={Bell} />
+        <DetailItem label={t('reminders.form.fields.type')} value={reminder.type?.replace('_', ' ') || t('reminders.type.general')} icon={Bell} />
         
-        <DetailItem label="Priority" value={reminder.priority?.charAt(0).toUpperCase() + reminder.priority?.slice(1)} icon={Bell} />
+        <DetailItem label={t('reminders.form.fields.priority')} value={reminder.priority?.charAt(0).toUpperCase() + reminder.priority?.slice(1)} icon={Bell} />
         
         {reminder.isRecurring && (
-          <DetailItem label="Recurring" value="Yes" icon={Repeat} />
+          <DetailItem label={t('reminders.recurrence.label')} value={t('reminders.yes')} icon={Repeat} />
         )}
         
         {reminder.description && (
-          <DetailItem label="Description" value={reminder.description} icon={FileText} />
+          <DetailItem label={t('reminders.form.fields.description')} value={reminder.description} icon={FileText} />
         )}
         
         {reminder.notes && (
-          <DetailItem label="Notes" value={reminder.notes} icon={FileText} />
+          <DetailItem label={t('reminders.form.fields.notes')} value={reminder.notes} icon={FileText} />
         )}
       </div>
     </div>

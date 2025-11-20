@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { financeService, paymentService } from "../../api/index";
 import Button from "../../components/common/Button";
 import Select from "../../components/common/Select";
@@ -25,6 +26,7 @@ import { toast } from "react-hot-toast";
 
 const Finance = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [period, setPeriod] = useState("month");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -82,7 +84,7 @@ const Finance = () => {
       });
     } catch (error) {
       console.error("Error fetching financial data:", error);
-      toast.error("Failed to load financial data");
+      toast.error(t("finance.errors.loadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -146,40 +148,40 @@ const Finance = () => {
   const summary = financialData.summary || {};
   const mainMetrics = [
     {
-      label: "Total Revenue",
+      label: t("finance.metrics.totalRevenue"),
       value: formatCurrency(summary.totalIncome || 0),
-      change: 0, // Calculate from trends if needed
+      change: 0,
       icon: TrendingUp,
       bgColor: "bg-green-50 dark:bg-green-900/20",
       iconColor: "text-green-600 dark:text-green-400",
-      description: "All income sources",
+      description: t("finance.metrics.allIncomeSources"),
     },
     {
-      label: "Total Expenses",
+      label: t("finance.metrics.totalExpenses"),
       value: formatCurrency(summary.totalExpense || 0),
       change: 0,
       icon: TrendingDown,
       bgColor: "bg-red-50 dark:bg-red-900/20",
       iconColor: "text-red-600 dark:text-red-400",
-      description: "Event + Venue costs",
+      description: t("finance.metrics.eventVenueCosts"),
     },
     {
-      label: "Net Profit",
+      label: t("finance.metrics.netProfit"),
       value: formatCurrency(summary.netProfit || 0),
       change: 0,
       icon: DollarSign,
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
       iconColor: "text-blue-600 dark:text-blue-400",
-      description: "After all expenses",
+      description: t("finance.metrics.afterAllExpenses"),
     },
     {
-      label: "Profit Margin",
+      label: t("finance.metrics.profitMargin"),
       value: `${summary.profitMargin || 0}%`,
       change: 0,
       icon: Target,
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
       iconColor: "text-purple-600 dark:text-purple-400",
-      description: "Overall profitability",
+      description: t("finance.metrics.overallProfitability"),
     },
   ];
 
@@ -197,10 +199,10 @@ const Finance = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Finance Dashboard
+            {t("finance.dashboard")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Complete overview of your venue's financial performance
+            {t("finance.overview")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -209,17 +211,17 @@ const Finance = () => {
             onChange={(e) => setPeriod(e.target.value)}
             className="min-w-[140px]"
           >
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="quarter">This Quarter</option>
-            <option value="year">This Year</option>
+            <option value="week">{t("finance.period.week")}</option>
+            <option value="month">{t("finance.period.month")}</option>
+            <option value="quarter">{t("finance.period.quarter")}</option>
+            <option value="year">{t("finance.period.year")}</option>
           </Select>
           <Button
             variant="primary"
             icon={FileText}
             onClick={() => navigate("/finance/reports")}
           >
-            Reports
+            {t("finance.buttons.reports")}
           </Button>
         </div>
       </div>
@@ -263,10 +265,10 @@ const Finance = () => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Event Financials
+                  {t("finance.eventFinancials.title")}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Revenue and costs from events
+                  {t("finance.eventFinancials.description")}
                 </p>
               </div>
             </div>
@@ -274,7 +276,7 @@ const Finance = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Event Revenue
+                  {t("finance.eventFinancials.eventRevenue")}
                 </span>
                 <span className="text-lg font-bold text-green-600 dark:text-green-400">
                   {formatCurrency(
@@ -287,7 +289,7 @@ const Finance = () => {
 
               <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Partner Costs
+                  {t("finance.eventFinancials.partnerCosts")}
                 </span>
                 <span className="text-lg font-bold text-red-600 dark:text-red-400">
                   {formatCurrency(eventExpenses)}
@@ -297,7 +299,7 @@ const Finance = () => {
               <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    Event Profit
+                    {t("finance.eventFinancials.eventProfit")}
                   </span>
                   <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                     {formatCurrency(
@@ -320,10 +322,10 @@ const Finance = () => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Venue Operating Expenses
+                  {t("finance.venueExpenses.title")}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Fixed and recurring costs
+                  {t("finance.venueExpenses.description")}
                 </p>
               </div>
             </div>
@@ -358,7 +360,9 @@ const Finance = () => {
                         />
                       </div>
                       <span className="text-xs text-gray-500 dark:text-gray-500">
-                        {percentage.toFixed(1)}% of venue expenses
+                        {t("finance.venueExpenses.percentageOfExpenses", { 
+                          percentage: percentage.toFixed(1) 
+                        })}
                       </span>
                     </div>
                   );
@@ -367,7 +371,7 @@ const Finance = () => {
               <div className="pt-3 mt-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    Total Venue Expenses
+                    {t("finance.venueExpenses.totalVenueExpenses")}
                   </span>
                   <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
                     {formatCurrency(venueExpenses)}
@@ -386,7 +390,7 @@ const Finance = () => {
             <div className="flex items-center gap-2 mb-4">
               <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Cash Flow
+                {t("finance.cashFlow.title")}
               </h3>
             </div>
 
@@ -402,7 +406,7 @@ const Finance = () => {
                     </p>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        Net
+                        {t("finance.cashFlow.net")}
                       </span>
                       <span
                         className={`text-lg font-bold ${
@@ -420,7 +424,7 @@ const Finance = () => {
                 <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      Current Balance
+                      {t("finance.cashFlow.currentBalance")}
                     </span>
                     <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                       {formatCurrency(financialData.currentBalance || 0)}
@@ -432,7 +436,7 @@ const Finance = () => {
               <div className="text-center py-8">
                 <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-600 dark:text-gray-400">
-                  No cash flow data
+                  {t("finance.cashFlow.noData")}
                 </p>
               </div>
             )}
@@ -445,14 +449,14 @@ const Finance = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Recent Transactions
+                  {t("finance.recentTransactions.title")}
                 </h3>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => navigate("/finance/transactions")}
                 >
-                  View All
+                  {t("finance.recentTransactions.viewAll")}
                 </Button>
               </div>
 
@@ -484,7 +488,7 @@ const Finance = () => {
                             </div>
                             <div>
                               <p className="font-medium text-gray-900 dark:text-white">
-                                {transaction.description || "Transaction"}
+                                {transaction.description || t("finance.recentTransactions.transaction")}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
                                 {(transaction.category || "other").replace(
@@ -517,7 +521,7 @@ const Finance = () => {
                 <div className="text-center py-8">
                   <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-600 dark:text-gray-400">
-                    No recent transactions
+                    {t("finance.recentTransactions.noData")}
                   </p>
                 </div>
               )}
@@ -532,14 +536,14 @@ const Finance = () => {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Upcoming Payments
+                  {t("finance.upcomingPayments.title")}
                 </h3>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => navigate("/payments")}
                 >
-                  View All
+                  {t("finance.upcomingPayments.viewAll")}
                 </Button>
               </div>
 
@@ -547,6 +551,15 @@ const Finance = () => {
                 {financialData.upcomingPayments.slice(0, 6).map((payment) => {
                   const daysUntil = getDaysUntil(payment.dueDate);
                   const isUrgent = daysUntil <= 3;
+
+                  let dueText = "";
+                  if (daysUntil === 0) {
+                    dueText = t("finance.upcomingPayments.dueToday");
+                  } else if (daysUntil === 1) {
+                    dueText = t("finance.upcomingPayments.dueTomorrow");
+                  } else {
+                    dueText = t("finance.upcomingPayments.dueInDays", { days: daysUntil });
+                  }
 
                   return (
                     <div
@@ -556,7 +569,7 @@ const Finance = () => {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <p className="font-medium text-gray-900 dark:text-white text-sm">
-                            {payment.description || "Payment"}
+                            {payment.description || t("finance.upcomingPayments.payment")}
                           </p>
                           <div className="flex items-center gap-1 mt-1">
                             <Clock
@@ -569,11 +582,7 @@ const Finance = () => {
                                   : "text-gray-500 dark:text-gray-500"
                               }`}
                             >
-                              {daysUntil === 0
-                                ? "Due today"
-                                : daysUntil === 1
-                                  ? "Due tomorrow"
-                                  : `${daysUntil} days`}
+                              {dueText}
                             </p>
                           </div>
                         </div>
@@ -601,10 +610,10 @@ const Finance = () => {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-white">
-                  Transactions
+                  {t("finance.quickActions.transactions.title")}
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  View all
+                  {t("finance.quickActions.transactions.description")}
                 </p>
               </div>
             </div>
@@ -622,10 +631,10 @@ const Finance = () => {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-white">
-                  Analytics
+                  {t("finance.quickActions.analytics.title")}
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Deep insights
+                  {t("finance.quickActions.analytics.description")}
                 </p>
               </div>
             </div>
@@ -643,10 +652,10 @@ const Finance = () => {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-white">
-                  Reports
+                  {t("finance.quickActions.reports.title")}
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Generate
+                  {t("finance.quickActions.reports.description")}
                 </p>
               </div>
             </div>
@@ -664,10 +673,10 @@ const Finance = () => {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-white">
-                  Profitability
+                  {t("finance.quickActions.profitability.title")}
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  By event
+                  {t("finance.quickActions.profitability.description")}
                 </p>
               </div>
             </div>

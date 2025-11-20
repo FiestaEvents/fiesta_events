@@ -1,6 +1,6 @@
-// ReminderDetails.jsx
 import { useCallback, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../../hooks/useToast";
 
 // Components
@@ -19,6 +19,7 @@ const ReminderDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  const { t } = useTranslation();
 
   // Use custom hook for reminder data
   const { reminderData, loading, error, refreshData } = useReminderDetail(id);
@@ -46,13 +47,13 @@ const ReminderDetails = () => {
 
   const getStatusLabel = useCallback((status) => {
     const labels = {
-      active: "Active",
-      completed: "Completed",
-      snoozed: "Snoozed",
-      cancelled: "Cancelled",
+      active: t('reminders.status.active'),
+      completed: t('reminders.status.completed'),
+      snoozed: t('reminders.status.snoozed'),
+      cancelled: t('reminders.status.cancelled'),
     };
-    return labels[status] || status || "Unknown";
-  }, []);
+    return labels[status] || status || t('reminders.unknown');
+  }, [t]);
 
   const getStatusColor = useCallback((status) => {
     const colors = {
@@ -91,21 +92,21 @@ const ReminderDetails = () => {
   // Event handlers
   const handleEditReminder = useCallback(() => {
     if (!id) {
-      showError("Cannot edit reminder: Reminder ID not found");
+      showError(t('reminders.validation.invalidId'));
       return;
     }
     setIsEditModalOpen(true);
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
     await refreshData();
-    showSuccess("Reminder updated successfully");
-  }, [refreshData, showSuccess]);
+    showSuccess(t('reminders.notifications.updated'));
+  }, [refreshData, showSuccess, t]);
 
   const handleDeleteReminder = useCallback(async () => {
     if (!id) {
-      showError("Cannot delete reminder: Reminder ID not found");
+      showError(t('reminders.validation.invalidId'));
       return;
     }
 
@@ -114,24 +115,23 @@ const ReminderDetails = () => {
       await promise(
         reminderService.delete(id),
         {
-          loading: "Deleting reminder...",
-          success: "Reminder deleted successfully",
-          error: "Failed to delete reminder"
+          loading: t('reminders.notifications.deleting'),
+          success: t('reminders.notifications.deleted'),
+          error: t('reminders.notifications.deleteError')
         }
       );
       setIsDeleteModalOpen(false);
       navigate("/reminders");
     } catch (err) {
       console.error("Delete reminder error:", err);
-      // Error is handled by the promise toast
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError]);
+  }, [id, navigate, promise, showError, t]);
 
   const handleComplete = useCallback(async () => {
     if (!id) {
-      showError("Cannot complete reminder: Reminder ID not found");
+      showError(t('reminders.validation.invalidId'));
       return;
     }
 
@@ -142,23 +142,22 @@ const ReminderDetails = () => {
           reminderService.complete(id) : 
           reminderService.update(id, { status: "completed" }),
         {
-          loading: "Completing reminder...",
-          success: "Reminder marked as completed",
-          error: "Failed to complete reminder"
+          loading: t('reminders.notifications.completing'),
+          success: t('reminders.notifications.completed'),
+          error: t('reminders.notifications.completeError')
         }
       );
       await refreshData();
     } catch (err) {
       console.error("Complete reminder error:", err);
-      // Error is handled by the promise toast
     } finally {
       setActionLoading(false);
     }
-  }, [id, refreshData, promise, showError]);
+  }, [id, refreshData, promise, showError, t]);
 
   const handleSnooze = useCallback(async () => {
     if (!id) {
-      showError("Cannot snooze reminder: Reminder ID not found");
+      showError(t('reminders.validation.invalidId'));
       return;
     }
 
@@ -167,23 +166,22 @@ const ReminderDetails = () => {
       await promise(
         reminderService.snooze(id, { hours: 1 }),
         {
-          loading: "Snoozing reminder...",
-          success: "Reminder snoozed for 1 hour",
-          error: "Failed to snooze reminder"
+          loading: t('reminders.notifications.snoozing', { duration: 1, unit: 'hour' }),
+          success: t('reminders.notifications.snoozed', { duration: 1, unit: 'hour' }),
+          error: t('reminders.notifications.snoozeError')
         }
       );
       await refreshData();
     } catch (err) {
       console.error("Snooze reminder error:", err);
-      // Error is handled by the promise toast
     } finally {
       setActionLoading(false);
     }
-  }, [id, refreshData, promise, showError]);
+  }, [id, refreshData, promise, showError, t]);
 
   const handleCancel = useCallback(async () => {
     if (!id) {
-      showError("Cannot cancel reminder: Reminder ID not found");
+      showError(t('reminders.validation.invalidId'));
       return;
     }
 
@@ -194,24 +192,23 @@ const ReminderDetails = () => {
           reminderService.cancel(id) : 
           reminderService.update(id, { status: "cancelled" }),
         {
-          loading: "Cancelling reminder...",
-          success: "Reminder cancelled",
-          error: "Failed to cancel reminder"
+          loading: t('reminders.notifications.cancelling'),
+          success: t('reminders.notifications.cancelled'),
+          error: t('reminders.notifications.cancelError')
         }
       );
       await refreshData();
     } catch (err) {
       console.error("Cancel reminder error:", err);
-      // Error is handled by the promise toast
     } finally {
       setActionLoading(false);
     }
-  }, [id, refreshData, promise, showError]);
+  }, [id, refreshData, promise, showError, t]);
 
   const handleRetry = useCallback(() => {
     refreshData();
-    showInfo("Retrying to load reminder details...");
-  }, [refreshData, showInfo]);
+    showInfo(t('reminders.notifications.loadingDetails'));
+  }, [refreshData, showInfo, t]);
 
   // Loading state
   if (loading && !reminderData) {
@@ -220,7 +217,7 @@ const ReminderDetails = () => {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading reminder details...
+            {t('reminders.loadingDetails')}
           </p>
         </div>
       </div>
@@ -234,24 +231,24 @@ const ReminderDetails = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!reminderData ? "Reminder Not Found" : "Error Loading Reminder"}
+              {!reminderData ? t('reminders.notFound') : t('reminders.errorLoading')}
             </h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || "The reminder you're looking for doesn't exist."}
+              {error?.message || t('reminders.notFoundDescription')}
             </p>
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => navigate("/reminders")}
                 className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
               >
-                Back to Reminders
+                {t('reminders.backToReminders')}
               </button>
               {error && (
                 <button
                   onClick={handleRetry}
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
                 >
-                  Try Again
+                  {t('reminders.tryAgain')}
                 </button>
               )}
             </div>
@@ -302,9 +299,9 @@ const ReminderDetails = () => {
               <div className="border-b border-gray-200 dark:border-orange-800">
                 <nav className="flex -mb-px">
                   {[
-                    { id: "details", label: "Details" },
-                    { id: "recurrence", label: "Recurrence" },
-                    { id: "history", label: "History" },
+                    { id: "details", label: t('reminders.details.tab') },
+                    { id: "recurrence", label: t('reminders.details.recurrenceSettings') },
+                    { id: "history", label: t('reminders.details.activityHistory') },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -351,28 +348,28 @@ const ReminderDetails = () => {
       </div>
 
       {/* Modals */}
-<Modal
-  isOpen={isEditModalOpen}
-  onClose={() => setIsEditModalOpen(false)}
-  title="Edit Reminder"
-  size="lg"
->
-  <ReminderForm
-    reminder={reminderData}
-    onSuccess={handleEditSuccess}
-    onCancel={() => setIsEditModalOpen(false)}
-    isOpen={isEditModalOpen}
-    onClose={() => setIsEditModalOpen(false)}
-  />
-</Modal>
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title={t('reminders.form.editTitle')}
+        size="lg"
+      >
+        <ReminderForm
+          reminder={reminderData}
+          onSuccess={handleEditSuccess}
+          onCancel={() => setIsEditModalOpen(false)}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+        />
+      </Modal>
       <ConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteReminder}
-        title="Delete Reminder"
-        message={`Are you sure you want to delete "${reminderData?.title}"? This action cannot be undone and will remove all associated data.`}
-        confirmText="Delete Reminder"
-        cancelText="Cancel"
+        title={t('reminders.modals.delete.title')}
+        message={t('reminders.modals.delete.description', { name: reminderData?.title })}
+        confirmText={t('reminders.modals.delete.confirm')}
+        cancelText={t('reminders.modals.delete.cancel')}
         variant="danger"
         loading={deleteLoading}
       />

@@ -1,9 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Paperclip, Download } from 'lucide-react';
 import Button from '../../../components/common/Button';
 import EmptyState from '../../../components/common/EmptyState';
 
 const AttachmentsTab = ({ task, formatShortDate }) => {
+  const { t } = useTranslation();
+
   const handleDownload = (attachment) => {
     // Implement download logic here
     console.log('Downloading attachment:', attachment);
@@ -19,7 +22,7 @@ const AttachmentsTab = ({ task, formatShortDate }) => {
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-        Attachments ({task.attachments?.length || 0})
+        {t('tasks.detail.attachments.title')} ({task.attachments?.length || 0})
       </h3>
       
       {task.attachments?.length > 0 ? (
@@ -48,7 +51,7 @@ const AttachmentsTab = ({ task, formatShortDate }) => {
                 icon={Download}
                 onClick={() => handleDownload(attachment)}
               >
-                Download
+                {t('tasks.detail.attachments.download')}
               </Button>
             </div>
           ))}
@@ -56,8 +59,8 @@ const AttachmentsTab = ({ task, formatShortDate }) => {
       ) : (
         <EmptyState
           icon={Paperclip}
-          title="No attachments"
-          description="Upload files to keep them organized with this task."
+          title={t('tasks.detail.attachments.noAttachments')}
+          description={t('tasks.detail.attachments.noAttachmentsDescription')}
           size="lg"
         />
       )}

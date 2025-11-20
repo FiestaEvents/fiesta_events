@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
@@ -31,6 +32,7 @@ import formatCurrency from "../../utils/formatCurrency";
 
 const PaymentsList = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo, promise } = useToast();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +114,7 @@ const PaymentsList = () => {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Failed to load payments. Please try again.";
+        t('payments.notifications.error');
       setError(errorMessage);
       showError(errorMessage);
       setPayments([]);
@@ -120,17 +122,17 @@ const PaymentsList = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, type, status, method, page, limit, showError]);
+  }, [search, type, status, method, page, limit, showError, t]);
 
   // Show confirmation modal
-  const showDeleteConfirmation = useCallback((paymentId, paymentName = "Payment") => {
+  const showDeleteConfirmation = useCallback((paymentId, paymentName = t('payments.payment')) => {
     setConfirmationModal({
       isOpen: true,
       paymentId,
       paymentName,
       onConfirm: () => handleDeleteConfirm(paymentId, paymentName)
     });
-  }, []);
+  }, [t]);
 
   // Close confirmation modal
   const closeConfirmationModal = useCallback(() => {
@@ -143,45 +145,39 @@ const PaymentsList = () => {
   }, []);
 
   // Handle confirmed deletion
-  const handleDeleteConfirm = useCallback(async (paymentId, paymentName = "Payment") => {
+  const handleDeleteConfirm = useCallback(async (paymentId, paymentName = t('payments.payment')) => {
     if (!paymentId) {
-      showError("Invalid payment ID");
+      showError(t('payments.notifications.deleteError'));
       return;
     }
 
     try {
-      // Use the promise toast for loading state
       await promise(
         paymentService.delete(paymentId),
         {
-          loading: `Deleting ${paymentName}...`,
-          success: `${paymentName} deleted successfully`,
-          error: `Failed to delete ${paymentName}`
+          loading: t('payments.notifications.deleting', { paymentName }),
+          success: t('payments.notifications.deleteSuccess'),
+          error: t('payments.notifications.deleteError')
         }
       );
 
-      // Refresh the payments list
       fetchPayments();
       
-      // Close detail modal if the deleted payment is currently selected
       if (selectedPayment?._id === paymentId) {
         setSelectedPayment(null);
         setIsDetailModalOpen(false);
       }
       
-      // Close confirmation modal
       closeConfirmationModal();
     } catch (err) {
-      // Error is already handled by the promise toast
       console.error("Delete payment error:", err);
       closeConfirmationModal();
     }
-  }, [fetchPayments, selectedPayment, promise, showError, closeConfirmationModal]);
+  }, [fetchPayments, selectedPayment, promise, showError, closeConfirmationModal, t]);
 
-  // Updated payment deletion handler
-  const handleDeletePayment = useCallback((paymentId, paymentName = "Payment") => {
+  const handleDeletePayment = useCallback((paymentId, paymentName = t('payments.payment')) => {
     showDeleteConfirmation(paymentId, paymentName);
-  }, [showDeleteConfirmation]);
+  }, [showDeleteConfirmation, t]);
 
   // Handle row click to open detail modal
   const handleRowClick = useCallback((payment) => {
@@ -199,7 +195,7 @@ const PaymentsList = () => {
     async (paymentId, refundData) => {
       try {
         if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
-          showError("Please enter a valid refund amount");
+          showError(t('payments.modals.refund.invalidAmount'));
           return;
         }
 
@@ -209,9 +205,9 @@ const PaymentsList = () => {
             refundReason: refundData.reason,
           }),
           {
-            loading: "Processing refund...",
-            success: "Payment refunded successfully",
-            error: "Failed to refund payment"
+            loading: t('payments.notifications.refunding'),
+            success: t('payments.notifications.refundSuccess'),
+            error: t('payments.notifications.refundError')
           }
         );
 
@@ -220,11 +216,10 @@ const PaymentsList = () => {
         setRefundData({ amount: "", reason: "" });
         fetchPayments();
       } catch (err) {
-        // Error is already handled by the promise toast
         console.error("Refund payment error:", err);
       }
     },
-    [fetchPayments, promise, showError]
+    [fetchPayments, promise, showError, t]
   );
 
   useEffect(() => {
@@ -248,10 +243,10 @@ const PaymentsList = () => {
         navigate(`/payments/${payment._id}`);
       } else {
         console.error("Invalid payment data:", payment);
-        showError("Cannot view payment: Invalid data");
+        showError(t('payments.notifications.invalidData'));
       }
     },
-    [navigate, showError]
+    [navigate, showError, t]
   );
 
   const handleRefundClick = useCallback((payment) => {
@@ -269,10 +264,10 @@ const PaymentsList = () => {
     setIsFormOpen(false);
     showSuccess(
       selectedPayment 
-        ? "Payment updated successfully" 
-        : "Payment recorded successfully"
+        ? t('payments.notifications.updateSuccess') 
+        : t('payments.notifications.createSuccess')
     );
-  }, [fetchPayments, selectedPayment, showSuccess]);
+  }, [fetchPayments, selectedPayment, showSuccess, t]);
 
   const handleFormClose = useCallback(() => {
     setSelectedPayment(null);
@@ -285,17 +280,17 @@ const PaymentsList = () => {
     setStatus("all");
     setMethod("all");
     setPage(1);
-    showInfo("Filters cleared");
-  }, [showInfo]);
+    showInfo(t('payments.notifications.filtersCleared'));
+  }, [showInfo, t]);
 
   const handleRetry = useCallback(() => {
     fetchPayments();
-    showInfo("Retrying to load payments...");
-  }, [fetchPayments, showInfo]);
+    showInfo(t('payments.notifications.retrying'));
+  }, [fetchPayments, showInfo, t]);
 
   const handleExportCSV = useCallback(() => {
     if (!payments || payments.length === 0) {
-      showError("No payments to export");
+      showError(t('payments.notifications.noPaymentsExport'));
       return;
     }
 
@@ -326,12 +321,12 @@ const PaymentsList = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      showSuccess("Payments exported successfully");
+      showSuccess(t('payments.notifications.exportSuccess'));
     } catch (error) {
       console.error("Error exporting payments:", error);
-      showError("Failed to export payments");
+      showError(t('payments.notifications.exportError'));
     }
-  }, [payments, showSuccess, showError]);
+  }, [payments, showSuccess, showError, t]);
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -369,9 +364,8 @@ const PaymentsList = () => {
     return type === "income" ? "green" : "red";
   };
 
-  // ✅ ENHANCED: Calculate separate completed and pending amounts
+  // Stats calculation
   const stats = {
-    // Completed amounts (actual money received/paid)
     completedIncome: payments
       .filter((p) => p.type === "income" && ["completed", "paid"].includes((p.status || "").toLowerCase()))
       .reduce((sum, p) => sum + (p.netAmount || p.amount || 0), 0),
@@ -380,7 +374,6 @@ const PaymentsList = () => {
       .filter((p) => p.type === "expense" && ["completed", "paid"].includes((p.status || "").toLowerCase()))
       .reduce((sum, p) => sum + (p.netAmount || p.amount || 0), 0),
     
-    // Pending amounts (money expected but not yet received/paid)
     pendingIncome: payments
       .filter((p) => p.type === "income" && (p.status || "").toLowerCase() === "pending")
       .reduce((sum, p) => sum + (p.amount || 0), 0),
@@ -389,7 +382,6 @@ const PaymentsList = () => {
       .filter((p) => p.type === "expense" && (p.status || "").toLowerCase() === "pending")
       .reduce((sum, p) => sum + (p.amount || 0), 0),
     
-    // Counts
     completedPayments: payments.filter((p) =>
       ["completed", "paid"].includes((p.status || "").toLowerCase())
     ).length,
@@ -403,19 +395,18 @@ const PaymentsList = () => {
     ).length,
   };
 
-  // Calculate net amounts
   stats.netCompleted = stats.completedIncome - stats.completedExpenses;
   stats.netPending = stats.pendingIncome - stats.pendingExpenses;
   stats.netProjected = stats.netCompleted + stats.netPending;
 
-  // ✅ ENHANCED: New Stats Cards JSX
+  // Stats Cards Section
   const StatsCardsSection = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Card 1: Total Income (Completed + Pending breakdown) */}
+      {/* Income Card */}
       <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-medium text-green-800 dark:text-green-300">
-            Income
+            {t('payments.stats.income')}
           </div>
           <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
             <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -424,7 +415,7 @@ const PaymentsList = () => {
         <div className="space-y-2">
           <div>
             <div className="text-xs text-green-700 dark:text-green-400 mb-0.5">
-              Completed
+              {t('payments.stats.completed')}
             </div>
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(stats.completedIncome)}
@@ -433,7 +424,9 @@ const PaymentsList = () => {
           {stats.pendingIncome > 0 && (
             <div className="pt-2 border-t border-green-200 dark:border-green-800">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-green-700 dark:text-green-400">Pending</span>
+                <span className="text-green-700 dark:text-green-400">
+                  {t('payments.stats.pending')}
+                </span>
                 <span className="font-semibold text-green-600 dark:text-green-400">
                   {formatCurrency(stats.pendingIncome)}
                 </span>
@@ -443,11 +436,11 @@ const PaymentsList = () => {
         </div>
       </div>
 
-      {/* Card 2: Total Expenses (Completed + Pending breakdown) */}
+      {/* Expenses Card */}
       <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-medium text-red-800 dark:text-red-300">
-            Expenses
+            {t('payments.stats.expenses')}
           </div>
           <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg">
             <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
@@ -456,7 +449,7 @@ const PaymentsList = () => {
         <div className="space-y-2">
           <div>
             <div className="text-xs text-red-700 dark:text-red-400 mb-0.5">
-              Completed
+              {t('payments.stats.completed')}
             </div>
             <div className="text-2xl font-bold text-red-600 dark:text-red-400">
               {formatCurrency(stats.completedExpenses)}
@@ -465,7 +458,9 @@ const PaymentsList = () => {
           {stats.pendingExpenses > 0 && (
             <div className="pt-2 border-t border-red-200 dark:border-red-800">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-red-700 dark:text-red-400">Pending</span>
+                <span className="text-red-700 dark:text-red-400">
+                  {t('payments.stats.pending')}
+                </span>
                 <span className="font-semibold text-red-600 dark:text-red-400">
                   {formatCurrency(stats.pendingExpenses)}
                 </span>
@@ -475,11 +470,11 @@ const PaymentsList = () => {
         </div>
       </div>
 
-      {/* Card 3: Net Amount (Realized + Projected) */}
+      {/* Net Amount Card */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
-            Net Amount
+            {t('payments.stats.netAmount')}
           </div>
           <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
             <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -488,7 +483,7 @@ const PaymentsList = () => {
         <div className="space-y-2">
           <div>
             <div className="text-xs text-blue-700 dark:text-blue-400 mb-0.5">
-              Realized
+              {t('payments.stats.realized')}
             </div>
             <div
               className={`text-2xl font-bold ${
@@ -504,7 +499,7 @@ const PaymentsList = () => {
             <div className="pt-2 border-t border-blue-200 dark:border-blue-800">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-blue-700 dark:text-blue-400">
-                  Projected
+                  {t('payments.stats.projected')}
                 </span>
                 <span
                   className={`font-semibold ${
@@ -521,17 +516,17 @@ const PaymentsList = () => {
         </div>
       </div>
 
-      {/* Card 4: Payment Status Summary */}
+      {/* Payment Status Card */}
       <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-3">
-          Payment Status
+          {t('payments.stats.paymentStatus')}
         </div>
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                Completed
+                {t('payments.stats.completed')}
               </span>
             </div>
             <span className="text-lg font-bold text-gray-900 dark:text-white">
@@ -542,7 +537,7 @@ const PaymentsList = () => {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                Pending
+                {t('payments.stats.pending')}
               </span>
             </div>
             <span className="text-lg font-bold text-gray-900 dark:text-white">
@@ -554,7 +549,7 @@ const PaymentsList = () => {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Failed
+                  {t('payments.statuses.failed')}
                 </span>
               </div>
               <span className="text-lg font-bold text-gray-900 dark:text-white">
@@ -585,10 +580,10 @@ const PaymentsList = () => {
     hasActiveFilters &&
     hasInitialLoad;
 
-  // Table columns configuration for the new Table component
+  // Table columns configuration
   const columns = [
     {
-      header: "Type",
+      header: t('payments.table.type'),
       accessor: "type",
       sortable: true,
       width: "10%",
@@ -600,13 +595,15 @@ const PaymentsList = () => {
             ) : (
               <TrendingDown className="w-3 h-3" />
             )}
-            <span className="capitalize">{row.type}</span>
+            <span className="capitalize">
+              {t(`payments.types.${row.type}`)}
+            </span>
           </div>
         </Badge>
       ),
     },
     {
-      header: "Description",
+      header: t('payments.table.description'),
       accessor: "description",
       sortable: true,
       width: "25%",
@@ -617,14 +614,14 @@ const PaymentsList = () => {
           </div>
           {row.reference && (
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Ref: {row.reference}
+              {t('payments.table.reference')}: {row.reference}
             </div>
           )}
         </div>
       ),
     },
     {
-      header: "Client",
+      header: t('payments.table.client'),
       accessor: "client",
       sortable: true,
       width: "15%",
@@ -635,7 +632,7 @@ const PaymentsList = () => {
       ),
     },
     {
-      header: "Date",
+      header: t('payments.table.date'),
       accessor: "date",
       sortable: true,
       width: "12%",
@@ -646,18 +643,18 @@ const PaymentsList = () => {
       ),
     },
     {
-      header: "Method",
+      header: t('payments.table.method'),
       accessor: "method",
       sortable: true,
       width: "12%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400 capitalize">
-          {(row.method || "N/A").replace(/_/g, " ")}
+          {t(`payments.methods.${row.method}`) || "N/A"}
         </div>
       ),
     },
     {
-      header: "Amount",
+      header: t('payments.table.amount'),
       accessor: "amount",
       sortable: true,
       width: "13%",
@@ -675,18 +672,18 @@ const PaymentsList = () => {
       ),
     },
     {
-      header: "Status",
+      header: t('payments.table.status'),
       accessor: "status",
       sortable: true,
       width: "10%",
       render: (row) => (
         <Badge color={getStatusBadgeColor(row.status)}>
-          {row.status || "Unknown"}
+          {t(`payments.statuses.${row.status}`) || "Unknown"}
         </Badge>
       ),
     },
     {
-      header: "Actions",
+      header: t('payments.table.actions'),
       accessor: "actions",
       width: "3%",
       className: "text-center",
@@ -698,7 +695,7 @@ const PaymentsList = () => {
               handleViewPayment(row);
             }}
             className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-            title="View Payment"
+            title={t('payments.viewPayment')}
           >
             <Eye className="h-4 w-4" />
           </button>
@@ -708,7 +705,7 @@ const PaymentsList = () => {
               handleEditPayment(row);
             }}
             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-            title="Edit Payment"
+            title={t('payments.editPayment')}
           >
             <Edit className="h-4 w-4" />
           </button>
@@ -722,7 +719,7 @@ const PaymentsList = () => {
                   handleRefundClick(row);
                 }}
                 className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 p-1 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition"
-                title="Refund Payment"
+                title={t('payments.refundPayment')}
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
@@ -730,10 +727,10 @@ const PaymentsList = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleDeletePayment(row._id, row.description || "Payment");
+              handleDeletePayment(row._id, row.description || t('payments.payment'));
             }}
             className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            title="Delete Payment"
+            title={t('payments.deletePayment')}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -748,13 +745,13 @@ const PaymentsList = () => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            Payments
+            {t('payments.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Track all income and expense payments.
+            {t('payments.subtitle')}
             {hasInitialLoad &&
               totalCount > 0 &&
-              `Showing ${payments.length} of ${totalCount} payments`}
+              ` ${t('payments.showing', { count: payments.length, total: totalCount })}`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -765,7 +762,7 @@ const PaymentsList = () => {
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" />
-              Export
+              {t('payments.exportPayments')}
             </Button>
           )}
           {totalCount > 0 && (
@@ -775,13 +772,13 @@ const PaymentsList = () => {
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Payment
+              {t('payments.addPayment')}
             </Button>
           )}
         </div>
       </div>
 
-      {/* ✅ ENHANCED: Stats Cards */}
+      {/* Stats Cards */}
       <StatsCardsSection />
 
       {/* Error Message */}
@@ -790,14 +787,14 @@ const PaymentsList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Payments
+                {t('payments.notifications.error')}
               </p>
               <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 {error}
               </p>
             </div>
             <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
+              {t('payments.notifications.retry')}
             </Button>
           </div>
         </div>
@@ -811,7 +808,7 @@ const PaymentsList = () => {
               <Input
                 className="dark:bg-[#1f2937] dark:text-white"
                 icon={Search}
-                placeholder="Search by description, reference, or client..."
+                placeholder={t('payments.searchPlaceholder')}
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -829,9 +826,9 @@ const PaymentsList = () => {
                   setType(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Types" },
-                  { value: "income", label: "Income" },
-                  { value: "expense", label: "Expense" },
+                  { value: "all", label: t('payments.filters.allTypes') },
+                  { value: "income", label: t('payments.types.income') },
+                  { value: "expense", label: t('payments.types.expense') },
                 ]}
               />
             </div>
@@ -844,11 +841,11 @@ const PaymentsList = () => {
                   setStatus(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Status" },
-                  { value: "pending", label: "Pending" },
-                  { value: "completed", label: "Completed" },
-                  { value: "failed", label: "Failed" },
-                  { value: "refunded", label: "Refunded" },
+                  { value: "all", label: t('payments.filters.allStatus') },
+                  { value: "pending", label: t('payments.statuses.pending') },
+                  { value: "completed", label: t('payments.statuses.completed') },
+                  { value: "failed", label: t('payments.statuses.failed') },
+                  { value: "refunded", label: t('payments.statuses.refunded') },
                 ]}
               />
             </div>
@@ -861,13 +858,13 @@ const PaymentsList = () => {
                   setMethod(e.target.value);
                 }}
                 options={[
-                  { value: "all", label: "All Methods" },
-                  { value: "cash", label: "Cash" },
-                  { value: "card", label: "Card" },
-                  { value: "credit_card", label: "Credit Card" },
-                  { value: "bank_transfer", label: "Bank Transfer" },
-                  { value: "check", label: "Check" },
-                  { value: "mobile_payment", label: "Mobile Payment" },
+                  { value: "all", label: t('payments.filters.allMethods') },
+                  { value: "cash", label: t('payments.methods.cash') },
+                  { value: "card", label: t('payments.methods.card') },
+                  { value: "credit_card", label: t('payments.methods.credit_card') },
+                  { value: "bank_transfer", label: t('payments.methods.bank_transfer') },
+                  { value: "check", label: t('payments.methods.check') },
+                  { value: "mobile_payment", label: t('payments.methods.mobile_payment') },
                 ]}
               />
             </div>
@@ -878,24 +875,20 @@ const PaymentsList = () => {
                 className="flex items-center gap-2"
               >
                 <X className="h-4 w-4" />
-                Clear
+                {t('payments.filters.clearFilters')}
               </Button>
             )}
           </div>
 
           {hasActiveFilters && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Active filters:</span>
+              <span>{t('payments.filters.activeFilters')}:</span>
               {search.trim() && (
-                <Badge color="blue">Search: "{search.trim()}"</Badge>
+                <Badge color="blue">{t('payments.search')}: "{search.trim()}"</Badge>
               )}
-              {type !== "all" && <Badge color="green">Type: {type}</Badge>}
-              {status !== "all" && (
-                <Badge color="purple">Status: {status}</Badge>
-              )}
-              {method !== "all" && (
-                <Badge color="orange">Method: {method}</Badge>
-              )}
+              {type !== "all" && <Badge color="green">{t('payments.filters.type')}: {type}</Badge>}
+              {status !== "all" && <Badge color="purple">{t('payments.filters.status')}: {status}</Badge>}
+              {method !== "all" && <Badge color="orange">{t('payments.filters.method')}: {method}</Badge>}
             </div>
           )}
         </div>
@@ -906,7 +899,7 @@ const PaymentsList = () => {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
           <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading payments...
+            {t('payments.notifications.loading')}
           </p>
         </div>
       )}
@@ -958,13 +951,13 @@ const PaymentsList = () => {
         <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No payments found
+            {t('payments.table.noResults')}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No payments match your current search or filter criteria.
+            {t('payments.table.noResultsDescription')}
           </p>
           <Button onClick={handleClearFilters} variant="outline">
-            Clear All Filters
+            {t('payments.filters.clearFilters')}
           </Button>
         </div>
       )}
@@ -974,14 +967,14 @@ const PaymentsList = () => {
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <DollarSign className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No payments yet
+            {t('payments.table.noPayments')}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Get started by recording your first payment.
+            {t('payments.getStarted')}
           </p>
           <Button onClick={handleAddPayment} variant="primary">
             <Plus className="h-4 w-4 mr-2" />
-            Record First Payment
+            {t('payments.recordFirstPayment')}
           </Button>
         </div>
       )}
@@ -1000,7 +993,7 @@ const PaymentsList = () => {
         <Modal
           isOpen={isFormOpen}
           onClose={handleFormClose}
-          title={selectedPayment ? "Edit Payment" : "Record New Payment"}
+          title={selectedPayment ? t('payments.modals.paymentForm.editTitle') : t('payments.modals.paymentForm.newTitle')}
           size="lg"
         >
           <PaymentForm
@@ -1020,13 +1013,13 @@ const PaymentsList = () => {
             setIsRefundModalOpen(false);
             setRefundData({ amount: "", reason: "" });
           }}
-          title="Refund Payment"
+          title={t('payments.modals.refund.title')}
           size="sm"
         >
           <div className="p-6">
             <div className="space-y-4 mb-6">
               <Input
-                label="Refund Amount"
+                label={t('payments.modals.refund.amount')}
                 type="number"
                 value={refundData.amount}
                 onChange={(e) =>
@@ -1038,12 +1031,12 @@ const PaymentsList = () => {
                 step="0.01"
               />
               <Input
-                label="Reason (Optional)"
+                label={t('payments.modals.refund.reason')}
                 value={refundData.reason}
                 onChange={(e) =>
                   setRefundData((prev) => ({ ...prev, reason: e.target.value }))
                 }
-                placeholder="Enter refund reason"
+                placeholder={t('payments.modals.refund.reasonPlaceholder')}
               />
             </div>
             <div className="flex justify-end gap-3">
@@ -1055,7 +1048,7 @@ const PaymentsList = () => {
                   setRefundData({ amount: "", reason: "" });
                 }}
               >
-                Cancel
+                {t('payments.modals.refund.cancel')}
               </Button>
               <Button
                 variant="danger"
@@ -1063,7 +1056,7 @@ const PaymentsList = () => {
                   handleRefundPayment(selectedPayment._id, refundData)
                 }
               >
-                Confirm Refund
+                {t('payments.modals.refund.confirm')}
               </Button>
             </div>
           </div>
@@ -1074,7 +1067,7 @@ const PaymentsList = () => {
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={closeConfirmationModal}
-        title="Confirm Deletion"
+        title={t('payments.modals.delete.title')}
         size="md"
       >
         <div className="p-6">
@@ -1086,11 +1079,10 @@ const PaymentsList = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Payment
+                {t('payments.modals.delete.title')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.paymentName}"</strong>? 
-                This action cannot be undone and all associated data will be permanently removed.
+                {t('payments.modals.delete.description', { paymentName: confirmationModal.paymentName })}
               </p>
               <div className="flex justify-end gap-3">
                 <Button
@@ -1098,7 +1090,7 @@ const PaymentsList = () => {
                   onClick={closeConfirmationModal}
                   className="px-4 py-2"
                 >
-                  Cancel
+                  {t('payments.modals.delete.cancel')}
                 </Button>
                 <Button
                   variant="danger"
@@ -1106,7 +1098,7 @@ const PaymentsList = () => {
                   className="px-4 py-2 flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Payment
+                  {t('payments.modals.delete.confirm')}
                 </Button>
               </div>
             </div>

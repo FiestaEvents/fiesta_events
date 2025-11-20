@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CheckSquare, Edit, Trash2, Play, Pause, Archive, ArrowLeft } from "lucide-react";
 
 const TaskHeader = ({
@@ -17,6 +18,8 @@ const TaskHeader = ({
   completedSubtasks,
   totalSubtasks,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
       {/* Action Buttons */}
@@ -27,21 +30,21 @@ const TaskHeader = ({
             className="flex items-center border border-gray-300 p-1 rounded-lg pr-2 gap-2 text-sm text-gray-600 hover:text-gray-900 transition dark:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Tasks
+            {t('tasks.detail.header.backToTasks')}
           </button>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onEdit}
             className="p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition dark:text-gray-400 dark:hover:bg-blue-900 dark:hover:text-white"
-            title="Edit Task"
+            title={t('tasks.detail.header.editTask')}
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={onDelete}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition dark:text-red-400 dark:hover:bg-red-900"
-            title="Delete Task"
+            title={t('tasks.detail.header.deleteTask')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -67,7 +70,7 @@ const TaskHeader = ({
           <span
             className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getPriorityColor(task.priority)}`}
           >
-            {task.priority} Priority
+            {t('tasks.detail.header.priority', { priority: task.priority })}
           </span>
         </div>
       </div>
@@ -75,7 +78,7 @@ const TaskHeader = ({
       {/* Progress */}
       <div className="mb-6">
         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-          <span>Progress</span>
+          <span>{t('tasks.detail.overview.progress')}</span>
           <span>{Math.round(progress)}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
@@ -85,7 +88,7 @@ const TaskHeader = ({
           ></div>
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-          {completedSubtasks} of {totalSubtasks} subtasks completed
+          {t('tasks.detail.subtasks.completed', { completed: completedSubtasks, total: totalSubtasks })}
         </div>
       </div>
 
@@ -98,7 +101,10 @@ const TaskHeader = ({
             className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg border border-blue-200 hover:bg-blue-200 transition disabled:opacity-50 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-800"
           >
             <Play className="w-4 h-4" />
-            {actionLoading ? "Starting..." : "Start Working"}
+            {actionLoading 
+              ? t('tasks.detail.header.actions.starting')
+              : t('tasks.detail.header.actions.startWorking')
+            }
           </button>
         )}
         
@@ -109,7 +115,10 @@ const TaskHeader = ({
             className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-200 transition disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             <Pause className="w-4 h-4" />
-            {actionLoading ? "Pausing..." : "Pause Task"}
+            {actionLoading 
+              ? t('tasks.detail.header.actions.pausing')
+              : t('tasks.detail.header.actions.pauseTask')
+            }
           </button>
         )}
         
@@ -120,7 +129,10 @@ const TaskHeader = ({
             className="flex items-center justify-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg border border-green-200 hover:bg-green-200 transition disabled:opacity-50 dark:bg-green-900 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-800"
           >
             <CheckSquare className="w-4 h-4" />
-            {actionLoading ? "Completing..." : "Mark Complete"}
+            {actionLoading 
+              ? t('tasks.detail.header.actions.completing')
+              : t('tasks.detail.header.actions.markComplete')
+            }
           </button>
         )}
         
@@ -130,7 +142,10 @@ const TaskHeader = ({
           className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-200 transition disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
         >
           <Archive className="w-4 h-4" />
-          {actionLoading ? "Archiving..." : "Archive Task"}
+          {actionLoading 
+            ? t('tasks.detail.header.actions.archiving')
+            : t('tasks.detail.header.actions.archiveTask')
+          }
         </button>
       </div>
     </div>

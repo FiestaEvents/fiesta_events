@@ -1,30 +1,33 @@
 // src/components/events/EventForm/steps/Step1EventDetails.jsx
 import React from "react";
 import { Calendar, Clock, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Input from "../../../../components/common/Input";
 import Select from "../../../../components/common/Select";
 import Textarea from "../../../../components/common/Textarea";
 import Toggle from "../../../../components/common/Toggle";
 
-const eventTypeOptions = [
-  { value: "", label: "Select Event Type" },
-  { value: "wedding", label: "Wedding" },
-  { value: "birthday", label: "Birthday" },
-  { value: "corporate", label: "Corporate" },
-  { value: "conference", label: "Conference" },
-  { value: "party", label: "Party" },
-  { value: "other", label: "Other" },
-];
-
-const statusOptions = [
-  { value: "pending", label: "Pending" },
-  { value: "confirmed", label: "Confirmed" },
-  { value: "in-progress", label: "In Progress" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
 const Step1EventDetails = ({ formData, handleChange, errors }) => {
+  const { t } = useTranslation();
+
+  const eventTypeOptions = [
+    { value: "", label: t('eventForm.step1.selectEventType') },
+    { value: "wedding", label: t('eventForm.step1.eventTypes.wedding') },
+    { value: "birthday", label: t('eventForm.step1.eventTypes.birthday') },
+    { value: "corporate", label: t('eventForm.step1.eventTypes.corporate') },
+    { value: "conference", label: t('eventForm.step1.eventTypes.conference') },
+    { value: "party", label: t('eventForm.step1.eventTypes.party') },
+    { value: "other", label: t('eventForm.step1.eventTypes.other') },
+  ];
+
+  const statusOptions = [
+    { value: "pending", label: t('eventForm.step1.statusOptions.pending') },
+    { value: "confirmed", label: t('eventForm.step1.statusOptions.confirmed') },
+    { value: "in-progress", label: t('eventForm.step1.statusOptions.inProgress') },
+    { value: "completed", label: t('eventForm.step1.statusOptions.completed') },
+    { value: "cancelled", label: t('eventForm.step1.statusOptions.cancelled') },
+  ];
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -32,21 +35,23 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
         <div className="bg-white dark:bg-gray-800/50 border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-5 h-5 text-blue-500" />
-            <h4 className="font-semibold text-gray-900 dark:text-white">Event Details</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-white">
+              {t('eventForm.step1.eventDetails')}
+            </h4>
           </div>
           <div className="space-y-4">
             <Input
-              label="Event Title"
+              label={t('eventForm.step1.eventTitle')}
               name="title"
               value={formData.title}
               onChange={handleChange}
               error={errors.title}
               required
-              placeholder="Enter event title..."
+              placeholder={t('eventForm.step1.eventTitlePlaceholder')}
             />
 
             <Select
-              label="Event Type"
+              label={t('eventForm.step1.eventType')}
               name="type"
               value={formData.type}
               onChange={handleChange}
@@ -56,7 +61,7 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
             />
 
             <Select
-              label="Status"
+              label={t('eventForm.step1.status')}
               name="status"
               value={formData.status}
               onChange={handleChange}
@@ -64,12 +69,12 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
             />
 
             <Textarea
-              label="Event Description"
+              label={t('eventForm.step1.eventDescription')}
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows={4}
-              placeholder="Describe the event, special requirements, etc..."
+              placeholder={t('eventForm.step1.eventDescriptionPlaceholder')}
             />
           </div>
         </div>
@@ -78,13 +83,15 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
         <div className="bg-white dark:bg-gray-800/50 border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-blue-500" />
-            <h4 className="font-semibold text-gray-900 dark:text-white">Date & Time</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-white">
+              {t('eventForm.step1.dateTime')}
+            </h4>
           </div>
           <div className="space-y-3">
             {/* Same Day Toggle */}
             <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Same Day Event
+                {t('eventForm.step1.sameDayEvent')}
               </span>
               <Toggle
                 enabled={formData.sameDayEvent}
@@ -97,7 +104,7 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
             {/* Date Inputs */}
             {formData.sameDayEvent ? (
               <Input
-                label="Event Date"
+                label={t('eventForm.step1.eventDate')}
                 name="startDate"
                 type="date"
                 value={formData.startDate}
@@ -108,7 +115,7 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Start Date"
+                  label={t('eventForm.step1.startDate')}
                   name="startDate"
                   type="date"
                   value={formData.startDate}
@@ -117,7 +124,7 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
                   required
                 />
                 <Input
-                  label="End Date"
+                  label={t('eventForm.step1.endDate')}
                   name="endDate"
                   type="date"
                   value={formData.endDate}
@@ -131,14 +138,14 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
             {/* Time Inputs */}
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Start Time"
+                label={t('eventForm.step1.startTime')}
                 name="startTime"
                 type="time"
                 value={formData.startTime}
                 onChange={handleChange}
               />
               <Input
-                label="End Time"
+                label={t('eventForm.step1.endTime')}
                 name="endTime"
                 type="time"
                 value={formData.endTime}
@@ -149,7 +156,7 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
 
             {/* Guest Count */}
             <Input
-              label="Guest Count"
+              label={t('eventForm.step1.guestCount')}
               name="guestCount"
               type="number"
               min="1"
@@ -157,7 +164,7 @@ const Step1EventDetails = ({ formData, handleChange, errors }) => {
               onChange={handleChange}
               icon={Users}
               error={errors.guestCount}
-              placeholder="Expected number of guests"
+              placeholder={t('eventForm.step1.guestCountPlaceholder')}
             />
           </div>
         </div>

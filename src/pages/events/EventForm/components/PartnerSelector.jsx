@@ -1,6 +1,7 @@
 // src/components/events/EventForm/components/PartnerSelector.jsx
 import React from "react";
 import { X, CheckCircle, Clock, DollarSign } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Select from "../../../../components/common/Select";
 
 const PartnerSelector = ({
@@ -11,6 +12,8 @@ const PartnerSelector = ({
   prefilledPartner,
   calculateEventHours,
 }) => {
+  const { t } = useTranslation();
+  
   const availablePartners = partners.filter(
     (p) => !selectedPartners.some((sp) => sp.partner === p._id)
   );
@@ -24,7 +27,7 @@ const PartnerSelector = ({
       onAddPartner({
         partner: partner._id,
         partnerName: partner.name,
-        service: partner.category || "General Service",
+        service: partner.category || t('eventForm.components.partnerSelector.generalService'),
         priceType: partner.priceType || "fixed",
         rate: partner.priceType === "hourly" ? partner.hourlyRate : partner.fixedRate,
         hours: partner.priceType === "hourly" ? 1 : 0,
@@ -34,7 +37,6 @@ const PartnerSelector = ({
   };
 
   const getPartnerCost = (partner, hours) => {
-    // ✅ FIX: Use partner.rate instead of hourlyRate/fixedRate
     const rate = partner.rate || 0;
     
     if (partner.priceType === "hourly") {
@@ -45,24 +47,22 @@ const PartnerSelector = ({
   };
 
   const formatPartnerPrice = (partner) => {
-    // ✅ FIX: Use partner.rate instead of hourlyRate/fixedRate
     const rate = partner.rate || 0;
     
     if (partner.priceType === "hourly") {
-      return `${rate} TND/hr`;
+      return `${rate} ${t('eventForm.currency')}/${t('eventForm.components.partnerSelector.hour')}`;
     } else {
-      return `${rate} TND`;
+      return `${rate} ${t('eventForm.currency')}`;
     }
   };
 
   const formatPartnerCostBreakdown = (partner, hours) => {
-    // ✅ FIX: Use partner.rate instead of hourlyRate/fixedRate
     const rate = partner.rate || 0;
     
     if (partner.priceType === "hourly") {
-      return `${rate} TND/hr × ${hours}h = ${getPartnerCost(partner, hours).toFixed(2)} TND`;
+      return `${rate} ${t('eventForm.currency')}/${t('eventForm.components.partnerSelector.hour')} × ${hours}${t('eventForm.components.partnerSelector.hourShort')} = ${getPartnerCost(partner, hours).toFixed(2)} ${t('eventForm.currency')}`;
     } else {
-      return `Fixed rate: ${rate.toFixed(2)} TND`;
+      return `${t('eventForm.components.partnerSelector.fixedRate')}: ${rate.toFixed(2)} ${t('eventForm.currency')}`;
     }
   };
 
@@ -73,10 +73,12 @@ const PartnerSelector = ({
         <div className="p-4 bg-green-50 border-2 border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
           <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
             <CheckCircle className="w-5 h-5" />
-            <span className="font-semibold">Partner Pre-selected</span>
+            <span className="font-semibold">
+              {t('eventForm.components.partnerSelector.preSelected')}
+            </span>
           </div>
           <p className="text-sm text-green-600 dark:text-green-400">
-            <strong>{prefilledPartner.name}</strong> has been automatically added
+            <strong>{prefilledPartner.name}</strong> {t('eventForm.components.partnerSelector.autoAdded')}
           </p>
         </div>
       )}
@@ -86,11 +88,11 @@ const PartnerSelector = ({
         value=""
         onChange={handleSelectPartner}
         options={[
-          { value: "", label: "Select Partner to Add" },
+          { value: "", label: t('eventForm.components.partnerSelector.selectPartner') },
           ...availablePartners.map((p) => {
             const price = p.priceType === "hourly" 
-              ? `${p.hourlyRate || 0} TND/hr`
-              : `${p.fixedRate || 0} TND (fixed)`;
+              ? `${p.hourlyRate || 0} ${t('eventForm.currency')}/${t('eventForm.components.partnerSelector.hour')}`
+              : `${p.fixedRate || 0} ${t('eventForm.currency')} (${t('eventForm.components.partnerSelector.fixed')})`;
             return {
               value: p._id,
               label: `${p.name} - ${price}`,
@@ -104,7 +106,7 @@ const PartnerSelector = ({
       {selectedPartners.length > 0 && (
         <div className="space-y-2 mt-4">
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Added Partners ({selectedPartners.length})
+            {t('eventForm.components.partnerSelector.addedPartners', { count: selectedPartners.length })}
           </p>
           {selectedPartners.map((partner, idx) => (
             <div
@@ -123,12 +125,12 @@ const PartnerSelector = ({
                     {partner.priceType === "hourly" ? (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
                         <Clock className="w-3 h-3" />
-                        Hourly
+                        {t('eventForm.components.partnerSelector.hourly')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded">
                         <DollarSign className="w-3 h-3" />
-                        Fixed
+                        {t('eventForm.components.partnerSelector.fixed')}
                       </span>
                     )}
                   </div>
@@ -140,14 +142,14 @@ const PartnerSelector = ({
               <div className="flex items-center gap-2 ml-2">
                 <div className="text-right">
                   <div className="text-sm font-semibold text-orange-600 dark:text-orange-400">
-                    {getPartnerCost(partner, calculateEventHours?.()).toFixed(2)} TND
+                    {getPartnerCost(partner, calculateEventHours?.()).toFixed(2)} {t('eventForm.currency')}
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => onRemovePartner(idx)}
                   className="p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  title="Remove partner"
+                  title={t('eventForm.components.partnerSelector.removePartner')}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -160,7 +162,7 @@ const PartnerSelector = ({
       {/* Empty State */}
       {selectedPartners.length === 0 && (
         <div className="text-center py-6 text-gray-500 dark:text-gray-400 text-sm">
-          No partners added yet. Select from the dropdown above to add partners.
+          {t('eventForm.components.partnerSelector.noPartners')}
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Calendar, 
   User, 
@@ -15,6 +16,8 @@ const TaskInfo = ({
   getPriorityColor,
   isOverdue 
 }) => {
+  const { t } = useTranslation();
+
   const DetailItem = ({ label, value, icon: Icon, warning = false }) => (
     <div className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
       <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${warning ? 'text-red-500' : 'text-gray-400'}`} />
@@ -32,35 +35,55 @@ const TaskInfo = ({
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Task Information
+        {t('tasks.detail.info.title')}
       </h3>
       
       <div className="space-y-1">
         <DetailItem 
-          label="Due Date" 
+          label={t('tasks.detail.info.dueDate')} 
           value={formatShortDate(task.dueDate)} 
           icon={Calendar}
           warning={isOverdue(task.dueDate, task.status)}
         />
         
         {task.startDate && (
-          <DetailItem label="Start Date" value={formatShortDate(task.startDate)} icon={Calendar} />
+          <DetailItem 
+            label={t('tasks.detail.info.startDate')} 
+            value={formatShortDate(task.startDate)} 
+            icon={Calendar} 
+          />
         )}
         
         {task.assignedTo && (
-          <DetailItem label="Assigned To" value={task.assignedTo.name} icon={User} />
+          <DetailItem 
+            label={t('tasks.detail.info.assignedTo')} 
+            value={task.assignedTo.name} 
+            icon={User} 
+          />
         )}
         
         {task.category && (
-          <DetailItem label="Category" value={task.category.replace("_", " ")} icon={Tag} />
+          <DetailItem 
+            label={t('tasks.detail.info.category')} 
+            value={task.category.replace("_", " ")} 
+            icon={Tag} 
+          />
         )}
         
         {task.estimatedHours && (
-          <DetailItem label="Estimated Hours" value={`${task.estimatedHours}h`} icon={Clock} />
+          <DetailItem 
+            label={t('tasks.detail.info.estimatedHours')} 
+            value={`${task.estimatedHours}h`} 
+            icon={Clock} 
+          />
         )}
         
         {task.actualHours && (
-          <DetailItem label="Actual Hours" value={`${task.actualHours}h`} icon={Clock} />
+          <DetailItem 
+            label={t('tasks.detail.info.actualHours')} 
+            value={`${task.actualHours}h`} 
+            icon={Clock} 
+          />
         )}
       </div>
 
@@ -71,7 +94,7 @@ const TaskInfo = ({
             <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
             <div>
               <h4 className="font-medium text-red-800 dark:text-red-300 mb-1">
-                Task Blocked
+                {t('tasks.detail.info.taskBlocked')}
               </h4>
               <p className="text-sm text-red-700 dark:text-red-400">
                 {task.blockedReason}

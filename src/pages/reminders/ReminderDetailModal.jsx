@@ -13,6 +13,7 @@ import {
   Tag,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
 import { reminderService } from "../../api/index";
 import Button from "../../components/common/Button";
@@ -23,6 +24,7 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError, promise } = useToast();
+  const { t } = useTranslation();
 
   if (!isOpen || !reminder) return null;
 
@@ -100,7 +102,6 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
     try {
       setIsProcessing(true);
 
-      // Calculate snooze until date based on duration and unit
       const now = new Date();
       let snoozeUntil;
       
@@ -124,9 +125,9 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
       await promise(
         reminderService.snooze(reminder._id, snoozeData),
         {
-          loading: `Snoozing reminder for ${duration} ${unit}...`,
-          success: `Reminder snoozed for ${duration} ${unit}`,
-          error: `Failed to snooze reminder`
+          loading: t('reminders.notifications.snoozing', { duration, unit }),
+          success: t('reminders.notifications.snoozed', { duration, unit }),
+          error: t('reminders.notifications.snoozeError')
         }
       );
       
@@ -152,9 +153,9 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
           snoozeUntil: null
         }),
         {
-          loading: "Activating reminder...",
-          success: "Reminder activated successfully",
-          error: "Failed to activate reminder"
+          loading: t('reminders.notifications.activating'),
+          success: t('reminders.notifications.unsnoozed'),
+          error: t('reminders.notifications.activateError')
         }
       );
       
@@ -176,9 +177,9 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
       await promise(
         reminderService.delete(reminder._id),
         {
-          loading: "Deleting reminder...",
-          success: "Reminder deleted successfully",
-          error: "Failed to delete reminder"
+          loading: t('reminders.notifications.deleting'),
+          success: t('reminders.notifications.deleted'),
+          error: t('reminders.notifications.deleteError')
         }
       );
       onClose();
@@ -228,24 +229,24 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                     className="text-2xl font-bold leading-6 text-gray-900 dark:text-white"
                     id="modal-title"
                   >
-                    {reminder.title || "Untitled Reminder"}
+                    {reminder.title || t('reminders.untitled')}
                   </h3>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Badge color={getStatusBadgeColor(reminder.status)}>
-                      {reminder.status ? reminder.status.charAt(0).toUpperCase() + reminder.status.slice(1) : "Active"}
+                      {reminder.status ? reminder.status.charAt(0).toUpperCase() + reminder.status.slice(1) : t('reminders.status.active')}
                     </Badge>
                     <Badge color={getTypeBadgeColor(reminder.type)}>
-                      {reminder.type ? reminder.type.charAt(0).toUpperCase() + reminder.type.slice(1) : "Other"}
+                      {reminder.type ? reminder.type.charAt(0).toUpperCase() + reminder.type.slice(1) : t('reminders.type.other')}
                     </Badge>
                     <Badge color={getPriorityBadgeColor(reminder.priority)}>
-                      {reminder.priority ? reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1) : "Medium"}
+                      {reminder.priority ? reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1) : t('reminders.priority.medium')}
                     </Badge>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
                   className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors ml-4 flex-shrink-0"
-                  title="Close"
+                  title={t('reminders.close')}
                 >
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
@@ -257,7 +258,7 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                       <FileText className="w-4 h-4 text-orange-500" />
-                      Description
+                      {t('reminders.details.description')}
                     </h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                       {reminder.description}
@@ -268,14 +269,14 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                 {/* Reminder Details */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Reminder Details
+                    {t('reminders.details.reminderDetails')}
                   </h4>
                   <div className="space-y-3">
                     {/* Date & Time */}
                     <div className="flex items-center gap-3 text-sm">
                       <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
                       <div>
-                        <div className="text-gray-500 dark:text-gray-400">Date & Time</div>
+                        <div className="text-gray-500 dark:text-gray-400">{t('reminders.details.dateTime')}</div>
                         <div className="font-medium text-gray-900 dark:text-white">
                           {formatDateTime(reminder.reminderDate, reminder.reminderTime)}
                         </div>
@@ -287,7 +288,7 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                       <div className="flex items-center gap-3 text-sm">
                         <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0" />
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400">Snoozed Until</div>
+                          <div className="text-gray-500 dark:text-gray-400">{t('reminders.details.snoozedUntil')}</div>
                           <div className="font-medium text-yellow-600 dark:text-yellow-400">
                             {formatDateLong(reminder.snoozeUntil)}
                           </div>
@@ -300,9 +301,9 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                       <div className="flex items-center gap-3 text-sm">
                         <User className="w-5 h-5 text-orange-500 flex-shrink-0" />
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400">Created By</div>
+                          <div className="text-gray-500 dark:text-gray-400">{t('reminders.details.createdBy')}</div>
                           <div className="font-medium text-gray-900 dark:text-white">
-                            {reminder.createdBy.name || "Unknown"}
+                            {reminder.createdBy.name || t('reminders.unknown')}
                           </div>
                         </div>
                       </div>
@@ -313,29 +314,29 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                 {/* Related Entities */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Related To
+                    {t('reminders.details.relatedTo')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {reminder.relatedEvent && (
                       <Badge color="purple" className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        Event
+                        {t('reminders.type.event')}
                       </Badge>
                     )}
                     {reminder.relatedTask && (
                       <Badge color="blue" className="flex items-center gap-1">
                         <FileText className="w-3 h-3" />
-                        Task
+                        {t('reminders.type.task')}
                       </Badge>
                     )}
                     {reminder.relatedPayment && (
                       <Badge color="green" className="flex items-center gap-1">
                         <Tag className="w-3 h-3" />
-                        Payment
+                        {t('reminders.type.payment')}
                       </Badge>
                     )}
                     {!reminder.relatedEvent && !reminder.relatedTask && !reminder.relatedPayment && (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">No related entities</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('reminders.noRelatedEntities')}</span>
                     )}
                   </div>
                 </div>
@@ -345,13 +346,13 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-orange-500" />
-                      Recurrence
+                      {t('reminders.details.recurrence')}
                     </h4>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {reminder.recurrence.frequency} every {reminder.recurrence.interval}{" "}
-                      {reminder.recurrence.frequency === "daily" ? "day(s)" : 
-                       reminder.recurrence.frequency === "weekly" ? "week(s)" : 
-                       reminder.recurrence.frequency === "monthly" ? "month(s)" : "year(s)"}
+                      {reminder.recurrence.frequency} {t('reminders.every')} {reminder.recurrence.interval}{" "}
+                      {reminder.recurrence.frequency === "daily" ? t('reminders.days') : 
+                       reminder.recurrence.frequency === "weekly" ? t('reminders.weeks') : 
+                       reminder.recurrence.frequency === "monthly" ? t('reminders.months') : t('reminders.years')}
                     </div>
                   </div>
                 )}
@@ -400,7 +401,7 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                     disabled={isProcessing}
                     size="sm"
                   >
-                    Unsnooze
+                    {t('reminders.actions.unsnooze')}
                   </Button>
                 )}
 
@@ -412,7 +413,7 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                   disabled={isProcessing}
                   size="sm"
                 >
-                  {isProcessing ? "Deleting..." : "Delete"}
+                  {isProcessing ? t('reminders.deleting') : t('reminders.actions.delete')}
                 </Button>
               </div>
               <div className="flex gap-3">
@@ -422,16 +423,16 @@ const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData })
                   onClick={() => onEdit(reminder)}
                   size="sm"
                 >
-                  Edit
+                  {t('reminders.actions.edit')}
                 </Button>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={handleViewFullDetails}
                   className="gap-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title="View Full Details"
+                  title={t('reminders.actions.viewDetails')}
                 >
-                  More Details
+                  {t('reminders.actions.moreDetails')}
                   <ArrowRight className="w-4 h-4 text-white" />
                 </Button>
               </div>
