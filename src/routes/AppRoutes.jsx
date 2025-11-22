@@ -40,7 +40,7 @@ import PaymentForm from "../pages/payments/PaymentForm.jsx";
 // Invoices
 import Invoices from "../pages/invoices/InvoicesPage.jsx";
 import InvoiceFormPage from "../pages/invoices/InvoiceFormPage.jsx";
-
+import InvoiceSettingPage from "../pages/invoices/InvoiceCustomizationPage.jsx"; // ✅ ADD
 // Finance
 import Finance from "../pages/finance/Finance.jsx";
 import FinanceReports from "../pages/finance/Reports.jsx";
@@ -121,7 +121,7 @@ const AppRoutes = () => {
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/invoices/new" element={<InvoiceFormPage />} />
           <Route path="/invoices/:id/edit" element={<InvoiceFormPage />} />
-
+          <Route path="/invoices/settings" element={<InvoiceSettingPage />} /> {/* ✅ ADD */} 
           {/* Finance */}
           <Route path="/finance" element={<Finance />} />
           <Route path="/finance/transactions" element={<Transactions />} />

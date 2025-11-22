@@ -560,47 +560,47 @@
       "cancelled": "Cancelled"
     }
   },
-  "eventDetail": {
-    "title": "Détails de l'événement",
-    "loading": "Chargement des détails de l'événement...",
+ "eventDetail": {
+    "title": "Event Details",
+    "loading": "Loading event details...",
     "errors": {
-      "notFound": "Événement non trouvé",
-      "loading": "Erreur de chargement de l'événement",
-      "notFoundDescription": "L'événement que vous recherchez n'existe pas.",
-      "edit": "Impossible de modifier l'événement : ID d'événement non trouvé",
-      "delete": "Impossible de supprimer l'événement : ID d'événement non trouvé",
-      "payment": "Impossible d'enregistrer le paiement : ID d'événement non trouvé"
+      "notFound": "Event not found",
+      "loading": "Error loading event",
+      "notFoundDescription": "The event you are looking for does not exist.",
+      "edit": "Unable to edit event: Event ID not found",
+      "delete": "Unable to delete event: Event ID not found",
+      "payment": "Unable to record payment: Event ID not found"
     },
     "actions": {
-      "backToEvents": "Retour aux événements",
-      "tryAgain": "Réessayer",
-      "edit": "Modifier l'événement",
-      "delete": "Supprimer l'événement",
-      "recordPayment": "Enregistrer le paiement",
-      "retry": "Nouvelle tentative de chargement des détails de l'événement...",
-      "deleteLoading": "Suppression de l'événement...",
-      "deleteSuccess": "Événement supprimé avec succès",
-      "deleteError": "Échec de la suppression de l'événement",
-      "editSuccess": "Événement mis à jour avec succès"
+      "backToEvents": "Back to events connections",
+      "tryAgain": "Try again",
+      "edit": "Edit event",
+      "delete": "Delete event",
+      "recordPayment": "Record payment",
+      "retry": "Retrying to load event details...",
+      "deleteLoading": "Deleting event...",
+      "deleteSuccess": "Event deleted successfully",
+      "deleteError": "Failed to delete event",
+      "editSuccess": "Event updated successfully"
     },
     "tabs": {
-      "partners": "Partenaires",
-      "payments": "Paiements",
-      "activity": "Activité"
+      "partners": "Partners",
+      "payments": "Payments",
+      "activity": "Activity"
     },
     "deleteModal": {
-      "title": "Supprimer l'événement",
-      "message": "Êtes-vous sûr de vouloir supprimer \"{{eventTitle}}\" ? Cette action ne peut pas être annulée et supprimera toutes les données associées.",
-      "confirmText": "Supprimer l'événement",
-      "cancelText": "Annuler"
+      "title": "Delete Event",
+      "message": "Are you sure you want to delete \"{{eventTitle}}\"? This action cannot be undone and will delete all associated data.",
+      "confirmText": "Delete event",
+      "cancelText": "Cancel"
     },
     "status": {
-      "pending": "En attente",
-      "confirmed": "Confirmé",
-      "in-progress": "En cours",
-      "completed": "Terminé",
-      "cancelled": "Annulé",
-      "unknown": "Inconnu"
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "in-progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "unknown": "Unknown"
     }
   },
   "eventActivityTab": {
@@ -730,9 +730,13 @@
     }
   },
   "eventForm": {
-    "currency": "TND",
-    "totalAmount": "Total Amount",
-    
+    "header": {
+      "createNewEvent": "Create New Event",
+      "editEvent": "Edit Event",
+      "stepProgress": "Step {{current}} of {{total}}: {{title}}",
+      "prefillClient": "Client: {{name}}",
+      "prefillPartner": "Partner: {{name}}"
+    },
     "steps": {
       "eventDetails": "Event Details",
       "clientSelection": "Client Selection",
@@ -740,60 +744,44 @@
       "payment": "Payment",
       "review": "Review"
     },
-    
-    "header": {
-      "editEvent": "Edit Event",
-      "createNewEvent": "Create New Event",
-      "stepProgress": "Step {{current}} of {{total}}: {{title}}",
-      "prefillClient": "Client Pre-selected: {{name}}",
-      "prefillPartner": "Partner Pre-selected: {{name}}"
-    },
-    
     "buttons": {
       "previous": "Previous",
       "continue": "Continue",
-      "saveChanges": "Save Changes",
-      "updateEvent": "Update Event",
       "createEvent": "Create Event",
-      "createForClient": "Create Event for {{name}}",
-      "createWithPartner": "Create Event with {{name}}"
+      "updateEvent": "Update Event",
+      "saveChanges": "Save Changes",
+      "createForClient": "Create for {{name}}",
+      "createWithPartner": "Create with {{name}}"
     },
-    
     "messages": {
-      "loading": "Loading...",
-      "draftRestored": "Draft restored successfully",
-      "clientPreselected": "Client {{name}} has been pre-selected",
-      "partnerPreselected": "Partner {{name}} has been pre-selected",
-      "datePreselected": "Date {{date}} has been pre-selected",
-      "clientNameRequired": "Client name is required",
-      "validEmailRequired": "Please enter a valid email address",
-      "clientCreated": "Client {{name}} created successfully",
-      "clientCreationFailed": "Failed to create client",
-      "partnerNotFound": "Partner not found",
-      "partnerAdded": "Partner {{name}} added successfully",
-      "partnerRemoved": "Partner {{name}} removed successfully",
-      "fixErrors": "Please fix the errors before continuing",
-      "quickSaveEditOnly": "Quick save is only available when editing an event",
-      "fixStepErrors": "Please fix the errors in this step before saving",
-      "eventUpdated": "Event updated successfully",
-      "updateFailed": "Failed to update event",
-      "fixFormErrors": "Please fix all form errors before submitting",
-      "eventCreated": "Event created successfully",
-      "createFailed": "Failed to create event",
-      "paymentRecorded": "Payment recorded successfully",
-      "paymentFailed": "Failed to record payment"
+      "fixErrors": "Please fix the errors before continuing.",
+      "fixFormErrors": "Please fix the errors in the form.",
+      "eventCreated": "Event created successfully!",
+      "eventUpdated": "Event updated successfully!",
+      "saveFailed": "Failed to save event.",
+      "draftRestored": "Draft restored successfully.",
+      "clientCreated": "Client {{name}} created and selected.",
+      "clientCreationFailed": "Failed to create client.",
+      "partnerAdded": "{{name}} added to event.",
+      "partnerRemoved": "{{name}} removed.",
+      "partnerNotFound": "Partner not found.",
+      "clientPreselected": "Client {{name}} pre-selected.",
+      "partnerPreselected": "Partner {{name}} pre-selected.",
+      "datePreselected": "Date {{date}} selected.",
+      "paymentRecorded": "Payment recorded successfully.",
+      "paymentFailed": "Failed to record payment.",
+      "loading": "Loading event data..."
     },
-    
     "step1": {
       "eventDetails": "Event Details",
       "dateTime": "Date & Time",
       "eventTitle": "Event Title",
-      "eventTitlePlaceholder": "Enter event title...",
-      "eventType": "Event Type",
+      "eventTitlePlaceholder": "e.g. Smith Wedding",
       "selectEventType": "Select Event Type",
+      "eventType": "Event Type",
       "status": "Status",
-      "eventDescription": "Event Description",
-      "eventDescriptionPlaceholder": "Describe the event, special requirements, etc...",
+      "eventDescription": "Description",
+      "eventDescriptionPlaceholder": "Add details about the event...",
       "sameDayEvent": "Same Day Event",
       "eventDate": "Event Date",
       "startDate": "Start Date",
@@ -801,8 +789,7 @@
       "startTime": "Start Time",
       "endTime": "End Time",
       "guestCount": "Guest Count",
-      "guestCountPlaceholder": "Expected number of guests",
-      
+      "guestCountPlaceholder": "e.g. 100",
       "eventTypes": {
         "wedding": "Wedding",
         "birthday": "Birthday",
@@ -811,7 +798,6 @@
         "party": "Party",
         "other": "Other"
       },
-      
       "statusOptions": {
         "pending": "Pending",
         "confirmed": "Confirmed",
@@ -820,58 +806,52 @@
         "cancelled": "Cancelled"
       }
     },
-    
     "step2": {
       "clientSelection": "Client Selection",
       "newClient": "New Client",
       "cancel": "Cancel",
       "createNewClient": "Create New Client",
-      "clientNamePlaceholder": "Client Name *",
-      "emailPlaceholder": "Email",
+      "clientNamePlaceholder": "Client Name",
+      "emailPlaceholder": "Email Address",
       "phonePlaceholder": "Phone Number (8 digits)",
-      "createAndSelect": "Create & Select Client",
-      
+      "createAndSelect": "Create & Select",
       "errors": {
         "clientNameRequired": "Client name is required",
         "validEmail": "Please enter a valid email",
         "phoneLength": "Phone number must be 8 digits"
       }
     },
-    
     "step3": {
       "venueSpaceSelection": "Venue Space Selection",
       "selectVenueSpace": "Select Venue Space",
-      "selectVenueSpacePlaceholder": "Select a Venue Space",
-      "selectedVenueSpace": "Selected Venue Space",
-      "changeSpace": "Change Space",
+      "selectVenueSpacePlaceholder": "Choose a space...",
+      "selectedVenueSpace": "Selected Space",
+      "changeSpace": "Change",
       "basePrice": "Base Price",
       "capacity": "Capacity",
       "status": "Status",
+      "amenities": "Amenities",
       "reserved": "Reserved",
       "available": "Available",
-      "amenities": "Amenities",
-      "guests": "guests",
+      "guests": "Guests",
       "pricing": "Pricing",
-      "basePriceLabel": "Base Price (from venue space)",
+      "basePriceLabel": "Base Price (from venue)",
       "discount": "Discount (Optional)",
-      "finalPrice": "Final",
+      "finalPrice": "Final Price",
       "servicePartners": "Service Partners",
-      
       "discountTypes": {
-        "percentage": "Percentage",
-        "fixed": "Fixed Amount"
+        "fixed": "TND",
+        "percentage": "%"
       },
-      
       "warnings": {
-        "guestCountExceeds": "Guest count ({{count}}) exceeds maximum capacity ({{max}})",
-        "guestCountBelow": "Guest count ({{count}}) is below minimum capacity ({{min}})",
-        "dateConflict": "This venue space has {{count}} conflicting event(s) at this time"
+        "guestCountExceeds": "Guest count ({{count}}) exceeds maximum capacity ({{max}}).",
+        "guestCountBelow": "Guest count ({{count}}) is below minimum capacity ({{min}}).",
+        "dateConflict": "Warning: {{count}} other event(s) scheduled on this date."
       }
     },
-    
     "step4": {
-      "infoBanner": "This step is optional. You can record payments later from the payments section.",
-      "recordPayment": "Record Initial Payment (Optional)",
+      "recordPayment": "Record Initial Payment",
+      "infoBanner": "You can record an initial deposit or payment now, or skip this step and handle it later.",
       "paymentAmount": "Payment Amount",
       "totalAmount": "Total Amount",
       "payment": "Payment",
@@ -880,8 +860,7 @@
       "paymentDate": "Payment Date",
       "paymentStatusLabel": "Payment Status",
       "paymentNotes": "Payment Notes",
-      "paymentNotesPlaceholder": "Any notes about this payment...",
-      
+      "paymentNotesPlaceholder": "Reference number, check details...",
       "paymentMethods": {
         "cash": "Cash",
         "creditCard": "Credit Card",
@@ -889,7 +868,6 @@
         "check": "Check",
         "mobilePayment": "Mobile Payment"
       },
-      
       "paymentStatus": {
         "pending": "Pending",
         "completed": "Completed",
@@ -897,85 +875,80 @@
         "refunded": "Refunded"
       }
     },
-    
     "step5": {
       "eventSummary": "Event Summary",
       "financialSummary": "Financial Summary",
-      "additionalNotes": "Additional Notes",
-      "additionalNotesPlaceholder": "Add any additional notes about this event...",
-      "autoGenerateInvoice": "Auto-Generate Invoice",
-      "autoGenerateInvoiceDesc": "Create a draft invoice for this event automatically",
       "title": "Title",
       "type": "Type",
       "status": "Status",
       "date": "Date",
-      "to": "to",
       "time": "Time",
+      "to": "to",
       "venueSpace": "Venue Space",
       "client": "Client",
       "guests": "Guests",
-      "notAvailable": "N/A",
       "venuePrice": "Venue Price",
       "partners": "Partners",
       "discount": "Discount",
       "total": "Total",
       "initialPayment": "Initial Payment",
-      "remaining": "Remaining"
+      "remaining": "Remaining Balance",
+      "autoGenerateInvoice": "Auto-Generate Invoice",
+      "autoGenerateInvoiceDesc": "Create a draft invoice for this client automatically.",
+      "additionalNotes": "Additional Notes",
+      "additionalNotesPlaceholder": "Any internal notes or special requirements...",
+      "notAvailable": "N/A"
     },
-    
     "components": {
       "clientSelector": {
-        "preSelected": "Client Pre-selected",
-        "searchPlaceholder": "Search clients by name, email, or phone...",
+        "preSelected": "Pre-selected Client",
+        "searchPlaceholder": "Search by name, email or phone...",
         "selected": "Selected",
         "noClients": "No clients found",
-        "noClientsDesc": "Try a different search or create a new client"
+        "noClientsDesc": "Try a different search or create a new client."
       },
-      
-      "draftModal": {
-        "title": "Draft Found!",
-        "description": "You have an unsaved draft from {{time}}",
-        "hoursAgo": "{{count}} hour ago",
-        "hoursAgo_plural": "{{count}} hours ago",
-        "minutesAgo": "{{count}} minute ago",
-        "minutesAgo_plural": "{{count}} minutes ago",
-        "eventTitle": "Event Title",
-        "eventType": "Event Type",
-        "lastSaved": "Last Saved",
-        "untitled": "Untitled Event",
-        "warning": "If you discard this draft, all unsaved changes will be permanently lost.",
-        "discard": "Discard Draft",
-        "restore": "Restore Draft"
-      },
-      
       "partnerSelector": {
-        "preSelected": "Partner Pre-selected",
-        "autoAdded": "has been automatically added",
+        "preSelected": "Pre-selected Partner",
+        "autoAdded": "has been automatically added to this event.",
         "selectPartner": "Select Partner to Add",
-        "generalService": "General Service",
-        "hour": "hr",
-        "hourShort": "h",
-        "fixedRate": "Fixed rate",
+        "addedPartners": "Added Partners ({{count}})",
         "hourly": "Hourly",
         "fixed": "Fixed",
-        "addedPartners": "Added Partners ({{count}})",
-        "removePartner": "Remove partner",
-        "noPartners": "No partners added yet. Select from the dropdown above to add partners."
+        "hour": "hr",
+        "hourShort": "h",
+        "fixedRate": "Fixed Rate",
+        "removePartner": "Remove Partner",
+        "noPartners": "No partners added yet.",
+        "generalService": "General Service"
       },
-      
       "priceSummary": {
         "title": "Price Summary",
         "venue": "Venue",
         "partners": "Partners",
         "partner": "Partner",
-        "discount": "Discount",
-        "total": "Total",
         "fixed": "Fixed",
         "hourly": "Hourly",
-        "hours": "hours",
-        "note": "Real-time calculation. Partner costs are calculated based on their pricing type (fixed rate or hourly rate)."
+        "hours": "hrs",
+        "discount": "Discount",
+        "total": "Total",
+        "note": "Tax calculation will be applied in the invoice."
+      },
+      "draftModal": {
+        "title": "Unsaved Draft Found",
+        "description": "We found an unsaved event draft from:",
+        "hoursAgo": "{{count}} hours ago",
+        "minutesAgo": "{{count}} minutes ago",
+        "eventTitle": "Event Title",
+        "eventType": "Type",
+        "lastSaved": "Last Saved",
+        "untitled": "Untitled Event",
+        "warning": "Restoring this draft will overwrite current form data.",
+        "discard": "Discard Draft",
+        "restore": "Restore Draft"
       }
-    }
+    },
+    "currency": "TND",
+    "totalAmount": "Total Amount"
   },
   "partners": {
     "title": "Partners",

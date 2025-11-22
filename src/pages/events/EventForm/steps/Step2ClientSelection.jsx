@@ -1,48 +1,36 @@
-// src/components/events/EventForm/steps/Step2ClientSelection.jsx
 import React, { useState } from "react";
 import { UserPlus, Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useEventContext } from "../EventFormContext";
 import ClientSelector from "../components/ClientSelector";
 import Button from "../../../../components/common/Button";
 import Input from "../../../../components/common/Input";
-import { toast } from "react-hot-toast";
+import { clientService } from "../../../../api";
+import { useToast } from "../../../../hooks/useToast"; // ✅ Custom Toast
 
-const Step2ClientSelection = ({
-  formData,
-  selectedClient,
-  handleSelectClient,
-  clients,
-  errors,
-  onCreateClient,
-}) => {
+const Step2ClientSelection = () => {
   const { t } = useTranslation();
+  const { formData, selectedClient, handleSelectClient, clients, setClients, errors, setFormData, setSelectedClient } = useEventContext();
+  const { showSuccess, showError, validationError } = useToast(); // ✅ Hook usage
+  
   const [showClientForm, setShowClientForm] = useState(false);
   const [newClient, setNewClient] = useState({ name: "", email: "", phone: "" });
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateClient = async () => {
-    if (!newClient.name.trim()) {
-      toast.error(t('eventForm.step2.errors.clientNameRequired'));
-      return;
-    }
-
-    if (newClient.email && !/^\S+@\S+\.\S+$/.test(newClient.email)) {
-      toast.error(t('eventForm.step2.errors.validEmail'));
-      return;
-    }
-
-    if (newClient.phone && newClient.phone.length !== 8) {
-      toast.error(t('eventForm.step2.errors.phoneLength'));
-      return;
-    }
-
+    if (!newClient.name.trim()) return validationError('Client Name');
     try {
       setIsCreating(true);
-      await onCreateClient(newClient);
-      setNewClient({ name: "", email: "", phone: "" });
+      const response = await clientService.create(newClient);
+      const createdClient = response.client || response.data;
+      setClients(prev => [...prev, createdClient]);
+      setSelectedClient(createdClient._id);
+      setFormData(prev => ({ ...prev, clientId: createdClient._id }));
       setShowClientForm(false);
+      showSuccess(t('eventForm.messages.clientCreated', { name: createdClient.name }));
     } catch (error) {
-      console.error("Error creating client:", error);
+      console.error(error);
+      showError(t('eventForm.messages.clientCreationFailed'));
     } finally {
       setIsCreating(false);
     }
@@ -50,80 +38,30 @@ const Step2ClientSelection = ({
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-300">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <UserPlus className="w-5 h-5 text-blue-500" />
-          {t('eventForm.step2.clientSelection')}
+          <UserPlus className="w-5 h-5 text-blue-500" /> {t('eventForm.step2.clientSelection')}
         </h4>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          icon={showClientForm ? X : Plus}
-          onClick={() => setShowClientForm(!showClientForm)}
-        >
+        <Button type="button" variant="primary" size="sm" icon={showClientForm ? X : Plus} onClick={() => setShowClientForm(!showClientForm)}>
           {showClientForm ? t('eventForm.step2.cancel') : t('eventForm.step2.newClient')}
         </Button>
       </div>
 
-      {/* Create Client Form */}
-      {showClientForm && (
-        <div className="mb-6 p-4 bg-white dark:bg-gray-900/20 border-2 border-gray-200 dark:border-gray-800 rounded-lg animate-in slide-in-from-top-2 duration-300">
-          <h5 className="font-semibold text-gray-800 dark:text-gray-300 mb-3 flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            {t('eventForm.step2.createNewClient')}
-          </h5>
+      {showClientForm ? (
+        <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg animate-in slide-in-from-top-2">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-            <Input
-              placeholder={t('eventForm.step2.clientNamePlaceholder')}
-              value={newClient.name}
-              onChange={(e) =>
-                setNewClient((prev) => ({ ...prev, name: e.target.value }))
-              }
-            />
-            <Input
-              placeholder={t('eventForm.step2.emailPlaceholder')}
-              type="email"
-              value={newClient.email}
-              onChange={(e) =>
-                setNewClient((prev) => ({ ...prev, email: e.target.value }))
-              }
-            />
-            <Input
-              placeholder={t('eventForm.step2.phonePlaceholder')}
-              type="tel"
-              pattern="[0-9]{8}"
-              maxLength={8}
-              value={newClient.phone}
-              onChange={(e) => {
-                const numbersOnly = e.target.value.replace(/\D/g, "").slice(0, 8);
-                setNewClient((prev) => ({ ...prev, phone: numbersOnly }));
-              }}
-            />
+            <Input placeholder={t('eventForm.step2.clientNamePlaceholder')} value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} />
+            <Input placeholder={t('eventForm.step2.emailPlaceholder')} type="email" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} />
+            <Input placeholder={t('eventForm.step2.phonePlaceholder')} type="tel" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} />
           </div>
           <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="primary"
-              icon={Plus}
-              onClick={handleCreateClient}
-              loading={isCreating}
-            >
+            <Button type="button" variant="primary" icon={Plus} onClick={handleCreateClient} loading={isCreating}>
               {t('eventForm.step2.createAndSelect')}
             </Button>
           </div>
         </div>
-      )}
-
-      {/* Client Selector */}
-      {!showClientForm && (
-        <ClientSelector
-          clients={clients}
-          selectedClient={selectedClient}
-          onSelectClient={handleSelectClient}
-          error={errors.clientId}
-        />
+      ) : (
+        <ClientSelector clients={clients} selectedClient={selectedClient} onSelectClient={handleSelectClient} error={errors.clientId} />
       )}
     </div>
   );

@@ -1,54 +1,39 @@
-// src/components/events/EventForm/hooks/useFormValidation.js
 import { useCallback } from "react";
 
 export const useFormValidation = () => {
   const validateStep = useCallback((step, formData, selectedClient) => {
     const newErrors = {};
 
+    // Step 1: Details
     if (step === 1) {
-      if (!formData.title.trim()) {
-        newErrors.title = "Event title is required";
-      }
-      if (!formData.type) {
-        newErrors.type = "Event type is required";
-      }
-      if (!formData.startDate) {
-        newErrors.startDate = "Start date is required";
-      }
-      if (!formData.sameDayEvent && !formData.endDate) {
-        newErrors.endDate = "End date is required";
-      }
-      if (formData.startTime && formData.endTime && formData.sameDayEvent) {
-        if (formData.startTime >= formData.endTime) {
-          newErrors.endTime = "End time must be after start time";
-        }
+      if (!formData.title?.trim()) newErrors.title = "Title is required";
+      if (!formData.type) newErrors.type = "Event type is required";
+      if (!formData.startDate) newErrors.startDate = "Start date is required";
+      if (!formData.sameDayEvent && !formData.endDate) newErrors.endDate = "End date is required";
+      
+      // Logical Date Check
+      if (formData.startDate && formData.endDate && new Date(formData.startDate) > new Date(formData.endDate)) {
+        newErrors.endDate = "End date cannot be before start date";
       }
     }
 
+    // Step 2: Client
     if (step === 2) {
-      if (!formData.clientId && !selectedClient) {
-        newErrors.clientId = "Please select a client";
-      }
+      if (!formData.clientId) newErrors.clientId = "Please select a client";
     }
 
+    // Step 3: Venue & Pricing
     if (step === 3) {
-      if (!formData.venueSpaceId) {
-        newErrors.venueSpaceId = "Please select a venue space";
-      }
-
-      const basePriceValue = parseFloat(formData.pricing.basePrice);
-      if (isNaN(basePriceValue) || basePriceValue < 0) {
-        newErrors["pricing.basePrice"] = "Valid base price is required";
-      }
+      if (!formData.venueSpaceId) newErrors.venueSpaceId = "Please select a venue space";
+      
+      const basePrice = parseFloat(formData.pricing?.basePrice);
+      if (isNaN(basePrice) || basePrice < 0) newErrors["pricing.basePrice"] = "Invalid base price";
     }
 
+    // Step 4: Payment (Optional but strictly validated if entered)
     if (step === 4) {
       if (formData.payment?.amount) {
-        const paymentAmount = parseFloat(formData.payment.amount);
-        // We'd need totalPrice passed in to validate this properly
-        if (paymentAmount < 0) {
-          newErrors["payment.amount"] = "Payment amount cannot be negative";
-        }
+        if (parseFloat(formData.payment.amount) < 0) newErrors["payment.amount"] = "Amount cannot be negative";
       }
     }
 

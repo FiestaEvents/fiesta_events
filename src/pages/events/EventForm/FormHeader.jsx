@@ -1,4 +1,3 @@
-// src/components/events/EventForm/FormHeader.jsx
 import React from "react";
 import { Check, Calendar, UserPlus, Building, CreditCard, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -9,7 +8,6 @@ const FormHeader = ({
   isEditMode, 
   prefillClient, 
   prefillPartner, 
-  returnUrl,
   onStepClick
 }) => {
   const { t } = useTranslation();
@@ -22,110 +20,82 @@ const FormHeader = ({
     5: { title: t('eventForm.steps.review'), icon: FileText, color: "orange" },
   };
 
-  const currentStepConfig = stepConfigs[currentStep];
+  // Safety check: Ensure currentStep is valid, fallback to step 1
+  const currentStepConfig = stepConfigs[currentStep] || stepConfigs[1];
 
   return (
-    <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800/50 px-6 py-6 border-b-2 border-orange-200 dark:border-gray-600">
-      <div className="flex flex-col gap-4">
-        {/* Title */}
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
-            <currentStepConfig.icon className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isEditMode 
-                ? t('eventForm.header.editEvent')
-                : t('eventForm.header.createNewEvent')
-              }
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
-              <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-              {t('eventForm.header.stepProgress', { 
-                current: currentStep, 
-                total: totalSteps, 
-                title: currentStepConfig.title 
-              })}
-            </p>
-          </div>
-        </div>
-
-        {/* Context Indicators */}
-        {(prefillClient || prefillPartner || returnUrl) && (
-          <div className="flex flex-wrap gap-2">
-            {prefillClient && (
-              <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                {t('eventForm.header.prefillClient', { name: prefillClient.name })}
-              </span>
-            )}
-            {prefillPartner && (
-              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                {t('eventForm.header.prefillPartner', { name: prefillPartner.name })}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Step Indicator */}
-        <div className="flex items-center justify-center">
-          <div className="flex items-center w-full max-w-3xl">
-            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => {
-              const config = stepConfigs[step];
-              const isActive = step === currentStep;
-              const isComplete = step < currentStep;
-              const isClickable = step < currentStep;
-
-              return (
-                <div key={step} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-shrink-0 mx-auto">
-                    <button
-                      type="button"
-                      onClick={() => isClickable && onStepClick && onStepClick(step)}
-                      disabled={!isClickable}
-                      className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
-                        isActive
-                          ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-500 text-white shadow-lg scale-110"
-                          : isComplete
-                          ? "bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white shadow-md cursor-pointer hover:scale-105 hover:shadow-lg"
-                          : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      {isComplete ? (
-                        <Check className="w-5 h-5" />
-                      ) : (
-                        <span className="font-bold">{step}</span>
-                      )}
-                      {isActive && (
-                        <span className="absolute -inset-1 bg-orange-400 rounded-full animate-ping opacity-20"></span>
-                      )}
-                    </button>
-                    <span
-                      className={`text-xs mt-2 font-medium text-center transition-colors whitespace-nowrap ${
-                        isActive
-                          ? "text-orange-600 dark:text-orange-400"
-                          : isComplete
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {config.title}
-                    </span>
-                  </div>
-
-                  {step < totalSteps && (
-                    <div
-                      className={`h-1 min-w-10 rounded-full transition-all duration-300 ${
-                        isComplete ? "bg-green-500" : "bg-gray-200 dark:bg-gray-600"
-                      }`}
-                    />
-                  )}
-                </div>
-              );
+    <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-800 px-6 py-6 border-b border-orange-200 dark:border-gray-600">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {isEditMode 
+              ? t('eventForm.header.editEvent') 
+              : t('eventForm.header.createNewEvent')}
+          </h2>
+          
+          {/* ✅ FIX: Explicitly passing 'title' to the translation interpolation */}
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            {t('eventForm.header.stepProgress', { 
+              current: currentStep, 
+              total: totalSteps, 
+              title: currentStepConfig.title // <--- This replaces {{title}}
             })}
-          </div>
+          </p>
         </div>
+        
+        {/* Badges for Context */}
+        <div className="flex gap-2">
+          {prefillClient && (
+            <span className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium flex items-center gap-1">
+              <UserPlus size={12} /> {t('eventForm.header.prefillClient', { name: prefillClient.name })}
+            </span>
+          )}
+          {prefillPartner && (
+            <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium flex items-center gap-1">
+              <UserPlus size={12} /> {t('eventForm.header.prefillPartner', { name: prefillPartner.name })}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Stepper Visual */}
+      <div className="flex items-center justify-between relative">
+        {/* Progress Line Background */}
+        <div className="absolute left-0 top-5 w-full h-1 bg-gray-200 dark:bg-gray-600 -z-0 rounded-full"></div>
+        
+        {/* Progress Line Active */}
+        <div 
+          className="absolute left-0 top-5 h-1 bg-orange-500 -z-0 rounded-full transition-all duration-300"
+          style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
+        ></div>
+
+        {/* Steps */}
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => {
+          const config = stepConfigs[step];
+          const isActive = step === currentStep;
+          const isComplete = step < currentStep;
+          const Icon = config.icon;
+
+          return (
+            <div 
+              key={step} 
+              className={`flex flex-col items-center z-10 ${isComplete ? "cursor-pointer" : ""}`} 
+              onClick={() => isComplete && onStepClick && onStepClick(step)}
+            >
+              <div 
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
+                  ${isActive ? 'bg-orange-500 border-orange-500 text-white shadow-lg scale-110' : 
+                    isComplete ? 'bg-green-500 border-green-500 text-white hover:bg-green-600' : 
+                    'bg-white dark:bg-gray-800 border-gray-300 text-gray-400'}`}
+              >
+                {isComplete ? <Check size={20} /> : <Icon size={18} />}
+              </div>
+              <span className={`text-xs font-medium mt-2 ${isActive ? 'text-orange-600' : 'text-gray-500'}`}>
+                {config.title}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

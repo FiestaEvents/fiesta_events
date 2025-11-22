@@ -258,62 +258,225 @@
   },
 
   "clientForm": {
-    "title": {
-      "add": "إضافة عميل جديد",
-      "edit": "تعديل العميل"
+"header": {
+      "createNewEvent": "إنشاء حدث جديد",
+      "editEvent": "تعديل الحدث",
+      "stepProgress": "الخطوة {{current}} من {{total}}: {{title}}",
+      "prefillClient": "العميل: {{name}}",
+      "prefillPartner": "الشريك: {{name}}"
     },
-    "description": {
-      "add": "إنشاء ملف عميل جديد",
-      "edit": "تحديث معلومات العميل"
-    },
-    "sections": {
-      "personal": "المعلومات الشخصية",
-      "address": "معلومات العنوان",
-      "additional": "معلومات إضافية"
-    },
-    "fields": {
-      "name": "الاسم الكامل",
-      "email": "البريد الإلكتروني",
-      "phone": "رقم الهاتف",
-      "company": "الشركة",
-      "street": "العنوان الكامل",
-      "city": "المدينة",
-      "state": "الولاية/المحافظة",
-      "zipCode": "الرمز البريدي",
-      "country": "البلد",
-      "notes": "ملاحظات العميل",
-      "status": "الحالة"
-    },
-    "placeholders": {
-      "name": "مثال: أحمد محمد",
-      "email": "name@company.com",
-      "phone": "مثال: 12345678",
-      "company": "الشركة أو المؤسسة",
-      "street": "123 الشارع الرئيسي",
-      "city": "الرياض",
-      "state": "المنطقة",
-      "zipCode": "12345",
-      "country": "المملكة العربية السعودية",
-      "notes": "ملاحظات أو تعليقات أو معلومات إضافية اختيارية حول هذا العميل..."
-    },
-    "errors": {
-      "nameRequired": "الاسم الكامل مطلوب",
-      "nameMinLength": "يجب أن يكون الاسم مكون من حرفين على الأقل",
-      "emailRequired": "البريد الإلكتروني مطلوب",
-      "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صالح",
-      "phoneRequired": "رقم الهاتف مطلوب",
-      "phoneInvalid": "يجب أن يتكون رقم الهاتف من 8 أرقام بالضبط",
-      "loading": "خطأ في تحميل العميل",
-      "creating": "خطأ في إنشاء العميل",
-      "saving": "فشل حفظ العميل. يرجى المحاولة مرة أخرى."
+    "steps": {
+      "eventDetails": "تفاصيل الحدث",
+      "clientSelection": "اختيار العميل",
+      "venuePricing": "القاعة والتسعير",
+      "payment": "الدفع",
+      "review": "المراجعة"
     },
     "buttons": {
+      "previous": "السابق",
+      "continue": "متابعة",
+      "createEvent": "إنشاء الحدث",
+      "updateEvent": "تحديث",
+      "saveChanges": "حفظ التغييرات",
+      "createForClient": "إنشاء لـ {{name}}",
+      "createWithPartner": "إنشاء مع {{name}}"
+    },
+    "messages": {
+      "fixErrors": "يرجى تصحيح الأخطاء قبل المتابعة.",
+      "fixFormErrors": "يرجى تصحيح الأخطاء في النموذج.",
+      "eventCreated": "تم إنشاء الحدث بنجاح!",
+      "eventUpdated": "تم تحديث الحدث بنجاح!",
+      "saveFailed": "فشل حفظ الحدث.",
+      "draftRestored": "تمت استعادة المسودة بنجاح.",
+      "clientCreated": "تم إنشاء العميل {{name}} وتحديده.",
+      "clientCreationFailed": "فشل إنشاء العميل.",
+      "partnerAdded": "تمت إضافة {{name}} إلى الحدث.",
+      "partnerRemoved": "تمت إزالة {{name}}.",
+      "partnerNotFound": "الشريك غير موجود.",
+      "clientPreselected": "العميل {{name}} محدد مسبقاً.",
+      "partnerPreselected": "الشريك {{name}} محدد مسبقاً.",
+      "datePreselected": "تم تحديد التاريخ {{date}}.",
+      "paymentRecorded": "تم تسجيل الدفع بنجاح.",
+      "paymentFailed": "فشل تسجيل الدفع.",
+      "loading": "جاري تحميل بيانات الحدث..."
+    },
+    "step1": {
+      "eventDetails": "تفاصيل الحدث",
+      "dateTime": "التاريخ والوقت",
+      "eventTitle": "عنوان الحدث",
+      "eventTitlePlaceholder": "مثال: حفل زفاف بن علي",
+      "selectEventType": "اختر نوع الحدث",
+      "eventType": "نوع الحدث",
+      "status": "الحالة",
+      "eventDescription": "الوصف",
+      "eventDescriptionPlaceholder": "أضف تفاصيل حول الحدث...",
+      "sameDayEvent": "حدث في نفس اليوم",
+      "eventDate": "تاريخ الحدث",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "startTime": "وقت البدء",
+      "endTime": "وقت الانتهاء",
+      "guestCount": "عدد الضيوف",
+      "guestCountPlaceholder": "مثال: 100",
+      "eventTypes": {
+        "wedding": "زفاف",
+        "birthday": "عيد ميلاد",
+        "corporate": "شركات",
+        "conference": "مؤتمر",
+        "party": "حفلة",
+        "other": "آخر"
+      },
+      "statusOptions": {
+        "pending": "قيد الانتظار",
+        "confirmed": "مؤكد",
+        "inProgress": "جاري",
+        "completed": "مكتمل",
+        "cancelled": "ملغى"
+      }
+    },
+    "step2": {
+      "clientSelection": "اختيار العميل",
+      "newClient": "عميل جديد",
       "cancel": "إلغاء",
-      "create": "إنشاء العميل",
-      "update": "تحديث العميل",
-      "creating": "جاري الإنشاء...",
-      "updating": "جاري التحديث..."
-    }
+      "createNewClient": "إنشاء عميل جديد",
+      "clientNamePlaceholder": "اسم العميل",
+      "emailPlaceholder": "البريد الإلكتروني",
+      "phonePlaceholder": "رقم الهاتف (8 أرقام)",
+      "createAndSelect": "إنشاء واختيار",
+      "errors": {
+        "clientNameRequired": "اسم العميل مطلوب",
+        "validEmail": "يرجى إدخال بريد إلكتروني صالح",
+        "phoneLength": "يجب أن يتكون رقم الهاتف من 8 أرقام"
+      }
+    },
+    "step3": {
+      "venueSpaceSelection": "اختيار القاعة",
+      "selectVenueSpace": "اختر القاعة",
+      "selectVenueSpacePlaceholder": "اختر مساحة...",
+      "selectedVenueSpace": "القاعة المختارة",
+      "changeSpace": "تغيير",
+      "basePrice": "السعر الأساسي",
+      "capacity": "السعة",
+      "status": "الحالة",
+      "amenities": "المرافق",
+      "reserved": "محجوز",
+      "available": "متاح",
+      "guests": "ضيوف",
+      "pricing": "التسعير",
+      "basePriceLabel": "السعر الأساسي (للقاعة)",
+      "discount": "خصم (اختياري)",
+      "finalPrice": "السعر النهائي",
+      "servicePartners": "شركاء الخدمة",
+      "discountTypes": {
+        "fixed": "د.ت",
+        "percentage": "%"
+      },
+      "warnings": {
+        "guestCountExceeds": "عدد الضيوف ({{count}}) يتجاوز السعة القصوى ({{max}}).",
+        "guestCountBelow": "عدد الضيوف ({{count}}) أقل من السعة الدنيا ({{min}}).",
+        "dateConflict": "تنبيه: {{count}} حدث آخر مجدول في هذا التاريخ."
+      }
+    },
+    "step4": {
+      "recordPayment": "تسجيل دفعة أولية",
+      "infoBanner": "يمكنك تسجيل دفعة مقدمة الآن أو تخطي هذه الخطوة.",
+      "paymentAmount": "مبلغ الدفع",
+      "totalAmount": "المبلغ الإجمالي",
+      "payment": "المدفوع",
+      "remaining": "المتبقي",
+      "paymentMethod": "طريقة الدفع",
+      "paymentDate": "تاريخ الدفع",
+      "paymentStatusLabel": "حالة الدفع",
+      "paymentNotes": "ملاحظات الدفع",
+      "paymentNotesPlaceholder": "رقم المرجع، تفاصيل الشيك...",
+      "paymentMethods": {
+        "cash": "نقداً",
+        "creditCard": "بطاقة ائتمان",
+        "bankTransfer": "تحويل بنكي",
+        "check": "شيك",
+        "mobilePayment": "دفع عبر الهاتف"
+      },
+      "paymentStatus": {
+        "pending": "قيد الانتظار",
+        "completed": "مكتمل",
+        "failed": "فشل",
+        "refunded": "مسترد"
+      }
+    },
+    "step5": {
+      "eventSummary": "ملخص الحدث",
+      "financialSummary": "الملخص المالي",
+      "title": "العنوان",
+      "type": "النوع",
+      "status": "الحالة",
+      "date": "التاريخ",
+      "time": "الوقت",
+      "to": "إلى",
+      "venueSpace": "القاعة",
+      "client": "العميل",
+      "guests": "الضيوف",
+      "venuePrice": "سعر القاعة",
+      "partners": "الشركاء",
+      "discount": "الخصم",
+      "total": "الإجمالي",
+      "initialPayment": "الدفعة الأولى",
+      "remaining": "المتبقي للدفع",
+      "autoGenerateInvoice": "إنشاء فاتورة",
+      "autoGenerateInvoiceDesc": "إنشاء مسودة فاتورة لهذا العميل تلقائياً.",
+      "additionalNotes": "ملاحظات إضافية",
+      "additionalNotesPlaceholder": "ملاحظات داخلية أو متطلبات خاصة...",
+      "notAvailable": "غير متوفر"
+    },
+    "components": {
+      "clientSelector": {
+        "preSelected": "عميل محدد مسبقاً",
+        "searchPlaceholder": "بحث بالاسم، البريد أو الهاتف...",
+        "selected": "محدد",
+        "noClients": "لم يتم العثور على عملاء",
+        "noClientsDesc": "جرب بحثاً آخر أو أنشئ عميلاً جديداً."
+      },
+      "partnerSelector": {
+        "preSelected": "شريك محدد مسبقاً",
+        "autoAdded": "تمت إضافته تلقائياً لهذا الحدث.",
+        "selectPartner": "اختر شريكاً للإضافة",
+        "addedPartners": "الشركاء المضافون ({{count}})",
+        "hourly": "بالساعة",
+        "fixed": "ثابت",
+        "hour": "ساعة",
+        "hourShort": "س",
+        "fixedRate": "سعر ثابت",
+        "removePartner": "إزالة الشريك",
+        "noPartners": "لم تتم إضافة شركاء بعد.",
+        "generalService": "خدمة عامة"
+      },
+      "priceSummary": {
+        "title": "ملخص السعر",
+        "venue": "القاعة",
+        "partners": "الشركاء",
+        "partner": "شريك",
+        "fixed": "ثابت",
+        "hourly": "بالساعة",
+        "hours": "س",
+        "discount": "خصم",
+        "total": "الإجمالي",
+        "note": "سيتم تطبيق حساب الضريبة في الفاتورة."
+      },
+      "draftModal": {
+        "title": "تم العثور على مسودة",
+        "description": "وجدنا مسودة حدث غير محفوظة من:",
+        "hoursAgo": "منذ {{count}} ساعة",
+        "minutesAgo": "منذ {{count}} دقيقة",
+        "eventTitle": "عنوان الحدث",
+        "eventType": "النوع",
+        "lastSaved": "آخر حفظ",
+        "untitled": "حدث بدون عنوان",
+        "warning": "استعادة هذه المسودة ستلغي البيانات الحالية.",
+        "discard": "تجاهل",
+        "restore": "استعادة"
+      }
+    },
+    "currency": "د.ت",
+    "totalAmount": "المبلغ الإجمالي"
   },
 
   "clientDetail": {

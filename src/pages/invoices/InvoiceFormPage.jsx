@@ -518,15 +518,18 @@ const InvoiceFormPage = ({
     }
   };
 
-  const handleItemChange = (index, field, value) => {
+const handleItemChange = (index, field, value) => {
     const updatedItems = [...formData.items];
     updatedItems[index] = {
       ...updatedItems[index],
       [field]: value,
     };
     
-    const quantity = Number(updatedItems[index].quantity) || 0;
-    const rate = Number(updatedItems[index].rate) || 0;
+    // ✅ FIX: Robust calculation with Number() wrapper
+    const quantity = parseFloat(updatedItems[index].quantity) || 0;
+    const rate = parseFloat(updatedItems[index].rate) || 0;
+    
+    // Update the amount for this specific line item
     updatedItems[index].amount = quantity * rate;
     
     setFormData((prev) => ({
@@ -729,7 +732,7 @@ const InvoiceFormPage = ({
     }
   };
 
-  // ============================================
+// ============================================
   // FORM SUBMISSION
   // ============================================
   const handleSubmit = async (e) => {
@@ -747,20 +750,31 @@ const InvoiceFormPage = ({
 
     try {
       setLoading(true);
+      
+      // ✅ FIX: Explicitly include calculated totals in the payload
       const invoiceData = {
         invoiceType: invoiceType,
         issueDate: formData.issueDate,
         dueDate: formData.dueDate,
+        
+        // Items
         items: formData.items.map(item => ({
           description: item.description.trim(),
           quantity: Number(item.quantity),
           rate: Number(item.rate),
-          amount: Number(item.amount),
+          amount: Number(item.quantity) * Number(item.rate), // Ensure amount is calculated
           category: item.category,
         })),
+
+        // Financials (Send the values from your calculations state)
+        subtotal: Number(calculations.subtotal),
         taxRate: Number(formData.taxRate),
+        taxAmount: Number(calculations.tax), // Backend expects 'taxAmount' usually
         discount: Number(formData.discount),
         discountType: formData.discountType,
+        totalAmount: Number(calculations.totalAmount),
+
+        // Meta
         notes: formData.notes.trim(),
         terms: formData.terms.trim(),
         currency: formData.currency,
@@ -779,10 +793,8 @@ const InvoiceFormPage = ({
       }
 
       if (isModalMode && propOnSubmit) {
-        // In modal mode, call the provided onSubmit callback
         await propOnSubmit(invoiceData);
       } else {
-        // In page mode, handle submission directly
         if (isEditMode) {
           await invoiceService.update(id, invoiceData);
           toast.success(`${invoiceType === 'client' ? 'Invoice' : 'Bill'} updated successfully`);

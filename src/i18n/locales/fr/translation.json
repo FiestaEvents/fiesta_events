@@ -837,88 +837,74 @@
     }
   },
   "eventForm": {
-    "currency": "TND",
-    "totalAmount": "Montant Total",
-    
+    "header": {
+      "createNewEvent": "Créer un Nouvel Événement",
+      "editEvent": "Modifier l'Événement",
+      "stepProgress": "Étape {{current}} sur {{total}} : {{title}}",
+      "prefillClient": "Client : {{name}}",
+      "prefillPartner": "Partenaire : {{name}}"
+    },
     "steps": {
       "eventDetails": "Détails de l'Événement",
       "clientSelection": "Sélection du Client",
-      "venuePricing": "Lieu et Tarification",
+      "venuePricing": "Salle & Tarification",
       "payment": "Paiement",
-      "review": "Révision"
+      "review": "Récapitulatif"
     },
-    
-    "header": {
-      "editEvent": "Modifier l'Événement",
-      "createNewEvent": "Créer un Nouvel Événement",
-      "stepProgress": "Étape {{current}} sur {{total}}: {{title}}",
-      "prefillClient": "Client Présélectionné: {{name}}",
-      "prefillPartner": "Partenaire Présélectionné: {{name}}"
-    },
-    
     "buttons": {
       "previous": "Précédent",
-      "continue": "Continuer",
-      "saveChanges": "Enregistrer les Modifications",
-      "updateEvent": "Mettre à Jour l'Événement",
+      "continue": "Suivant",
       "createEvent": "Créer l'Événement",
-      "createForClient": "Créer un Événement pour {{name}}",
-      "createWithPartner": "Créer un Événement avec {{name}}"
+      "updateEvent": "Mettre à jour",
+      "saveChanges": "Enregistrer",
+      "createForClient": "Créer pour {{name}}",
+      "createWithPartner": "Créer avec {{name}}"
     },
-    
     "messages": {
-      "loading": "Chargement...",
-      "draftRestored": "Brouillon restauré avec succès",
-      "clientPreselected": "Le client {{name}} a été présélectionné",
-      "partnerPreselected": "Le partenaire {{name}} a été présélectionné",
-      "datePreselected": "La date {{date}} a été présélectionnée",
-      "clientNameRequired": "Le nom du client est requis",
-      "validEmailRequired": "Veuillez entrer une adresse e-mail valide",
-      "clientCreated": "Client {{name}} créé avec succès",
-      "clientCreationFailed": "Échec de la création du client",
-      "partnerNotFound": "Partenaire introuvable",
-      "partnerAdded": "Partenaire {{name}} ajouté avec succès",
-      "partnerRemoved": "Partenaire {{name}} supprimé avec succès",
-      "fixErrors": "Veuillez corriger les erreurs avant de continuer",
-      "quickSaveEditOnly": "La sauvegarde rapide n'est disponible que lors de la modification d'un événement",
-      "fixStepErrors": "Veuillez corriger les erreurs de cette étape avant d'enregistrer",
-      "eventUpdated": "Événement mis à jour avec succès",
-      "updateFailed": "Échec de la mise à jour de l'événement",
-      "fixFormErrors": "Veuillez corriger toutes les erreurs du formulaire avant de soumettre",
-      "eventCreated": "Événement créé avec succès",
-      "createFailed": "Échec de la création de l'événement",
-      "paymentRecorded": "Paiement enregistré avec succès",
-      "paymentFailed": "Échec de l'enregistrement du paiement"
+      "fixErrors": "Veuillez corriger les erreurs avant de continuer.",
+      "fixFormErrors": "Veuillez corriger les erreurs dans le formulaire.",
+      "eventCreated": "Événement créé avec succès !",
+      "eventUpdated": "Événement mis à jour avec succès !",
+      "saveFailed": "Échec de l'enregistrement de l'événement.",
+      "draftRestored": "Brouillon restauré avec succès.",
+      "clientCreated": "Client {{name}} créé et sélectionné.",
+      "clientCreationFailed": "Échec de la création du client.",
+      "partnerAdded": "{{name}} ajouté à l'événement.",
+      "partnerRemoved": "{{name}} retiré.",
+      "partnerNotFound": "Partenaire introuvable.",
+      "clientPreselected": "Client {{name}} présélectionné.",
+      "partnerPreselected": "Partenaire {{name}} présélectionné.",
+      "datePreselected": "Date du {{date}} sélectionnée.",
+      "paymentRecorded": "Paiement enregistré avec succès.",
+      "paymentFailed": "Échec de l'enregistrement du paiement.",
+      "loading": "Chargement des données de l'événement..."
     },
-    
     "step1": {
       "eventDetails": "Détails de l'Événement",
       "dateTime": "Date et Heure",
       "eventTitle": "Titre de l'Événement",
-      "eventTitlePlaceholder": "Entrez le titre de l'événement...",
+      "eventTitlePlaceholder": "ex: Mariage Ben Ali",
+      "selectEventType": "Sélectionner le Type",
       "eventType": "Type d'Événement",
-      "selectEventType": "Sélectionnez le Type d'Événement",
       "status": "Statut",
-      "eventDescription": "Description de l'Événement",
-      "eventDescriptionPlaceholder": "Décrivez l'événement, exigences spéciales, etc...",
-      "sameDayEvent": "Événement sur une Journée",
+      "eventDescription": "Description",
+      "eventDescriptionPlaceholder": "Ajoutez des détails sur l'événement...",
+      "sameDayEvent": "Événement sur une journée",
       "eventDate": "Date de l'Événement",
       "startDate": "Date de Début",
       "endDate": "Date de Fin",
       "startTime": "Heure de Début",
       "endTime": "Heure de Fin",
       "guestCount": "Nombre d'Invités",
-      "guestCountPlaceholder": "Nombre d'invités prévu",
-      
+      "guestCountPlaceholder": "ex: 100",
       "eventTypes": {
         "wedding": "Mariage",
         "birthday": "Anniversaire",
         "corporate": "Entreprise",
         "conference": "Conférence",
-        "party": "Fête",
+        "party": "Soirée",
         "other": "Autre"
       },
-      
       "statusOptions": {
         "pending": "En Attente",
         "confirmed": "Confirmé",
@@ -927,162 +913,149 @@
         "cancelled": "Annulé"
       }
     },
-    
     "step2": {
       "clientSelection": "Sélection du Client",
       "newClient": "Nouveau Client",
       "cancel": "Annuler",
       "createNewClient": "Créer un Nouveau Client",
-      "clientNamePlaceholder": "Nom du Client *",
-      "emailPlaceholder": "E-mail",
+      "clientNamePlaceholder": "Nom du Client",
+      "emailPlaceholder": "Adresse Email",
       "phonePlaceholder": "Numéro de Téléphone (8 chiffres)",
-      "createAndSelect": "Créer et Sélectionner le Client",
-      
+      "createAndSelect": "Créer et Sélectionner",
       "errors": {
         "clientNameRequired": "Le nom du client est requis",
-        "validEmail": "Veuillez entrer un e-mail valide",
-        "phoneLength": "Le numéro de téléphone doit contenir 8 chiffres"
+        "validEmail": "Veuillez entrer un email valide",
+        "phoneLength": "Le numéro de téléphone doit comporter 8 chiffres"
       }
     },
-    
     "step3": {
       "venueSpaceSelection": "Sélection de l'Espace",
-      "selectVenueSpace": "Sélectionnez l'Espace",
-      "selectVenueSpacePlaceholder": "Sélectionnez un Espace",
+      "selectVenueSpace": "Sélectionner un Espace",
+      "selectVenueSpacePlaceholder": "Choisir un espace...",
       "selectedVenueSpace": "Espace Sélectionné",
-      "changeSpace": "Changer l'Espace",
+      "changeSpace": "Changer",
       "basePrice": "Prix de Base",
       "capacity": "Capacité",
       "status": "Statut",
+      "amenities": "Équipements",
       "reserved": "Réservé",
       "available": "Disponible",
-      "amenities": "Commodités",
-      "guests": "invités",
+      "guests": "Invités",
       "pricing": "Tarification",
-      "basePriceLabel": "Prix de Base (depuis l'espace du lieu)",
-      "discount": "Réduction (Optionnel)",
-      "finalPrice": "Final",
-      "servicePartners": "Partenaires de Service",
-      
+      "basePriceLabel": "Prix de Base (de la salle)",
+      "discount": "Remise (Optionnel)",
+      "finalPrice": "Prix Final",
+      "servicePartners": "Prestataires de Service",
       "discountTypes": {
-        "percentage": "Pourcentage",
-        "fixed": "Montant Fixe"
+        "fixed": "TND",
+        "percentage": "%"
       },
-      
       "warnings": {
-        "guestCountExceeds": "Le nombre d'invités ({{count}}) dépasse la capacité maximale ({{max}})",
-        "guestCountBelow": "Le nombre d'invités ({{count}}) est inférieur à la capacité minimale ({{min}})",
-        "dateConflict": "Cet espace a {{count}} événement(s) en conflit à cette heure"
+        "guestCountExceeds": "Le nombre d'invités ({{count}}) dépasse la capacité maximale ({{max}}).",
+        "guestCountBelow": "Le nombre d'invités ({{count}}) est inférieur à la capacité minimale ({{min}}).",
+        "dateConflict": "Attention : {{count}} autre(s) événement(s) prévu(s) à cette date."
       }
     },
-    
     "step4": {
-      "infoBanner": "Cette étape est facultative. Vous pouvez enregistrer les paiements plus tard depuis la section des paiements.",
-      "recordPayment": "Enregistrer le Paiement Initial (Optionnel)",
+      "recordPayment": "Enregistrer un Paiement Initial",
+      "infoBanner": "Vous pouvez enregistrer un acompte maintenant ou passer cette étape.",
       "paymentAmount": "Montant du Paiement",
       "totalAmount": "Montant Total",
       "payment": "Paiement",
-      "remaining": "Restant",
+      "remaining": "Reste à Payer",
       "paymentMethod": "Méthode de Paiement",
       "paymentDate": "Date de Paiement",
       "paymentStatusLabel": "Statut du Paiement",
       "paymentNotes": "Notes de Paiement",
-      "paymentNotesPlaceholder": "Notes concernant ce paiement...",
-      
+      "paymentNotesPlaceholder": "Numéro de référence, détails du chèque...",
       "paymentMethods": {
         "cash": "Espèces",
-        "creditCard": "Carte de Crédit",
+        "creditCard": "Carte Bancaire",
         "bankTransfer": "Virement Bancaire",
         "check": "Chèque",
         "mobilePayment": "Paiement Mobile"
       },
-      
       "paymentStatus": {
         "pending": "En Attente",
-        "completed": "Terminé",
+        "completed": "Effectué",
         "failed": "Échoué",
         "refunded": "Remboursé"
       }
     },
-    
     "step5": {
       "eventSummary": "Résumé de l'Événement",
       "financialSummary": "Résumé Financier",
-      "additionalNotes": "Notes Supplémentaires",
-      "additionalNotesPlaceholder": "Ajoutez des notes supplémentaires sur cet événement...",
-      "autoGenerateInvoice": "Générer une Facture Automatiquement",
-      "autoGenerateInvoiceDesc": "Créer un brouillon de facture pour cet événement automatiquement",
       "title": "Titre",
       "type": "Type",
       "status": "Statut",
       "date": "Date",
-      "to": "à",
       "time": "Heure",
-      "venueSpace": "Espace du Lieu",
+      "to": "à",
+      "venueSpace": "Espace",
       "client": "Client",
       "guests": "Invités",
-      "notAvailable": "N/A",
-      "venuePrice": "Prix du Lieu",
+      "venuePrice": "Prix Salle",
       "partners": "Partenaires",
-      "discount": "Réduction",
+      "discount": "Remise",
       "total": "Total",
       "initialPayment": "Paiement Initial",
-      "remaining": "Restant"
+      "remaining": "Reste à Payer",
+      "autoGenerateInvoice": "Générer la Facture",
+      "autoGenerateInvoiceDesc": "Créer automatiquement une facture brouillon pour ce client.",
+      "additionalNotes": "Notes Supplémentaires",
+      "additionalNotesPlaceholder": "Notes internes ou exigences particulières...",
+      "notAvailable": "N/A"
     },
-    
     "components": {
       "clientSelector": {
         "preSelected": "Client Présélectionné",
-        "searchPlaceholder": "Rechercher des clients par nom, e-mail ou téléphone...",
+        "searchPlaceholder": "Rechercher par nom, email ou téléphone...",
         "selected": "Sélectionné",
         "noClients": "Aucun client trouvé",
-        "noClientsDesc": "Essayez une recherche différente ou créez un nouveau client"
+        "noClientsDesc": "Essayez une autre recherche ou créez un nouveau client."
       },
-      
-      "draftModal": {
-        "title": "Brouillon Trouvé!",
-        "description": "Vous avez un brouillon non enregistré datant de {{time}}",
-        "hoursAgo": "il y a {{count}} heure",
-        "hoursAgo_plural": "il y a {{count}} heures",
-        "minutesAgo": "il y a {{count}} minute",
-        "minutesAgo_plural": "il y a {{count}} minutes",
-        "eventTitle": "Titre de l'Événement",
-        "eventType": "Type d'Événement",
-        "lastSaved": "Dernière Sauvegarde",
-        "untitled": "Événement Sans Titre",
-        "warning": "Si vous supprimez ce brouillon, toutes les modifications non enregistrées seront définitivement perdues.",
-        "discard": "Supprimer le Brouillon",
-        "restore": "Restaurer le Brouillon"
-      },
-      
       "partnerSelector": {
         "preSelected": "Partenaire Présélectionné",
-        "autoAdded": "a été automatiquement ajouté",
-        "selectPartner": "Sélectionnez un Partenaire à Ajouter",
-        "generalService": "Service Général",
-        "hour": "heure",
-        "hourShort": "h",
-        "fixedRate": "Tarif fixe",
-        "hourly": "Horaire",
-        "fixed": "Fixe",
+        "autoAdded": "a été automatiquement ajouté à cet événement.",
+        "selectPartner": "Sélectionner un Partenaire",
         "addedPartners": "Partenaires Ajoutés ({{count}})",
-        "removePartner": "Retirer le partenaire",
-        "noPartners": "Aucun partenaire ajouté pour le moment. Sélectionnez dans la liste déroulante ci-dessus pour ajouter des partenaires."
+        "hourly": "Horaire",
+        "fixed": "Forfait",
+        "hour": "h",
+        "hourShort": "h",
+        "fixedRate": "Prix Fixe",
+        "removePartner": "Retirer le Partenaire",
+        "noPartners": "Aucun partenaire ajouté.",
+        "generalService": "Service Général"
       },
-      
       "priceSummary": {
         "title": "Résumé des Prix",
-        "venue": "Lieu",
+        "venue": "Salle",
         "partners": "Partenaires",
         "partner": "Partenaire",
-        "discount": "Réduction",
-        "total": "Total",
-        "fixed": "Fixe",
+        "fixed": "Forfait",
         "hourly": "Horaire",
-        "hours": "heures",
-        "note": "Calcul en temps réel. Les coûts des partenaires sont calculés en fonction de leur type de tarification (tarif fixe ou tarif horaire)."
+        "hours": "h",
+        "discount": "Remise",
+        "total": "Total",
+        "note": "Le calcul de la TVA sera appliqué dans la facture."
+      },
+      "draftModal": {
+        "title": "Brouillon Trouvé",
+        "description": "Nous avons trouvé un brouillon non enregistré datant de :",
+        "hoursAgo": "il y a {{count}} heures",
+        "minutesAgo": "il y a {{count}} minutes",
+        "eventTitle": "Titre de l'Événement",
+        "eventType": "Type",
+        "lastSaved": "Dernière Sauvegarde",
+        "untitled": "Événement Sans Titre",
+        "warning": "La restauration écrasera les données actuelles du formulaire.",
+        "discard": "Ignorer",
+        "restore": "Restaurer"
       }
-    }
+    },
+    "currency": "TND",
+    "totalAmount": "Montant Total"
   },
   "partners": {
     "title": "Partenaires",
