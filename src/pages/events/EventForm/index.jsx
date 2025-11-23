@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { ChevronRight, ChevronLeft, Save, DollarSign } from "lucide-react";
+import { ChevronRight, ChevronLeft, Save, DollarSign, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useToast } from "../../../hooks/useToast"; // ✅ Custom Toast
+import { useToast } from "../../../hooks/useToast";
 
+// Context & Sub-components
 import { EventFormProvider, useEventContext } from "./EventFormContext";
 import FormHeader from "./FormHeader";
 import Step1EventDetails from "./steps/Step1EventDetails";
@@ -11,9 +12,13 @@ import Step2ClientSelection from "./steps/Step2ClientSelection";
 import Step3VenuePricing from "./steps/Step3VenuePricing";
 import Step4Payment from "./steps/Step4Payment";
 import Step5Review from "./steps/Step5Review";
-import Button from "../../../components/common/Button";
 import DraftRestoreModal from "./components/DraftRestoreModal";
+
+// Services
 import { eventService, paymentService, invoiceService } from "../../../api";
+
+// ✅ Generic Components
+import Button from "../../../components/common/Button";
 
 const TOTAL_STEPS = 5;
 
@@ -21,7 +26,7 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   
-  // ✅ Destructure Toast methods
+  // Toast Hook
   const { showSuccess, showError, apiError, validationError, formSuccess } = useToast(); 
 
   const { 
@@ -33,7 +38,7 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState(null);
 
-  // --- Draft Logic ---
+  // --- Draft Logic (PRESERVED) ---
   useEffect(() => {
     if (!meta.isEditMode) {
       const draft = localStorage.getItem("eventFormDraft");
@@ -69,7 +74,7 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
         partners: draftData.savedData.partners || []
       }));
       setCurrentStep(draftData.currentStep || 1);
-      showSuccess(t('eventForm.messages.draftRestored')); // ✅ Toast
+      showSuccess(t('eventForm.messages.draftRestored'));
     }
     setDraftData(null);
     setShowDraftModal(false);
@@ -81,27 +86,27 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
     setShowDraftModal(false);
   };
 
-  // --- Navigation ---
+  // --- Navigation (PRESERVED) ---
   const nextStep = useCallback(() => {
     const validationErrors = validateStep(currentStep, formData, selectedClient);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length === 0) {
       setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
     } else {
-      validationError(); // ✅ Toast
+      validationError();
     }
   }, [currentStep, formData, selectedClient, validateStep, setErrors, validationError]);
 
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
   const jumpToStep = (step) => step < currentStep && setCurrentStep(step);
 
-  // --- Submit ---
+  // --- Submit Logic (PRESERVED) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     const validationErrors = validateStep(currentStep, formData, selectedClient);
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return validationError(); // ✅ Toast
+    if (Object.keys(validationErrors).length > 0) return validationError();
 
     try {
       setLoading(true);
@@ -134,16 +139,15 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
       let response;
       if (meta.isEditMode) {
         response = await eventService.update(meta.eventId, submitData);
-        formSuccess('Updated'); // ✅ Toast
+        formSuccess('Updated');
       } else {
         response = await eventService.create(submitData);
-        formSuccess('Created'); // ✅ Toast
+        formSuccess('Created');
         localStorage.removeItem("eventFormDraft");
       }
 
-      // ✅ SAFE EXTRACTION of ID
       const createdEventId = response.event?._id || response.data?._id || meta.eventId || response._id;
-      const createdVenueId = response.event?.venueId || response.data?.venueId || submitData.venueId; // Ensure we get venue ID
+      const createdVenueId = response.event?.venueId || response.data?.venueId || submitData.venueId;
 
       // 1. Handle Payment
       if (formData.payment.amount && parseFloat(formData.payment.amount) > 0) {
@@ -180,7 +184,7 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
           ];
 
           await invoiceService.create({
-            venue: createdVenueId, // Required field
+            venue: createdVenueId,
             client: formData.clientId,
             event: createdEventId,
             invoiceType: "client",
@@ -193,10 +197,10 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
             discountType: submitData.pricing.discountType,
             notes: formData.notes
           });
-          showSuccess("Invoice generated automatically"); // ✅ Toast
+          showSuccess("Invoice generated automatically");
         } catch (invError) {
           console.error("Invoice Gen Error:", invError);
-          showError("Event created, but Invoice generation failed."); // ✅ Toast
+          showError("Event created, but Invoice generation failed.");
         }
       }
 
@@ -207,12 +211,13 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
 
     } catch (error) {
       console.error(error);
-      apiError(error, t('eventForm.messages.saveFailed')); // ✅ Toast
+      apiError(error, t('eventForm.messages.saveFailed'));
     } finally {
       setLoading(false);
     }
   };
 
+  // --- Step Renderer ---
   const renderStep = () => {
     switch (currentStep) {
       case 1: return <Step1EventDetails />;
@@ -230,7 +235,10 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
         <DraftRestoreModal draftData={draftData} onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden h-full flex flex-col">
+      {/* ✅ Main Card Container */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden h-full flex flex-col border border-gray-100 dark:border-gray-700 transition-all duration-200">
+        
+        {/* Header */}
         <FormHeader 
           currentStep={currentStep} 
           totalSteps={TOTAL_STEPS} 
@@ -240,46 +248,75 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
           onStepClick={jumpToStep} 
         />
 
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-          {renderStep()}
+        {/* Scrollable Content Area */}
+        <div className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar bg-gray-50/50 dark:bg-gray-900/50">
+          <div className="max-w-4xl mx-auto w-full">
+            {renderStep()}
+          </div>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t flex justify-between items-center shrink-0">
-          <div className="flex items-center">
-            {currentStep > 1 && (
-              <Button variant="outline" icon={ChevronLeft} onClick={prevStep}>
+        {/* Footer / Action Bar */}
+        <div className="bg-white dark:bg-gray-800 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0 z-10 relative shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+          
+          {/* Left: Previous Button */}
+          <div className="w-full sm:w-auto flex justify-start order-2 sm:order-1">
+            {currentStep > 1 ? (
+              <Button 
+                variant="outline" 
+                icon={ChevronLeft} 
+                onClick={prevStep}
+                className="w-full sm:w-auto"
+              >
                 {t('eventForm.buttons.previous')}
               </Button>
+            ) : (
+              <div className="w-24 hidden sm:block" /> /* Spacer */
             )}
           </div>
 
-          {currentStep >= 3 && calculations.totalPrice >= 0 && (
-            <div className="hidden md:flex items-center gap-6 bg-white dark:bg-gray-600 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-500 shadow-sm">
-              <div className="flex flex-col items-end text-xs text-gray-500 dark:text-gray-300 border-r border-gray-200 dark:border-gray-500 pr-4 mr-2">
-                <span>Base: <strong>{calculations.basePrice.toFixed(2)}</strong></span>
-                <span>Partners: <strong>{calculations.partnersTotal.toFixed(2)}</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-green-100 text-green-700 rounded-full">
-                  <DollarSign size={16} />
+          {/* Center: Price Display (Visible from Step 3) */}
+          <div className="order-1 sm:order-2 w-full sm:w-auto flex justify-center">
+            {currentStep >= 3 && calculations.totalPrice >= 0 && (
+              <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-700/50 px-5 py-2 rounded-full border border-gray-200 dark:border-gray-600">
+                <div className="flex flex-col items-end text-xs text-gray-500 dark:text-gray-400 border-r border-gray-300 dark:border-gray-500 pr-4 mr-1">
+                  <span>Base: <span className="font-medium text-gray-700 dark:text-gray-200">{calculations.basePrice.toFixed(2)}</span></span>
+                  <span>Partners: <span className="font-medium text-gray-700 dark:text-gray-200">{calculations.partnersTotal.toFixed(2)}</span></span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total (TTC)</span>
-                  <span className="text-lg font-bold text-gray-900 dark:text-white leading-none">
-                    {calculations.totalPrice.toFixed(2)} TND
-                  </span>
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full">
+                    <DollarSign size={16} strokeWidth={3} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider leading-tight">Total (TTC)</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white leading-none">
+                      {calculations.totalPrice.toFixed(2)} <span className="text-xs font-normal text-gray-500">TND</span>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          <div className="flex items-center gap-3">
+          {/* Right: Next/Save Button */}
+          <div className="w-full sm:w-auto flex justify-end order-3">
             {currentStep < TOTAL_STEPS ? (
-              <Button variant="primary" icon={ChevronRight} onClick={nextStep}>
+              <Button 
+                variant="primary" 
+                icon={ChevronRight} 
+                iconPosition="right"
+                onClick={nextStep}
+                className="w-full sm:w-auto"
+              >
                 {t('eventForm.buttons.continue')}
               </Button>
             ) : (
-              <Button variant="primary" icon={Save} loading={loading} onClick={handleSubmit}>
+              <Button 
+                variant="success" // Changed to success for final action
+                icon={Save} 
+                loading={loading} 
+                onClick={handleSubmit}
+                className="w-full sm:w-auto shadow-lg shadow-green-500/20"
+              >
                 {meta.isEditMode ? t('eventForm.buttons.updateEvent') : t('eventForm.buttons.createEvent')}
               </Button>
             )}
@@ -290,7 +327,7 @@ const EventFormContent = ({ isModal, onClose, onSuccess, returnUrl }) => {
   );
 };
 
-// Outer Wrapper remains unchanged...
+// --- Outer Wrapper (Preserved Logic) ---
 const EventForm = ({ isOpen, onClose, eventId, onSuccess, initialDate, prefillClient }) => {
   const { id: urlEventId } = useParams();
   const location = useLocation();
@@ -302,6 +339,7 @@ const EventForm = ({ isOpen, onClose, eventId, onSuccess, initialDate, prefillCl
   const activePrefillClient = prefillClient || location.state?.prefillClient;
   const activePrefillPartner = location.state?.prefillPartner;
 
+  // Early return if modal is closed
   if (isModal && !isOpen && location.pathname !== "/events/new") return null;
 
   const content = (
@@ -316,18 +354,36 @@ const EventForm = ({ isOpen, onClose, eventId, onSuccess, initialDate, prefillCl
     </EventFormProvider>
   );
 
+  // ✅ Enhanced Modal Overlay
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 overflow-hidden backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="fixed inset-0 bg-gray-900/50" onClick={onClose}></div>
-        <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+      <div className="fixed inset-0 z-[60] overflow-hidden flex items-center justify-center p-4 sm:p-6">
+        {/* Backdrop with Blur */}
+        <div 
+          className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
+          onClick={onClose}
+          aria-hidden="true"
+        />
+        
+        {/* Modal Container */}
+        <div className="relative w-full max-w-6xl h-full max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 shadow-2xl">
+          
+          {/* Close Button (Absolute) */}
+          <button 
+            onClick={onClose}
+            className="absolute -top-3 -right-3 z-50 p-2 bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full shadow-md hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
           {content}
         </div>
       </div>
     );
   }
 
-  return <div className="container mx-auto px-4 py-8 max-w-5xl">{content}</div>;
+  // Standard Page Layout
+  return <div className="container mx-auto px-4 py-8 max-w-6xl h-[calc(100vh-100px)]">{content}</div>;
 };
 
 export default EventForm;

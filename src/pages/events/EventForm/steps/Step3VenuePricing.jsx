@@ -1,7 +1,9 @@
 import React from "react";
-import { Building, DollarSign, Users, Calculator } from "lucide-react";
+import { Building, DollarSign, Users, Calculator, Plus, Percent, Receipt } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEventContext } from "../EventFormContext"; 
+
+// ✅ Generic Components
 import Select from "../../../../components/common/Select";
 import Input from "../../../../components/common/Input";
 import PartnerSelector from "../components/PartnerSelector";
@@ -9,7 +11,7 @@ import PartnerSelector from "../components/PartnerSelector";
 const Step3VenuePricing = () => {
   const { t } = useTranslation();
   
-  // 1. Extract everything from Context
+  // 1. Context Extraction
   const { 
     formData, 
     handleChange, 
@@ -21,7 +23,7 @@ const Step3VenuePricing = () => {
     calculations 
   } = useEventContext();
 
-  // 2. Partner Handlers
+  // 2. Partner Logic
   const handleAddPartner = (newPartner) => {
     setFormData(prev => ({ 
       ...prev, 
@@ -36,20 +38,19 @@ const Step3VenuePricing = () => {
     }));
   };
 
-  // 3. Safety Accessor for Calculations
-  // This prevents the "undefined" crash if the context hasn't finished calc yet
+  // 3. Safety Helper for Numbers
   const calc = (key) => (calculations?.[key] || 0).toFixed(2);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-300">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       
-      {/* === SECTION 1: VENUE SPACE === */}
-      <div className="bg-white dark:bg-gray-800/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-            <Building className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+      {/* --- Venue Space Selection (Full Width) --- */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+          <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400">
+            <Building className="w-5 h-5" />
           </div>
-          <h4 className="font-semibold text-gray-900 dark:text-white">
+          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
             {t('eventForm.step3.venueSpaceSelection')}
           </h4>
         </div>
@@ -71,31 +72,34 @@ const Step3VenuePricing = () => {
 
         {/* Capacity Warnings */}
         {warnings.guestCount && (
-          <div className={`mt-3 text-sm p-3 rounded-lg flex items-start gap-2 border ${
+          <div className={`mt-4 text-sm p-4 rounded-lg flex items-start gap-3 border ${
             warnings.guestCount.type === 'error' 
-              ? 'bg-red-50 border-red-100 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300' 
-              : 'bg-amber-50 border-amber-100 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300'
+              ? 'bg-red-50 border-red-100 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300' 
+              : 'bg-amber-50 border-amber-100 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300'
           }`}>
-            <span>{warnings.guestCount.message}</span>
+            <div className={`mt-0.5 p-1 rounded-full ${warnings.guestCount.type === 'error' ? 'bg-red-200 dark:bg-red-900' : 'bg-amber-200 dark:bg-amber-900'}`}>
+              <Users className="w-3 h-3" />
+            </div>
+            <span className="leading-relaxed font-medium">{warnings.guestCount.message}</span>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* === SECTION 2: PRICING & TAX === */}
-        <div className="bg-white dark:bg-gray-800/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700 h-fit">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+        {/* --- Left Column: Pricing & Breakdown --- */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
+              <DollarSign className="w-5 h-5" />
             </div>
-            <h4 className="font-semibold text-gray-900 dark:text-white">
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white">
               {t('eventForm.step3.pricing')}
             </h4>
           </div>
 
-          <div className="space-y-5">
-            {/* Base Price (Read Only) */}
+          <div className="space-y-5 flex-1">
+            {/* Base Price */}
             <Input 
               label={t('eventForm.step3.basePriceLabel')} 
               name="pricing.basePrice" 
@@ -104,12 +108,12 @@ const Step3VenuePricing = () => {
               onChange={handleChange} 
               error={errors["pricing.basePrice"]} 
               disabled 
-              className="bg-gray-50 dark:bg-gray-700"
+              className="bg-gray-50 dark:bg-gray-700 cursor-not-allowed"
             />
             
-            {/* Discount & Tax Grid */}
+            {/* Discount & Tax Row */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Discount */}
+              {/* Discount Input Group */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   {t('eventForm.step3.discount')}
@@ -120,18 +124,23 @@ const Step3VenuePricing = () => {
                     name="pricing.discount"
                     value={formData.pricing.discount} 
                     onChange={handleChange}
-                    className="block w-full min-w-0 flex-1 rounded-l-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5"
+                    className="block w-full min-w-0 flex-1 rounded-l-lg border border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors"
                     placeholder="0"
                   />
-                  <select 
-                    name="pricing.discountType" 
-                    value={formData.pricing.discountType} 
-                    onChange={handleChange}
-                    className="inline-flex items-center rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                  >
-                    <option value="fixed">TND</option>
-                    <option value="percentage">%</option>
-                  </select>
+                  <div className="relative">
+                    <select 
+                      name="pricing.discountType" 
+                      value={formData.pricing.discountType} 
+                      onChange={handleChange}
+                      className="h-full rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 px-3 py-0 text-gray-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 focus:ring-0 focus:border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors appearance-none pr-8"
+                    >
+                      <option value="fixed">TND</option>
+                      <option value="percentage">%</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -144,60 +153,68 @@ const Step3VenuePricing = () => {
                 value={formData.pricing.taxRate} 
                 onChange={handleChange}
                 placeholder="19"
+                icon={Percent}
               />
             </div>
 
-            {/* === LIVE RECEIPT PREVIEW === */}
-            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-700 space-y-2 text-sm">
-              <div className="flex items-center gap-2 text-gray-500 mb-2 pb-2 border-b border-gray-200 dark:border-gray-700 font-medium">
-                <Calculator size={14} /> Calculation Breakdown
+            {/* Live Receipt Preview */}
+            <div className="mt-6 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-5">
+              <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+                <Receipt className="w-4 h-4" /> Calculation Breakdown
               </div>
               
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Venue Base:</span>
-                <span>{calc('basePrice')}</span>
-              </div>
-              
-              {(calculations?.partnersTotal > 0) && (
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Partners:</span>
-                  <span>+ {calc('partnersTotal')}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Venue Base</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{calc('basePrice')}</span>
                 </div>
-              )}
+                
+                {(calculations?.partnersTotal > 0) && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Partners</span>
+                    <span className="font-medium text-gray-900 dark:text-white">+ {calc('partnersTotal')}</span>
+                  </div>
+                )}
 
-              {(calculations?.discountAmount > 0) && (
-                <div className="flex justify-between text-red-500">
-                  <span>Discount:</span>
-                  <span>- {calc('discountAmount')}</span>
+                {(calculations?.discountAmount > 0) && (
+                  <div className="flex justify-between text-green-600 dark:text-green-400">
+                    <span>Discount</span>
+                    <span>- {calc('discountAmount')}</span>
+                  </div>
+                )}
+
+                <div className="my-2 border-t border-gray-200 dark:border-gray-700"></div>
+
+                <div className="flex justify-between font-medium text-gray-700 dark:text-gray-300">
+                  <span>Subtotal (HT)</span>
+                  <span>{calc('subtotalAfterDiscount')}</span>
                 </div>
-              )}
 
-              <div className="flex justify-between font-semibold text-gray-900 dark:text-white pt-1 border-t border-dashed border-gray-200 dark:border-gray-700">
-                <span>Subtotal (HT):</span>
-                {/* ✅ Safety check applied here */}
-                <span>{calc('subtotalAfterDiscount')}</span>
-              </div>
+                <div className="flex justify-between text-gray-500">
+                  <span>Tax ({formData.pricing.taxRate}%)</span>
+                  <span>+ {calc('taxAmount')}</span>
+                </div>
 
-              <div className="flex justify-between text-gray-500">
-                <span>Tax ({formData.pricing.taxRate}%):</span>
-                <span>+ {calc('taxAmount')}</span>
-              </div>
+                <div className="my-2 border-t border-gray-200 dark:border-gray-700"></div>
 
-              <div className="flex justify-between pt-2 border-t border-gray-300 dark:border-gray-600 font-bold text-lg text-orange-600 dark:text-orange-400">
-                <span>Total (TTC):</span>
-                <span>{calc('totalPrice')} TND</span>
+                <div className="flex justify-between items-end pt-1">
+                  <span className="text-base font-bold text-gray-900 dark:text-white">Total (TTC)</span>
+                  <span className="text-xl font-bold text-orange-600 dark:text-orange-500 leading-none">
+                    {calc('totalPrice')} <span className="text-sm font-normal text-gray-500">TND</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* === SECTION 3: PARTNERS === */}
-        <div className="bg-white dark:bg-gray-800/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700 h-fit">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        {/* --- Right Column: Partner Selection --- */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+              <Users className="w-5 h-5" />
             </div>
-            <h4 className="font-semibold text-gray-900 dark:text-white">
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white">
               {t('eventForm.step3.servicePartners')}
             </h4>
           </div>
@@ -207,8 +224,7 @@ const Step3VenuePricing = () => {
             selectedPartners={formData.partners}
             onAddPartner={handleAddPartner}
             onRemovePartner={handleRemovePartner}
-            // Use safe accessor for eventHours too
-            calculateEventHours={() => calculations?.eventHours || 1}
+            calculateEventHours={() => calculations?.eventHours || 1} // Safe fallback
           />
         </div>
       </div>

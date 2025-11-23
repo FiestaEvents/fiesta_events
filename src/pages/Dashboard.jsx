@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-// ✅ FIX 1: Ensure Button is imported
+
+// ✅ 1. Generic Components
 import Button from "../components/common/Button"; 
+import { StatusBadge } from "../components/common/Badge"; // Using your generic badge
+
+// ✅ 2. Hooks & API
+import useToast from "../hooks/useToast";
 import {
   taskService,
   eventService,
@@ -11,6 +16,7 @@ import {
   invoiceService,
   dashboardService
 } from "../api/index";
+
 import formatCurrency from "../utils/formatCurrency";
 import {
   TrendingUp,
@@ -53,6 +59,7 @@ ChartJS.register(
 const DashboardPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { apiError } = useToast(); // Use custom hook for errors
   const [loading, setLoading] = useState(true);
   
   const [metrics, setMetrics] = useState({
@@ -72,6 +79,13 @@ const DashboardPage = () => {
     payments: [],
     actions: [] 
   });
+
+  // ✅ Helper: Strict DD/MM/YYYY formatter
+  const formatDateDDMMYYYY = (isoDate) => {
+    if (!isoDate) return "";
+    const date = new Date(isoDate);
+    return date.toLocaleDateString("en-GB"); // en-GB forces dd/mm/yyyy
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,27 +109,23 @@ const DashboardPage = () => {
           venueService.getMe().catch(() => ({}))
         ]);
 
-        // --- SAFE DATA EXTRACTION (Fixes TypeError) ---
-        
         const eventsRaw = eventsRes?.events || eventsRes?.data?.events || [];
         const events = Array.isArray(eventsRaw) ? eventsRaw : [];
 
         const paymentsRaw = paymentsRes?.payments || paymentsRes?.data?.payments || [];
         const payments = Array.isArray(paymentsRaw) ? paymentsRaw : [];
 
-        // ✅ FIX 2: Force tasks to be an array
         const tasksRaw = tasksRes?.tasks || tasksRes?.data?.tasks || tasksRes?.data || [];
         const tasks = Array.isArray(tasksRaw) ? tasksRaw : [];
 
         const invoiceStats = invoicesRes?.stats || invoicesRes?.data?.stats || {};
         const venueData = venueRes?.venue || venueRes?.data || {};
 
-        // --- CALCULATE METRICS ---
+        // --- CALCULATE METRICS (Simplified for brevity, logic preserved) ---
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
 
-        // Event Logic
         const currentMonthEvents = events.filter(event => {
           if (!event.startDate) return false;
           const d = new Date(event.startDate);
@@ -125,7 +135,6 @@ const DashboardPage = () => {
         const maxCapacity = venueData?.capacity?.max || 30;
         const occupancyRate = maxCapacity > 0 ? Math.round((currentMonthEvents / 30) * 100) : 0;
 
-        // Revenue Logic
         const currentMonthRevenue = payments
           .filter(payment => {
             const d = new Date(payment.paidDate || payment.createdAt);
@@ -146,13 +155,11 @@ const DashboardPage = () => {
           ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
           : (currentMonthRevenue > 0 ? 100 : 0);
 
-        // Lead Logic
         const pendingEvents = events.filter(e => (e.status || 'pending') === 'pending').length;
         const confirmedEvents = events.filter(e => ['confirmed', 'completed', 'paid'].includes(e.status)).length;
         const totalLeads = pendingEvents + confirmedEvents;
         const conversionRate = totalLeads > 0 ? Math.round((confirmedEvents / totalLeads) * 100) : 0;
 
-        // Operations Logic
         const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
         const urgentTasks = tasks.filter(t => t.priority === 'high' || t.priority === 'urgent').length;
 
@@ -162,18 +169,9 @@ const DashboardPage = () => {
             growth: revenueGrowth, 
             outstanding: invoiceStats.totalDue || 0 
           },
-          occupancy: { 
-            rate: occupancyRate, 
-            totalEvents: currentMonthEvents 
-          },
-          leads: { 
-            conversionRate, 
-            pending: pendingEvents 
-          },
-          operations: { 
-            pendingTasks, 
-            urgentReminders: urgentTasks 
-          }
+          occupancy: { rate: occupancyRate, totalEvents: currentMonthEvents },
+          leads: { conversionRate, pending: pendingEvents },
+          operations: { pendingTasks, urgentReminders: urgentTasks }
         });
 
         // Charts Logic
@@ -250,14 +248,15 @@ const DashboardPage = () => {
         });
 
       } catch (error) {
-        console.error("❌ Dashboard Critical Error:", error);
+        // ✅ Use hook for error handling
+        apiError(error, "Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [apiError]); // Added dependency
 
   if (loading) {
     return (
@@ -271,7 +270,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6 lg:p-8 space-y-8">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 md:p-6 lg:p-8 space-y-8">
       
       {/* 1. HEADER & ACTION CENTER */}
       <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
@@ -426,10 +425,8 @@ const DashboardPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize hidden sm:inline-block
-                      ${event.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {event.status}
-                    </span>
+                    {/* ✅ Uses Generic StatusBadge component */}
+                    <StatusBadge status={event.status} size="sm" dot={true} />
                     <ArrowRight className="text-gray-300 group-hover:text-orange-500" size={18} />
                   </div>
                 </div>
@@ -462,8 +459,9 @@ const DashboardPage = () => {
                       <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                         {pay.clientId?.name || "Client Payment"}
                       </span>
+                      {/* ✅ Fixed Date Format to DD/MM/YYYY */}
                       <span className="text-[10px] text-gray-400">
-                        {new Date(pay.createdAt).toLocaleDateString()}
+                        {formatDateDDMMYYYY(pay.createdAt)}
                       </span>
                     </div>
                   </div>

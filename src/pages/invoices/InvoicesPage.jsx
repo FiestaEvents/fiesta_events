@@ -2,31 +2,30 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  AlertCircle,
   Briefcase,
   Check,
   ChevronDown,
   ChevronUp,
-  Clock,
-  DollarSign,
   Download,
   Edit,
   Eye,
-  FileText,
   Mail,
   Plus,
   Search,
   Send,
-  Settings, // ✅ Imported
+  Settings,
   Trash2,
   Users,
-  X,
   AlertTriangle,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  XCircle,
+  FileText, // ✅ Added missing import
 } from "lucide-react";
 
-// Components
-import Card from "../../components/common/Card";
-import Badge from "../../components/common/Badge";
+// ✅ Generic Components
+import Badge, { StatusBadge } from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -36,14 +35,14 @@ import Pagination from "../../components/common/Pagination";
 import Select from "../../components/common/Select";
 import InvoiceFormPage from "./InvoiceFormPage";
 
-// Services & Utils
+// ✅ Services & Utils
 import { invoiceService } from "../../api/index";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../hooks/useToast";
 import formatCurrency from "../../utils/formatCurrency";
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
-  const { showSuccess, showError, showInfo, promise } = useToast();
+  const { showSuccess, apiError, showInfo, promise } = useToast();
   const { t } = useTranslation();
 
   // ==========================================
@@ -53,7 +52,6 @@ const InvoicesPage = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [error, setError] = useState(null);
   
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState("");
@@ -83,8 +81,6 @@ const InvoicesPage = () => {
   const [editingInvoice, setEditingInvoice] = useState(null);
   
   // Action Modals
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     invoiceId: null,
@@ -92,13 +88,18 @@ const InvoicesPage = () => {
     onConfirm: null
   });
 
+  // ✅ Helper: Strict DD/MM/YYYY format
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("en-GB");
+  };
+
   // ==========================================
   // DATA NORMALIZATION
   // ==========================================
   const normalizeInvoiceData = (invoice) => {
     if (!invoice || typeof invoice !== "object") return null;
 
-    // Extract recipient info based on type
     let recipientName = "", recipientEmail = "", recipientCompany = "";
 
     if (invoice.invoiceType === "client") {
@@ -132,7 +133,7 @@ const InvoicesPage = () => {
   // API CALLS
   // ==========================================
   
-const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
       const response = await invoiceService.getStats({
@@ -141,10 +142,8 @@ const fetchStats = useCallback(async () => {
         invoiceType: invoiceType,
       });
 
-      // ✅ FIX: Handle the direct object returned by the new backend
       const data = response?.stats || response?.data?.stats || {};
 
-      // Check if data is an array (Legacy) or Object (New Backend)
       if (Array.isArray(data)) {
         const typeStats = data.find((s) => s._id === invoiceType) || {};
         setStats({
@@ -154,7 +153,6 @@ const fetchStats = useCallback(async () => {
           overdue: typeStats.overdue || 0
         });
       } else {
-        // New Backend returns the object directly calculated
         setStats({
           totalRevenue: data.totalRevenue || 0,
           paid: data.paid || 0,
@@ -162,7 +160,6 @@ const fetchStats = useCallback(async () => {
           overdue: data.overdue || 0
         });
       }
-
     } catch (error) {
       console.error("Error fetching stats:", error);
       setStats({ totalRevenue: 0, paid: 0, totalDue: 0, overdue: 0 });
@@ -174,7 +171,6 @@ const fetchStats = useCallback(async () => {
   const fetchInvoices = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
 
       const params = {
         search: searchTerm || undefined,
@@ -190,7 +186,6 @@ const fetchStats = useCallback(async () => {
       const response = await invoiceService.getAll(params);
       let invoicesData = response?.invoices || response?.data?.invoices || [];
 
-      // Normalize
       invoicesData = invoicesData
         .map(normalizeInvoiceData)
         .filter((invoice) => invoice !== null);
@@ -204,16 +199,14 @@ const fetchStats = useCallback(async () => {
       setTotalItems(paginationData.total || invoicesData.length);
       setHasInitialLoad(true);
     } catch (error) {
-      console.error("Error fetching invoices:", error);
-      setError(t("invoices.errors.loadInvoicesFailed"));
+      apiError(error, t("invoices.errors.loadInvoicesFailed"));
       setInvoices([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters, currentPage, pageSize, invoiceType, t]);
+  }, [searchTerm, filters, currentPage, pageSize, invoiceType, t, apiError]);
 
-  // Effects
   useEffect(() => { fetchInvoices(); }, [fetchInvoices]);
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { setCurrentPage(1); setSelectedRows([]); }, [invoiceType]);
@@ -222,23 +215,16 @@ const fetchStats = useCallback(async () => {
   // HANDLERS
   // ==========================================
 
-  // --- Navigation ---
   const handleCreateInvoice = () => {
     setFormMode("create");
     setEditingInvoice(null);
     setIsFormModalOpen(true);
   };
 
-  // --- Details & Edit ---
   const handleRowClick = useCallback((invoice) => {
     setSelectedInvoice(invoice);
     setIsDetailModalOpen(true);
   }, []);
-
-  const handleViewInvoice = (invoice) => {
-    setSelectedInvoice(invoice);
-    setIsDetailModalOpen(true);
-  };
 
   const handleEditInvoice = async (invoice) => {
     try {
@@ -249,11 +235,10 @@ const fetchStats = useCallback(async () => {
       setIsDetailModalOpen(false);
       setIsFormModalOpen(true);
     } catch (error) {
-      showError(t("invoices.errors.loadDetailsFailed"));
+      apiError(error, t("invoices.errors.loadDetailsFailed"));
     }
   };
 
-  // --- Form Submission ---
   const handleFormSubmit = async (invoiceData) => {
     try {
       if (formMode === "create") {
@@ -274,39 +259,14 @@ const fetchStats = useCallback(async () => {
       fetchInvoices();
       fetchStats();
     } catch (err) {
-      console.error(err);
+      // Toast handled by promise
     }
-  };
-
-  // --- Actions (Send, Pay, Cancel, Download) ---
-  const handleSendInvoice = async (invoice) => {
-    try {
-      await promise(invoiceService.send(invoice._id, { message: "Invoice attached." }), {
-        loading: t("invoices.send.loading"),
-        success: t("invoices.send.success"),
-        error: t("invoices.send.error")
-      });
-      fetchInvoices();
-    } catch (err) { console.error(err); }
-  };
-
-  const handleMarkAsPaid = async (invoice) => {
-    try {
-      await promise(invoiceService.markAsPaid(invoice._id, { paymentMethod: "cash" }), {
-        loading: t("invoices.markAsPaid.loading"),
-        success: t("invoices.markAsPaid.success"),
-        error: t("invoices.markAsPaid.error")
-      });
-      fetchInvoices();
-      fetchStats();
-    } catch (err) { console.error(err); }
   };
 
   const handleDownloadInvoice = async (invoice) => {
     try {
       showInfo(t("invoices.download.generating"));
       const blob = await invoiceService.download(invoice._id);
-      
       if (!blob || blob.size === 0) throw new Error("Empty file");
       
       const url = window.URL.createObjectURL(blob);
@@ -320,11 +280,10 @@ const fetchStats = useCallback(async () => {
       
       showSuccess(t("invoices.download.success"));
     } catch (err) {
-      showError(t("invoices.download.errors.generic"));
+      apiError(err, t("invoices.download.errors.generic"));
     }
   };
 
-  // --- Delete & Cancel ---
   const handleDeleteClick = (id, name) => {
     setConfirmationModal({
       isOpen: true,
@@ -338,24 +297,10 @@ const fetchStats = useCallback(async () => {
           fetchStats();
           setConfirmationModal({ isOpen: false, invoiceId: null, invoiceName: "", onConfirm: null });
         } catch (err) {
-          showError(t("invoices.delete.error"));
+          apiError(err, t("invoices.delete.error"));
         }
       }
     });
-  };
-
-  const handleCancelConfirm = async () => {
-    if (!selectedInvoice) return;
-    try {
-      await promise(invoiceService.cancel(selectedInvoice._id, cancelReason), {
-        loading: t("invoices.cancel.loading"),
-        success: t("invoices.cancel.success"),
-        error: t("invoices.cancel.error")
-      });
-      setIsCancelModalOpen(false);
-      setCancelReason("");
-      fetchInvoices();
-    } catch (err) { console.error(err); }
   };
 
   const handleBulkSend = async () => {
@@ -370,8 +315,6 @@ const fetchStats = useCallback(async () => {
     } catch (e) { console.error(e); }
   };
 
-  // --- Filters ---
-  const handleFilterChange = (key, value) => setFilters(p => ({ ...p, [key]: value }));
   const handleClearFilters = () => {
     setFilters({ status: "", startDate: "", endDate: "" });
     setSearchTerm("");
@@ -380,10 +323,6 @@ const fetchStats = useCallback(async () => {
   // ==========================================
   // TABLE CONFIG
   // ==========================================
-  const safeRender = (fn, row, fallback = "-") => {
-    try { return fn(row) || fallback; } catch { return fallback; }
-  };
-
   const columns = [
     {
       accessor: "invoiceNumber",
@@ -406,7 +345,7 @@ const fetchStats = useCallback(async () => {
       accessor: "dueDate",
       header: t("invoices.table.headers.dueDate"),
       width: "15%",
-      render: (row) => <div className="text-gray-600 dark:text-gray-400">{new Date(row.dueDate).toLocaleDateString()}</div>
+      render: (row) => <div className="text-gray-600 dark:text-gray-400 font-mono">{formatDate(row.dueDate)}</div>
     },
     {
       accessor: "totalAmount",
@@ -418,10 +357,7 @@ const fetchStats = useCallback(async () => {
       accessor: "status",
       header: t("invoices.table.headers.status"),
       width: "10%",
-      render: (row) => {
-        const colors = { paid: "green", sent: "blue", draft: "gray", overdue: "red", partial: "yellow" };
-        return <Badge color={colors[row.status] || "gray"}>{row.status}</Badge>;
-      }
+      render: (row) => <StatusBadge status={row.status} size="sm" />
     },
     {
       header: "Actions",
@@ -431,21 +367,27 @@ const fetchStats = useCallback(async () => {
         const canEdit = ["draft", "sent"].includes(row.status);
         return (
           <div className="flex justify-center gap-2">
-            <button onClick={(e) => { e.stopPropagation(); handleViewInvoice(row); }} className="p-1 text-gray-500 hover:text-orange-500"><Eye size={16} /></button>
-            {canEdit && <button onClick={(e) => { e.stopPropagation(); handleEditInvoice(row); }} className="p-1 text-gray-500 hover:text-blue-500"><Edit size={16} /></button>}
-            <button onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(row); }} className="p-1 text-gray-500 hover:text-green-500"><Download size={16} /></button>
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleRowClick(row); }} className="text-gray-500 hover:text-blue-600">
+              <Eye size={16} />
+            </Button>
+            {canEdit && (
+              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleEditInvoice(row); }} className="text-gray-500 hover:text-orange-600">
+                <Edit size={16} />
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(row); }} className="text-gray-500 hover:text-green-600">
+              <Download size={16} />
+            </Button>
             {row.status === "draft" && (
-               <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(row._id, row.invoiceNumber); }} className="p-1 text-gray-500 hover:text-red-500"><Trash2 size={16} /></button>
+               <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClick(row._id, row.invoiceNumber); }} className="text-gray-500 hover:text-red-600">
+                 <Trash2 size={16} />
+               </Button>
             )}
           </div>
         );
       }
     }
   ];
-
-  // ==========================================
-  // RENDER
-  // ==========================================
 
   if (loading && !hasInitialLoad) return <div className="h-screen flex items-center justify-center"><LoadingSpinner /></div>;
 
@@ -456,11 +398,10 @@ const fetchStats = useCallback(async () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("invoices.title")}</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your {invoiceType} invoices and bills</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your {invoiceType} invoices</p>
         </div>
         
         <div className="flex items-center gap-3">
-           {/* SETTINGS BUTTON */}
            <Button variant="outline" icon={Settings} onClick={() => navigate("/invoices/settings")}>
               {t("invoices.settings", "Settings")}
            </Button>
@@ -477,92 +418,79 @@ const fetchStats = useCallback(async () => {
         </div>
       </div>
 
-      {/* 2. STATS CARDS */}
+      {/* 2. STATS CARDS (Using standard divs instead of Card) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-           <div className="text-gray-500 text-sm">Total Revenue</div>
-           <div className="text-2xl font-bold">{statsLoading ? "..." : formatCurrency(stats?.totalRevenue || 0)}</div>
-        </Card>
-        <Card className="p-4 border-green-100 bg-green-50/50">
-           <div className="text-green-700 text-sm">Paid</div>
-           <div className="text-2xl font-bold text-green-700">{statsLoading ? "..." : formatCurrency(stats?.paid || 0)}</div>
-        </Card>
-        <Card className="p-4 border-yellow-100 bg-yellow-50/50">
-           <div className="text-yellow-700 text-sm">Pending</div>
-           <div className="text-2xl font-bold text-yellow-700">{statsLoading ? "..." : formatCurrency(stats?.totalDue || 0)}</div>
-        </Card>
-        <Card className="p-4 border-red-100 bg-red-50/50">
-           <div className="text-red-700 text-sm">Overdue</div>
-           <div className="text-2xl font-bold text-red-700">{statsLoading ? "..." : stats?.overdue || 0}</div>
-        </Card>
+        <StatBox label="Total Revenue" value={stats?.totalRevenue} loading={statsLoading} icon={TrendingUp} color="blue" />
+        <StatBox label="Paid" value={stats?.paid} loading={statsLoading} icon={CheckCircle} color="green" />
+        <StatBox label="Pending" value={stats?.totalDue} loading={statsLoading} icon={Clock} color="yellow" />
+        <StatBox label="Overdue" value={stats?.overdue} loading={statsLoading} icon={XCircle} color="red" />
       </div>
 
-      {/* 3. CONTROLS (Type Toggle & Search) */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-4 rounded-lg dark:bg-gray-800">
-         {/* Type Toggle */}
-         <div className="flex bg-white dark:bg-gray-700 rounded-lg p-1 shadow-sm self-start">
-            <button 
-              onClick={() => setInvoiceType("client")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                invoiceType === "client" ? "bg-orange-500 text-white shadow" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
-              }`}
-            >
-              <Users size={16} /> Client Invoices
-            </button>
-            <button 
-              onClick={() => setInvoiceType("partner")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                invoiceType === "partner" ? "bg-orange-500 text-white shadow" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
-              }`}
-            >
-              <Briefcase size={16} /> Partner Bills
-            </button>
-         </div>
+      {/* 3. CONTROLS (Using standard div) */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
+           {/* Type Toggle */}
+           <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <button 
+                onClick={() => setInvoiceType("client")}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                  invoiceType === "client" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
+                }`}
+              >
+                <Users size={16} /> Client Invoices
+              </button>
+              <button 
+                onClick={() => setInvoiceType("partner")}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                  invoiceType === "partner" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
+                }`}
+              >
+                <Briefcase size={16} /> Partner Bills
+              </button>
+           </div>
 
-         {/* Search & Filter */}
-         <div className="flex gap-2 flex-1 justify-end">
-            <div className="w-full md:w-64">
-               <Input 
-                 icon={Search} 
-                 placeholder="Search invoices..." 
-                 value={searchTerm} 
-                 onChange={(e) => setSearchTerm(e.target.value)} 
-               />
-            </div>
-            <Button variant="outline" icon={showFilters ? ChevronUp : ChevronDown} onClick={() => setShowFilters(!showFilters)}>
-               Filter
-            </Button>
-         </div>
+           {/* Search & Filter */}
+           <div className="flex gap-3 flex-1 justify-end w-full md:w-auto">
+              <div className="w-full md:w-64">
+                 <Input 
+                   icon={Search} 
+                   placeholder="Search..." 
+                   value={searchTerm} 
+                   onChange={(e) => setSearchTerm(e.target.value)} 
+                 />
+              </div>
+              <Button variant="outline" icon={showFilters ? ChevronUp : ChevronDown} onClick={() => setShowFilters(!showFilters)}>
+                 Filter
+              </Button>
+           </div>
+        </div>
+
+        {/* Expanded Filters */}
+        {showFilters && (
+           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <Select 
+                label="Status" 
+                value={filters.status} 
+                onChange={(e) => setFilters(p => ({...p, status: e.target.value}))}
+                options={[
+                  { value: "", label: "All Statuses" },
+                  { value: "draft", label: "Draft" },
+                  { value: "sent", label: "Sent" },
+                  { value: "paid", label: "Paid" },
+                  { value: "overdue", label: "Overdue" }
+                ]}
+              />
+              <Input type="date" label="Start Date" value={filters.startDate} onChange={(e) => setFilters(p => ({...p, startDate: e.target.value}))} />
+              <Input type="date" label="End Date" value={filters.endDate} onChange={(e) => setFilters(p => ({...p, endDate: e.target.value}))} />
+              <div className="sm:col-span-3 flex justify-end">
+                 <Button variant="ghost" onClick={handleClearFilters}>Clear Filters</Button>
+              </div>
+           </div>
+        )}
       </div>
-
-      {/* Expanded Filters */}
-      {showFilters && (
-         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-gray-50 border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-            <Select 
-              label="Status" 
-              value={filters.status} 
-              onChange={(e) => handleFilterChange("status", e.target.value)}
-            >
-               <option value="">All Statuses</option>
-               <option value="draft">Draft</option>
-               <option value="sent">Sent</option>
-               <option value="paid">Paid</option>
-               <option value="overdue">Overdue</option>
-            </Select>
-            <Input type="date" label="Start Date" value={filters.startDate} onChange={(e) => handleFilterChange("startDate", e.target.value)} />
-            <Input type="date" label="End Date" value={filters.endDate} onChange={(e) => handleFilterChange("endDate", e.target.value)} />
-            <div className="sm:col-span-3 flex justify-end">
-               <Button variant="ghost" onClick={handleClearFilters}>Clear Filters</Button>
-            </div>
-         </div>
-      )}
 
       {/* 4. TABLE */}
-      {error ? (
-         <div className="bg-red-50 text-red-600 p-4 rounded border border-red-200 text-center">
-            {error} <Button size="sm" variant="outline" onClick={fetchInvoices} className="ml-2">Retry</Button>
-         </div>
-      ) : invoices.length > 0 ? (
+      {invoices.length > 0 ? (
         <>
           <Table 
              columns={columns} 
@@ -584,18 +512,15 @@ const fetchStats = useCallback(async () => {
         </>
       ) : (
          <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-300 dark:bg-gray-800 dark:border-gray-700">
-            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">No invoices found</h3>
-            <p className="text-gray-500 mt-1">Create a new invoice to get started.</p>
-            <div className="mt-6">
-               <Button variant="primary" icon={Plus} onClick={handleCreateInvoice}>Create Invoice</Button>
-            </div>
+            <Button variant="primary" icon={Plus} onClick={handleCreateInvoice} className="mt-4">Create Invoice</Button>
          </div>
       )}
 
       {/* ================= MODALS ================= */}
 
-      {/* Form Modal (Create/Edit) */}
+      {/* Form Modal */}
       <Modal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} size="xl" title={formMode === 'create' ? "New Invoice" : "Edit Invoice"}>
          <div className="p-4">
             <InvoiceFormPage 
@@ -608,35 +533,34 @@ const fetchStats = useCallback(async () => {
          </div>
       </Modal>
 
-      {/* Detail Modal (View) */}
+      {/* Detail Modal */}
       {selectedInvoice && isDetailModalOpen && (
          <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} size="lg" title={`Invoice ${selectedInvoice.invoiceNumber}`}>
             <div className="p-6 space-y-6">
-               <div className="flex justify-between border-b pb-4">
+               <div className="flex justify-between border-b pb-4 border-gray-100 dark:border-gray-700">
                   <div>
                      <h3 className="text-xl font-bold">{selectedInvoice.recipientName}</h3>
                      <p className="text-gray-500">{selectedInvoice.recipientEmail}</p>
                   </div>
-                  <Badge size="lg">{selectedInvoice.status}</Badge>
+                  <StatusBadge status={selectedInvoice.status} size="lg" />
                </div>
 
-               {/* Items */}
                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
                      <tr>
-                        <th className="p-2 text-left">Description</th>
-                        <th className="p-2 text-right">Qty</th>
-                        <th className="p-2 text-right">Price</th>
-                        <th className="p-2 text-right">Total</th>
+                        <th className="p-3 text-left">Description</th>
+                        <th className="p-3 text-right">Qty</th>
+                        <th className="p-3 text-right">Price</th>
+                        <th className="p-3 text-right">Total</th>
                      </tr>
                   </thead>
                   <tbody>
                      {selectedInvoice.items.map((item, i) => (
-                        <tr key={i} className="border-b">
-                           <td className="p-2">{item.description}</td>
-                           <td className="p-2 text-right">{item.quantity}</td>
-                           <td className="p-2 text-right">{formatCurrency(item.rate)}</td>
-                           <td className="p-2 text-right font-medium">{formatCurrency(item.amount)}</td>
+                        <tr key={i} className="border-b border-gray-100 dark:border-gray-700">
+                           <td className="p-3">{item.description}</td>
+                           <td className="p-3 text-right">{item.quantity}</td>
+                           <td className="p-3 text-right">{formatCurrency(item.rate)}</td>
+                           <td className="p-3 text-right font-medium">{formatCurrency(item.amount)}</td>
                         </tr>
                      ))}
                   </tbody>
@@ -644,15 +568,13 @@ const fetchStats = useCallback(async () => {
                
                <div className="flex justify-end pt-4">
                   <div className="w-64 space-y-2 text-right">
-                     <div className="flex justify-between text-gray-600"><span>Subtotal:</span> <span>{formatCurrency(selectedInvoice.subtotal)}</span></div>
-                     <div className="flex justify-between font-bold text-lg"><span>Total:</span> <span>{formatCurrency(selectedInvoice.totalAmount)}</span></div>
+                     <div className="flex justify-between text-lg font-bold"><span>Total:</span> <span>{formatCurrency(selectedInvoice.totalAmount)}</span></div>
                   </div>
                </div>
 
-               <div className="flex justify-end gap-2 pt-4 border-t">
+               <div className="flex justify-end gap-2 pt-6 border-t border-gray-100 dark:border-gray-700">
                   <Button variant="outline" onClick={() => handleDownloadInvoice(selectedInvoice)} icon={Download}>Download PDF</Button>
-                  {selectedInvoice.status === 'draft' && <Button variant="primary" onClick={() => handleSendInvoice(selectedInvoice)} icon={Send}>Send Invoice</Button>}
-                  {selectedInvoice.status === 'sent' && <Button variant="success" onClick={() => handleMarkAsPaid(selectedInvoice)} icon={Check}>Mark Paid</Button>}
+                  {selectedInvoice.status === 'draft' && <Button variant="primary" onClick={() => navigate(`/invoices/send/${selectedInvoice._id}`)} icon={Send}>Send Invoice</Button>}
                </div>
             </div>
          </Modal>
@@ -662,14 +584,38 @@ const fetchStats = useCallback(async () => {
       <Modal isOpen={confirmationModal.isOpen} onClose={() => setConfirmationModal({...confirmationModal, isOpen: false})} title="Confirm Deletion" size="sm">
          <div className="p-6 text-center">
             <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="mb-6 text-gray-600">Are you sure you want to delete <strong>{confirmationModal.invoiceName}</strong>? This action cannot be undone.</p>
+            <p className="mb-6 text-gray-600">Are you sure you want to delete <strong>{confirmationModal.invoiceName}</strong>?</p>
             <div className="flex justify-center gap-3">
                <Button variant="outline" onClick={() => setConfirmationModal({...confirmationModal, isOpen: false})}>Cancel</Button>
-               <Button variant="danger" onClick={confirmationModal.onConfirm}>Delete Invoice</Button>
+               <Button variant="danger" onClick={confirmationModal.onConfirm}>Delete</Button>
             </div>
          </div>
       </Modal>
 
+    </div>
+  );
+};
+
+// --- Helper Sub-component (Replacing Card) ---
+const StatBox = ({ label, value, loading, icon: Icon, color }) => {
+  const colors = {
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+    green: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
+    yellow: "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400",
+    red: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4">
+      <div className={`p-3 rounded-lg ${colors[color]}`}>
+        <Icon className="w-6 h-6" />
+      </div>
+      <div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          {loading ? "..." : formatCurrency(value)}
+        </p>
+      </div>
     </div>
   );
 };

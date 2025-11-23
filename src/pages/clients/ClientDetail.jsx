@@ -1,53 +1,53 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useToast } from "../../hooks/useToast";
 import { useTranslation } from "react-i18next";
+import { Loader2, AlertTriangle, ArrowLeft, Calendar, CreditCard, Activity } from "lucide-react";
 
-// Components
+// ✅ Generic Components & Config
+import Button from "../../components/common/Button";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
+import { badgeVariants, statusToBadgeVariant } from "../../config/theme.config"; 
+
+// Hooks and Services
+import { useToast } from "../../hooks/useToast";
+import { clientService } from "../../api/index";
+import { useClientDetail } from "../../hooks/useClientDetail";
+
+// Sub-components
 import EventDetailModal from "../events/EventDetailModal";
 import EventForm from "../events/EventForm";
 import ClientForm from "./ClientForm";
-import ActivityTab from "./components/ActivityTab";
 import ClientHeader from "./components/ClientHeader";
 import ClientInfo from "./components/ClientInfo";
 import EventsTab from "./components/EventsTab";
 import PaymentsTab from "./components/PaymentsTab";
-
-// Hooks and Services
-import { clientService } from "../../api/index";
-import { useClientDetail } from "../../hooks/useClientDetail";
+import ActivityTab from "./components/ActivityTab";
 
 const ClientDetail = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
-  const { showSuccess, showError, showInfo, promise } = useToast();
+  const { showSuccess, showInfo, promise, apiError } = useToast();
 
-  const { clientData, events, eventsStats, loading, error, refreshData } =
-    useClientDetail(id);
+  const { clientData, events, eventsStats, loading, error, refreshData } = useClientDetail(id);
 
   // UI state
   const [activeTab, setActiveTab] = useState("activity");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  
+  // Event Modal State
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-
-  // EventForm modal state - SIMPLIFIED: only store eventId
   const [isEventFormOpen, setIsEventFormOpen] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
 
-  // Utility functions
+  // ✅ Helpers
   const formatDate = useCallback((date) => {
     if (!date) return "-";
     try {
-      const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
+      return new Date(date).toLocaleDateString("en-GB"); 
     } catch {
       return date;
     }
@@ -57,58 +57,33 @@ const ClientDetail = () => {
     return t(`clientDetail.status.${status}`) || status || t("clients.table.defaultValues.unnamed");
   }, [t]);
 
-  const getStatusColor = useCallback((status) => {
-    const colors = {
-      active: "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
-      inactive: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-      pending: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      confirmed: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      completed: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      cancelled: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-      paid: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      partial: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      overdue: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-    };
-    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100";
+  const getStatusVariant = useCallback((status) => {
+    return statusToBadgeVariant[status] || 'secondary';
   }, []);
 
-  // Event handlers
+  // --- Handlers ---
+
   const handleViewEvent = useCallback((event) => {
     setSelectedEvent(event);
     setIsEventModalOpen(true);
   }, []);
 
-  // UPDATED: Only store eventId, not the full event object
   const handleEditEvent = useCallback((event) => {
-    console.log("Edit event called with:", event);
     setIsEventModalOpen(false);
-    
-    // Extract just the ID
     const eventId = typeof event === 'object' ? event._id : event;
     setEditingEventId(eventId);
     setIsEventFormOpen(true);
   }, []);
 
-  const handleNavigateToEvent = useCallback(
-    (eventId, e) => {
-      if (e && e.stopPropagation) e.stopPropagation();
-      navigate(`/events/${eventId}/detail`, {
-        state: {
-          fromClient: id,
-          clientData: clientData,
-        },
-      });
-    },
-    [navigate, id, clientData]
-  );
+  const handleNavigateToEvent = useCallback((eventId, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    navigate(`/events/${eventId}/detail`, { state: { fromClient: id, clientData } });
+  }, [navigate, id, clientData]);
 
   const handleEditClient = useCallback(() => {
-    if (!id) {
-      showError(t("clients.errors.invalidId"));
-      return;
-    }
+    if (!id) return apiError(null, t("clients.errors.invalidId"));
     setIsEditModalOpen(true);
-  }, [id, showError, t]);
+  }, [id, apiError, t]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
@@ -117,179 +92,145 @@ const ClientDetail = () => {
   }, [refreshData, showSuccess, t]);
 
   const handleDeleteClient = useCallback(async () => {
-    if (!id) {
-      showError(t("clients.errors.invalidId"));
-      return;
-    }
+    if (!id) return apiError(null, t("clients.errors.invalidId"));
 
     try {
       setDeleteLoading(true);
       await promise(clientService.delete(id), {
-        loading: t("clients.toast.deleting", { name: clientData?.name || "Client" }),
-        success: t("clients.toast.deleteSuccess", { name: clientData?.name || "Client" }),
-        error: t("clients.toast.deleteError", { name: clientData?.name || "Client" }),
+        loading: t("clients.toast.deleting", { name: clientData?.name }),
+        success: t("clients.toast.deleteSuccess", { name: clientData?.name }),
+        error: t("clients.toast.deleteError", { name: clientData?.name }),
       });
       setIsDeleteModalOpen(false);
       navigate("/clients");
     } catch (err) {
-      console.error("Delete client error:", err);
+      // Toast handles UI
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError, clientData, t]);
+  }, [id, navigate, promise, clientData, t, apiError]);
 
   const handleCreateEvent = useCallback(() => {
-    if (!id) {
-      showError(t("clients.errors.invalidId"));
-      return;
-    }
-
+    if (!id) return apiError(null, t("clients.errors.invalidId"));
     setEditingEventId(null);
     setIsEventFormOpen(true);
-  }, [id, showError, t]);
-
-  // EventForm modal handlers
-  const handleEventFormClose = useCallback(() => {
-    setIsEventFormOpen(false);
-    setEditingEventId(null);
-  }, []);
+  }, [id, apiError, t]);
 
   const handleEventFormSuccess = useCallback(async () => {
     setIsEventFormOpen(false);
     setEditingEventId(null);
     await refreshData();
-    showSuccess(
-      editingEventId
-        ? t("events.toast.updateSuccess")
-        : t("events.toast.createSuccess")
-    );
+    showSuccess(editingEventId ? t("events.toast.updateSuccess") : t("events.toast.createSuccess"));
   }, [editingEventId, refreshData, showSuccess, t]);
 
-  const handleRecordPayment = useCallback(
-    (eventId) => {
-      if (!eventId) {
-        showError("Please select an event first");
-        return;
-      }
+  const handleRecordPayment = useCallback((eventId) => {
+    if (!eventId) return apiError(null, "Please select an event first");
+    navigate(`/payments/new`, {
+      state: { prefillEvent: { _id: eventId, clientId: id, clientName: clientData?.name } },
+    });
+  }, [navigate, id, clientData, apiError]);
 
-      if (!id) {
-        showError(t("clients.errors.invalidId"));
-        return;
-      }
+  // --- Loading & Error States ---
 
-      navigate(`/payments/new`, {
-        state: {
-          prefillEvent: {
-            _id: eventId,
-            clientId: id,
-            clientName: clientData?.name,
-          },
-        },
-      });
-    },
-    [navigate, id, clientData, showError, t]
-  );
-
-  const handleRetry = useCallback(() => {
-    refreshData();
-    showInfo(t("clientDetail.loading"));
-  }, [refreshData, showInfo, t]);
-
-  // Loading state
   if (loading && !clientData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
-            {t("clientDetail.loading")}
-          </p>
-        </div>
+        <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
       </div>
     );
   }
 
-  // Error or not found
   if (error || !clientData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!clientData ? t("clientDetail.notFound") : t("clientDetail.errorLoading")}
-            </h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || t("clientDetail.notFoundDescription")}
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => navigate("/clients")}
-                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
-              >
-                {t("clientDetail.buttons.backToClients")}
-              </button>
-              {error && (
-                <button
-                  onClick={handleRetry}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-                >
-                  {t("clientDetail.buttons.tryAgain")}
-                </button>
-              )}
-            </div>
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+            <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {!clientData ? t("clientDetail.notFound") : t("clientDetail.errorLoading")}
+          </h3>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
+            {error?.message || t("clientDetail.notFoundDescription")}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => navigate("/clients")} icon={ArrowLeft}>
+              {t("clientDetail.buttons.backToClients")}
+            </Button>
+            {error && (
+              <Button variant="primary" onClick={() => { refreshData(); showInfo(t("clientDetail.loading")); }}>
+                {t("clientDetail.buttons.tryAgain")}
+              </Button>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  // Main render
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Column - Client Details */}
-          <div className="lg:col-span-1">
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-800">
-                <ClientHeader
-                  client={clientData}
-                  onBack={() => navigate("/clients")}
-                  onEdit={handleEditClient}
-                  onDelete={() => setIsDeleteModalOpen(true)}
-                  getStatusColor={getStatusColor}
-                  getStatusLabel={getStatusLabel}
-                />
-              </div>
+  // --- Tabs Config ---
+  const tabs = [
+    { id: "activity", label: t("clientDetail.labels.activityTimeline"), icon: Activity },
+    { id: "events", label: t("clientDetail.labels.eventHistory"), icon: Calendar },
+    { id: "payments", label: t("clientDetail.labels.totalRevenue"), icon: CreditCard },
+  ];
 
-              <div className="bg-white rounded-lg shadow-sm p-6 dark:bg-gray-800 dark:border-gray-800">
-                <ClientInfo client={clientData} formatDate={formatDate} />
-              </div>
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* --- Left Column: Header & Info (4 Cols) --- */}
+          <div className="lg:col-span-4 space-y-6">
+            
+            {/* Header Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <ClientHeader
+                client={clientData}
+                onBack={() => navigate("/clients")}
+                onEdit={handleEditClient}
+                onDelete={() => setIsDeleteModalOpen(true)}
+                getStatusVariant={getStatusVariant}
+                getStatusLabel={getStatusLabel}
+              />
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <ClientInfo client={clientData} formatDate={formatDate} />
             </div>
           </div>
 
-          {/* Right Column - Tabs */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
-              <div className="border-b border-gray-200 dark:border-orange-800">
-                <nav className="flex -mb-px">
-                  {["activity", "events", "payments"].map((tab) => (
+          {/* --- Right Column: Tabs & Content (8 Cols) --- */}
+          <div className="lg:col-span-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 min-h-[600px] flex flex-col">
+              
+              {/* Tabs Navigation */}
+              <div className="border-b border-gray-200 dark:border-gray-700">
+                <nav className="flex overflow-x-auto no-scrollbar" aria-label="Tabs">
+                  {tabs.map((tab) => (
                     <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex-1 px-6 py-3 text-sm font-medium border-b-2 transition ${
-                        activeTab === tab
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      // ✅ FIX: Added 'flex-1' for equal width and 'justify-center' to center content
+                      className={`
+                        flex-1 group flex items-center justify-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap
+                        ${activeTab === tab.id
                           ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400"
-                          : "border-transparent text-gray-600 hover:text-gray-900 hover:border-orange-300 dark:text-gray-400 dark:hover:text-white"
-                      }`}
+                          : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300"
+                        }
+                      `}
                     >
-                      {t(`clientDetail.tabs.${tab}`)}
+                      <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "text-orange-500" : "text-gray-400 group-hover:text-gray-500"}`} />
+                      {tab.label}
                     </button>
                   ))}
                 </nav>
               </div>
 
-              <div className="p-6">
+              {/* Tab Content */}
+              <div className="p-6 flex-1">
                 {activeTab === "events" && (
                   <EventsTab
                     events={events}
@@ -300,7 +241,7 @@ const ClientDetail = () => {
                     onViewEvent={handleViewEvent}
                     onNavigateToEvent={handleNavigateToEvent}
                     formatDate={formatDate}
-                    getStatusColor={getStatusColor}
+                    getStatusVariant={getStatusVariant}
                     getStatusLabel={getStatusLabel}
                   />
                 )}
@@ -318,7 +259,7 @@ const ClientDetail = () => {
                     events={events}
                     eventsStats={eventsStats}
                     formatDate={formatDate}
-                    getStatusColor={getStatusColor}
+                    getStatusVariant={getStatusVariant}
                     getStatusLabel={getStatusLabel}
                   />
                 )}
@@ -328,7 +269,7 @@ const ClientDetail = () => {
         </div>
       </div>
 
-      {/* Modals */}
+      {/* --- Modals --- */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -365,14 +306,13 @@ const ClientDetail = () => {
         refreshData={refreshData}
       />
 
-      {/* UPDATED: Only pass eventId and prefillClient */}
       {isEventFormOpen && (
         <EventForm
           isOpen={isEventFormOpen}
           onClose={handleEventFormClose}
           onSuccess={handleEventFormSuccess}
-          eventId={editingEventId}  // ✅ Only eventId
-          prefillClient={!editingEventId ? {  // ✅ Only for new events
+          eventId={editingEventId}
+          prefillClient={!editingEventId ? {
             _id: id,
             name: clientData?.name,
             email: clientData?.email,

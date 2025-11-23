@@ -1,12 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { financeService } from "../../api/index";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
-import Select from "../../components/common/Select";
-import Table from "../../components/common/NewTable";
-import Badge from "../../components/common/Badge";
-import Modal from "../../components/common/Modal";
 import {
   Plus,
   Search,
@@ -19,13 +12,32 @@ import {
   Trash2,
   Download,
   DollarSign,
+  Loader2,
+  AlertTriangle
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+
+// ✅ API & Services
+import { financeService } from "../../api/index";
+
+// ✅ Generic Components & Utils
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Table from "../../components/common/NewTable";
+import Badge from "../../components/common/Badge";
+import Modal from "../../components/common/Modal";
+import formatCurrency from "../../utils/formatCurrency";
+
+// ✅ Hooks
+import { useToast } from "../../hooks/useToast";
 
 const Transactions = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { showSuccess, apiError, showError } = useToast(); // Custom toast hook
+
+  // State
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     type: "",
@@ -38,31 +50,19 @@ const Transactions = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
-  // State management
   const [transactions, setTransactions] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [pageSize, setPageSize] = useState(10);
 
-  // Date formatting function
+  // ✅ Helper: Strict DD/MM/YYYY format
   const formatDate = (date) => {
     if (!date) return "-";
     try {
-      const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
+      return new Date(date).toLocaleDateString("en-GB");
     } catch {
       return date;
     }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("tn-TN", {
-      style: "currency",
-      currency: "TND",
-    }).format(amount || 0);
   };
 
   // Fetch transactions
@@ -84,14 +84,11 @@ const Transactions = () => {
 
       // Remove undefined values
       Object.keys(params).forEach(key => {
-        if (params[key] === undefined) {
-          delete params[key];
-        }
+        if (params[key] === undefined) delete params[key];
       });
 
       const response = await financeService.getAll(params);
 
-      // Handle the response structure properly
       const financeData = response?.finance || response?.data?.records || [];
       const paginationData = response?.pagination || response?.data?.pagination || {
         page: page,
@@ -102,23 +99,18 @@ const Transactions = () => {
       setTransactions(financeData);
       setPagination(paginationData);
     } catch (error) {
-      console.error("Error fetching transactions:", error);
-      toast.error(error.message || t("transactions.errors.loadFailed"));
+      apiError(error, t("transactions.errors.loadFailed"));
       setTransactions([]);
       setPagination({ page: 1, pages: 1, total: 0 });
     } finally {
       setIsLoading(false);
     }
-  }, [searchQuery, filters, pageSize, t]);
+  }, [searchQuery, filters, pageSize, t, apiError]);
 
   // Reset to page 1 when search or filters change
   useEffect(() => {
     fetchTransactions(1);
   }, [fetchTransactions]);
-
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-  };
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -139,12 +131,11 @@ const Transactions = () => {
   const handleDelete = async () => {
     try {
       await financeService.delete(deleteModal.id);
-      toast.success(t("transactions.success.deleted"));
+      showSuccess(t("transactions.success.deleted"));
       setDeleteModal({ show: false, id: null });
       fetchTransactions(pagination.page);
     } catch (error) {
-      console.error("Error deleting transaction:", error);
-      toast.error(error.response?.data?.error || error.message || t("transactions.errors.deleteFailed"));
+      apiError(error, t("transactions.errors.deleteFailed"));
     }
   };
 
@@ -152,13 +143,11 @@ const Transactions = () => {
   const handleExport = () => {
     try {
       if (!transactions || transactions.length === 0) {
-        toast.error(t("transactions.errors.noData"));
+        showError(t("transactions.errors.noData"));
         return;
       }
 
-      // Generate CSV content
-      let csvContent =
-        "Date,Description,Type,Category,Amount,Payment Method,Reference,Status\n";
+      let csvContent = "Date,Description,Type,Category,Amount,Payment Method,Reference,Status\n";
 
       transactions.forEach((transaction) => {
         const date = formatDate(transaction.date);
@@ -173,7 +162,6 @@ const Transactions = () => {
         csvContent += `${date},"${description}",${type},"${category}",${amount},"${paymentMethod}","${reference}",${status}\n`;
       });
 
-      // Create and download file
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -184,16 +172,15 @@ const Transactions = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success(t("transactions.success.exported"));
+      showSuccess(t("transactions.success.exported"));
     } catch (error) {
       console.error("Error exporting transactions:", error);
-      toast.error(t("transactions.errors.exportFailed"));
+      showError(t("transactions.errors.exportFailed"));
     }
   };
 
-  const getTypeVariant = (type) => {
-    return type === "income" ? "success" : "danger";
-  };
+  // Helper for badge variants
+  const getTypeVariant = (type) => (type === "income" ? "success" : "danger");
 
   // Define table columns
   const columns = [
@@ -203,7 +190,7 @@ const Transactions = () => {
       sortable: true,
       width: "12%",
       render: (row) => (
-        <div className="text-sm text-gray-900 dark:text-white">
+        <div className="text-sm text-gray-900 dark:text-white font-mono">
           {formatDate(row.date)}
         </div>
       ),
@@ -217,7 +204,7 @@ const Transactions = () => {
           <div className="font-medium text-gray-900 dark:text-white">
             {row.description || t("transactions.table.noDescription")}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+          <div className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-0.5">
             {t(`transactions.categories.${row.category}`) || (row.category || "").replace(/_/g, " ")}
           </div>
         </div>
@@ -228,18 +215,11 @@ const Transactions = () => {
       header: t("transactions.table.type"),
       width: "12%",
       render: (row) => (
-        <Badge variant={getTypeVariant(row.type)}>
+        <Badge variant={getTypeVariant(row.type)} size="sm">
           <div className="flex items-center gap-1">
-            {row.type === "income" ? (
-              <TrendingUp className="w-3 h-3" />
-            ) : (
-              <TrendingDown className="w-3 h-3" />
-            )}
+            {row.type === "income" ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             <span className="capitalize">
-              {row.type === "income" 
-                ? t("transactions.filters.income")
-                : t("transactions.filters.expense")
-              }
+              {row.type === "income" ? t("transactions.filters.income") : t("transactions.filters.expense")}
             </span>
           </div>
         </Badge>
@@ -251,13 +231,7 @@ const Transactions = () => {
       sortable: true,
       width: "15%",
       render: (row) => (
-        <div
-          className={`font-semibold ${
-            row.type === "income"
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-600 dark:text-red-400"
-          }`}
-        >
+        <div className={`font-bold ${row.type === "income" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
           {row.type === "income" ? "+" : "-"}
           {formatCurrency(Math.abs(row.amount || 0))}
         </div>
@@ -278,7 +252,7 @@ const Transactions = () => {
       header: t("transactions.table.reference"),
       width: "12%",
       render: (row) => (
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
           {row.reference || "-"}
         </span>
       ),
@@ -289,39 +263,36 @@ const Transactions = () => {
       width: "10%",
       className: "text-center",
       render: (row) => (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1">
           <Button
             variant="ghost"
             size="sm"
             icon={Eye}
-            title={t("transactions.actions.view")}
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/finance/transactions/${row._id || row.id}`);
             }}
+            className="text-gray-500 hover:text-blue-600"
           />
           <Button
             variant="ghost"
             size="sm"
             icon={Edit}
-            title={t("transactions.actions.edit")}
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/finance/transactions/${row._id || row.id}/edit`);
             }}
+            className="text-gray-500 hover:text-orange-600"
           />
           <Button
             variant="ghost"
             size="sm"
             icon={Trash2}
-            title={t("transactions.actions.delete")}
             onClick={(e) => {
               e.stopPropagation();
-              setDeleteModal({
-                show: true,
-                id: row._id || row.id,
-              });
+              setDeleteModal({ show: true, id: row._id || row.id });
             }}
+            className="text-gray-500 hover:text-red-600"
           />
         </div>
       ),
@@ -332,35 +303,21 @@ const Transactions = () => {
   const stats = useMemo(() => [
     {
       label: t("transactions.stats.totalIncome"),
-      value: formatCurrency(
-        transactions
-          .filter((t) => t.type === "income")
-          .reduce((sum, t) => sum + (t.amount || 0), 0)
-      ),
+      value: formatCurrency(transactions.filter((t) => t.type === "income").reduce((sum, t) => sum + (t.amount || 0), 0)),
       icon: TrendingUp,
       bgColor: "bg-green-50 dark:bg-green-900/20",
       iconColor: "text-green-600 dark:text-green-400",
     },
     {
       label: t("transactions.stats.totalExpenses"),
-      value: formatCurrency(
-        transactions
-          .filter((t) => t.type === "expense")
-          .reduce((sum, t) => sum + (t.amount || 0), 0)
-      ),
+      value: formatCurrency(transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + (t.amount || 0), 0)),
       icon: TrendingDown,
       bgColor: "bg-red-50 dark:bg-red-900/20",
       iconColor: "text-red-600 dark:text-red-400",
     },
     {
       label: t("transactions.stats.netAmount"),
-      value: formatCurrency(
-        transactions.reduce((sum, t) => {
-          return t.type === "income"
-            ? sum + (t.amount || 0)
-            : sum - (t.amount || 0);
-        }, 0)
-      ),
+      value: formatCurrency(transactions.reduce((sum, t) => t.type === "income" ? sum + (t.amount || 0) : sum - (t.amount || 0), 0)),
       icon: DollarSign,
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
       iconColor: "text-blue-600 dark:text-blue-400",
@@ -374,7 +331,6 @@ const Transactions = () => {
     },
   ], [transactions, t]);
 
-  // Category options for filter
   const categoryOptions = useMemo(() => [
     { value: "", label: t("transactions.filters.allCategories") },
     { value: "event_revenue", label: t("transactions.categories.event_revenue") },
@@ -390,7 +346,7 @@ const Transactions = () => {
   ], [t]);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 bg-white dark:bg-gray-800 rounded-lg dark:border-gray-700">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -409,7 +365,6 @@ const Transactions = () => {
             variant="primary"
             icon={Plus}
             onClick={() => navigate("/finance/transactions/new")}
-            disabled
           >
             {t("transactions.actions.addTransaction")}
           </Button>
@@ -422,20 +377,18 @@ const Transactions = () => {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {stat.label}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        {stat.value}
-                      </p>
-                    </div>
-                    <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                      <Icon className={`w-6 h-6 ${stat.iconColor}`} />
-                    </div>
+              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {stat.label}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      {stat.value}
+                    </p>
+                  </div>
+                  <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                    <Icon className={`w-6 h-6 ${stat.iconColor}`} />
                   </div>
                 </div>
               </div>
@@ -445,7 +398,7 @@ const Transactions = () => {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
@@ -453,13 +406,15 @@ const Transactions = () => {
                 icon={Search}
                 placeholder={t("transactions.actions.search")}
                 value={searchQuery}
-                onChange={handleSearch}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
               />
             </div>
             <Button
               variant="outline"
               icon={Filter}
               onClick={() => setShowFilters(!showFilters)}
+              className={showFilters ? "bg-gray-100 dark:bg-gray-700" : ""}
             >
               {t("transactions.actions.filters")}
             </Button>
@@ -472,31 +427,25 @@ const Transactions = () => {
                 label={t("transactions.filters.type")}
                 value={filters.type}
                 onChange={(e) => handleFilterChange("type", e.target.value)}
-              >
-                <option value="">{t("transactions.filters.allTypes")}</option>
-                <option value="income">{t("transactions.filters.income")}</option>
-                <option value="expense">{t("transactions.filters.expense")}</option>
-              </Select>
+                options={[
+                  { value: "", label: t("transactions.filters.allTypes") },
+                  { value: "income", label: t("transactions.filters.income") },
+                  { value: "expense", label: t("transactions.filters.expense") }
+                ]}
+              />
 
               <Select
                 label={t("transactions.filters.category")}
                 value={filters.category}
                 onChange={(e) => handleFilterChange("category", e.target.value)}
-              >
-                {categoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
+                options={categoryOptions}
+              />
 
               <Input
                 label={t("transactions.filters.startDate")}
                 type="date"
                 value={filters.startDate}
-                onChange={(e) =>
-                  handleFilterChange("startDate", e.target.value)
-                }
+                onChange={(e) => handleFilterChange("startDate", e.target.value)}
               />
 
               <Input
@@ -511,31 +460,29 @@ const Transactions = () => {
                 label={t("transactions.filters.minAmount")}
                 type="number"
                 value={filters.minAmount}
-                onChange={(e) =>
-                  handleFilterChange("minAmount", e.target.value)
-                }
+                onChange={(e) => handleFilterChange("minAmount", e.target.value)}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
+                icon={DollarSign}
               />
 
               <Input
                 label={t("transactions.filters.maxAmount")}
                 type="number"
                 value={filters.maxAmount}
-                onChange={(e) =>
-                  handleFilterChange("maxAmount", e.target.value)
-                }
+                onChange={(e) => handleFilterChange("maxAmount", e.target.value)}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
+                icon={DollarSign}
               />
 
-              <div className="flex items-end">
+              <div className="flex items-end md:col-span-3">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={handleClearFilters}
-                  className="w-full"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400"
                 >
                   {t("transactions.actions.clearFilters")}
                 </Button>
@@ -573,18 +520,22 @@ const Transactions = () => {
         title={t("transactions.deleteModal.title")}
         size="sm"
       >
-        <div className="p-6">
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <div className="space-y-4">
+          <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg flex items-center gap-3 text-red-700 dark:text-red-300">
+            <AlertTriangle className="w-5 h-5" />
+            <p className="font-medium">{t("transactions.deleteModal.warning") || "Are you sure?"}</p>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400">
             {t("transactions.deleteModal.message")}
           </p>
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-3 pt-2">
             <Button
               variant="outline"
               onClick={() => setDeleteModal({ show: false, id: null })}
             >
               {t("transactions.actions.cancel")}
             </Button>
-            <Button variant="danger" onClick={handleDelete}>
+            <Button variant="danger" onClick={handleDelete} icon={Trash2}>
               {t("transactions.actions.delete")}
             </Button>
           </div>

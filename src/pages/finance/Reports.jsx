@@ -1,26 +1,33 @@
 import { useState } from "react";
-import { financeService } from "../../api/index";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
-import Select from "../../components/common/Select";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
-import formatCurrency from "../../utils/formatCurrency";
 import {
   FileText,
   Download,
   Calendar,
   TrendingUp,
   PieChart,
-  BarChart3,
   DollarSign,
   Eye,
   AlertCircle,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+
+// ✅ API & Services
+import { financeService } from "../../api/index";
+
+// ✅ Generic Components & Utils
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Card from "../../components/common/Card";
+import formatCurrency from "../../utils/formatCurrency";
+
+// ✅ Context
+import { useToast } from "../../hooks/useToast";
 
 const FinanceReports = () => {
   const { t } = useTranslation();
+  const { showSuccess, showError, apiError } = useToast();
+
   const [reportType, setReportType] = useState("profit-loss");
   const [period, setPeriod] = useState("month");
   const [customRange, setCustomRange] = useState({
@@ -31,12 +38,12 @@ const FinanceReports = () => {
   const [reportData, setReportData] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  // FIXED: Get date range based on period
-  const getDateRange = (period) => {
+  // Get date range based on period
+  const getDateRange = (selectedPeriod) => {
     const endDate = new Date();
     let startDate = new Date();
 
-    switch (period) {
+    switch (selectedPeriod) {
       case "week":
         startDate.setDate(endDate.getDate() - 7);
         break;
@@ -65,7 +72,7 @@ const FinanceReports = () => {
         break;
       case "custom":
         if (!customRange.startDate || !customRange.endDate) {
-          toast.error(t("reports.errors.selectDates"));
+          showError(t("reports.errors.selectDates"));
           return null;
         }
         return {
@@ -82,7 +89,6 @@ const FinanceReports = () => {
     };
   };
 
-  // FIXED: Generate report using only available API methods
   const handleGenerateReport = async () => {
     try {
       setIsGenerating(true);
@@ -95,7 +101,7 @@ const FinanceReports = () => {
 
       let data = null;
 
-      // Call appropriate API based on report type - ONLY AVAILABLE ENDPOINTS
+      // Call appropriate API based on report type
       switch (reportType) {
         case "profit-loss":
           data = await financeService.getProfitLoss(dateRange);
@@ -118,27 +124,28 @@ const FinanceReports = () => {
 
       setReportData(data);
       setShowPreview(true);
-      toast.success(t("reports.success.generated"));
+      showSuccess(t("reports.success.generated"));
     } catch (error) {
       console.error("Error generating report:", error);
-      toast.error(error.response?.data?.error || error.message || t("reports.errors.generateFailed"));
+      apiError(error, t("reports.errors.generateFailed"));
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // FIXED: Client-side CSV export for available reports only
+  // CSV export logic
   const handleExportCSV = () => {
     if (!reportData) {
-      toast.error(t("reports.errors.generateFirst"));
+      showError(t("reports.errors.generateFirst"));
       return;
     }
 
     try {
       let csvContent = "";
-      const timestamp = new Date().toISOString().split("T")[0];
+      // Format filename date as dd-mm-yyyy
+      const now = new Date();
+      const timestamp = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
 
-      // Generate CSV based on report type - ONLY AVAILABLE ENDPOINTS
       switch (reportType) {
         case "profit-loss":
           csvContent = generateProfitLossCSV(reportData);
@@ -159,7 +166,6 @@ const FinanceReports = () => {
           throw new Error("Invalid report type");
       }
 
-      // Create and download CSV file
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -170,16 +176,15 @@ const FinanceReports = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success(t("reports.success.exported"));
+      showSuccess(t("reports.success.exported"));
     } catch (error) {
       console.error("Error exporting CSV:", error);
-      toast.error(t("reports.errors.exportFailed"));
+      showError(t("reports.errors.exportFailed"));
     }
   };
 
-  // CSV generation helpers for available endpoints
+  // --- CSV Generators ---
   const generateProfitLossCSV = (data) => {
-    // Handle different response formats from getProfitLoss
     const revenue = data?.revenue || 0;
     const expenses = data?.expenses || 0;
     const profitability = data?.profitability || (revenue - expenses);
@@ -188,14 +193,12 @@ const FinanceReports = () => {
     csv += `Total Revenue,${revenue}\n`;
     csv += `Total Expenses,${expenses}\n`;
     csv += `Net Profit,${profitability}\n`;
-    
     return csv;
   };
 
   const generateCashFlowCSV = (data) => {
     const cashFlow = data?.cashFlow || [];
     const currentBalance = data?.currentBalance || 0;
-    
     let csv = "Period,Inflow,Outflow,Net Cash Flow\n";
     
     if (cashFlow.length > 0) {
@@ -207,99 +210,71 @@ const FinanceReports = () => {
         csv += `${period},${inflow},${outflow},${net}\n`;
       });
     } else {
-      // Fallback if no time series data
       csv += `Current Balance,,,${currentBalance}\n`;
     }
-    
     return csv;
   };
 
   const generateExpenseBreakdownCSV = (data) => {
     const breakdown = data?.breakdown || [];
     const totalExpenses = data?.totalExpenses || 0;
-    
     let csv = "Category,Amount,Percentage\n";
-    
     breakdown.forEach((item) => {
       const category = item.category || item._id || "Other";
       const amount = item.amount || item.total || 0;
       const percentage = totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(2) : 0;
       csv += `${category},${amount},${percentage}%\n`;
     });
-    
-    // Add total row
     csv += `Total,${totalExpenses},100%\n`;
-    
     return csv;
   };
 
   const generateRevenueAnalysisCSV = (data) => {
     const breakdown = data?.breakdown || [];
     const totalIncome = data?.totalIncome || 0;
-    
     let csv = "Category,Amount,Percentage\n";
-    
     breakdown.forEach((item) => {
       const category = item.category || item._id || "Other";
       const amount = item.amount || item.total || 0;
       const percentage = totalIncome > 0 ? ((amount / totalIncome) * 100).toFixed(2) : 0;
       csv += `${category},${amount},${percentage}%\n`;
     });
-    
-    // Add total row
     csv += `Total,${totalIncome},100%\n`;
-    
     return csv;
   };
 
   const generateTaxSummaryCSV = (data) => {
     const year = data?.year || new Date().getFullYear();
-    const totalIncome = data?.totalIncome || 0;
-    const totalExpense = data?.totalExpense || 0;
-    const taxableIncome = data?.taxableIncome || 0;
-    const totalTaxPaid = data?.totalTaxPaid || 0;
-    
     let csv = "Tax Summary for " + year + "\n\n";
     csv += "Category,Amount\n";
-    csv += `Total Income,${totalIncome}\n`;
-    csv += `Total Expenses,${totalExpense}\n`;
-    csv += `Taxable Income,${taxableIncome}\n`;
-    csv += `Total Tax Paid,${totalTaxPaid}\n`;
-    
+    csv += `Total Income,${data?.totalIncome || 0}\n`;
+    csv += `Total Expenses,${data?.totalExpense || 0}\n`;
+    csv += `Taxable Income,${data?.taxableIncome || 0}\n`;
+    csv += `Total Tax Paid,${data?.totalTaxPaid || 0}\n`;
     return csv;
   };
 
-  const generateSummaryCSV = (data) => {
-    const summary = data?.summary || data || {};
-    const categoryBreakdown = data?.categoryBreakdown || [];
-    const timeSeries = data?.timeSeries || [];
-    
-    let csv = "Financial Summary\n\n";
-    
-    // Summary section
-    csv += "Overview\n";
-    csv += "Metric,Value\n";
-    csv += `Total Income,${summary.totalIncome || summary.income || 0}\n`;
-    csv += `Total Expenses,${summary.totalExpenses || summary.expenses || 0}\n`;
-    csv += `Net Profit,${summary.netProfit || (summary.totalIncome || 0) - (summary.totalExpenses || 0)}\n`;
-    csv += `Transaction Count,${summary.totalTransactions || summary.transactions || 0}\n\n`;
-    
-    // Category breakdown if available
-    if (categoryBreakdown.length > 0) {
-      csv += "Category Breakdown\n";
-      csv += "Category,Amount\n";
-      categoryBreakdown.forEach((item) => {
-        const category = item.category || item._id || "Other";
-        const amount = item.amount || item.total || 0;
-        csv += `${category},${amount}\n`;
-      });
-      csv += "\n";
-    }
-    
-    return csv;
-  };
+  // --- Option Arrays ---
+  const reportTypeOptions = [
+    { value: "profit-loss", label: t("reports.types.profitLoss.name") },
+    { value: "cash-flow", label: t("reports.types.cashFlow.name") },
+    { value: "expense-breakdown", label: t("reports.types.expenseBreakdown.name") },
+    { value: "revenue-analysis", label: t("reports.types.revenueAnalysis.name") }, // Added missing translation key assumption
+    { value: "tax-summary", label: t("reports.types.taxSummary.name") },
+  ];
 
-  const reportTypes = [
+  const periodOptions = [
+    { value: "week", label: t("reports.periods.week") },
+    { value: "month", label: t("reports.periods.month") },
+    { value: "quarter", label: t("reports.periods.quarter") },
+    { value: "year", label: t("reports.periods.year") },
+    { value: "last-month", label: t("reports.periods.lastMonth") },
+    { value: "last-quarter", label: t("reports.periods.lastQuarter") },
+    { value: "last-year", label: t("reports.periods.lastYear") },
+    { value: "custom", label: t("reports.periods.custom") },
+  ];
+
+  const reportTypeDetails = [
     {
       id: "profit-loss",
       name: t("reports.types.profitLoss.name"),
@@ -335,7 +310,7 @@ const FinanceReports = () => {
   ];
 
   return (
-    <div className="bg-white space-y-6 p-6">
+    <div className="space-y-6 p-6 bg-white dark:bg-gray-800">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -347,421 +322,336 @@ const FinanceReports = () => {
       </div>
 
       {/* API Limitation Notice */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <div className="p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
-              {t("reports.notice.title")}
-            </h4>
-            <p className="text-sm text-blue-700 dark:text-blue-400">
-              {t("reports.notice.description")}
-            </p>
-          </div>
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+        <div>
+          <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
+            {t("reports.notice.title")}
+          </h4>
+          <p className="text-sm text-blue-700 dark:text-blue-400">
+            {t("reports.notice.description")}
+          </p>
         </div>
       </div>
 
       {/* Report Configuration */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            {t("reports.configuration.title")}
-          </h3>
+      <Card>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          {t("reports.configuration.title")}
+        </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Select
-              label={t("reports.configuration.reportType")}
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
-            >
-              {reportTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </Select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Select
+            label={t("reports.configuration.reportType")}
+            value={reportType}
+            onChange={(e) => setReportType(e.target.value)}
+            options={reportTypeOptions}
+          />
 
-            <Select
-              label={t("reports.configuration.period")}
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-            >
-              <option value="week">{t("reports.periods.week")}</option>
-              <option value="month">{t("reports.periods.month")}</option>
-              <option value="quarter">{t("reports.periods.quarter")}</option>
-              <option value="year">{t("reports.periods.year")}</option>
-              <option value="last-month">{t("reports.periods.lastMonth")}</option>
-              <option value="last-quarter">{t("reports.periods.lastQuarter")}</option>
-              <option value="last-year">{t("reports.periods.lastYear")}</option>
-              <option value="custom">{t("reports.periods.custom")}</option>
-            </Select>
+          <Select
+            label={t("reports.configuration.period")}
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            options={periodOptions}
+          />
 
-            {period === "custom" && (
-              <>
-                <Input
-                  label={t("reports.configuration.startDate")}
-                  type="date"
-                  value={customRange.startDate}
-                  onChange={(e) =>
-                    setCustomRange((prev) => ({
-                      ...prev,
-                      startDate: e.target.value,
-                    }))
-                  }
-                />
+          {period === "custom" && (
+            <>
+              <Input
+                label={t("reports.configuration.startDate")}
+                type="date"
+                value={customRange.startDate}
+                onChange={(e) =>
+                  setCustomRange((prev) => ({
+                    ...prev,
+                    startDate: e.target.value,
+                  }))
+                }
+              />
 
-                <Input
-                  label={t("reports.configuration.endDate")}
-                  type="date"
-                  value={customRange.endDate}
-                  onChange={(e) =>
-                    setCustomRange((prev) => ({
-                      ...prev,
-                      endDate: e.target.value,
-                    }))
-                  }
-                  min={customRange.startDate}
-                />
-              </>
-            )}
-          </div>
-
-          <div className="mt-6 flex items-center gap-3">
-            <Button
-              variant="primary"
-              icon={Eye}
-              onClick={handleGenerateReport}
-              loading={isGenerating}
-              disabled={isGenerating}
-            >
-              {isGenerating ? t("reports.configuration.generating") : t("reports.configuration.generate")}
-            </Button>
-            {reportData && (
-              <Button
-                variant="outline"
-                icon={Download}
-                onClick={handleExportCSV}
-              >
-                {t("reports.configuration.export")}
-              </Button>
-            )}
-          </div>
+              <Input
+                label={t("reports.configuration.endDate")}
+                type="date"
+                value={customRange.endDate}
+                onChange={(e) =>
+                  setCustomRange((prev) => ({
+                    ...prev,
+                    endDate: e.target.value,
+                  }))
+                }
+                min={customRange.startDate}
+              />
+            </>
+          )}
         </div>
-      </div>
+
+        <div className="mt-6 flex items-center gap-3">
+          <Button
+            variant="primary"
+            icon={Eye}
+            onClick={handleGenerateReport}
+            loading={isGenerating}
+            disabled={isGenerating}
+          >
+            {isGenerating ? t("reports.configuration.generating") : t("reports.configuration.generate")}
+          </Button>
+          {reportData && (
+            <Button
+              variant="outline"
+              icon={Download}
+              onClick={handleExportCSV}
+            >
+              {t("reports.configuration.export")}
+            </Button>
+          )}
+        </div>
+      </Card>
 
       {/* Report Preview */}
       {showPreview && reportData && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t("reports.preview.title")}
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPreview(false)}
-              >
-                {t("reports.preview.close")}
-              </Button>
-            </div>
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {t("reports.preview.title")}
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPreview(false)}
+            >
+              {t("reports.preview.close")}
+            </Button>
+          </div>
 
-            <div className="overflow-x-auto">
-              {reportType === "profit-loss" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t("reports.preview.totalRevenue")}
-                      </p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(reportData?.revenue || 0)}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t("reports.preview.totalExpenses")}
-                      </p>
-                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {formatCurrency(reportData?.expenses || 0)}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t("reports.preview.netProfit")}
-                      </p>
-                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {formatCurrency(reportData?.profitability || (reportData?.revenue || 0) - (reportData?.expenses || 0))}
-                      </p>
-                    </div>
-                  </div>
+          <div className="overflow-x-auto">
+            {reportType === "profit-loss" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <MetricPreviewBox 
+                    label={t("reports.preview.totalRevenue")} 
+                    value={formatCurrency(reportData?.revenue || 0)} 
+                    color="green" 
+                  />
+                  <MetricPreviewBox 
+                    label={t("reports.preview.totalExpenses")} 
+                    value={formatCurrency(reportData?.expenses || 0)} 
+                    color="red" 
+                  />
+                  <MetricPreviewBox 
+                    label={t("reports.preview.netProfit")} 
+                    value={formatCurrency(reportData?.profitability || (reportData?.revenue || 0) - (reportData?.expenses || 0))} 
+                    color="blue" 
+                  />
                 </div>
-              )}
+              </div>
+            )}
 
-              {reportType === "cash-flow" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t("reports.preview.currentBalance")}
-                      </p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(reportData?.currentBalance || 0)}
-                      </p>
-                    </div>
-                  </div>
-                  {reportData?.cashFlow && reportData.cashFlow.length > 0 && (
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                      <thead className="bg-gray-50 dark:bg-gray-800">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                            {t("reports.preview.period")}
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                            {t("reports.preview.inflow")}
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                            {t("reports.preview.outflow")}
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                            {t("reports.preview.netFlow")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                        {reportData.cashFlow.map((flow, index) => (
-                          <tr key={index}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                              {flow.period || flow.month || "N/A"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 dark:text-green-400">
-                              {formatCurrency(flow.inflow || 0)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
-                              {formatCurrency(flow.outflow || 0)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
-                              {formatCurrency(flow.net || (flow.inflow || 0) - (flow.outflow || 0))}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
+            {reportType === "cash-flow" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <MetricPreviewBox 
+                    label={t("reports.preview.currentBalance")} 
+                    value={formatCurrency(reportData?.currentBalance || 0)} 
+                    color="green" 
+                  />
                 </div>
-              )}
-
-              {(reportType === "expense-breakdown" || reportType === "revenue-analysis") && (
-                <div className="space-y-4">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      {reportType === "expense-breakdown" 
-                        ? t("reports.preview.totalExpenses")
-                        : t("reports.preview.totalRevenue")
-                      }
-                    </p>
-                    <p className={`text-2xl font-bold ${
-                      reportType === "expense-breakdown" 
-                        ? "text-red-600 dark:text-red-400" 
-                        : "text-green-600 dark:text-green-400"
-                    }`}>
-                      {formatCurrency(
-                        reportType === "expense-breakdown" 
-                          ? reportData?.totalExpenses || 0
-                          : reportData?.totalIncome || 0
-                      )}
-                    </p>
-                  </div>
-                  
+                {reportData?.cashFlow && reportData.cashFlow.length > 0 && (
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                          {t("reports.preview.category")}
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                          {t("reports.preview.amount")}
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                          {t("reports.preview.percentage")}
-                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("reports.preview.period")}</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.inflow")}</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.outflow")}</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.netFlow")}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                      {(reportData?.breakdown || []).map((item, index) => {
-                        const total = reportType === "expense-breakdown" 
-                          ? reportData?.totalExpenses || 1
-                          : reportData?.totalIncome || 1;
-                        const percentage = ((item.amount || item.total || 0) / total * 100).toFixed(1);
-                        
-                        return (
-                          <tr key={index}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize">
-                              {(item.category || item._id || "Other").replace(/_/g, " ")}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900 dark:text-white">
-                              {formatCurrency(item.amount || item.total || 0)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                              {percentage}%
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {reportData.cashFlow.map((flow, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{flow.period || flow.month || "N/A"}</td>
+                          <td className="px-6 py-4 text-sm text-right text-green-600">{formatCurrency(flow.inflow || 0)}</td>
+                          <td className="px-6 py-4 text-sm text-right text-red-600">{formatCurrency(flow.outflow || 0)}</td>
+                          <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900 dark:text-white">
+                            {formatCurrency(flow.net || (flow.inflow || 0) - (flow.outflow || 0))}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
-                </div>
-              )}
+                )}
+              </div>
+            )}
 
-              {reportType === "tax-summary" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t("reports.preview.totalRevenue")}
-                      </p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(reportData?.totalIncome || 0)}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t("reports.preview.totalExpenses")}
-                      </p>
-                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {formatCurrency(reportData?.totalExpense || 0)}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t("reports.preview.taxableIncome")}
-                      </p>
-                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {formatCurrency(reportData?.taxableIncome || 0)}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t("reports.preview.totalTaxPaid")}
-                      </p>
-                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                        {formatCurrency(reportData?.totalTaxPaid || 0)}
-                      </p>
-                    </div>
-                  </div>
+            {(reportType === "expense-breakdown" || reportType === "revenue-analysis") && (
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    {reportType === "expense-breakdown" 
+                      ? t("reports.preview.totalExpenses")
+                      : t("reports.preview.totalRevenue")
+                    }
+                  </p>
+                  <p className={`text-2xl font-bold ${
+                    reportType === "expense-breakdown" ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+                  }`}>
+                    {formatCurrency(
+                      reportType === "expense-breakdown" 
+                        ? reportData?.totalExpenses || 0
+                        : reportData?.totalIncome || 0
+                    )}
+                  </p>
                 </div>
-              )}
-            </div>
+                
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("reports.preview.category")}</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.amount")}</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.percentage")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                    {(reportData?.breakdown || []).map((item, index) => {
+                      const total = reportType === "expense-breakdown" 
+                        ? reportData?.totalExpenses || 1
+                        : reportData?.totalIncome || 1;
+                      const percentage = ((item.amount || item.total || 0) / total * 100).toFixed(1);
+                      
+                      return (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize">
+                            {(item.category || item._id || "Other").replace(/_/g, " ")}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold">
+                            {formatCurrency(item.amount || item.total || 0)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                            {percentage}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {reportType === "tax-summary" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <MetricPreviewBox label={t("reports.preview.totalRevenue")} value={formatCurrency(reportData?.totalIncome || 0)} color="green" />
+                  <MetricPreviewBox label={t("reports.preview.totalExpenses")} value={formatCurrency(reportData?.totalExpense || 0)} color="red" />
+                  <MetricPreviewBox label={t("reports.preview.taxableIncome")} value={formatCurrency(reportData?.taxableIncome || 0)} color="blue" />
+                  <MetricPreviewBox label={t("reports.preview.totalTaxPaid")} value={formatCurrency(reportData?.totalTaxPaid || 0)} color="yellow" />
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Report Types Grid */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            {t("reports.types.available")}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reportTypes.map((type) => {
-              const Icon = type.icon;
-              const isSelected = reportType === type.id;
+      <Card>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          {t("reports.types.available")}
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {reportTypeDetails.map((type) => {
+            const Icon = type.icon;
+            const isSelected = reportType === type.id;
 
-              return (
-                <div
-                  key={type.id}
-                  className={`cursor-pointer transition-all hover:shadow-lg border rounded-lg ${
-                    isSelected 
-                      ? "ring-2 ring-blue-500 dark:ring-blue-400 border-blue-300 dark:border-blue-600" 
-                      : "border-gray-200 dark:border-gray-700"
-                  }`}
-                  onClick={() => setReportType(type.id)}
-                >
-                  <div className="p-6">
-                    <div className={`p-3 ${type.bgColor} rounded-lg w-fit mb-4`}>
-                      <Icon className={`w-6 h-6 ${type.iconColor}`} />
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                      {type.name}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {type.description}
-                    </p>
+            return (
+              <div
+                key={type.id}
+                className={`cursor-pointer transition-all hover:shadow-lg border rounded-lg ${
+                  isSelected 
+                    ? "ring-2 ring-blue-500 border-blue-300 dark:border-blue-600" 
+                    : "border-gray-200 dark:border-gray-700"
+                }`}
+                onClick={() => setReportType(type.id)}
+              >
+                <div className="p-6">
+                  <div className={`p-3 ${type.bgColor} rounded-lg w-fit mb-4`}>
+                    <Icon className={`w-6 h-6 ${type.iconColor}`} />
                   </div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    {type.name}
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {type.description}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
+      </Card>
 
       {/* Quick Reports */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            {t("reports.quickReports.title")}
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {t("reports.quickReports.description")}
-          </p>
+      <Card>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          {t("reports.quickReports.title")}
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          {t("reports.quickReports.description")}
+        </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setReportType("profit-loss");
-                setPeriod("month");
-                handleGenerateReport();
-              }}
-              className="h-auto py-4 flex-col gap-2"
-            >
-              <Calendar className="w-5 h-5" />
-              <span>{t("reports.quickReports.monthlyPL")}</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                setReportType("cash-flow");
-                setPeriod("quarter");
-                handleGenerateReport();
-              }}
-              className="h-auto py-4 flex-col gap-2"
-            >
-              <DollarSign className="w-5 h-5" />
-              <span>{t("reports.quickReports.quarterlyCashFlow")}</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                setReportType("expense-breakdown");
-                setPeriod("year");
-                handleGenerateReport();
-              }}
-              className="h-auto py-4 flex-col gap-2"
-            >
-              <PieChart className="w-5 h-5" />
-              <span>{t("reports.quickReports.annualExpenses")}</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                setReportType("tax-summary");
-                setPeriod("year");
-                handleGenerateReport();
-              }}
-              className="h-auto py-4 flex-col gap-2"
-            >
-              <FileText className="w-5 h-5" />
-              <span>{t("reports.quickReports.taxSummary")}</span>
-            </Button>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <QuickReportButton 
+            icon={Calendar} 
+            text={t("reports.quickReports.monthlyPL")}
+            onClick={() => { setReportType("profit-loss"); setPeriod("month"); handleGenerateReport(); }} 
+          />
+          <QuickReportButton 
+            icon={DollarSign} 
+            text={t("reports.quickReports.quarterlyCashFlow")}
+            onClick={() => { setReportType("cash-flow"); setPeriod("quarter"); handleGenerateReport(); }} 
+          />
+          <QuickReportButton 
+            icon={PieChart} 
+            text={t("reports.quickReports.annualExpenses")}
+            onClick={() => { setReportType("expense-breakdown"); setPeriod("year"); handleGenerateReport(); }} 
+          />
+          <QuickReportButton 
+            icon={FileText} 
+            text={t("reports.quickReports.taxSummary")}
+            onClick={() => { setReportType("tax-summary"); setPeriod("year"); handleGenerateReport(); }} 
+          />
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
+
+// --- Sub-components ---
+
+const MetricPreviewBox = ({ label, value, color }) => {
+  const colors = {
+    green: "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400",
+    red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
+    blue: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
+    yellow: "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400",
+  };
+
+  return (
+    <div className={`p-4 rounded-lg ${colors[color].split(" ")[0]} ${colors[color].split(" ")[1]}`}>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${colors[color].split(" ").slice(2).join(" ")}`}>
+        {value}
+      </p>
+    </div>
+  );
+};
+
+const QuickReportButton = ({ icon: Icon, text, onClick }) => (
+  <Button
+    variant="outline"
+    onClick={onClick}
+    className="h-auto py-4 flex-col gap-2"
+  >
+    <Icon className="w-5 h-5" />
+    <span>{text}</span>
+  </Button>
+);
 
 export default FinanceReports;

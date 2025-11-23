@@ -2,6 +2,10 @@ import React from "react";
 import { Building2, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+// ✅ Generic Components
+import Button from "../../../components/common/Button";
+import { StatusBadge } from "../../../components/common/Badge";
+
 const getInitials = (name = "") =>
   name
     .trim()
@@ -17,63 +21,78 @@ const ClientHeader = ({
   onBack,
   onEdit,
   onDelete,
-  getStatusColor,
-  getStatusLabel,
 }) => {
   const { t } = useTranslation();
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
       {/* Action Buttons */}
-      <div className="flex justify-between gap-2 mb-4">
+      <div className="flex justify-between items-center gap-2 mb-6">
         <div>
-          <button
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={onBack}
-            className="flex items-center border border-gray-300 p-1 rounded-lg pr-2 gap-2 text-sm text-gray-600 hover:text-gray-900 transition dark:text-white"
+            className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            {t("clientDetail.buttons.backToClients")}
-          </button>
+            <span className="hidden sm:inline">{t("clientDetail.buttons.backToClients")}</span>
+            <span className="sm:hidden">{t("common.back")}</span>
+          </Button>
         </div>
+        
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onEdit}
-            className="p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition dark:text-gray-400 dark:hover:bg-blue-900 dark:hover:text-white"
             title={t("clientDetail.actions.edit")}
+            className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30"
           >
             <Edit className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onDelete}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition dark:text-red-400 dark:hover:bg-red-900"
             title={t("clientDetail.actions.delete")}
+            className="text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30"
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Client Header */}
-      <div className="text-center mb-6">
-        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto">
+      {/* Client Identity */}
+      <div className="text-center mb-2">
+        {/* Avatar */}
+        <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto shadow-md">
           {getInitials(client.name) || "?"}
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white">
+        
+        {/* Name */}
+        <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white break-words">
           {client.name || t("clients.table.defaultValues.unnamed")}
         </h1>
 
+        {/* Company */}
         {client.company && (
-          <p className="text-gray-600 flex items-center justify-center gap-2 mt-1 dark:text-gray-400">
-            <Building2 className="w-4 h-4" />
+          <p className="text-gray-500 flex items-center justify-center gap-2 mt-1 mb-4 text-sm dark:text-gray-400">
+            <Building2 className="w-3.5 h-3.5" />
             {client.company}
           </p>
         )}
 
-        <span
-          className={`inline-block px-3 py-1 rounded-full text-sm font-medium border mt-3 ${getStatusColor(client.status)}`}
-        >
-          {getStatusLabel(client.status)}
-        </span>
+        {/* Status Badge */}
+        <div className="mt-4 flex justify-center">
+          <StatusBadge 
+            status={client.status} 
+            size="md" 
+            dot={true} 
+            className="px-4 py-1"
+          />
+        </div>
       </div>
     </div>
   );

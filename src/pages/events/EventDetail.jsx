@@ -1,27 +1,39 @@
-// EventDetail.jsx
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useToast } from "../../hooks/useToast";
+import { useTranslation } from "react-i18next";
+import { 
+  Loader2, 
+  AlertTriangle, 
+  ArrowLeft,
+  Users,
+  CreditCard,
+  Activity
+} from "lucide-react";
 
-// Components
-import Modal, { ConfirmModal } from "../../components/common/Modal";
-import EventForm from "./EventForm";
-import EventHeader from "./components/EventHeader.jsx";
-import EventInfo from "./components/EventInfo.jsx";
-import EventPartnersTab from "./components/EventPartnersTab.jsx";
-import EventPaymentsTab from "./components/EventPaymentsTab.jsx";
-import EventActivityTab from "./components/EventActivityTab.jsx";
-
-// Hooks and Services
+// ✅ API & Services
 import { eventService } from "../../api/index";
 import { useEventDetail } from "../../hooks/useEventDetail";
-import { useTranslation } from "react-i18next";
+import { useToast } from "../../hooks/useToast";
+
+// ✅ Generic Components
+import Button from "../../components/common/Button";
+import Modal, { ConfirmModal } from "../../components/common/Modal";
+
+// ✅ Sub-components
+import EventForm from "./EventForm";
+import EventHeader from "./components/EventHeader";
+import EventInfo from "./components/EventInfo";
+import EventPartnersTab from "./components/EventPartnersTab";
+import EventPaymentsTab from "./components/EventPaymentsTab";
+import EventActivityTab from "./components/EventActivityTab";
 
 const EventDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { showSuccess, showError, showInfo, promise } = useToast();
   const { t } = useTranslation();
+  
+  // ✅ Use extended toast methods
+  const { showSuccess, apiError, showInfo, promise } = useToast();
 
   // Use custom hook for event data
   const { eventData, payments, loading, error, refreshData } = useEventDetail(id);
@@ -32,73 +44,41 @@ const EventDetail = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Utility functions
+  // ✅ Helper: Strict DD/MM/YYYY
   const formatDate = useCallback((date) => {
     if (!date) return "-";
     try {
-      const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
+      return new Date(date).toLocaleDateString("en-GB");
     } catch {
       return date;
     }
   }, []);
 
+  // ✅ Helper: Strict DD/MM/YYYY HH:MM
   const formatDateTime = useCallback((date) => {
     if (!date) return "-";
     try {
-      const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const year = d.getFullYear();
-      const hours = d.getHours().toString().padStart(2, "0");
-      const minutes = d.getMinutes().toString().padStart(2, "0");
-      return `${day}/${month}/${year} ${hours}:${minutes}`;
+      return new Date(date).toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
     } catch {
       return date;
     }
-  }, []);
-
-  const getStatusLabel = useCallback((status) => {
-    const labels = {
-      pending: t("eventDetail.status.pending"),
-      confirmed: t("eventDetail.status.confirmed"),
-      "in-progress": t("eventDetail.status.in-progress"),
-      completed: t("eventDetail.status.completed"),
-      cancelled: t("eventDetail.status.cancelled"),
-    };
-    return labels[status] || status || t("eventDetail.status.unknown");
-  }, [t]);
-
-  const getStatusColor = useCallback((status) => {
-    const colors = {
-      pending:
-        "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-100",
-      confirmed:
-        "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-100",
-      "in-progress":
-        "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:border-purple-700 dark:text-purple-100",
-      completed:
-        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
-      cancelled:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-    };
-    return (
-      colors[status] ||
-      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-    );
   }, []);
 
   // Event handlers
   const handleEditEvent = useCallback(() => {
     if (!id) {
-      showError(t("eventDetail.errors.edit"));
+      apiError(null, t("eventDetail.errors.edit"));
       return;
     }
     setIsEditModalOpen(true);
-  }, [id, showError, t]);
+  }, [id, apiError, t]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
@@ -108,7 +88,7 @@ const EventDetail = () => {
 
   const handleDeleteEvent = useCallback(async () => {
     if (!id) {
-      showError(t("eventDetail.errors.delete"));
+      apiError(null, t("eventDetail.errors.delete"));
       return;
     }
 
@@ -125,11 +105,12 @@ const EventDetail = () => {
       setIsDeleteModalOpen(false);
       navigate("/events");
     } catch (err) {
+      // Promise toast handles UI feedback
       console.error("Delete event error:", err);
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError, t]);
+  }, [id, navigate, promise, t, apiError]);
 
   const handleNavigateToClient = useCallback(() => {
     if (eventData?.clientId?._id) {
@@ -145,7 +126,7 @@ const EventDetail = () => {
 
   const handleRecordPayment = useCallback(() => {
     if (!id) {
-      showError(t("eventDetail.errors.payment"));
+      apiError(null, t("eventDetail.errors.payment"));
       return;
     }
 
@@ -159,7 +140,7 @@ const EventDetail = () => {
         },
       },
     });
-  }, [navigate, id, eventData, showError, t]);
+  }, [navigate, id, eventData, apiError, t]);
 
   const handleRetry = useCallback(() => {
     refreshData();
@@ -170,9 +151,9 @@ const EventDetail = () => {
   if (loading && !eventData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
+          <p className="text-gray-600 dark:text-gray-400">
             {t("eventDetail.loading")}
           </p>
         </div>
@@ -184,41 +165,50 @@ const EventDetail = () => {
   if (error || !eventData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!eventData ? t("eventDetail.errors.notFound") : t("eventDetail.errors.loading")}
-            </h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || t("eventDetail.errors.notFoundDescription")}
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => navigate("/events")}
-                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+            <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {!eventData ? t("eventDetail.errors.notFound") : t("eventDetail.errors.loading")}
+          </h3>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
+            {error?.message || t("eventDetail.errors.notFoundDescription")}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/events")}
+            >
+              {t("eventDetail.actions.backToEvents")}
+            </Button>
+            {error && (
+              <Button
+                variant="primary"
+                onClick={handleRetry}
               >
-                {t("eventDetail.actions.backToEvents")}
-              </button>
-              {error && (
-                <button
-                  onClick={handleRetry}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-                >
-                  {t("eventDetail.actions.tryAgain")}
-                </button>
-              )}
-            </div>
+                {t("eventDetail.actions.tryAgain")}
+              </Button>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
+  // Tab Configuration
+  const tabs = [
+    { id: "partners", label: t("eventDetail.tabs.partners"), icon: Users },
+    { id: "payments", label: t("eventDetail.tabs.payments"), icon: CreditCard },
+    { id: "activity", label: t("eventDetail.tabs.activity"), icon: Activity },
+  ];
+
   // Main render
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          
           {/* Left Column - Event Details */}
           <div className="lg:col-span-1">
             <div className="space-y-6">
@@ -228,8 +218,6 @@ const EventDetail = () => {
                   onBack={() => navigate("/events")}
                   onEdit={handleEditEvent}
                   onDelete={() => setIsDeleteModalOpen(true)}
-                  getStatusColor={getStatusColor}
-                  getStatusLabel={getStatusLabel}
                 />
               </div>
 
@@ -247,19 +235,20 @@ const EventDetail = () => {
           {/* Right Column - Tabs */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
-              <div className="border-b border-gray-200 dark:border-orange-800">
+              <div className="border-b border-gray-200 dark:border-orange-800/30">
                 <nav className="flex -mb-px">
-                  {["partners", "payments", "activity"].map((tab) => (
+                  {tabs.map((tab) => (
                     <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex-1 px-6 py-3 text-sm font-medium border-b-2 transition ${
-                        activeTab === tab
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 px-6 py-3 text-sm font-medium border-b-2 transition flex items-center justify-center gap-2 ${
+                        activeTab === tab.id
                           ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400"
                           : "border-transparent text-gray-600 hover:text-gray-900 hover:border-orange-300 dark:text-gray-400 dark:hover:text-white"
                       }`}
                     >
-                      {t(`eventDetail.tabs.${tab}`)}
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
                     </button>
                   ))}
                 </nav>

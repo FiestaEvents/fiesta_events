@@ -1,94 +1,27 @@
 import React, { useState } from "react";
-import {
-  X,
-  Trash2,
-  Edit,
-  RotateCcw,
-  ArrowRight,
-  Calendar,
-  DollarSign,
-  CreditCard,
-  FileText,
-  User,
-  Building,
-} from "lucide-react";
+import { Trash2, Edit, RotateCcw, ArrowRight, Calendar, CreditCard, FileText, User, Building, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+
+import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import Badge, { StatusBadge } from "../../components/common/Badge";
 import { useToast } from "../../context/ToastContext";
 import { paymentService } from "../../api/index";
-import Button from "../../components/common/Button";
-import Badge from "../../components/common/Badge";
 import formatCurrency from "../../utils/formatCurrency";
 
-const PaymentDetailModal = ({
-  isOpen,
-  onClose,
-  payment,
-  onEdit,
-  refreshData,
-}) => {
+const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { showSuccess, showError, promise } = useToast();
+  const { promise } = useToast();
 
-  if (!isOpen || !payment) return null;
+  if (!payment) return null;
 
-  const getStatusBadgeColor = (status) => {
-    const statusLower = (status || "").toLowerCase();
-    switch (statusLower) {
-      case "completed":
-      case "paid":
-        return "green";
-      case "pending":
-        return "yellow";
-      case "failed":
-        return "red";
-      case "refunded":
-        return "blue";
-      default:
-        return "gray";
-    }
-  };
+  const formatDateLong = (date) => new Date(date).toLocaleDateString("en-GB", { day: '2-digit', month: 'long', year: 'numeric' });
 
-  const getTypeBadgeColor = (type) => {
-    return type === "income" ? "green" : "red";
-  };
-
-  const formatDateLong = (dateString) => {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    const weekday = d.toLocaleString("en-GB", { weekday: "long" });
-    const day = d.getDate();
-    const month = d.toLocaleString("en-GB", { month: "long" });
-    const year = d.getFullYear();
-    return `${weekday}, ${day} ${month} ${year}`;
-  };
-
-  const formatMethod = (method) => {
-    if (!method) return t('payments.unknown');
-    return t(`payments.methods.${method}`) || method
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
-
-  const getClientName = () => {
-    if (payment.client?.name) return payment.client.name;
-    if (payment.event?.clientId?.name) return payment.event.clientId.name;
-    return "N/A";
-  };
-
-  const getPartnerName = () => {
-    if (payment.partner?.name) return payment.partner.name;
-    if (payment.partnerId?.name) return payment.partnerId.name;
-    return "N/A";
-  };
-
-  // Handle delete
   const handleDelete = async () => {
-    if (!payment._id) return;
-
     try {
       setIsProcessing(true);
       await promise(paymentService.delete(payment._id), {
@@ -96,363 +29,134 @@ const PaymentDetailModal = ({
         success: t('payments.notifications.deleteSuccess'),
         error: t('payments.notifications.deleteError'),
       });
+      setShowDeleteConfirm(false);
       onClose();
-      refreshData();
-    } catch (error) {
-      console.error("Failed to delete payment:", error);
-    } finally {
-      setIsProcessing(false);
-    }
+      if (refreshData) refreshData();
+    } catch (e) { console.error(e); }
+    finally { setIsProcessing(false); }
   };
 
-  // Handle refund
   const handleRefund = async () => {
-    if (!payment._id) return;
-
     try {
       setIsProcessing(true);
-      await promise(
-        paymentService.refund(payment._id, {
-          refundAmount: payment.amount,
-          refundReason: t('payments.refund.defaultReason'),
-        }),
-        {
-          loading: t('payments.notifications.refunding'),
-          success: t('payments.notifications.refundSuccess'),
-          error: t('payments.notifications.refundError'),
-        }
-      );
+      await promise(paymentService.refund(payment._id, { refundAmount: payment.amount, refundReason: "Requested" }), {
+        loading: t('payments.notifications.refunding'),
+        success: t('payments.notifications.refundSuccess'),
+        error: t('payments.notifications.refundError'),
+      });
       onClose();
-      refreshData();
-    } catch (error) {
-      console.error("Failed to refund payment:", error);
-    } finally {
-      setIsProcessing(false);
-    }
+      if (refreshData) refreshData();
+    } catch (e) { console.error(e); }
+    finally { setIsProcessing(false); }
   };
 
-  const handleViewFullDetails = () => {
-    onClose();
-    navigate(`/payments/${payment._id}`);
-  };
+  const InfoRow = ({ icon: Icon, label, value }) => (
+    <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
+      <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 text-sm">
+        <Icon size={16} /> <span>{label}</span>
+      </div>
+      <span className="font-medium text-gray-900 dark:text-white text-sm">{value || "-"}</span>
+    </div>
+  );
 
-  const canRefund =
-    payment.type === "income" &&
-    ["completed", "paid"].includes((payment.status || "").toLowerCase()) &&
-    !payment.refundAmount;
+  const canRefund = payment.type === "income" && ["completed", "paid"].includes(payment.status?.toLowerCase()) && !payment.refundAmount;
 
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background Overlay */}
-        <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          aria-hidden="true"
-          onClick={onClose}
-        ></div>
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title={t('payments.detail.title', 'Payment Details')} size="md">
+        <div className="space-y-6">
+          {/* Header Badges */}
+          <div className="flex gap-2 -mt-2 justify-center">
+            <StatusBadge status={payment.status} />
+            <Badge variant={payment.type === "income" ? "success" : "danger"} className="capitalize">
+              {payment.type}
+            </Badge>
+          </div>
 
-        {/* Modal Content */}
-        <span
-          className="hidden sm:inline-block sm:align-middle sm:h-screen"
-          aria-hidden="true"
-        >
-          &#8203;
-        </span>
-        <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="border-0">
-            <div className="px-6 pt-5 pb-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3
-                    className="text-2xl font-bold leading-6 text-gray-900 dark:text-white"
-                    id="modal-title"
-                  >
-                    {payment.description || t('payments.detail.title')}
-                  </h3>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Badge color={getTypeBadgeColor(payment.type)}>
-                      {payment.type ? t(`payments.types.${payment.type}`).toUpperCase() : t('payments.unknown').toUpperCase()}
-                    </Badge>
-                    <Badge color={getStatusBadgeColor(payment.status)}>
-                      {t(`payments.statuses.${payment.status}`) || t('payments.unknown')}
-                    </Badge>
-                    {payment.refundAmount !== 0 && (
-                      <Badge color="blue">
-                        {t('payments.detail.refundAmount')}: {formatCurrency(payment.refundAmount)}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors ml-4 flex-shrink-0"
-                  title={t('common.close')}
+          {/* Amount Hero */}
+          <div className={`text-center p-6 rounded-2xl ${payment.type === "income" ? "bg-green-50 dark:bg-green-900/20 text-green-700" : "bg-red-50 dark:bg-red-900/20 text-red-700"}`}>
+            <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1">{t('payments.totalAmount', 'Total Amount')}</p>
+            <h2 className="text-4xl font-extrabold">{payment.type === "income" ? "+" : "-"}{formatCurrency(payment.amount)}</h2>
+          </div>
+
+          {/* Details List */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 px-4">
+            <InfoRow icon={CreditCard} label={t('payments.detail.paymentMethod', 'Method')} value={payment.method} />
+            <InfoRow icon={Calendar} label={t('payments.detail.paymentDate', 'Date')} value={formatDateLong(payment.paidDate || payment.createdAt)} />
+            <InfoRow icon={FileText} label={t('payments.form.reference', 'Reference')} value={payment.reference} />
+            {payment.client && <InfoRow icon={User} label={t('payments.form.client', 'Client')} value={payment.client.name} />}
+            {payment.partner && <InfoRow icon={Building} label={t('payments.partner', 'Partner')} value={payment.partner.name} />}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button 
+                variant="danger" // ✅ Fixed: Danger Variant
+                icon={Trash2} 
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isProcessing}
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                {t("common.delete", "Delete")}
+              </Button>
+
+              {canRefund && (
+                <Button 
+                  variant="outline" 
+                  icon={RotateCcw} 
+                  onClick={handleRefund} 
+                  loading={isProcessing} 
+                  size="sm"
+                  className="w-full sm:w-auto text-amber-600 border-amber-200 hover:bg-amber-50"
                 >
-                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                </button>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                {/* Amount */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <DollarSign className="w-8 h-8 text-orange-500" />
-                      <div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {t('payments.form.amount')}
-                        </div>
-                        <div
-                          className={`text-2xl font-bold ${
-                            payment.type === "income"
-                              ? "text-green-600 dark:text-green-400"
-                              : "text-red-600 dark:text-red-400"
-                          }`}
-                        >
-                          {payment.type === "income" ? "+" : "-"}
-                          {formatCurrency(payment.amount)}
-                        </div>
-                      </div>
-                    </div>
-                    {payment.netAmount &&
-                      payment.netAmount !== payment.amount && (
-                        <div className="text-right">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {t('payments.form.netAmount')}
-                          </div>
-                          <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                            {formatCurrency(payment.netAmount)}
-                          </div>
-                        </div>
-                      )}
-                  </div>
-                </div>
-
-                {/* Payment Details */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    {t('payments.detail.paymentInformation')}
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {/* Method */}
-                    <div className="flex items-center gap-3 text-sm">
-                      <CreditCard className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400">
-                          {t('payments.detail.paymentMethod')}
-                        </div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {formatMethod(payment.method)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Date */}
-                    <div className="flex items-center gap-3 text-sm">
-                      <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400">
-                          {t('payments.detail.paymentDate')}
-                        </div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {formatDateLong(
-                            payment.paidDate || payment.createdAt
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Reference */}
-                    {payment.reference && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <FileText className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">
-                            {t('payments.form.reference')}
-                          </div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {payment.reference}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Related Entities */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    {t('payments.detail.relatedTo')}
-                  </h4>
-                  <div className="space-y-3">
-                    {/* Client */}
-                    {(payment.client || payment.event?.clientId) && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <User className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">
-                            {t('payments.form.client')}
-                          </div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {getClientName()}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Partner */}
-                    {(payment.partner || payment.partnerId) && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Building className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">
-                            {t('payments.partner')}
-                          </div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {getPartnerName()}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Event */}
-                    {payment.event && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">
-                            {t('payments.form.event')}
-                          </div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {payment.event.title || t('payments.event')}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Fees and Refunds */}
-                {(payment.fees || payment.refundAmount) && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                      {t('payments.detail.feesRefunds')}
-                    </h4>
-                    <div className="space-y-2">
-                      {payment.fees && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">
-                            {t('payments.form.fees.processingFee')}
-                          </span>
-                          <span className="text-gray-900 dark:text-white">
-                            {formatCurrency(payment.fees.processingFee || 0)}
-                          </span>
-                        </div>
-                      )}
-                      {payment.fees && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">
-                            {t('payments.form.fees.platformFee')}
-                          </span>
-                          <span className="text-gray-900 dark:text-white">
-                            {formatCurrency(payment.fees.platformFee || 0)}
-                          </span>
-                        </div>
-                      )}
-                      {payment.refundAmount !== 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-red-500 dark:text-red-400">
-                            {t('payments.detail.refundAmount')}
-                          </span>
-                          <span className="text-red-600 dark:text-red-400 font-medium">
-                            -{formatCurrency(payment.refundAmount)}
-                          </span>
-                        </div>
-                      )}
-                      {payment.refundReason && (
-                        <div className="text-sm">
-                          <div className="text-gray-500 dark:text-gray-400">
-                            {t('payments.detail.refundReason')}
-                          </div>
-                          <div className="text-gray-900 dark:text-white mt-1">
-                            {payment.refundReason}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Description */}
-                {payment.description && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-orange-500" />
-                      {t('payments.form.description')}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                      {payment.description}
-                    </p>
-                  </div>
-                )}
-              </div>
+                  {t('payments.refunding', 'Refund')}
+                </Button>
+              )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex justify-between gap-3 rounded-b-xl">
-              <div className="flex gap-2">
-                <Button
-                  variant="danger"
-                  icon={Trash2}
-                  onClick={handleDelete}
-                  disabled={isProcessing}
-                  size="sm"
-                >
-                  {isProcessing ? t('payments.deleting') : t('payments.deletePayment')}
-                </Button>
-
-                {canRefund && (
-                  <Button
-                    variant="outline"
-                    icon={RotateCcw}
-                    onClick={handleRefund}
-                    disabled={isProcessing}
-                    size="sm"
-                  >
-                    {isProcessing ? t('payments.refunding') : t('payments.refundPayment')}
-                  </Button>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  icon={Edit}
-                  onClick={() => onEdit(payment)}
-                  size="sm"
-                >
-                  {t('payments.editPayment')}
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleViewFullDetails}
-                  className="gap-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title={t('payments.detail.moreDetails')}
-                >
-                  {t('payments.detail.moreDetails')}
-                  <ArrowRight className="w-4 h-4 text-white" />
-                </Button>
-              </div>
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                icon={Edit} 
+                onClick={() => onEdit(payment)}
+                size="sm"
+                className="flex-1 sm:flex-none"
+              >
+                {t("common.edit", "Edit")}
+              </Button>
+              
+              <Button 
+                variant="primary" 
+                icon={ArrowRight} 
+                onClick={() => { onClose(); navigate(`/payments/${payment._id}`); }}
+                size="sm"
+                className="flex-1 sm:flex-none gap-2"
+              >
+                {t("common.viewDetails", "View Details")}
+              </Button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </Modal>
+
+      {/* Delete Confirmation */}
+      <Modal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title={t("common.confirmDelete", "Confirm Delete")} size="sm">
+        <div className="p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+            {t("payments.notifications.deleteConfirm", "Are you sure you want to delete this payment record?")}
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>{t("common.cancel", "Cancel")}</Button>
+            <Button variant="danger" loading={isProcessing} onClick={handleDelete}>{t("common.delete", "Delete")}</Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 

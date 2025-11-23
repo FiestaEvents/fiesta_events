@@ -1,43 +1,48 @@
-// src/components/common/DateInput.jsx
 import React, { useRef } from "react";
 import { Calendar } from "lucide-react";
-import Input from "./Input"; // Import your existing Input component
+import Input from "./Input"; 
 
-const DateInput = ({ label, name, value, onChange, error, required, min, disabled }) => {
+const DateInput = ({ label, name, value, onChange, error, required, min, disabled, className }) => {
   const dateInputRef = useRef(null);
 
-  // Helper: Convert YYYY-MM-DD (Backend) to DD/MM/YYYY (Display)
+  // ✅ Tunisan Format Logic: Convert YYYY-MM-DD (Backend) -> DD/MM/YYYY (Display)
   const formatDateForDisplay = (isoDate) => {
     if (!isoDate) return "";
-    const [year, month, day] = isoDate.split("-");
+    // Safety check to ensure we have a valid YYYY-MM-DD string
+    const parts = isoDate.split("-");
+    if (parts.length !== 3) return isoDate; 
+    
+    const [year, month, day] = parts;
     return `${day}/${month}/${year}`;
   };
 
   const handleDivClick = () => {
     if (!disabled && dateInputRef.current) {
-      // Open the native date picker
-      if (dateInputRef.current.showPicker) {
+      // Modern browsers support showPicker()
+      if (typeof dateInputRef.current.showPicker === "function") {
         dateInputRef.current.showPicker();
       } else {
+        // Fallback for older browsers
         dateInputRef.current.focus();
+        dateInputRef.current.click();
       }
     }
   };
 
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       {/* 1. The Visible "Pretty" Input (Read Only) */}
-      <div onClick={handleDivClick} className="cursor-pointer">
+      <div onClick={handleDivClick} className="cursor-pointer group">
         <Input
           label={label}
           icon={Calendar}
           value={formatDateForDisplay(value)}
-          placeholder="DD/MM/YYYY"
+          placeholder="DD/MM/YYYY" 
           error={error}
           required={required}
           disabled={disabled}
-          readOnly // User cannot type, must pick from calendar
-          className="cursor-pointer pointer-events-none bg-white dark:bg-gray-800" // pointer-events-none ensures click goes to div
+          readOnly // User cannot type directly, must use picker
+          className="cursor-pointer pointer-events-none bg-white dark:bg-gray-800 group-hover:border-orange-400 transition-colors"
         />
       </div>
 
@@ -51,8 +56,9 @@ const DateInput = ({ label, name, value, onChange, error, required, min, disable
         min={min}
         disabled={disabled}
         required={required}
-        className="absolute bottom-0 left-0 w-full h-0 opacity-0 pointer-events-none"
-        style={{ visibility: "hidden", position: "absolute" }} // Hide visually but keep in DOM
+        className="absolute bottom-0 left-0 w-full h-full opacity-0 pointer-events-none z-0"
+        tabIndex={-1} 
+        aria-hidden="true"
       />
     </div>
   );

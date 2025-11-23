@@ -1,34 +1,23 @@
 import React, { useState, useEffect } from "react";
+import {
+  Save, X, Building2, User, Mail, Phone, MapPin, DollarSign, Star, Briefcase, Tag, FileText, ChevronRight, ChevronLeft, Check, Clock
+} from "lucide-react";
+import { useToast } from "../../hooks/useToast";
+import { useTranslation } from "react-i18next";
+
+// ✅ API & Services
 import { partnerService } from "../../api/index";
+
+// ✅ Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
-import {
-  Save,
-  X,
-  Building2,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  DollarSign,
-  Star,
-  Briefcase,
-  Tag,
-  FileText,
-  ChevronRight,
-  ChevronLeft,
-  Check,
-  Clock,
-  Calendar,
-} from "lucide-react";
-import { toast } from "react-hot-toast";
-import { useTranslation } from "react-i18next";
 
 const PartnerForm = ({ partner, onSuccess, onCancel }) => {
   const isEditMode = !!partner;
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
 
   // Multi-step state
   const [currentStep, setCurrentStep] = useState(1);
@@ -72,9 +61,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         priceType = "fixed";
       } else if (hasHourlyRate && !hasFixedRate) {
         priceType = "hourly";
-      } else if (hasHourlyRate && hasFixedRate) {
-        priceType = "hourly";
-        console.warn("Partner has both hourly and fixed rates. Defaulting to hourly.");
       }
 
       setFormData({
@@ -104,33 +90,13 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
 
   // Step configuration
   const steps = [
-    {
-      number: 1,
-      title: t("partnerForm.steps.basicInfo"),
-      icon: User,
-      color: "orange",
-    },
-    {
-      number: 2,
-      title: t("partnerForm.steps.professional"),
-      icon: Briefcase,
-      color: "orange",
-    },
-    {
-      number: 3,
-      title: t("partnerForm.steps.address"),
-      icon: MapPin,
-      color: "orange",
-    },
-    {
-      number: 4,
-      title: t("partnerForm.steps.notes"),
-      icon: FileText,
-      color: "orange",
-    },
+    { number: 1, title: t("partnerForm.steps.basicInfo"), icon: User },
+    { number: 2, title: t("partnerForm.steps.professional"), icon: Briefcase },
+    { number: 3, title: t("partnerForm.steps.address"), icon: MapPin },
+    { number: 4, title: t("partnerForm.steps.notes"), icon: FileText },
   ];
 
-  // Category options matching schema
+  // Category options
   const categoryOptions = [
     { value: "", label: t("partnerForm.options.selectCategory") },
     { value: "driver", label: "Driver" },
@@ -153,11 +119,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     { value: "inactive", label: t("partners.actions.filters.inactive") },
   ];
 
-  const priceTypeOptions = [
-    { value: "hourly", label: t("partnerForm.options.hourly"), icon: Clock },
-    { value: "fixed", label: t("partnerForm.options.fixed"), icon: DollarSign },
-  ];
-
   // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -178,7 +139,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       }));
     }
 
-    // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -187,57 +147,33 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     }
   };
 
-  const handlePriceTypeChange = (e) => {
-    const { value } = e.target;
+  const handlePriceTypeChange = (value) => {
     setFormData((prev) => ({
       ...prev,
       priceType: value,
       ...(value === "hourly" ? { fixedRate: "" } : { hourlyRate: "" }),
     }));
-
-    if (errors.hourlyRate || errors.fixedRate) {
-      setErrors((prev) => ({
-        ...prev,
-        hourlyRate: "",
-        fixedRate: "",
-      }));
-    }
+    setErrors((prev) => ({ ...prev, hourlyRate: "", fixedRate: "" }));
   };
 
+  // Validation
   const validateStep = (step) => {
     const newErrors = {};
 
     if (step === 1) {
-      if (!formData.name.trim()) {
-        newErrors.name = t("partnerForm.errors.required", { field: t("partnerForm.fields.name") });
-      }
-      if (!formData.email.trim()) {
-        newErrors.email = t("partnerForm.errors.required", { field: t("partnerForm.fields.email") });
-      } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-        newErrors.email = t("partnerForm.errors.invalidEmail");
-      }
-      if (!formData.phone.trim()) {
-        newErrors.phone = t("partnerForm.errors.required", { field: t("partnerForm.fields.phone") });
-      }
+      if (!formData.name.trim()) newErrors.name = t("partnerForm.errors.required", { field: t("partnerForm.fields.name") });
+      if (!formData.email.trim()) newErrors.email = t("partnerForm.errors.required", { field: t("partnerForm.fields.email") });
+      else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = t("partnerForm.errors.invalidEmail");
+      if (!formData.phone.trim()) newErrors.phone = t("partnerForm.errors.required", { field: t("partnerForm.fields.phone") });
     }
 
     if (step === 2) {
-      if (!formData.category) {
-        newErrors.category = t("partnerForm.errors.required", { field: t("partnerForm.fields.category") });
-      }
+      if (!formData.category) newErrors.category = t("partnerForm.errors.required", { field: t("partnerForm.fields.category") });
 
       if (formData.priceType === "hourly") {
-        if (!formData.hourlyRate) {
-          newErrors.hourlyRate = t("partnerForm.errors.required", { field: t("partnerForm.fields.hourlyRate") });
-        } else if (isNaN(formData.hourlyRate) || parseFloat(formData.hourlyRate) < 0) {
-          newErrors.hourlyRate = t("partnerForm.errors.positiveNumber", { field: t("partnerForm.fields.hourlyRate") });
-        }
-      } else if (formData.priceType === "fixed") {
-        if (!formData.fixedRate) {
-          newErrors.fixedRate = t("partnerForm.errors.required", { field: t("partnerForm.fields.fixedAmount") });
-        } else if (isNaN(formData.fixedRate) || parseFloat(formData.fixedRate) < 0) {
-          newErrors.fixedRate = t("partnerForm.errors.positiveNumber", { field: t("partnerForm.fields.fixedAmount") });
-        }
+        if (!formData.hourlyRate) newErrors.hourlyRate = t("partnerForm.errors.required", { field: t("partnerForm.fields.hourlyRate") });
+      } else {
+        if (!formData.fixedRate) newErrors.fixedRate = t("partnerForm.errors.required", { field: t("partnerForm.fields.fixedAmount") });
       }
 
       if (formData.rating && (isNaN(formData.rating) || formData.rating < 0 || formData.rating > 5)) {
@@ -251,96 +187,36 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
 
   const validateAllRequired = () => {
     const newErrors = {};
-
-    // Step 1 validations
-    if (!formData.name.trim()) {
-      newErrors.name = t("partnerForm.errors.required", { field: t("partnerForm.fields.name") });
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = t("partnerForm.errors.required", { field: t("partnerForm.fields.email") });
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = t("partnerForm.errors.invalidEmail");
-    }
-    if (!formData.phone.trim()) {
-      newErrors.phone = t("partnerForm.errors.required", { field: t("partnerForm.fields.phone") });
-    }
-
-    // Step 2 validations
-    if (!formData.category) {
-      newErrors.category = t("partnerForm.errors.required", { field: t("partnerForm.fields.category") });
-    }
-
-    if (formData.priceType === "hourly") {
-      if (!formData.hourlyRate) {
-        newErrors.hourlyRate = t("partnerForm.errors.required", { field: t("partnerForm.fields.hourlyRate") });
-      } else if (isNaN(formData.hourlyRate) || parseFloat(formData.hourlyRate) < 0) {
-        newErrors.hourlyRate = t("partnerForm.errors.positiveNumber", { field: t("partnerForm.fields.hourlyRate") });
-      }
-    } else if (formData.priceType === "fixed") {
-      if (!formData.fixedRate) {
-        newErrors.fixedRate = t("partnerForm.errors.required", { field: t("partnerForm.fields.fixedAmount") });
-      } else if (isNaN(formData.fixedRate) || parseFloat(formData.fixedRate) < 0) {
-        newErrors.fixedRate = t("partnerForm.errors.positiveNumber", { field: t("partnerForm.fields.fixedAmount") });
-      }
-    }
-
-    if (formData.rating && (isNaN(formData.rating) || formData.rating < 0 || formData.rating > 5)) {
-      newErrors.rating = t("partnerForm.errors.invalidRating");
-    }
-
+    if (!formData.name.trim()) newErrors.name = t("partnerForm.errors.required", { field: t("partnerForm.fields.name") });
+    if (!formData.email.trim()) newErrors.email = t("partnerForm.errors.required", { field: t("partnerForm.fields.email") });
+    if (!formData.phone.trim()) newErrors.phone = t("partnerForm.errors.required", { field: t("partnerForm.fields.phone") });
+    if (!formData.category) newErrors.category = t("partnerForm.errors.required", { field: t("partnerForm.fields.category") });
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Navigation
   const handleNext = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-    } else {
-      toast.error("Please fix the errors before proceeding");
-    }
+    if (validateStep(currentStep)) setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
   };
 
   const handlePrevious = (e) => {
     e.preventDefault();
-    e.stopPropagation();
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleStepClick = (step, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    if (step < currentStep || validateStep(currentStep)) {
-      setCurrentStep(step);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && currentStep < totalSteps) {
-      e.preventDefault();
-      handleNext(e);
-    }
+  const handleStepClick = (step) => {
+    if (step < currentStep || validateStep(currentStep)) setCurrentStep(step);
   };
 
   const handleQuickUpdate = async (e) => {
     e.preventDefault();
-    e.stopPropagation();
-
     if (!validateAllRequired()) {
-      toast.error("Please fix all required fields before updating");
-      if (errors.name || errors.email || errors.phone) {
-        setCurrentStep(1);
-      } else if (errors.category || errors.hourlyRate || errors.fixedRate || errors.rating) {
-        setCurrentStep(2);
-      }
+      showError("Please fix validation errors.");
       return;
     }
-
     await handleSubmit(e);
   };
 
@@ -348,115 +224,78 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     e.preventDefault();
 
     if (!isEditMode && currentStep < totalSteps) {
-      if (!validateStep(currentStep)) {
-        toast.error("Please fix the errors in the form");
-        return;
-      }
+      if (!validateStep(currentStep)) return;
       handleNext(e);
       return;
     }
 
-    if (!validateAllRequired()) {
-      toast.error("Please fix all required fields");
-      return;
-    }
+    if (!validateAllRequired()) return;
 
     try {
       setSaving(true);
-
       const submitData = {
         ...formData,
         priceType: formData.priceType,
         ...(formData.priceType === "hourly"
-          ? {
-              hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined,
-              fixedRate: undefined,
-            }
-          : {
-              fixedRate: formData.fixedRate ? parseFloat(formData.fixedRate) : undefined,
-              hourlyRate: undefined,
-            }),
-        rating: formData.rating ? parseFloat(formData.rating) : 0,
+          ? { hourlyRate: parseFloat(formData.hourlyRate), fixedRate: undefined }
+          : { fixedRate: parseFloat(formData.fixedRate), hourlyRate: undefined }),
+        rating: parseFloat(formData.rating) || 0,
       };
 
-      const hasAddress = Object.values(submitData.address).some((val) => val);
-      if (!hasAddress) {
-        delete submitData.address;
-      }
+      // Remove empty address
+      if (!Object.values(submitData.address).some(v => v)) delete submitData.address;
 
       if (isEditMode) {
         await partnerService.update(partner._id, submitData);
-        toast.success(t("partners.notifications.updated"));
+        showSuccess(t("partners.notifications.updated"));
       } else {
         await partnerService.create(submitData);
-        toast.success(t("partners.notifications.added"));
+        showSuccess(t("partners.notifications.added"));
       }
-
       onSuccess?.();
     } catch (err) {
-      console.error("Error saving partner:", err);
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        `Failed to ${isEditMode ? "update" : "create"} partner`;
-      toast.error(errorMessage);
+      showError(err.message || "Failed to save partner");
     } finally {
       setSaving(false);
     }
   };
 
+  // --- Renders ---
+
   const renderStepIndicator = () => (
-    <div className="mb-8">
-      <div className="flex items-center justify-between">
-        {steps.map((step, index) => {
+    <div className="mb-8 px-2">
+      <div className="flex items-center justify-between relative">
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-200 dark:bg-gray-700 -z-10" />
+        {steps.map((step) => {
           const isCompleted = step.number < currentStep;
           const isCurrent = step.number === currentStep;
           const StepIcon = step.icon;
 
           return (
-            <React.Fragment key={step.number}>
-              <button
-                type="button"
-                onClick={(e) => handleStepClick(step.number, e)}
-                className={`flex flex-col items-center gap-2 transition-all ${
-                  isCompleted || isCurrent ? "cursor-pointer" : "cursor-not-allowed opacity-50"
-                }`}
-                disabled={!isCompleted && !isCurrent}
-              >
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                    isCompleted
-                      ? "bg-orange-600 text-white"
-                      : isCurrent
-                      ? `bg-orange-600 text-white ring-4 ring-orange-200 dark:ring-orange-900`
-                      : "bg-orange-200 dark:bg-orange-700 text-orange-400"
-                  }`}
-                >
-                  {isCompleted ? <Check className="w-6 h-6" /> : <StepIcon className="w-6 h-6" />}
-                </div>
-                <div className="text-center">
-                  <div
-                    className={`text-sm font-medium ${
-                      isCompleted || isCurrent ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"
-                    }`}
-                  >
-                    {step.title}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Step {step.number} of {totalSteps}
-                  </div>
-                </div>
-              </button>
-              {index < steps.length - 1 && (
-                <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 mx-2 mb-8">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      step.number < currentStep ? "bg-orange-600" : "bg-transparent"
-                    }`}
-                  />
-                </div>
-              )}
-            </React.Fragment>
+            <button
+              key={step.number}
+              type="button"
+              onClick={() => handleStepClick(step.number)}
+              disabled={!isCompleted && !isCurrent}
+              className={`group flex flex-col items-center gap-2 bg-white dark:bg-[#1f2937] px-2 transition-all ${
+                isCompleted || isCurrent ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                isCompleted 
+                  ? "bg-green-500 border-green-500 text-white" 
+                  : isCurrent 
+                    ? "bg-orange-600 border-orange-600 text-white ring-4 ring-orange-100 dark:ring-orange-900/30" 
+                    : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400"
+              }`}>
+                {isCompleted ? <Check className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+              </div>
+              <span className={`text-xs font-semibold whitespace-nowrap ${
+                isCurrent ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"
+              }`}>
+                {step.title}
+              </span>
+            </button>
           );
         })}
       </div>
@@ -467,9 +306,11 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fadeIn">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">
+              {t("partnerForm.steps.basicInfo")}
+            </h3>
             <Input
-              className="w-full"
               label={t("partnerForm.fields.name")}
               name="name"
               value={formData.name}
@@ -479,7 +320,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
               placeholder={t("partnerForm.placeholders.name")}
               icon={User}
             />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label={t("partnerForm.fields.email")}
@@ -491,41 +331,19 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                 required
                 placeholder={t("partnerForm.placeholders.email")}
                 icon={Mail}
-                className="w-full"
               />
-
               <Input
                 label={t("partnerForm.fields.phone")}
                 name="phone"
+                type="tel"
                 value={formData.phone}
-                onChange={(e) => {
-                  const numbersOnly = e.target.value.replace(/\D/g, '').slice(0, 8);
-                  setFormData((prev) => ({
-                    ...prev,
-                    phone: numbersOnly
-                  }));
-                  
-                  if (errors.phone) {
-                    setErrors((prev) => ({ ...prev, phone: '' }));
-                  }
-                }}
-                onBlur={() => {
-                  if (formData.phone && formData.phone.length !== 8) {
-                    setErrors((prev) => ({ 
-                      ...prev, 
-                      phone: t("partnerForm.errors.invalidPhone")
-                    }));
-                  }
-                }}
+                onChange={(e) => setFormData(p => ({...p, phone: e.target.value.replace(/\D/g, '').slice(0, 8)}))}
                 error={errors.phone}
                 required
                 placeholder={t("partnerForm.placeholders.phone")}
                 icon={Phone}
-                className="w-full"
-                type="tel"
               />
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label={t("partnerForm.fields.company")}
@@ -534,16 +352,13 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                 onChange={handleChange}
                 placeholder={t("partnerForm.placeholders.company")}
                 icon={Building2}
-                className="w-full"
               />
-
               <Select
                 label={t("partnerForm.fields.status")}
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
                 options={statusOptions}
-                className="w-full"
               />
             </div>
           </div>
@@ -551,7 +366,10 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
 
       case 2:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fadeIn">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">
+              {t("partnerForm.steps.professional")}
+            </h3>
             <Select
               label={t("partnerForm.fields.category")}
               name="category"
@@ -561,7 +379,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
               error={errors.category}
               required
               icon={Tag}
-              className="w-full"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -572,7 +389,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                 onChange={handleChange}
                 placeholder={t("partnerForm.placeholders.location")}
                 icon={MapPin}
-                className="w-full"
               />
 
               <div className="space-y-2">
@@ -580,32 +396,31 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                   {t("partnerForm.fields.pricingType")} <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
-                  {priceTypeOptions.map((option) => {
-                    const IconComponent = option.icon;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => {
-                          const event = {
-                            target: {
-                              name: "priceType",
-                              value: option.value,
-                            },
-                          };
-                          handlePriceTypeChange(event);
-                        }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 border-2 rounded-lg transition-all ${
-                          formData.priceType === option.value
-                            ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:border-orange-400 dark:text-orange-300"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-gray-500"
-                        }`}
-                      >
-                        <IconComponent className="w-4 h-4" />
-                        <span className="text-sm font-medium">{option.label}</span>
-                      </button>
-                    );
-                  })}
+                  <button
+                    type="button"
+                    onClick={() => handlePriceTypeChange("hourly")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 border-2 rounded-lg transition-all ${
+                      formData.priceType === "hourly"
+                        ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:border-orange-400 dark:text-orange-300"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-medium">{t("partnerForm.options.hourly")}</span>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handlePriceTypeChange("fixed")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 border-2 rounded-lg transition-all ${
+                      formData.priceType === "fixed"
+                        ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:border-orange-400 dark:text-orange-300"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    <span className="text-sm font-medium">{t("partnerForm.options.fixed")}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -624,14 +439,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                   required
                   placeholder={t("partnerForm.placeholders.hourlyRate")}
                   icon={Clock}
-                  className="w-full"
-                  addOn={
-                    <div className="flex items-center px-3 bg-gray-100 border-l border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        /{t("common.hour")}
-                      </span>
-                    </div>
-                  }
                 />
               ) : (
                 <Input
@@ -646,46 +453,23 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
                   required
                   placeholder={t("partnerForm.placeholders.fixedAmount")}
                   icon={DollarSign}
-                  className="w-full"
-                  addOn={
-                    <div className="flex items-center px-3 bg-gray-100 border-l border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {t("common.total")}
-                      </span>
-                    </div>
-                  }
                 />
               )}
             </div>
 
-            <div className="relative">
-              <Input
-                label={t("partnerForm.fields.rating")}
-                name="rating"
-                type="number"
-                step="0.1"
-                min="0"
-                max="5"
-                value={formData.rating}
-                onChange={handleChange}
-                error={errors.rating}
-                placeholder={t("partnerForm.placeholders.rating")}
-                icon={Star}
-                className="w-full"
-              />
-              <div className="absolute top-9 right-3 flex items-center gap-1 pointer-events-none">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-3 h-3 ${
-                      i < Math.floor(formData.rating)
-                        ? "text-yellow-500 fill-yellow-500"
-                        : "text-gray-300 dark:text-gray-600"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+            <Input
+              label={t("partnerForm.fields.rating")}
+              name="rating"
+              type="number"
+              step="0.1"
+              min="0"
+              max="5"
+              value={formData.rating}
+              onChange={handleChange}
+              error={errors.rating}
+              placeholder={t("partnerForm.placeholders.rating")}
+              icon={Star}
+            />
 
             <Textarea
               label={t("partnerForm.fields.specialties")}
@@ -695,68 +479,39 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
               rows={3}
               placeholder={t("partnerForm.placeholders.specialties")}
               maxLength={500}
-              className="w-full dark:bg-gray-800"
             />
           </div>
         );
 
       case 3:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fadeIn">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">
+              {t("partnerForm.steps.address")}
+            </h3>
             <Input
-              className="w-full"
               label={t("partnerForm.fields.street")}
               name="address.street"
               value={formData.address.street}
               onChange={handleChange}
               placeholder={t("partnerForm.placeholders.street")}
             />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                className="w-full"
-                label={t("partnerForm.fields.city")}
-                name="address.city"
-                value={formData.address.city}
-                onChange={handleChange}
-                placeholder={t("partnerForm.placeholders.city")}
-              />
-
-              <Input
-                className="w-full"
-                label={t("partnerForm.fields.state")}
-                name="address.state"
-                value={formData.address.state}
-                onChange={handleChange}
-                placeholder={t("partnerForm.placeholders.state")}
-              />
-
-              <Input
-                className="w-full"
-                label={t("partnerForm.fields.zipCode")}
-                name="address.zipCode"
-                value={formData.address.zipCode}
-                onChange={handleChange}
-                placeholder={t("partnerForm.placeholders.zipCode")}
-              />
-
-              <Input
-                className="w-full"
-                label={t("partnerForm.fields.country")}
-                name="address.country"
-                value={formData.address.country}
-                onChange={handleChange}
-                placeholder={t("partnerForm.placeholders.country")}
-              />
+              <Input label={t("partnerForm.fields.city")} name="address.city" value={formData.address.city} onChange={handleChange} placeholder={t("partnerForm.placeholders.city")} />
+              <Input label={t("partnerForm.fields.state")} name="address.state" value={formData.address.state} onChange={handleChange} placeholder={t("partnerForm.placeholders.state")} />
+              <Input label={t("partnerForm.fields.zipCode")} name="address.zipCode" value={formData.address.zipCode} onChange={handleChange} placeholder={t("partnerForm.placeholders.zipCode")} />
+              <Input label={t("partnerForm.fields.country")} name="address.country" value={formData.address.country} onChange={handleChange} placeholder={t("partnerForm.placeholders.country")} />
             </div>
           </div>
         );
 
       case 4:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fadeIn">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">
+              {t("partnerForm.steps.notes")}
+            </h3>
             <Textarea
-              className="w-full"
               label={t("partnerForm.fields.notes")}
               name="notes"
               value={formData.notes}
@@ -775,82 +530,50 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      onKeyDown={handleKeyDown}
-      className="space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar p-6"
-    >
-      {/* Step Indicator */}
-      {renderStepIndicator()}
+    <div className="bg-white dark:bg-[#1f2937] h-full flex flex-col">
+      <form onSubmit={handleSubmit} onKeyDown={(e) => e.key === 'Enter' && currentStep < totalSteps && handleNext(e)} className="flex-1 flex flex-col p-6 pt-2">
+        
+        {renderStepIndicator()}
 
-      {/* Step Content */}
-      <div className="">{renderStepContent()}</div>
+        <div className="flex-1 mt-2 mb-6">
+          {renderStepContent()}
+        </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex items-center sticky bottom-0 bg-white justify-between pt-6 border-t border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-        <div className="space-x-4"></div>
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div>
+            {currentStep > 1 && (
+              <Button type="button" variant="outline" onClick={handlePrevious} disabled={saving}>
+                <ChevronLeft className="w-4 h-4 mr-1" /> {t("partnerForm.actions.previous")}
+              </Button>
+            )}
+          </div>
 
-        <div className="flex items-center justify-between gap-3 w-full">
-          {currentStep > 1 && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={saving}
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              {t("partnerForm.actions.previous")}
+          <div className="flex items-center gap-3">
+            <Button type="button" variant="ghost" onClick={onCancel} disabled={saving}>
+              {t("partnerForm.actions.cancel")}
             </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={saving}
-          >
-            <X className="w-4 h-4 mr-2" />
-            {t("partnerForm.actions.cancel")}
-          </Button>
 
-          <div className="flex items-center gap-4">
             {isEditMode && currentStep < totalSteps && (
-              <Button
-                type="button"
-                onClick={handleQuickUpdate}
-                loading={saving}
-                disabled={saving}
-                className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700 hover:bg-orange-600"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {t("partnerForm.actions.updateNow")}
+              <Button type="button" variant="secondary" onClick={handleQuickUpdate} disabled={saving}>
+                <Save className="w-4 h-4 mr-2" /> {t("partnerForm.actions.updateNow")}
               </Button>
             )}
 
             {currentStep < totalSteps ? (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleNext}
-                disabled={saving}
-              >
-                {t("partnerForm.actions.next")}
-                <ChevronRight className="" />
+              <Button type="button" variant="primary" onClick={handleNext} disabled={saving}>
+                {t("partnerForm.actions.next")} <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-              <Button
-                type="submit"
-                variant="primary"
-                loading={saving}
-                disabled={saving}
-              >
+              <Button type="submit" variant="primary" loading={saving}>
                 <Save className="w-4 h-4 mr-2" />
                 {isEditMode ? t("partnerForm.actions.update") : t("partnerForm.actions.create")}
               </Button>
             )}
           </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 

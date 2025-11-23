@@ -1,10 +1,13 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useToast } from "../../hooks/useToast";
 import { useTranslation } from "react-i18next";
+import { Loader2, AlertTriangle } from "lucide-react";
 
-// Components
+// ✅ Generic Components
+import Button from "../../components/common/Button";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
+
+// Sub-components
 import EventDetailModal from "../events/EventDetailModal";
 import EventForm from "../events/EventForm";
 import PartnerForm from "./PartnerForm";
@@ -14,103 +17,52 @@ import EventsTab from "./components/EventsTab";
 import PerformanceTab from "./components/PerformanceTab";
 import OverviewTab from "./components/OverviewTab";
 
-// Hooks and Services
+// Services & Hooks
 import { partnerService } from "../../api/index";
 import { usePartnerDetail } from "../../hooks/usePartnerDetail";
+import { useToast } from "../../hooks/useToast";
 
 const PartnerDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { showSuccess, showError, showInfo, promise } = useToast();
   const { t } = useTranslation();
+  
+  // ✅ Use extended toast methods
+  const { showSuccess, apiError, showInfo, promise } = useToast();
 
-  const { partnerData, events, eventsStats, loading, error, refreshData } =
-    usePartnerDetail(id);
+  const { partnerData, events, eventsStats, loading, error, refreshData } = usePartnerDetail(id);
 
   // UI state
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  
+  // Event Modal state
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-
-  // EventForm modal state
   const [isEventFormOpen, setIsEventFormOpen] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
 
-  // Utility functions
+  // ✅ Helper: Strict DD/MM/YYYY format
   const formatDate = useCallback((date) => {
     if (!date) return "-";
     try {
-      const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
+      return new Date(date).toLocaleDateString("en-GB");
     } catch {
       return date;
     }
   }, []);
 
-  const getStatusLabel = useCallback((status) => {
-    const labels = {
-      active: t("partnerHeader.status.active"),
-      inactive: t("partnerHeader.status.inactive"),
-      pending: t("partnerHeader.status.pending"),
-    };
-    return labels[status] || status || t("common.unknown");
-  }, [t]);
+  // --- Event Handlers ---
 
-  const getStatusColor = useCallback((status) => {
-    const colors = {
-      active: "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
-      inactive: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-      pending: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-    };
-    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100";
-  }, []);
-
-  const getCategoryColor = useCallback((category) => {
-    const colors = {
-      catering: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
-      decoration: "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900 dark:border-pink-700",
-      photography: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:border-purple-700",
-      music: "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900 dark:border-indigo-700",
-      security: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700",
-      cleaning: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
-      audio_visual: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
-      floral: "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900 dark:border-pink-700",
-      entertainment: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
-      vendor: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
-      supplier: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
-      sponsor: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:border-purple-700",
-      contractor: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
-    };
-    return colors[category] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700";
-  }, []);
-
-  const getEventStatusColor = useCallback((status) => {
-    const colors = {
-      pending: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:border-yellow-700",
-      confirmed: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700",
-      "in-progress": "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700",
-      completed: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:border-green-700",
-      cancelled: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700",
-    };
-    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700";
-  }, []);
-
-  // Event handlers
   const handleViewEvent = useCallback((event) => {
     setSelectedEvent(event);
     setIsEventModalOpen(true);
   }, []);
 
   const handleEditEvent = useCallback((event) => {
-    console.log("Edit event called with:", event);
     setIsEventModalOpen(false);
-    
     const eventId = typeof event === 'object' ? event._id : event;
     setEditingEventId(eventId);
     setIsEventFormOpen(true);
@@ -131,11 +83,11 @@ const PartnerDetail = () => {
 
   const handleEditPartner = useCallback(() => {
     if (!id) {
-      showError("Cannot edit partner: Partner ID not found");
+      apiError(null, "Cannot edit partner: Partner ID not found");
       return;
     }
     setIsEditModalOpen(true);
-  }, [id, showError]);
+  }, [id, apiError]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
@@ -145,7 +97,7 @@ const PartnerDetail = () => {
 
   const handleDeletePartner = useCallback(async () => {
     if (!id) {
-      showError("Cannot delete partner: Partner ID not found");
+      apiError(null, "Cannot delete partner: Partner ID not found");
       return;
     }
 
@@ -162,11 +114,12 @@ const PartnerDetail = () => {
       setIsDeleteModalOpen(false);
       navigate("/partners");
     } catch (err) {
-      console.error("Delete partner error:", err);
+      // Toast handles the error display
+      console.error(err);
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError, t]);
+  }, [id, navigate, promise, t, apiError]);
 
   // EventForm modal handlers
   const handleEventFormClose = useCallback(() => {
@@ -190,13 +143,14 @@ const PartnerDetail = () => {
     showInfo(t("partnerDetail.error.retrying"));
   }, [refreshData, showInfo, t]);
 
-  // Loading state
+  // --- Render States ---
+
   if (loading && !partnerData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
+          <p className="text-gray-600 dark:text-gray-400">
             {t("partnerDetail.loading")}
           </p>
         </div>
@@ -204,57 +158,55 @@ const PartnerDetail = () => {
     );
   }
 
-  // Error or not found
   if (error || !partnerData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!partnerData ? t("partnerDetail.error.notFound") : t("partnerDetail.error.loading")}
-            </h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || t("partnerDetail.error.message")}
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => navigate("/partners")}
-                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+            <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {!partnerData ? t("partnerDetail.error.notFound") : t("partnerDetail.error.loading")}
+          </h3>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
+            {error?.message || t("partnerDetail.error.message")}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/partners")}
+            >
+              {t("partnerDetail.backToPartners")}
+            </Button>
+            {error && (
+              <Button
+                variant="primary"
+                onClick={handleRetry}
               >
-                {t("partnerDetail.backToPartners")}
-              </button>
-              {error && (
-                <button
-                  onClick={handleRetry}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-                >
-                  {t("partnerDetail.error.retry")}
-                </button>
-              )}
-            </div>
+                {t("partnerDetail.error.retry")}
+              </Button>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  // Main render
+  // --- Main Layout ---
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          
           {/* Left Column - Partner Details */}
           <div className="lg:col-span-1">
             <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
                 <PartnerHeader
                   partner={partnerData}
                   onBack={() => navigate("/partners")}
                   onEdit={handleEditPartner}
                   onDelete={() => setIsDeleteModalOpen(true)}
-                  getStatusColor={getStatusColor}
-                  getStatusLabel={getStatusLabel}
-                  getCategoryColor={getCategoryColor}
                 />
               </div>
 
@@ -262,7 +214,6 @@ const PartnerDetail = () => {
                 <PartnerInfo 
                   partner={partnerData} 
                   formatDate={formatDate}
-                  getCategoryColor={getCategoryColor}
                 />
               </div>
             </div>
@@ -271,7 +222,7 @@ const PartnerDetail = () => {
           {/* Right Column - Tabs */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
-              <div className="border-b border-gray-200 dark:border-orange-800">
+              <div className="border-b border-gray-200 dark:border-orange-800/30">
                 <nav className="flex -mb-px">
                   {[
                     { id: "overview", label: t("partnerDetail.tabs.overview") },
@@ -317,8 +268,6 @@ const PartnerDetail = () => {
                     onViewEvent={handleViewEvent}
                     onNavigateToEvent={handleNavigateToEvent}
                     formatDate={formatDate}
-                    getEventStatusColor={getEventStatusColor}
-                    getStatusLabel={getStatusLabel}
                   />
                 )}
 
@@ -335,7 +284,8 @@ const PartnerDetail = () => {
         </div>
       </div>
 
-      {/* Modals */}
+      {/* --- Modals --- */}
+
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -372,7 +322,6 @@ const PartnerDetail = () => {
         refreshData={refreshData}
       />
 
-      {/* Event Form Modal */}
       {isEventFormOpen && (
         <EventForm
           isOpen={isEventFormOpen}

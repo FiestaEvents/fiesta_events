@@ -7,7 +7,6 @@ import {
   Clock,
   MapPin,
   Users,
-  Tag,
   X,
   List,
   Grid,
@@ -22,20 +21,80 @@ import {
   AlertTriangle,
   ChevronDown,
 } from "lucide-react";
+
+// ✅ API & Services
 import { eventService } from "../../api/index";
-import EventForm from "./EventForm/index";
-import EventDetailModal from "./EventDetailModal";
+
+// ✅ Generic Components
 import Button from "../../components/common/Button";
-import TitleCard from "../../components/common/TitleCard";
-import Badge from "../../components/common/Badge";
+import Badge, { StatusBadge } from "../../components/common/Badge";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import TableComponent from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Modal from "../../components/common/Modal";
+
+// ✅ Contexts & Modals
 import { useToast } from "../../context/ToastContext";
+import EventForm from "./EventForm/index";
+import EventDetailModal from "./EventDetailModal";
 
 // --- UTILITY FUNCTIONS ---
+
+// Map event types to badge variants from theme.config.js (Used in List View)
+const getTypeVariant = (type) => {
+  const map = {
+    wedding: "purple",
+    corporate: "info",
+    birthday: "warning",
+    conference: "success",
+    party: "warning",
+    social: "warning",
+    other: "secondary",
+  };
+  return map[type?.toLowerCase()] || "secondary";
+};
+
+// Strict DD/MM/YYYY Time format
+const formatDateTime = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
+
+const formatDateShort = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+  });
+};
+
+const formatDateLong = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+const formatTime = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+// --- LEGACY HELPERS FOR CALENDAR VIEW (PRESERVED) ---
 const getStatusColor = (status) => {
   const colors = {
     draft: "gray",
@@ -65,60 +124,15 @@ const getTypeColor = (type) => {
 const getTypeClasses = (type) => {
   const normalizedType = type?.toLowerCase() || "other";
   const classes = {
-    wedding:
-      "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-800",
-    corporate:
-      "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-200 dark:hover:bg-blue-800",
-    birthday:
-      "bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-700 hover:bg-pink-200 dark:hover:bg-pink-800",
-    conference:
-      "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800",
-    party:
-      "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800",
-    social:
-      "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800",
-    other:
-      "bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800",
+    wedding: "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-800",
+    corporate: "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-200 dark:hover:bg-blue-800",
+    birthday: "bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-700 hover:bg-pink-200 dark:hover:bg-pink-800",
+    conference: "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800",
+    party: "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800",
+    social: "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-800",
+    other: "bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800",
   };
   return classes[normalizedType] || classes.other;
-};
-
-const formatTime = (dateString) => {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
-
-const formatDateShort = (dateString) => {
-  if (!dateString) return "";
-  const d = new Date(dateString);
-  const day = d.getDate();
-  const month = d.toLocaleString("en-GB", { month: "short" });
-  return `${day} ${month}`;
-};
-
-const formatDateLong = (dateString) => {
-  if (!dateString) return "";
-  const d = new Date(dateString);
-  const weekday = d.toLocaleString("en-GB", { weekday: "long" });
-  const day = d.getDate();
-  const month = d.toLocaleString("en-GB", { month: "long" });
-  const year = d.getFullYear();
-  return `${weekday}, ${day} ${month} ${year}`;
-};
-
-const formatDateTime = (dateString) => {
-  if (!dateString) return "";
-  const d = new Date(dateString);
-  const day = d.getDate();
-  const month = d.toLocaleString("en-GB", { month: "short" });
-  const year = d.getFullYear();
-  const hours = d.getHours().toString().padStart(2, "0");
-  const minutes = d.getMinutes().toString().padStart(2, "0");
-  return `${day} ${month} ${year}, ${hours}:${minutes}`;
 };
 
 // --- DATE EVENTS MODAL COMPONENT ---
@@ -131,9 +145,9 @@ const DateEventsModal = ({
   onCreateEvent,
 }) => {
   const { t } = useTranslation();
-  
-  if (!isOpen || !selectedDate) return null;
-  
+
+  if (!selectedDate) return null;
+
   const dateEvents = events.filter((event) => {
     const eventDate = new Date(event.startDate);
     return (
@@ -142,111 +156,76 @@ const DateEventsModal = ({
       eventDate.getFullYear() === selectedDate.getFullYear()
     );
   });
-  
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {formatDateLong(selectedDate)}
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {dateEvents.length} {dateEvents.length !== 1 ? t("eventList.calendar.events") : t("eventList.calendar.event")}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
-        </div>
-        {/* Content */}
-        <div className="p-6">
-          {dateEvents.length > 0 ? (
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {dateEvents.map((event) => (
-                <div
-                  key={event.id || event._id}
-                  onClick={() => onEventClick(event)}
-                  className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors border border-gray-200 dark:border-gray-600"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-base flex-1 mr-2">
-                      {event.title}
-                    </h3>
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      <Badge
-                        color={getStatusColor(event.status)}
-                        className="text-xs"
-                      >
-                        {event.status}
-                      </Badge>
-                      {event.type && (
-                        <Badge
-                          color={getTypeColor(event.type)}
-                          className="text-xs"
-                        >
-                          {event.type}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      {formatTime(event.startDate)}
-                      {event.endDate && ` - ${formatTime(event.endDate)}`}
-                    </div>
-                    {event.client && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Users className="w-4 h-4" />
-                        {t("eventList.dateEventsModal.client")}: {event.client.name || t("eventList.table.unknownClient")}
-                      </div>
-                    )}
-                    {event.guestCount && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <MapPin className="w-4 h-4" />
-                        {event.guestCount} {t("eventList.dateEventsModal.guests")}
-                      </div>
-                    )}
-                    {event.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                        {event.description}
-                      </p>
-                    )}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={formatDateLong(selectedDate)}
+      size="md"
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2 mb-4">
+          {dateEvents.length} {dateEvents.length !== 1 ? t("eventList.calendar.events") : t("eventList.calendar.event")}
+        </p>
+
+        {dateEvents.length > 0 ? (
+          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+            {dateEvents.map((event) => (
+              <div
+                key={event.id || event._id}
+                onClick={() => onEventClick(event)}
+                className="p-4 bg-white dark:bg-gray-700/50 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-all border border-gray-200 dark:border-gray-600 shadow-sm"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-base truncate pr-2">
+                    {event.title}
+                  </h3>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <StatusBadge status={event.status} size="xs" />
+                    <Badge variant={getTypeVariant(event.type)} size="xs">
+                      {event.type}
+                    </Badge>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                {t("eventList.dateEventsModal.noEventsScheduled")}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {t("eventList.dateEventsModal.noEventsMessage")}
-              </p>
-            </div>
-          )}
-          {/* Create Event Button */}
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <Button
-              variant="primary"
-              icon={Plus}
-              onClick={() => onCreateEvent(selectedDate)}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4" />
-              {t("eventList.actions.createEventOnDate")}
-            </Button>
+                
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <Clock className="w-3.5 h-3.5" />
+                    {formatTime(event.startDate)}
+                    {event.endDate && ` - ${formatTime(event.endDate)}`}
+                  </div>
+                  {event.client && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <Users className="w-3.5 h-3.5" />
+                      {event.client.name || t("eventList.table.unknownClient")}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
+        ) : (
+          <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700">
+            <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              {t("eventList.dateEventsModal.noEventsMessage")}
+            </p>
+          </div>
+        )}
+
+        <div className="pt-4 mt-2 border-t border-gray-100 dark:border-gray-700">
+          <Button
+            variant="primary"
+            icon={Plus}
+            onClick={() => onCreateEvent(selectedDate)}
+            className="w-full justify-center"
+          >
+            {t("eventList.actions.createEventOnDate")}
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 
@@ -255,6 +234,8 @@ const EventList = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  
+  // State
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -262,33 +243,57 @@ const EventList = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [viewMode, setViewMode] = useState("list");
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  // Pagination for list view
+  
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  // Modal States
+
+  // Modals
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDateEventsModalOpen, setIsDateEventsModalOpen] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [prefilledDate, setPrefilledDate] = useState(null);
-  // Confirmation modal state
-  const [confirmationModal, setConfirmationModal] = useState({
-    isOpen: false,
-    eventId: null,
-    eventName: "",
-    onConfirm: null,
-  });
-  // Filter state
+  
+  // Confirmation Modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+
+  // Filters
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [eventType, setEventType] = useState("all");
   const [dateRange, setDateRange] = useState("all");
-  // Year selector state
   const [showYearSelector, setShowYearSelector] = useState(false);
 
-  // Event handlers
+  // Calendar helpers needed for rendering
+  const currentYear = currentDate.getFullYear();
+  const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+
+  const eventTypeColors = [
+    { type: "wedding", color: "bg-purple-500", label: t("eventList.filters.wedding") },
+    { type: "corporate", color: "bg-blue-500", label: t("eventList.filters.corporate") },
+    { type: "birthday", color: "bg-pink-500", label: t("eventList.filters.birthday") },
+    { type: "conference", color: "bg-green-500", label: t("eventList.filters.conference") },
+    { type: "party", color: "bg-orange-500", label: t("eventList.filters.party") },
+    { type: "social", color: "bg-orange-500", label: t("eventList.filters.social") },
+    { type: "other", color: "bg-gray-500", label: t("eventList.filters.other") },
+  ];
+
+  const weekDays = [
+    t("eventList.calendar.weekDays.sun"),
+    t("eventList.calendar.weekDays.mon"),
+    t("eventList.calendar.weekDays.tue"),
+    t("eventList.calendar.weekDays.wed"),
+    t("eventList.calendar.weekDays.thu"),
+    t("eventList.calendar.weekDays.fri"),
+    t("eventList.calendar.weekDays.sat"),
+  ];
+
+  // --- Handlers ---
+
   const onEventClick = useCallback((event) => {
     setSelectedEvent(event);
     setIsDetailsModalOpen(true);
@@ -300,7 +305,7 @@ const EventList = () => {
     setIsDateEventsModalOpen(true);
   }, []);
 
-  // Separate fetch functions for list and calendar views
+  // Fetch Logic (List View)
   const fetchEventsForListView = useCallback(async () => {
     try {
       setLoading(true);
@@ -317,43 +322,24 @@ const EventList = () => {
       };
 
       const response = await eventService.getAll(params);
-      let eventsData = [];
-      let paginationData = {};
+      let eventsData = response?.data?.events || response?.events || response?.data || response || [];
+      let paginationData = response?.data?.pagination || response?.pagination || {};
 
-      if (response?.data?.events) {
-        eventsData = response.data.events;
-        paginationData = response.data.pagination || {};
-      } else if (response?.events) {
-        eventsData = response.events;
-        paginationData = response.pagination || {};
-      } else if (Array.isArray(response?.data)) {
-        eventsData = response.data;
-      } else if (Array.isArray(response)) {
-        eventsData = response;
-      }
-
-      // Sort events by start date
-      const sortedEvents = eventsData.sort(
-        (a, b) => new Date(a.startDate) - new Date(b.startDate)
-      );
-      setEvents(sortedEvents);
+      setEvents(eventsData);
       setTotalPages(paginationData.totalPages || paginationData.pages || 1);
       setTotalItems(paginationData.total || eventsData.length);
       setHasInitialLoad(true);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        t("eventList.error.message");
-      setError(errorMessage);
-      showError(errorMessage);
+      const msg = err.response?.data?.message || err.message || t("eventList.error.message");
+      setError(msg);
+      showError(msg);
       setEvents([]);
-      setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
   }, [currentPage, pageSize, search, status, eventType, dateRange, showError, t]);
 
+  // Fetch Logic (Calendar View)
   const fetchEventsForCalendarView = useCallback(async () => {
     try {
       setLoading(true);
@@ -362,10 +348,9 @@ const EventList = () => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
 
-      // For calendar view, we'll fetch events in batches if needed
       const params = {
         page: 1,
-        limit: 100, // Use maximum allowed limit
+        limit: 100, // Fetch max for calendar
         sort: "startDate",
         year: year,
         month: month,
@@ -376,32 +361,15 @@ const EventList = () => {
       };
 
       const response = await eventService.getAll(params);
-      let eventsData = [];
+      let eventsData = response?.data?.events || response?.events || response?.data || response || [];
 
-      if (response?.data?.events) {
-        eventsData = response.data.events;
-      } else if (response?.events) {
-        eventsData = response.events;
-      } else if (Array.isArray(response?.data)) {
-        eventsData = response.data;
-      } else if (Array.isArray(response)) {
-        eventsData = response;
-      }
-
-      // Sort events by start date
-      const sortedEvents = eventsData.sort(
-        (a, b) => new Date(a.startDate) - new Date(b.startDate)
-      );
-      setEvents(sortedEvents);
+      setEvents(eventsData);
       setTotalItems(eventsData.length);
       setHasInitialLoad(true);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        t("eventList.error.message");
-      setError(errorMessage);
-      showError(errorMessage);
+      const msg = err.response?.data?.message || err.message || t("eventList.error.message");
+      setError(msg);
+      showError(msg);
       setEvents([]);
       setHasInitialLoad(true);
     } finally {
@@ -418,19 +386,18 @@ const EventList = () => {
     }
   }, [viewMode, fetchEventsForListView, fetchEventsForCalendarView]);
 
-  // Initial data loading and when view mode changes
   useEffect(() => {
     refreshAllData();
   }, [refreshAllData]);
 
-  // Also refresh when currentDate changes in calendar view
   useEffect(() => {
     if (viewMode === "calendar") {
       fetchEventsForCalendarView();
     }
   }, [currentDate, viewMode, fetchEventsForCalendarView]);
 
-  // Filter handlers
+  // --- Filter Handlers ---
+
   const handleClearFilters = useCallback(() => {
     setSearch("");
     setStatus("all");
@@ -446,67 +413,36 @@ const EventList = () => {
     showInfo(t("eventList.notifications.retrying"));
   }, [refreshAllData, showInfo, t]);
 
-  const hasActiveFilters =
-    search.trim() !== "" ||
-    status !== "all" ||
-    eventType !== "all" ||
-    dateRange !== "all";
-  const showEmptyState =
-    !loading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
-  const showNoResults =
-    !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
+  const hasActiveFilters = search.trim() !== "" || status !== "all" || eventType !== "all" || dateRange !== "all";
+  const showEmptyState = !loading && events.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
 
-  // Delete confirmation handlers
-  const showDeleteConfirmation = useCallback((eventId, eventName = "Event") => {
-    setConfirmationModal({
-      isOpen: true,
-      eventId,
-      eventName,
-      onConfirm: () => handleDeleteConfirm(eventId, eventName),
-    });
+  // --- CRUD Handlers ---
+
+  const handleDeleteEvent = useCallback((event) => {
+    setEventToDelete(event);
+    setDeleteModalOpen(true);
   }, []);
 
-  const closeConfirmationModal = useCallback(() => {
-    setConfirmationModal({
-      isOpen: false,
-      eventId: null,
-      eventName: "",
-      onConfirm: null,
-    });
-  }, []);
-
-  const handleDeleteConfirm = useCallback(
-    async (eventId, eventName = "Event") => {
-      if (!eventId) {
-        showError(t("eventList.notifications.deleteError", { name: eventName }));
-        return;
+  const confirmDelete = useCallback(async () => {
+    if (!eventToDelete) return;
+    
+    try {
+      await promise(eventService.delete(eventToDelete._id), {
+        loading: t("eventList.notifications.deletingEvent", { name: eventToDelete.title }),
+        success: t("eventList.notifications.eventDeleted", { name: eventToDelete.title }),
+        error: t("eventList.notifications.deleteError", { name: eventToDelete.title }),
+      });
+      refreshAllData();
+      setDeleteModalOpen(false);
+      setEventToDelete(null);
+      if (selectedEvent?._id === eventToDelete._id) {
+        setIsDetailsModalOpen(false);
       }
-      try {
-        await promise(eventService.delete(eventId), {
-          loading: t("eventList.notifications.deletingEvent", { name: eventName }),
-          success: t("eventList.notifications.eventDeleted", { name: eventName }),
-          error: t("eventList.notifications.deleteError", { name: eventName }),
-        });
-        refreshAllData();
-        if (selectedEvent?._id === eventId) {
-          setSelectedEvent(null);
-          setIsDetailsModalOpen(false);
-        }
-        closeConfirmationModal();
-      } catch (err) {
-        console.error("Delete event error:", err);
-        closeConfirmationModal();
-      }
-    },
-    [refreshAllData, selectedEvent, promise, showError, closeConfirmationModal, t]
-  );
-
-  const handleDeleteEvent = useCallback(
-    (eventId, eventName = "Event") => {
-      showDeleteConfirmation(eventId, eventName);
-    },
-    [showDeleteConfirmation]
-  );
+    } catch (err) {
+      console.error(err);
+    }
+  }, [eventToDelete, promise, t, refreshAllData, selectedEvent]);
 
   const handleCreateEvent = useCallback((date = null) => {
     setSelectedEvent(null);
@@ -533,270 +469,144 @@ const EventList = () => {
     );
   }, [refreshAllData, selectedEvent, showSuccess, t]);
 
-  const handleFormClose = useCallback(() => {
-    setShowEventModal(false);
-    setSelectedEvent(null);
-    setPrefilledDate(null);
-  }, []);
+  // --- Calendar Logic (Preserved exactly) ---
 
-  const handleDateEventsModalClose = useCallback(() => {
-    setIsDateEventsModalOpen(false);
-    setSelectedDate(null);
-  }, []);
-
-  // Calendar calculations
   const { daysInMonth, startingDayOfWeek } = useMemo(() => {
     const date = currentDate;
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    return { daysInMonth, startingDayOfWeek };
+    return { 
+      daysInMonth: lastDay.getDate(), 
+      startingDayOfWeek: firstDay.getDay() 
+    };
   }, [currentDate]);
 
-  const getEventsForDate = useCallback(
-    (date) => {
-      if (!date) return [];
-      return events
-        .filter((event) => {
-          if (!event.startDate) return false;
-          const eventDate = new Date(event.startDate);
-          return (
-            eventDate.getDate() === date.getDate() &&
-            eventDate.getMonth() === date.getMonth() &&
-            eventDate.getFullYear() === date.getFullYear()
-          );
-        })
-        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-    },
-    [events]
-  );
+  const calendarDays = useMemo(() => {
+    const days = [];
+    for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
+    }
+    return days;
+  }, [currentDate, daysInMonth, startingDayOfWeek]);
 
-  // Navigation handlers
-  const previousMonth = useCallback(() => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    );
-  }, [currentDate]);
+  const getEventsForDate = useCallback((date) => {
+    if (!date) return [];
+    return events.filter((event) => {
+      if (!event.startDate) return false;
+      const eDate = new Date(event.startDate);
+      return (
+        eDate.getDate() === date.getDate() &&
+        eDate.getMonth() === date.getMonth() &&
+        eDate.getFullYear() === date.getFullYear()
+      );
+    }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+  }, [events]);
 
-  const nextMonth = useCallback(() => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    );
-  }, [currentDate]);
-
-  const goToToday = useCallback(() => {
+  // Calendar Navigation
+  const previousMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  
+  const goToToday = () => {
     const today = new Date();
     setCurrentDate(today);
     setSelectedDate(today);
-    showInfo(t("eventList.notifications.navigatedToToday"));
-  }, [showInfo, t]);
-
-  const formatMonthYear = (date) => {
-    return date.toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
+    if (viewMode === 'calendar') showInfo(t("eventList.notifications.navigatedToToday"));
   };
 
-  const isToday = useCallback((date) => {
+  const handleYearSelect = (year) => {
+    setCurrentDate(new Date(year, currentDate.getMonth(), 1));
+    setShowYearSelector(false);
+    showInfo(t("eventList.notifications.navigatedToYear", { year }));
+  };
+  
+  const formatMonthYear = (date) => {
+    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  };
+
+  const isToday = (date) => {
     const today = new Date();
     return (
       date.getDate() === today.getDate() &&
       date.getMonth() === today.getMonth() &&
       date.getFullYear() === today.getFullYear()
     );
-  }, []);
+  };
 
-  const isSelectedDate = useCallback(
-    (date) => {
-      if (!selectedDate) return false;
-      return (
-        date.getDate() === selectedDate.getDate() &&
-        date.getMonth() === selectedDate.getMonth() &&
-        date.getFullYear() === selectedDate.getFullYear()
-      );
-    },
-    [selectedDate]
-  );
+  const isSelectedDate = (date) => {
+    if (!selectedDate) return false;
+    return (
+      date.getDate() === selectedDate.getDate() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getFullYear() === selectedDate.getFullYear()
+    );
+  };
 
-  // Year selection handlers
-  const currentYear = currentDate.getFullYear();
-  const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+  // --- Table Columns ---
 
-  const handleYearSelect = useCallback(
-    (year) => {
-      setCurrentDate(new Date(year, currentDate.getMonth(), 1));
-      setShowYearSelector(false);
-      showInfo(t("eventList.notifications.navigatedToYear", { year }));
-    },
-    [currentDate, showInfo, t]
-  );
-
-  const calendarDays = useMemo(() => {
-    const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(
-        new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-      );
-    }
-    return days;
-  }, [currentDate, daysInMonth, startingDayOfWeek]);
-
-  // Week days with translations
-  const weekDays = [
-    t("eventList.calendar.weekDays.sun"),
-    t("eventList.calendar.weekDays.mon"),
-    t("eventList.calendar.weekDays.tue"),
-    t("eventList.calendar.weekDays.wed"),
-    t("eventList.calendar.weekDays.thu"),
-    t("eventList.calendar.weekDays.fri"),
-    t("eventList.calendar.weekDays.sat"),
-  ];
-
-  // Event type colors for legend
-  const eventTypeColors = [
-    { type: "wedding", color: "bg-purple-500", label: t("eventList.filters.wedding") },
-    { type: "corporate", color: "bg-blue-500", label: t("eventList.filters.corporate") },
-    { type: "birthday", color: "bg-pink-500", label: t("eventList.filters.birthday") },
-    { type: "conference", color: "bg-green-500", label: t("eventList.filters.conference") },
-    { type: "party", color: "bg-orange-500", label: t("eventList.filters.party") },
-    { type: "social", color: "bg-orange-500", label: t("eventList.filters.social") },
-    { type: "other", color: "bg-gray-500", label: t("eventList.filters.other") },
-  ];
-
-  // Handle view mode change
-  const handleViewModeChange = useCallback((mode) => {
-    setViewMode(mode);
-    setCurrentPage(1);
-    if (mode === "calendar") {
-      // Reset to current month when switching to calendar view
-      setCurrentDate(new Date());
-    }
-  }, []);
-
-  // Table columns for list view
   const tableColumns = [
     {
       header: t("eventList.table.eventTitle"),
       accessor: "title",
       sortable: true,
-      width: "25%",
-      render: (row) => (
-        <div className="font-medium text-gray-900 dark:text-white">
-          {row.title}
-        </div>
-      ),
+      render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.title}</span>,
     },
     {
       header: t("eventList.table.client"),
       accessor: "client",
       sortable: true,
-      width: "20%",
-      render: (row) => {
-        // Enhanced client name extraction
-        const getClientName = (event) => {
-          if (!event) return t("eventList.table.unknownClient");
-
-          // Try different possible client data structures
-          if (event.client?.name) return event.client.name;
-          if (event.clientId?.name) return event.clientId.name;
-          if (event.clientName) return event.clientName;
-          if (typeof event.client === "string") return event.client;
-          if (typeof event.clientId === "string") return t("eventList.table.loading");
-
-          return t("eventList.table.unknownClient");
-        };
-
-        return (
-          <div className="text-gray-600 dark:text-gray-400">
-            {getClientName(row)}
-          </div>
-        );
-      },
+      render: (row) => (
+        <span className="text-gray-600 dark:text-gray-400">
+          {row.client?.name || row.clientName || t("eventList.table.unknownClient")}
+        </span>
+      ),
     },
     {
       header: t("eventList.table.dateTime"),
       accessor: "startDate",
       sortable: true,
-      width: "15%",
       render: (row) => (
-        <div className="text-gray-600 dark:text-gray-400">
+        <span className="text-gray-600 dark:text-gray-400 font-mono text-xs">
           {formatDateTime(row.startDate)}
-        </div>
+        </span>
       ),
     },
     {
       header: t("eventList.table.type"),
       accessor: "type",
       sortable: true,
-      width: "12%",
-      render: (row) => (
-        <Badge color={getTypeColor(row.type)}>{row.type || t("eventList.filters.other")}</Badge>
-      ),
+      render: (row) => <Badge variant={getTypeVariant(row.type)}>{row.type || "Other"}</Badge>,
     },
     {
       header: t("eventList.table.status"),
       accessor: "status",
       sortable: true,
-      width: "12%",
-      render: (row) => (
-        <Badge color={getStatusColor(row.status)}>{row.status}</Badge>
-      ),
+      render: (row) => <StatusBadge status={row.status} />,
     },
     {
       header: t("eventList.table.guests"),
       accessor: "guestCount",
-      sortable: true,
-      width: "8%",
-      render: (row) => (
-        <div className="text-gray-600 dark:text-gray-400">
-          {row.guestCount || "-"}
-        </div>
-      ),
+      width: "100px",
+      render: (row) => row.guestCount || "-",
     },
     {
       header: t("eventList.table.actions"),
       accessor: "actions",
-      width: "10%",
+      width: "120px",
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEventClick(row);
-            }}
-            className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-            title={t("eventList.actions.viewEvent")}
-          >
-            <Eye className="h-4 w-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditEvent(row);
-            }}
-            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-            title={t("eventList.actions.editEvent")}
-          >
-            <Edit className="h-4 w-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteEvent(row._id, row.title || "Event");
-            }}
-            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            title={t("eventList.actions.deleteEvent")}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEventClick(row); }}>
+            <Eye className="h-4 w-4 text-gray-500" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleEditEvent(row); }}>
+            <Edit className="h-4 w-4 text-blue-500" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteEvent(row); }}>
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
         </div>
       ),
     },
@@ -804,276 +614,151 @@ const EventList = () => {
 
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
-      {/* Event Detail Modal */}
-      <EventDetailModal
-        isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
-        event={selectedEvent}
-        onEdit={handleEditEvent}
-        refreshData={refreshAllData}
-      />
-      {/* Date Events Modal */}
-      <DateEventsModal
-        isOpen={isDateEventsModalOpen}
-        onClose={handleDateEventsModalClose}
-        selectedDate={selectedDate}
-        events={events}
-        onEventClick={onEventClick}
-        onCreateEvent={handleCreateEvent}
-      />
-      {/* Event Form Modal */}
-      {showEventModal && (
-        <EventForm
-          isOpen={showEventModal}
-          onClose={handleFormClose}
-          eventId={selectedEvent?._id}
-          event={selectedEvent}
-          onSuccess={handleFormSuccess}
-          initialDate={prefilledDate}
-        />
-      )}
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t("eventList.title")}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {t("eventList.subtitle")}{" "}
-            {hasInitialLoad &&
-              totalItems > 0 &&
-              `- ${t("eventList.showingEvents", { count: events.length, total: totalItems })}`}
+      
+      {/* Header & Controls */}
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("eventList.title")}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {t("eventList.subtitle")} 
+            {totalItems > 0 && ` • ${t("eventList.showingEvents", { count: events.length, total: totalItems })}`}
           </p>
         </div>
+
         <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+          {/* View Toggle */}
+          <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
             <button
-              onClick={() => handleViewModeChange("list")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "list"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              onClick={() => { setViewMode("list"); setCurrentPage(1); }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                viewMode === "list" ? "bg-white dark:bg-gray-700 shadow text-orange-600 dark:text-orange-400" : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              <Table className="w-4 h-4" />
+              <List className="w-4 h-4" />
               {t("eventList.viewMode.list")}
             </button>
             <button
-              onClick={() => handleViewModeChange("calendar")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "calendar"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              onClick={() => { setViewMode("calendar"); setCurrentDate(new Date()); }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                viewMode === "calendar" ? "bg-white dark:bg-gray-700 shadow text-orange-600 dark:text-orange-400" : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <Grid className="w-4 h-4" />
               {t("eventList.viewMode.calendar")}
             </button>
           </div>
+
           {!showEmptyState && (
-            <Button
-              variant="primary"
-              icon={Plus}
-              onClick={() => handleCreateEvent()}
-            >
-              <Plus className="h-4 w-4" />
+            <Button variant="primary" icon={Plus} onClick={() => handleCreateEvent()}>
               {t("eventList.actions.createEvent")}
             </Button>
           )}
         </div>
       </div>
-      
-      {/* Error Message */}
+
+      {/* Error Banner */}
       {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-800 dark:text-red-200 font-medium">
-                {t("eventList.error.title")}
-              </p>
-              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
-                {error}
-              </p>
-            </div>
-            <Button onClick={handleRetry} size="sm" variant="outline">
-              {t("eventList.actions.retry")}
-            </Button>
-          </div>
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex justify-between items-center">
+          <div className="text-red-700 dark:text-red-300 text-sm">{error}</div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>{t("eventList.actions.retry")}</Button>
         </div>
       )}
-      
-      {/* Search & Filters */}
+
+      {/* Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                className="dark:bg-[#1f2937] dark:text-white"
-                icon={Search}
-                placeholder={t("eventList.search.placeholder")}
-                value={search}
-                onChange={(e) => {
-                  setCurrentPage(1);
-                  setSearch(e.target.value);
-                }}
-              />
-            </div>
-            <div className="sm:w-48">
-              <Select
-                className="dark:bg-[#1f2937] dark:text-white"
-                icon={Filter}
-                value={status}
-                onChange={(e) => {
-                  setCurrentPage(1);
-                  setStatus(e.target.value);
-                }}
-                options={[
-                  { value: "all", label: t("eventList.filters.allStatus") },
-                  { value: "draft", label: t("eventList.filters.draft") },
-                  { value: "pending", label: t("eventList.filters.pending") },
-                  { value: "confirmed", label: t("eventList.filters.confirmed") },
-                  { value: "in-progress", label: t("eventList.filters.inProgress") },
-                  { value: "completed", label: t("eventList.filters.completed") },
-                  { value: "cancelled", label: t("eventList.filters.cancelled") },
-                ]}
-              />
-            </div>
-            <div className="sm:w-48">
-              <Select
-                className="dark:bg-[#1f2937] dark:text-white"
-                value={eventType}
-                onChange={(e) => {
-                  setCurrentPage(1);
-                  setEventType(e.target.value);
-                }}
-                options={[
-                  { value: "all", label: t("eventList.filters.allTypes") },
-                  { value: "wedding", label: t("eventList.filters.wedding") },
-                  { value: "corporate", label: t("eventList.filters.corporate") },
-                  { value: "birthday", label: t("eventList.filters.birthday") },
-                  { value: "conference", label: t("eventList.filters.conference") },
-                  { value: "party", label: t("eventList.filters.party") },
-                  { value: "social", label: t("eventList.filters.social") },
-                  { value: "other", label: t("eventList.filters.other") },
-                ]}
-              />
-            </div>
-            <div className="sm:w-48">
-              <Select
-                className="dark:bg-[#1f2937] dark:text-white"
-                value={dateRange}
-                onChange={(e) => {
-                  setCurrentPage(1);
-                  setDateRange(e.target.value);
-                }}
+        <div className="p-4 bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row gap-4">
+          <Input 
+            icon={Search} 
+            placeholder={t("eventList.search.placeholder")} 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)} 
+            className="flex-1"
+          />
+          <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
+            <Select 
+              value={status} 
+              onChange={(e) => setStatus(e.target.value)} 
+              options={[
+                { value: "all", label: t("eventList.filters.allStatus") },
+                { value: "draft", label: t("eventList.filters.draft") },
+                { value: "pending", label: t("eventList.filters.pending") },
+                { value: "confirmed", label: t("eventList.filters.confirmed") },
+                { value: "completed", label: t("eventList.filters.completed") },
+                { value: "cancelled", label: t("eventList.filters.cancelled") },
+              ]}
+              className="w-40"
+            />
+            <Select 
+              value={eventType} 
+              onChange={(e) => setEventType(e.target.value)} 
+              options={[
+                { value: "all", label: t("eventList.filters.allTypes") },
+                { value: "wedding", label: t("eventList.filters.wedding") },
+                { value: "corporate", label: t("eventList.filters.corporate") },
+                { value: "birthday", label: t("eventList.filters.birthday") },
+                { value: "conference", label: t("eventList.filters.conference") },
+                { value: "other", label: t("eventList.filters.other") },
+              ]}
+              className="w-40"
+            />
+            {viewMode === "list" && (
+              <Select 
+                value={dateRange} 
+                onChange={(e) => setDateRange(e.target.value)} 
                 options={[
                   { value: "all", label: t("eventList.filters.allDates") },
                   { value: "today", label: t("eventList.filters.today") },
-                  { value: "tomorrow", label: t("eventList.filters.tomorrow") },
-                  { value: "thisWeek", label: t("eventList.filters.thisWeek") },
-                  { value: "nextWeek", label: t("eventList.filters.nextWeek") },
-                  { value: "thisMonth", label: t("eventList.filters.thisMonth") },
-                  { value: "past", label: t("eventList.filters.pastEvents") },
                   { value: "upcoming", label: t("eventList.filters.upcoming") },
+                  { value: "past", label: t("eventList.filters.pastEvents") },
                 ]}
+                className="w-40"
               />
-            </div>
+            )}
             {hasActiveFilters && (
-              <Button
-                variant="outline"
-                onClick={handleClearFilters}
-                className="flex items-center gap-2"
-              >
-                <X className="h-4 w-4" />
-                {t("eventList.actions.clear")}
+              <Button variant="ghost" onClick={handleClearFilters} className="text-gray-500">
+                <X className="w-4 h-4" />
               </Button>
             )}
           </div>
-          {hasActiveFilters && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>{t("eventList.search.activeFilters")}</span>
-              {search.trim() && (
-                <Badge color="blue">{t("eventList.search.search")}: "{search.trim()}"</Badge>
-              )}
-              {status !== "all" && (
-                <Badge color="purple">{t("eventList.search.status")}: {status}</Badge>
-              )}
-              {eventType !== "all" && (
-                <Badge color="green">{t("eventList.search.type")}: {eventType}</Badge>
-              )}
-              {dateRange !== "all" && (
-                <Badge color="orange">{t("eventList.search.date")}: {dateRange}</Badge>
-              )}
-            </div>
-          )}
         </div>
       )}
-      
+
+      {/* Content Area */}
       {viewMode === "list" ? (
-        /* LIST VIEW */
-        <div className="space-y-6">
-          <div className="dark:bg-gray-800">
-            <div>
-              {/* No Results from Search/Filter */}
-              {showNoResults && (
-                <div className="text-center py-12">
-                  <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {t("eventList.emptyState.noResults")}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    {t("eventList.emptyState.noResultsMessage")}
-                  </p>
-                  <Button onClick={handleClearFilters} variant="outline">
-                    {t("eventList.actions.clearAllFilters")}
-                  </Button>
-                </div>
-              )}
-              {/* Empty State - No events at all */}
-              {showEmptyState && (
-                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <CalendarIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {t("eventList.emptyState.noEvents")}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    {t("eventList.emptyState.noEventsMessage")}
-                  </p>
-                  <Button onClick={() => handleCreateEvent()} variant="primary">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("eventList.actions.createFirstEvent")}
-                  </Button>
-                </div>
-              )}
-              {/* Events Table */}
-              {!showEmptyState && !showNoResults && (
-                <TableComponent
-                  columns={tableColumns}
-                  data={events}
-                  loading={loading}
-                  emptyMessage={t("eventList.table.noEvents")}
-                  onRowClick={onEventClick}
-                  striped={true}
-                  hoverable={true}
-                  pagination={true}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  pageSize={pageSize}
-                  totalItems={totalItems}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={(newSize) => {
-                    setPageSize(newSize);
-                    setCurrentPage(1);
-                  }}
-                  pageSizeOptions={[10, 25, 50, 100]}
-                />
-              )}
+        /* --- LIST VIEW --- */
+        <>
+          {showNoResults ? (
+            <div className="text-center py-12">
+              <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">{t("eventList.emptyState.noResultsMessage")}</p>
+              <Button variant="link" onClick={handleClearFilters}>{t("eventList.actions.clearAllFilters")}</Button>
             </div>
-          </div>
-        </div>
+          ) : showEmptyState ? (
+            <div className="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-200 dark:border-gray-700">
+              <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t("eventList.emptyState.noEvents")}</h3>
+              <Button variant="primary" icon={Plus} onClick={() => handleCreateEvent()}>
+                {t("eventList.actions.createFirstEvent")}
+              </Button>
+            </div>
+          ) : (
+            <TableComponent
+              columns={tableColumns}
+              data={events}
+              loading={loading}
+              onRowClick={onEventClick}
+              pagination={true}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageSizeChange={setPageSize}
+            />
+          )}
+        </>
       ) : (
-        /* CALENDAR VIEW */
+        /* --- CALENDAR VIEW (PRESERVED LAYOUT) --- */
         <div className="dark:bg-gray-800">
           <div className="">
             {/* Calendar Header */}
@@ -1370,49 +1055,61 @@ const EventList = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* --- Modals --- */}
+      
+      <DateEventsModal
+        isOpen={isDateEventsModalOpen}
+        onClose={() => setIsDateEventsModalOpen(false)}
+        selectedDate={selectedDate}
+        events={events}
+        onEventClick={onEventClick}
+        onCreateEvent={handleCreateEvent}
+      />
+
+      <EventDetailModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        event={selectedEvent}
+        onEdit={handleEditEvent}
+        refreshData={refreshAllData}
+      />
+
+      {showEventModal && (
+        <EventForm
+          isOpen={showEventModal}
+          onClose={() => setShowEventModal(false)}
+          eventId={selectedEvent?._id}
+          event={selectedEvent}
+          onSuccess={handleFormSuccess}
+          initialDate={prefilledDate}
+        />
+      )}
+
       <Modal
-        isOpen={confirmationModal.isOpen}
-        onClose={closeConfirmationModal}
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
         title={t("eventList.deleteModal.title")}
-        size="md"
+        size="sm"
       >
-        <div className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                {t("eventList.deleteModal.deleteEvent")}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {t("eventList.deleteModal.confirmMessage")}{" "}
-                <strong>"{confirmationModal.eventName}"</strong>? {t("eventList.deleteModal.warningMessage")}
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={closeConfirmationModal}
-                  className="px-4 py-2"
-                >
-                  {t("eventList.actions.cancel")}
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={confirmationModal.onConfirm}
-                  className="px-4 py-2 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {t("eventList.actions.deleteEvent")}
-                </Button>
-              </div>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+            <AlertTriangle className="w-5 h-5" />
+            <p className="font-medium">{t("eventList.deleteModal.warningMessage")}</p>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            {t("eventList.deleteModal.confirmMessage")} <strong>{eventToDelete?.title}</strong>?
+          </p>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+              {t("eventList.actions.cancel")}
+            </Button>
+            <Button variant="danger" icon={Trash2} onClick={confirmDelete}>
+              {t("eventList.actions.deleteEvent")}
+            </Button>
           </div>
         </div>
       </Modal>
+
     </div>
   );
 };

@@ -1,293 +1,215 @@
 import React, { useState } from "react";
-import {
-  X,
-  Trash2,
-  Edit,
-  Mail,
-  Phone,
-  MapPin,
-  Building,
-  Star,
-  Calendar,
-  ArrowRight,
-  Users,
-  Tag,
+import { 
+  Trash2, Edit, Mail, Phone, MapPin, Building, Star, Briefcase, ArrowRight, AlertTriangle, DollarSign, Tag, AlignLeft
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "../../context/ToastContext";
-import { partnerService } from "../../api/index";
-import Button from "../../components/common/Button";
-import Badge from "../../components/common/Badge";
 import { useTranslation } from "react-i18next";
 
+// ✅ Generic Components
+import Button from "../../components/common/Button";
+import Badge, { StatusBadge } from "../../components/common/Badge";
+import Modal from "../../components/common/Modal";
+
+// Services & Hooks
+import { useToast } from "../../context/ToastContext";
+import { partnerService } from "../../api/index";
+import formatCurrency from "../../utils/formatCurrency";
+
 const PartnerDetailModal = ({ isOpen, onClose, partner, onEdit, refreshData }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
-  const { showSuccess, showError, promise } = useToast();
+  const { promise } = useToast();
   const { t } = useTranslation();
 
-  if (!isOpen || !partner) return null;
-
-  const getStatusColor = (status) => {
-    const colors = {
-      active: "green",
-      inactive: "red",
-    };
-    return colors[status] || "gray";
-  };
-
-  const formatDateLong = (dateString) => {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    const weekday = d.toLocaleString("en-GB", { weekday: "long" });
-    const day = d.getDate();
-    const month = d.toLocaleString("en-GB", { month: "long" });
-    const year = d.getFullYear();
-    return `${weekday}, ${day} ${month} ${year}`;
-  };
-
-  const formatCategory = (category) => {
-    const categoryLabels = {
-      driver: "Driver",
-      bakery: "Bakery",
-      catering: "Catering",
-      decoration: "Decoration",
-      photography: "Photography",
-      music: "Music",
-      security: "Security",
-      cleaning: "Cleaning",
-      audio_visual: "Audio/Visual",
-      floral: "Floral",
-      entertainment: "Entertainment",
-      hairstyling: "Hair Styling",
-      other: "Other",
-    };
-    return categoryLabels[category] || category;
-  };
+  if (!partner) return null;
 
   const handleDelete = async () => {
-    if (!partner._id) return;
-    
     try {
       setIsDeleting(true);
-      await promise(
-        partnerService.delete(partner._id),
-        {
-          loading: t("partners.deleteModal.deleting", { name: partner.name || "Partner" }),
-          success: t("partners.notifications.deleted"),
-          error: t("partners.deleteModal.errorDeleting", { name: partner.name || "Partner" })
-        }
-      );
+      await promise(partnerService.delete(partner._id), {
+        loading: t("partnerDetailModal.delete.loading", "Deleting..."),
+        success: t("partnerDetailModal.delete.success", "Partner deleted successfully"),
+        error: t("partnerDetailModal.delete.error", "Failed to delete partner")
+      });
+      setShowDeleteConfirm(false);
       onClose();
-      refreshData();
-    } catch (error) {
-      console.error("Failed to delete partner:", error);
-    } finally {
-      setIsDeleting(false);
-    }
+      if (refreshData) refreshData();
+    } catch (e) { console.error(e); } 
+    finally { setIsDeleting(false); }
   };
 
   const handleViewFullDetails = () => {
     onClose();
-    navigate(`/partners/${partner._id}`, { state: { partner } });
+    navigate(`/partners/${partner._id}`);
   };
 
+  // --- Sub-components ---
+
+  const StatBox = ({ icon: Icon, value, label, color = "blue" }) => {
+    const colors = {
+      yellow: "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400",
+      blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+      green: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
+    };
+    return (
+      <div className={`flex flex-col items-center justify-center p-3 rounded-xl ${colors[color]} border border-transparent transition-transform hover:scale-105`}>
+        <div className="flex items-center gap-1.5 font-bold text-lg">
+          <Icon size={18} /> {value}
+        </div>
+        <span className="text-[10px] uppercase tracking-wider opacity-80 font-semibold">{label}</span>
+      </div>
+    );
+  };
+
+  const InfoRow = ({ icon: Icon, label, value }) => {
+    if (!value) return null;
+    return (
+      <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-2 -mx-2 rounded-lg">
+        <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+          <Icon size={16} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">{label}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{value}</p>
+        </div>
+      </div>
+    );
+  };
+
+  // Helpers
+  const rateDisplay = partner.priceType === 'hourly' 
+    ? partner.hourlyRate 
+    : partner.fixedRate;
+
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background Overlay */}
-        <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          aria-hidden="true"
-          onClick={onClose}
-        ></div>
-
-        {/* Modal Content */}
-        <span
-          className="hidden sm:inline-block sm:align-middle sm:h-screen"
-          aria-hidden="true"
-        >
-          &#8203;
-        </span>
-        <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="border-0">
-            <div className="px-6 pt-5 pb-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3
-                    className="text-2xl font-bold leading-6 text-gray-900 dark:text-white"
-                    id="modal-title"
-                  >
-                    {partner.name || t("common.unknown")}
-                  </h3>
-                  <div className="mt-1 flex items-center gap-2">
-                    <Badge color={getStatusColor(partner.status)}>
-                      {partner.status || t("common.unknown")}
-                    </Badge>
-                    <Badge color="blue">
-                      {formatCategory(partner.category)}
-                    </Badge>
-                  </div>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors ml-4 flex-shrink-0"
-                  title="Close"
-                >
-                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                </button>
-              </div>
-              
-              <div className="mt-6 space-y-4">
-                {/* Contact Information */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
-                  {partner.email && (
-                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                      <Mail className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span className="truncate">{partner.email}</span>
-                    </div>
-                  )}
-                  
-                  {partner.phone && (
-                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                      <Phone className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span>{partner.phone}</span>
-                    </div>
-                  )}
-                  
-                  {partner.company && (
-                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                      <Building className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span>{partner.company}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Rating and Performance */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    {t("partnerDetail.performance")}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                      <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {partner.rating?.toFixed(1) || "0.0"}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {t("common.rating")}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-orange-500" />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {partner.totalJobs || 0}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {t("partnerDetail.totalJobs")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {partner.hourlyRate && (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                      <Tag className="w-5 h-5 text-orange-500" />
-                      <span>{t("partnerDetail.hourlyRate")}: ${partner.hourlyRate}/hr</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Location Information */}
-                {partner.location && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-orange-500" />
-                      {t("partnerDetail.location")}
-                    </h4>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {partner.location}
-                    </div>
-                  </div>
-                )}
-
-                {/* Additional Information */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
-                  {partner.createdAt && (
-                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                      <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span>{t("partnerDetail.created")}: {formatDateLong(partner.createdAt)}</span>
-                    </div>
-                  )}
-                  
-                  {partner.specialties && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                        {t("partnerDetail.specialties")}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                        {partner.specialties}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {partner.notes && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                        {t("partnerDetail.notes")}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                        {partner.notes}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title={t("partnerDetailModal.title")} size="md">
+        <div className="space-y-6">
+          
+          {/* Header: Avatar & Name */}
+          <div className="flex flex-col items-center text-center pb-2">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-4">
+              {partner.name.charAt(0).toUpperCase()}
             </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{partner.name}</h2>
             
-            {/* Action Buttons */}
-            <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex justify-between gap-3 rounded-b-xl">
-              <Button
-                variant="danger"
-                icon={Trash2}
-                onClick={handleDelete}
-                disabled={isDeleting}
-                size="sm"
+            <div className="flex gap-2 mt-3">
+              <StatusBadge status={partner.status} />
+              {partner.category && (
+                <Badge variant="info" className="capitalize" icon={<Tag size={10}/>}>
+                  {partner.category}
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-3 gap-3">
+            <StatBox 
+              icon={Star} 
+              value={partner.rating?.toFixed(1) || "0.0"} 
+              label={t("partnerDetailModal.stats.rating")} 
+              color="yellow" 
+            />
+            <StatBox 
+              icon={Briefcase} 
+              value={partner.totalJobs || 0} 
+              label={t("partnerDetailModal.stats.jobs")} 
+              color="blue" 
+            />
+            <StatBox 
+              icon={DollarSign} 
+              value={rateDisplay ? formatCurrency(rateDisplay).replace('TND', '') : '-'} 
+              label={partner.priceType === 'hourly' ? t("partnerDetailModal.stats.hourly") : t("partnerDetailModal.stats.fixed")} 
+              color="green" 
+            />
+          </div>
+
+          {/* Info List */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-2">
+            <div className="px-2 pb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+              {t("partnerDetailModal.sections.contact")}
+            </div>
+            <InfoRow icon={Mail} label={t("partnerDetailModal.labels.email")} value={partner.email} />
+            <InfoRow icon={Phone} label={t("partnerDetailModal.labels.phone")} value={partner.phone} />
+            <InfoRow icon={Building} label={t("partnerDetailModal.labels.company")} value={partner.company} />
+            <InfoRow icon={MapPin} label={t("partnerDetailModal.labels.location")} value={partner.location} />
+          </div>
+
+          {/* Specialties / Notes */}
+          {partner.specialties && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50">
+              <h4 className="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-2">
+                {t("partnerDetailModal.labels.specialties")}
+              </h4>
+              <p className="text-sm text-blue-900 dark:text-blue-100 leading-relaxed">
+                {partner.specialties}
+              </p>
+            </div>
+          )}
+
+          {/* Notes */}
+          {partner.notes && (
+            <div className="flex gap-3 items-start text-sm bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+              <AlignLeft className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+              <p className="italic">"{partner.notes}"</p>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <Button 
+              variant="danger" 
+              icon={Trash2} 
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full sm:w-auto"
+            >
+              {t("partnerDetailModal.actions.delete")}
+            </Button>
+
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                icon={Edit} 
+                onClick={() => onEdit(partner)}
+                className="flex-1 sm:flex-none"
               >
-                {isDeleting ? t("partnerDetail.actions.deleting") : t("partnerDetail.actions.delete")}
+                {t("partnerDetailModal.actions.edit")}
               </Button>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  icon={Edit}
-                  onClick={() => onEdit(partner)}
-                  size="sm"
-                >
-                  {t("partnerDetail.actions.edit")}
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleViewFullDetails}
-                  className="gap-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title={t("partnerDetail.actions.moreDetails")}
-                >
-                  {t("partnerDetail.actions.moreDetails")}
-                  <ArrowRight className="w-4 h-4 text-white" />
-                </Button>
-              </div>
+              <Button 
+                variant="primary" 
+                icon={ArrowRight} 
+                onClick={handleViewFullDetails}
+                className="flex-1 sm:flex-none gap-2"
+              >
+                {t("partnerDetailModal.actions.view")}
+              </Button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </Modal>
+
+      {/* Delete Confirmation */}
+      <Modal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title={t("partnerDetailModal.delete.title")} size="sm">
+        <div className="p-6 text-center">
+          <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={32} />
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed text-sm">
+            {t("partnerDetailModal.delete.message", { name: partner.name })}
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              {t("partnerDetailModal.delete.cancel")}
+            </Button>
+            <Button variant="danger" loading={isDeleting} onClick={handleDelete}>
+              {t("partnerDetailModal.delete.confirm")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 

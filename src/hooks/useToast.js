@@ -1,18 +1,17 @@
-// src/hooks/useToast.js
 import { useCallback } from 'react';
 import { useToast as useToastContext } from '../context/ToastContext';
 
 // Custom hook with convenience methods
 export const useToast = () => {
-  const { 
-    showToast, 
-    dismiss, 
-    clearAll, 
-    success, 
-    error, 
-    warning, 
-    info, 
-    loading, 
+  const {
+    showToast,
+    dismiss,
+    clearAll,
+    success,
+    error,
+    warning,
+    info,
+    loading,
     promise,
     showSuccess,
     showError,
@@ -99,11 +98,7 @@ export const useToast = () => {
   }, [dismiss]);
 
   return {
-    // ========================
-    // BASIC METHODS
-    // ========================
-    
-    // Core toast methods
+    // Core methods
     showToast,
     dismiss,
     clearAll,
@@ -114,13 +109,9 @@ export const useToast = () => {
     warning,
     info,
     loading,
-    
-    // Promise support
     promise,
-    
-    // ========================
-    // ALIASES FOR CONVENIENCE
-    // ========================
+
+    // Aliases
     toast,
     show: showToast,
     showSuccess,
@@ -128,35 +119,23 @@ export const useToast = () => {
     showWarning,
     showInfo,
     showLoading,
-    hideNotification, // Backward compatibility alias
+    hideNotification,
 
-    // ========================
-    // EXTENDED CONVENIENCE METHODS
-    // ========================
-    
-    // Error handling
+    // Extended Convenience Methods
     apiError,
     networkError,
     permissionError,
     validationError,
-    
-    // Form operations
     formSuccess,
     formError,
-    
-    // CRUD operations
     deleteSuccess,
     deleteError,
     archiveSuccess,
     archiveError,
     restoreSuccess,
     restoreError,
-    
-    // File operations
     fileUploadSuccess,
     fileUploadError,
-    
-    // Bulk operations
     bulkActionSuccess,
     bulkActionError,
   };
