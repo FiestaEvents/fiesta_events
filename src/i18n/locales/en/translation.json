@@ -1,39 +1,60 @@
 {
-  "dashboard": {
-    "title": "Dashboard",
-    "welcome_msg": "Here is what is happening at your venue today.",
-    "charts": {
-      "revenue_trend": "Revenue_trend",
-      "event_status": "Event_status",
-      "total": "Total"
-    },
-    "all_caught_up": "All_caught_up",
-    "metrics": {
-      "revenue": "Revenue",
-      "pending": "Pending",
-      "occupancy": "Occupancy",
-      "events_this_month": "Events_this_month",
-      "conversion": "Conversion",
-      "pending_enquiries": "Pending_enquiries",
-      "tasks": "Tasks",
-      "urgent_items": "Urgent_items"
-    },
-    "upcoming": {
-      "title": "Title",
-      "no_events": "No_events"
-    },
-    "view_all": "View_all",
-    "recent_inflow": "Recent_inflow",
-    "no_payments": "No_payments",
-    "view_financial": "View_financial",
-    "quick_actions": "Quick_actions",
-    "actions": {
-      "new_event": "New_event",
-      "add_client": "Add_client",
-      "new_invoice": "New_invoice",
-      "settings": "Settings"
-    }
+"dashboard": {
+  "title": "Dashboard",
+  "welcome_msg": "Here is what is happening at your venue today.",
+  "loading": "Loading Dashboard...",
+  "all_caught_up": "All caught up!",
+  "recent_inflow": "Recent Inflow",
+  "view_financial": "View Financial Report",
+  "quick_actions": "Quick Actions",
+  "no_payments": "No recent payments.",
+  "view_all": "View All",
+  "errors": {
+    "load_failed": "Failed to load dashboard data"
   },
+  "metrics": {
+    "revenue": "Monthly Revenue",
+    "pending": "Pending",
+    "occupancy": "Occupancy",
+    "events_this_month": "Events this month",
+    "conversion": "Lead Conversion",
+    "pending_enquiries": "Pending Enquiries",
+    "tasks": "Operations",
+    "urgent_items": "Urgent Items"
+  },
+  "charts": {
+    "revenue_trend": "Revenue Trend",
+    "event_status": "Event Status",
+    "total": "Total"
+  },
+  "calendar": {
+    "occupancy_view": "Overview"
+  },
+  "upcoming": {
+    "title": "Upcoming Schedule",
+    "no_events": "No upcoming events scheduled."
+  },
+  "leads": {
+    "title": "Recent Enquiries",
+    "no_leads": "No pending enquiries."
+  },
+  "actions": {
+    "new_event": "New Event",
+    "add_client": "Add Client",
+    "new_invoice": "New Invoice",
+    "settings": "Settings",
+    "assign_partner": "Assign"
+  },
+  "alerts": {
+    "overdue_invoices": "{{count}} Overdue Invoices",
+    "pending_enquiries": "{{count}} New Enquiries",
+    "urgent_tasks": "{{count}} Urgent Tasks",
+    "missing_partners": "Missing Vendors"
+  },
+  "payments": {
+    "client_payment": "Client Payment"
+  }
+},
   "clients": {
     "title": "Clients",
     "description": "Manage your client relationships and information",

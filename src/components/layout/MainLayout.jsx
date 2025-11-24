@@ -2,11 +2,13 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import AppLauncher from "./AppLauncher.jsx"; // ✅ Import the Metro component
 import { useLanguage } from "../../context/LanguageContext";
 
 const MainLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMetroOpen, setIsMetroOpen] = useState(false); // ✅ New State for Metro Menu
   const { isRTL } = useLanguage();
 
   // Load collapse state from localStorage on mount
@@ -33,6 +35,11 @@ const MainLayout = () => {
     });
   }, []);
 
+  // ✅ New Handler for Metro Toggle
+  const handleToggleMetro = useCallback(() => {
+    setIsMetroOpen((prev) => !prev);
+  }, []);
+
   // Calculate padding based on RTL and collapse state
   const sidebarPadding = isCollapsed 
     ? (isRTL ? "lg:pr-20" : "lg:pl-20")
@@ -40,19 +47,26 @@ const MainLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* ✅ Metro Navigation Overlay (Z-Index handles visibility over sidebar) */}
+      <AppLauncher 
+        isOpen={isMetroOpen} 
+        onClose={() => setIsMetroOpen(false)} 
+      />
+
+      {/* Standard Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
       />
-      <div
-        className={`transition-all duration-300 ${sidebarPadding}`}
-      >
+
+      <div className={`transition-all duration-300 ${sidebarPadding}`}>
         <TopBar
           onMenuClick={handleMenuClick}
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
+          onToggleMetro={handleToggleMetro} // ✅ Pass the toggle function
         />
         <main className="pt-16">
           <div className="p-4">

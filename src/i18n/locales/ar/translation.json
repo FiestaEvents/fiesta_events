@@ -1,39 +1,60 @@
 {
-  "dashboard": {
-    "title": "لوحة التحكم",
-    "charts": {
-      "revenue_trend": "Revenue_trend",
-      "event_status": "Event_status",
-      "total": "Total"
-    },
-      "welcome_msg": "إليك ما يحدث في مكانك اليوم.",
-    "all_caught_up": "All_caught_up",
-    "metrics": {
-      "revenue": "Revenue",
-      "pending": "Pending",
-      "occupancy": "Occupancy",
-      "events_this_month": "Events_this_month",
-      "conversion": "Conversion",
-      "pending_enquiries": "Pending_enquiries",
-      "tasks": "Tasks",
-      "urgent_items": "Urgent_items"
-    },
-    "upcoming": {
-      "title": "Title",
-      "no_events": "No_events"
-    },
-    "view_all": "View_all",
-    "recent_inflow": "Recent_inflow",
-    "no_payments": "No_payments",
-    "view_financial": "View_financial",
-    "quick_actions": "Quick_actions",
-    "actions": {
-      "new_event": "New_event",
-      "add_client": "Add_client",
-      "new_invoice": "New_invoice",
-      "settings": "Settings"
-    }
+ "dashboard": {
+  "title": "لوحة التحكم",
+  "welcome_msg": "إليك ما يحدث في مكانك اليوم.",
+  "loading": "جاري تحميل لوحة التحكم...",
+  "all_caught_up": "أنت على اطلاع بكل شيء!",
+  "recent_inflow": "التدفقات المالية الحديثة",
+  "view_financial": "عرض التقرير المالي",
+  "quick_actions": "إجراءات سريعة",
+  "no_payments": "لا توجد مدفوعات حديثة.",
+  "view_all": "عرض الكل",
+  "errors": {
+    "load_failed": "فشل تحميل البيانات"
   },
+  "metrics": {
+    "revenue": "الإيرادات الشهرية",
+    "pending": "معلق",
+    "occupancy": "نسبة الإشغال",
+    "events_this_month": "فعاليات هذا الشهر",
+    "conversion": "تحويل العملاء المحتملين",
+    "pending_enquiries": "استفسارات معلقة",
+    "tasks": "العمليات",
+    "urgent_items": "مهام عاجلة"
+  },
+  "charts": {
+    "revenue_trend": "اتجاه الإيرادات",
+    "event_status": "حالة الفعاليات",
+    "total": "الإجمالي"
+  },
+  "calendar": {
+    "occupancy_view": "نظرة عامة"
+  },
+  "upcoming": {
+    "title": "الجدول القادم",
+    "no_events": "لا توجد فعاليات قادمة."
+  },
+  "leads": {
+    "title": "الاستفسارات الأخيرة",
+    "no_leads": "لا توجد استفسارات معلقة."
+  },
+  "actions": {
+    "new_event": "حدث جديد",
+    "add_client": "إضافة عميل",
+    "new_invoice": "فاتورة جديدة",
+    "settings": "الإعدادات",
+    "assign_partner": "تعيين"
+  },
+  "alerts": {
+    "overdue_invoices": "{{count}} فواتير متأخرة",
+    "pending_enquiries": "{{count}} استفسارات جديدة",
+    "urgent_tasks": "{{count}} مهام عاجلة",
+    "missing_partners": "موردون مفقودون"
+  },
+  "payments": {
+    "client_payment": "دفعة عميل"
+  }
+},
   "clients": {
     "title": "العملاء",
     "description": "إدارة علاقات ومعلومات العملاء",

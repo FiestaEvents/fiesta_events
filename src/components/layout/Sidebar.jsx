@@ -3,20 +3,19 @@ import { NavLink as RouterNavLink, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../context/LanguageContext";
 import {
-  LayoutDashboardIcon,
-  CalendarDaysIcon,
-  UserRoundIcon,
-  HandshakeIcon,
-  ListChecksIcon,
-  BellRingIcon,
-  CreditCardIcon,
-  FileTextIcon,
-  LineChartIcon,
-  UsersIcon,
-  ShieldCheckIcon,
-  SettingsIcon,
-  XIcon,
-} from "../icons/IconComponents";
+  LayoutDashboard,
+  CalendarDays,
+  UserRound,
+  Handshake,
+  ListChecks,
+  BellRing,
+  CreditCard,
+  FileText,
+  LineChart,
+  Users,
+  Settings,
+  X,
+} from "lucide-react"; // Updated to use Lucide imports directly
 
 const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
   const { t } = useTranslation();
@@ -29,7 +28,7 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
       className={({ isActive }) =>
         `flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 group ${
           isActive
-            ? "bg-[#f97316] text-white shadow-lg shadow-orange-500/30"
+            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
         }`
       }
@@ -141,16 +140,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             )}
             {isCollapsed && (
               <Link to="/" className="flex items-center justify-center">
-                <div className="h-12 w-12">
-                  <img
-                    src="/fiesta logo-01.png"
-                    alt="Fiesta Logo"
-                    className="h-full w-full object-contain"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
-                  />
-                </div>
+                 {/* Small logo or Icon here */}
+                 <div className="w-8 h-8 bg-orange-500 rounded-lg"></div>
               </Link>
             )}
             {!isCollapsed && (
@@ -158,7 +149,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 onClick={onClose}
                 className="lg:hidden text-gray-500 hover:text-orange-600 dark:text-gray-400 dark:hover:text-orange-400 transition-colors"
               >
-                <XIcon className="h-6 w-6" />
+                <X className="h-6 w-6" />
               </button>
             )}
           </div>
@@ -168,8 +159,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             {/* Overview Section */}
             <NavSection titleKey="sidebar.overview" isCollapsed={isCollapsed}>
               <NavLink
-                to="/"
-                icon={LayoutDashboardIcon}
+                to="/dashboard"
+                icon={LayoutDashboard}
                 labelKey="common.dashboard"
                 isCollapsed={isCollapsed}
               />
@@ -179,31 +170,31 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             <NavSection titleKey="sidebar.operations" isCollapsed={isCollapsed}>
               <NavLink
                 to="/events"
-                icon={CalendarDaysIcon}
+                icon={CalendarDays}
                 labelKey="common.events"
                 isCollapsed={isCollapsed}
               />
               <NavLink
                 to="/clients"
-                icon={UserRoundIcon}
+                icon={UserRound}
                 labelKey="common.clients"
                 isCollapsed={isCollapsed}
               />
               <NavLink
                 to="/partners"
-                icon={HandshakeIcon}
+                icon={Handshake}
                 labelKey="common.partners"
                 isCollapsed={isCollapsed}
               />
               <NavLink
                 to="/tasks"
-                icon={ListChecksIcon}
+                icon={ListChecks}
                 labelKey="common.tasks"
                 isCollapsed={isCollapsed}
               />
               <NavLink
                 to="/reminders"
-                icon={BellRingIcon}
+                icon={BellRing}
                 labelKey="common.reminders"
                 isCollapsed={isCollapsed}
               />
@@ -213,19 +204,19 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             <NavSection titleKey="sidebar.financial" isCollapsed={isCollapsed}>
               <NavLink
                 to="/finance"
-                icon={LineChartIcon}
+                icon={LineChart}
                 labelKey="common.finance"
                 isCollapsed={isCollapsed}
               />
               <NavLink
                 to="/payments"
-                icon={CreditCardIcon}
+                icon={CreditCard}
                 labelKey="common.payments"
                 isCollapsed={isCollapsed}
               />
               <NavLink
                 to="/invoices"
-                icon={FileTextIcon}
+                icon={FileText}
                 labelKey="common.invoices"
                 isCollapsed={isCollapsed}
               />
@@ -235,7 +226,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             <NavSection titleKey="sidebar.management" isCollapsed={isCollapsed}>
               <NavLink
                 to="/settings"
-                icon={SettingsIcon}
+                icon={Settings}
                 labelKey="common.settings"
                 isCollapsed={isCollapsed}
               />

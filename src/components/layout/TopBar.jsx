@@ -9,11 +9,13 @@ import {
   User,
   Settings as SettingsIcon,
   LogOut,
+  LayoutGrid // The Icon for the App Launcher
 } from "lucide-react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { reminderService } from "../../api/index";
+import AppLauncher from "./AppLauncher"; // ✅ Import the new 3x3 Grid Menu
 
 const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const { theme, toggleTheme } = useTheme();
@@ -22,77 +24,74 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
 
+  // --- STATE ---
   const [notifications, setNotifications] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [notificationDropdownOpen, setNotificationDropdownOpen] =
-    useState(false);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // ✅ App Launcher State
+  const [isLauncherOpen, setIsLauncherOpen] = useState(false);
 
-  const dropdownRef = useRef();
-  const notificationRef = useRef();
+  // --- REFS ---
+  const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
+  const launcherToggleRef = useRef(null); // ✅ Ref for the grid button
 
   // Calculate positioning based on RTL and collapse state
   const topBarOffset = isCollapsed 
     ? (isRTL ? "lg:right-20" : "lg:left-20")
     : (isRTL ? "lg:right-64" : "lg:left-64");
 
-  // Fetch upcoming reminders as notifications
+  // --- HANDLERS ---
+
+  // 1. Search Logic
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (query) {
+      navigate(`/search?q=${encodeURIComponent(query)}`);
+      // setSearchQuery(""); // Uncomment if you want to clear input after search
+    }
+  };
+
+  // 2. Fetch Notifications (Reminders)
   useEffect(() => {
     let isMounted = true;
-
     const fetchNotifications = async () => {
       if (!isMounted) return;
-
       try {
         const response = await reminderService.getUpcoming();
-
+        
+        // Robust extraction logic for different API response structures
         let reminders = [];
-        if (response?.data?.data?.reminders) {
-          reminders = response.data.data.reminders;
-        } else if (response?.data?.reminders) {
-          reminders = response.data.reminders;
-        } else if (response?.reminders) {
-          reminders = response.reminders;
-        } else if (Array.isArray(response?.data)) {
-          reminders = response.data;
-        } else if (Array.isArray(response)) {
-          reminders = response;
-        }
+        if (response?.data?.data?.reminders) reminders = response.data.data.reminders;
+        else if (response?.data?.reminders) reminders = response.data.reminders;
+        else if (response?.reminders) reminders = response.reminders;
+        else if (Array.isArray(response?.data)) reminders = response.data;
+        else if (Array.isArray(response)) reminders = response;
 
-        const activeReminders = reminders.filter(
-          (reminder) => reminder.status === "active"
-        );
-
-        if (isMounted) {
-          setNotifications(activeReminders);
-        }
+        const activeReminders = reminders.filter(r => r.status === "active");
+        
+        if (isMounted) setNotifications(activeReminders);
       } catch (error) {
         console.error("Error fetching notifications:", error);
-        if (isMounted) {
-          setNotifications([]);
-        }
+        if (isMounted) setNotifications([]);
       }
     };
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 300000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    const interval = setInterval(fetchNotifications, 300000); // Poll every 5 mins
+    return () => { isMounted = false; clearInterval(interval); };
   }, []);
 
-  // Close dropdowns if clicked outside
+  // 3. Click Outside Handler (For User & Notify Dropdowns)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setNotificationDropdownOpen(false);
       }
     };
@@ -100,6 +99,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // --- HELPERS ---
   const formatReminderDate = (dateString, timeString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -107,110 +107,83 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    if (date.toDateString() === today.toDateString()) {
-      return `${t("notifications.today")} ${timeString || ""}`;
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return `${t("notifications.tomorrow")} ${timeString || ""}`;
-    } else {
-      return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${timeString || ""}`;
-    }
+    if (date.toDateString() === today.toDateString()) return `${t("notifications.today")} ${timeString || ""}`;
+    else if (date.toDateString() === tomorrow.toDateString()) return `${t("notifications.tomorrow")} ${timeString || ""}`;
+    else return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${timeString || ""}`;
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "urgent":
-        return "text-red-600 dark:text-red-400";
-      case "high":
-        return "text-orange-600 dark:text-orange-400";
-      case "medium":
-        return "text-yellow-600 dark:text-yellow-400";
-      case "low":
-        return "text-blue-600 dark:text-blue-400";
-      default:
-        return "text-gray-600 dark:text-gray-400";
+      case "urgent": return "text-red-600 dark:text-red-400";
+      case "high": return "text-orange-600 dark:text-orange-400";
+      case "medium": return "text-yellow-600 dark:text-yellow-400";
+      case "low": return "text-blue-600 dark:text-blue-400";
+      default: return "text-gray-600 dark:text-gray-400";
     }
   };
 
-  const getUserInitials = () => {
-    if (!user?.name) return "AV";
-    return user.name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const getUserInitials = () => user?.name ? user.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) : "AV";
 
   const getUserRole = () => {
-    if (!user?.role) return t("common.user");
-    if (typeof user.role === "string") {
-      return user.role.charAt(0).toUpperCase() + user.role.slice(1);
-    } else if (user.role?.name) {
-      return user.role.name;
-    }
-    return t("common.user");
+    const roleName = typeof user?.role === "string" ? user.role : user?.role?.name;
+    return roleName ? roleName.charAt(0).toUpperCase() + roleName.slice(1) : t("common.user");
   };
 
   const getRoleColor = () => {
-    const role = user?.role;
-    const roleName = typeof role === "string" ? role : role?.name;
-
+    const roleName = typeof user?.role === "string" ? user.role : user?.role?.name;
     switch (roleName?.toLowerCase()) {
-      case "owner":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case "admin":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "manager":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "staff":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+      case "owner": return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+      case "admin": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "manager": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "staff": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   return (
-    <header
-      className={`fixed top-0 ${isRTL ? 'left-0 right-0' : 'left-0 right-0'} h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${topBarOffset} dark:bg-gray-900 dark:border-gray-700`}
-    >
+    <header className={`fixed top-0 ${isRTL ? 'left-0 right-0' : 'left-0 right-0'} h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${topBarOffset} dark:bg-gray-900 dark:border-gray-700`}>
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
-        {/* Left Section */}
-        <div className="flex items-center gap-4">
+        
+        {/* LEFT SECTION */}
+        <div className="flex items-center gap-2">
           {/* Mobile Menu Toggle */}
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
+          <button onClick={onMenuClick} className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
 
-          {/* Desktop Collapse Toggle */}
-          <button
-            onClick={onToggleCollapse}
-            className="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
+          {/* Desktop Sidebar Collapse Toggle */}
+          <button onClick={onToggleCollapse} className="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          </button>
+
+          {/* ✅ APP LAUNCHER TOGGLE (3x3 Grid) */}
+          <button 
+            ref={launcherToggleRef}
+            onClick={() => setIsLauncherOpen(!isLauncherOpen)}
+            className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ml-1 ${
+              isLauncherOpen 
+                ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400" 
+                : "text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            }`}
+            title={t("common.apps", "Apps")}
+          >
+            <LayoutGrid className="h-5 w-5" />
           </button>
 
           {/* Mobile Logo */}
-          <Link to="/" className="flex items-center gap-2 lg:hidden">
+          <Link to="/" className="flex items-center gap-2 lg:hidden ml-2">
             <div className="relative h-12 w-auto">
-              <img
-                src="/fiesta logo-01.png"
-                alt="Fiesta Logo"
-                className="h-full w-auto object-contain"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
-              />
+              <img src="/fiesta logo-01.png" alt="Fiesta Logo" className="h-full w-auto object-contain" onError={(e) => { e.target.style.display = "none"; }} />
             </div>
           </Link>
         </div>
 
-        {/* Center Section - Search */}
+        {/* CENTER SECTION - SEARCH */}
         <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-          <div className="relative w-full">
-            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400`} />
+          <form onSubmit={handleSearch} className="relative w-full">
+            <button type="submit" className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 p-1 hover:text-blue-500 transition-colors`}>
+              <Search className={`w-4 h-4 text-gray-400`} />
+            </button>
             <input
               type="text"
               placeholder={t("common.searchPlaceholder")}
@@ -219,182 +192,81 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
               className={`w-full ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
               dir={isRTL ? 'rtl' : 'ltr'}
             />
-          </div>
+          </form>
         </div>
 
-        {/* Right Section */}
+        {/* RIGHT SECTION */}
         <div className="flex items-center gap-2">
-          {/* Language Switcher */}
-          <div className="hidden sm:block">
-            <LanguageSwitcher />
-          </div>
+          {/* Language */}
+          <div className="hidden sm:block"><LanguageSwitcher /></div>
 
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label={t("common.toggleTheme")}
-          >
-            {theme === "light" ? (
-              <MoonIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-            ) : (
-              <SunIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-            )}
+          {/* Theme */}
+          <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            {theme === "light" ? <MoonIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" /> : <SunIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />}
           </button>
 
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
-            <button
-              onClick={() =>
-                setNotificationDropdownOpen(!notificationDropdownOpen)
-              }
-              className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label={t("common.notifications")}
-            >
+            <button onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)} className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <BellIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-              {notifications.length > 0 && (
-                <span className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} w-2 h-2 bg-red-500 rounded-full`}></span>
-              )}
+              {notifications.length > 0 && <span className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} w-2 h-2 bg-red-500 rounded-full`}></span>}
             </button>
-
-            {/* Notifications Dropdown */}
             {notificationDropdownOpen && (
               <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {t("notifications.upcomingReminders")}
-                    </h3>
-                    {notifications.length > 0 && (
-                      <span className="text-xs font-semibold px-2 py-1 bg-red-500 text-white rounded-full">
-                        {notifications.length}
-                      </span>
-                    )}
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("notifications.upcomingReminders")}</h3>
+                    {notifications.length > 0 && <span className="text-xs font-semibold px-2 py-1 bg-red-500 text-white rounded-full">{notifications.length}</span>}
                   </div>
                 </div>
-                {notifications.length > 0 ? (
-                  <div className="max-h-80 overflow-y-auto">
-                    {notifications.map((reminder) => (
-                      <div
-                        key={reminder._id}
-                        className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
-                        onClick={() => {
-                          navigate("/reminders");
-                          setNotificationDropdownOpen(false);
-                        }}
-                      >
-                        <div className="flex justify-between items-start gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                {reminder.title ||
-                                  t("notifications.untitledReminder")}
-                              </p>
-                              {reminder.priority && (
-                                <span
-                                  className={`text-xs font-semibold uppercase ${getPriorityColor(reminder.priority)}`}
-                                >
-                                  {reminder.priority}
-                                </span>
-                              )}
-                            </div>
-                            {reminder.description && (
-                              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-1">
-                                {reminder.description}
-                              </p>
-                            )}
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length > 0 ? notifications.map((reminder) => (
+                    <div key={reminder._id} className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0" onClick={() => { navigate("/reminders"); setNotificationDropdownOpen(false); }}>
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{reminder.title || t("notifications.untitledReminder")}</p>
+                            {reminder.priority && <span className={`text-xs font-semibold uppercase ${getPriorityColor(reminder.priority)}`}>{reminder.priority}</span>}
                           </div>
-                          <span className="text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap flex-shrink-0">
-                            {formatReminderDate(
-                              reminder.reminderDate,
-                              reminder.reminderTime
-                            )}
-                          </span>
+                          {reminder.description && <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-1">{reminder.description}</p>}
                         </div>
+                        <span className="text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap flex-shrink-0">{formatReminderDate(reminder.reminderDate, reminder.reminderTime)}</span>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="px-4 py-8 text-center">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {t("notifications.noReminders")}
-                    </p>
-                  </div>
-                )}
+                    </div>
+                  )) : <div className="px-4 py-8 text-center"><p className="text-sm text-gray-500 dark:text-gray-400">{t("notifications.noReminders")}</p></div>}
+                </div>
               </div>
             )}
           </div>
 
           {/* User Menu */}
           <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className={`flex items-center gap-3 ${isRTL ? 'pr-3 pl-2' : 'pl-3 pr-2'} py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors`}
-            >
+            <button onClick={() => setDropdownOpen(!dropdownOpen)} className={`flex items-center gap-3 ${isRTL ? 'pr-3 pl-2' : 'pl-3 pr-2'} py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors`}>
               <div className={`hidden sm:block ${isRTL ? 'text-left' : 'text-right'}`}>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user?.name || t("common.user")}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {getUserRole()}
-                </p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || t("common.user")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{getUserRole()}</p>
               </div>
               <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">
-                  {getUserInitials()}
-                </span>
+                <span className="text-white font-semibold text-sm">{getUserInitials()}</span>
               </div>
               <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
             </button>
-
-            {/* User Dropdown */}
             {dropdownOpen && (
               <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.name || t("common.user")}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {user?.email}
-                  </p>
-                  {user?.role && (
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${getRoleColor()}`}
-                    >
-                      {getUserRole()}
-                    </span>
-                  )}
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || t("common.user")}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user?.email}</p>
+                  {user?.role && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${getRoleColor()}`}>{getUserRole()}</span>}
                 </div>
-                <button
-                  className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
-                  onClick={() => {
-                    navigate("/settings");
-                    setDropdownOpen(false);
-                  }}
-                >
-                  <User className="w-4 h-4" />
-                  {t("common.profile")}
+                <button className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => { navigate("/settings"); setDropdownOpen(false); }}>
+                  <User className="w-4 h-4" /> {t("common.profile")}
                 </button>
-                <button
-                  className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
-                  onClick={() => {
-                    navigate("/settings");
-                    setDropdownOpen(false);
-                  }}
-                >
-                  <SettingsIcon className="w-4 h-4" />
-                  {t("common.settings")}
+                <button className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => { navigate("/settings"); setDropdownOpen(false); }}>
+                  <SettingsIcon className="w-4 h-4" /> {t("common.settings")}
                 </button>
                 <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
-                  <button
-                    className={`w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
-                    onClick={() => {
-                      logout();
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    <LogOut className="w-4 h-4" />
-                    {t("common.logout")}
+                  <button className={`w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => { logout(); setDropdownOpen(false); }}>
+                    <LogOut className="w-4 h-4" /> {t("common.logout")}
                   </button>
                 </div>
               </div>
@@ -402,6 +274,14 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           </div>
         </div>
       </div>
+
+      {/* ✅ App Launcher Dropdown (Rendered here, positions itself absolutely) */}
+      <AppLauncher 
+        isOpen={isLauncherOpen} 
+        onClose={() => setIsLauncherOpen(false)} 
+        toggleRef={launcherToggleRef} 
+      />
+
     </header>
   );
 };

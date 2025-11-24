@@ -1,39 +1,60 @@
 {
-  "dashboard": {
-    "title": "Tableau de Bord",
-    "charts": {
-      "revenue_trend": "Revenue_trend",
-      "event_status": "Event_status",
-      "total": "Total"
-    },
-  "welcome_msg": "Voici ce qui se passe dans votre établissement aujourd'hui." ,
-    "all_caught_up": "All_caught_up",
-    "metrics": {
-      "revenue": "Revenue",
-      "pending": "Pending",
-      "occupancy": "Occupancy",
-      "events_this_month": "Events_this_month",
-      "conversion": "Conversion",
-      "pending_enquiries": "Pending_enquiries",
-      "tasks": "Tasks",
-      "urgent_items": "Urgent_items"
-    },
-    "upcoming": {
-      "title": "Title",
-      "no_events": "No_events"
-    },
-    "view_all": "View_all",
-    "recent_inflow": "Recent_inflow",
-    "no_payments": "No_payments",
-    "view_financial": "View_financial",
-    "quick_actions": "Quick_actions",
-    "actions": {
-      "new_event": "New_event",
-      "add_client": "Add_client",
-      "new_invoice": "New_invoice",
-      "settings": "Settings"
-    }
+ "dashboard": {
+  "title": "Tableau de Bord",
+  "welcome_msg": "Voici ce qui se passe dans votre établissement aujourd'hui.",
+  "loading": "Chargement du tableau de bord...",
+  "all_caught_up": "Vous êtes à jour !",
+  "recent_inflow": "Rentrées Récentes",
+  "view_financial": "Voir Rapport Financier",
+  "quick_actions": "Actions Rapides",
+  "no_payments": "Aucun paiement récent.",
+  "view_all": "Voir Tout",
+  "errors": {
+    "load_failed": "Échec du chargement des données"
   },
+  "metrics": {
+    "revenue": "Revenu Mensuel",
+    "pending": "En attente",
+    "occupancy": "Taux d'Occupation",
+    "events_this_month": "Événements ce mois",
+    "conversion": "Conversion Prospects",
+    "pending_enquiries": "Demandes en attente",
+    "tasks": "Opérations",
+    "urgent_items": "Tâches urgentes"
+  },
+  "charts": {
+    "revenue_trend": "Tendance des Revenus",
+    "event_status": "Statut des Événements",
+    "total": "Total"
+  },
+  "calendar": {
+    "occupancy_view": "Aperçu"
+  },
+  "upcoming": {
+    "title": "Planning à Venir",
+    "no_events": "Aucun événement prévu."
+  },
+  "leads": {
+    "title": "Demandes Récentes",
+    "no_leads": "Aucune demande en attente."
+  },
+  "actions": {
+    "new_event": "Nouvel Événement",
+    "add_client": "Ajouter Client",
+    "new_invoice": "Nouvelle Facture",
+    "settings": "Paramètres",
+    "assign_partner": "Assigner"
+  },
+  "alerts": {
+    "overdue_invoices": "{{count}} Factures en Retard",
+    "pending_enquiries": "{{count}} Nouvelles Demandes",
+    "urgent_tasks": "{{count}} Tâches Urgentes",
+    "missing_partners": "Vendeurs Manquants"
+  },
+  "payments": {
+    "client_payment": "Paiement Client"
+  }
+},
   "clients": {
     "title": "Clients",
     "description": "Gérez vos relations et informations clients",
