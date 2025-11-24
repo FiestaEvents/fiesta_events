@@ -19,6 +19,10 @@ jobs:
 
       # 1. Build the React App
       - name: Install & Build
+        env:
+          # This takes the secret from GitHub and injects it into the build process
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
         run: |
           npm ci
           npm run build
