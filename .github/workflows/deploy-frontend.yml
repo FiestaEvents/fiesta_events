@@ -1,0 +1,38 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      # 1. Build the React App
+      - name: Install & Build
+        run: |
+          npm ci
+          npm run build
+          # NOTE: Check your project! Does Vite/Create-React-App create a 'dist' or 'build' folder?
+          # If it creates 'build', change 'dist' to 'build' in the step below.
+
+      # 2. Copy ONLY the build folder to the server
+      - name: Copy to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "dist/*" # Change to "build/*" if using Create-React-App
+          target: "/var/www/fiesta/client"
+          strip_components: 1 # This removes the "dist" folder wrapper so files go directly into /client
+          rm: true # This deletes old files in /client to keep it clean
