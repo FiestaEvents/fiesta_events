@@ -1,60 +1,135 @@
 {
  "dashboard": {
-  "title": "لوحة التحكم",
-  "welcome_msg": "إليك ما يحدث في مكانك اليوم.",
-  "loading": "جاري تحميل لوحة التحكم...",
-  "all_caught_up": "أنت على اطلاع بكل شيء!",
-  "recent_inflow": "التدفقات المالية الحديثة",
-  "view_financial": "عرض التقرير المالي",
-  "quick_actions": "إجراءات سريعة",
-  "no_payments": "لا توجد مدفوعات حديثة.",
-  "view_all": "عرض الكل",
-  "errors": {
-    "load_failed": "فشل تحميل البيانات"
+    "loading": "جاري تحميل لوحة القيادة...",
+    
+    "today": {
+      "title": "مركز القيادة اليوم",
+      "view_schedule": "عرض الجدول",
+      "events": "الفعاليات اليوم",
+      "expected_revenue": "الإيرادات المتوقعة",
+      "pending_tasks": "المهام المعلقة",
+      "events_list": "فعاليات اليوم",
+      "guests": "ضيوف"
+    },
+    
+    "actions": {
+      "title": "مركز الإجراءات",
+      "overdue_invoices": "{{count}} فواتير متأخرة",
+      "new_enquiries": "{{count}} استفسارات جديدة",
+      "urgent_tasks": "{{count}} مهام عاجلة"
+    },
+    
+    "financial": {
+      "title": "مركز القيادة المالية",
+      "cash_position": "الوضع النقدي",
+      "net_cash": "النقد الصافي",
+      "monthly_revenue": "الإيرادات الشهرية",
+      "vs_last_month": "مقابل الشهر الماضي",
+      "bookings": "الحجوزات",
+      "conversion": "التحويل",
+      "avg_value": "متوسط قيمة الفعالية",
+      "per_event": "لكل فعالية",
+      "cash_flow_details": "تفاصيل التدفق النقدي",
+      "money_in": "الإيرادات",
+      "money_out": "المصروفات",
+      "upcoming": "القادم",
+      "receivables": "المستحقات",
+      "payables": "الالتزامات",
+      "invoice_aging": "تقرير أعمار الفواتير",
+      "outstanding": "المستحق",
+      "aging_0_30": "0-30 يوم",
+      "aging_31_60": "31-60 يوم",
+      "aging_60_plus": "أكثر من 60 يوم",
+      "invoices": "فواتير",
+      "critical": "حرج",
+      "goals_this_month": "أهداف هذا الشهر",
+      "revenue": "الإيرادات",
+      "net": "الصافي"
+    },
+    
+    "calendar": {
+      "title": "التقويم ونظرة عامة على الحجوزات",
+      "occupancy": "الإشغال",
+      "occupancy_rate": "معدل الإشغال",
+      "days_booked": "الأيام المحجوزة",
+      "upcoming_events": "الفعاليات القادمة",
+      "unknown_client": "عميل غير معروف",
+      "guests": "ضيوف",
+      "no_upcoming": "لا توجد فعاليات قادمة.",
+      "missing_vendors": "فعاليات بدون شركاء",
+      "assign_now": "تعيين الآن"
+    },
+    
+    "performance": {
+      "title": "مقاييس الأداء",
+      "tabs": {
+        "revenue": "الإيرادات",
+        "events": "الفعاليات",
+        "clients": "العملاء"
+      },
+      "current_month": "الشهر الحالي",
+      "last_month": "الشهر الماضي",
+      "growth": "النمو",
+      "event_breakdown": "تحليل الفعاليات",
+      "client_retention": "الاحتفاظ بالعملاء",
+      "new_clients": "عملاء جدد",
+      "returning_clients": "عملاء عائدون",
+      "avg_ltv": "متوسط القيمة الدائمة",
+      "sales_pipeline": "مسار المبيعات",
+      "enquiries": "الاستفسارات",
+      "quoted": "عروض الأسعار",
+      "confirmed": "مؤكد",
+      "completed": "مكتمل",
+      "conversion_rate": "معدل التحويل"
+    },
+    
+    "charts": {
+      "current_year": "العام الحالي",
+      "last_year": "العام الماضي",
+      "total": "الإجمالي"
+    },
+    
+    "insights": {
+      "title": "رؤى الأعمال",
+      "response_time": "وقت الاستجابة للعملاء المحتملين",
+      "avg": "المتوسط",
+      "average": "متوسط وقت الاستجابة",
+      "target": "الهدف",
+      "slowest": "أبطأ استجابة",
+      "on_target": "✓ تحقيق هدف وقت الاستجابة",
+      "needs_improvement": "⚠ يحتاج وقت الاستجابة للتحسين",
+      "cancellation": "تحليل الإلغاءات",
+      "rate": "المعدل",
+      "cancellation_rate": "معدل الإلغاء",
+      "revenue_lost": "الإيرادات المفقودة",
+      "main_reason": "السبب الرئيسي"
+    },
+    
+    "leads": {
+      "title": "العملاء المحتملون المعلقون",
+      "unknown": "عميل غير معروف",
+      "no_pending": "لا يوجد عملاء محتملون معلقون"
+    },
+    
+    "activity": {
+      "title": "النشاط الأخير",
+      "payment_received": "تم استلام دفعة: {{amount}} من {{client}}",
+      "new_booking": "حجز جديد: {{title}}",
+      "no_recent": "لا يوجد نشاط حديث"
+    },
+    
+    "quick_actions": {
+      "title": "إجراءات سريعة",
+      "new_event": "فعالية جديدة",
+      "add_client": "إضافة عميل",
+      "new_invoice": "فاتورة جديدة",
+      "settings": "الإعدادات"
+    },
+    
+    "errors": {
+      "fetch_failed": "فشل تحميل بيانات لوحة القيادة"
+    }
   },
-  "metrics": {
-    "revenue": "الإيرادات الشهرية",
-    "pending": "معلق",
-    "occupancy": "نسبة الإشغال",
-    "events_this_month": "فعاليات هذا الشهر",
-    "conversion": "تحويل العملاء المحتملين",
-    "pending_enquiries": "استفسارات معلقة",
-    "tasks": "العمليات",
-    "urgent_items": "مهام عاجلة"
-  },
-  "charts": {
-    "revenue_trend": "اتجاه الإيرادات",
-    "event_status": "حالة الفعاليات",
-    "total": "الإجمالي"
-  },
-  "calendar": {
-    "occupancy_view": "نظرة عامة"
-  },
-  "upcoming": {
-    "title": "الجدول القادم",
-    "no_events": "لا توجد فعاليات قادمة."
-  },
-  "leads": {
-    "title": "الاستفسارات الأخيرة",
-    "no_leads": "لا توجد استفسارات معلقة."
-  },
-  "actions": {
-    "new_event": "حدث جديد",
-    "add_client": "إضافة عميل",
-    "new_invoice": "فاتورة جديدة",
-    "settings": "الإعدادات",
-    "assign_partner": "تعيين"
-  },
-  "alerts": {
-    "overdue_invoices": "{{count}} فواتير متأخرة",
-    "pending_enquiries": "{{count}} استفسارات جديدة",
-    "urgent_tasks": "{{count}} مهام عاجلة",
-    "missing_partners": "موردون مفقودون"
-  },
-  "payments": {
-    "client_payment": "دفعة عميل"
-  }
-},
   "clients": {
     "title": "العملاء",
     "description": "إدارة علاقات ومعلومات العملاء",

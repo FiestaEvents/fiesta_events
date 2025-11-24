@@ -15,7 +15,7 @@ import ForgotPassword from "../pages/auth/ForgotPassword.jsx";
 import ResetPassword from "../pages/auth/ResetPassword.jsx";
 
 // Main
-import Dashboard from "../pages/Dashboard.jsx";
+import Dashboard from "../pages/Dashboard2.jsx";
 
 // Events
 import EventsList from "../pages/events/EventsList.jsx";

@@ -7,15 +7,34 @@ import {
   Search,
   ChevronDown,
   User,
-  Settings as SettingsIcon,
+  Settings,
   LogOut,
-  LayoutGrid // The Icon for the App Launcher
+  LayoutGrid,
+  Calendar,
+  Users,
+  Briefcase,
+  FileText,
+  DollarSign,
+  CheckSquare,
+  Bell,
+  Clock,
+  TrendingUp,
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { reminderService } from "../../api/index";
-import AppLauncher from "./AppLauncher"; // ✅ Import the new 3x3 Grid Menu
+import { 
+  reminderService, 
+  eventService, 
+  clientService, 
+  partnerService,
+  invoiceService,
+  paymentService,
+  taskService 
+} from "../../api/index";
+import AppLauncher from "./AppLauncher";
 
 const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const { theme, toggleTheme } = useTheme();
@@ -29,65 +48,234 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // ✅ App Launcher State
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
+  
+  // Search state
+  const [searchResults, setSearchResults] = useState({
+    events: [],
+    clients: [],
+    partners: [],
+    invoices: [],
+    payments: [],
+    tasks: [],
+    reminders: []
+  });
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState([]);
 
   // --- REFS ---
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
-  const launcherToggleRef = useRef(null); // ✅ Ref for the grid button
+  const launcherToggleRef = useRef(null);
+  const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
 
-  // Calculate positioning based on RTL and collapse state
+  // Calculate positioning
   const topBarOffset = isCollapsed 
     ? (isRTL ? "lg:right-20" : "lg:left-20")
     : (isRTL ? "lg:right-64" : "lg:left-64");
 
-  // --- HANDLERS ---
+  // --- SEARCH LOGIC ---
+  
+  // Debounced search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        await performSearch(searchQuery);
+      } else {
+        setSearchResults({
+          events: [],
+          clients: [],
+          partners: [],
+          invoices: [],
+          payments: [],
+          tasks: [],
+          reminders: []
+        });
+        setShowSearchResults(false);
+      }
+    }, 300);
 
-  // 1. Search Logic
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const query = searchQuery.trim();
-    if (query) {
-      navigate(`/search?q=${encodeURIComponent(query)}`);
-      // setSearchQuery(""); // Uncomment if you want to clear input after search
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const performSearch = async (query) => {
+    setSearchLoading(true);
+    setShowSearchResults(true);
+
+    try {
+      // Search all entities in parallel
+      const [events, clients, partners, invoices, payments, tasks, reminders] = await Promise.allSettled([
+        eventService.getAll({ search: query, limit: 3 }),
+        clientService.getAll({ search: query, limit: 3 }),
+        partnerService.getAll({ search: query, limit: 3 }),
+        invoiceService.getAll({ search: query, limit: 3 }),
+        paymentService.getAll({ search: query, limit: 3 }),
+        taskService.getAll({ search: query, limit: 3 }),
+        reminderService.getAll({ search: query, limit: 3 })
+      ]);
+
+      // Extract and filter results client-side
+      setSearchResults({
+        events: filterBySearchQuery(
+          events.status === 'fulfilled' ? extractData(events.value) : [],
+          query,
+          'events'
+        ).slice(0, 3),
+        clients: filterBySearchQuery(
+          clients.status === 'fulfilled' ? extractData(clients.value) : [],
+          query,
+          'clients'
+        ).slice(0, 3),
+        partners: filterBySearchQuery(
+          partners.status === 'fulfilled' ? extractData(partners.value) : [],
+          query,
+          'partners'
+        ).slice(0, 3),
+        invoices: filterBySearchQuery(
+          invoices.status === 'fulfilled' ? extractData(invoices.value) : [],
+          query,
+          'invoices'
+        ).slice(0, 3),
+        payments: filterBySearchQuery(
+          payments.status === 'fulfilled' ? extractData(payments.value) : [],
+          query,
+          'payments'
+        ).slice(0, 3),
+        tasks: filterBySearchQuery(
+          tasks.status === 'fulfilled' ? extractData(tasks.value) : [],
+          query,
+          'tasks'
+        ).slice(0, 3),
+        reminders: filterBySearchQuery(
+          reminders.status === 'fulfilled' ? extractData(reminders.value) : [],
+          query,
+          'reminders'
+        ).slice(0, 3)
+      });
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setSearchLoading(false);
     }
   };
 
-  // 2. Fetch Notifications (Reminders)
-  useEffect(() => {
-    let isMounted = true;
-    const fetchNotifications = async () => {
-      if (!isMounted) return;
-      try {
-        const response = await reminderService.getUpcoming();
-        
-        // Robust extraction logic for different API response structures
-        let reminders = [];
-        if (response?.data?.data?.reminders) reminders = response.data.data.reminders;
-        else if (response?.data?.reminders) reminders = response.data.reminders;
-        else if (response?.reminders) reminders = response.reminders;
-        else if (Array.isArray(response?.data)) reminders = response.data;
-        else if (Array.isArray(response)) reminders = response;
+  const extractData = (response) => {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if (response.data && Array.isArray(response.data)) return response.data;
+    if (response.events && Array.isArray(response.events)) return response.events;
+    if (response.clients && Array.isArray(response.clients)) return response.clients;
+    if (response.partners && Array.isArray(response.partners)) return response.partners;
+    if (response.invoices && Array.isArray(response.invoices)) return response.invoices;
+    if (response.payments && Array.isArray(response.payments)) return response.payments;
+    if (response.tasks && Array.isArray(response.tasks)) return response.tasks;
+    if (response.reminders && Array.isArray(response.reminders)) return response.reminders;
+    return [];
+  };
 
-        const activeReminders = reminders.filter(r => r.status === "active");
+  // Client-side filtering helper
+  const filterBySearchQuery = (items, query, category) => {
+    if (!query || !items || items.length === 0) return items;
+    
+    const searchLower = query.toLowerCase();
+    
+    return items.filter(item => {
+      // Search in different fields based on category
+      switch(category) {
+        case 'events':
+          return (item.title?.toLowerCase().includes(searchLower) ||
+                  item.description?.toLowerCase().includes(searchLower) ||
+                  item.type?.toLowerCase().includes(searchLower));
         
-        if (isMounted) setNotifications(activeReminders);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-        if (isMounted) setNotifications([]);
+        case 'clients':
+        case 'partners':
+          return (item.name?.toLowerCase().includes(searchLower) ||
+                  item.email?.toLowerCase().includes(searchLower) ||
+                  item.phone?.includes(searchLower) ||
+                  item.company?.toLowerCase().includes(searchLower));
+        
+        case 'invoices':
+          return (item.invoiceNumber?.toLowerCase().includes(searchLower) ||
+                  item.recipientName?.toLowerCase().includes(searchLower) ||
+                  item.status?.toLowerCase().includes(searchLower));
+        
+        case 'payments':
+          return (item.description?.toLowerCase().includes(searchLower) ||
+                  item.reference?.toLowerCase().includes(searchLower) ||
+                  item.status?.toLowerCase().includes(searchLower));
+        
+        case 'tasks':
+          return (item.title?.toLowerCase().includes(searchLower) ||
+                  item.description?.toLowerCase().includes(searchLower) ||
+                  item.status?.toLowerCase().includes(searchLower) ||
+                  item.category?.toLowerCase().includes(searchLower));
+        
+        case 'reminders':
+          return (item.title?.toLowerCase().includes(searchLower) ||
+                  item.description?.toLowerCase().includes(searchLower) ||
+                  item.type?.toLowerCase().includes(searchLower));
+        
+        default:
+          return false;
       }
-    };
+    });
+  };
 
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 300000); // Poll every 5 mins
-    return () => { isMounted = false; clearInterval(interval); };
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      saveRecentSearch(searchQuery);
+    }
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearchSubmit();
+    }
+  };
+
+  const handleResultClick = (type, id) => {
+    saveRecentSearch(searchQuery);
+    setShowSearchResults(false);
+    setSearchQuery("");
+    
+    const routes = {
+      events: `/events/${id}/detail`,
+      clients: `/clients/${id}`,
+      partners: `/partners/${id}`,
+      invoices: `/invoices/${id}/edit`,
+      payments: `/payments/${id}`,
+      tasks: `/tasks/${id}`,
+      reminders: `/reminders/${id}`
+    };
+    
+    navigate(routes[type]);
+  };
+
+  const saveRecentSearch = (query) => {
+    const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+    const updated = [query, ...recent.filter(q => q !== query)].slice(0, 5);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+    setRecentSearches(updated);
+  };
+
+  const loadRecentSearches = () => {
+    const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+    setRecentSearches(recent);
+  };
+
+  useEffect(() => {
+    loadRecentSearches();
   }, []);
 
-  // 3. Click Outside Handler (For User & Notify Dropdowns)
+  // Click outside handler for search
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearchResults(false);
+      }
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
@@ -99,14 +287,71 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- HELPERS ---
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd/Ctrl + K to focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      // Escape to close search
+      if (e.key === 'Escape') {
+        setShowSearchResults(false);
+        searchInputRef.current?.blur();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Count total results
+  const totalResults = Object.values(searchResults).reduce((acc, arr) => acc + arr.length, 0);
+  const hasResults = totalResults > 0;
+
+  // Search result categories config
+  const categoryConfig = {
+    events: { icon: Calendar, color: 'blue', label: t('common.events', 'Events') },
+    clients: { icon: Users, color: 'green', label: t('common.clients', 'Clients') },
+    partners: { icon: Briefcase, color: 'purple', label: t('common.partners', 'Partners') },
+    invoices: { icon: FileText, color: 'orange', label: t('common.invoices', 'Invoices') },
+    payments: { icon: DollarSign, color: 'emerald', label: t('common.payments', 'Payments') },
+    tasks: { icon: CheckSquare, color: 'indigo', label: t('common.tasks', 'Tasks') },
+    reminders: { icon: Bell, color: 'yellow', label: t('common.reminders', 'Reminders') }
+  };
+
+  // --- NOTIFICATION LOGIC (keeping existing) ---
+  useEffect(() => {
+    let isMounted = true;
+    const fetchNotifications = async () => {
+      if (!isMounted) return;
+      try {
+        const response = await reminderService.getUpcoming();
+        let reminders = [];
+        if (response?.data?.data?.reminders) reminders = response.data.data.reminders;
+        else if (response?.data?.reminders) reminders = response.data.reminders;
+        else if (response?.reminders) reminders = response.reminders;
+        else if (Array.isArray(response?.data)) reminders = response.data;
+        else if (Array.isArray(response)) reminders = response;
+        const activeReminders = reminders.filter(r => r.status === "active");
+        if (isMounted) setNotifications(activeReminders);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        if (isMounted) setNotifications([]);
+      }
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 300000);
+    return () => { isMounted = false; clearInterval(interval); };
+  }, []);
+
+  // --- HELPER FUNCTIONS (keeping existing) ---
   const formatReminderDate = (dateString, timeString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
     if (date.toDateString() === today.toDateString()) return `${t("notifications.today")} ${timeString || ""}`;
     else if (date.toDateString() === tomorrow.toDateString()) return `${t("notifications.tomorrow")} ${timeString || ""}`;
     else return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${timeString || ""}`;
@@ -123,12 +368,10 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   };
 
   const getUserInitials = () => user?.name ? user.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) : "AV";
-
   const getUserRole = () => {
     const roleName = typeof user?.role === "string" ? user.role : user?.role?.name;
     return roleName ? roleName.charAt(0).toUpperCase() + roleName.slice(1) : t("common.user");
   };
-
   const getRoleColor = () => {
     const roleName = typeof user?.role === "string" ? user.role : user?.role?.name;
     switch (roleName?.toLowerCase()) {
@@ -146,17 +389,12 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
         
         {/* LEFT SECTION */}
         <div className="flex items-center gap-2">
-          {/* Mobile Menu Toggle */}
           <button onClick={onMenuClick} className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
-
-          {/* Desktop Sidebar Collapse Toggle */}
           <button onClick={onToggleCollapse} className="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
-
-          {/* ✅ APP LAUNCHER TOGGLE (3x3 Grid) */}
           <button 
             ref={launcherToggleRef}
             onClick={() => setIsLauncherOpen(!isLauncherOpen)}
@@ -169,8 +407,6 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           >
             <LayoutGrid className="h-5 w-5" />
           </button>
-
-          {/* Mobile Logo */}
           <Link to="/" className="flex items-center gap-2 lg:hidden ml-2">
             <div className="relative h-12 w-auto">
               <img src="/fiesta logo-01.png" alt="Fiesta Logo" className="h-full w-auto object-contain" onError={(e) => { e.target.style.display = "none"; }} />
@@ -178,29 +414,157 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           </Link>
         </div>
 
-        {/* CENTER SECTION - SEARCH */}
-        <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-          <form onSubmit={handleSearch} className="relative w-full">
-            <button type="submit" className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 p-1 hover:text-blue-500 transition-colors`}>
-              <Search className={`w-4 h-4 text-gray-400`} />
+        {/* CENTER SECTION - ENHANCED SEARCH */}
+        <div className="hidden md:flex flex-1 max-w-2xl mx-8 relative" ref={searchRef}>
+          <div className="relative w-full">
+            <button 
+              onClick={handleSearchSubmit}
+              className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 p-1 hover:text-blue-500 transition-colors z-10`}
+            >
+              {searchLoading ? (
+                <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4 text-gray-400" />
+              )}
             </button>
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder={t("common.searchPlaceholder")}
+              placeholder={t("common.searchPlaceholder", "Search events, clients, tasks...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
+              onKeyPress={handleSearchKeyPress}
+              onFocus={() => {
+                if (searchQuery.trim().length >= 2) {
+                  setShowSearchResults(true);
+                }
+              }}
+              className={`w-full ${isRTL ? 'pr-10 pl-24' : 'pl-10 pr-24'} py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
               dir={isRTL ? 'rtl' : 'ltr'}
             />
-          </form>
+            <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 flex items-center gap-1`}>
+              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
+                {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
+              </kbd>
+              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
+                K
+              </kbd>
+            </div>
+          </div>
+
+          {/* SEARCH RESULTS DROPDOWN */}
+          {showSearchResults && (
+            <div className={`absolute top-full ${isRTL ? 'right-0' : 'left-0'} mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl overflow-hidden z-50 max-h-[600px] overflow-y-auto`}>
+              {searchLoading ? (
+                <div className="p-8 text-center">
+                  <Loader2 className="w-6 h-6 text-gray-400 animate-spin mx-auto mb-2" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("common.searching", "Searching...")}
+                  </p>
+                </div>
+              ) : searchQuery.trim().length < 2 ? (
+                <div className="p-6">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    {t("common.searchMinChars", "Type at least 2 characters to search")}
+                  </p>
+                  {recentSearches.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 flex items-center gap-2">
+                        <Clock className="w-3 h-3" />
+                        {t("common.recentSearches", "Recent Searches")}
+                      </p>
+                      <div className="space-y-1">
+                        {recentSearches.map((recent, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setSearchQuery(recent)}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                          >
+                            {recent}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : !hasResults ? (
+                <div className="p-8 text-center">
+                  <Search className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("common.noResults", "No results found for")} "{searchQuery}"
+                  </p>
+                </div>
+              ) : (
+                <div className="py-2">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {t("common.foundResults", "Found")} {totalResults} {t("common.results", "results")}
+                    </p>
+                  </div>
+                  
+                  {Object.entries(searchResults).map(([category, items]) => {
+                    if (items.length === 0) return null;
+                    const config = categoryConfig[category];
+                    const Icon = config.icon;
+                    
+                    return (
+                      <div key={category} className="py-2">
+                        <div className="px-4 py-2">
+                          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase flex items-center gap-2">
+                            <Icon className="w-3 h-3" />
+                            {config.label}
+                          </p>
+                        </div>
+                        {items.map((item) => (
+                          <button
+                            key={item._id}
+                            onClick={() => handleResultClick(category, item._id)}
+                            className="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group"
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className={`w-8 h-8 rounded-lg bg-${config.color}-100 dark:bg-${config.color}-900/30 flex items-center justify-center flex-shrink-0`}>
+                                <Icon className={`w-4 h-4 text-${config.color}-600 dark:text-${config.color}-400`} />
+                              </div>
+                              <div className="flex-1 min-w-0 text-left">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                  {item.title || item.name || item.invoiceNumber || item.description || 'Untitled'}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                  {category === 'events' && item.type}
+                                  {category === 'clients' && item.email}
+                                  {category === 'partners' && item.category}
+                                  {category === 'invoices' && `${item.status} • ${item.totalAmount || 0} TND`}
+                                  {category === 'payments' && `${item.status} • ${item.amount || 0} TND`}
+                                  {category === 'tasks' && item.status}
+                                  {category === 'reminders' && formatReminderDate(item.reminderDate, item.reminderTime)}
+                                </p>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+                    <button
+                      onClick={() => setShowSearchResults(false)}
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-2"
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      {t("common.seeAllResults", "See all results")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* RIGHT SECTION */}
+        {/* RIGHT SECTION (keeping existing) */}
         <div className="flex items-center gap-2">
-          {/* Language */}
           <div className="hidden sm:block"><LanguageSwitcher /></div>
-
-          {/* Theme */}
           <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             {theme === "light" ? <MoonIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" /> : <SunIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />}
           </button>
@@ -262,7 +626,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                   <User className="w-4 h-4" /> {t("common.profile")}
                 </button>
                 <button className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => { navigate("/settings"); setDropdownOpen(false); }}>
-                  <SettingsIcon className="w-4 h-4" /> {t("common.settings")}
+                  <Settings className="w-4 h-4" /> {t("common.settings")}
                 </button>
                 <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
                   <button className={`w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => { logout(); setDropdownOpen(false); }}>
@@ -275,13 +639,11 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
         </div>
       </div>
 
-      {/* ✅ App Launcher Dropdown (Rendered here, positions itself absolutely) */}
       <AppLauncher 
         isOpen={isLauncherOpen} 
         onClose={() => setIsLauncherOpen(false)} 
         toggleRef={launcherToggleRef} 
       />
-
     </header>
   );
 };

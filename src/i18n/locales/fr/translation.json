@@ -1,60 +1,135 @@
 {
- "dashboard": {
-  "title": "Tableau de Bord",
-  "welcome_msg": "Voici ce qui se passe dans votre établissement aujourd'hui.",
-  "loading": "Chargement du tableau de bord...",
-  "all_caught_up": "Vous êtes à jour !",
-  "recent_inflow": "Rentrées Récentes",
-  "view_financial": "Voir Rapport Financier",
-  "quick_actions": "Actions Rapides",
-  "no_payments": "Aucun paiement récent.",
-  "view_all": "Voir Tout",
-  "errors": {
-    "load_failed": "Échec du chargement des données"
+  "dashboard": {
+    "loading": "Chargement du tableau de bord...",
+    
+    "today": {
+      "title": "Centre de Commande d'Aujourd'hui",
+      "view_schedule": "Voir le Planning",
+      "events": "Événements Aujourd'hui",
+      "expected_revenue": "Revenu Attendu",
+      "pending_tasks": "Tâches en Attente",
+      "events_list": "Événements d'Aujourd'hui",
+      "guests": "invités"
+    },
+    
+    "actions": {
+      "title": "Centre d'Action",
+      "overdue_invoices": "{{count}} Factures en Retard",
+      "new_enquiries": "{{count}} Nouvelles Demandes",
+      "urgent_tasks": "{{count}} Tâches Urgentes"
+    },
+    
+    "financial": {
+      "title": "Centre de Commande Financier",
+      "cash_position": "Position de Trésorerie",
+      "net_cash": "Trésorerie Nette",
+      "monthly_revenue": "Revenu Mensuel",
+      "vs_last_month": "vs Mois Dernier",
+      "bookings": "Réservations",
+      "conversion": "Conversion",
+      "avg_value": "Valeur Moy. Événement",
+      "per_event": "Par Événement",
+      "cash_flow_details": "Détails du Flux de Trésorerie",
+      "money_in": "Entrées",
+      "money_out": "Sorties",
+      "upcoming": "À Venir",
+      "receivables": "Créances",
+      "payables": "Dettes",
+      "invoice_aging": "Rapport de Vieillissement des Factures",
+      "outstanding": "En Souffrance",
+      "aging_0_30": "0-30 Jours",
+      "aging_31_60": "31-60 Jours",
+      "aging_60_plus": "60+ Jours",
+      "invoices": "factures",
+      "critical": "CRITIQUE",
+      "goals_this_month": "Objectifs de Ce Mois",
+      "revenue": "Revenu",
+      "net": "Net"
+    },
+    
+    "calendar": {
+      "title": "Calendrier et Aperçu des Réservations",
+      "occupancy": "Occupation",
+      "occupancy_rate": "Taux d'Occupation",
+      "days_booked": "Jours Réservés",
+      "upcoming_events": "Événements à Venir",
+      "unknown_client": "Client Inconnu",
+      "guests": "Invités",
+      "no_upcoming": "Aucun événement prévu.",
+      "missing_vendors": "Événements Sans Partenaires",
+      "assign_now": "Assigner Maintenant"
+    },
+    
+    "performance": {
+      "title": "Métriques de Performance",
+      "tabs": {
+        "revenue": "Revenu",
+        "events": "Événements",
+        "clients": "Clients"
+      },
+      "current_month": "Mois Actuel",
+      "last_month": "Mois Dernier",
+      "growth": "Croissance",
+      "event_breakdown": "Répartition des Événements",
+      "client_retention": "Fidélisation Client",
+      "new_clients": "Nouveaux Clients",
+      "returning_clients": "Clients Fidèles",
+      "avg_ltv": "Valeur Vie Moy.",
+      "sales_pipeline": "Pipeline de Vente",
+      "enquiries": "Demandes",
+      "quoted": "Devis",
+      "confirmed": "Confirmés",
+      "completed": "Complétés",
+      "conversion_rate": "Taux de Conversion"
+    },
+    
+    "charts": {
+      "current_year": "Année Actuelle",
+      "last_year": "Année Dernière",
+      "total": "Total"
+    },
+    
+    "insights": {
+      "title": "Aperçus Commerciaux",
+      "response_time": "Temps de Réponse aux Prospects",
+      "avg": "Moy",
+      "average": "Temps de Réponse Moyen",
+      "target": "Objectif",
+      "slowest": "Réponse la Plus Lente",
+      "on_target": "✓ Objectif de temps de réponse atteint",
+      "needs_improvement": "⚠ Le temps de réponse doit être amélioré",
+      "cancellation": "Analyse des Annulations",
+      "rate": "Taux",
+      "cancellation_rate": "Taux d'Annulation",
+      "revenue_lost": "Revenu Perdu",
+      "main_reason": "Raison Principale"
+    },
+    
+    "leads": {
+      "title": "Prospects en Attente",
+      "unknown": "Client Inconnu",
+      "no_pending": "Aucun prospect en attente"
+    },
+    
+    "activity": {
+      "title": "Activité Récente",
+      "payment_received": "Paiement reçu : {{amount}} de {{client}}",
+      "new_booking": "Nouvelle réservation : {{title}}",
+      "no_recent": "Aucune activité récente"
+    },
+    
+    "quick_actions": {
+      "title": "Actions Rapides",
+      "new_event": "Nouvel Événement",
+      "add_client": "Ajouter Client",
+      "new_invoice": "Nouvelle Facture",
+      "settings": "Paramètres"
+    },
+    
+    "errors": {
+      "fetch_failed": "Échec du chargement des données"
+    }
   },
-  "metrics": {
-    "revenue": "Revenu Mensuel",
-    "pending": "En attente",
-    "occupancy": "Taux d'Occupation",
-    "events_this_month": "Événements ce mois",
-    "conversion": "Conversion Prospects",
-    "pending_enquiries": "Demandes en attente",
-    "tasks": "Opérations",
-    "urgent_items": "Tâches urgentes"
-  },
-  "charts": {
-    "revenue_trend": "Tendance des Revenus",
-    "event_status": "Statut des Événements",
-    "total": "Total"
-  },
-  "calendar": {
-    "occupancy_view": "Aperçu"
-  },
-  "upcoming": {
-    "title": "Planning à Venir",
-    "no_events": "Aucun événement prévu."
-  },
-  "leads": {
-    "title": "Demandes Récentes",
-    "no_leads": "Aucune demande en attente."
-  },
-  "actions": {
-    "new_event": "Nouvel Événement",
-    "add_client": "Ajouter Client",
-    "new_invoice": "Nouvelle Facture",
-    "settings": "Paramètres",
-    "assign_partner": "Assigner"
-  },
-  "alerts": {
-    "overdue_invoices": "{{count}} Factures en Retard",
-    "pending_enquiries": "{{count}} Nouvelles Demandes",
-    "urgent_tasks": "{{count}} Tâches Urgentes",
-    "missing_partners": "Vendeurs Manquants"
-  },
-  "payments": {
-    "client_payment": "Paiement Client"
-  }
-},
   "clients": {
     "title": "Clients",
     "description": "Gérez vos relations et informations clients",

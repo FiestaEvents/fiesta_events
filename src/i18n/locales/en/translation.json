@@ -1,60 +1,135 @@
 {
-"dashboard": {
-  "title": "Dashboard",
-  "welcome_msg": "Here is what is happening at your venue today.",
-  "loading": "Loading Dashboard...",
-  "all_caught_up": "All caught up!",
-  "recent_inflow": "Recent Inflow",
-  "view_financial": "View Financial Report",
-  "quick_actions": "Quick Actions",
-  "no_payments": "No recent payments.",
-  "view_all": "View All",
-  "errors": {
-    "load_failed": "Failed to load dashboard data"
+  "dashboard": {
+    "loading": "Loading Dashboard...",
+    
+    "today": {
+      "title": "Today's Command Center",
+      "view_schedule": "View Schedule",
+      "events": "Events Today",
+      "expected_revenue": "Expected Revenue",
+      "pending_tasks": "Pending Tasks",
+      "events_list": "Today's Events",
+      "guests": "guests"
+    },
+    
+    "actions": {
+      "title": "Action Center",
+      "overdue_invoices": "{{count}} Overdue Invoices",
+      "new_enquiries": "{{count}} New Enquiries",
+      "urgent_tasks": "{{count}} Urgent Tasks"
+    },
+    
+    "financial": {
+      "title": "Financial Command Center",
+      "cash_position": "Cash Position",
+      "net_cash": "Net Cash",
+      "monthly_revenue": "Monthly Revenue",
+      "vs_last_month": "vs Last Month",
+      "bookings": "Bookings",
+      "conversion": "Conversion",
+      "avg_value": "Avg Event Value",
+      "per_event": "Per Event",
+      "cash_flow_details": "Cash Flow Details",
+      "money_in": "Money In",
+      "money_out": "Money Out",
+      "upcoming": "Upcoming",
+      "receivables": "Receivables",
+      "payables": "Payables",
+      "invoice_aging": "Invoice Aging Report",
+      "outstanding": "Outstanding",
+      "aging_0_30": "0-30 Days",
+      "aging_31_60": "31-60 Days",
+      "aging_60_plus": "60+ Days",
+      "invoices": "invoices",
+      "critical": "CRITICAL",
+      "goals_this_month": "Goals This Month",
+      "revenue": "Revenue",
+      "net": "Net"
+    },
+    
+    "calendar": {
+      "title": "Calendar & Booking Overview",
+      "occupancy": "Occupancy",
+      "occupancy_rate": "Occupancy Rate",
+      "days_booked": "Days Booked",
+      "upcoming_events": "Upcoming Events",
+      "unknown_client": "Unknown Client",
+      "guests": "Guests",
+      "no_upcoming": "No upcoming events scheduled.",
+      "missing_vendors": "Events Missing Partners",
+      "assign_now": "Assign Now"
+    },
+    
+    "performance": {
+      "title": "Performance Metrics",
+      "tabs": {
+        "revenue": "Revenue",
+        "events": "Events",
+        "clients": "Clients"
+      },
+      "current_month": "Current Month",
+      "last_month": "Last Month",
+      "growth": "Growth",
+      "event_breakdown": "Event Breakdown",
+      "client_retention": "Client Retention",
+      "new_clients": "New Clients",
+      "returning_clients": "Returning Clients",
+      "avg_ltv": "Avg Lifetime Value",
+      "sales_pipeline": "Sales Pipeline",
+      "enquiries": "Enquiries",
+      "quoted": "Quoted",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "conversion_rate": "Conversion Rate"
+    },
+    
+    "charts": {
+      "current_year": "Current Year",
+      "last_year": "Last Year",
+      "total": "Total"
+    },
+    
+    "insights": {
+      "title": "Business Insights",
+      "response_time": "Lead Response Time",
+      "avg": "Avg",
+      "average": "Average Response Time",
+      "target": "Target",
+      "slowest": "Slowest Response",
+      "on_target": "✓ Meeting target response time",
+      "needs_improvement": "⚠ Response time needs improvement",
+      "cancellation": "Cancellation Analysis",
+      "rate": "Rate",
+      "cancellation_rate": "Cancellation Rate",
+      "revenue_lost": "Revenue Lost",
+      "main_reason": "Main Reason"
+    },
+    
+    "leads": {
+      "title": "Pending Leads",
+      "unknown": "Unknown Client",
+      "no_pending": "No pending leads"
+    },
+    
+    "activity": {
+      "title": "Recent Activity",
+      "payment_received": "Payment received: {{amount}} from {{client}}",
+      "new_booking": "New booking: {{title}}",
+      "no_recent": "No recent activity"
+    },
+    
+    "quick_actions": {
+      "title": "Quick Actions",
+      "new_event": "New Event",
+      "add_client": "Add Client",
+      "new_invoice": "New Invoice",
+      "settings": "Settings"
+    },
+    
+    "errors": {
+      "fetch_failed": "Failed to load dashboard data"
+    }
   },
-  "metrics": {
-    "revenue": "Monthly Revenue",
-    "pending": "Pending",
-    "occupancy": "Occupancy",
-    "events_this_month": "Events this month",
-    "conversion": "Lead Conversion",
-    "pending_enquiries": "Pending Enquiries",
-    "tasks": "Operations",
-    "urgent_items": "Urgent Items"
-  },
-  "charts": {
-    "revenue_trend": "Revenue Trend",
-    "event_status": "Event Status",
-    "total": "Total"
-  },
-  "calendar": {
-    "occupancy_view": "Overview"
-  },
-  "upcoming": {
-    "title": "Upcoming Schedule",
-    "no_events": "No upcoming events scheduled."
-  },
-  "leads": {
-    "title": "Recent Enquiries",
-    "no_leads": "No pending enquiries."
-  },
-  "actions": {
-    "new_event": "New Event",
-    "add_client": "Add Client",
-    "new_invoice": "New Invoice",
-    "settings": "Settings",
-    "assign_partner": "Assign"
-  },
-  "alerts": {
-    "overdue_invoices": "{{count}} Overdue Invoices",
-    "pending_enquiries": "{{count}} New Enquiries",
-    "urgent_tasks": "{{count}} Urgent Tasks",
-    "missing_partners": "Missing Vendors"
-  },
-  "payments": {
-    "client_payment": "Client Payment"
-  }
-},
   "clients": {
     "title": "Clients",
     "description": "Manage your client relationships and information",
