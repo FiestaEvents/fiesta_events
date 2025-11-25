@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Briefcase,
-  Check,
   ChevronDown,
   ChevronUp,
   Download,
@@ -32,7 +31,6 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable"; // Internal pagination supported
 import Select from "../../components/common/Select";
-import InvoiceFormPage from "./InvoiceFormPage";
 
 // ✅ Services & Utils
 import { invoiceService } from "../../api/index";
@@ -75,9 +73,6 @@ const InvoicesPage = () => {
   // Modals State
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [formMode, setFormMode] = useState("create"); // 'create' | 'edit'
-  const [editingInvoice, setEditingInvoice] = useState(null);
   
   // Action Modals
   const [confirmationModal, setConfirmationModal] = useState({
@@ -215,9 +210,8 @@ const InvoicesPage = () => {
   // ==========================================
 
   const handleCreateInvoice = () => {
-    setFormMode("create");
-    setEditingInvoice(null);
-    setIsFormModalOpen(true);
+    // Navigate to the Create Page with the correct type query param
+    navigate(`/invoices/create?type=${invoiceType}`);
   };
 
   const handleRowClick = useCallback((invoice) => {
@@ -225,41 +219,9 @@ const InvoicesPage = () => {
     setIsDetailModalOpen(true);
   }, []);
 
-  const handleEditInvoice = async (invoice) => {
-    try {
-      const response = await invoiceService.getById(invoice._id);
-      const fullInvoice = response?.invoice || response?.data?.invoice || invoice;
-      setFormMode("edit");
-      setEditingInvoice(normalizeInvoiceData(fullInvoice));
-      setIsDetailModalOpen(false);
-      setIsFormModalOpen(true);
-    } catch (error) {
-      apiError(error, t("invoices.errors.loadDetailsFailed"));
-    }
-  };
-
-  const handleFormSubmit = async (invoiceData) => {
-    try {
-      if (formMode === "create") {
-        await promise(invoiceService.create(invoiceData), {
-          loading: t("invoices.create.loading"),
-          success: t("invoices.create.success"),
-          error: t("invoices.create.error")
-        });
-      } else {
-        await promise(invoiceService.update(editingInvoice._id, invoiceData), {
-          loading: t("invoices.update.loading"),
-          success: t("invoices.update.success"),
-          error: t("invoices.update.error")
-        });
-      }
-      setIsFormModalOpen(false);
-      setEditingInvoice(null);
-      fetchInvoices();
-      fetchStats();
-    } catch (err) {
-      // Toast handled by promise
-    }
+  const handleEditInvoice = (invoice) => {
+    // Navigate to the Edit Page using ID
+    navigate(`/invoices/edit/${invoice._id}`);
   };
 
   const handleDownloadInvoice = async (invoice) => {
@@ -515,20 +477,6 @@ const InvoicesPage = () => {
          </div>
       )}
 
-      {/* ================= MODALS ================= */}
-
-      {/* Form Modal */}
-      <Modal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} size="xl" title={formMode === 'create' ? "New Invoice" : "Edit Invoice"}>
-         <div className="p-4">
-            <InvoiceFormPage 
-               mode={formMode} 
-               invoiceType={invoiceType} 
-               invoice={editingInvoice} 
-               onSubmit={handleFormSubmit} 
-               onCancel={() => setIsFormModalOpen(false)} 
-            />
-         </div>
-      </Modal>
 
       {/* Detail Modal */}
       {selectedInvoice && isDetailModalOpen && (
@@ -571,7 +519,11 @@ const InvoicesPage = () => {
 
                <div className="flex justify-end gap-2 pt-6 border-t border-gray-100 dark:border-gray-700">
                   <Button variant="outline" onClick={() => handleDownloadInvoice(selectedInvoice)} icon={Download}>Download PDF</Button>
-                  {selectedInvoice.status === 'draft' && <Button variant="primary" onClick={() => navigate(`/invoices/send/${selectedInvoice._id}`)} icon={Send}>Send Invoice</Button>}
+                  {selectedInvoice.status === 'draft' && (
+                    <Button variant="primary" onClick={() => handleEditInvoice(selectedInvoice)} icon={Edit}>
+                      Edit Invoice
+                    </Button>
+                  )}
                </div>
             </div>
          </Modal>

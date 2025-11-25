@@ -225,6 +225,12 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             {/* Management Section */}
             <NavSection titleKey="sidebar.management" isCollapsed={isCollapsed}>
               <NavLink
+                to="/contracts"
+                icon={Settings}
+                labelKey="contracts"
+                isCollapsed={isCollapsed}
+              />
+              <NavLink
                 to="/settings"
                 icon={Settings}
                 labelKey="common.settings"
