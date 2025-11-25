@@ -159,7 +159,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                    className="absolute right-3 top-[40px] text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
                     tabIndex="-1"
                   >
                     {showPassword ? (
