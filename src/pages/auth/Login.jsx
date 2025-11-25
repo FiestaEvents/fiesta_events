@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Loader2 } from "lucide-react"; 
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react"; 
 import { useAuth } from "../../context/AuthContext";
-import useToast from "../../hooks/useToast"; // Updated to use the hook
+import useToast from "../../hooks/useToast";
 import Button from "../../components/common/Button";
-import Input from "../../components/common/Input"; // Using generic Input
+import Input from "../../components/common/Input";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, user, loading: authLoading } = useAuth();
   
-  // Use the extended toast methods
   const { success, apiError } = useToast();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -18,7 +17,6 @@ const Login = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({ email: "", password: "" });
 
-  // Only redirect after auth has finished initializing
   useEffect(() => {
     if (!authLoading && isAuthenticated && user) {
       navigate("/dashboard", { replace: true });
@@ -28,7 +26,6 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error for the field being edited
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -37,7 +34,6 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate form
     const newErrors = {};
     if (!formData.email) {
       newErrors.email = "Email is required";
@@ -55,22 +51,19 @@ const Login = () => {
     try {
       await login(formData.email, formData.password);
       success("Login successful!");
-      // Navigation happens via the useEffect
     } catch (err) {
-      // Use the generic apiError helper from useToast
+      console.log("err", err);
       apiError(err, "Invalid credentials");
       
-      // Also set local form errors for visual feedback
       setErrors({
-        email: " ",
-        password: " ",
+        email: "Invalid email",
+        password: "Or invalid password",
       });
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Show loading state while auth is initializing
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center p-4">
@@ -86,7 +79,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col">
-      {/* Main content area that grows and centers the card */}
       <div className="flex-1 flex items-center justify-center p-0 md:p-4">
         {/* Background decoration */}
         <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
@@ -100,8 +92,8 @@ const Login = () => {
         {/* Login Card */}
         <div className="relative w-full h-full md:max-w-md md:h-auto z-10">
           <div className="bg-white w-full h-full md:rounded-2xl md:shadow-2xl md:h-auto flex flex-col justify-center">
-            {/* Form Section */}
             <div className="px-6 py-8 md:px-8 md:py-8 space-y-6">
+              
               {/* Logo */}
               <div className="flex justify-center mb-2">
                 <div className="w-full flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
@@ -123,19 +115,32 @@ const Login = () => {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email Input */}
-                <Input
-                  label="Email Address"
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@example.com"
-                  error={errors.email}
-                  required
-                  className="bg-white w-full"
-                />
+              {/* Form - Increased space-y to accommodate absolute errors comfortably */}
+              <form onSubmit={handleSubmit} className="space-y-7">
+                
+                {/* Email Input Wrapper */}
+                <div className="relative">
+                  <Input
+                    label="Email Address"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="you@example.com"
+                    required
+                    // We remove the 'error' prop to prevent the input component from rendering the message and pushing layout.
+                    // Instead, we inject the red border class manually if there is an error.
+                    className={`bg-white w-full ${errors.email ? '!border-red-500 focus:!border-red-500' : ''}`}
+                  />
+                  
+                  {/* Absolute Error Message */}
+                  {errors.email && (
+                    <div className="absolute -bottom-5 left-0 flex items-center text-xs text-red-500 animate-fadeIn">
+                      <AlertCircle size={12} className="mr-1" />
+                      <span>{errors.email}</span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Password Input Wrapper */}
                 <div className="relative">
@@ -146,9 +151,8 @@ const Login = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
-                    error={errors.password}
                     required
-                    className="bg-white pr-10 w-full" // Add padding right for the icon
+                    className={`bg-white pr-10 w-full ${errors.password ? '!border-red-500 focus:!border-red-500' : ''}`}
                   />
                   
                   {/* Toggle Password Button */}
@@ -164,6 +168,14 @@ const Login = () => {
                       <Eye size={20} />
                     )}
                   </button>
+
+                  {/* Absolute Error Message */}
+                  {errors.password && (
+                    <div className="absolute -bottom-5 left-0 flex items-center text-xs text-red-500 animate-fadeIn">
+                      <AlertCircle size={12} className="mr-1" />
+                      <span>{errors.password}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Remember Me & Forgot Password */}
@@ -185,7 +197,6 @@ const Login = () => {
                   </Link>
                 </div>
 
-                {/* Submit Button */}
                 <Button
                   type="submit"
                   variant="primary"
@@ -196,7 +207,6 @@ const Login = () => {
                 </Button>
               </form>
 
-              {/* Sign Up Link */}
               <div className="text-center pt-2">
                 <p className="text-sm text-gray-600">
                   Don't have an account?{" "}
