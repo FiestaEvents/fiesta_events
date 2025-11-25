@@ -189,14 +189,21 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
     }
   }, [errors]);
 
-  const handleSelectClient = useCallback((clientId) => {
+const handleSelectClient = useCallback((clientId) => {
     if (selectedClient === clientId) {
+      // Deselect (toggle off)
       setSelectedClient(null);
       setFormData(prev => ({ ...prev, clientId: "" }));
     } else {
+      // Select client
       setSelectedClient(clientId);
       setFormData(prev => ({ ...prev, clientId }));
-      setErrors(prev => ({ ...prev, clientId: null }));
+      
+      // ✅ FIXED: Remove the error property completely
+      setErrors(prev => {
+        const { clientId: removedError, ...rest } = prev;
+        return rest;
+      });
     }
   }, [selectedClient]);
 

@@ -570,7 +570,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           </button>
 
           {/* Notifications */}
-          <div className="relative" ref={notificationRef}>
+          <div className="relative z-50" ref={notificationRef}>
             <button onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)} className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <BellIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
               {notifications.length > 0 && <span className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} w-2 h-2 bg-red-500 rounded-full`}></span>}

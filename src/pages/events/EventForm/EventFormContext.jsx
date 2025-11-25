@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useMemo, useState, useCallback } from "react";
 import { useEventForm } from "../../../hooks/useEventForm"; 
 import { useFormValidation } from "../../../hooks/useFormValidation";
 
@@ -12,13 +12,45 @@ export const EventFormProvider = ({
   prefillClient,
   prefillPartner 
 }) => {
+  // 1. Core Form Logic
   const formLogic = useEventForm(eventId, isEditMode, null, initialDate);
   const { validateStep } = useFormValidation();
+  
+  // 2. Stepper State
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 5;
 
+  // 3. Navigation & Validation Logic
+  const goToNextStep = useCallback(() => {
+    // Validate current step before moving
+    const errors = validateStep(currentStep, formLogic.formData, formLogic.selectedClient);
+    formLogic.setErrors(errors);
+
+    if (Object.keys(errors).length === 0) {
+      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
+    return false;
+  }, [currentStep, formLogic.formData, formLogic.selectedClient, validateStep, formLogic.setErrors]);
+
+  const goToPrevStep = useCallback(() => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const goToStep = useCallback((step) => {
+    // Only allow jumping back, or jumping forward if current step is valid (optional strictness)
+    if (step < currentStep) {
+      setCurrentStep(step);
+    }
+  }, [currentStep]);
+
+  // 4. Calculations (Price, etc.)
   const calculations = useMemo(() => {
     const { formData } = formLogic;
     
-    // 1. Calculate Duration
+    // Duration
     let eventHours = 1;
     if (formData.startDate) {
       const endDateStr = formData.endDate || formData.startDate;
@@ -30,27 +62,19 @@ export const EventFormProvider = ({
       }
     }
 
-    // 2. Base Costs
+    // Base Costs
     const basePrice = parseFloat(formData.pricing?.basePrice) || 0;
 
-    // 3. Partner Costs (Fixed vs Hourly Logic)
+    // Partner Costs
     const partnersDetails = (formData.partners || []).map((partner) => {
       let cost = 0;
       const rate = parseFloat(partner.rate) || 0;
-
       if (partner.priceType === "hourly") {
-        // Hourly: Always recalculate based on duration
         const hours = parseFloat(partner.hours) || eventHours;
         cost = hours * rate;
       } else {
-        // Fixed: Use the explicit cost if it exists (manual override), otherwise default to the base rate
-        if (partner.cost !== undefined && partner.cost !== null && partner.cost !== "") {
-           cost = parseFloat(partner.cost);
-        } else {
-           cost = rate;
-        }
+        cost = (partner.cost !== undefined && partner.cost !== null) ? parseFloat(partner.cost) : rate;
       }
-      
       return { 
         ...partner, 
         calculatedCost: cost, 
@@ -60,7 +84,7 @@ export const EventFormProvider = ({
 
     const partnersTotal = partnersDetails.reduce((sum, p) => sum + p.calculatedCost, 0);
 
-    // 4. Discount
+    // Discount
     let discountAmount = 0;
     const discountVal = parseFloat(formData.pricing?.discount) || 0;
     const subtotalBeforeDiscount = basePrice + partnersTotal;
@@ -73,11 +97,11 @@ export const EventFormProvider = ({
 
     const subtotalAfterDiscount = Math.max(0, subtotalBeforeDiscount - discountAmount);
 
-    // 5. Tax (Applied on the discounted amount)
+    // Tax
     const taxRate = parseFloat(formData.pricing?.taxRate) || 0;
     const taxAmount = (subtotalAfterDiscount * taxRate) / 100;
 
-    // 6. Final Total
+    // Final Total
     const totalPrice = subtotalAfterDiscount + taxAmount;
 
     return {
@@ -95,8 +119,12 @@ export const EventFormProvider = ({
   }, [formLogic.formData]);
 
   const value = {
-    ...formLogic, 
-    validateStep,
+    ...formLogic,
+    currentStep,
+    totalSteps,
+    goToNextStep,
+    goToPrevStep,
+    goToStep,
     calculations, 
     meta: { isEditMode, eventId, prefillClient, prefillPartner }
   };
@@ -110,8 +138,6 @@ export const EventFormProvider = ({
 
 export const useEventContext = () => {
   const context = useContext(EventFormContext);
-  if (!context) {
-    throw new Error("useEventContext must be used within an EventFormProvider");
-  }
+  if (!context) throw new Error("useEventContext must be used within an EventFormProvider");
   return context;
 };

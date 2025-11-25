@@ -9,7 +9,7 @@ import Modal, { ConfirmModal } from "../../components/common/Modal";
 
 // Sub-components
 import EventDetailModal from "../events/EventDetailModal";
-import EventForm from "../events/EventForm";
+import EventForm from "../events/EventForm/SharedEventForm";
 import PartnerForm from "./PartnerForm";
 import PartnerHeader from "./components/PartnerHeader";
 import PartnerInfo from "./components/PartnerInfo";

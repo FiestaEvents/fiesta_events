@@ -362,7 +362,7 @@ const ClientsList = () => {
           <Button onClick={handleClearFilters} variant="outline">{t("clients.buttons.clearAllFilters")}</Button>
         </div>
       ) : showEmptyState ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
           <Users className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("clients.empty.title")}</h3>
           <Button onClick={() => setIsFormOpen(true)} variant="primary" icon={Plus}>{t("clients.buttons.addFirstClient")}</Button>

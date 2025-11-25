@@ -395,7 +395,7 @@ const RemindersList = () => {
           <Button variant="outline" onClick={handleClearFilters} className="mt-4">{t('reminders.clearFilters')}</Button>
         </div>
       ) : showEmptyState ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
           <Bell className="mx-auto h-12 w-12 text-gray-300 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('reminders.noReminders')}</h3>
           <Button variant="primary" icon={Plus} onClick={() => setIsFormOpen(true)} className="mt-4">{t('reminders.createFirst')}</Button>

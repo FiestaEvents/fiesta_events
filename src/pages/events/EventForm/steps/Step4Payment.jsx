@@ -22,22 +22,22 @@ const Step4Payment = () => {
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500">
       
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
         
         {/* --- Header --- */}
-        <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-          <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
-            <CreditCard className="w-5 h-5" />
+        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 border-b border-gray-100 dark:border-gray-700 pb-3 sm:pb-4">
+          <div className="p-1.5 sm:p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
+            <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+          <h4 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
             {t('eventForm.step4.recordPayment')}
           </h4>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           
           {/* --- Left Column: Financials --- */}
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             
             {/* Payment Amount */}
             <Input
@@ -52,17 +52,17 @@ const Step4Payment = () => {
               min="0"
             />
 
-            {/* Payment Summary Card */}
-            <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-5 border border-gray-200 dark:border-gray-600 space-y-3">
-              <div className="flex justify-between items-center text-sm">
+            {/* Payment Summary Card - FIXED: Better mobile spacing */}
+            <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-600 space-y-2.5 sm:space-y-3">
+              <div className="flex justify-between items-center text-xs sm:text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Total Due</span>
                 <span className="font-semibold text-gray-900 dark:text-white">{total.toFixed(2)} TND</span>
               </div>
               
               {/* Visual Progress Bar */}
-              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 overflow-hidden">
+              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 sm:h-2.5 overflow-hidden">
                 <div 
-                  className={`h-2.5 rounded-full transition-all duration-500 ${
+                  className={`h-2 sm:h-2.5 rounded-full transition-all duration-500 ${
                     remaining === 0 ? "bg-green-500" : "bg-indigo-500"
                   }`}
                   style={{ width: `${progress}%` }}
@@ -71,12 +71,12 @@ const Step4Payment = () => {
 
               <div className="flex justify-between items-center pt-1">
                 <div className="flex flex-col">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Paid</span>
-                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{paid.toFixed(2)} TND</span>
+                  <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Paid</span>
+                  <span className="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">{paid.toFixed(2)} TND</span>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Remaining</span>
-                  <span className={`text-sm font-bold ${remaining > 0 ? "text-orange-600" : "text-green-600"}`}>
+                  <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Remaining</span>
+                  <span className={`text-xs sm:text-sm font-bold ${remaining > 0 ? "text-orange-600" : "text-green-600"}`}>
                     {remaining.toFixed(2)} TND
                   </span>
                 </div>
@@ -99,7 +99,7 @@ const Step4Payment = () => {
           </div>
 
           {/* --- Right Column: Details --- */}
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             
             {/* Date */}
             <DateInput 
@@ -107,7 +107,7 @@ const Step4Payment = () => {
               name="payment.paymentDate" 
               value={formData.payment.paymentDate} 
               onChange={handleChange}
-              required // Usually good to require date if creating a payment record
+              required
             />
 
             {/* Notes */}

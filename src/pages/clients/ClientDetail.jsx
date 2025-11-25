@@ -15,7 +15,7 @@ import { useClientDetail } from "../../hooks/useClientDetail";
 
 // Sub-components
 import EventDetailModal from "../events/EventDetailModal";
-import EventForm from "../events/EventForm";
+import EventForm from "../events/EventForm/SharedEventForm";
 import ClientForm from "./ClientForm";
 import ClientHeader from "./components/ClientHeader";
 import ClientInfo from "./components/ClientInfo";

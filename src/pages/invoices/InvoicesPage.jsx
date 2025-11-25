@@ -21,7 +21,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  FileText, // ✅ Added missing import
+  FileText,
 } from "lucide-react";
 
 // ✅ Generic Components
@@ -30,8 +30,7 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable";
-import Pagination from "../../components/common/Pagination";
+import Table from "../../components/common/NewTable"; // Internal pagination supported
 import Select from "../../components/common/Select";
 import InvoiceFormPage from "./InvoiceFormPage";
 
@@ -418,7 +417,7 @@ const InvoicesPage = () => {
         </div>
       </div>
 
-      {/* 2. STATS CARDS (Using standard divs instead of Card) */}
+      {/* 2. STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatBox label="Total Revenue" value={stats?.totalRevenue} loading={statsLoading} icon={TrendingUp} color="blue" />
         <StatBox label="Paid" value={stats?.paid} loading={statsLoading} icon={CheckCircle} color="green" />
@@ -426,7 +425,7 @@ const InvoicesPage = () => {
         <StatBox label="Overdue" value={stats?.overdue} loading={statsLoading} icon={XCircle} color="red" />
       </div>
 
-      {/* 3. CONTROLS (Using standard div) */}
+      {/* 3. CONTROLS */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
            {/* Type Toggle */}
@@ -489,27 +488,25 @@ const InvoicesPage = () => {
         )}
       </div>
 
-      {/* 4. TABLE */}
+      {/* 4. TABLE WITH INTEGRATED PAGINATION */}
       {invoices.length > 0 ? (
-        <>
-          <Table 
-             columns={columns} 
-             data={invoices} 
-             onRowClick={handleRowClick}
-             selectable={true}
-             selectedRows={selectedRows}
-             onSelectionChange={setSelectedRows}
-             striped
-          />
-          <Pagination 
-             currentPage={currentPage} 
-             totalPages={totalPages} 
-             totalItems={totalItems} 
-             onPageChange={setCurrentPage} 
-             pageSize={pageSize}
-             onPageSizeChange={setPageSize}
-          />
-        </>
+        <Table 
+           columns={columns} 
+           data={invoices} 
+           onRowClick={handleRowClick}
+           selectable={true}
+           selectedRows={selectedRows}
+           onSelectionChange={setSelectedRows}
+           striped
+           // Pagination props
+           pagination={true}
+           currentPage={currentPage}
+           totalPages={totalPages}
+           totalItems={totalItems}
+           onPageChange={setCurrentPage}
+           pageSize={pageSize}
+           onPageSizeChange={setPageSize}
+        />
       ) : (
          <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-300 dark:bg-gray-800 dark:border-gray-700">
             <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
@@ -596,7 +593,7 @@ const InvoicesPage = () => {
   );
 };
 
-// --- Helper Sub-component (Replacing Card) ---
+// --- Helper Sub-component ---
 const StatBox = ({ label, value, loading, icon: Icon, color }) => {
   const colors = {
     blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",

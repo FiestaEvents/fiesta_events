@@ -20,7 +20,7 @@ import Button from "../../components/common/Button";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
 
 // ✅ Sub-components
-import EventForm from "./EventForm";
+import EventForm from "./EventForm/SharedEventForm";
 import EventHeader from "./components/EventHeader";
 import EventInfo from "./components/EventInfo";
 import EventPartnersTab from "./components/EventPartnersTab";

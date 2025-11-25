@@ -649,6 +649,7 @@
       "updateEvent": "Update Event"
     },
     "messages": {
+      "fixErrors": "Please fix the errors in the form before proceeding.",
       "saveFailed": "Failed to save event.",
       "draftRestored": "Draft restored successfully.",
       "clientCreated": "Client {{name}} created and selected.",
@@ -2706,6 +2707,215 @@
       "confirm": {
         "deleteSpace": "Are you sure you want to delete this space?",
         "clearAllAmenities": "Remove all amenities?"
+      }
+    }
+  },
+  "venueSettings": {
+    "title": "Venue Settings",
+    "subtitle": "Manage your venue information, operating hours, and team settings",
+    
+    "tabs": {
+      "personal": "Personal",
+      "security": "Security",
+      "venue": "Venue",
+      "amenities": "Amenities & Hours",
+      "spaces": "Spaces"
+    },
+    
+    "common": {
+      "loading": "Loading...",
+      "tryAgain": "Try Again",
+      "save": "Save Changes"
+    },
+    
+    "personal": {
+      "title": "Personal Information",
+      "description": "Update your personal details and profile information",
+      "fields": {
+        "fullName": "Full Name",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "avatar": "Avatar URL"
+      },
+      "avatarPreview": {
+        "title": "Avatar Preview",
+        "description": "This is how your avatar will appear across the platform"
+      },
+      "save": "Save Personal Info"
+    },
+    
+    "security": {
+      "title": "Password & Security",
+      "description": "Change your password and manage security settings",
+      "fields": {
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password"
+      },
+      "requirements": {
+        "title": "Password Requirements",
+        "items": [
+          "At least 6 characters long",
+          "Mix of uppercase and lowercase letters recommended",
+          "Include numbers or special characters for stronger security"
+        ]
+      },
+      "changePassword": "Change Password"
+    },
+    
+    "venue": {
+      "basicInfo": {
+        "title": "Basic Information",
+        "description": "Essential details about your venue",
+        "fields": {
+          "venueName": "Venue Name",
+          "description": "Description",
+          "descriptionPlaceholder": "Describe your venue, its unique features, and what makes it special..."
+        }
+      },
+      "address": {
+        "title": "Location & Address",
+        "description": "Where your venue is located",
+        "fields": {
+          "street": "Street Address",
+          "city": "City",
+          "state": "State/Province",
+          "zipCode": "ZIP/Postal Code",
+          "country": "Country"
+        }
+      },
+      "contact": {
+        "title": "Contact Information",
+        "description": "How clients can reach you",
+        "fields": {
+          "phone": "Phone Number",
+          "email": "Email Address"
+        }
+      },
+      "save": "Save Venue Settings"
+    },
+    
+    "amenities": {
+      "title": "Amenities",
+      "description": "Select the amenities and features available at your venue",
+      "quickAdd": {
+        "title": "Quick Add Amenities",
+        "description": "Click to add popular amenities to your venue"
+      },
+      "customAmenity": {
+        "title": "Add Custom Amenity",
+        "placeholder": "Enter custom amenity name",
+        "add": "Add"
+      },
+      "selectedAmenities": {
+        "title": "Selected Amenities ({{count}})",
+        "clearAll": "Clear All",
+        "empty": {
+          "title": "No amenities added yet",
+          "description": "Start adding amenities using the options above"
+        }
+      },
+      "operatingHours": {
+        "title": "Operating Hours",
+        "description": "Set your venue's regular operating hours for each day of the week",
+        "days": {
+          "monday": "Monday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday",
+          "thursday": "Thursday",
+          "friday": "Friday",
+          "saturday": "Saturday",
+          "sunday": "Sunday"
+        },
+        "labels": {
+          "to": "to",
+          "closed": "Closed"
+        }
+      },
+      "save": "Save Amenities & Hours"
+    },
+    
+    "spaces": {
+      "title": "Venue Spaces",
+      "description": "Manage different rooms and areas within your venue",
+      "existingSpaces": {
+        "title": "Your Spaces ({{count}})",
+        "description": "All available spaces in your venue",
+        "capacity": "Capacity",
+        "price": "Base Price",
+        "status": {
+          "active": "Active",
+          "inactive": "Inactive"
+        },
+        "actions": {
+          "edit": "Edit space",
+          "delete": "Delete space"
+        }
+      },
+      "form": {
+        "addTitle": "Add New Space",
+        "addDescription": "Create a new bookable space within your venue",
+        "editTitle": "Edit Space",
+        "editDescription": "Update the details of this space",
+        "fields": {
+          "spaceName": "Space Name",
+          "description": "Description",
+          "descriptionPlaceholder": "Describe this space, its features, and ideal uses...",
+          "basePrice": "Base Price",
+          "minCapacity": "Min Capacity",
+          "maxCapacity": "Max Capacity"
+        },
+        "activeLabel": "Space is active and bookable",
+        "actions": {
+          "add": "Add Space",
+          "update": "Update Space",
+          "cancel": "Cancel"
+        }
+      },
+      "emptyState": {
+        "title": "No spaces yet",
+        "description": "Create your first venue space to start managing bookings for different areas"
+      },
+      "save": "Save Spaces"
+    },
+    
+    "validation": {
+      "required": "This field is required",
+      "email": "Please enter a valid email address",
+      "minLength": "Must be at least {{min}} characters",
+      "passwordsMatch": "Passwords do not match",
+      "capacityRange": "Maximum capacity must be greater than minimum capacity"
+    },
+    
+    "notifications": {
+      "success": {
+        "profileUpdated": "Profile updated successfully",
+        "passwordChanged": "Password changed successfully",
+        "venueUpdated": "Venue settings saved successfully",
+        "amenityAdded": "Amenity added successfully",
+        "customAmenityAdded": "Custom amenity added successfully",
+        "amenitiesCleared": "All amenities removed",
+        "spaceCreated": "Space created successfully",
+        "spaceUpdated": "Space updated successfully",
+        "spaceDeleted": "Space deleted successfully",
+        "imageUploaded": "Image uploaded successfully",
+        "imageRemoved": "Image removed successfully"
+      },
+      "error": {
+        "loadFailed": "Failed to load settings. Please try again.",
+        "saveFailed": "Failed to save changes. Please try again.",
+        "generic": "Please fix the errors before saving",
+        "amenityExists": "This amenity has already been added",
+        "spaceNameRequired": "Space name is required",
+        "capacityRequired": "Capacity information is required",
+        "priceRequired": "Base price is required",
+        "uploadFailed": "Failed to upload image",
+        "deleteFailed": "Failed to delete",
+        "saveSpaceFirst": "Please save the space before uploading images"
+      },
+      "confirm": {
+        "deleteSpace": "Are you sure you want to delete this space? This action cannot be undone.",
+        "clearAllAmenities": "Are you sure you want to remove all amenities?"
       }
     }
   },

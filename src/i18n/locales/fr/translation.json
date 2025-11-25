@@ -2735,108 +2735,139 @@
     "saveError": "Échec de l'enregistrement des paramètres."
   }
 },
-  "venueSettings": {
-    "title": "Paramètres",
-    "subtitle": "Gérez votre profil, les détails de votre lieu et vos préférences",
+   "venueSettings": {
+    "title": "Paramètres de la salle",
+    "subtitle": "Gérez les informations de votre salle, les horaires d'ouverture et les paramètres de l'équipe",
+    
     "tabs": {
-      "personal": "Informations Personnelles",
+      "personal": "Personnel",
       "security": "Sécurité",
-      "venue": "Détails du Lieu",
+      "venue": "Salle",
       "amenities": "Équipements & Horaires",
-      "spaces": "Espaces du Lieu"
+      "spaces": "Espaces"
     },
+    
+    "common": {
+      "loading": "Chargement...",
+      "tryAgain": "Réessayer",
+      "save": "Enregistrer les modifications"
+    },
+    
     "personal": {
-      "title": "Informations Personnelles",
-      "description": "Mettez à jour vos informations personnelles et votre photo de profil",
+      "title": "Informations personnelles",
+      "description": "Mettez à jour vos informations personnelles et votre profil",
       "fields": {
-        "fullName": "Nom Complet",
-        "email": "Adresse Email (Lecture seule)",
-        "phone": "Numéro de Téléphone",
-        "avatar": "URL de l'Avatar"
+        "fullName": "Nom complet",
+        "email": "Adresse e-mail",
+        "phone": "Numéro de téléphone",
+        "avatar": "URL de l'avatar"
       },
       "avatarPreview": {
-        "title": "Photo de Profil",
-        "description": "Aperçu de votre avatar"
+        "title": "Aperçu de l'avatar",
+        "description": "Voici comment votre avatar apparaîtra sur la plateforme"
       },
-      "save": "Sauvegarder les Modifications"
+      "save": "Enregistrer les infos personnelles"
     },
+    
     "security": {
-      "title": "Changer le Mot de Passe",
-      "description": "Assurez-vous que votre compte utilise un mot de passe fort",
+      "title": "Mot de passe et sécurité",
+      "description": "Changez votre mot de passe et gérez les paramètres de sécurité",
       "fields": {
-        "currentPassword": "Mot de Passe Actuel",
-        "newPassword": "Nouveau Mot de Passe",
-        "confirmPassword": "Confirmer le Nouveau Mot de Passe"
+        "currentPassword": "Mot de passe actuel",
+        "newPassword": "Nouveau mot de passe",
+        "confirmPassword": "Confirmer le nouveau mot de passe"
       },
       "requirements": {
-        "title": "Exigences du Mot de Passe :",
-        "items": "Items"
+        "title": "Exigences du mot de passe",
+        "items": [
+          "Au moins 6 caractères",
+          "Mélange de majuscules et minuscules recommandé",
+          "Inclure des chiffres ou des caractères spéciaux pour plus de sécurité"
+        ]
       },
-      "changePassword": "Changer le Mot de Passe"
+      "changePassword": "Changer le mot de passe"
     },
+    
     "venue": {
       "basicInfo": {
-        "title": "Informations de Base",
+        "title": "Informations de base",
+        "description": "Détails essentiels sur votre salle",
         "fields": {
-          "venueName": "Nom du Lieu",
-          "description": "Description"
+          "venueName": "Nom de la salle",
+          "description": "Description",
+          "descriptionPlaceholder": "Décrivez votre salle, ses caractéristiques uniques et ce qui la rend spéciale..."
         }
       },
       "address": {
-        "title": "Adresse",
+        "title": "Localisation et adresse",
+        "description": "Où se trouve votre salle",
         "fields": {
           "street": "Adresse",
           "city": "Ville",
           "state": "État/Province",
-          "zipCode": "Code Postal",
+          "zipCode": "Code postal",
           "country": "Pays"
         }
       },
       "contact": {
-        "title": "Informations de Contact",
+        "title": "Coordonnées",
+        "description": "Comment les clients peuvent vous contacter",
         "fields": {
-          "phone": "Téléphone",
-          "email": "Email"
+          "phone": "Numéro de téléphone",
+          "email": "Adresse e-mail"
         }
       },
-      "save": "Sauvegarder les Détails du Lieu"
+      "save": "Enregistrer les paramètres de la salle"
     },
+    
     "amenities": {
-      "title": "Équipements du Lieu",
-      "description": "Ajoutez les équipements que votre lieu propose. Sélectionnez parmi les options courantes ou ajoutez des équipements personnalisés.",
+      "title": "Équipements",
+      "description": "Sélectionnez les équipements et fonctionnalités disponibles dans votre salle",
       "quickAdd": {
-        "title": "Ajout Rapide d'Équipements Courants",
-        "description": "Cliquez pour ajouter les équipements fréquemment utilisés pour les mariages et événements"
+        "title": "Ajout rapide d'équipements",
+        "description": "Cliquez pour ajouter des équipements populaires à votre salle"
       },
       "customAmenity": {
-        "title": "Ajouter un Équipement Personnalisé",
-        "placeholder": "Entrez un équipement personnalisé (ex: Mobilier Vintage, Feu de Camp, etc.)",
-        "add": "Ajouter Personnalisé"
+        "title": "Ajouter un équipement personnalisé",
+        "placeholder": "Entrez le nom de l'équipement personnalisé",
+        "add": "Ajouter"
       },
       "selectedAmenities": {
-        "title": "Équipements Sélectionnés ({{count}})",
-        "clearAll": "Tout Effacer",
+        "title": "Équipements sélectionnés ({{count}})",
+        "clearAll": "Tout effacer",
         "empty": {
-          "description": "Sélectionnez parmi les options courantes ci-dessus ou ajoutez des équipements personnalisés."
+          "title": "Aucun équipement ajouté",
+          "description": "Commencez à ajouter des équipements en utilisant les options ci-dessus"
         }
       },
       "operatingHours": {
-        "title": "Heures d'Ouverture",
-        "description": "Définissez l'horaire hebdomadaire de votre lieu",
+        "title": "Horaires d'ouverture",
+        "description": "Définissez les horaires d'ouverture réguliers de votre salle pour chaque jour de la semaine",
+        "days": {
+          "monday": "Lundi",
+          "tuesday": "Mardi",
+          "wednesday": "Mercredi",
+          "thursday": "Jeudi",
+          "friday": "Vendredi",
+          "saturday": "Samedi",
+          "sunday": "Dimanche"
+        },
         "labels": {
           "to": "à",
           "closed": "Fermé"
         }
       },
-      "save": "Sauvegarder les Équipements & Horaires"
+      "save": "Enregistrer équipements et horaires"
     },
+    
     "spaces": {
-      "title": "Espaces du Lieu",
-      "description": "Gérez les différents espaces dans votre lieu",
+      "title": "Espaces de la salle",
+      "description": "Gérez les différentes salles et zones de votre établissement",
       "existingSpaces": {
-        "title": "Espaces Existants ({{count}})",
+        "title": "Vos espaces ({{count}})",
+        "description": "Tous les espaces disponibles dans votre salle",
         "capacity": "Capacité",
-        "price": "Prix",
+        "price": "Prix de base",
         "status": {
           "active": "Actif",
           "inactive": "Inactif"
@@ -2846,68 +2877,70 @@
           "delete": "Supprimer l'espace"
         }
       },
-      "emptyState": {
-        "title": "Aucun Espace pour le Moment",
-        "description": "Ajoutez différents espaces dans votre lieu pour offrir plus d'options de réservation à vos clients."
-      },
       "form": {
-        "addTitle": "Ajouter un Nouvel Espace",
-        "editTitle": "Modifier l'Espace",
+        "addTitle": "Ajouter un nouvel espace",
+        "addDescription": "Créez un nouvel espace réservable dans votre salle",
+        "editTitle": "Modifier l'espace",
+        "editDescription": "Mettez à jour les détails de cet espace",
         "fields": {
-          "spaceName": "Nom de l'Espace",
-          "basePrice": "Prix de Base ($)",
+          "spaceName": "Nom de l'espace",
           "description": "Description",
-          "minCapacity": "Capacité Minimum",
-          "maxCapacity": "Capacité Maximum"
+          "descriptionPlaceholder": "Décrivez cet espace, ses caractéristiques et ses utilisations idéales...",
+          "basePrice": "Prix de base",
+          "minCapacity": "Capacité min",
+          "maxCapacity": "Capacité max"
         },
-        "activeLabel": "Actif (disponible pour les réservations)",
+        "activeLabel": "L'espace est actif et réservable",
         "actions": {
-          "add": "Ajouter l'Espace",
-          "update": "Mettre à Jour l'Espace",
+          "add": "Ajouter l'espace",
+          "update": "Mettre à jour l'espace",
           "cancel": "Annuler"
         }
       },
-      "save": "Sauvegarder Tous les Changements"
+      "emptyState": {
+        "title": "Aucun espace encore",
+        "description": "Créez votre premier espace pour commencer à gérer les réservations pour différentes zones"
+      },
+      "save": "Enregistrer les espaces"
     },
-    "common": {
-      "loading": "Chargement des paramètres...",
-      "tryAgain": "Réessayer"
-    },
+    
     "validation": {
-      "required": "Ce champ est requis",
-      "email": "Veuillez fournir un email valide",
-      "minLength": "Doit contenir au moins {min} caractères",
-      "passwordsMatch": "Les mots de passe doivent correspondre",
-      "capacityRange": "La capacité maximale doit être supérieure ou égale à la capacité minimale"
+      "required": "Ce champ est obligatoire",
+      "email": "Veuillez entrer une adresse e-mail valide",
+      "minLength": "Doit contenir au moins {{min}} caractères",
+      "passwordsMatch": "Les mots de passe ne correspondent pas",
+      "capacityRange": "La capacité maximale doit être supérieure à la capacité minimale"
     },
+    
     "notifications": {
       "success": {
-        "profileUpdated": "Profil mis à jour avec succès !",
-        "passwordChanged": "Mot de passe changé avec succès !",
-        "venueUpdated": "Paramètres du lieu mis à jour avec succès !",
+        "profileUpdated": "Profil mis à jour avec succès",
+        "passwordChanged": "Mot de passe modifié avec succès",
+        "venueUpdated": "Paramètres de la salle enregistrés avec succès",
+        "amenityAdded": "Équipement ajouté avec succès",
+        "customAmenityAdded": "Équipement personnalisé ajouté avec succès",
+        "amenitiesCleared": "Tous les équipements ont été supprimés",
         "spaceCreated": "Espace créé avec succès",
         "spaceUpdated": "Espace mis à jour avec succès",
         "spaceDeleted": "Espace supprimé avec succès",
-        "amenityAdded": "Équipement ajouté",
-        "customAmenityAdded": "Équipement personnalisé ajouté",
         "imageUploaded": "Image téléchargée avec succès",
         "imageRemoved": "Image supprimée avec succès"
       },
       "error": {
-        "generic": "Une erreur est survenue",
-        "loadFailed": "Échec du chargement des paramètres",
-        "saveFailed": "Échec de la sauvegarde",
+        "loadFailed": "Échec du chargement des paramètres. Veuillez réessayer.",
+        "saveFailed": "Échec de l'enregistrement des modifications. Veuillez réessayer.",
+        "generic": "Veuillez corriger les erreurs avant d'enregistrer",
+        "amenityExists": "Cet équipement a déjà été ajouté",
+        "spaceNameRequired": "Le nom de l'espace est obligatoire",
+        "capacityRequired": "Les informations de capacité sont obligatoires",
+        "priceRequired": "Le prix de base est obligatoire",
+        "uploadFailed": "Échec du téléchargement de l'image",
         "deleteFailed": "Échec de la suppression",
-        "uploadFailed": "Échec du téléchargement",
-        "spaceNameRequired": "Le nom de l'espace est requis",
-        "capacityRequired": "La plage de capacité est requise",
-        "priceRequired": "Le prix est requis",
-        "amenityExists": "Cet équipement existe déjà",
-        "saveSpaceFirst": "Veuillez d'abord sauvegarder l'espace avant de télécharger des images"
+        "saveSpaceFirst": "Veuillez enregistrer l'espace avant de télécharger des images"
       },
       "confirm": {
-        "deleteSpace": "Êtes-vous sûr de vouloir supprimer cet espace ?",
-        "clearAllAmenities": "Supprimer tous les équipements ?"
+        "deleteSpace": "Êtes-vous sûr de vouloir supprimer cet espace ? Cette action ne peut pas être annulée.",
+        "clearAllAmenities": "Êtes-vous sûr de vouloir supprimer tous les équipements ?"
       }
     }
   },
