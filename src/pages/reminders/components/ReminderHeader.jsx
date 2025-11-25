@@ -1,15 +1,10 @@
 import React from "react";
-import { Bell, Edit, Trash2, CheckCircle, Clock, XCircle ,ArrowLeft} from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Bell, Edit, Trash2, CheckCircle, Clock, XCircle, ArrowLeft } from "lucide-react";
 
-const getInitials = (name = "") =>
-  name
-    .trim()
-    .split(/\s+/)
-    .map((n) => n[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+// ✅ Generic Components
+import Button from "../../../components/common/Button";
+import Badge, { StatusBadge } from "../../../components/common/Badge";
 
 const ReminderHeader = ({
   reminder,
@@ -19,99 +14,120 @@ const ReminderHeader = ({
   onComplete,
   onSnooze,
   onCancel,
-  getStatusColor,
-  getStatusLabel,
-  getPriorityColor,
   actionLoading,
 }) => {
+  const { t } = useTranslation();
+
+  // Helper to map priority to theme variants
+  const getPriorityVariant = (priority) => {
+    const map = {
+      urgent: "danger",
+      high: "warning", // Orange/Red
+      medium: "info",  // Blue
+      low: "secondary", // Gray
+    };
+    return map[priority?.toLowerCase()] || "secondary";
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
-      {/* Action Buttons */}
-      <div className="flex justify-between gap-2 mb-4">
+    <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
+      
+      {/* Top Navigation & Actions */}
+      <div className="flex justify-between items-center gap-2 mb-6">
         <div>
-          <button
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={onBack}
-            className="flex items-center border border-gray-300 p-1 rounded-lg pr-2 gap-2 text-sm text-gray-600 hover:text-gray-900 transition dark:text-white"
+            className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Reminders
-          </button>
+            <span className="hidden sm:inline">{t('reminders.backToReminders', 'Back')}</span>
+          </Button>
         </div>
+        
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onEdit}
-            className="p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition dark:text-gray-400 dark:hover:bg-blue-900 dark:hover:text-white"
-            title="Edit Reminder"
+            title={t('reminders.actions.edit', 'Edit')}
+            className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30"
           >
             <Edit className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onDelete}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition dark:text-red-400 dark:hover:bg-red-900"
-            title="Delete Reminder"
+            title={t('reminders.actions.delete', 'Delete')}
+            className="text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30"
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Reminder Header */}
+      {/* Reminder Identity */}
       <div className="text-center mb-6">
-        <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto">
+        <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto shadow-md">
           <Bell className="w-8 h-8" />
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white">
-          {reminder.title || "Untitled Reminder"}
+        
+        <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white break-words leading-tight">
+          {reminder.title || t('reminders.untitled', 'Untitled Reminder')}
         </h1>
 
-        <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
-          <span
-            className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(reminder.status)}`}
-          >
-            {getStatusLabel(reminder.status)}
-          </span>
+        <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+          <StatusBadge status={reminder.status} size="md" dot={true} />
           
-          <span
-            className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getPriorityColor(reminder.priority)}`}
-          >
-            {reminder.priority} Priority
-          </span>
+          {reminder.priority && (
+            <Badge 
+              variant={getPriorityVariant(reminder.priority)} 
+              size="md" 
+              className="capitalize"
+            >
+              {reminder.priority}
+            </Badge>
+          )}
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col gap-2">
-        {reminder.status === "active" && (
-          <>
-            <button
-              onClick={onSnooze}
-              disabled={actionLoading}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-100 text-orange-800 rounded-lg border border-orange-200 hover:bg-orange-200 transition disabled:opacity-50 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-800"
-            >
-              <Clock className="w-4 h-4" />
-              {actionLoading ? "Snoozing..." : "Snooze 1 Hour"}
-            </button>
-            <button
-              onClick={onComplete}
-              disabled={actionLoading}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg border border-green-200 hover:bg-green-200 transition disabled:opacity-50 dark:bg-green-900 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-800"
-            >
-              <CheckCircle className="w-4 h-4" />
-              {actionLoading ? "Completing..." : "Mark Complete"}
-            </button>
-          </>
-        )}
-        {reminder.status === "active" && (
-          <button
+      {/* Primary Actions (Snooze/Complete/Cancel) */}
+      {reminder.status === "active" && (
+        <div className="flex flex-col gap-3 pt-2 border-t border-gray-100 dark:border-gray-700 mt-2">
+          
+          <Button
+            onClick={onComplete}
+            disabled={actionLoading}
+            className="w-full justify-center bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+            icon={CheckCircle}
+          >
+            {actionLoading ? t('reminders.completing', 'Completing...') : t('reminders.markComplete', 'Mark Complete')}
+          </Button>
+
+          <Button
+            onClick={onSnooze}
+            disabled={actionLoading}
+            variant="outline"
+            className="w-full justify-center text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/20"
+            icon={Clock}
+          >
+            {actionLoading ? t('reminders.snoozing', 'Snoozing...') : t('reminders.snooze1Hour', 'Snooze 1 Hour')}
+          </Button>
+
+          <Button
             onClick={onCancel}
             disabled={actionLoading}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-100 text-red-800 rounded-lg border border-red-200 hover:bg-red-200 transition disabled:opacity-50 dark:bg-red-900 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-800"
+            variant="ghost"
+            className="w-full justify-center text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+            icon={XCircle}
           >
-            <XCircle className="w-4 h-4" />
-            {actionLoading ? "Cancelling..." : "Cancel Reminder"}
-          </button>
-        )}
-      </div>
+            {actionLoading ? t('reminders.cancelling', 'Cancelling...') : t('reminders.cancelReminder', 'Cancel Reminder')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

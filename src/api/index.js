@@ -1,8 +1,7 @@
-
 //fiesta_events/src/api/index.js
 /**
  * ============================================
- * FIESTA VENUE MANAGEMENT - CONSOLIDATED API SERVICES
+ * Fiesta Events - CONSOLIDATED API SERVICES
  * ============================================
  * *
  */
@@ -409,7 +408,10 @@ export const eventService = {
    */
   updatePartner: async (id, partnerId, partnerData) => {
     try {
-      const response = await api.put(`/events/${id}/partners/${partnerId}`, partnerData);
+      const response = await api.put(
+        `/events/${id}/partners/${partnerId}`,
+        partnerData
+      );
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -501,7 +503,7 @@ export const eventService = {
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // ============================================
@@ -643,8 +645,8 @@ export const clientService = {
    */
   search: async (query, params = {}) => {
     try {
-      const response = await api.get("/clients", { 
-        params: { ...params, search: query } 
+      const response = await api.get("/clients", {
+        params: { ...params, search: query },
       });
       return handleResponse(response);
     } catch (error) {
@@ -716,15 +718,15 @@ export const clientService = {
    */
   export: async (params = {}) => {
     try {
-      const response = await api.get("/clients/export", { 
+      const response = await api.get("/clients/export", {
         params,
-        responseType: 'blob'
+        responseType: "blob",
       });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // ============================================
@@ -2143,8 +2145,8 @@ export const reminderService = {
    */
   getByType: async (type, params = {}) => {
     try {
-      const response = await api.get("/reminders", { 
-        params: { ...params, type } 
+      const response = await api.get("/reminders", {
+        params: { ...params, type },
       });
       return handleResponse(response);
     } catch (error) {
@@ -2164,7 +2166,7 @@ export const reminderService = {
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // ============================================
@@ -2917,7 +2919,7 @@ export const dashboardService = {
 export const invoiceService = {
   /**
    * Get all invoices with filters
-   * @param {Object} params - { search, status, invoiceType, client, partner, event, startDate, endDate, page, limit, isArchived }
+   * @param {Object} params - { page, limit, search, status, type, startDate, endDate }
    * @returns {Promise<{ invoices: Array, pagination }>}
    */
   getAll: async (params = {}) => {
@@ -2930,8 +2932,8 @@ export const invoiceService = {
   },
 
   /**
-   * Get single invoice by ID
-   * @param {string} id - Invoice ID
+   * Get invoice by ID
+   * @param {string} id
    * @returns {Promise<{ invoice }>}
    */
   getById: async (id) => {
@@ -2944,8 +2946,8 @@ export const invoiceService = {
   },
 
   /**
-   * Create new invoice (client or partner)
-   * @param {Object} data - Invoice data including invoiceType, client/partner, items, etc.
+   * Create new invoice
+   * @param {Object} data
    * @returns {Promise<{ invoice }>}
    */
   create: async (data) => {
@@ -2958,43 +2960,9 @@ export const invoiceService = {
   },
 
   /**
-   * Create client invoice
-   * @param {Object} data - Invoice data with client reference
-   * @returns {Promise<{ invoice }>}
-   */
-  createClientInvoice: async (data) => {
-    try {
-      const response = await api.post("/invoices", {
-        ...data,
-        invoiceType: "client",
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Create partner invoice/bill
-   * @param {Object} data - Invoice data with partner reference
-   * @returns {Promise<{ invoice }>}
-   */
-  createPartnerInvoice: async (data) => {
-    try {
-      const response = await api.post("/invoices", {
-        ...data,
-        invoiceType: "partner",
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
    * Update invoice
-   * @param {string} id - Invoice ID
-   * @param {Object} data - Fields to update
+   * @param {string} id
+   * @param {Object} data
    * @returns {Promise<{ invoice }>}
    */
   update: async (id, data) => {
@@ -3007,9 +2975,9 @@ export const invoiceService = {
   },
 
   /**
-   * Archive invoice (soft delete)
-   * @param {string} id - Invoice ID
-   * @returns {Promise<{ invoice }>}
+   * Delete invoice (Archive)
+   * @param {string} id
+   * @returns {Promise<{ success: boolean }>}
    */
   delete: async (id) => {
     try {
@@ -3021,66 +2989,10 @@ export const invoiceService = {
   },
 
   /**
-   * Restore archived invoice
-   * @param {string} id - Invoice ID
-   * @returns {Promise<{ invoice }>}
-   */
-  restore: async (id) => {
-    try {
-      const response = await api.patch(`/invoices/${id}/restore`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get archived invoices
-   * @param {Object} params - Query parameters
-   * @returns {Promise<{ invoices: Array, pagination: Object }>}
-   */
-  getArchived: async (params = {}) => {
-    try {
-      const response = await api.get("/invoices/archived", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Bulk archive invoices
-   * @param {Array} ids - Array of invoice IDs
-   * @returns {Promise<{ archived: number }>}
-   */
-  bulkArchive: async (ids) => {
-    try {
-      const response = await api.post("/invoices/bulk-archive", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Bulk restore invoices
-   * @param {Array} ids - Array of invoice IDs
-   * @returns {Promise<{ restored: number }>}
-   */
-  bulkRestore: async (ids) => {
-    try {
-      const response = await api.post("/invoices/bulk-restore", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
    * Send invoice via email
-   * @param {string} id - Invoice ID
-   * @param {Object} data - { email, message }
-   * @returns {Promise<{ invoice }>}
+   * @param {string} id
+   * @param {Object} data - { message, sendCopy }
+   * @returns {Promise<{ success: boolean }>}
    */
   send: async (id, data = {}) => {
     try {
@@ -3092,63 +3004,14 @@ export const invoiceService = {
   },
 
   /**
-   * Download invoice PDF
-   * @param {string} id - Invoice ID
-   * @returns {Promise<Blob>}
-   */
-download: async (id) => {
-  try {
-    const response = await api.get(`/invoices/${id}/download`, {
-      responseType: 'blob',
-      timeout: 30000, // 30 second timeout
-    });
-    
-    // Check if response is a blob
-    if (response.data instanceof Blob) {
-      return response.data;
-    }
-    throw new Error('Invalid response format');
-  } catch (error) {
-    console.error('Download API error:', error);
-    
-    // Handle blob errors - read the blob to get error message
-    if (error.response?.data instanceof Blob) {
-      try {
-        const errorText = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsText(error.response.data);
-        });
-        
-        const errorData = JSON.parse(errorText);
-        throw new Error(errorData.message || 'PDF generation failed');
-      } catch (parseError) {
-        throw new Error('Failed to generate PDF');
-      }
-    }
-    
-    // Handle other errors
-    if (error.response?.status === 404) {
-      throw new Error('Invoice not found');
-    } else if (error.response?.status === 500) {
-      throw new Error('Server error generating PDF');
-    } else if (error.code === 'ECONNABORTED') {
-      throw new Error('Request timeout - PDF generation taking too long');
-    }
-    
-    throw new Error(error.message || 'Failed to download invoice');
-  }
-},
-
-  /**
    * Mark invoice as paid
-   * @param {string} id - Invoice ID
-   * @param {Object} data - { paymentMethod, reference }
+   * @param {string} id
+   * @param {Object} data - { paymentMethod, notes }
    * @returns {Promise<{ invoice }>}
    */
   markAsPaid: async (id, data = {}) => {
     try {
-      const response = await api.patch(`/invoices/${id}/paid`, data);
+      const response = await api.post(`/invoices/${id}/mark-paid`, data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -3157,14 +3020,32 @@ download: async (id) => {
 
   /**
    * Cancel invoice
-   * @param {string} id - Invoice ID
-   * @param {string} reason - Cancellation reason
+   * @param {string} id
+   * @param {string} reason
    * @returns {Promise<{ invoice }>}
    */
   cancel: async (id, reason = "") => {
     try {
-      const response = await api.patch(`/invoices/${id}/cancel`, { reason });
+      const response = await api.post(`/invoices/${id}/cancel`, { reason });
       return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Download invoice PDF
+   * @param {string} id
+   * @param {string} language - 'en', 'fr', 'ar'
+   * @returns {Promise<Blob>}
+   */
+  download: async (id, language = "fr") => {
+    try {
+      const response = await api.get(`/invoices/${id}/download`, {
+        params: { language },
+        responseType: "blob", // Important for PDF
+      });
+      return response.data;
     } catch (error) {
       return handleError(error);
     }
@@ -3173,7 +3054,7 @@ download: async (id) => {
   /**
    * Get invoice statistics
    * @param {Object} params - { startDate, endDate, invoiceType }
-   * @returns {Promise<{ stats, overdue, dueSoon, monthlyRevenue }>}
+   * @returns {Promise<{ stats }>}
    */
   getStats: async (params = {}) => {
     try {
@@ -3184,14 +3065,17 @@ download: async (id) => {
     }
   },
 
+  // ============================================
+  // INVOICE SETTINGS & CUSTOMIZATION
+  // ============================================
+
   /**
-   * Get client invoices
-   * @param {string} clientId - Client ID
-   * @returns {Promise<{ invoices: Array }>}
+   * Get invoice settings
+   * @returns {Promise<{ data: Object }>}
    */
-  getByClient: async (clientId) => {
+  getSettings: async () => {
     try {
-      const response = await api.get(`/invoices/client/${clientId}`);
+      const response = await api.get("/invoices/settings");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -3199,13 +3083,13 @@ download: async (id) => {
   },
 
   /**
-   * Get partner invoices
-   * @param {string} partnerId - Partner ID
-   * @returns {Promise<{ invoices: Array }>}
+   * Update invoice settings
+   * @param {Object} data - Full settings object
+   * @returns {Promise<{ message: string, data: Object }>}
    */
-  getByPartner: async (partnerId) => {
+  updateSettings: async (data) => {
     try {
-      const response = await api.get(`/invoices/partner/${partnerId}`);
+      const response = await api.put("/invoices/settings", data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -3213,28 +3097,14 @@ download: async (id) => {
   },
 
   /**
-   * Get event invoices (both client and partner)
-   * @param {string} eventId - Event ID
-   * @returns {Promise<{ invoices: Array }>}
+   * Apply a preset template
+   * @param {string} template - 'modern', 'classic', 'minimal'
+   * @returns {Promise<{ message: string, data: Object }>}
    */
-  getByEvent: async (eventId) => {
+  applyTemplate: async (template) => {
     try {
-      const response = await api.get(`/invoices/event/${eventId}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get client invoices with filters
-   * @param {Object} params - Filter parameters
-   * @returns {Promise<{ invoices: Array, pagination }>}
-   */
-  getClientInvoices: async (params = {}) => {
-    try {
-      const response = await api.get("/invoices", {
-        params: { ...params, invoiceType: "client" },
+      const response = await api.post("/invoices/settings/apply-template", {
+        template,
       });
       return handleResponse(response);
     } catch (error) {
@@ -3243,100 +3113,33 @@ download: async (id) => {
   },
 
   /**
-   * Get partner invoices with filters
-   * @param {Object} params - Filter parameters
-   * @returns {Promise<{ invoices: Array, pagination }>}
+   * Reset settings to system defaults
+   * @returns {Promise<{ message: string, data: Object }>}
    */
-  getPartnerInvoices: async (params = {}) => {
+  resetSettings: async () => {
     try {
-      const response = await api.get("/invoices", {
-        params: { ...params, invoiceType: "partner" },
+      const response = await api.post("/invoices/settings/reset");
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Generate a preview based on data (for the settings editor)
+   * @param {Object} invoiceData - Dummy data or current settings
+   * @returns {Promise<{ data: Object }>}
+   */
+  preview: async (invoiceData) => {
+    try {
+      const response = await api.post("/invoices/settings/preview", {
+        invoiceData,
       });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
-
-  /**
-   * Get overdue invoices
-   * @param {string} invoiceType - Optional: 'client' or 'partner'
-   * @returns {Promise<{ invoices: Array }>}
-   */
-  getOverdue: async (invoiceType = null) => {
-    try {
-      const params = { status: "overdue" };
-      if (invoiceType) {
-        params.invoiceType = invoiceType;
-      }
-      const response = await api.get("/invoices", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get unpaid invoices
-   * @param {string} invoiceType - Optional: 'client' or 'partner'
-   * @returns {Promise<{ invoices: Array }>}
-   */
-  getUnpaid: async (invoiceType = null) => {
-    try {
-      const params = { status: "unpaid" };
-      if (invoiceType) {
-        params.invoiceType = invoiceType;
-      }
-      const response = await api.get("/invoices", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Duplicate existing invoice
-   * @param {string} id - Invoice ID to duplicate
-   * @param {Object} overrides - Data to override in duplicated invoice
-   * @returns {Promise<{ invoice }>}
-   */
-  duplicate: async (id, overrides = {}) => {
-    try {
-      const response = await api.post(`/invoices/${id}/duplicate`, overrides);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Add payment to invoice
-   * @param {string} id - Invoice ID
-   * @param {Object} paymentData - Payment data
-   * @returns {Promise<{ invoice }>}
-   */
-  addPayment: async (id, paymentData) => {
-    try {
-      const response = await api.post(`/invoices/${id}/payments`, paymentData);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get invoice payments
-   * @param {string} id - Invoice ID
-   * @returns {Promise<{ payments: Array }>}
-   */
-  getPayments: async (id) => {
-    try {
-      const response = await api.get(`/invoices/${id}/payments`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  }
 };
 // ============================================
 // USER SERVICE

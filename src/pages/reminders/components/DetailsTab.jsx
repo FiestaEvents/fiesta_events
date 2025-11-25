@@ -1,138 +1,160 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { 
   Mail, 
   MessageSquare, 
-  Bell,
+  Bell, 
+  Smartphone,
   Calendar,
   User,
-  CheckCircle,
-  Link as LinkIcon
+  CheckSquare,
+  ArrowUpRight,
+  Layers,
+  Radio
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
-const DetailsTab = ({ reminder, formatDate, getStatusColor, getPriorityColor }) => {
+// ✅ Generic Components
+import Badge from '../../../components/common/Badge';
+
+const DetailsTab = ({ reminder }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
+  // Helper: Map notification types to Icons
   const getNotificationIcon = (method) => {
-    const icons = {
-      email: Mail,
-      sms: MessageSquare,
-      push: Bell,
-      in_app: Bell,
+    const map = {
+      email: <Mail className="w-3.5 h-3.5" />,
+      sms: <MessageSquare className="w-3.5 h-3.5" />,
+      push: <Smartphone className="w-3.5 h-3.5" />,
+      in_app: <Bell className="w-3.5 h-3.5" />,
     };
-    return icons[method] || Bell;
+    return map[method] || <Bell className="w-3.5 h-3.5" />;
   };
 
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    const day = d.getDate();
-    const month = d.toLocaleString("en-GB", { month: "short" });
-    const year = d.getFullYear();
-    const hours = d.getHours().toString().padStart(2, "0");
-    const minutes = d.getMinutes().toString().padStart(2, "0");
-    return `${day} ${month} ${year}, ${hours}:${minutes}`;
+  // Helper: Reusable Row Component (Matches ReminderInfo/RecurrenceTab)
+  const InfoRow = ({ icon: Icon, label, children, color = "blue", action = null }) => {
+    const colorClasses = {
+      blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+      purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
+      orange: "bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400",
+      green: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
+      indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400",
+    };
+
+    return (
+      <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0 group">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClasses[color]}`}>
+          <Icon className="w-5 h-5" />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+            {label}
+          </div>
+          <div className="text-sm font-semibold text-gray-900 dark:text-white break-words">
+            {children}
+          </div>
+        </div>
+
+        {action && (
+          <button
+            onClick={action}
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-900/20 rounded-full transition-colors"
+            title={t('common.viewDetails')}
+          >
+            <ArrowUpRight className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+    );
   };
 
   return (
-    <div className="space-y-6">
-      {/* Notification Methods */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Notification Methods
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {reminder.notificationMethods?.map((method, index) => {
-            const Icon = getNotificationIcon(method);
-            return (
-              <div
-                key={index}
-                className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700"
-              >
-                <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium text-blue-900 dark:text-blue-300 capitalize">
+    <div>
+      {/* Header */}
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+        <Layers className="w-5 h-5 text-indigo-500" />
+        {t('reminders.details.additionalInfo')}
+      </h3>
+
+      <div className="flex flex-col gap-1">
+        
+        {/* --- Notification Methods --- */}
+        <InfoRow 
+          icon={Radio} 
+          label={t('reminders.details.notificationMethods')} 
+          color="blue"
+        >
+          {reminder.notificationMethods && reminder.notificationMethods.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {reminder.notificationMethods.map((method, index) => (
+                <Badge 
+                  key={index} 
+                  variant="info" 
+                  size="sm" 
+                  icon={getNotificationIcon(method)}
+                  className="capitalize"
+                >
                   {method.replace("_", " ")}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        {(!reminder.notificationMethods || reminder.notificationMethods.length === 0) && (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            No notification methods configured
-          </p>
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <span className="text-gray-400 font-normal italic">
+              {t('reminders.noNotificationMethods', 'No active notifications configured')}
+            </span>
+          )}
+        </InfoRow>
+
+        {/* --- Related Items --- */}
+        
+        {/* Related Event */}
+        {reminder.relatedEvent && (
+          <InfoRow 
+            icon={Calendar}
+            label={t('reminders.type.event')}
+            color="orange"
+            action={() => navigate(`/events/${reminder.relatedEvent._id}`)}
+          >
+            {reminder.relatedEvent.title}
+          </InfoRow>
         )}
-      </div>
 
-      {/* Related Items */}
-      {(reminder.relatedEvent || reminder.relatedClient || reminder.relatedTask) && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Related Items
-          </h3>
-          <div className="space-y-3">
-            {reminder.relatedEvent && (
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {reminder.relatedEvent.title}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Event</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => navigate(`/events/${reminder.relatedEvent._id}`)}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
-                >
-                  <LinkIcon className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+        {/* Related Client */}
+        {reminder.relatedClient && (
+          <InfoRow 
+            icon={User}
+            label={t('reminders.type.client')}
+            color="indigo"
+            action={() => navigate(`/clients/${reminder.relatedClient._id}`)}
+          >
+            {reminder.relatedClient.name}
+          </InfoRow>
+        )}
 
-            {reminder.relatedClient && (
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {reminder.relatedClient.name}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Client</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => navigate(`/clients/${reminder.relatedClient._id}`)}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
-                >
-                  <LinkIcon className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+        {/* Related Task */}
+        {reminder.relatedTask && (
+          <InfoRow 
+            icon={CheckSquare}
+            label={t('reminders.type.task')}
+            color="green"
+            action={() => navigate(`/tasks/${reminder.relatedTask._id}`)}
+          >
+            {reminder.relatedTask.title}
+          </InfoRow>
+        )}
 
-            {reminder.relatedTask && (
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {reminder.relatedTask.title}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Task</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => navigate(`/tasks/${reminder.relatedTask._id}`)}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
-                >
-                  <LinkIcon className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+        {/* Empty State for Relations */}
+        {!reminder.relatedEvent && !reminder.relatedClient && !reminder.relatedTask && (
+          <div className="py-4 text-center">
+            <p className="text-xs text-gray-400 italic">
+              {t('reminders.details.noLinkedItems', 'This reminder is not linked to any specific events, clients, or tasks.')}
+            </p>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 };

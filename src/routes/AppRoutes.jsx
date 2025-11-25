@@ -1,162 +1,183 @@
+import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoutes.jsx";
 
-// Layouts
-import AuthLayout from "../components/layout/AuthLayout.jsx";
-import MainLayout from "../components/layout/MainLayout.jsx";
-
-// Common components
+// ✅ Keep LoadingSpinner static so it's available immediately
 import LoadingSpinner from "../components/common/LoadingSpinner.jsx";
 
+// ============================================
+// LAZY IMPORTS (Code Splitting)
+// ============================================
+
+// Layouts
+const AuthLayout = lazy(() => import("../components/layout/AuthLayout.jsx"));
+const MainLayout = lazy(() => import("../components/layout/MainLayout.jsx"));
+
 // Auth Pages
-import Login from "../pages/auth/Login.jsx";
-import Register from "../pages/auth/Register.jsx";
-import ForgotPassword from "../pages/auth/ForgotPassword.jsx";
-import ResetPassword from "../pages/auth/ResetPassword.jsx";
+const Login = lazy(() => import("../pages/auth/Login.jsx"));
+const Register = lazy(() => import("../pages/auth/Register.jsx"));
+const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword.jsx"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword.jsx"));
 
 // Main
-import Dashboard from "../pages/Dashboard.jsx";
+const Dashboard = lazy(() => import("../pages/Dashboard2.jsx"));
+const Landing = lazy(() => import("../pages/landing.jsx"));
 
 // Events
-import EventsList from "../pages/events/EventsList.jsx";
-import EventDetail from "../pages/events/EventDetail.jsx";
-import EventForm from "../pages/events/EventForm.jsx";
+const EventsList = lazy(() => import("../pages/events/EventsList.jsx"));
+const EventDetail = lazy(() => import("../pages/events/EventDetail.jsx"));
+const CreateEventPage = lazy(() => import("../pages/events/EventForm/CreateEventPage.jsx"));
+const EditEventPage = lazy(() => import("../pages/events/EventForm/EditEventPage.jsx"));
 
 // Clients
-import ClientsList from "../pages/clients/ClientsList.jsx";
-import ClientDetail from "../pages/clients/ClientDetail.jsx";
-import ClientForm from "../pages/clients/ClientForm.jsx";
+const ClientsList = lazy(() => import("../pages/clients/ClientsList.jsx"));
+const ClientDetail = lazy(() => import("../pages/clients/ClientDetail.jsx"));
+const ClientForm = lazy(() => import("../pages/clients/ClientForm.jsx"));
 
 // Partners
-import PartnersList from "../pages/partners/PartnersList.jsx";
-import PartnerDetail from "../pages/partners/PartnerDetail.jsx";
-import PartnerForm from "../pages/partners/PartnerForm.jsx";
+const PartnersList = lazy(() => import("../pages/partners/PartnersList.jsx"));
+const PartnerDetail = lazy(() => import("../pages/partners/PartnerDetail.jsx"));
+const PartnerForm = lazy(() => import("../pages/partners/PartnerForm.jsx"));
 
 // Payments
-import PaymentsList from "../pages/payments/PaymentsList.jsx";
-import PaymentDetail from "../pages/payments/PaymentDetail.jsx";
-import PaymentForm from "../pages/payments/PaymentForm.jsx";
+const PaymentsList = lazy(() => import("../pages/payments/PaymentsList.jsx"));
+const PaymentDetail = lazy(() => import("../pages/payments/PaymentDetail.jsx"));
+const PaymentForm = lazy(() => import("../pages/payments/PaymentForm.jsx"));
 
 // Invoices
-import Invoices from "../pages/invoices/InvoicesPage.jsx";
-import InvoiceFormPage from "../pages/invoices/InvoiceFormPage.jsx";
+const Invoices = lazy(() => import("../pages/invoices/InvoicesPage.jsx"));
+const InvoiceFormPage = lazy(() => import("../pages/invoices/InvoiceFormPage.jsx"));
+const InvoiceSettingPage = lazy(() => import("../pages/invoices/InvoiceCustomizationPage.jsx"));
 
 // Finance
-import Finance from "../pages/finance/Finance.jsx";
-import FinanceReports from "../pages/finance/Reports.jsx";
-import Transactions from "../pages/finance/Transactions.jsx";
-import Analytics from "../pages/finance/Analytics.jsx";
+const Finance = lazy(() => import("../pages/finance/Finance.jsx"));
+const FinanceReports = lazy(() => import("../pages/finance/Reports.jsx"));
+const Transactions = lazy(() => import("../pages/finance/Transactions.jsx"));
+const Analytics = lazy(() => import("../pages/finance/Analytics.jsx"));
 
 // Tasks
-import TasksList from "../pages/tasks/TasksList.jsx";
-import TaskDetail from "../pages/tasks/TaskDetail.jsx";
-import TaskForm from "../pages/tasks/TaskForm.jsx";
+const TasksList = lazy(() => import("../pages/tasks/TasksList.jsx"));
+const TaskDetail = lazy(() => import("../pages/tasks/TaskDetail.jsx"));
+const TaskForm = lazy(() => import("../pages/tasks/TaskForm.jsx"));
 
 // Reminders
-import RemindersList from "../pages/reminders/RemindersList.jsx";
-import ReminderDetail from "../pages/reminders/ReminderDetails.jsx";
-import ReminderForm from "../pages/reminders/ReminderForm.jsx";
+const RemindersList = lazy(() => import("../pages/reminders/RemindersList.jsx"));
+const ReminderDetail = lazy(() => import("../pages/reminders/ReminderDetails.jsx"));
+const ReminderForm = lazy(() => import("../pages/reminders/ReminderForm.jsx"));
 
 // Team
-import TeamList from "../pages/team/TeamList.jsx";
-import TeamMemberDetail from "../pages/team/TeamMemberDetail.jsx";
-import InviteTeam from "../pages/team/InviteTeam.jsx";
-import TeamMemberEdit from "../pages/team/TeamForm.jsx";
+const TeamList = lazy(() => import("../pages/team/TeamList.jsx"));
+const TeamMemberDetail = lazy(() => import("../pages/team/TeamMemberDetail.jsx"));
+const InviteTeam = lazy(() => import("../pages/team/InviteTeam.jsx"));
+const TeamMemberEdit = lazy(() => import("../pages/team/TeamForm.jsx"));
 
 // Roles
-import RolesList from "../pages/roles/RolesList.jsx";
-import RoleForm from "../pages/roles/RoleForm.jsx";
+const RolesList = lazy(() => import("../pages/roles/RolesList.jsx"));
+const RoleForm = lazy(() => import("../pages/roles/RoleForm.jsx"));
 
 // Settings
-import VenueSettings from "../pages/settings/VenueSettings.jsx";
+const VenueSettings = lazy(() => import("../pages/settings/VenueSettings.jsx"));
 
 // ============================================
 // ROUTING CONFIGURATION
 // ============================================
 
 const AppRoutes = () => {
+  // Center the spinner for the initial load
+  const LoadingFallback = () => (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+      <LoadingSpinner size="lg" />
+    </div>
+  );
+
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route element={<AuthLayout />}>
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-      </Route>
-
-      {/* Protected Routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-
-          {/* Events */}
-          <Route path="/events" element={<EventsList />} />
-          <Route path="/events/new" element={<EventForm />} />
-          <Route path="/events/:id/detail" element={<EventDetail />} />
-          <Route path="/events/:id" element={<EventForm />} />
-
-          {/* Clients */}
-          <Route path="/clients" element={<ClientsList />} />
-          <Route path="/clients/new" element={<ClientForm />} />
-          <Route path="/clients/:id" element={<ClientDetail />} />
-          <Route path="/clients/:id/edit" element={<ClientForm />} />
-
-          {/* Partners */}
-          <Route path="/partners" element={<PartnersList />} />
-          <Route path="/partners/new" element={<PartnerForm />} />
-          <Route path="/partners/:id" element={<PartnerDetail />} />
-          <Route path="/partners/:id/edit" element={<PartnerForm />} />
-
-          {/* Payments */}
-          <Route path="/payments" element={<PaymentsList />} />
-          <Route path="/payments/new" element={<PaymentForm />} />
-          <Route path="/payments/:id" element={<PaymentDetail />} />
-          <Route path="/payments/:id/edit" element={<PaymentForm />} />
-
-          {/* Invoices */}
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/invoices/new" element={<InvoiceFormPage />} />
-          <Route path="/invoices/:id/edit" element={<InvoiceFormPage />} />
-
-          {/* Finance */}
-          <Route path="/finance" element={<Finance />} />
-          <Route path="/finance/transactions" element={<Transactions />} />
-          <Route path="/finance/analytics" element={<Analytics />} />
-          <Route path="/finance/reports" element={<FinanceReports />} />
-
-          {/* Tasks */}
-          <Route path="/tasks" element={<TasksList />} />
-          <Route path="/tasks/board" element={<TasksList />} />
-          <Route path="/tasks/:id" element={<TaskDetail />} />
-          <Route path="/tasks/:id/edit" element={<TaskForm />} />
-
-          {/* Reminders */}
-          <Route path="/reminders" element={<RemindersList />} />
-          <Route path="/reminders/new" element={<ReminderForm />} />
-          <Route path="/reminders/:id" element={<ReminderDetail />} />
-          <Route path="/reminders/:id/edit" element={<ReminderForm />} />
-
-          {/* Team */}
-          <Route path="/team" element={<TeamList />} />
-          <Route path="/team/invite" element={<InviteTeam />} />
-          <Route path="/team/:id" element={<TeamMemberDetail />} />
-          <Route path="/team/:id/edit" element={<TeamMemberEdit />} />
-
-          {/* Roles */}
-          <Route path="/roles" element={<RolesList />} />
-          <Route path="/roles/new" element={<RoleForm />} />
-          <Route path="/roles/:id/edit" element={<RoleForm />} />
-
-          {/* Settings  */}
-          <Route path="/settings" element={<VenueSettings />} />
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/" element={<Navigate to="/landing" replace />} />
+        
+        <Route element={<AuthLayout />}>
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Route>
-      </Route>
 
-      {/* Catch-All */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            
+            {/* Events */}
+            <Route path="/events" element={<EventsList />} />
+            <Route path="/events/new" element={<CreateEventPage />} />
+            <Route path="/events/:id/edit" element={<EditEventPage />} />
+            <Route path="/events/:id/detail" element={<EventDetail />} />
+            <Route path="/events/:id" element={<EventDetail />} />
+
+            {/* Clients */}
+            <Route path="/clients" element={<ClientsList />} />
+            <Route path="/clients/new" element={<ClientForm />} />
+            <Route path="/clients/:id" element={<ClientDetail />} />
+            <Route path="/clients/:id/edit" element={<ClientForm />} />
+            
+            {/* Partners */}
+            <Route path="/partners" element={<PartnersList />} />
+            <Route path="/partners/new" element={<PartnerForm />} />
+            <Route path="/partners/:id" element={<PartnerDetail />} />
+            <Route path="/partners/:id/edit" element={<PartnerForm />} />
+            
+            {/* Payments */}
+            <Route path="/payments" element={<PaymentsList />} />
+            <Route path="/payments/new" element={<PaymentForm />} />
+            <Route path="/payments/:id" element={<PaymentDetail />} />
+            <Route path="/payments/:id/edit" element={<PaymentForm />} />
+            
+            {/* Invoices */}
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/invoices/new" element={<InvoiceFormPage />} />
+            <Route path="/invoices/:id/edit" element={<InvoiceFormPage />} />
+            <Route path="/invoices/settings" element={<InvoiceSettingPage />} />
+            
+            {/* Finance */}
+            <Route path="/finance" element={<Finance />} />
+            <Route path="/finance/transactions" element={<Transactions />} />
+            <Route path="/finance/analytics" element={<Analytics />} />
+            <Route path="/finance/reports" element={<FinanceReports />} />
+            
+            {/* Tasks */}
+            <Route path="/tasks" element={<TasksList />} />
+            <Route path="/tasks/board" element={<TasksList />} />
+            <Route path="/tasks/:id" element={<TaskDetail />} />
+            <Route path="/tasks/:id/edit" element={<TaskForm />} />
+            
+            {/* Reminders */}
+            <Route path="/reminders" element={<RemindersList />} />
+            <Route path="/reminders/new" element={<ReminderForm />} />
+            <Route path="/reminders/:id" element={<ReminderDetail />} />
+            <Route path="/reminders/:id/edit" element={<ReminderForm />} />
+            
+            {/* Team */}
+            <Route path="/team" element={<TeamList />} />
+            <Route path="/team/invite" element={<InviteTeam />} />
+            <Route path="/team/:id" element={<TeamMemberDetail />} />
+            <Route path="/team/:id/edit" element={<TeamMemberEdit />} />
+            
+            {/* Roles */}
+            <Route path="/roles" element={<RolesList />} />
+            <Route path="/roles/new" element={<RoleForm />} />
+            <Route path="/roles/:id/edit" element={<RoleForm />} />
+            
+            {/* Settings  */}
+            <Route path="/settings" element={<VenueSettings />} />
+          </Route>
+        </Route>
+
+        {/* Catch-All */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
   );
 };
 

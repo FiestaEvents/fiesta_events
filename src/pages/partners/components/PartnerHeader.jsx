@@ -1,6 +1,10 @@
-// components/partners/PartnerHeader.jsx
 import React from "react";
-import { Camera, Edit, Trash2, ArrowLeft, Star } from "lucide-react";
+import { Edit, Trash2, ArrowLeft, Star, Briefcase } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+// ✅ Generic Components
+import Button from "../../../components/common/Button";
+import Badge, { StatusBadge } from "../../../components/common/Badge";
 
 const getInitials = (name = "") =>
   name
@@ -17,78 +21,115 @@ const PartnerHeader = ({
   onBack,
   onEdit,
   onDelete,
-  getStatusColor,
-  getStatusLabel,
-  getCategoryColor,
 }) => {
+  const { t } = useTranslation();
+
+  // Helper to map categories to theme variants
+  const getCategoryVariant = (category) => {
+    const map = {
+      driver: "info",
+      bakery: "warning",
+      catering: "success",
+      decoration: "purple",
+      photography: "purple",
+      music: "info",
+      security: "danger",
+      cleaning: "secondary",
+      audio_visual: "primary",
+      floral: "success",
+      entertainment: "warning",
+      hairstyling: "purple",
+      other: "secondary",
+    };
+    return map[category?.toLowerCase()] || "secondary";
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
+    <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
+      
       {/* Action Buttons */}
-      <div className="flex justify-between gap-2 mb-4">
+      <div className="flex justify-between items-center gap-2 mb-6">
         <div>
-          <button
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={onBack}
-            className="flex items-center border border-gray-300 p-1 rounded-lg pr-2 gap-2 text-sm text-gray-600 hover:text-gray-900 transition dark:text-white"
+            className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Partners
-          </button>
+            <span className="hidden sm:inline">{t("partnerDetail.backToPartners", "Back")}</span>
+            <span className="sm:hidden">{t("common.back", "Back")}</span>
+          </Button>
         </div>
+        
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onEdit}
-            className="p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition dark:text-gray-400 dark:hover:bg-blue-900 dark:hover:text-white"
-            title="Edit Partner"
+            title={t("partnerDetail.actions.edit", "Edit")}
+            className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30"
           >
             <Edit className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onDelete}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition dark:text-red-400 dark:hover:bg-red-900"
-            title="Delete Partner"
+            title={t("partnerDetail.actions.delete", "Delete")}
+            className="text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30"
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Partner Header */}
-      <div className="text-center mb-6">
-        <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto">
+      {/* Partner Identity */}
+      <div className="text-center mb-2">
+        {/* Avatar */}
+        <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto shadow-md">
           {getInitials(partner.name) || "?"}
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white">
-          {partner.name || "Unnamed Partner"}
+        
+        {/* Name */}
+        <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white break-words">
+          {partner.name || t("common.unknown")}
         </h1>
 
+        {/* Company */}
         {partner.company && (
-          <p className="text-gray-600 flex items-center justify-center gap-2 mt-1 dark:text-gray-400">
-            <Camera className="w-4 h-4" />
+          <p className="text-gray-500 flex items-center justify-center gap-2 mt-1 mb-4 text-sm dark:text-gray-400">
+            <Briefcase className="w-3.5 h-3.5" />
             {partner.company}
           </p>
         )}
 
-        {/* Status and Category Badges */}
-        <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
-          <span
-            className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(partner.status)}`}
-          >
-            {getStatusLabel(partner.status)}
-          </span>
+        {/* Badges Container */}
+        <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+          {/* Status */}
+          <StatusBadge status={partner.status} size="md" dot={true} />
           
+          {/* Category */}
           {partner.category && (
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getCategoryColor(partner.category)}`}
+            <Badge 
+              variant={getCategoryVariant(partner.category)} 
+              size="md"
+              className="capitalize"
             >
               {partner.category.replace('_', ' ')}
-            </span>
+            </Badge>
           )}
           
-          {partner.rating && (
-            <div className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-300">
-              <Star className="w-4 h-4 fill-current" />
-              <span>{partner.rating.toFixed(1)}</span>
-            </div>
+          {/* Rating */}
+          {partner.rating > 0 && (
+            <Badge 
+              variant="warning" 
+              size="md" 
+              icon={<Star className="w-3 h-3 fill-current" />}
+            >
+              {partner.rating.toFixed(1)}
+            </Badge>
           )}
         </div>
       </div>

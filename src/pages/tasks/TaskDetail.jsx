@@ -1,377 +1,301 @@
-// TaskDetail.jsx
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useToast } from "../../hooks/useToast";
+import { useTranslation } from "react-i18next";
+import { 
+  ArrowLeft, 
+  Loader2, 
+  AlertTriangle,
+  FileText,
+  ListTodo,
+  MessageSquare,
+  Paperclip,
+  History
+} from "lucide-react";
 
-// Components
-import Modal, { ConfirmModal } from "../../components/common/Modal";
-import TaskForm from "./TaskForm.jsx";
-import TaskHeader from "./components/TaskHeader.jsx";
-import TaskInfo from "./components/TaskInfo.jsx";
-import OverviewTab from "./components/OverviewTab.jsx";
-import SubtasksTab from "./components/SubtasksTab.jsx";
-import CommentsTab from "./components/CommentsTab.jsx";
-import AttachmentsTab from "./components/AttachmentsTab.jsx";
-import TimelineTab from "./components/TimelineTab.jsx";
-
-// Hooks and Services
+// ✅ API & Services
 import { taskService } from "../../api/index";
 import { useTaskDetail } from "../../hooks/useTaskDetail";
+
+// ✅ Generic Components
+import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import TaskForm from "./TaskForm";
+
+// ✅ Sub-components
+import TaskHeader from "./components/TaskHeader";
+import TaskInfo from "./components/TaskInfo";
+import OverviewTab from "./components/OverviewTab";
+import SubtasksTab from "./components/SubtasksTab";
+import CommentsTab from "./components/CommentsTab";
+import AttachmentsTab from "./components/AttachmentsTab";
+import TimelineTab from "./components/TimelineTab";
+
+// ✅ Context
+import { useToast } from "../../context/ToastContext";
 
 const TaskDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { showSuccess, showError, showInfo, promise } = useToast();
+  const { t } = useTranslation();
+  const { showSuccess, promise, showInfo } = useToast();
 
-  // Use custom hook for task data
+  // Data Hook
   const { taskData, loading, error, refreshData } = useTaskDetail(id);
 
-  // UI state
+  // UI State
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
+  // Local Loading States
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Utility functions
+  // --- Helpers ---
+
   const formatDate = useCallback((date) => {
     if (!date) return "-";
-    try {
-      const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
-    } catch {
-      return date;
-    }
-  }, []);
-
-  const formatShortDate = useCallback((date) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
       year: "numeric",
-      month: "short",
-      day: "numeric",
     });
   }, []);
 
   const formatDateTime = useCallback((date) => {
     if (!date) return "-";
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
       year: "numeric",
-      month: "long",
-      day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
   }, []);
 
-  const getStatusLabel = useCallback((status) => {
-    const labels = {
-      todo: "To Do",
-      "in_progress": "In Progress",
-      completed: "Completed",
-      cancelled: "Cancelled",
-      blocked: "Blocked",
-      archived: "Archived",
-    };
-    return labels[status] || status || "Unknown";
-  }, []);
-
-  const getStatusColor = useCallback((status) => {
-    const colors = {
-      todo:
-        "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100",
-      "in_progress":
-        "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-100",
-      completed:
-        "bg-green-600 text-white border-green-200 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
-      cancelled:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-      blocked:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
-      archived:
-        "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100",
-    };
+  // ✅ Is Overdue Helper
+  const isOverdue = useCallback((date, status) => {
+    if (!date) return false;
     return (
-      colors[status] ||
-      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+      new Date(date) < new Date() &&
+      !["completed", "cancelled", "archived", "blocked"].includes(status?.toLowerCase())
     );
   }, []);
 
-  const getPriorityColor = useCallback((priority) => {
-    const colors = {
-      low:
-        "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100",
-      medium:
-        "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-100",
-      high:
-        "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-100",
-      urgent:
-        "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+  // Map Status to Badge Variants
+  const getStatusVariant = useCallback((status) => {
+    const map = {
+      pending: "warning",
+      todo: "blue",
+      in_progress: "purple",
+      completed: "success",
+      cancelled: "secondary",
+      blocked: "danger",
+      archived: "gray"
     };
-    return (
-      colors[priority] ||
-      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-    );
+    return map[status] || "secondary";
   }, []);
 
-  // Event handlers
-  const handleEditTask = useCallback(() => {
-    if (!id) {
-      showError("Cannot edit task: Task ID not found");
-      return;
+  // Map Priority to Badge Variants
+  const getPriorityVariant = useCallback((priority) => {
+    const map = {
+      low: "gray",
+      medium: "info",
+      high: "warning",
+      urgent: "danger"
+    };
+    return map[priority] || "secondary";
+  }, []);
+
+  // --- Actions ---
+
+  const handleAction = async (apiCall, toastMessages, onSuccess = () => {}) => {
+    try {
+      setActionLoading(true);
+      await promise(apiCall, toastMessages);
+      await refreshData();
+      onSuccess();
+    } catch (err) {
+      // Toast handles error display
+    } finally {
+      setActionLoading(false);
     }
-    setIsEditModalOpen(true);
-  }, [id, showError]);
+  };
 
-  const handleEditSuccess = useCallback(async () => {
-    setIsEditModalOpen(false);
-    await refreshData();
-    showSuccess("Task updated successfully");
-  }, [refreshData, showSuccess]);
+  const handleStatusChange = (newStatus) => {
+    handleAction(
+      taskService.updateStatus(id, newStatus),
+      {
+        loading: t('tasks.detail.toasts.status.loading'),
+        success: t('tasks.detail.toasts.status.success', { status: newStatus.replace('_', ' ') }),
+        error: t('tasks.detail.toasts.status.error')
+      }
+    );
+  };
 
-  const handleDeleteTask = useCallback(async () => {
-    if (!id) {
-      showError("Cannot delete task: Task ID not found");
-      return;
-    }
+  const handleComplete = () => {
+    handleAction(
+      taskService.complete(id),
+      {
+        loading: t('tasks.detail.toasts.complete.loading'),
+        success: t('tasks.detail.toasts.complete.success'),
+        error: t('tasks.detail.toasts.complete.error')
+      }
+    );
+  };
 
+  const handleArchive = () => {
+    handleAction(
+      taskService.archive(id),
+      {
+        loading: t('tasks.detail.toasts.archive.loading'),
+        success: t('tasks.detail.toasts.archive.success'),
+        error: t('tasks.detail.toasts.archive.error')
+      },
+      () => navigate("/tasks")
+    );
+  };
+
+  const handleDeleteTask = async () => {
     try {
       setDeleteLoading(true);
       await promise(
         taskService.delete(id),
         {
-          loading: "Deleting task...",
-          success: "Task deleted successfully",
-          error: "Failed to delete task"
+          loading: t('tasks.detail.toasts.delete.loading'),
+          success: t('tasks.detail.toasts.delete.success'),
+          error: t('tasks.detail.toasts.delete.error')
         }
       );
       setIsDeleteModalOpen(false);
       navigate("/tasks");
     } catch (err) {
-      console.error("Delete task error:", err);
-      // Error is handled by the promise toast
+      // Toast handles error
     } finally {
       setDeleteLoading(false);
     }
-  }, [id, navigate, promise, showError]);
+  };
 
-  const handleStatusChange = useCallback(async (newStatus) => {
-    if (!id) {
-      showError("Cannot update task status: Task ID not found");
-      return;
-    }
+  // --- Configuration ---
 
-    try {
-      setActionLoading(true);
-      await promise(
-        taskService.updateStatus(id, newStatus),
-        {
-          loading: "Updating task status...",
-          success: `Status updated to ${newStatus.replace('_', ' ')}`,
-          error: "Failed to update task status"
-        }
-      );
-      await refreshData();
-    } catch (err) {
-      console.error("Status change error:", err);
-      // Error is handled by the promise toast
-    } finally {
-      setActionLoading(false);
-    }
-  }, [id, refreshData, promise, showError]);
+  const tabs = [
+    { id: "overview", label: t('tasks.detail.tabs.overview'), icon: FileText },
+    { id: "subtasks", label: t('tasks.detail.tabs.subtasks'), icon: ListTodo, count: taskData?.subtasks?.length },
+    { id: "comments", label: t('tasks.detail.tabs.comments'), icon: MessageSquare, count: taskData?.comments?.length },
+    { id: "attachments", label: t('tasks.detail.tabs.attachments'), icon: Paperclip, count: taskData?.attachments?.length },
+    { id: "timeline", label: t('tasks.detail.tabs.timeline'), icon: History },
+  ];
 
-  const handleComplete = useCallback(async () => {
-    if (!id) {
-      showError("Cannot complete task: Task ID not found");
-      return;
-    }
+  // --- Loading & Error States ---
 
-    try {
-      setActionLoading(true);
-      await promise(
-        taskService.complete(id),
-        {
-          loading: "Completing task...",
-          success: "Task marked as completed",
-          error: "Failed to complete task"
-        }
-      );
-      await refreshData();
-    } catch (err) {
-      console.error("Complete error:", err);
-      // Error is handled by the promise toast
-    } finally {
-      setActionLoading(false);
-    }
-  }, [id, refreshData, promise, showError]);
-
-  const handleArchive = useCallback(async () => {
-    if (!id) {
-      showError("Cannot archive task: Task ID not found");
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      await promise(
-        taskService.archive(id),
-        {
-          loading: "Archiving task...",
-          success: "Task archived successfully",
-          error: "Failed to archive task"
-        }
-      );
-      setIsDeleteModalOpen(false);
-      navigate("/tasks");
-    } catch (err) {
-      console.error("Archive error:", err);
-      // Error is handled by the promise toast
-    } finally {
-      setActionLoading(false);
-    }
-  }, [id, navigate, promise, showError]);
-
-  const handleRetry = useCallback(() => {
-    refreshData();
-    showInfo("Retrying to load task details...");
-  }, [refreshData, showInfo]);
-
-  const isOverdue = useCallback((date, status) => {
-    if (!date) return false;
-    return new Date(date) < new Date() && !["completed", "cancelled"].includes(status);
-  }, []);
-
-  // Loading state
-  if (loading && !taskData) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading task details...
-          </p>
-        </div>
+      <div className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <Loader2 className="w-10 h-10 text-orange-500 animate-spin mb-4" />
+        <p className="text-gray-500 dark:text-gray-400 font-medium">{t('tasks.detail.loading')}</p>
       </div>
     );
   }
 
-  // Error or not found
   if (error || !taskData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full dark:bg-gray-800">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {!taskData ? "Task Not Found" : "Error Loading Task"}
-            </h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {error?.message || "The task you're looking for doesn't exist."}
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => navigate("/tasks")}
-                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg border hover:bg-gray-700 transition"
-              >
-                Back to Tasks
-              </button>
-              {error && (
-                <button
-                  onClick={handleRetry}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-                >
-                  Try Again
-                </button>
-              )}
-            </div>
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            {t('tasks.detail.errorLoading')}
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
+            {error?.message || t('tasks.detail.notFound')}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => navigate("/tasks")} icon={ArrowLeft}>
+              {t('tasks.detail.backToTasks')}
+            </Button>
+            <Button variant="primary" onClick={() => { refreshData(); showInfo(t('tasks.detail.toasts.retry')); }}>
+              {t('tasks.detail.tryAgain')}
+            </Button>
           </div>
         </div>
       </div>
     );
   }
 
-  // Calculate progress
-  const completedSubtasks = taskData?.subtasks?.filter(st => st.completed).length || 0;
-  const totalSubtasks = taskData?.subtasks?.length || 0;
-  const progress = taskData?.progress || (totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0);
+  // Calculations
+  const completedSubtasks = taskData.subtasks?.filter(st => st.completed).length || 0;
+  const totalSubtasks = taskData.subtasks?.length || 0;
+  const progress = taskData.progress || (totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0);
 
-  // Main render
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Column - Task Details */}
-          <div className="lg:col-span-1">
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-                <TaskHeader
-                  task={taskData}
-                  onBack={() => navigate("/tasks")}
-                  onEdit={handleEditTask}
-                  onDelete={() => setIsDeleteModalOpen(true)}
-                  onComplete={handleComplete}
-                  onArchive={handleArchive}
-                  onStatusChange={handleStatusChange}
-                  getStatusColor={getStatusColor}
-                  getStatusLabel={getStatusLabel}
-                  getPriorityColor={getPriorityColor}
-                  actionLoading={actionLoading}
-                  progress={progress}
-                  completedSubtasks={completedSubtasks}
-                  totalSubtasks={totalSubtasks}
-                />
-              </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* --- Left Column: Header & Info (4 Cols) --- */}
+          <div className="lg:col-span-4 space-y-6">
+            
+            {/* Header Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <TaskHeader
+                task={taskData}
+                onBack={() => navigate("/tasks")}
+                onEdit={() => setIsEditModalOpen(true)}
+                onDelete={() => setIsDeleteModalOpen(true)}
+                onComplete={handleComplete}
+                onArchive={handleArchive}
+                onStatusChange={handleStatusChange}
+                getStatusVariant={getStatusVariant} 
+                getPriorityVariant={getPriorityVariant} 
+                actionLoading={actionLoading}
+                progress={progress}
+                completedSubtasks={completedSubtasks}
+                totalSubtasks={totalSubtasks}
+              />
+            </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800">
-                <TaskInfo 
-                  task={taskData} 
-                  formatDate={formatDate}
-                  formatShortDate={formatShortDate}
-                  getStatusColor={getStatusColor}
-                  getPriorityColor={getPriorityColor}
-                  isOverdue={isOverdue}
-                />
-              </div>
+            {/* Info Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <TaskInfo 
+                task={taskData} 
+                formatDate={formatDate}
+                formatDateTime={formatDateTime}
+                isOverdue={isOverdue} // ✅ FIXED: Passed the isOverdue prop
+              />
             </div>
           </div>
 
-          {/* Right Column - Tabs */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
-              <div className="border-b border-gray-200 dark:border-orange-800">
-                <nav className="flex -mb-px">
-                  {[
-                    { id: "overview", label: "Overview" },
-                    { id: "subtasks", label: "Subtasks" },
-                    { id: "comments", label: "Comments" },
-                    { id: "attachments", label: "Attachments" },
-                    { id: "timeline", label: "Timeline" },
-                  ].map((tab) => (
+          {/* --- Right Column: Tabs & Content (8 Cols) --- */}
+          <div className="lg:col-span-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 min-h-[600px] flex flex-col">
+              
+              {/* Tabs Navigation */}
+              <div className="border-b border-gray-200 dark:border-gray-700">
+                <nav className="flex overflow-x-auto no-scrollbar" aria-label="Tabs">
+                  {tabs.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 px-6 py-3 text-sm font-medium border-b-2 transition ${
-                        activeTab === tab.id
-                          ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400"
-                          : "border-transparent text-gray-600 hover:text-gray-900 hover:border-orange-300 dark:text-gray-400 dark:hover:text-white"
-                      }`}
+                      className={`
+                        group flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap
+                        ${activeTab === tab.id
+                          ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                          : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300"
+                        }
+                      `}
                     >
+                      <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "text-orange-500" : "text-gray-400 group-hover:text-gray-500"}`} />
                       {tab.label}
-                      {tab.id === "comments" && taskData?.comments?.length > 0 && (
-                        <span className="ml-2 py-0.5 px-2 rounded-full text-xs bg-orange-100 text-orange-600 dark:bg-orange-600 dark:text-orange-300">
-                          {taskData.comments.length}
-                        </span>
-                      )}
-                      {tab.id === "attachments" && taskData?.attachments?.length > 0 && (
-                        <span className="ml-2 py-0.5 px-2 rounded-full text-xs bg-orange-100 text-orange-600 dark:bg-orange-600 dark:text-orange-300">
-                          {taskData.attachments.length}
-                        </span>
-                      )}
-                      {tab.id === "subtasks" && totalSubtasks > 0 && (
-                        <span className="ml-2 py-0.5 px-2 rounded-full text-xs bg-orange-100 text-orange-600 dark:bg-orange-600 dark:text-orange-300">
-                          {totalSubtasks}
+                      
+                      {tab.count > 0 && (
+                        <span className={`ml-1 py-0.5 px-2 rounded-full text-xs ${
+                          activeTab === tab.id 
+                            ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" 
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                        }`}>
+                          {tab.count}
                         </span>
                       )}
                     </button>
@@ -379,7 +303,8 @@ const TaskDetail = () => {
                 </nav>
               </div>
 
-              <div className="p-6">
+              {/* Tab Content */}
+              <div className="p-6 flex-1">
                 {activeTab === "overview" && (
                   <OverviewTab
                     task={taskData}
@@ -397,7 +322,7 @@ const TaskDetail = () => {
                     progress={progress}
                     completedSubtasks={completedSubtasks}
                     totalSubtasks={totalSubtasks}
-                    formatShortDate={formatShortDate}
+                    refreshData={refreshData}
                   />
                 )}
 
@@ -405,13 +330,15 @@ const TaskDetail = () => {
                   <CommentsTab
                     task={taskData}
                     formatDateTime={formatDateTime}
+                    refreshData={refreshData}
                   />
                 )}
 
                 {activeTab === "attachments" && (
                   <AttachmentsTab
                     task={taskData}
-                    formatShortDate={formatShortDate}
+                    formatDate={formatDate}
+                    refreshData={refreshData}
                   />
                 )}
 
@@ -427,31 +354,58 @@ const TaskDetail = () => {
         </div>
       </div>
 
-<Modal
-  isOpen={isEditModalOpen}
-  onClose={() => setIsEditModalOpen(false)}
-  title="Edit Task"
-  size="lg"
->
-  <TaskForm
-    task={taskData}
-    onSuccess={handleEditSuccess}
-    onCancel={() => setIsEditModalOpen(false)}
-    isOpen={isEditModalOpen}
-    onClose={() => setIsEditModalOpen(false)}
-  />
-</Modal>
-      <ConfirmModal
+      {/* --- Edit Modal --- */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title={t('tasks.detail.modals.edit.title')}
+        size="lg"
+      >
+        <TaskForm
+          task={taskData}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            refreshData();
+            showSuccess(t('tasks.detail.toasts.edit.success'));
+          }}
+          onCancel={() => setIsEditModalOpen(false)}
+        />
+      </Modal>
+
+      {/* --- Delete Confirmation Modal --- */}
+      <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDeleteTask}
-        title="Delete Task"
-        message={`Are you sure you want to delete "${taskData?.title}"? This action cannot be undone and will remove all associated data.`}
-        confirmText="Delete Task"
-        cancelText="Cancel"
-        variant="danger"
-        loading={deleteLoading}
-      />
+        title={t('tasks.detail.modals.delete.title')}
+        size="sm"
+      >
+        <div className="p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+          </div>
+          
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            {t('tasks.detail.modals.delete.message', { title: taskData?.title })}
+          </p>
+          
+          <div className="flex justify-center gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={deleteLoading}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              variant="danger" 
+              onClick={handleDeleteTask}
+              loading={deleteLoading}
+            >
+              {t('common.delete')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

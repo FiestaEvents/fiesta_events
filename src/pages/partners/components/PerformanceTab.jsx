@@ -6,192 +6,189 @@ import {
   Calendar,
   DollarSign,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
-import ProgressBar from '../../../components/common/ProgressBar';
+import { useTranslation } from 'react-i18next';
 
-const PerformanceTab = ({ partner, events, eventsStats }) => {
-  // Calculate performance metrics
+// ✅ Generic Components & Utils
+import ProgressBar from '../../../components/common/ProgressBar'; // Assuming this exists
+import formatCurrency from '../../../utils/formatCurrency';
+
+const PerformanceTab = ({ partner, events }) => {
+  const { t } = useTranslation();
+
+  // --- Metrics Calculation ---
   const totalEvents = events?.length || 0;
   const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
   const completionRate = totalEvents > 0 ? (completedEvents / totalEvents) * 100 : 0;
   
+  // Calculate revenue specific to this partner
   const totalRevenue = events?.reduce((sum, event) => {
-    const partnerData = event.partners?.find(p => {
-      const partnerId = p.partner?._id?.$oid || p.partner?._id || p.partner;
-      return partnerId === partner?._id;
+    const partnerEntry = event.partners?.find(p => {
+      const pId = p.partner?._id || p.partner;
+      return pId === partner?._id;
     });
-    return sum + (partnerData?.cost || partnerData?.hourlyRate || 0);
+    return sum + (partnerEntry?.cost || partnerEntry?.hourlyRate || 0);
   }, 0) || 0;
 
   const averageRevenue = totalEvents > 0 ? totalRevenue / totalEvents : 0;
-  const performanceScore = partner?.rating ? (partner.rating / 5) * 100 : 0;
 
-  const MetricCard = ({ title, value, description, icon: Icon, color = "blue" }) => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-full ${color} flex-shrink-0`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-            {title}
-          </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-            {value}
-          </p>
-          {description && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {description}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  // --- Sub-components ---
 
-  const PerformanceIndicator = ({ label, value, max = 100, color = "blue" }) => {
-    const percentage = (value / max) * 100;
-    const getColorClass = (percent) => {
-      if (percent >= 80) return 'text-green-600 dark:text-green-400';
-      if (percent >= 60) return 'text-orange-600 dark:text-orange-400';
-      return 'text-red-600 dark:text-red-400';
+  const StatBox = ({ title, value, subtext, icon: Icon, color }) => {
+    const colorClasses = {
+      yellow: "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400",
+      green: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
+      purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
+      blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
     };
 
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm flex items-center gap-4">
+        <div className={`p-3 rounded-full ${colorClasses[color]}`}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+          {subtext && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{subtext}</p>}
+        </div>
+      </div>
+    );
+  };
+
+  const PerformanceBar = ({ label, value, max = 100, color = "blue" }) => {
+    const percentage = Math.min((value / max) * 100, 100);
     return (
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
-          <span className={getColorClass(percentage)}>{value}</span>
+          <span className="font-bold text-gray-900 dark:text-white">
+            {typeof value === 'number' ? value.toFixed(1) : value}
+            {max === 100 && "%"}
+          </span>
         </div>
-        <ProgressBar value={percentage} color={color} />
+        {/* Fallback if ProgressBar component isn't available */}
+        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+          <div 
+            className={`h-2.5 rounded-full transition-all duration-500 bg-${color}-500`} 
+            style={{ width: `${percentage}%` }}
+          ></div>
+        </div>
       </div>
     );
   };
 
   return (
     <div className="space-y-6">
-      {/* Key Metrics */}
+      
+      {/* 1. Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Overall Rating"
-          value={partner?.rating ? partner.rating.toFixed(1) : 'N/A'}
-          description="/ 5.0"
+        <StatBox
+          title={t("performanceTab.metrics.overallRating", "Rating")}
+          value={partner?.rating ? partner.rating.toFixed(1) : "N/A"}
+          subtext={t("common.rating", { value: "5.0" })}
           icon={Star}
-          color="bg-yellow-500"
+          color="yellow"
         />
-        
-        <MetricCard
-          title="Completion Rate"
+        <StatBox
+          title={t("performanceTab.metrics.completionRate", "Completion")}
           value={`${Math.round(completionRate)}%`}
-          description={`${completedEvents}/${totalEvents} events`}
+          subtext={t("common.eventsCount", { completed: completedEvents, total: totalEvents })}
           icon={CheckCircle}
-          color="bg-green-500"
+          color="green"
         />
-        
-        <MetricCard
-          title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
-          description="All time"
+        <StatBox
+          title={t("performanceTab.metrics.totalRevenue", "Total Revenue")}
+          value={formatCurrency(totalRevenue)}
+          subtext={t("performanceTab.metrics.allTime", "Lifetime Earnings")}
           icon={DollarSign}
-          color="bg-purple-500"
+          color="purple"
         />
-        
-        <MetricCard
-          title="Avg. per Event"
-          value={`$${averageRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-          description="Average revenue"
+        <StatBox
+          title={t("performanceTab.metrics.averagePerEvent", "Avg. per Event")}
+          value={formatCurrency(averageRevenue)}
           icon={TrendingUp}
-          color="bg-blue-500"
+          color="blue"
         />
       </div>
 
-      {/* Performance Score */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Award className="w-6 h-6 text-orange-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Performance Score
-          </h3>
+      {/* 2. Detailed Performance Score */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quality & Reliability */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <Award className="w-5 h-5 text-orange-500" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              {t("performanceTab.performanceScore.title", "Performance Score")}
+            </h3>
+          </div>
+          
+          <div className="space-y-6">
+            <PerformanceBar
+              label={t("performanceTab.performanceScore.serviceQuality", "Service Quality (Rating)")}
+              value={partner?.rating || 0}
+              max={5}
+              color="orange"
+            />
+            <PerformanceBar
+              label={t("performanceTab.performanceScore.reliability", "Reliability (Completion)")}
+              value={completionRate}
+              color="green"
+            />
+            <PerformanceBar
+              label={t("performanceTab.performanceScore.revenueGeneration", "Revenue Potential")}
+              value={Math.min((totalRevenue / 10000) * 100, 100)} // Example scale
+              color="purple"
+            />
+          </div>
         </div>
-        
-        <div className="space-y-2">
-          <PerformanceIndicator
-            label="Service Quality"
-            value={partner?.rating || 0}
-            max={5}
-            color="orange"
-          />
-          <PerformanceIndicator
-            label="Reliability"
-            value={completionRate}
-            color="green"
-          />
-          <PerformanceIndicator
-            label="Revenue Generation"
-            value={Math.min((totalRevenue / 10000) * 100, 100)} // Assuming 10k is excellent
-            color="purple"
-          />
-        </div>
-      </div>
 
-      {/* Monthly Performance */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-          Performance Overview
-        </h3>
-        
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {completedEvents}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Events Completed</p>
+        {/* Activity Summary */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <Calendar className="w-5 h-5 text-blue-500" />
             </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {totalEvents}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Assignments</p>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              {t("performanceTab.performanceOverview.title", "Activity Summary")}
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">{totalEvents}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">{t("performanceTab.performanceOverview.totalAssignments", "Assigned")}</p>
             </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                <DollarSign className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                ${totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Revenue Generated</p>
+            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">{completedEvents}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">{t("performanceTab.performanceOverview.eventsCompleted", "Completed")}</p>
+            </div>
+            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">{totalEvents - completedEvents}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">{t("common.pending", "Pending")}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recommendations */}
-      {completionRate < 80 && (
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
-            <div>
-              <h4 className="font-semibold text-orange-800 dark:text-orange-300 mb-2">
-                Improvement Opportunity
-              </h4>
-              <p className="text-orange-700 dark:text-orange-400 text-sm">
-                {completionRate < 60 
-                  ? "Consider focusing on completing more events to improve reliability scores."
-                  : "Good progress! Continue maintaining consistent event completion rates."
-                }
-              </p>
-            </div>
+      {/* 3. Recommendations (Conditional) */}
+      {completionRate > 0 && completionRate < 80 && (
+        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <h4 className="font-semibold text-orange-800 dark:text-orange-300 text-sm mb-1">
+              {t("performanceTab.recommendations.improvementOpportunity", "Attention Required")}
+            </h4>
+            <p className="text-sm text-orange-700 dark:text-orange-400 opacity-90">
+              {completionRate < 60 
+                ? t("performanceTab.recommendations.lowCompletion", "Completion rate is critically low. Review partner reliability.")
+                : t("performanceTab.recommendations.goodProgress", "Completion rate is below target. Monitor upcoming events closely.")
+              }
+            </p>
           </div>
         </div>
       )}

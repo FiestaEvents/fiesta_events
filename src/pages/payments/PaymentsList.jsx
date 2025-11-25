@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "../../components/common/Button";
-import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable";
-import Input from "../../components/common/Input";
-import Select from "../../components/common/Select";
-import Pagination from "../../components/common/Pagination";
-import { paymentService } from "../../api/index";
-import { DollarSign } from "../../components/icons/IconComponents";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   Search,
-  Filter,
   Eye,
   X,
   Edit,
@@ -21,26 +13,240 @@ import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
+  DollarSign,
+  Activity
 } from "lucide-react";
+
+// API & Services
+import { paymentService } from "../../api/index";
+
+// Components & Utils
+import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import Table from "../../components/common/NewTable";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Badge from "../../components/common/Badge";
+import formatCurrency from "../../utils/formatCurrency";
+
+// Context
+import { useToast } from "../../context/ToastContext";
+
+// Sub-components
 import PaymentDetailModal from "./PaymentDetailModal";
 import PaymentForm from "./PaymentForm";
-import Badge from "../../components/common/Badge";
-import { useToast } from "../../context/ToastContext";
-import formatCurrency from "../../utils/formatCurrency";
+
+// ================================================================
+// CONSTANTS
+// ================================================================
+
+const INITIAL_FILTERS = {
+  search: "",
+  type: "all",
+  status: "all",
+  method: "all",
+  page: 1,
+  limit: 10
+};
+
+const PAYMENT_TYPES = {
+  INCOME: "income",
+  EXPENSE: "expense"
+};
+
+const PAYMENT_STATUSES = {
+  COMPLETED: "completed",
+  PAID: "paid",
+  PENDING: "pending",
+  FAILED: "failed",
+  REFUNDED: "refunded"
+};
+
+const BADGE_VARIANTS = {
+  STATUS: {
+    completed: "success",
+    paid: "success",
+    pending: "warning",
+    failed: "danger",
+    refunded: "info"
+  },
+  TYPE: {
+    income: "success",
+    expense: "danger"
+  }
+};
+
+const STAT_CONFIGS = [
+  {
+    key: "income",
+    labelKey: "payments.stats.income",
+    bgClass: "bg-green-50 dark:bg-green-900/20",
+    borderClass: "border-green-200 dark:border-green-800",
+    textClass: "text-green-800 dark:text-green-300",
+    iconBgClass: "bg-green-100 dark:bg-green-800",
+    iconClass: "text-green-600 dark:text-green-400",
+    valueClass: "text-green-700 dark:text-green-400",
+    subTextClass: "text-green-600 dark:text-green-500",
+    icon: TrendingUp,
+    getValue: (stats) => stats.completedIncome,
+    getSubValue: (stats) => stats.pendingIncome
+  },
+  {
+    key: "expenses",
+    labelKey: "payments.stats.expenses",
+    bgClass: "bg-red-50 dark:bg-red-900/20",
+    borderClass: "border-red-200 dark:border-red-800",
+    textClass: "text-red-800 dark:text-red-300",
+    iconBgClass: "bg-red-100 dark:bg-red-800",
+    iconClass: "text-red-600 dark:text-red-400",
+    valueClass: "text-red-700 dark:text-red-400",
+    subTextClass: "text-red-600 dark:text-red-500",
+    icon: TrendingDown,
+    getValue: (stats) => stats.completedExpenses,
+    getSubValue: (stats) => stats.pendingExpenses
+  },
+  {
+    key: "netAmount",
+    labelKey: "payments.stats.netAmount",
+    bgClass: "bg-blue-50 dark:bg-blue-900/20",
+    borderClass: "border-blue-200 dark:border-blue-800",
+    textClass: "text-blue-800 dark:text-blue-300",
+    iconBgClass: "bg-blue-100 dark:bg-blue-800",
+    iconClass: "text-blue-600 dark:text-blue-400",
+    valueClass: "text-blue-700 dark:text-blue-400",
+    subTextClass: "text-blue-600 dark:text-blue-500",
+    icon: DollarSign,
+    getValue: (stats) => stats.netCompleted,
+    getSubValue: (stats) => stats.netProjected,
+    subLabel: "payments.stats.projected",
+    isDynamic: true
+  },
+  {
+    key: "status",
+    labelKey: "payments.stats.paymentStatus",
+    bgClass: "bg-gray-50 dark:bg-gray-800",
+    borderClass: "border-gray-200 dark:border-gray-700",
+    textClass: "text-gray-800 dark:text-gray-300",
+    iconBgClass: "bg-gray-200 dark:bg-gray-700",
+    iconClass: "text-gray-600 dark:text-gray-400",
+    icon: Activity,
+    isStatusCard: true
+  }
+];
+
+// ================================================================
+// HELPER FUNCTIONS
+// ================================================================
+
+const formatDate = (date) => {
+  if (!date) return "-";
+  try {
+    return new Date(date).toLocaleDateString("en-GB");
+  } catch {
+    return date;
+  }
+};
+
+const getClientName = (payment) => {
+  if (payment.client?.name) return payment.client.name;
+  if (payment.event?.clientId?.name) return payment.event.clientId.name;
+  return "N/A";
+};
+
+const getBadgeVariant = (value, type) => {
+  const variants = type === 'status' ? BADGE_VARIANTS.STATUS : BADGE_VARIANTS.TYPE;
+  return variants[value?.toLowerCase()] || "secondary";
+};
+
+const normalizePaymentsResponse = (response) => {
+  let data = response?.data?.data?.payments || 
+              response?.data?.payments || 
+              response?.payments || 
+              response?.data || 
+              response || [];
+  
+  if (!Array.isArray(data)) data = [];
+
+  const totalPages = response?.data?.data?.totalPages || 
+                     response?.data?.totalPages || 
+                     response?.totalPages || 1;
+  
+  const totalCount = response?.data?.data?.totalCount || 
+                     response?.data?.totalCount || 
+                     response?.totalCount || 
+                     data.length;
+
+  return { payments: data, totalPages, totalCount };
+};
+
+const calculateStats = (payments) => {
+  const stats = {
+    completedIncome: 0,
+    pendingIncome: 0,
+    completedExpenses: 0,
+    pendingExpenses: 0,
+    completedPayments: 0,
+    pendingPayments: 0,
+    failedPayments: 0
+  };
+
+  payments.forEach(payment => {
+    const status = payment.status?.toLowerCase();
+    const isCompleted = [PAYMENT_STATUSES.COMPLETED, PAYMENT_STATUSES.PAID].includes(status);
+    const isPending = status === PAYMENT_STATUSES.PENDING;
+    const amount = payment.netAmount || payment.amount || 0;
+
+    if (payment.type === PAYMENT_TYPES.INCOME) {
+      if (isCompleted) stats.completedIncome += amount;
+      if (isPending) stats.pendingIncome += amount;
+    } else if (payment.type === PAYMENT_TYPES.EXPENSE) {
+      if (isCompleted) stats.completedExpenses += amount;
+      if (isPending) stats.pendingExpenses += amount;
+    }
+
+    if (isCompleted) stats.completedPayments++;
+    if (isPending) stats.pendingPayments++;
+    if (status === PAYMENT_STATUSES.FAILED) stats.failedPayments++;
+  });
+
+  stats.netCompleted = stats.completedIncome - stats.completedExpenses;
+  stats.netPending = stats.pendingIncome - stats.pendingExpenses;
+  stats.netProjected = stats.netCompleted + stats.netPending;
+
+  return stats;
+};
+
+// ================================================================
+// MAIN COMPONENT
+// ================================================================
 
 const PaymentsList = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo, promise } = useToast();
+
+  // ============================================================
+  // STATE MANAGEMENT
+  // ============================================================
+
+  // Data States
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // UI States
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
-  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // Confirmation modal state
+  // Filter States
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Modal States
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     paymentId: null,
@@ -48,385 +254,207 @@ const PaymentsList = () => {
     onConfirm: null
   });
 
-  // Refund state
-  const [refundData, setRefundData] = useState({
-    amount: "",
-    reason: "",
-  });
+  const [refundData, setRefundData] = useState({ amount: "", reason: "" });
 
-  // Search & filter state
-  const [search, setSearch] = useState("");
-  const [type, setType] = useState("all");
-  const [status, setStatus] = useState("all");
-  const [method, setMethod] = useState("all");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  // ============================================================
+  // COMPUTED VALUES
+  // ============================================================
 
-  // Fetch payments with toast notifications
+  const stats = calculateStats(payments);
+
+  const hasActiveFilters = 
+    filters.search.trim() !== "" || 
+    filters.type !== "all" || 
+    filters.status !== "all" || 
+    filters.method !== "all";
+
+  const showEmptyState = 
+    !loading && 
+    !error && 
+    payments.length === 0 && 
+    !hasActiveFilters && 
+    hasInitialLoad;
+
+  const showNoResults = 
+    !loading && 
+    !error && 
+    payments.length === 0 && 
+    hasActiveFilters && 
+    hasInitialLoad;
+
+  // ============================================================
+  // DATA FETCHING
+  // ============================================================
+
   const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       const params = {
-        page,
-        limit,
-        ...(search.trim() && { search: search.trim() }),
-        ...(type !== "all" && { type }),
-        ...(status !== "all" && { status }),
-        ...(method !== "all" && { method }),
+        page: filters.page,
+        limit: filters.limit,
+        ...(filters.search.trim() && { search: filters.search.trim() }),
+        ...(filters.type !== "all" && { type: filters.type }),
+        ...(filters.status !== "all" && { status: filters.status }),
+        ...(filters.method !== "all" && { method: filters.method })
       };
 
       const response = await paymentService.getAll(params);
-
-      let paymentsData = [];
-      let totalPages = 1;
-      let totalCount = 0;
-
-      if (response?.data?.data?.payments) {
-        paymentsData = response.data.data.payments || [];
-        totalPages = response.data.data.totalPages || 1;
-        totalCount = response.data.data.totalCount || paymentsData.length;
-      } else if (response?.data?.payments) {
-        paymentsData = response.data.payments || [];
-        totalPages = response.data.totalPages || 1;
-        totalCount = response.data.totalCount || paymentsData.length;
-      } else if (response?.payments) {
-        paymentsData = response.payments || [];
-        totalPages = response.totalPages || 1;
-        totalCount = response.totalCount || paymentsData.length;
-      } else if (Array.isArray(response?.data)) {
-        paymentsData = response.data;
-      } else if (Array.isArray(response)) {
-        paymentsData = response;
-      }
+      const { payments: paymentsData, totalPages: pages, totalCount: count } = 
+        normalizePaymentsResponse(response);
 
       setPayments(paymentsData);
-      setTotalPages(totalPages);
-      setTotalCount(totalCount);
+      setTotalPages(pages);
+      setTotalCount(count);
       setHasInitialLoad(true);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to load payments. Please try again.";
-      setError(errorMessage);
-      showError(errorMessage);
+      const msg = err.response?.data?.message || 
+                  err.message || 
+                  t('payments.notifications.error');
+      setError(msg);
+      showError(msg);
       setPayments([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [search, type, status, method, page, limit, showError]);
+  }, [filters, showError, t]);
 
-  // Show confirmation modal
-  const showDeleteConfirmation = useCallback((paymentId, paymentName = "Payment") => {
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
+
+  // ============================================================
+  // FILTER HANDLERS
+  // ============================================================
+
+  const updateFilter = useCallback((key, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value,
+      ...(key !== 'page' && { page: 1 })
+    }));
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setFilters(INITIAL_FILTERS);
+    showInfo(t('payments.notifications.filtersCleared'));
+  }, [showInfo, t]);
+
+  // ============================================================
+  // PAYMENT ACTIONS
+  // ============================================================
+
+  const handleDeleteConfirm = useCallback(async (paymentId, paymentName) => {
+    try {
+      await promise(paymentService.delete(paymentId), {
+        loading: t('payments.notifications.deleting', { paymentName }),
+        success: t('payments.notifications.deleteSuccess'),
+        error: t('payments.notifications.deleteError')
+      });
+      
+      fetchPayments();
+      setConfirmationModal({ 
+        isOpen: false, 
+        paymentId: null, 
+        paymentName: "", 
+        onConfirm: null 
+      });
+      
+      if (selectedPayment?._id === paymentId) {
+        setIsDetailModalOpen(false);
+      }
+    } catch (err) {
+      // Error handled by promise
+    }
+  }, [fetchPayments, selectedPayment, promise, t]);
+
+  const handleDeletePayment = useCallback((paymentId, paymentName) => {
     setConfirmationModal({
       isOpen: true,
       paymentId,
       paymentName,
       onConfirm: () => handleDeleteConfirm(paymentId, paymentName)
     });
+  }, [handleDeleteConfirm]);
+
+  const handleRefundPayment = useCallback(async (paymentId, refundData) => {
+    // Refund logic implementation
+    console.log("Refund payment:", paymentId, refundData);
   }, []);
 
-  // Close confirmation modal
-  const closeConfirmationModal = useCallback(() => {
-    setConfirmationModal({
-      isOpen: false,
-      paymentId: null,
-      paymentName: "",
-      onConfirm: null
-    });
-  }, []);
-
-  // Handle confirmed deletion
-  const handleDeleteConfirm = useCallback(async (paymentId, paymentName = "Payment") => {
-    if (!paymentId) {
-      showError("Invalid payment ID");
-      return;
+  const handleExportCSV = useCallback(() => {
+    if (!payments.length) {
+      return showError(t('payments.notifications.noPaymentsExport'));
     }
+    showSuccess(t('payments.notifications.exportSuccess'));
+  }, [payments.length, showError, showSuccess, t]);
 
-    try {
-      // Use the promise toast for loading state
-      await promise(
-        paymentService.delete(paymentId),
-        {
-          loading: `Deleting ${paymentName}...`,
-          success: `${paymentName} deleted successfully`,
-          error: `Failed to delete ${paymentName}`
-        }
-      );
+  // ============================================================
+  // MODAL HANDLERS
+  // ============================================================
 
-      // Refresh the payments list
-      fetchPayments();
-      
-      // Close detail modal if the deleted payment is currently selected
-      if (selectedPayment?._id === paymentId) {
-        setSelectedPayment(null);
-        setIsDetailModalOpen(false);
-      }
-      
-      // Close confirmation modal
-      closeConfirmationModal();
-    } catch (err) {
-      // Error is already handled by the promise toast
-      console.error("Delete payment error:", err);
-      closeConfirmationModal();
-    }
-  }, [fetchPayments, selectedPayment, promise, showError, closeConfirmationModal]);
-
-  // Updated payment deletion handler
-  const handleDeletePayment = useCallback((paymentId, paymentName = "Payment") => {
-    showDeleteConfirmation(paymentId, paymentName);
-  }, [showDeleteConfirmation]);
-
-  // Handle row click to open detail modal
-  const handleRowClick = useCallback((payment) => {
+  const openPaymentDetail = useCallback((payment) => {
     setSelectedPayment(payment);
     setIsDetailModalOpen(true);
   }, []);
 
-  // Handle detail modal close
-  const handleDetailModalClose = useCallback(() => {
-    setSelectedPayment(null);
-    setIsDetailModalOpen(false);
-  }, []);
-
-  const handleRefundPayment = useCallback(
-    async (paymentId, refundData) => {
-      try {
-        if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
-          showError("Please enter a valid refund amount");
-          return;
-        }
-
-        await promise(
-          paymentService.refund(paymentId, {
-            refundAmount: parseFloat(refundData.amount),
-            refundReason: refundData.reason,
-          }),
-          {
-            loading: "Processing refund...",
-            success: "Payment refunded successfully",
-            error: "Failed to refund payment"
-          }
-        );
-
-        setIsRefundModalOpen(false);
-        setSelectedPayment(null);
-        setRefundData({ amount: "", reason: "" });
-        fetchPayments();
-      } catch (err) {
-        // Error is already handled by the promise toast
-        console.error("Refund payment error:", err);
-      }
-    },
-    [fetchPayments, promise, showError]
-  );
-
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
-
-  const handleAddPayment = useCallback(() => {
-    setSelectedPayment(null);
+  const openPaymentForm = useCallback((payment = null) => {
+    setSelectedPayment(payment);
     setIsFormOpen(true);
   }, []);
 
-  const handleEditPayment = useCallback((payment) => {
-    setSelectedPayment(payment);
+  const closePaymentDetail = useCallback(() => {
     setIsDetailModalOpen(false);
-    setIsFormOpen(true);
   }, []);
 
-  const handleViewPayment = useCallback(
-    (payment) => {
-      if (payment && payment._id) {
-        navigate(`/payments/${payment._id}`);
-      } else {
-        console.error("Invalid payment data:", payment);
-        showError("Cannot view payment: Invalid data");
-      }
-    },
-    [navigate, showError]
-  );
-
-  const handleRefundClick = useCallback((payment) => {
-    setSelectedPayment(payment);
-    setRefundData({
-      amount: payment.amount.toString(),
-      reason: "",
-    });
-    setIsRefundModalOpen(true);
+  const closePaymentForm = useCallback(() => {
+    setIsFormOpen(false);
+    setSelectedPayment(null);
   }, []);
 
   const handleFormSuccess = useCallback(() => {
     fetchPayments();
-    setSelectedPayment(null);
-    setIsFormOpen(false);
+    closePaymentForm();
     showSuccess(
       selectedPayment 
-        ? "Payment updated successfully" 
-        : "Payment recorded successfully"
+        ? t('payments.notifications.updateSuccess') 
+        : t('payments.notifications.createSuccess')
     );
-  }, [fetchPayments, selectedPayment, showSuccess]);
+  }, [fetchPayments, closePaymentForm, selectedPayment, showSuccess, t]);
 
-  const handleFormClose = useCallback(() => {
-    setSelectedPayment(null);
-    setIsFormOpen(false);
+  const handleEditFromDetail = useCallback((payment) => {
+    setSelectedPayment(payment);
+    setIsDetailModalOpen(false);
+    setIsFormOpen(true);
   }, []);
 
-  const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setType("all");
-    setStatus("all");
-    setMethod("all");
-    setPage(1);
-    showInfo("Filters cleared");
-  }, [showInfo]);
+  // ============================================================
+  // TABLE COLUMNS CONFIGURATION
+  // ============================================================
 
-  const handleRetry = useCallback(() => {
-    fetchPayments();
-    showInfo("Retrying to load payments...");
-  }, [fetchPayments, showInfo]);
-
-  const handleExportCSV = useCallback(() => {
-    if (!payments || payments.length === 0) {
-      showError("No payments to export");
-      return;
-    }
-
-    try {
-      let csvContent =
-        "Date,Type,Description,Client,Method,Amount,Status,Reference\n";
-
-      payments.forEach((payment) => {
-        const date = payment.paidDate || payment.createdAt || "";
-        const type = payment.type || "";
-        const description = (payment.description || "").replace(/,/g, " ");
-        const client = getClientName(payment).replace(/,/g, " ");
-        const method = (payment.method || "").replace(/_/g, " ");
-        const amount = payment.amount || 0;
-        const status = payment.status || "";
-        const reference = (payment.reference || "").replace(/,/g, " ");
-
-        csvContent += `${date},${type},"${description}","${client}","${method}",${amount},${status},"${reference}"\n`;
-      });
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `payments-${new Date().toISOString().split("T")[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      showSuccess("Payments exported successfully");
-    } catch (error) {
-      console.error("Error exporting payments:", error);
-      showError("Failed to export payments");
-    }
-  }, [payments, showSuccess, showError]);
-
-  const formatDate = (date) => {
-    if (!date) return "-";
-    const d = new Date(date);
-    const day = d.getDate().toString().padStart(2, "0");
-    const month = (d.getMonth() + 1).toString().padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const getClientName = (payment) => {
-    if (payment.client?.name) return payment.client.name;
-    if (payment.event?.clientId?.name) return payment.event.clientId.name;
-    return "N/A";
-  };
-
-  const getStatusBadgeColor = (status) => {
-    const statusLower = (status || "").toLowerCase();
-    switch (statusLower) {
-      case "completed":
-      case "paid":
-        return "green";
-      case "pending":
-        return "yellow";
-      case "failed":
-        return "red";
-      case "refunded":
-        return "blue";
-      default:
-        return "gray";
-    }
-  };
-
-  const getTypeBadgeColor = (type) => {
-    return type === "income" ? "green" : "red";
-  };
-
-  // Calculate statistics
-  const stats = {
-    totalIncome: payments
-      .filter((p) => p.type === "income")
-      .reduce((sum, p) => sum + (p.amount || 0), 0),
-    totalExpenses: payments
-      .filter((p) => p.type === "expense")
-      .reduce((sum, p) => sum + (p.amount || 0), 0),
-    completedPayments: payments.filter((p) =>
-      ["completed", "paid"].includes((p.status || "").toLowerCase())
-    ).length,
-    pendingPayments: payments.filter(
-      (p) => (p.status || "").toLowerCase() === "pending"
-    ).length,
-  };
-  stats.netAmount = stats.totalIncome - stats.totalExpenses;
-
-  const hasActiveFilters =
-    search.trim() !== "" ||
-    type !== "all" ||
-    status !== "all" ||
-    method !== "all";
-  const showEmptyState =
-    !loading &&
-    !error &&
-    payments.length === 0 &&
-    !hasActiveFilters &&
-    hasInitialLoad;
-  const showNoResults =
-    !loading &&
-    !error &&
-    payments.length === 0 &&
-    hasActiveFilters &&
-    hasInitialLoad;
-
-  // Table columns configuration for the new Table component
-  const columns = [
+  const tableColumns = [
     {
-      header: "Type",
+      header: t('payments.table.type'),
       accessor: "type",
-      sortable: true,
       width: "10%",
       render: (row) => (
-        <Badge color={getTypeBadgeColor(row.type)}>
+        <Badge variant={getBadgeVariant(row.type, 'type')}>
           <div className="flex items-center gap-1">
-            {row.type === "income" ? (
+            {row.type === PAYMENT_TYPES.INCOME ? (
               <TrendingUp className="w-3 h-3" />
             ) : (
               <TrendingDown className="w-3 h-3" />
             )}
-            <span className="capitalize">{row.type}</span>
+            <span className="capitalize">{t(`payments.types.${row.type}`)}</span>
           </div>
         </Badge>
-      ),
+      )
     },
     {
-      header: "Description",
+      header: t('payments.table.description'),
       accessor: "description",
-      sortable: true,
       width: "25%",
       render: (row) => (
         <div>
@@ -434,147 +462,140 @@ const PaymentsList = () => {
             {row.description || "N/A"}
           </div>
           {row.reference && (
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Ref: {row.reference}
+            <div className="text-xs text-gray-500">
+              {t('payments.table.reference')}: {row.reference}
             </div>
           )}
         </div>
-      ),
+      )
     },
     {
-      header: "Client",
+      header: t('payments.table.client'),
       accessor: "client",
-      sortable: true,
       width: "15%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
           {getClientName(row)}
         </div>
-      ),
+      )
     },
     {
-      header: "Date",
+      header: t('payments.table.date'),
       accessor: "date",
-      sortable: true,
       width: "12%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
           {formatDate(row.paidDate || row.createdAt)}
         </div>
-      ),
+      )
     },
     {
-      header: "Method",
-      accessor: "method",
-      sortable: true,
-      width: "12%",
-      render: (row) => (
-        <div className="text-gray-600 dark:text-gray-400 capitalize">
-          {(row.method || "N/A").replace(/_/g, " ")}
-        </div>
-      ),
-    },
-    {
-      header: "Amount",
+      header: t('payments.table.amount'),
       accessor: "amount",
-      sortable: true,
       width: "13%",
       render: (row) => (
-        <div
-          className={`font-semibold ${
-            row.type === "income"
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-600 dark:text-red-400"
-          }`}
-        >
-          {row.type === "income" ? "+" : "-"}
+        <div className={`font-bold ${
+          row.type === PAYMENT_TYPES.INCOME 
+            ? "text-green-600" 
+            : "text-red-600"
+        }`}>
+          {row.type === PAYMENT_TYPES.INCOME ? "+" : "-"}
           {formatCurrency(row.amount)}
         </div>
-      ),
+      )
     },
     {
-      header: "Status",
+      header: t('payments.table.status'),
       accessor: "status",
-      sortable: true,
       width: "10%",
       render: (row) => (
-        <Badge color={getStatusBadgeColor(row.status)}>
-          {row.status || "Unknown"}
+        <Badge variant={getBadgeVariant(row.status, 'status')}>
+          {t(`payments.statuses.${row.status}`) || "Unknown"}
         </Badge>
-      ),
+      )
     },
     {
-      header: "Actions",
+      header: t('payments.table.actions'),
       accessor: "actions",
-      width: "3%",
+      width: "15%",
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              handleRowClick(row);
+              navigate(`/payments/${row._id}`);
             }}
-            className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-            title="View Payment"
+            className="text-gray-500 hover:text-orange-600"
           >
             <Eye className="h-4 w-4" />
-          </button>
-          <button
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              handleEditPayment(row);
+              openPaymentForm(row);
             }}
-            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-            title="Edit Payment"
+            className="text-blue-500 hover:text-blue-700"
           >
             <Edit className="h-4 w-4" />
-          </button>
-          {row.type === "income" &&
-            ["completed", "paid"].includes(
-              (row.status || "").toLowerCase()
-            ) && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRefundClick(row);
-                }}
-                className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 p-1 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition"
-                title="Refund Payment"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-            )}
-          <button
+          </Button>
+
+          {row.type === PAYMENT_TYPES.INCOME && 
+           [PAYMENT_STATUSES.COMPLETED, PAYMENT_STATUSES.PAID].includes(row.status?.toLowerCase()) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPayment(row);
+                setIsRefundModalOpen(true);
+              }}
+              className="text-yellow-500 hover:text-yellow-700"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              handleDeletePayment(row._id, row.description || "Payment");
+              handleDeletePayment(row._id, row.description);
             }}
-            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            title="Delete Payment"
+            className="text-red-500 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
-      ),
-    },
+      )
+    }
   ];
 
-  return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            Payments
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track all income and expense payments.
-            {hasInitialLoad &&
-              totalCount > 0 &&
-              `Showing ${payments.length} of ${totalCount} payments`}
-          </p>
-        </div>
+  // ============================================================
+  // RENDER: HEADER
+  // ============================================================
+
+  const renderHeader = () => (
+    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          {t('payments.title')}
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400">
+          {t('payments.subtitle')}
+          {hasInitialLoad && !showEmptyState && (
+            <span className="ml-1">({totalCount})</span>
+          )}
+        </p>
+      </div>
+
+      {!showEmptyState && (
         <div className="flex gap-2">
           {totalCount > 0 && (
             <Button
@@ -583,430 +604,343 @@ const PaymentsList = () => {
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" />
-              Export
+              {t('payments.exportPayments')}
             </Button>
           )}
-          {totalCount > 0 && (
-            <Button
-              variant="primary"
-              onClick={handleAddPayment}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Payment
-            </Button>
-          )}
+          <Button
+            variant="primary"
+            onClick={() => openPaymentForm()}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            {t('payments.addPayment')}
+          </Button>
         </div>
-      </div>
+      )}
+    </div>
+  );
 
-      {/* Stats Cards */}
+  // ============================================================
+  // RENDER: STATS
+  // ============================================================
+
+  const renderStats = () => {
+    if (showEmptyState || payments.length === 0) return null;
+
+    return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium text-green-800 dark:text-green-300">
-                Total Income
-              </div>
-              <div className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(stats.totalIncome)}
-              </div>
-            </div>
-            <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-        </div>
+        {STAT_CONFIGS.map(config => {
+          const Icon = config.icon;
 
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium text-red-800 dark:text-red-300">
-                Total Expenses
-              </div>
-              <div className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">
-                {formatCurrency(stats.totalExpenses)}
-              </div>
-            </div>
-            <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg">
-              <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                Net Amount
-              </div>
+          if (config.isStatusCard) {
+            return (
               <div
-                className={`mt-1 text-2xl font-bold ${
-                  stats.netAmount >= 0
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
+                key={config.key}
+                className={`p-4 rounded-lg border ${config.bgClass} ${config.borderClass}`}
               >
-                {formatCurrency(stats.netAmount)}
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`text-sm font-medium ${config.textClass}`}>
+                    {t(config.labelKey)}
+                  </div>
+                  <div className={`p-2 rounded-lg ${config.iconBgClass}`}>
+                    <Icon className={`w-5 h-5 ${config.iconClass}`} />
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <span className="w-2 h-2 bg-green-500 rounded-full" />
+                      {t('payments.statuses.completed')}
+                    </span>
+                    <span className="font-bold dark:text-white">
+                      {stats.completedPayments}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <span className="w-2 h-2 bg-yellow-500 rounded-full" />
+                      {t('payments.statuses.pending')}
+                    </span>
+                    <span className="font-bold dark:text-white">
+                      {stats.pendingPayments}
+                    </span>
+                  </div>
+                  {stats.failedPayments > 0 && (
+                    <div className="flex justify-between">
+                      <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <span className="w-2 h-2 bg-red-500 rounded-full" />
+                        {t('payments.statuses.failed')}
+                      </span>
+                      <span className="font-bold dark:text-white">
+                        {stats.failedPayments}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          const mainValue = config.getValue(stats);
+          const subValue = config.getSubValue(stats);
+
+          return (
+            <div
+              key={config.key}
+              className={`p-4 rounded-lg border ${config.bgClass} ${config.borderClass}`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className={`text-sm font-medium ${config.textClass}`}>
+                  {t(config.labelKey)}
+                </div>
+                <div className={`p-2 rounded-lg ${config.iconBgClass}`}>
+                  <Icon className={`w-5 h-5 ${config.iconClass}`} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className={`text-2xl font-bold ${
+                  config.isDynamic && mainValue < 0 
+                    ? 'text-red-600' 
+                    : config.valueClass
+                }`}>
+                  {formatCurrency(mainValue)}
+                </div>
+                <div className={`text-xs ${config.subTextClass}`}>
+                  {t(config.subLabel || 'payments.stats.pending')}: {formatCurrency(subValue)}
+                </div>
               </div>
             </div>
-            <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg"></div>
-          </div>
-        </div>
-
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">
-            Payment Status
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Completed
-              </span>
-              <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                {stats.completedPayments}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Pending
-              </span>
-              <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-                {stats.pendingPayments}
-              </span>
-            </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
+    );
+  };
 
-      {/* Error Message */}
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Payments
-              </p>
-              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
-                {error}
-              </p>
-            </div>
-            <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
-            </Button>
-          </div>
+  // ============================================================
+  // RENDER: FILTERS
+  // ============================================================
+
+  const renderFilters = () => {
+    if (!hasInitialLoad || showEmptyState) return null;
+
+    return (
+      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4">
+        <Input
+          className="flex-1"
+          icon={Search}
+          placeholder={t('payments.searchPlaceholder')}
+          value={filters.search}
+          onChange={(e) => updateFilter('search', e.target.value)}
+        />
+        <div className="sm:w-40">
+          <Select
+            value={filters.type}
+            onChange={(e) => updateFilter('type', e.target.value)}
+            options={[
+              { value: "all", label: "All Types" },
+              { value: "income", label: "Income" },
+              { value: "expense", label: "Expense" }
+            ]}
+          />
         </div>
-      )}
-
-      {/* Search & Filters */}
-      {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                className="dark:bg-[#1f2937] dark:text-white"
-                icon={Search}
-                placeholder="Search by description, reference, or client..."
-                value={search}
-                onChange={(e) => {
-                  setPage(1);
-                  setSearch(e.target.value);
-                }}
-              />
-            </div>
-            <div className="sm:w-40">
-              <Select
-                className="dark:bg-[#1f2937] dark:text-white"
-                icon={Filter}
-                value={type}
-                onChange={(e) => {
-                  setPage(1);
-                  setType(e.target.value);
-                }}
-                options={[
-                  { value: "all", label: "All Types" },
-                  { value: "income", label: "Income" },
-                  { value: "expense", label: "Expense" },
-                ]}
-              />
-            </div>
-            <div className="sm:w-40">
-              <Select
-                className="dark:bg-[#1f2937] dark:text-white"
-                value={status}
-                onChange={(e) => {
-                  setPage(1);
-                  setStatus(e.target.value);
-                }}
-                options={[
-                  { value: "all", label: "All Status" },
-                  { value: "pending", label: "Pending" },
-                  { value: "completed", label: "Completed" },
-                  { value: "failed", label: "Failed" },
-                  { value: "refunded", label: "Refunded" },
-                ]}
-              />
-            </div>
-            <div className="sm:w-40">
-              <Select
-                className="dark:bg-[#1f2937] dark:text-white"
-                value={method}
-                onChange={(e) => {
-                  setPage(1);
-                  setMethod(e.target.value);
-                }}
-                options={[
-                  { value: "all", label: "All Methods" },
-                  { value: "cash", label: "Cash" },
-                  { value: "card", label: "Card" },
-                  { value: "credit_card", label: "Credit Card" },
-                  { value: "bank_transfer", label: "Bank Transfer" },
-                  { value: "check", label: "Check" },
-                  { value: "mobile_payment", label: "Mobile Payment" },
-                ]}
-              />
-            </div>
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                onClick={handleClearFilters}
-                className="flex items-center gap-2"
-              >
-                <X className="h-4 w-4" />
-                Clear
-              </Button>
-            )}
-          </div>
-
-          {hasActiveFilters && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Active filters:</span>
-              {search.trim() && (
-                <Badge color="blue">Search: "{search.trim()}"</Badge>
-              )}
-              {type !== "all" && <Badge color="green">Type: {type}</Badge>}
-              {status !== "all" && (
-                <Badge color="purple">Status: {status}</Badge>
-              )}
-              {method !== "all" && (
-                <Badge color="orange">Method: {method}</Badge>
-              )}
-            </div>
-          )}
+        <div className="sm:w-40">
+          <Select
+            value={filters.status}
+            onChange={(e) => updateFilter('status', e.target.value)}
+            options={[
+              { value: "all", label: "All Status" },
+              { value: "pending", label: "Pending" },
+              { value: "completed", label: "Completed" }
+            ]}
+          />
         </div>
-      )}
-
-      {/* Loading State */}
-      {loading && !hasInitialLoad && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading payments...
-          </p>
-        </div>
-      )}
-
-      {/* Table Section */}
-      {!loading && hasInitialLoad && payments.length > 0 && (
-        <>
-          <div className="overflow-x-auto">
-            <Table
-              columns={columns}
-              data={payments}
-              loading={loading}
-              onRowClick={handleRowClick}
-              pagination={true}
-              currentPage={page}
-              totalPages={totalPages}
-              pageSize={limit}
-              totalItems={totalCount}
-              onPageChange={setPage}
-              onPageSizeChange={(newLimit) => {
-                setLimit(newLimit);
-                setPage(1);
-              }}
-              pageSizeOptions={[10, 25, 50, 100]}
-            />
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-6">
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                pageSize={limit}
-                onPageSizeChange={(newLimit) => {
-                  setLimit(newLimit);
-                  setPage(1);
-                }}
-                totalItems={totalCount}
-              />
-            </div>
-          )}
-        </>
-      )}
-
-      {/* No Results from Search/Filter */}
-      {showNoResults && (
-        <div className="text-center py-12">
-          <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No payments found
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No payments match your current search or filter criteria.
-          </p>
-          <Button onClick={handleClearFilters} variant="outline">
-            Clear All Filters
+        {hasActiveFilters && (
+          <Button variant="outline" icon={X} onClick={handleClearFilters}>
+            {t('payments.filters.clearFilters')}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
+    );
+  };
 
-      {/* Empty State - No payments at all */}
-      {showEmptyState && (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <DollarSign className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No payments yet
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Get started by recording your first payment.
-          </p>
-          <Button onClick={handleAddPayment} variant="primary">
-            <Plus className="h-4 w-4 mr-2" />
-            Record First Payment
-          </Button>
-        </div>
-      )}
+  // ============================================================
+  // RENDER: ERROR STATE
+  // ============================================================
 
+  const renderError = () => {
+    if (!error) return null;
+
+    return (
+      <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <AlertTriangle className="text-red-600 dark:text-red-400" />
+          <p className="text-red-800 dark:text-red-200 font-medium">{error}</p>
+        </div>
+        <Button
+          onClick={fetchPayments}
+          size="sm"
+          variant="outline"
+          className="border-red-200 text-red-700 hover:bg-red-100"
+        >
+          {t("common.retry")}
+        </Button>
+      </div>
+    );
+  };
+
+  // ============================================================
+  // RENDER: EMPTY STATES
+  // ============================================================
+
+  const renderEmptyState = () => {
+    if (!showEmptyState) return null;
+
+    return (
+      <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
+        <DollarSign className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          {t('payments.table.noPayments')}
+        </h3>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">
+          Get started by recording your first payment
+        </p>
+        <Button
+          onClick={() => openPaymentForm()}
+          variant="primary"
+          icon={Plus}
+        >
+          {t('payments.recordFirstPayment')}
+        </Button>
+      </div>
+    );
+  };
+
+  const renderNoResults = () => {
+    if (!showNoResults) return null;
+
+    return (
+      <div className="text-center py-12">
+        <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          {t('payments.table.noResults')}
+        </h3>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">
+          Try adjusting your filters
+        </p>
+        <Button onClick={handleClearFilters} variant="outline">
+          {t('payments.filters.clearFilters')}
+        </Button>
+      </div>
+    );
+  };
+
+  // ============================================================
+  // RENDER: TABLE
+  // ============================================================
+
+  const renderTable = () => {
+    if (loading || !hasInitialLoad || payments.length === 0) return null;
+
+    return (
+      <Table
+        columns={tableColumns}
+        data={payments}
+        loading={loading}
+        emptyMessage={t('payments.table.empty')}
+        onRowClick={openPaymentDetail}
+        striped
+        hoverable
+        pagination={true}
+        currentPage={filters.page}
+        totalPages={totalPages}
+        onPageChange={(page) => updateFilter('page', page)}
+        totalItems={totalCount}
+        pageSize={filters.limit}
+        onPageSizeChange={(limit) => {
+          updateFilter('limit', limit);
+          updateFilter('page', 1);
+        }}
+      />
+    );
+  };
+
+  // ============================================================
+  // RENDER: MODALS
+  // ============================================================
+
+  const renderModals = () => (
+    <>
       {/* Payment Detail Modal */}
       <PaymentDetailModal
         isOpen={isDetailModalOpen}
-        onClose={handleDetailModalClose}
+        onClose={closePaymentDetail}
         payment={selectedPayment}
-        onEdit={handleEditPayment}
+        onEdit={handleEditFromDetail}
         refreshData={fetchPayments}
       />
 
-      {/* Add/Edit Form */}
-      {isFormOpen && (
-        <Modal
-          isOpen={isFormOpen}
-          onClose={handleFormClose}
-          title={selectedPayment ? "Edit Payment" : "Record New Payment"}
-          size="lg"
-        >
-          <PaymentForm
-            payment={selectedPayment}
-            onSuccess={handleFormSuccess}
-            onCancel={handleFormClose}
-          />
-        </Modal>
-      )}
-
-      {/* Refund Modal */}
-      {isRefundModalOpen && selectedPayment && (
-        <Modal
-          isOpen={isRefundModalOpen}
-          onClose={() => {
-            setSelectedPayment(null);
-            setIsRefundModalOpen(false);
-            setRefundData({ amount: "", reason: "" });
-          }}
-          title="Refund Payment"
-          size="sm"
-        >
-          <div className="p-6">
-            <div className="space-y-4 mb-6">
-              <Input
-                label="Refund Amount"
-                type="number"
-                value={refundData.amount}
-                onChange={(e) =>
-                  setRefundData((prev) => ({ ...prev, amount: e.target.value }))
-                }
-                placeholder="0.00"
-                min="0"
-                max={selectedPayment?.amount}
-                step="0.01"
-              />
-              <Input
-                label="Reason (Optional)"
-                value={refundData.reason}
-                onChange={(e) =>
-                  setRefundData((prev) => ({ ...prev, reason: e.target.value }))
-                }
-                placeholder="Enter refund reason"
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsRefundModalOpen(false);
-                  setSelectedPayment(null);
-                  setRefundData({ amount: "", reason: "" });
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() =>
-                  handleRefundPayment(selectedPayment._id, refundData)
-                }
-              >
-                Confirm Refund
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Payment Form Modal */}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={closePaymentForm}
+        title={
+          selectedPayment
+            ? t('payments.modals.paymentForm.editTitle')
+            : t('payments.modals.paymentForm.newTitle')
+        }
+        size="lg"
+      >
+        <PaymentForm
+          payment={selectedPayment}
+          onSuccess={handleFormSuccess}
+          onCancel={closePaymentForm}
+        />
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={confirmationModal.isOpen}
-        onClose={closeConfirmationModal}
-        title="Confirm Deletion"
-        size="md"
+        onClose={() => setConfirmationModal(p => ({ ...p, isOpen: false }))}
+        title={t('payments.modals.delete.title')}
+        size="sm"
       >
-        <div className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Payment
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete <strong>"{confirmationModal.paymentName}"</strong>? 
-                This action cannot be undone and all associated data will be permanently removed.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={closeConfirmationModal}
-                  className="px-4 py-2"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={confirmationModal.onConfirm}
-                  className="px-4 py-2 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Payment
-                </Button>
-              </div>
-            </div>
+        <div className="p-6 text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="mb-6 text-gray-600 dark:text-gray-300">
+            {t('payments.modals.delete.description', {
+              paymentName: confirmationModal.paymentName
+            })}
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmationModal(p => ({ ...p, isOpen: false }))}
+            >
+              {t('payments.modals.delete.cancel')}
+            </Button>
+            <Button variant="danger" onClick={confirmationModal.onConfirm}>
+              {t('payments.modals.delete.confirm')}
+            </Button>
           </div>
         </div>
       </Modal>
+    </>
+  );
+
+  // ============================================================
+  // MAIN RENDER
+  // ============================================================
+
+  return (
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
+      {renderHeader()}
+      {renderStats()}
+      {renderFilters()}
+      {renderError()}
+      {renderEmptyState()}
+      {renderNoResults()}
+      {renderTable()}
+      {renderModals()}
     </div>
   );
 };

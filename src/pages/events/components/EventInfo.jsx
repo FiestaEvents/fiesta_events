@@ -1,4 +1,3 @@
-// components/events/components/EventInfo.jsx
 import React from "react";
 import {
   Calendar,
@@ -9,137 +8,161 @@ import {
   DollarSign,
   FileText,
   ExternalLink,
+  AlignLeft,
+  Tag
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { useTranslation } from "react-i18next";
 
-const EventInfo = ({ event, formatDate, formatDateTime, onNavigateToClient }) => {
-  const InfoRow = ({ icon: Icon, label, value, onClick, isLink }) => (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
-      <Icon className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-      <div className="flex-1 min-w-0">
-        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-          {label}
+const EventInfo = ({ event, formatDate, onNavigateToClient }) => {
+  const { t } = useTranslation();
+
+  // Helper component for single-line rows
+  const InfoRow = ({ icon: Icon, label, value, onClick, isLink, color = "orange" }) => {
+    if (!value && value !== 0) return null;
+
+    const colorClasses = {
+      orange: "bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400",
+      blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+      green: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
+      purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
+      gray: "bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+    };
+
+    return (
+      <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClasses[color] || colorClasses.gray}`}>
+          <Icon className="w-5 h-5" />
         </div>
-        {isLink && onClick ? (
-          <button
-            onClick={onClick}
-            className="text-sm font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 flex items-center gap-1 group"
-          >
-            <span>{value || "-"}</span>
-            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
-          </button>
-        ) : (
-          <div className="text-sm font-medium text-gray-900 dark:text-white break-words">
-            {value || "-"}
+        
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
+            {label}
           </div>
-        )}
+          
+          {isLink && onClick ? (
+            <button
+              onClick={onClick}
+              className="text-sm font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 flex items-center gap-1 group transition-colors"
+            >
+              <span className="truncate">{value}</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+            </button>
+          ) : (
+            <div className="text-sm font-semibold text-gray-900 dark:text-white break-words">
+              {value}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Event Information
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+        <AlignLeft className="w-5 h-5 text-orange-500" />
+        {t("eventInfo.title", "Event Details")}
       </h2>
-      <div className="space-y-0">
-        {/* Date & Time */}
+
+      <div className="flex flex-col gap-1">
+        
+        {/* --- TIMING --- */}
         <InfoRow
           icon={Calendar}
-          label="Start Date"
+          label={t("eventInfo.fields.startDate")}
           value={formatDate(event.startDate)}
+          color="orange"
         />
         
         {event.endDate && event.endDate !== event.startDate && (
           <InfoRow
             icon={Calendar}
-            label="End Date"
+            label={t("eventInfo.fields.endDate")}
             value={formatDate(event.endDate)}
+            color="orange"
           />
         )}
 
         {(event.startTime || event.endTime) && (
           <InfoRow
             icon={Clock}
-            label="Time"
-            value={`${event.startTime || "00:00"} - ${event.endTime || "23:59"}`}
+            label={t("eventInfo.fields.time")}
+            value={`${event.startTime || "00:00"} - ${event.endTime || "..."}`}
+            color="blue"
           />
         )}
 
-        {/* Venue Space */}
-        {event.venueSpace?.name && (
-          <InfoRow
-            icon={MapPin}
-            label="Venue Space"
-            value={event.venueSpace.name}
-          />
-        )}
+        {/* --- LOCATION & PEOPLE --- */}
+        <InfoRow
+          icon={MapPin}
+          label={t("eventInfo.fields.venueSpace")}
+          value={event.venueSpace?.name}
+          color="green"
+        />
 
-        {/* Guest Count */}
-        {event.guestCount && (
-          <InfoRow
-            icon={Users}
-            label="Guest Count"
-            value={`${event.guestCount} guests`}
-          />
-        )}
+        <InfoRow
+          icon={Users}
+          label={t("eventInfo.fields.guestCount")}
+          value={event.guestCount ? `${event.guestCount} ${t("eventInfo.values.guests")}` : null}
+          color="purple"
+        />
 
-        {/* Client */}
-        {event.clientId && (
-          <InfoRow
-            icon={User}
-            label="Client"
-            value={event.clientId.name || event.clientId.email || "Unknown"}
-            onClick={onNavigateToClient}
-            isLink={true}
-          />
-        )}
+        <InfoRow
+          icon={User}
+          label={t("eventInfo.fields.client")}
+          value={event.clientId?.name || event.clientId?.email}
+          onClick={onNavigateToClient}
+          isLink={true}
+          color="blue"
+        />
 
-        {/* Pricing */}
-        {event.pricing?.totalAmount !== undefined && (
-          <InfoRow
-            icon={DollarSign}
-            label="Total Amount"
-            value={formatCurrency(event.pricing.totalAmount)}
-          />
-        )}
-
-        {event.pricing?.basePrice !== undefined && (
-          <InfoRow
-            icon={DollarSign}
-            label="Base Price"
-            value={formatCurrency(event.pricing.basePrice)}
-          />
-        )}
+        {/* --- FINANCIALS --- */}
+        <InfoRow
+          icon={DollarSign}
+          label={t("eventInfo.fields.totalAmount")}
+          value={event.pricing?.totalAmount !== undefined ? formatCurrency(event.pricing.totalAmount) : null}
+          color="green"
+        />
 
         {event.pricing?.discount > 0 && (
           <InfoRow
-            icon={DollarSign}
-            label="Discount"
+            icon={Tag}
+            label={t("eventInfo.fields.discount")}
             value={
               event.pricing.discountType === "percentage"
                 ? `${event.pricing.discount}%`
                 : formatCurrency(event.pricing.discount)
             }
+            color="gray"
           />
         )}
+      </div>
 
-        {/* Description */}
+      {/* --- LONG FORM CONTENT --- */}
+      <div className="mt-6 space-y-4">
         {event.description && (
-          <InfoRow
-            icon={FileText}
-            label="Description"
-            value={event.description}
-          />
+          <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
+            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5" />
+              {t("eventInfo.fields.description")}
+            </h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
+              {event.description}
+            </p>
+          </div>
         )}
 
-        {/* Notes */}
         {event.notes && (
-          <InfoRow
-            icon={FileText}
-            label="Notes"
-            value={event.notes}
-          />
+          <div className="bg-yellow-50 dark:bg-gray-800/50 p-4 rounded-lg border border-yellow-100 dark:border-gray-700">
+            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5" />
+              {t("eventInfo.fields.notes")}
+            </h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed italic">
+              {event.notes}
+            </p>
+          </div>
         )}
       </div>
     </div>

@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Button from "../../components/common/Button";
-import Badge from "../../components/common/Badge";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
-import Modal from "../../components/common/Modal";
-import Input from "../../components/common/Input";
-import { paymentService } from "../../api/index";
-import { toast } from "react-hot-toast";
-import formatCurrency from "../../utils/formatCurrency";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Edit,
@@ -17,33 +10,63 @@ import {
   CreditCard,
   FileText,
   User,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
   TrendingUp,
   TrendingDown,
   RotateCcw,
-  Download,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  XCircle,
+  AlertCircle,
+  Briefcase
 } from "lucide-react";
+
+// ✅ Generic Components
+import Button from "../../components/common/Button";
+import Badge, { StatusBadge } from "../../components/common/Badge";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import Modal from "../../components/common/Modal";
+import Input from "../../components/common/Input";
+
+// ✅ Sub-components (for editing within the page)
+import PaymentForm from "./PaymentForm";
+
+// ✅ Services & Utils
+import { paymentService } from "../../api/index";
+import { useToast } from "../../hooks/useToast";
+import formatCurrency from "../../utils/formatCurrency";
 
 const PaymentDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { t } = useTranslation();
+  const { showSuccess, apiError } = useToast();
 
   // State
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Modals State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
-  const [refundData, setRefundData] = useState({
-    amount: "",
-    reason: "",
-  });
+  const [refundData, setRefundData] = useState({ amount: "", reason: "" });
 
-  useEffect(() => {
-    fetchPayment();
-  }, [id]);
+  // ✅ Helper: Strict DD/MM/YYYY format
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("en-GB");
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleString("en-GB", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+  };
+
+  const getTypeVariant = (type) => type === "income" ? "success" : "danger";
 
   const fetchPayment = async () => {
     try {
@@ -51,38 +74,47 @@ const PaymentDetail = () => {
       const response = await paymentService.getById(id);
       setPayment(response.payment || response);
     } catch (error) {
-      console.error("Error fetching payment:", error);
-      toast.error(error.message || "Failed to load payment");
+      apiError(error, t('payments.notifications.loadError'));
       navigate("/payments");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchPayment();
+  }, [id]);
+
+  // --- Handlers ---
+
   const handleEdit = () => {
-    navigate(`/payments/${id}/edit`);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = async () => {
+    setIsEditModalOpen(false);
+    await fetchPayment();
+    showSuccess(t('payments.notifications.updateSuccess'));
   };
 
   const handleDelete = async () => {
     try {
       await paymentService.delete(id);
-      toast.success("Payment deleted successfully");
+      showSuccess(t('payments.notifications.deleteSuccess'));
       navigate("/payments");
     } catch (error) {
-      console.error("Error deleting payment:", error);
-      toast.error(error.message || "Failed to delete payment");
+      apiError(error, t('payments.notifications.deleteError'));
     }
   };
 
   const handleRefund = async () => {
     try {
       if (!refundData.amount || parseFloat(refundData.amount) <= 0) {
-        toast.error("Please enter a valid refund amount");
+        apiError(null, t('payments.modals.refund.invalidAmount'));
         return;
       }
-
       if (parseFloat(refundData.amount) > payment.amount) {
-        toast.error("Refund amount cannot exceed payment amount");
+        apiError(null, t('payments.modals.refund.amountExceeded'));
         return;
       }
 
@@ -90,559 +122,317 @@ const PaymentDetail = () => {
         refundAmount: parseFloat(refundData.amount),
         refundReason: refundData.reason,
       });
-
-      toast.success("Payment refunded successfully");
+      
+      showSuccess(t('payments.notifications.refundSuccess'));
       setIsRefundModalOpen(false);
       setRefundData({ amount: "", reason: "" });
-      fetchPayment(); // Refresh payment data
+      fetchPayment();
     } catch (error) {
-      console.error("Error refunding payment:", error);
-      toast.error(error.message || "Failed to refund payment");
+      apiError(error, t('payments.notifications.refundError'));
     }
   };
 
-const formatDate = (date) => {
-  if (!date) return '-';
-  const d = new Date(date);
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+  if (loading) return <div className="flex h-screen justify-center items-center"><LoadingSpinner size="lg" /></div>;
+  if (!payment) return <div className="text-center py-12">{t('payments.notFound')}</div>;
 
-const formatDateTime = (dateString) => {
-  if (!dateString) return "";
-  const d = new Date(dateString);
-  const day = d.getDate();
-  const month = d.toLocaleString("en-GB", { month: "short" });
-  const year = d.getFullYear();
-  const hours = d.getHours().toString().padStart(2, "0");
-  const minutes = d.getMinutes().toString().padStart(2, "0");
-  return `${day} ${month} ${year}, ${hours}:${minutes}`;
-};
-
-  const getStatusVariant = (status) => {
-    const statusLower = (status || "").toLowerCase();
-    switch (statusLower) {
-      case "completed":
-      case "paid":
-        return "success";
-      case "pending":
-        return "warning";
-      case "failed":
-        return "danger";
-      case "refunded":
-        return "info";
-      default:
-        return "gray";
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    const statusLower = (status || "").toLowerCase();
-    switch (statusLower) {
-      case "completed":
-      case "paid":
-        return CheckCircle;
-      case "pending":
-        return Clock;
-      case "failed":
-        return XCircle;
-      case "refunded":
-        return AlertCircle;
-      default:
-        return Clock;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  if (!payment) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600 dark:text-gray-400">Payment not found</p>
-      </div>
-    );
-  }
-
-  const StatusIcon = getStatusIcon(payment.status);
   const TypeIcon = payment.type === "income" ? TrendingUp : TrendingDown;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-white rounded-lg dark:bg-gray-900 min-h-screen space-y-6">
+      
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
-        <div className="flex items-start gap-4">
-          <button
-            onClick={() => navigate("/payments")}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <DollarSign className="w-8 h-8" />
-              Payment Details
-            </h1>
-            <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-              {payment.reference || `Payment #${id.slice(-8)}`}
-            </p>
-          </div>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate("/payments")}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          {t('common.back', 'Back')}
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            {t('payments.detail.title')}
+          </h1>
+          <p className="text-sm text-gray-500">{payment.reference ? `${t('payments.table.reference')}: ${payment.reference}` : `#${id.slice(-8)}`}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Information */}
+        
+        {/* --- LEFT COLUMN (Main Info) --- */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Payment Overview */}
-          <div>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Payment Overview
-              </h3>
-
-              <div className="space-y-6">
-                {/* Type and Status */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`p-3 rounded-lg ${
-                        payment.type === "income"
-                          ? "bg-green-50 dark:bg-green-900/20"
-                          : "bg-red-50 dark:bg-red-900/20"
-                      }`}
-                    >
-                      <TypeIcon
-                        className={`w-6 h-6 ${
-                          payment.type === "income"
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Payment Type
-                      </p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                        {payment.type}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant={getStatusVariant(payment.status)}>
-                    <div className="flex items-center gap-1">
-                      <StatusIcon className="w-3 h-3" />
-                      <span className="capitalize">{payment.status}</span>
-                    </div>
+          
+          {/* Amount & Status Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-xl ${payment.type === "income" ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"}`}>
+                  <TypeIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium uppercase tracking-wider">{t('payments.form.type')}</p>
+                  <Badge variant={getTypeVariant(payment.type)} className="capitalize mt-1">
+                    {t(`payments.types.${payment.type}`)}
                   </Badge>
                 </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-500 mb-1">{t('payments.form.status')}</p>
+                <StatusBadge status={payment.status} size="lg" />
+              </div>
+            </div>
 
-                {/* Amount */}
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Total Amount
-                  </p>
-                  <p
-                    className={`text-4xl font-bold ${
-                      payment.type === "income"
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {payment.type === "income" ? "+" : "-"}
-                    {formatCurrency(payment.amount)}
-                  </p>
-                </div>
-
-                {/* Description */}
-                {payment.description && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      Description
-                    </p>
-                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
-                      {payment.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* Payment Details Grid */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Payment Method
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-gray-400" />
-                      <p className="text-gray-900 dark:text-white font-medium capitalize">
-                        {(payment.method || "N/A").replace(/_/g, " ")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Reference Number
-                    </p>
-                    <p className="text-gray-900 dark:text-white font-medium">
-                      {payment.reference || "—"}
-                    </p>
-                  </div>
-
-                  {payment.dueDate && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Due Date
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <p className="text-gray-900 dark:text-white">
-                          {formatDate(payment.dueDate)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {payment.paidDate && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Paid Date
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <p className="text-gray-900 dark:text-white">
-                          {formatDate(payment.paidDate)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+            <div className="text-center py-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t('payments.totalAmount')}</p>
+              <div className={`text-5xl font-bold tracking-tight ${payment.type === "income" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                {payment.type === "income" ? "+" : "-"}{formatCurrency(payment.amount)}
               </div>
             </div>
           </div>
 
-          {/* Fees Breakdown */}
-          {(payment.fees?.processingFee > 0 ||
-            payment.fees?.platformFee > 0 ||
-            payment.fees?.otherFees > 0) && (
-            <div>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Fees & Charges
-                </h3>
-                <div className="space-y-3">
-                  {payment.fees.processingFee > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Processing Fee
-                      </span>
-                      <span className="text-gray-900 dark:text-white font-medium">
-                        {formatCurrency(payment.fees.processingFee)}
-                      </span>
-                    </div>
-                  )}
-                  {payment.fees.platformFee > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Platform Fee
-                      </span>
-                      <span className="text-gray-900 dark:text-white font-medium">
-                        {formatCurrency(payment.fees.platformFee)}
-                      </span>
-                    </div>
-                  )}
-                  {payment.fees.otherFees > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Other Fees
-                      </span>
-                      <span className="text-gray-900 dark:text-white font-medium">
-                        {formatCurrency(payment.fees.otherFees)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-900 dark:text-white font-semibold">
-                        Net Amount
-                      </span>
-                      <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                        {formatCurrency(payment.netAmount)}
-                      </span>
-                    </div>
-                  </div>
+          {/* Details Grid */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-orange-500" />
+              {t('payments.detail.overview')}
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+              <DetailItem 
+                icon={CreditCard} 
+                label={t('payments.detail.paymentMethod')} 
+                value={t(`payments.methods.${payment.method}`) || payment.method} 
+                color="blue"
+              />
+              <DetailItem 
+                icon={FileText} 
+                label={t('payments.form.reference')} 
+                value={payment.reference || "N/A"} 
+                color="purple"
+              />
+              <DetailItem 
+                icon={Calendar} 
+                label={t('payments.form.paidDate')} 
+                value={formatDate(payment.paidDate)} 
+                color="green"
+              />
+              <DetailItem 
+                icon={Calendar} 
+                label={t('payments.form.dueDate')} 
+                value={formatDate(payment.dueDate)} 
+                color="orange"
+              />
+            </div>
+
+            {payment.description && (
+              <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">{t('payments.form.description')}</h4>
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {payment.description}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Refund Information */}
+          {/* Refund Information Block */}
           {payment.refundAmount > 0 && (
-            <div>
-              <div className="p-6 bg-orange-50 dark:bg-orange-900/20">
-                <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-300 mb-4 flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5" />
-                  Refund Information
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-700 dark:text-gray-300">
-                      Refund Amount
-                    </span>
-                    <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                      {formatCurrency(payment.refundAmount)}
-                    </span>
+            <div className="bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-200 dark:border-orange-800 p-6">
+              <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-300 mb-4 flex items-center gap-2">
+                <RotateCcw className="w-5 h-5" />
+                {t('payments.refundInformation')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-orange-600/70 uppercase font-bold mb-1">{t('payments.detail.refundAmount')}</p>
+                  <p className="text-xl font-bold text-orange-700 dark:text-orange-400">{formatCurrency(payment.refundAmount)}</p>
+                </div>
+                {payment.refundDate && (
+                  <div>
+                    <p className="text-xs text-orange-600/70 uppercase font-bold mb-1">{t('payments.refundDate')}</p>
+                    <p className="text-orange-900 dark:text-orange-200 font-medium">{formatDate(payment.refundDate)}</p>
                   </div>
-                  {payment.refundDate && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700 dark:text-gray-300">
-                        Refund Date
-                      </span>
-                      <span className="text-gray-900 dark:text-white">
-                        {formatDate(payment.refundDate)}
-                      </span>
-                    </div>
-                  )}
-                  {payment.refundReason && (
-                    <div className="pt-3 border-t border-orange-200 dark:border-orange-800">
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                        Reason
-                      </p>
-                      <p className="text-gray-900 dark:text-white">
-                        {payment.refundReason}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Related Information */}
-          {(payment.event || payment.client) && (
-            <div>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Related Information
-                </h3>
-                <div className="space-y-4">
-                  {payment.event && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Event
-                      </p>
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/events/${payment.event._id || payment.event}`
-                          )
-                        }
-                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                      >
-                        {payment.event.title || "View Event"}
-                      </button>
-                    </div>
-                  )}
-                  {payment.client && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Client
-                      </p>
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/clients/${payment.client._id || payment.client}`
-                          )
-                        }
-                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                      >
-                        {payment.client.name || "View Client"}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                )}
+                {payment.refundReason && (
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-orange-600/70 uppercase font-bold mb-1">{t('payments.detail.refundReason')}</p>
+                    <p className="text-orange-900 dark:text-orange-200 bg-white/50 dark:bg-black/20 p-3 rounded-lg text-sm">
+                      {payment.refundReason}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
+        {/* --- RIGHT COLUMN (Sidebar) --- */}
+        <div className="lg:col-span-1 space-y-6">
+          
           {/* Quick Actions */}
-          <div>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Quick Actions
-              </h3>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  icon={Edit}
-                  onClick={handleEdit}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">{t('payments.quickActions')}</h3>
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                icon={Edit} 
+                onClick={handleEdit} // ✅ Fixed missing handler
+                className="w-full justify-start hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20"
+              >
+                {t('payments.editPayment')}
+              </Button>
+              
+              {payment.type === "income" && ["completed", "paid"].includes(payment.status?.toLowerCase()) && !payment.refundAmount && (
+                <Button 
+                  variant="outline" 
+                  icon={RotateCcw} 
+                  onClick={() => { setRefundData({ amount: payment.amount, reason: "" }); setIsRefundModalOpen(true); }}
+                  className="w-full justify-start text-yellow-600 border-yellow-200 hover:bg-yellow-50 hover:border-yellow-300 dark:border-yellow-800 dark:text-yellow-400"
                 >
-                  Edit Payment
+                  {t('payments.processRefund')}
                 </Button>
-                {payment.type === "income" &&
-                  ["completed", "paid"].includes(
-                    (payment.status || "").toLowerCase()
-                  ) &&
-                  !payment.refundAmount && (
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start"
-                      icon={RotateCcw}
-                      onClick={() => {
-                        setRefundData({
-                          amount: payment.amount.toString(),
-                          reason: "",
-                        });
-                        setIsRefundModalOpen(true);
-                      }}
-                    >
-                      Process Refund
-                    </Button>
-                  )}
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  icon={Trash2}
-                  onClick={() => setIsDeleteModalOpen(true)}
-                >
-                  Delete Payment
-                </Button>
-              </div>
+              )}
+
+              <Button 
+                variant="outline" 
+                icon={Trash2} 
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 dark:border-red-900 dark:text-red-400"
+              >
+                {t('payments.deletePayment')}
+              </Button>
             </div>
           </div>
 
-          {/* Metadata */}
-          <div>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Metadata
+          {/* Related Info */}
+          {(payment.event || payment.client) && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <User className="w-4 h-4" />
+                {t('payments.detail.relatedInformation')}
               </h3>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400">Created</p>
-                  <p className="text-gray-900 dark:text-white">
-                    {formatDateTime(payment.createdAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Last Updated
-                  </p>
-                  <p className="text-gray-900 dark:text-white">
-                    {formatDateTime(payment.updatedAt)}
-                  </p>
-                </div>
-                {payment.processedBy && (
-                  <div>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Processed By
-                    </p>
-                    <p className="text-gray-900 dark:text-white">
-                      {payment.processedBy.name || "System"}
-                    </p>
+              <div className="space-y-4">
+                {payment.event && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-semibold">{t('payments.form.event')}</p>
+                    <button 
+                      onClick={() => navigate(`/events/${payment.event._id || payment.event}/detail`)}
+                      className="text-sm font-bold text-gray-900 dark:text-white hover:underline flex items-center gap-1"
+                    >
+                      {payment.event.title || t('payments.viewEvent')}
+                      <ArrowLeft className="w-3 h-3 rotate-180" />
+                    </button>
+                  </div>
+                )}
+                {payment.client && (
+                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800">
+                    <p className="text-xs text-purple-600 dark:text-purple-400 mb-1 font-semibold">{t('payments.form.client')}</p>
+                    <button 
+                      onClick={() => navigate(`/clients/${payment.client._id || payment.client}`)}
+                      className="text-sm font-bold text-gray-900 dark:text-white hover:underline flex items-center gap-1"
+                    >
+                      {payment.client.name || t('payments.viewClient')}
+                      <ArrowLeft className="w-3 h-3 rotate-180" />
+                    </button>
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Metadata */}
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">{t('payments.detail.metadata')}</h3>
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                <span className="text-gray-500">{t('payments.detail.created')}</span>
+                <span className="font-mono text-gray-700 dark:text-gray-300">{formatDateTime(payment.createdAt)}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                <span className="text-gray-500">{t('payments.detail.lastUpdated')}</span>
+                <span className="font-mono text-gray-700 dark:text-gray-300">{formatDateTime(payment.updatedAt)}</span>
+              </div>
+              {payment.processedBy && (
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-500">{t('payments.detail.processedBy')}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{payment.processedBy.name}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
+      {/* --- Modals --- */}
+
+      {/* Edit Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title={t('payments.modals.paymentForm.editTitle')} size="lg">
+        <PaymentForm payment={payment} onSuccess={handleEditSuccess} onCancel={() => setIsEditModalOpen(false)} />
+      </Modal>
+
       {/* Refund Modal */}
       <Modal
         isOpen={isRefundModalOpen}
-        onClose={() => {
-          setIsRefundModalOpen(false);
-          setRefundData({ amount: "", reason: "" });
-        }}
-        title="Process Refund"
+        onClose={() => setIsRefundModalOpen(false)}
+        title={t('payments.modals.refund.title')}
         size="sm"
       >
-        <div className="p-6">
-          <div className="space-y-4 mb-6">
-            <Input
-              label="Refund Amount"
-              type="number"
-              value={refundData.amount}
-              onChange={(e) =>
-                setRefundData((prev) => ({ ...prev, amount: e.target.value }))
-              }
-              placeholder="0.00"
-              min="0"
-              max={payment?.amount}
-              step="0.01"
-              icon={DollarSign}
-            />
-            <Input
-              label="Reason for Refund"
-              value={refundData.reason}
-              onChange={(e) =>
-                setRefundData((prev) => ({ ...prev, reason: e.target.value }))
-              }
-              placeholder="Enter refund reason (optional)"
-            />
-            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                This will refund{" "}
-                {formatCurrency(parseFloat(refundData.amount) || 0)} to the
-                client. This action cannot be undone.
-              </p>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsRefundModalOpen(false);
-                setRefundData({ amount: "", reason: "" });
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleRefund}>
-              Confirm Refund
-            </Button>
+        <div className="space-y-4 p-4">
+          <Input
+            label={t('payments.modals.refund.amount')}
+            type="number"
+            value={refundData.amount}
+            onChange={(e) => setRefundData(p => ({ ...p, amount: e.target.value }))}
+            icon={DollarSign}
+            max={payment.amount}
+          />
+          <Input
+            label={t('payments.modals.refund.reason')}
+            value={refundData.reason}
+            onChange={(e) => setRefundData(p => ({ ...p, reason: e.target.value }))}
+          />
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setIsRefundModalOpen(false)}>{t('common.cancel')}</Button>
+            <Button variant="danger" onClick={handleRefund}>{t('payments.modals.refund.confirm')}</Button>
           </div>
         </div>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Payment"
+        title={t('payments.modals.delete.title')}
         size="sm"
       >
-        <div className="p-6">
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this payment? This action cannot be
-            undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="danger" onClick={handleDelete}>
-              Delete Payment
-            </Button>
+        <div className="p-6 text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600 mb-6">{t('payments.deleteConfirmation')}</p>
+          <div className="flex justify-center gap-3">
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>{t('common.cancel')}</Button>
+            <Button variant="danger" onClick={handleDelete}>{t('payments.modals.delete.confirm')}</Button>
           </div>
         </div>
       </Modal>
+    </div>
+  );
+};
+
+// --- Helper Component ---
+const DetailItem = ({ icon: Icon, label, value, color = "gray" }) => {
+  const colors = {
+    blue: "text-blue-600 bg-blue-50 dark:bg-blue-900/20",
+    purple: "text-purple-600 bg-purple-50 dark:bg-purple-900/20",
+    green: "text-green-600 bg-green-50 dark:bg-green-900/20",
+    orange: "text-orange-600 bg-orange-50 dark:bg-orange-900/20",
+    gray: "text-gray-600 bg-gray-100 dark:bg-gray-800"
+  };
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colors[color]}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div>
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">{label}</p>
+        <p className="font-medium text-gray-900 dark:text-white">{value}</p>
+      </div>
     </div>
   );
 };

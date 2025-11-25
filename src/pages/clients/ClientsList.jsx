@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "../../components/common/Button";
-import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable";
-import Input from "../../components/common/Input";
-import Select from "../../components/common/Select";
-import Pagination from "../../components/common/Pagination";
-import { clientService } from "../../api/index";
-import { UsersIcon } from "../../components/icons/IconComponents";
-import ClientDetailModal from "./ClientDetailModal.jsx"
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   Search,
@@ -18,17 +10,32 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
+  Users
 } from "lucide-react";
-import ClientDetail from "./ClientDetail.jsx";
-import ClientForm from "./ClientForm.jsx";
-import Badge from "../../components/common/Badge";
-import { useTranslation } from "react-i18next";
+
+// ✅ API & Services
+import { clientService } from "../../api/index";
+
+// ✅ Generic Components
+import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import Table from "../../components/common/NewTable";
+import Input from "../../components/common/Input";
+import Select from "../../components/common/Select";
+import Pagination from "../../components/common/Pagination";
+import Badge, { StatusBadge } from "../../components/common/Badge";
+
+// ✅ Context & Sub-components
 import { useToast } from "../../context/ToastContext";
+import ClientDetailModal from "./ClientDetailModal";
+import ClientForm from "./ClientForm";
 
 const ClientsList = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  
+  // State
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,7 +44,7 @@ const ClientsList = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // Confirmation modal state
+  // Confirmation modal
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     clientId: null,
@@ -45,7 +52,7 @@ const ClientsList = () => {
     onConfirm: null,
   });
 
-  // Search & filter state
+  // Filters & Pagination
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
@@ -53,7 +60,13 @@ const ClientsList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch clients with toast notifications
+  // ✅ Helper: Strict DD/MM/YYYY format
+  const formatDate = (dateString) => {
+    if (!dateString) return t("clients.table.defaultValues.noDate");
+    return new Date(dateString).toLocaleDateString("en-GB");
+  };
+
+  // Fetch clients
   const fetchClients = useCallback(async () => {
     try {
       setLoading(true);
@@ -68,37 +81,19 @@ const ClientsList = () => {
 
       const response = await clientService.getAll(params);
 
-      let clientsData = [];
-      let totalPages = 1;
-      let totalCount = 0;
+      // Data extraction logic
+      let data = response?.data?.data?.clients || response?.data?.clients || response?.clients || response?.data || response || [];
+      if (!Array.isArray(data)) data = [];
 
-      if (response?.data?.data?.clients) {
-        clientsData = response.data.data.clients || [];
-        totalPages = response.data.data.totalPages || 1;
-        totalCount = response.data.data.totalCount || clientsData.length;
-      } else if (response?.data?.clients) {
-        clientsData = response.data.clients || [];
-        totalPages = response.data.totalPages || 1;
-        totalCount = response.data.totalCount || clientsData.length;
-      } else if (response?.clients) {
-        clientsData = response.clients || [];
-        totalPages = response.totalPages || 1;
-        totalCount = response.totalCount || clientsData.length;
-      } else if (Array.isArray(response?.data)) {
-        clientsData = response.data;
-      } else if (Array.isArray(response)) {
-        clientsData = response;
-      }
+      let pTotalPages = response?.data?.data?.totalPages || response?.data?.totalPages || response?.totalPages || 1;
+      let pTotalCount = response?.data?.data?.totalCount || response?.data?.totalCount || response?.totalCount || data.length;
 
-      setClients(clientsData);
-      setTotalPages(totalPages);
-      setTotalCount(totalCount);
+      setClients(data);
+      setTotalPages(pTotalPages);
+      setTotalCount(pTotalCount);
       setHasInitialLoad(true);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to load clients. Please try again.";
+      const errorMessage = err.response?.data?.message || err.message || t("clients.errors.loadingDefault");
       setError(errorMessage);
       showError(errorMessage);
       setClients([]);
@@ -106,373 +101,229 @@ const ClientsList = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, status, page, limit, showError]);
-
-  // Show confirmation modal
-  const showDeleteConfirmation = useCallback(
-    (clientId, clientName = "Client") => {
-      setConfirmationModal({
-        isOpen: true,
-        clientId,
-        clientName,
-        onConfirm: () => handleDeleteConfirm(clientId, clientName),
-      });
-    },
-    []
-  );
-
-  // Close confirmation modal
-  const closeConfirmationModal = useCallback(() => {
-    setConfirmationModal({
-      isOpen: false,
-      clientId: null,
-      clientName: "",
-      onConfirm: null,
-    });
-  }, []);
-
-  // Handle confirmed deletion
-  const handleDeleteConfirm = useCallback(
-    async (clientId, clientName = "Client") => {
-      if (!clientId) {
-        showError("Invalid client ID");
-        return;
-      }
-
-      try {
-        // Use the promise toast for loading state
-        await promise(clientService.delete(clientId), {
-          loading: `Deleting ${clientName}...`,
-          success: `${clientName} deleted successfully`,
-          error: `Failed to delete ${clientName}`,
-        _});
-
-        // Refresh the clients list
-        fetchClients();
-
-        // Close detail modal if the deleted client is currently selected
-        if (selectedClient?._id === clientId) {
-          setSelectedClient(null);
-          setIsDetailModalOpen(false);
-        }
-
-        // Close confirmation modal
-        closeConfirmationModal();
-      } catch (err) {
-        // Error is already handled by the promise toast
-        console.error("Delete client error:", err);
-        closeConfirmationModal();
-      }
-    },
-    [fetchClients, selectedClient, promise, showError, closeConfirmationModal]
-  );
-
-  // Updated client deletion handler
-  const handleDeleteClient = useCallback(
-    (clientId, clientName = "Client") => {
-      showDeleteConfirmation(clientId, clientName);
-    },
-    [showDeleteConfirmation]
-  );
-
-  // Handle row click to open detail modal
-  const handleRowClick = useCallback((client) => {
-    setSelectedClient(client);
-    setIsDetailModalOpen(true);
-  }, []);
-
-  // Handle view client (alternative navigation)
-  const handleViewClient = useCallback(
-    (client) => {
-      navigate(`/clients/${client._id}`, { state: { client } });
-    },
-    [navigate]
-  );
-
-  // Handle edit client
-  const handleEditClient = useCallback((client) => {
-    setSelectedClient(client);
-    setIsDetailModalOpen(false);
-    setIsFormOpen(true);
-  }, []);
-
-  // Handle add client
-  const handleAddClient = useCallback(() => {
-    setSelectedClient(null);
-    setIsFormOpen(true);
-  }, []);
-
-  // Handle form success
-  const handleFormSuccess = useCallback(() => {
-    fetchClients();
-    setSelectedClient(null);
-    setIsFormOpen(false);
-    showSuccess(
-      selectedClient
-        ? "Client updated successfully"
-        : "Client created successfully"
-    );
-  }, [fetchClients, selectedClient, showSuccess]);
-
-  // Handle form close
-  const handleFormClose = useCallback(() => {
-    setSelectedClient(null);
-    setIsFormOpen(false);
-  }, []);
-
-  // Handle detail modal close
-  const handleDetailModalClose = useCallback(() => {
-    setSelectedClient(null);
-    setIsDetailModalOpen(false);
-  }, []);
-
-  // Clear filters
-  const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setStatus("all");
-    setPage(1);
-    showInfo("Filters cleared");
-  }, [showInfo]);
-
-  // Retry loading
-  const handleRetry = useCallback(() => {
-    fetchClients();
-    showInfo("Retrying to load clients...");
-  }, [fetchClients, showInfo]);
+  }, [search, status, page, limit, showError, t]);
 
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
 
-  const hasActiveFilters = search.trim() !== "" || status !== "all";
-  const showEmptyState =
-    !loading &&
-    !error &&
-    clients.length === 0 &&
-    !hasActiveFilters &&
-    hasInitialLoad;
-  const showNoResults =
-    !loading &&
-    !error &&
-    clients.length === 0 &&
-    hasActiveFilters &&
-    hasInitialLoad;
+  // --- Handlers ---
 
-  // Table columns configuration for the new Table component
+  const handleDeleteConfirm = useCallback(async (clientId, clientName) => {
+    try {
+      await promise(clientService.delete(clientId), {
+        loading: t("clients.toast.deleting", { name: clientName }),
+        success: t("clients.toast.deleteSuccess", { name: clientName }),
+        error: t("clients.toast.deleteError", { name: clientName }),
+      });
+      fetchClients();
+      setConfirmationModal({ isOpen: false, clientId: null, clientName: "", onConfirm: null });
+      if (selectedClient?._id === clientId) setIsDetailModalOpen(false);
+    } catch (err) {
+      // Promise handles UI feedback
+    }
+  }, [fetchClients, selectedClient, promise, t]);
+
+  const handleDeleteClient = (clientId, clientName) => {
+    setConfirmationModal({
+      isOpen: true,
+      clientId,
+      clientName,
+      onConfirm: () => handleDeleteConfirm(clientId, clientName),
+    });
+  };
+
+  const handleFormSuccess = () => {
+    fetchClients();
+    setIsFormOpen(false);
+    showSuccess(selectedClient ? t("clients.toast.updateSuccess") : t("clients.toast.createSuccess"));
+  };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setStatus("all");
+    setPage(1);
+    showInfo(t("clients.toast.filtersCleared"));
+  };
+
+  const handleRetry = () => {
+    fetchClients();
+    showInfo(t("clients.loading.retrying"));
+  };
+
+  const hasActiveFilters = search.trim() !== "" || status !== "all";
+  const showEmptyState = !loading && !error && clients.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !loading && !error && clients.length === 0 && hasActiveFilters && hasInitialLoad;
+
+  // Columns
   const columns = [
     {
-      header: "Client Name",
+      header: t("clients.table.columns.name"),
       accessor: "name",
-      sortable: true,
       width: "25%",
       render: (row) => (
         <div className="font-medium text-gray-900 dark:text-white">
-          {row.name || "Unnamed"}
+          {row.name || t("clients.table.defaultValues.unnamed")}
         </div>
       ),
     },
     {
-      header: "Email Address",
+      header: t("clients.table.columns.email"),
       accessor: "email",
-      sortable: true,
       width: "25%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.email || "No email"}
+          {row.email || t("clients.table.defaultValues.noEmail")}
         </div>
       ),
     },
     {
-      header: "Phone Number",
+      header: t("clients.table.columns.phone"),
       accessor: "phone",
-      sortable: true,
       width: "15%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.phone || "-"}
+          {row.phone || t("clients.table.defaultValues.noPhone")}
         </div>
       ),
     },
     {
-      header: "Status",
+      header: t("clients.table.columns.status"),
       accessor: "status",
-      sortable: true,
       width: "15%",
-      render: (row) => {
-        const statusLabels = {
-          active: t("Active"),
-          inactive: t("Inactive"),
-        };
-
-        return (
-          <Badge
-            color={
-              row.status === "active"
-                ? "green"
-                : row.status === "inactive"
-                  ? "red"
-                  : "yellow"
-            }
-          >
-            {statusLabels[row.status] || "N/A"}
-          </Badge>
-        );
-      },
+      render: (row) => <StatusBadge status={row.status} />,
     },
     {
-      header: "Date Created",
+      header: t("clients.table.columns.createdAt"),
       accessor: "createdAt",
-      sortable: true,
       width: "15%",
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
-          {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-"}
+          {formatDate(row.createdAt)}
         </div>
       ),
     },
     {
-      header: "Actions",
+      header: t("clients.table.columns.actions"),
       accessor: "actions",
       width: "10%",
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRowClick(row);
-            }}
-            className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition"
-            title="View Client"
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => { e.stopPropagation(); navigate(`/clients/${row._id}`, { state: { client: row } }); }}
+            className="text-orange-600 hover:text-orange-700 dark:text-orange-400"
+            title={t("clients.table.actions.view")}
           >
             <Eye className="h-4 w-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditClient(row);
-            }}
-            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-            title="Edit Client"
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => { e.stopPropagation(); setSelectedClient(row); setIsFormOpen(true); }}
+            className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            title={t("clients.table.actions.edit")}
           >
             <Edit className="h-4 w-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClient(row._id, row.name || "Client");
-            }}
-            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            title="Delete Client"
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => { e.stopPropagation(); handleDeleteClient(row._id, row.name); }}
+            className="text-red-600 hover:text-red-700 dark:text-red-400"
+            title={t("clients.table.actions.delete")}
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       ),
     },
   ];
+
+  // ✅ Helper to render custom footer if Pagination component hides itself on single page
+  const renderPagination = () => {
+    if (totalPages > 1) {
+      return (
+        <div className="mt-6">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={limit}
+            onPageSizeChange={(val) => { setLimit(val); setPage(1); }}
+            totalItems={totalCount}
+          />
+        </div>
+      );
+    }
+
+    // Custom single page footer
+    const start = Math.min((page - 1) * limit + 1, totalCount);
+    const end = Math.min(page * limit, totalCount);
+
+    return (
+      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+        <div>
+          Showing <span className="font-medium text-gray-900 dark:text-white">{start}</span> to{" "}
+          <span className="font-medium text-gray-900 dark:text-white">{end}</span> of{" "}
+          <span className="font-medium text-gray-900 dark:text-white">{totalCount}</span> results
+        </div>
+        <div className="flex items-center gap-2">
+          <span>Per page:</span>
+          <select
+            value={limit}
+            onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+            className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+          >
+            {[10, 25, 50, 100].map((size) => (
+              <option key={size} value={size}>{size}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div className="flex flex-col gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Clients
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("clients.title")}</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage your client records and relationships.{" "}
-            {hasInitialLoad &&
-              totalCount > 0 &&
-              `Showing ${clients.length} of ${totalCount} clients`}
+            {t("clients.description")} {hasInitialLoad && totalCount > 0 && `(${totalCount})`}
           </p>
         </div>
         {totalCount > 0 && (
-          <Button
-            variant="primary"
-            onClick={handleAddClient}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Client
+          <Button variant="primary" onClick={() => { setSelectedClient(null); setIsFormOpen(true); }} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" /> {t("clients.buttons.addClient")}
           </Button>
         )}
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-800 dark:text-red-200 font-medium">
-                Error Loading Clients
-              </p>
-              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
-                {error}
-              </p>
-            </div>
-            <Button onClick={handleRetry} size="sm" variant="outline">
-              Retry
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Search & Filters */}
+      {/* Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg">
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                className="dark:bg-[#1f2937] dark:text-white"
-                icon={Search}
-                placeholder="Search clients by name, email, or phone..."
-                value={search}
-                onChange={(e) => {
-                  setPage(1);
-                  setSearch(e.target.value);
-                }}
-              />
-            </div>
+            <Input className="flex-1" icon={Search} placeholder={t("clients.search.placeholder")} value={search} onChange={(e) => { setPage(1); setSearch(e.target.value); }} />
             <div className="sm:w-48">
-              <Select
-                className="dark:bg-[#1f2937] dark:text-white"
-                icon={Filter}
-                value={status}
-                onChange={(e) => {
-                  setPage(1);
-                  setStatus(e.target.value);
-                }}
+              <Select 
+                icon={Filter} 
+                value={status} 
+                onChange={(e) => { setPage(1); setStatus(e.target.value); }}
                 options={[
-                  { value: "all", label: "All Status" },
-                  { value: "active", label: "Active" },
-                  { value: "inactive", label: "Inactive" },
+                  { value: "all", label: t("clients.filters.allStatus") },
+                  { value: "active", label: t("clients.status.active") },
+                  { value: "inactive", label: t("clients.status.inactive") }
                 ]}
               />
             </div>
             {hasActiveFilters && (
-              <Button
-                variant="outline"
-                onClick={handleClearFilters}
-                className="flex items-center gap-2"
-              >
-                <X className="h-4 w-4" />
-                Clear
-              </Button>
+              <Button variant="outline" icon={X} onClick={handleClearFilters}>{t("clients.buttons.clear")}</Button>
             )}
           </div>
-
-          {hasActiveFilters && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Active filters:</span>
-              {search.trim() && (
-                <Badge color="blue">Search: "{search.trim()}"</Badge>
-              )}
-              {status !== "all" && (
-                <Badge color="purple">Status: {status}</Badge>
-              )}
-            </div>
-          )}
         </div>
       )}
 
@@ -480,13 +331,11 @@ const ClientsList = () => {
       {loading && !hasInitialLoad && (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400">
-            Loading clients...
-          </p>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">{t("clients.loading.initial")}</p>
         </div>
       )}
 
-      {/* Table Section */}
+      {/* Table */}
       {!loading && hasInitialLoad && clients.length > 0 && (
         <>
           <div className="overflow-x-auto">
@@ -494,141 +343,57 @@ const ClientsList = () => {
               columns={columns}
               data={clients}
               loading={loading}
-              // Enable row clicking for detail modal
-              onRowClick={handleRowClick}
-              // Enable pagination
-              pagination={true}
-              currentPage={page}
-              totalPages={totalPages}
-              pageSize={limit}
-              totalItems={totalCount}
-              onPageChange={setPage}
-              onPageSizeChange={(newLimit) => {
-                setLimit(newLimit);
-                setPage(1);
-              }}
-              pageSizeOptions={[10, 25, 50, 100]}
-              // Add hover and striped styling like EventList
-              striped={true}
-              hoverable={true}
+              onRowClick={(row) => { setSelectedClient(row); setIsDetailModalOpen(true); }}
+              striped
+              hoverable
             />
           </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-6">
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                pageSize={limit}
-                onPageSizeChange={(newLimit) => {
-                  setLimit(newLimit);
-                  setPage(1);
-                }}
-                totalItems={totalCount}
-              />
-            </div>
-          )}
+          
+          {/* ✅ Pagination (Always Visible if data exists) */}
+          {renderPagination()}
         </>
       )}
 
-      {/* No Results from Search/Filter */}
-      {showNoResults && (
+      {/* Empty / No Results */}
+      {showNoResults ? (
         <div className="text-center py-12">
           <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No clients found
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No clients match your current search or filter criteria.
-          </p>
-          <Button onClick={handleClearFilters} variant="outline">
-            Clear All Filters
-          </Button>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("clients.search.noResults")}</h3>
+          <Button onClick={handleClearFilters} variant="outline">{t("clients.buttons.clearAllFilters")}</Button>
         </div>
-      )}
-
-      {/* Empty State - No clients at all */}
-      {showEmptyState && (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <UsersIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No clients yet
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Get started by adding your first client.
-          </p>
-          <Button onClick={handleAddClient} variant="primary">
-            <Plus className="h-4 w-4 mr-2" />
-            Add First Client
-          </Button>
+      ) : showEmptyState ? (
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
+          <Users className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("clients.empty.title")}</h3>
+          <Button onClick={() => setIsFormOpen(true)} variant="primary" icon={Plus}>{t("clients.buttons.addFirstClient")}</Button>
         </div>
-      )}
+      ) : null}
 
-      {/* Client Detail Modal */}
-<ClientDetailModal
-  isOpen={isDetailModalOpen}
-  onClose={handleDetailModalClose}
-  client={selectedClient}
-  onEdit={handleEditClient}
-  refreshData={fetchClients}
-/>
+      {/* Modals */}
+      <ClientDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        client={selectedClient}
+        onEdit={() => { setIsDetailModalOpen(false); setIsFormOpen(true); }}
+        refreshData={fetchClients}
+      />
 
-      {/* Add/Edit Form Modal */}
-      <Modal
-        isOpen={isFormOpen}
-        onClose={handleFormClose}
-        title={selectedClient ? "Edit Client" : "Add New Client"}
-        size="lg"
-      >
-        <ClientForm
-          client={selectedClient}
-          onSuccess={handleFormSuccess}
-          onCancel={handleFormClose}
-        />
+      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={selectedClient ? t("clients.modal.editTitle") : t("clients.modal.addTitle")} size="lg">
+        <ClientForm client={selectedClient} onSuccess={handleFormSuccess} onCancel={() => setIsFormOpen(false)} />
       </Modal>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={confirmationModal.isOpen}
-        onClose={closeConfirmationModal}
-        title="Confirm Deletion"
-        size="md"
-      >
+      <Modal isOpen={confirmationModal.isOpen} onClose={() => setConfirmationModal(p => ({ ...p, isOpen: false }))} title={t("clients.modal.deleteTitle")} size="md">
         <div className="p-6">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
-              </div>
+            <div className="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-full p-2">
+              <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Delete Client
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete{" "}
-                <strong>"{confirmationModal.clientName}"</strong>? This action
-                cannot be undone and all associated data will be permanently
-                removed.
-              </p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("clients.buttons.deleteClient")}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{t("clients.modal.deleteMessage", { name: confirmationModal.clientName })}</p>
               <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={closeConfirmationModal}
-                  className="px-4 py-2"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={confirmationModal.onConfirm}
-                  className="px-4 py-2 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Client
-                </Button>
+                <Button variant="outline" onClick={() => setConfirmationModal(p => ({ ...p, isOpen: false }))}>{t("clients.buttons.cancel")}</Button>
+                <Button variant="danger" onClick={confirmationModal.onConfirm} icon={Trash2}>{t("clients.buttons.deleteClient")}</Button>
               </div>
             </div>
           </div>

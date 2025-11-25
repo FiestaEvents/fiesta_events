@@ -1,202 +1,157 @@
-// EventDetailModal.jsx
 import React, { useState } from "react";
 import {
-  X,
-  Trash2,
-  Edit,
-  Calendar as CalendarIcon,
-  Clock,
-  MapPin,
-  Users,
-  ArrowRight,
+  Trash2, Edit, Calendar, Clock, MapPin, Users, ArrowRight, AlertTriangle, AlignLeft
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
-import { eventService } from "../../api/index";
+import { useTranslation } from "react-i18next";
+
 import Button from "../../components/common/Button";
-import Badge from "../../components/common/Badge";
+import Modal from "../../components/common/Modal";
+import { StatusBadge } from "../../components/common/Badge";
+import { useToast } from "../../hooks/useToast";
+import { eventService } from "../../api/index";
 
 const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { promise } = useToast();
 
-  if (!isOpen || !event) return null;
+  if (!event) return null;
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: "yellow",
-      confirmed: "blue",
-      "in-progress": "purple",
-      completed: "green",
-      cancelled: "red",
-    };
-    return colors[status] || "gray";
-  };
-
-  const formatTime = (dateString) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleTimeString("tn-TN", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  const formatDateLong = (dateString) => {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    const weekday = d.toLocaleString("en-GB", { weekday: "long" });
-    const day = d.getDate();
-    const month = d.toLocaleString("en-GB", { month: "long" });
-    const year = d.getFullYear();
-    return `${weekday}, ${day} ${month} ${year}`;
-  };
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString("en-GB", { day: 'numeric', month: 'short', year: 'numeric' });
+  const getDay = (dateString) => new Date(dateString).getDate();
+  const getMonth = (dateString) => new Date(dateString).toLocaleDateString("en-GB", { month: 'short' }).toUpperCase();
 
   const handleDelete = async () => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${event.title}"? This action cannot be undone.`
-      )
-    ) {
+    try {
       setIsDeleting(true);
-      try {
-        await eventService.deleteEvent(event._id);
-        toast.success("Event deleted successfully");
-        console.log(`Event ${event._id} deleted successfully`);
-        onClose();
-        refreshData(); // Refresh the data after deletion
-      } catch (error) {
-        console.error("Failed to delete event:", error);
-        toast.error("Failed to delete event");
-      } finally {
-        setIsDeleting(false);
-      }
-    }
+      await promise(eventService.delete(event._id), {
+        loading: t("eventDetailModal.actions.delete.deleting"),
+        success: t("eventDetailModal.actions.delete.success"),
+        error: t("eventDetailModal.actions.delete.error")
+      });
+      setShowDeleteConfirm(false);
+      onClose();
+      if (refreshData) refreshData();
+    } catch (e) { console.error(e); } 
+    finally { setIsDeleting(false); }
   };
 
-  // Handle viewing full event details
-  const handleViewFullDetails = () => {
-    onClose(); // Close the current modal
-    navigate(`/events/${event._id}/detail`); // Navigate to the full event detail page
-  };
+  const InfoItem = ({ icon: Icon, label, value }) => (
+    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-gray-100">
+      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
+        <Icon size={16} />
+      </div>
+      <div>
+        <p className="text-xs text-gray-500 uppercase">{label}</p>
+        <p className="font-medium text-gray-900 dark:text-white">{value}</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background Overlay */}
-        <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          aria-hidden="true"
-          onClick={onClose}
-        ></div>
-
-        {/* Modal Content */}
-        <span
-          className="hidden sm:inline-block sm:align-middle sm:h-screen"
-          aria-hidden="true"
-        >
-          &#8203;
-        </span>
-        <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="border-0">
-            <div className="px-6 pt-5 pb-4">
-              <div className="flex justify-between items-start">
-                <h3
-                  className="text-2xl font-bold leading-6 text-gray-900 dark:text-white"
-                  id="modal-title"
-                >
-                  {event.title}
-                </h3>
-<button
-  onClick={onClose}
-  className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
-  title="Close"
->
-  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-</button>
-              </div>
-              <div className="mt-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <Badge color={getStatusColor(event.status)}>
-                    {event.status}
-                  </Badge>
-                </div>
-
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-semibold">Description:</span>{" "}
-                    {event.description || "No description provided."}
-                  </p>
-                  <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                    <CalendarIcon className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                    <span>{formatDateLong(event.startDate)}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                    <Clock className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                    <span>
-                      {formatTime(event.startDate)}
-                      {event.endDate ? ` - ${formatTime(event.endDate)}` : ""}
-                    </span>
-                  </div>
-                  {event.clientId?.name && (
-                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                      <Users className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span>
-                        Client:{" "}
-                        <span className="font-medium">
-                          {event.clientId.name}
-                        </span>
-                      </span>
-                    </div>
-                  )}
-                  {event.guestCount && (
-                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                      <MapPin className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <span>{event.guestCount} guests</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title={event.title} size="md">
+        <div className="space-y-6">
+          
+          {/* Hero Date Section */}
+          <div className="flex gap-4 items-start bg-gradient-to-r from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl border border-orange-200 dark:border-gray-600">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-orange-200 dark:border-gray-600 text-center overflow-hidden min-w-[60px]">
+              <div className="bg-orange-500 text-white text-xs font-bold py-1 uppercase">{getMonth(event.startDate)}</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white py-2">{getDay(event.startDate)}</div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 flex justify-between gap-3 rounded-b-xl">
-              <Button
-                variant="danger"
-                icon={Trash2}
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </Button>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  icon={Edit}
-                  onClick={() => onEdit(event._id)}
-                >
-                  Edit Event
-                </Button>
-                {/* Small square button for View Full Details */}
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleViewFullDetails}
-                  className="gap-3 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title="View Full Details"
-                >
-                  More Details
-                  <ArrowRight className="w-5 h-5 text-white" />
-                </Button>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{event.title}</h3>
+              <div className="mt-2">
+                <StatusBadge status={event.status} />
               </div>
             </div>
           </div>
+
+          {/* Description (Optional) */}
+          {event.description && (
+            <div className="flex gap-3 items-start text-sm bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+              <AlignLeft className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+              <p className="italic leading-relaxed">"{event.description}"</p>
+            </div>
+          )}
+
+          {/* Details Grid */}
+          <div className="grid grid-cols-1 gap-2">
+            <InfoItem 
+              icon={Clock} 
+              label={t("common.time")} 
+              value={`${new Date(event.startDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${new Date(event.endDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`} 
+            />
+            <InfoItem 
+              icon={Users} 
+              label={t("eventDetailModal.client")} 
+              value={event.clientId?.name} 
+            />
+            <InfoItem 
+              icon={MapPin} 
+              label={t("eventDetailModal.guests")} 
+              value={`${event.guestCount || 0}`} 
+            />
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-between gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <Button 
+              variant="ghost" 
+              className="text-red-600 hover:bg-red-50" 
+              icon={Trash2} 
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              {t("eventDetailModal.actions.delete.button")}
+            </Button>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                icon={Edit} 
+                onClick={() => onEdit(event)}
+              >
+                {t("eventDetailModal.actions.edit")}
+              </Button>
+              
+              <Button 
+                variant="primary" 
+                icon={ArrowRight} 
+                onClick={() => { onClose(); navigate(`/events/${event._id}/detail`); }}
+              >
+                {t("eventDetailModal.actions.viewFullDetails")}
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal 
+        isOpen={showDeleteConfirm} 
+        onClose={() => setShowDeleteConfirm(false)} 
+        title={t("common.confirmDelete")} 
+        size="sm"
+      >
+        <div className="p-4 text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            {t("eventDetailModal.actions.delete.confirm", { eventTitle: event.title })}
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              {t("eventDetailModal.close")}
+            </Button>
+            <Button variant="danger" loading={isDeleting} onClick={handleDelete}>
+              {t("eventDetailModal.actions.delete.button")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 

@@ -1,85 +1,59 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { 
   Save,
   X,
   ClipboardList,
   Calendar,
   User,
-  Flag,
-  Link,
-  Tag,
   CheckSquare,
   ChevronRight,
   ChevronLeft,
   Check,
-  Clock,
-  Eye,
-  AlertCircle,
   Plus,
   Trash2,
+  Clock
 } from 'lucide-react';
+
+// ✅ API & Services
 import { taskService, teamService, eventService, clientService, partnerService } from '../../api/index';
+
+// ✅ Generic Components
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
+import DateInput from '../../components/common/DateInput'; 
 import Textarea from '../../components/common/Textarea';
 import Select from '../../components/common/Select';
 import Badge from '../../components/common/Badge';
 
+// ✅ Context
+import { useToast } from '../../context/ToastContext';
+
 const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { showSuccess, showError, showWarning } = useToast();
   
-  // Determine if we're in edit mode
   const isEditMode = Boolean(id || taskProp?._id || taskProp?.id);
   const taskId = id || taskProp?._id || taskProp?.id;
-  
-  // Determine if we're in modal mode (has callbacks)
   const isModalMode = Boolean(onSuccess && onCancel);
 
   // Multi-step state
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
-  // Helper function to format date for display (dd/mm/yyyy)
-  const formatDateForDisplay = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+  const getTodayDate = () => new Date().toISOString().split('T')[0];
 
-  // Helper function to format date for input (yyyy-mm-dd)
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
-  };
-
-  // Helper function to parse dd/mm/yyyy to Date object
-  const parseDateFromDisplay = (dateString) => {
-    if (!dateString) return null;
-    const [day, month, year] = dateString.split('/');
-    return new Date(year, month - 1, day);
-  };
-
-  // Get today's date in yyyy-mm-dd format
-  const getTodayDate = () => {
-    return new Date().toISOString().split('T')[0];
-  };
-
-  // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     priority: 'medium',
     status: 'todo',
     category: 'other',
-    dueDate: '', // Due date is now empty by default
-    startDate: getTodayDate(), // Start date defaults to today
+    dueDate: '', 
+    startDate: getTodayDate(),
     reminderDate: '',
     estimatedHours: '',
     assignedTo: '',
@@ -92,7 +66,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     progress: 0,
   });
 
-  // UI state
   const [teamMembers, setTeamMembers] = useState([]);
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
@@ -106,66 +79,48 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
   // Constants
   const TASK_PRIORITIES = [
-    { value: 'low', label: 'Low', color: 'gray' },
-    { value: 'medium', label: 'Medium', color: 'blue' },
-    { value: 'high', label: 'High', color: 'orange' },
-    { value: 'urgent', label: 'Urgent', color: 'red' }
+    { value: 'low', label: t('tasks.priority.low') },
+    { value: 'medium', label: t('tasks.priority.medium') },
+    { value: 'high', label: t('tasks.priority.high') },
+    { value: 'urgent', label: t('tasks.priority.urgent') }
   ];
 
   const TASK_STATUSES = [
-    { value: 'pending', label: 'Pending', color: 'yellow' },
-    { value: 'todo', label: 'To Do', color: 'blue' },
-    { value: 'in_progress', label: 'In Progress', color: 'purple' },
-    { value: 'blocked', label: 'Blocked', color: 'red' },
-    { value: 'completed', label: 'Completed', color: 'green' },
-    { value: 'cancelled', label: 'Cancelled', color: 'gray' }
+    { value: 'pending', label: t('tasks.status.pending') },
+    { value: 'todo', label: t('tasks.status.todo') },
+    { value: 'in_progress', label: t('tasks.status.in_progress') },
+    { value: 'blocked', label: t('tasks.status.blocked') },
+    { value: 'completed', label: t('tasks.status.completed') },
+    { value: 'cancelled', label: t('tasks.status.cancelled') }
   ];
 
   const TASK_CATEGORIES = [
-    { value: 'event_preparation', label: 'Event Preparation' },
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'client_followup', label: 'Client Follow-up' },
-    { value: 'partner_coordination', label: 'Partner Coordination' },
-    { value: 'administrative', label: 'Administrative' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'setup', label: 'Setup' },
-    { value: 'cleanup', label: 'Cleanup' },
-    { value: 'other', label: 'Other' }
+    { value: 'event_preparation', label: t('tasks.category.event_preparation') },
+    { value: 'marketing', label: t('tasks.category.marketing') },
+    { value: 'maintenance', label: t('tasks.category.maintenance') },
+    { value: 'client_followup', label: t('tasks.category.client_followup') },
+    { value: 'partner_coordination', label: t('tasks.category.partner_coordination') },
+    { value: 'administrative', label: t('tasks.category.administrative') },
+    { value: 'finance', label: t('tasks.category.finance') },
+    { value: 'setup', label: t('tasks.category.setup') },
+    { value: 'cleanup', label: t('tasks.category.cleanup') },
+    { value: 'other', label: t('tasks.category.other') }
   ];
 
-  // Step configuration
   const steps = [
-    {
-      number: 1,
-      title: "Basic Info",
-      icon: ClipboardList,
-      color: "orange",
-    },
-    {
-      number: 2,
-      title: "Scheduling",
-      icon: Calendar,
-      color: "orange",
-    },
-    {
-      number: 3,
-      title: "Assignment",
-      icon: User,
-      color: "orange",
-    },
-    {
-      number: 4,
-      title: "Details",
-      icon: CheckSquare,
-      color: "orange",
-    },
+    { number: 1, title: t('tasks.form.steps.basicInfo'), icon: ClipboardList },
+    { number: 2, title: t('tasks.form.steps.scheduling'), icon: Calendar },
+    { number: 3, title: t('tasks.form.steps.assignment'), icon: User },
+    { number: 4, title: t('tasks.form.steps.details'), icon: CheckSquare },
   ];
 
-  // Load task data into form
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toISOString().split('T')[0];
+  };
+
   const loadTaskData = useCallback((taskData) => {
     if (!taskData) return;
-
     setFormData({
       title: taskData.title || '',
       description: taskData.description || '',
@@ -173,7 +128,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       status: taskData.status || 'todo',
       category: taskData.category || 'other',
       dueDate: taskData.dueDate ? formatDateForInput(taskData.dueDate) : '',
-      startDate: taskData.startDate ? formatDateForInput(taskData.startDate) : getTodayDate(), // Default to today if no start date
+      startDate: taskData.startDate ? formatDateForInput(taskData.startDate) : getTodayDate(),
       reminderDate: taskData.reminderDate ? formatDateForInput(taskData.reminderDate) : '',
       estimatedHours: taskData.estimatedHours || '',
       assignedTo: taskData.assignedTo?._id || taskData.assignedTo || '',
@@ -187,67 +142,24 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     });
   }, []);
 
-  // Fetch events by client ID
-  const fetchEventsByClient = useCallback(async (clientId) => {
-    if (!clientId) {
-      setFilteredEvents(events);
-      return;
-    }
-
-    try {
-      setFetchLoading(true);
-      const response = await eventService.getByClientId(clientId);
-      const clientEvents = response?.events || response?.data?.events || response?.data || [];
-      setFilteredEvents(clientEvents);
-    } catch (error) {
-      console.error('Error fetching client events:', error);
-      toast.error('Failed to load client events');
-      setFilteredEvents(events);
-    } finally {
-      setFetchLoading(false);
-    }
-  }, [events]);
-
-  // Set client when event is selected
-  const setClientFromEvent = useCallback((eventId) => {
-    if (!eventId) {
-      return;
-    }
-
-    const selectedEvent = events.find(event => event._id === eventId);
-    if (selectedEvent && selectedEvent.client) {
-      setFormData(prev => ({
-        ...prev,
-        relatedClient: selectedEvent.client._id || selectedEvent.client
-      }));
-    }
-  }, [events]);
-
-  // Fetch task data (for edit mode via route)
   const fetchTask = useCallback(async () => {
     if (!isEditMode || taskProp) return;
-
     try {
       setFetchLoading(true);
       const response = await taskService.getById(taskId);
       const taskData = response?.task || response?.data?.task || response;
       loadTaskData(taskData);
     } catch (error) {
-      console.error('Error fetching task:', error);
-      toast.error(error.message || 'Failed to load task');
-      if (!isModalMode) {
-        navigate('/tasks');
-      }
+      showError(error.message || t('tasks.messages.error.load'));
+      if (!isModalMode) navigate('/tasks');
     } finally {
       setFetchLoading(false);
     }
-  }, [taskId, isEditMode, taskProp, loadTaskData, isModalMode, navigate]);
+  }, [taskId, isEditMode, taskProp, loadTaskData, isModalMode, navigate, t, showError]);
 
-  // Fetch related data
   const fetchRelatedData = useCallback(async () => {
     try {
       setFetchLoading(true);
-      
       const [teamRes, eventsRes, clientsRes, partnersRes] = await Promise.all([
         teamService.getAll({ page: 1, limit: 100 }).catch(() => ({ data: [] })),
         eventService.getAll({ limit: 100 }).catch(() => ({ data: [] })),
@@ -255,70 +167,61 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
         partnerService.getAll({ limit: 100 }).catch(() => ({ data: [] })),
       ]);
 
-      const teamData = teamRes?.team || teamRes?.data?.team || teamRes?.data || [];
-      const eventsData = eventsRes?.events || eventsRes?.data?.events || eventsRes?.data || [];
-      const clientsData = clientsRes?.clients || clientsRes?.data?.clients || clientsRes?.data || [];
-      const partnersData = partnersRes?.partners || partnersRes?.data?.partners || partnersRes?.data || [];
-
-      setTeamMembers(teamData);
+      const eventsData = eventsRes?.events || eventsRes?.data?.events || [];
+      
+      setTeamMembers(teamRes?.team || teamRes?.data?.team || []);
       setEvents(eventsData);
       setFilteredEvents(eventsData);
-      setClients(clientsData);
-      setPartners(partnersData);
+      setClients(clientsRes?.clients || clientsRes?.data?.clients || []);
+      setPartners(partnersRes?.partners || partnersRes?.data?.partners || []);
     } catch (error) {
-      console.error('Error fetching related data:', error);
-      toast.error('Failed to load form data');
+      showError(t('tasks.messages.error.loadFormData'));
     } finally {
       setFetchLoading(false);
     }
-  }, []);
+  }, [t, showError]);
 
-  // Effects
   useEffect(() => {
-    if (taskProp) {
-      loadTaskData(taskProp);
-    } else {
-      fetchTask();
-    }
-    
+    if (taskProp) loadTaskData(taskProp);
+    else fetchTask();
     fetchRelatedData();
   }, [taskProp, fetchTask, fetchRelatedData, loadTaskData]);
 
-  // Event handlers
+  // Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  // Enhanced handler for client change
   const handleClientChange = (e) => {
     const { value } = e.target;
     setFormData(prev => ({ 
       ...prev, 
       relatedClient: value,
-      relatedEvent: '' // Reset event when client changes
+      relatedEvent: '' 
     }));
-    
-    // Fetch events for the selected client
-    if (value) {
-      fetchEventsByClient(value);
-    } else {
-      setFilteredEvents(events);
-    }
+    if (value) fetchEventsByClient(value);
+    else setFilteredEvents(events);
   };
 
-  // Enhanced handler for event change
+  const fetchEventsByClient = async (clientId) => {
+    if (!clientId) {
+      setFilteredEvents(events);
+      return;
+    }
+    const filtered = events.filter(e => e.client?._id === clientId || e.client === clientId);
+    setFilteredEvents(filtered);
+  };
+
   const handleEventChange = (e) => {
     const { value } = e.target;
     setFormData(prev => ({ ...prev, relatedEvent: value }));
-    
-    // Set client from selected event
     if (value) {
-      setClientFromEvent(value);
+      const selectedEvent = events.find(event => event._id === value);
+      if (selectedEvent?.client) {
+        setFormData(prev => ({ ...prev, relatedClient: selectedEvent.client._id || selectedEvent.client }));
+      }
     }
   };
 
@@ -333,19 +236,9 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
   const handleAddTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim().toLowerCase())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim().toLowerCase()]
-      }));
+      setFormData(prev => ({ ...prev, tags: [...prev.tags, tagInput.trim().toLowerCase()] }));
       setTagInput('');
     }
-  };
-
-  const handleRemoveTag = (tag) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(t => t !== tag)
-    }));
   };
 
   const handleAddSubtask = () => {
@@ -363,376 +256,194 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     }
   };
 
-  const handleRemoveSubtask = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      subtasks: prev.subtasks.filter((_, i) => i !== index)
-    }));
-  };
-
-  // Step validation
+  // Validation
   const validateStep = (step) => {
     const newErrors = {};
-
     if (step === 1) {
-      if (!formData.title.trim()) {
-        newErrors.title = 'Task title is required';
-      }
-      if (!formData.category) {
-        newErrors.category = 'Category is required';
-      }
+      if (!formData.title.trim()) newErrors.title = t('tasks.form.validation.titleRequired');
+      if (!formData.category) newErrors.category = t('tasks.form.validation.categoryRequired');
     }
-
     if (step === 2) {
-      if (!formData.dueDate) {
-        newErrors.dueDate = 'Due date is required';
-      }
-
-      if (formData.startDate && formData.dueDate) {
-        if (new Date(formData.startDate) > new Date(formData.dueDate)) {
-          newErrors.startDate = 'Start date must be before due date';
-        }
-      }
-
-      if (formData.reminderDate && formData.dueDate) {
-        if (new Date(formData.reminderDate) > new Date(formData.dueDate)) {
-          newErrors.reminderDate = 'Reminder date must be before due date';
-        }
-      }
-
-      if (formData.estimatedHours && (formData.estimatedHours < 0 || formData.estimatedHours > 1000)) {
-        newErrors.estimatedHours = 'Estimated hours must be between 0 and 1000';
+      if (!formData.dueDate) newErrors.dueDate = t('tasks.form.validation.dueDateRequired');
+      if (formData.startDate && formData.dueDate && new Date(formData.startDate) > new Date(formData.dueDate)) {
+        newErrors.startDate = t('tasks.form.validation.startDateBeforeDue');
       }
     }
-
-    if (step === 3) {
-      // No required validations for assignment (optional fields)
-    }
-
-    if (step === 4) {
-      // No required validations for details (optional fields)
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Validate all required fields
   const validateAllRequired = () => {
     const newErrors = {};
-
-    // Step 1 validations
-    if (!formData.title.trim()) {
-      newErrors.title = 'Task title is required';
-    }
-    if (!formData.category) {
-      newErrors.category = 'Category is required';
-    }
-
-    // Step 2 validations
-    if (!formData.dueDate) {
-      newErrors.dueDate = 'Due date is required';
-    }
-
+    if (!formData.title.trim()) newErrors.title = t('tasks.form.validation.titleRequired');
+    if (!formData.dueDate) newErrors.dueDate = t('tasks.form.validation.dueDateRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Navigation & Submit
   const handleNext = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-    } else {
-      toast.error('Please fix the errors before proceeding');
-    }
+    if (validateStep(currentStep)) setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+    else showWarning(t('tasks.form.validation.fixErrors'));
   };
 
   const handlePrevious = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleStepClick = (step, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    if (step < currentStep || validateStep(currentStep)) {
-      setCurrentStep(step);
-    }
+  const handleStepClick = (step) => {
+    if (step < currentStep || validateStep(currentStep)) setCurrentStep(step);
   };
 
-  // Prevent Enter key from submitting form except on last step
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && currentStep < totalSteps) {
-      e.preventDefault();
-      handleNext(e);
-    }
-  };
-
-  // Quick update handler
-  const handleQuickUpdate = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!validateAllRequired()) {
-      toast.error('Please fix all required fields before updating');
-      setCurrentStep(1);
-      return;
-    }
-
-    await handleSubmit(e);
-  };
-
-  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // For create mode on non-final steps, validate current step only
-    if (!isEditMode && currentStep < totalSteps) {
-      if (!validateStep(currentStep)) {
-        toast.error('Please fix the errors in the form');
-        return;
-      }
-      handleNext(e);
-      return;
-    }
-
-    // For final step or edit mode, validate all
     if (!validateAllRequired()) {
-      toast.error('Please fix all required fields');
+      showWarning(t('tasks.form.validation.fixAllErrors'));
       return;
     }
 
     try {
       setLoading(true);
 
+      // ✅ FIX: Explicitly sanitize object IDs. 
+      // If the value is an empty string "", convert it to null.
       const submitData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         priority: formData.priority,
         status: formData.status,
         category: formData.category,
+        
         dueDate: new Date(formData.dueDate).toISOString(),
+        startDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
+        reminderDate: formData.reminderDate ? new Date(formData.reminderDate).toISOString() : undefined,
+        
+        estimatedHours: formData.estimatedHours ? parseFloat(formData.estimatedHours) : undefined,
         progress: formData.progress,
         tags: formData.tags,
         subtasks: formData.subtasks,
-      };
+        watchers: formData.watchers,
 
-      // Optional fields
-      if (formData.startDate) submitData.startDate = new Date(formData.startDate).toISOString();
-      if (formData.reminderDate) submitData.reminderDate = new Date(formData.reminderDate).toISOString();
-      if (formData.estimatedHours) submitData.estimatedHours = parseFloat(formData.estimatedHours);
-      if (formData.assignedTo) submitData.assignedTo = formData.assignedTo;
-      if (formData.watchers.length > 0) submitData.watchers = formData.watchers;
-      if (formData.relatedEvent) submitData.relatedEvent = formData.relatedEvent;
-      if (formData.relatedClient) submitData.relatedClient = formData.relatedClient;
-      if (formData.relatedPartner) submitData.relatedPartner = formData.relatedPartner;
+        // ✅ SANITIZATION: Convert "" to null
+        assignedTo: formData.assignedTo || null,
+        relatedEvent: formData.relatedEvent || null,
+        relatedClient: formData.relatedClient || null,
+        relatedPartner: formData.relatedPartner || null,
+      };
 
       if (isEditMode) {
         await taskService.update(taskId, submitData);
-        toast.success('Task updated successfully');
+        showSuccess(t('tasks.messages.success.updated'));
       } else {
         await taskService.create(submitData);
-        toast.success('Task created successfully');
+        showSuccess(t('tasks.messages.success.created'));
       }
 
-      // Handle success based on mode
-      if (isModalMode && onSuccess) {
-        onSuccess();
-      } else {
-        navigate('/tasks');
-      }
+      if (isModalMode && onSuccess) onSuccess();
+      else navigate('/tasks');
     } catch (error) {
-      console.error('Error saving task:', error);
-      
-      if (error.status === 400 || error.status === 422) {
-        if (error.errors) {
-          setErrors(error.errors);
-        }
-        toast.error(error.message || 'Please fix the validation errors');
-      } else {
-        const errorMessage = error.message || `Failed to ${isEditMode ? 'update' : 'create'} task`;
-        toast.error(errorMessage);
-      }
+      showError(error.message || t('common.error'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancelClick = useCallback(() => {
-    if (isModalMode && onCancel) {
-      onCancel();
-    } else {
-      navigate('/tasks');
-    }
-  }, [isModalMode, onCancel, navigate]);
+  // --- Renders ---
 
-  // Render step indicator
   const renderStepIndicator = () => (
-    <div className="mb-8">
-      <div className="flex items-center justify-between">
-        {steps.map((step, index) => {
+    <div className="mb-8 px-2">
+      <div className="flex items-center justify-between relative">
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-200 dark:bg-gray-700 -z-10" />
+        {steps.map((step) => {
           const isCompleted = step.number < currentStep;
           const isCurrent = step.number === currentStep;
           const StepIcon = step.icon;
 
           return (
-            <React.Fragment key={step.number}>
-              <button
-                type="button"
-                onClick={(e) => handleStepClick(step.number, e)}
-                className={`flex flex-col items-center gap-2 transition-all ${
-                  isCompleted || isCurrent
-                    ? "cursor-pointer"
-                    : "cursor-not-allowed opacity-50"
-                }`}
-                disabled={!isCompleted && !isCurrent}
-              >
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                    isCompleted
-                      ? "bg-orange-600 text-white"
-                      : isCurrent
-                        ? "bg-orange-600 text-white ring-4 ring-orange-200 dark:ring-orange-900"
-                        : "bg-orange-200 dark:bg-orange-700 text-orange-400"
-                  }`}
-                >
-                  {isCompleted ? (
-                    <Check className="w-6 h-6" />
-                  ) : (
-                    <StepIcon className="w-6 h-6" />
-                  )}
-                </div>
-                <div className="text-center">
-                  <div
-                    className={`text-sm font-medium ${
-                      isCompleted || isCurrent
-                        ? "text-gray-900 dark:text-white"
-                        : "text-gray-400 dark:text-gray-500"
-                    }`}
-                  >
-                    {step.title}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Step {step.number} of {totalSteps}
-                  </div>
-                </div>
-              </button>
-              {index < steps.length - 1 && (
-                <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 mx-2 mb-8">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      step.number < currentStep
-                        ? "bg-orange-600"
-                        : "bg-transparent"
-                    }`}
-                  />
-                </div>
-              )}
-            </React.Fragment>
+            <button
+              key={step.number}
+              type="button"
+              onClick={() => handleStepClick(step.number)}
+              disabled={!isCompleted && !isCurrent}
+              className={`group flex flex-col items-center gap-2 bg-white dark:bg-[#1f2937] px-2 transition-all ${
+                isCompleted || isCurrent ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                isCompleted 
+                  ? "bg-green-500 border-green-500 text-white" 
+                  : isCurrent 
+                    ? "bg-orange-600 border-orange-600 text-white ring-4 ring-orange-100 dark:ring-orange-900/30" 
+                    : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400"
+              }`}>
+                {isCompleted ? <Check className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+              </div>
+              <span className={`text-xs font-semibold whitespace-nowrap ${
+                isCurrent ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"
+              }`}>
+                {step.title}
+              </span>
+            </button>
           );
         })}
       </div>
     </div>
   );
 
-  // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <ClipboardList className="w-5 h-5 text-white" />
-              </div>
-              Basic Information
+          <div className="space-y-4 animate-fadeIn">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">
+              {t('tasks.form.steps.basicInfo')}
             </h3>
-
             <Input
-              label="Task Title"
+              label={t('tasks.form.fields.title')}
               name="title"
               value={formData.title}
               onChange={handleChange}
               error={errors.title}
               required
-              placeholder="Enter a clear, descriptive task title"
-              className="w-full"
+              placeholder={t('tasks.form.fields.titlePlaceholder')}
             />
-
             <Textarea
-              label="Description"
+              label={t('tasks.form.fields.description')}
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows={4}
-              placeholder="Provide detailed information about the task, requirements, or instructions..."
-              error={errors.description}
-              className="w-full dark:bg-gray-800"
+              placeholder={t('tasks.form.fields.descriptionPlaceholder')}
             />
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Select
-                label="Priority"
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-                options={TASK_PRIORITIES.map(p => ({ value: p.value, label: p.label }))}
-                className="w-full"
-              />
-
-              <Select
-                label="Status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                options={TASK_STATUSES.map(s => ({ value: s.value, label: s.label }))}
-                className="w-full"
-              />
-
-              <Select
-                label="Category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                error={errors.category}
-                required
-                options={TASK_CATEGORIES}
-                className="w-full"
-              />
+              <Select label={t('tasks.form.fields.priority')} name="priority" value={formData.priority} onChange={handleChange} options={TASK_PRIORITIES} />
+              <Select label={t('tasks.form.fields.status')} name="status" value={formData.status} onChange={handleChange} options={TASK_STATUSES} />
+              <Select label={t('tasks.form.fields.category')} name="category" value={formData.category} onChange={handleChange} options={TASK_CATEGORIES} error={errors.category} required />
             </div>
           </div>
         );
 
       case 2:
         return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <Calendar className="w-5 h-5 text-white" />
-              </div>
-              Scheduling & Time Tracking
+          <div className="space-y-6 animate-fadeIn">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">
+              {t('tasks.form.steps.scheduling')}
             </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                type="date"
-                label="Start Date"
+            
+            {/* 2 Columns Grid for dates */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <DateInput
+                label={t('tasks.form.fields.startDate')}
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
                 error={errors.startDate}
                 className="w-full"
               />
-
-              <Input
-                type="date"
-                label="Due Date"
+              <DateInput
+                label={t('tasks.form.fields.dueDate')}
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
@@ -740,51 +451,50 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 required
                 className="w-full"
               />
+            </div>
 
-              <Input
-                type="date"
-                label="Reminder Date"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <DateInput
+                label={t('tasks.form.fields.reminderDate')}
                 name="reminderDate"
                 value={formData.reminderDate}
                 onChange={handleChange}
-                error={errors.reminderDate}
+                className="w-full"
+              />
+               <Input
+                type="number"
+                label={t('tasks.form.fields.estimatedHours')}
+                name="estimatedHours"
+                value={formData.estimatedHours}
+                onChange={handleChange}
+                min="0"
+                step="0.5"
+                icon={Clock}
                 className="w-full"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                type="number"
-                label="Estimated Hours"
-                name="estimatedHours"
-                value={formData.estimatedHours}
-                onChange={handleChange}
-                error={errors.estimatedHours}
-                min="0"
-                max="1000"
-                step="0.5"
-                placeholder="0.0"
-                className="w-full"
-              />
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Progress (%)
+            {/* Progress Slider */}
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+              <div className="flex justify-between mb-3">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('tasks.form.fields.progress')}
                 </label>
-                <input
-                  type="range"
-                  name="progress"
-                  value={formData.progress}
-                  onChange={handleChange}
-                  min="0"
-                  max="100"
-                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  <span>0%</span>
-                  <span className="font-medium text-orange-600">{formData.progress}%</span>
-                  <span>100%</span>
-                </div>
+                <span className="text-sm font-bold text-orange-600">{formData.progress}%</span>
+              </div>
+              <input
+                type="range"
+                name="progress"
+                value={formData.progress}
+                onChange={handleChange}
+                min="0"
+                max="100"
+                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-600"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-2">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
               </div>
             </div>
           </div>
@@ -792,301 +502,116 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
       case 3:
         return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              Assignment & Collaboration
-            </h3>
-
-            <Select
-              label="Assign To"
-              name="assignedTo"
-              value={formData.assignedTo}
-              onChange={handleChange}
-              options={[
-                { value: '', label: 'Unassigned' },
-                ...teamMembers.map(member => ({
-                  value: member._id,
-                  label: member.name || member.email,
-                }))
-              ]}
-              disabled={fetchLoading}
-              className="w-full"
-            />
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Watchers
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {teamMembers.map(member => (
-                  <label key={member._id} className="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={formData.watchers.includes(member._id)}
-                      onChange={() => handleWatchersChange(member._id)}
-                      className="rounded text-orange-600"
-                    />
-                    <span className="text-sm text-gray-900 dark:text-white truncate">
-                      {member.name || member.email}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Select
-                label="Related Client"
-                name="relatedClient"
-                value={formData.relatedClient}
-                onChange={handleClientChange}
-                options={[
-                  { value: '', label: 'No client' },
-                  ...clients.map(client => ({
-                    value: client._id,
-                    label: client.name,
-                  }))
-                ]}
-                disabled={fetchLoading}
-                className="w-full"
-              />
-
-              <Select
-                label="Related Event"
-                name="relatedEvent"
-                value={formData.relatedEvent}
-                onChange={handleEventChange}
-                options={[
-                  { value: '', label: 'No event' },
-                  ...filteredEvents.map(event => ({
-                    value: event._id,
-                    label: event.title,
-                  }))
-                ]}
-                disabled={fetchLoading}
-                className="w-full"
-              />
-
-              <Select
-                label="Related Partner"
-                name="relatedPartner"
-                value={formData.relatedPartner}
-                onChange={handleChange}
-                options={[
-                  { value: '', label: 'No partner' },
-                  ...partners.map(partner => ({
-                    value: partner._id,
-                    label: partner.name,
-                  }))
-                ]}
-                disabled={fetchLoading}
-                className="w-full"
-              />
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <CheckSquare className="w-5 h-5 text-white" />
-              </div>
-              Additional Details
-            </h3>
-
-            {/* Tags */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tags
-              </label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                  placeholder="Add tag and press Enter"
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
-                />
-                <Button type="button" variant="outline" onClick={handleAddTag}>
-                  Add
-                </Button>
-              </div>
-
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map(tag => (
-                    <Badge key={tag} color="blue" className="flex items-center gap-1">
-                      {tag}
-                      <X
-                        className="w-3 h-3 cursor-pointer"
-                        onClick={() => handleRemoveTag(tag)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Subtasks */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Subtasks
-              </label>
-              <div className="space-y-2 mb-3">
-                <Input
-                  label="Subtask Title"
-                  value={newSubtask.title}
-                  onChange={(e) => setNewSubtask(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter subtask title"
-                  className="w-full"
-                />
-                <Input
-                  label="Subtask Description (optional)"
-                  value={newSubtask.description}
-                  onChange={(e) => setNewSubtask(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brief description"
-                  className="w-full"
-                />
-                <Button type="button" variant="outline" icon={Plus} onClick={handleAddSubtask}>
-                  Add Subtask
-                </Button>
-              </div>
-
-              {formData.subtasks.length > 0 && (
-                <div className="space-y-2">
-                  {formData.subtasks.map((subtask, index) => (
-                    <div key={index} className="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900 dark:text-white">{subtask.title}</p>
-                        {subtask.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{subtask.description}</p>
-                        )}
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        icon={Trash2}
-                        onClick={() => handleRemoveSubtask(index)}
-                      />
+            <div className="space-y-4 animate-fadeIn">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">{t('tasks.form.steps.assignment')}</h3>
+                <Select label={t('tasks.form.fields.assignedTo')} name="assignedTo" value={formData.assignedTo} onChange={handleChange} options={[{ value: '', label: t('tasks.form.fields.unassigned') }, ...teamMembers.map(m => ({ value: m._id, label: m.name }))]} />
+                
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('tasks.form.fields.watchers')}</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {teamMembers.map(member => (
+                            <label key={member._id} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 cursor-pointer hover:border-orange-300 transition-colors">
+                                <input type="checkbox" checked={formData.watchers.includes(member._id)} onChange={() => handleWatchersChange(member._id)} className="rounded text-orange-600 focus:ring-orange-500" />
+                                <span className="text-sm truncate">{member.name}</span>
+                            </label>
+                        ))}
                     </div>
-                  ))}
                 </div>
-              )}
-            </div>
-          </div>
-        );
 
-      default:
-        return null;
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Select label={t('tasks.form.fields.relatedClient')} name="relatedClient" value={formData.relatedClient} onChange={handleClientChange} options={[{ value: '', label: t('tasks.form.fields.noClient') }, ...clients.map(c => ({ value: c._id, label: c.name }))]} />
+                    <Select label={t('tasks.form.fields.relatedEvent')} name="relatedEvent" value={formData.relatedEvent} onChange={handleEventChange} options={[{ value: '', label: t('tasks.form.fields.noEvent') }, ...filteredEvents.map(e => ({ value: e._id, label: e.title }))]} />
+                    <Select label={t('tasks.form.fields.relatedPartner')} name="relatedPartner" value={formData.relatedPartner} onChange={handleChange} options={[{ value: '', label: t('tasks.form.fields.noPartner') }, ...partners.map(p => ({ value: p._id, label: p.name }))]} />
+                </div>
+            </div>
+        ); 
+      case 4:
+         return (
+             <div className="space-y-4 animate-fadeIn">
+                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">{t('tasks.form.steps.details')}</h3>
+                 
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('tasks.form.fields.tags')}</label>
+                    <div className="flex gap-2 mb-2">
+                        <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())} placeholder={t('tasks.form.fields.tagPlaceholder')} className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm" />
+                        <Button type="button" variant="outline" onClick={handleAddTag}>{t('tasks.form.buttons.add')}</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {formData.tags.map(tag => (
+                            <Badge key={tag} variant="secondary" className="pl-2 pr-1 py-1">{tag}<X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setFormData(p => ({...p, tags: p.tags.filter(t => t !== tag)}))} /></Badge>
+                        ))}
+                    </div>
+                 </div>
+
+                 <div className="border-t pt-4 dark:border-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('tasks.form.fields.subtasks')}</label>
+                    <div className="flex gap-2 mb-3">
+                        <Input value={newSubtask.title} onChange={(e) => setNewSubtask(prev => ({ ...prev, title: e.target.value }))} placeholder={t('tasks.form.fields.subtaskTitlePlaceholder')} className="flex-1" />
+                        <Button type="button" variant="outline" icon={Plus} onClick={handleAddSubtask} />
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {formData.subtasks.map((subtask, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700 group">
+                                <span className="text-sm text-gray-700 dark:text-gray-300">{subtask.title}</span>
+                                <button type="button" onClick={() => setFormData(p => ({...p, subtasks: p.subtasks.filter((_, i) => i !== index)}))} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                        ))}
+                    </div>
+                 </div>
+             </div>
+         );
+      default: return null;
     }
   };
 
-  if (fetchLoading && isEditMode) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400 font-medium mt-4">Loading task form...</p>
-        </div>
-      </div>
-    );
-  }
+  if (fetchLoading && isEditMode) return <div className="p-10 text-center">{t('common.loading')}</div>;
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
-      {/* Header */}
+    <div className="bg-white dark:bg-[#1f2937] h-full flex flex-col">
       {!isModalMode && (
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {isEditMode ? 'Edit Task' : 'Create New Task'}
-            </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              {isEditMode ? 'Update task details' : 'Fill in the details to create a new task'}
-            </p>
-          </div>
+        <div className="mb-6 p-6 pb-0">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {isEditMode ? t('tasks.form.editTitle') : t('tasks.form.createTitle')}
+          </h1>
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        onKeyDown={handleKeyDown}
-        className="space-y-6"
-      >
-        {/* Step Indicator */}
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col p-6 pt-2">
         {renderStepIndicator()}
+        
+        <div className="flex-1 mt-2 mb-6">
+          {renderStepContent()}
+        </div>
 
-        {/* Step Content */}
-        <div className="min-h-[400px]">{renderStepContent()}</div>
-
-        {/* Navigation Buttons */}
         <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
           <div>
             {currentStep > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={loading}
-              >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Previous
+              <Button type="button" variant="outline" onClick={handlePrevious} disabled={loading}>
+                <ChevronLeft className="w-4 h-4 mr-1" /> {t('tasks.form.buttons.previous')}
               </Button>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancelClick}
-              disabled={loading}
-            >
-              <X className="w-4 h-4 mr-2" />
-              Cancel
+            <Button type="button" variant="ghost" onClick={isModalMode && onCancel ? onCancel : () => navigate('/tasks')} disabled={loading}>
+              {t('common.cancel')}
             </Button>
-
-            {/* Quick Update button - only show in edit mode and not on last step */}
+            
+            {/* Quick Update Button (Matches Screenshot "Update Now") */}
             {isEditMode && currentStep < totalSteps && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleQuickUpdate}
-                loading={loading}
-                disabled={loading}
-                className="bg-orange-500 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Update Now
-              </Button>
+               <Button type="button" variant="secondary" onClick={(e) => { e.preventDefault(); handleSubmit(e); }} loading={loading}>
+                 <Save className="w-4 h-4 mr-2" /> {t('tasks.form.buttons.updateNow')}
+               </Button>
             )}
 
             {currentStep < totalSteps ? (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleNext}
-                disabled={loading}
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-2" />
+              <Button type="button" variant="primary" onClick={handleNext} disabled={loading}>
+                {t('tasks.form.buttons.next')} <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-              <Button
-                type="submit"
-                variant="primary"
-                loading={loading}
-                disabled={loading}
-              >
+              <Button type="submit" variant="primary" loading={loading}>
                 <Save className="w-4 h-4 mr-2" />
-                {isEditMode ? 'Update Task' : 'Create Task'}
+                {isEditMode ? t('tasks.form.buttons.update') : t('tasks.form.buttons.create')}
               </Button>
             )}
           </div>

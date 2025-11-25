@@ -1,445 +1,196 @@
 import React, { useState } from "react";
-import {
-  X,
-  Trash2,
-  Edit,
-  Clock,
-  BellOff,
-  ArrowRight,
-  Calendar,
-  AlertTriangle,
-  FileText,
-  User,
-  Tag,
-} from "lucide-react";
+import { Trash2, Edit, Clock, BellOff, ArrowRight, Calendar, User, Tag, AlignLeft, Link2, Repeat, Bell, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { addHours, addDays } from "date-fns";
+
+import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
+import Badge, { StatusBadge } from "../../components/common/Badge";
 import { useToast } from "../../context/ToastContext";
 import { reminderService } from "../../api/index";
-import Button from "../../components/common/Button";
-import Badge from "../../components/common/Badge";
-import { format, addHours, addDays } from "date-fns";
 
 const ReminderDetailModal = ({ isOpen, onClose, reminder, onEdit, refreshData }) => {
+  const { t } = useTranslation();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
-  const { showSuccess, showError, promise } = useToast();
+  const { promise } = useToast();
 
-  if (!isOpen || !reminder) return null;
+  if (!reminder) return null;
 
-  const getStatusBadgeColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "green";
-      case "active":
-        return "blue";
-      case "snoozed":
-        return "yellow";
-      case "cancelled":
-        return "red";
-      default:
-        return "gray";
-    }
+  const formatDateTime = (date, time) => {
+    if (!date) return "";
+    const d = new Date(date).toLocaleDateString("en-GB");
+    return time ? `${d} • ${time}` : d;
   };
 
-  const getTypeBadgeColor = (type) => {
-    switch (type) {
-      case "event":
-        return "blue";
-      case "payment":
-        return "yellow";
-      case "task":
-        return "purple";
-      case "maintenance":
-        return "orange";
-      case "followup":
-        return "green";
-      default:
-        return "gray";
-    }
+  const formatDateLong = (date) => {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
   };
 
-  const getPriorityBadgeColor = (priority) => {
-    switch (priority) {
-      case "urgent":
-        return "red";
-      case "high":
-        return "orange";
-      case "medium":
-        return "yellow";
-      case "low":
-        return "gray";
-      default:
-        return "gray";
-    }
-  };
-
-  const formatDateLong = (dateString) => {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    const weekday = d.toLocaleString("en-GB", { weekday: "long" });
-    const day = d.getDate();
-    const month = d.toLocaleString("en-GB", { month: "long" });
-    const year = d.getFullYear();
-    return `${weekday}, ${day} ${month} ${year}`;
-  };
-
-  const formatDateTime = (dateString, timeString) => {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    const datePart = formatDateLong(dateString);
-    if (timeString) {
-      return `${datePart} at ${timeString}`;
-    }
-    return datePart;
-  };
-
-  // Handle snooze action
-  const handleSnooze = async (duration, unit = 'hours') => {
-    if (!reminder._id) return;
-
+  const handleAction = async (apiCall, messages) => {
     try {
       setIsProcessing(true);
-
-      // Calculate snooze until date based on duration and unit
-      const now = new Date();
-      let snoozeUntil;
-      
-      switch (unit) {
-        case 'hours':
-          snoozeUntil = addHours(now, duration);
-          break;
-        case 'days':
-          snoozeUntil = addDays(now, duration);
-          break;
-        default:
-          snoozeUntil = addHours(now, duration);
-      }
-
-      const snoozeData = {
-        snoozeUntil: snoozeUntil.toISOString(),
-        duration: duration,
-        unit: unit
-      };
-
-      await promise(
-        reminderService.snooze(reminder._id, snoozeData),
-        {
-          loading: `Snoozing reminder for ${duration} ${unit}...`,
-          success: `Reminder snoozed for ${duration} ${unit}`,
-          error: `Failed to snooze reminder`
-        }
-      );
-      
+      await promise(apiCall, messages);
       onClose();
-      refreshData();
-    } catch (err) {
-      console.error("Error snoozing reminder:", err);
-    } finally {
-      setIsProcessing(false);
-    }
+      if (refreshData) refreshData();
+    } catch (e) { console.error(e); } 
+    finally { setIsProcessing(false); }
   };
 
-  // Handle unsnooze
-  const handleUnsnooze = async () => {
-    if (!reminder._id) return;
+  const handleSnooze = (d, u) => handleAction(
+    reminderService.snooze(reminder._id, { snoozeUntil: (u === 'days' ? addDays(new Date(), d) : addHours(new Date(), d)).toISOString(), duration: d, unit: u }),
+    { loading: t('reminders.notifications.snoozing'), success: t('reminders.notifications.snoozed'), error: t('reminders.notifications.snoozeError') }
+  );
 
-    try {
-      setIsProcessing(true);
-      
-      await promise(
-        reminderService.update(reminder._id, { 
-          status: "active",
-          snoozeUntil: null
-        }),
-        {
-          loading: "Activating reminder...",
-          success: "Reminder activated successfully",
-          error: "Failed to activate reminder"
-        }
-      );
-      
-      onClose();
-      refreshData();
-    } catch (err) {
-      console.error("Error unsnoozing reminder:", err);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  const handleUnsnooze = () => handleAction(
+    reminderService.update(reminder._id, { status: "active", snoozeUntil: null }),
+    { loading: t('reminders.notifications.activating'), success: t('reminders.notifications.unsnoozed'), error: t('reminders.notifications.activateError') }
+  );
 
-  // Handle delete
-  const handleDelete = async () => {
-    if (!reminder._id) return;
-    
-    try {
-      setIsProcessing(true);
-      await promise(
-        reminderService.delete(reminder._id),
-        {
-          loading: "Deleting reminder...",
-          success: "Reminder deleted successfully",
-          error: "Failed to delete reminder"
-        }
-      );
-      onClose();
-      refreshData();
-    } catch (error) {
-      console.error("Failed to delete reminder:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  const handleDelete = () => handleAction(
+    reminderService.delete(reminder._id),
+    { loading: t('reminders.notifications.deleting'), success: t('reminders.notifications.deleted'), error: t('reminders.notifications.deleteError') }
+  );
 
   const handleViewFullDetails = () => {
     onClose();
     navigate(`/reminders/${reminder._id}`);
   };
 
-  const isSnoozed = reminder.status === "snoozed";
+  // --- UI Helpers ---
+  const InfoRow = ({ icon: Icon, label, value, color="blue" }) => (
+    <div className="flex items-center gap-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
+      <div className={`p-2 rounded-lg bg-${color}-50 text-${color}-600 dark:bg-${color}-900/20 dark:text-${color}-400 flex-shrink-0`}>
+        <Icon size={16} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-gray-500 uppercase font-semibold tracking-wide mb-0.5">{label}</p>
+        <p className="font-medium text-sm text-gray-900 dark:text-white truncate">{value}</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background Overlay */}
-        <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          aria-hidden="true"
-          onClick={onClose}
-        ></div>
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title={reminder.title} size="md">
+        <div className="space-y-6">
+          
+          {/* Header Status */}
+          <div className="flex gap-2 -mt-2">
+            <StatusBadge status={reminder.status} dot />
+            {reminder.priority && (
+              <Badge variant={reminder.priority === 'high' ? 'warning' : 'secondary'} className="capitalize">
+                {reminder.priority}
+              </Badge>
+            )}
+          </div>
+          
+          {/* Info Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 px-4 shadow-sm">
+            <InfoRow icon={Calendar} label={t('reminders.details.reminderInfo', "Reminder Info")} value={formatDateTime(reminder.reminderDate, reminder.reminderTime)} color="orange" />
+            {reminder.isRecurring && <InfoRow icon={Repeat} label={t('reminders.recurrence.label', "Repeat")} value={`${reminder.recurrence.frequency} (${reminder.recurrence.interval})`} color="blue" />}
+            {reminder.createdBy && <InfoRow icon={User} label={t('reminders.details.createdBy', "Created By")} value={reminder.createdBy.name} color="purple" />}
+          </div>
 
-        {/* Modal Content */}
-        <span
-          className="hidden sm:inline-block sm:align-middle sm:h-screen"
-          aria-hidden="true"
-        >
-          &#8203;
-        </span>
-        <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="border-0">
-            <div className="px-6 pt-5 pb-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3
-                    className="text-2xl font-bold leading-6 text-gray-900 dark:text-white"
-                    id="modal-title"
-                  >
-                    {reminder.title || "Untitled Reminder"}
-                  </h3>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Badge color={getStatusBadgeColor(reminder.status)}>
-                      {reminder.status ? reminder.status.charAt(0).toUpperCase() + reminder.status.slice(1) : "Active"}
-                    </Badge>
-                    <Badge color={getTypeBadgeColor(reminder.type)}>
-                      {reminder.type ? reminder.type.charAt(0).toUpperCase() + reminder.type.slice(1) : "Other"}
-                    </Badge>
-                    <Badge color={getPriorityBadgeColor(reminder.priority)}>
-                      {reminder.priority ? reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1) : "Medium"}
-                    </Badge>
-                  </div>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="w-7 h-7 flex items-center justify-center rounded bg-white hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors ml-4 flex-shrink-0"
-                  title="Close"
-                >
-                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                </button>
-              </div>
-              
-              <div className="mt-6 space-y-4">
-                {/* Description */}
-                {reminder.description && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-orange-500" />
-                      Description
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                      {reminder.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* Reminder Details */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Reminder Details
-                  </h4>
-                  <div className="space-y-3">
-                    {/* Date & Time */}
-                    <div className="flex items-center gap-3 text-sm">
-                      <Calendar className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400">Date & Time</div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {formatDateTime(reminder.reminderDate, reminder.reminderTime)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Snooze Information */}
-                    {isSnoozed && reminder.snoozeUntil && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">Snoozed Until</div>
-                          <div className="font-medium text-yellow-600 dark:text-yellow-400">
-                            {formatDateLong(reminder.snoozeUntil)}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Created By */}
-                    {reminder.createdBy && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <User className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">Created By</div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {reminder.createdBy.name || "Unknown"}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Related Entities */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Related To
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {reminder.relatedEvent && (
-                      <Badge color="purple" className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        Event
-                      </Badge>
-                    )}
-                    {reminder.relatedTask && (
-                      <Badge color="blue" className="flex items-center gap-1">
-                        <FileText className="w-3 h-3" />
-                        Task
-                      </Badge>
-                    )}
-                    {reminder.relatedPayment && (
-                      <Badge color="green" className="flex items-center gap-1">
-                        <Tag className="w-3 h-3" />
-                        Payment
-                      </Badge>
-                    )}
-                    {!reminder.relatedEvent && !reminder.relatedTask && !reminder.relatedPayment && (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">No related entities</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Recurrence */}
-                {reminder.recurrence && reminder.recurrence.enabled && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-orange-500" />
-                      Recurrence
-                    </h4>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {reminder.recurrence.frequency} every {reminder.recurrence.interval}{" "}
-                      {reminder.recurrence.frequency === "daily" ? "day(s)" : 
-                       reminder.recurrence.frequency === "weekly" ? "week(s)" : 
-                       reminder.recurrence.frequency === "monthly" ? "month(s)" : "year(s)"}
-                    </div>
-                  </div>
-                )}
-              </div>
+          {/* Snooze Banner */}
+          {reminder.status === 'snoozed' && reminder.snoozeUntil && (
+            <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200 text-sm">
+              <Clock className="w-4 h-4" />
+              <span>Snoozed until <strong>{formatDateLong(reminder.snoozeUntil)}</strong></span>
             </div>
-            
-            {/* Action Buttons */}
-            <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex justify-between gap-3 rounded-b-xl">
-              <div className="flex gap-2">
-                {/* Snooze/Unsnooze Button */}
-                {!isSnoozed ? (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      icon={Clock}
-                      onClick={() => handleSnooze(1, 'hours')}
-                      disabled={isProcessing}
-                      size="sm"
-                    >
-                      1H
-                    </Button>
-                    <Button
-                      variant="outline"
-                      icon={Clock}
-                      onClick={() => handleSnooze(4, 'hours')}
-                      disabled={isProcessing}
-                      size="sm"
-                    >
-                      4H
-                    </Button>
-                    <Button
-                      variant="outline"
-                      icon={Clock}
-                      onClick={() => handleSnooze(1, 'days')}
-                      disabled={isProcessing}
-                      size="sm"
-                    >
-                      1D
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    icon={BellOff}
-                    onClick={handleUnsnooze}
-                    disabled={isProcessing}
-                    size="sm"
-                  >
-                    Unsnooze
-                  </Button>
-                )}
+          )}
 
-                {/* Delete Button */}
-                <Button
-                  variant="danger"
-                  icon={Trash2}
-                  onClick={handleDelete}
-                  disabled={isProcessing}
+          {/* Description */}
+          {reminder.description && (
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl text-sm text-gray-700 dark:text-gray-300 border border-blue-100 dark:border-blue-800/30 leading-relaxed">
+              {reminder.description}
+            </div>
+          )}
+
+          {/* Quick Snooze Actions (only if active) */}
+          {reminder.status === 'active' && (
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" size="sm" onClick={() => handleSnooze(1, 'hours')} className="text-xs">+1 Hour</Button>
+              <Button variant="outline" size="sm" onClick={() => handleSnooze(1, 'days')} className="text-xs">+1 Day</Button>
+              <Button variant="outline" size="sm" onClick={() => handleSnooze(1, 'weeks')} className="text-xs">+1 Week</Button>
+            </div>
+          )}
+
+          {/* Footer Actions */}
+          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button 
+                variant="danger" // ✅ Fixed: Uses Red Danger Button
+                icon={Trash2} 
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isProcessing}
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                {t("common.delete", "Delete")}
+              </Button>
+              
+              {reminder.status === 'snoozed' && (
+                <Button 
+                  variant="outline" 
+                  icon={BellOff} 
+                  onClick={handleUnsnooze}
                   size="sm"
+                  className="w-full sm:w-auto"
                 >
-                  {isProcessing ? "Deleting..." : "Delete"}
+                  {t('reminders.actions.unsnooze', "Unsnooze")}
                 </Button>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  icon={Edit}
-                  onClick={() => onEdit(reminder)}
-                  size="sm"
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleViewFullDetails}
-                  className="gap-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
-                  title="View Full Details"
-                >
-                  More Details
-                  <ArrowRight className="w-4 h-4 text-white" />
-                </Button>
-              </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                icon={Edit} 
+                onClick={() => onEdit(reminder)} 
+                size="sm"
+                className="flex-1 sm:flex-none"
+              >
+                {t("common.edit", "Edit")}
+              </Button>
+              
+              <Button 
+                variant="primary" 
+                icon={ArrowRight} 
+                onClick={handleViewFullDetails} 
+                size="sm"
+                className="flex-1 sm:flex-none gap-2"
+              >
+                {t("common.viewDetails", "View Details")}
+              </Button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </Modal>
+
+      {/* Delete Confirmation */}
+      <Modal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title={t("common.confirmDelete", "Confirm Delete")} size="sm">
+        <div className="p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+            {t("reminders.notifications.deleteConfirm", "Are you sure you want to delete this reminder?")}
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>{t("common.cancel", "Cancel")}</Button>
+            <Button variant="danger" loading={isProcessing} onClick={handleDelete}>{t("common.delete", "Delete")}</Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 

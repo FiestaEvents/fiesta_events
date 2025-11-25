@@ -1,50 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { EyeClosedIcon, EyeIcon } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
-import { useToast } from "../../context/ToastContext.jsx";
-import Button from "../../components/common/Button.jsx";
-
-// Input Component
-const Input = ({
-  label,
-  error,
-  iconRight: IconRight,
-  onIconClick,
-  fullWidth,
-  ...props
-}) => (
-  <div className={fullWidth ? "w-full" : ""}>
-    {label && (
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-    )}
-    <div className="relative">
-      <input
-        className={`w-full px-4 py-1.5 text-base border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all duration-200 hover:shadow-md ${
-          error ? "border-red-500" : "border-gray-300"
-        }`}
-        {...props}
-      />
-      {IconRight && (
-        <button
-          type="button"
-          onClick={onIconClick}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
-        >
-          <IconRight size={20} />
-        </button>
-      )}
-    </div>
-    {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
-  </div>
-);
+import { Eye, EyeOff, Loader2 } from "lucide-react"; 
+import { useAuth } from "../../context/AuthContext";
+import useToast from "../../hooks/useToast"; // Updated to use the hook
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input"; // Using generic Input
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, user, loading: authLoading } = useAuth();
-  const { success, error: showError } = useToast();
+  
+  // Use the extended toast methods
+  const { success, apiError } = useToast();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -59,9 +26,12 @@ const Login = () => {
   }, [isAuthenticated, user, navigate, authLoading]);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error for the field being edited
-    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -85,14 +55,16 @@ const Login = () => {
     try {
       await login(formData.email, formData.password);
       success("Login successful!");
+      // Navigation happens via the useEffect
     } catch (err) {
-      // Set general authentication error on both fields or as needed
-      const errorMessage = err.message || "Invalid credentials";
+      // Use the generic apiError helper from useToast
+      apiError(err, "Invalid credentials");
+      
+      // Also set local form errors for visual feedback
       setErrors({
-        email: errorMessage,
-        password: errorMessage,
+        email: " ",
+        password: " ",
       });
-      showError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -104,7 +76,7 @@ const Login = () => {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-10">
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            <Loader2 className="h-12 w-12 text-orange-500 animate-spin" />
             <p className="mt-4 text-gray-600">Loading...</p>
           </div>
         </div>
@@ -116,7 +88,7 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Main content area that grows and centers the card */}
       <div className="flex-1 flex items-center justify-center p-0 md:p-4">
-        {/* Background decoration - hidden on mobile to reduce clutter */}
+        {/* Background decoration */}
         <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
           <div
@@ -125,13 +97,13 @@ const Login = () => {
           ></div>
         </div>
 
-        {/* Login Card - full screen on mobile */}
-        <div className="relative w-full h-full md:max-w-md md:h-auto">
+        {/* Login Card */}
+        <div className="relative w-full h-full md:max-w-md md:h-auto z-10">
           <div className="bg-white w-full h-full md:rounded-2xl md:shadow-2xl md:h-auto flex flex-col justify-center">
-            {/* Form Section with Logo at Top */}
-            <div className="px-6 py-8 md:px-8 md:py-4 space-y-4">
-              {/* Logo Only - Centered at Top */}
-              <div className="flex justify-center">
+            {/* Form Section */}
+            <div className="px-6 py-8 md:px-8 md:py-8 space-y-6">
+              {/* Logo */}
+              <div className="flex justify-center mb-2">
                 <div className="w-full flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
                   <img
                     src="fiesta logo-01.png"
@@ -141,17 +113,17 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* Sign In Title */}
-              <div className="text-left space-y-3 md:space-y-4">
-                <h2 className="text-2xl md:text-2xl text-left font-semibold text-gray-800">
+              {/* Title */}
+              <div className="text-left space-y-2">
+                <h2 className="text-2xl font-semibold text-gray-800">
                   Sign In
                 </h2>
-                <p className="text-gray-500 text-sm md:text-sm text-left">
+                <p className="text-gray-500 text-sm">
                   Enter your credentials to access your account
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Email Input */}
                 <Input
                   label="Email Address"
@@ -159,35 +131,49 @@ const Login = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  fullWidth
                   placeholder="you@example.com"
                   error={errors.email}
                   required
+                  className="bg-white w-full"
                 />
 
-                {/* Password Input */}
-                <Input
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter your password"
-                  fullWidth
-                  iconRight={showPassword ? EyeClosedIcon : EyeIcon}
-                  onIconClick={() => setShowPassword(!showPassword)}
-                  error={errors.password}
-                  required
-                />
+                {/* Password Input Wrapper */}
+                <div className="relative">
+                  <Input
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter your password"
+                    error={errors.password}
+                    required
+                    className="bg-white pr-10 w-full" // Add padding right for the icon
+                  />
+                  
+                  {/* Toggle Password Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                    tabIndex="-1"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
 
                 {/* Remember Me & Forgot Password */}
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center cursor-pointer">
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center cursor-pointer group">
                     <input
                       type="checkbox"
-                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
+                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 transition-all"
                     />
-                    <span className="ml-2 text-sm text-gray-600">
+                    <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-800">
                       Remember me
                     </span>
                   </label>
@@ -202,16 +188,16 @@ const Login = () => {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  loading={submitting}
                   variant="primary"
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-base"
+                  loading={submitting}
+                  className="w-full py-3 text-base shadow-orange-500/20 hover:shadow-orange-500/40"
                 >
                   {submitting ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
 
               {/* Sign Up Link */}
-              <div className="text-center">
+              <div className="text-center pt-2">
                 <p className="text-sm text-gray-600">
                   Don't have an account?{" "}
                   <Link
