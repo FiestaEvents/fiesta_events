@@ -1,108 +1,177 @@
-// src/pages/contracts/ContractDetailPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, Edit, Send, Copy, Trash2, Archive, Download, Mail, MoreHorizontal,
+  ArrowLeft, Edit, Send, Copy, Trash2, Download,
   FileSignature, Users, Briefcase, Calendar, Clock, CheckCircle,
-  XCircle, Eye, AlertTriangle, PenTool, Building2, Phone, MapPin, FileText, Scale
+  XCircle, Eye, PenTool, Building2, Phone, MapPin, FileText, Scale,
+  Receipt, Shield, FileCheck,Mail
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-// Services
+// Services & Utils
 import { contractService } from "../../api/index";
+import { useToast } from "../../hooks/useToast";
+import formatCurrency from "../../utils/formatCurrency";
 
 // Components
 import Button from "../../components/common/Button";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 
-// Hooks & Utils
-import { useToast } from "../../hooks/useToast";
-import formatCurrency from "../../utils/formatCurrency";
+// --- SUB-COMPONENTS ---
 
-// ============================================
-// STATUS CONFIG
-// ============================================
-const statusConfig = {
-  draft: { label: "Draft", color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300", icon: FileText },
-  sent: { label: "Sent", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: Send },
-  viewed: { label: "Viewed", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400", icon: Eye },
-  signed: { label: "Signed", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle },
-  expired: { label: "Expired", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400", icon: Clock },
-  cancelled: { label: "Cancelled", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", icon: XCircle },
+const StatusTracker = ({ currentStatus, t }) => {
+  const steps = [
+    { id: 'draft', label: t("contracts.detail.status.draft"), icon: FileText },
+    { id: 'sent', label: t("contracts.detail.status.sent"), icon: Send },
+    { id: 'signed', label: t("contracts.detail.status.signed"), icon: FileCheck }
+  ];
+
+  let activeIndex = 0;
+  if (['sent', 'viewed'].includes(currentStatus)) activeIndex = 1;
+  if (currentStatus === 'signed') activeIndex = 2;
+  
+  const isDead = ['cancelled', 'expired'].includes(currentStatus);
+
+  if (isDead) {
+    return (
+      <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 text-red-700 mb-6">
+        <XCircle size={24} />
+        <div>
+          <h3 className="font-bold uppercase text-sm">
+            {t("contracts.detail.tracker.inactiveTitle", { status: t(`contracts.detail.status.${currentStatus}`) })}
+          </h3>
+          <p className="text-xs opacity-80">{t("contracts.detail.tracker.inactiveDesc")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6 shadow-sm">
+      <div className="flex items-center justify-between relative">
+        <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 dark:bg-gray-700 -z-0 rounded-full" />
+        {steps.map((step, index) => {
+          const isCompleted = index <= activeIndex;
+          const isCurrent = index === activeIndex;
+          const Icon = step.icon;
+          return (
+            <div key={step.id} className="relative z-10 flex flex-col items-center bg-white dark:bg-gray-800 px-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                isCompleted 
+                  ? "bg-orange-600 border-orange-600 text-white" 
+                  : "bg-white border-gray-300 text-gray-400 dark:bg-gray-800 dark:border-gray-600"
+              }`}>
+                {isCompleted ? <CheckCircle size={18} /> : <Icon size={18} />}
+              </div>
+              <span className={`mt-2 text-xs font-bold uppercase tracking-wide ${
+                isCurrent ? "text-orange-600" : "text-gray-400"
+              }`}>
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
-// ============================================
-// INFO CARD
-// ============================================
-const InfoCard = ({ icon: Icon, label, value, subValue, iconColor = "text-gray-400" }) => (
-  <div className="flex items-start gap-3">
-    <div className={`p-2 rounded-lg bg-gray-50 dark:bg-gray-700 ${iconColor}`}>
-      <Icon size={18} />
+const DetailCard = ({ title, icon: Icon, children, className = "" }) => (
+  <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm ${className}`}>
+    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center gap-2">
+      <Icon size={16} className="text-orange-500" />
+      <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">{title}</h3>
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-0.5">{label}</p>
-      <p className="font-semibold text-gray-900 dark:text-white text-sm truncate" title={value}>{value || "-"}</p>
-      {subValue && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subValue}</p>}
+    <div className="p-6">
+      {children}
     </div>
   </div>
 );
 
+const InfoRow = ({ label, value, icon: Icon }) => (
+  <div className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
+    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+      {Icon && <Icon size={14} />}
+      <span className="text-sm font-medium">{label}</span>
+    </div>
+    <span className="text-sm font-semibold text-gray-900 dark:text-white text-right">{value || "-"}</span>
+  </div>
+);
+
 // ============================================
-// MAIN COMPONENT
+// MAIN PAGE
 // ============================================
 const ContractDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { t } = useTranslation();
-  const { showSuccess, apiError } = useToast();
+  const { t, i18n } = useTranslation();
+  const { showSuccess, apiError, showInfo } = useToast();
 
   const [contract, setContract] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, action: "" });
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Fetch Contract
+  // Fetch Data
   useEffect(() => {
     const fetchContract = async () => {
       try {
         setLoading(true);
         const res = await contractService.getById(id);
-        // Handle nested response structure safely
-        const data = res.data || res;
-        setContract(data.contract || data);
+        const data = res.message?.contract || res.data?.contract || res.contract || res;
+        setContract(data);
       } catch (err) {
         console.error(err);
-        apiError(err, "Failed to load contract");
+        apiError(err, t("contracts.detail.messages.loadError"));
         navigate("/contracts");
       } finally {
         setLoading(false);
       }
     };
     fetchContract();
-  }, [id, navigate, apiError]);
+  }, [id, navigate, apiError, t]);
 
   // Handlers
   const handleAction = async (action) => {
-    setMenuOpen(false);
-    if (["delete", "send", "archive"].includes(action)) {
+    if (action === "download") {
+      handleDownload();
+      return;
+    }
+    if (["delete", "send"].includes(action)) {
       setConfirmDialog({ open: true, action });
       return;
     }
-
     try {
       setActionLoading(true);
       if (action === "duplicate") {
         const res = await contractService.duplicate(id);
-        showSuccess("Contract duplicated");
-        const newId = res.data?.contract?._id || res.contract?._id;
-        navigate(`/contracts/${newId}/edit`);
+        showSuccess(t("contracts.detail.messages.duplicateSuccess"));
+        const newContract = res.message?.contract || res.data?.contract || res.contract;
+        if (newContract?._id) navigate(`/contracts/${newContract._id}/edit`);
       }
     } catch (err) {
-      apiError(err, `Failed to ${action} contract`);
+      apiError(err, `Error: ${action}`);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      showInfo(t("contracts.detail.messages.downloadStart"));
+      const response = await contractService.download(id);
+      const blob = new Blob([response], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contract-${contract.contractNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      showSuccess(t("contracts.detail.messages.downloadSuccess"));
+    } catch (err) {
+      apiError(err, "Download failed");
     }
   };
 
@@ -111,334 +180,301 @@ const ContractDetailPage = () => {
     try {
       setActionLoading(true);
       if (action === "delete") {
-        await contractService.delete(id);
-        showSuccess("Contract deleted");
+        await contractService.archive(id); 
+        showSuccess(t("contracts.detail.messages.deleteSuccess"));
         navigate("/contracts");
       } else if (action === "send") {
         await contractService.send(id);
-        showSuccess("Contract sent for signing");
-        // Refresh data
+        showSuccess(t("contracts.detail.messages.sendSuccess"));
         const res = await contractService.getById(id);
-        const data = res.data || res;
-        setContract(data.contract || data);
-      } else if (action === "archive") {
-        await contractService.archive(id);
-        showSuccess("Contract archived");
-        navigate("/contracts");
+        setContract(res.message?.contract || res.data?.contract || res.contract);
       }
     } catch (err) {
-      apiError(err, `Failed to ${action} contract`);
+      apiError(err, "Action failed");
     } finally {
       setActionLoading(false);
       setConfirmDialog({ open: false, action: "" });
     }
   };
 
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-";
-  const formatDateTime = (d) => d ? new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute:'2-digit' }) : "-";
+  // Formatters
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString(i18n.language, { day: "2-digit", month: "short", year: "numeric" }) : "-";
+  const formatDateTime = (d) => d ? new Date(d).toLocaleString(i18n.language, { day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute:'2-digit' }) : "-";
 
-  if (loading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center"><LoadingSpinner size="lg" /></div>;
   if (!contract) return null;
 
-  const status = statusConfig[contract.status] || statusConfig.draft;
-  const StatusIcon = status.icon;
-  
-  // Determine Party Type & Icon
+  const isDraft = contract.status === "draft";
+  const isSigned = contract.status === "signed";
   const isCompany = contract.party?.type === 'company';
-  const PartyIcon = isCompany ? Building2 : Users;
+  const isRTL = i18n.dir() === "rtl";
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate("/contracts")}>
-            <ArrowLeft size={20} />
-          </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-white rounded-xl dark:bg-gray-900 font-sans pb-20" dir={isRTL ? "rtl" : "ltr"}>
+      
+      {/* --- HEADER --- */}
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate("/contracts")} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500">
+              <ArrowLeft size={20} className={isRTL ? "rotate-180" : ""} />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 {contract.title}
+                <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-xs font-mono text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                  {contract.contractNumber}
+                </span>
               </h1>
-              <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${status.color}`}>
-                <StatusIcon size={14} />
-                {status.label}
-              </div>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm font-mono">
-              {contract.contractNumber} • Created {formatDate(contract.createdAt)}
-            </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {contract.status === "draft" && (
-            <>
-              <Button variant="outline" icon={Edit} onClick={() => navigate(`/contracts/${id}/edit`)}>
-                Edit
-              </Button>
-              <Button variant="primary" icon={Send} onClick={() => handleAction("send")} loading={actionLoading}>
-                Send
-              </Button>
-            </>
-          )}
-          {["sent", "viewed"].includes(contract.status) && (
-            <Button variant="primary" icon={PenTool} onClick={() => navigate(`/contracts/${id}/sign`)}>
-              Sign
-            </Button>
-          )}
-          
-          <div className="relative">
-            <Button variant="ghost" icon={MoreHorizontal} onClick={() => setMenuOpen(!menuOpen)} />
-            {menuOpen && (
+          {/* ACTIONS BAR */}
+          <div className="flex items-center gap-2">
+            {isDraft && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20 overflow-hidden">
-                  <button onClick={() => handleAction("duplicate")} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                    <Copy size={14} /> Duplicate
-                  </button>
-                  <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                    <Download size={14} /> Download PDF
-                  </button>
-                  <hr className="my-1 border-gray-200 dark:border-gray-700" />
-                  <button onClick={() => handleAction("archive")} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                    <Archive size={14} /> Archive
-                  </button>
-                  {contract.status === "draft" && (
-                    <button onClick={() => handleAction("delete")} className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 text-red-600">
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  )}
-                </div>
+                <Button size="sm" variant="danger" icon={Trash2} onClick={() => handleAction("delete")} disabled={actionLoading} className="hidden sm:flex">
+                  {t("contracts.detail.actions.delete")}
+                </Button>
+                <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-1 hidden sm:block" />
+                <Button size="sm" variant="outline" icon={Edit} onClick={() => navigate(`/contracts/${id}/edit`)}>
+                  {t("contracts.detail.actions.edit")}
+                </Button>
+                <Button size="sm" variant="primary" icon={Send} onClick={() => handleAction("send")} loading={actionLoading}>
+                  {t("contracts.detail.actions.send")}
+                </Button>
               </>
             )}
+            
+            {!isDraft && !isSigned && (
+               <Button size="sm" variant="success" icon={PenTool} onClick={() => navigate(`/contracts/${id}/sign`)}>
+                 {t("contracts.detail.actions.sign")}
+               </Button>
+            )}
+
+            <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-1" />
+            
+            <Button size="sm" variant="ghost" icon={Copy} onClick={() => handleAction("duplicate")} title={t("contracts.detail.actions.duplicate")} />
+            <Button size="sm" variant="outline" icon={Download} onClick={() => handleAction("download")}>
+              {t("contracts.detail.actions.download")}
+            </Button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* LEFT COLUMN: DETAILS */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* 1. LIFECYCLE TRACKER */}
+        <StatusTracker currentStatus={contract.status} t={t} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Party Info */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <PartyIcon size={18} className="text-orange-500" />
-              {contract.party?.type === 'company' ? "Company Details" : "Individual Details"}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4">
-              <InfoCard 
-                icon={PartyIcon} 
-                label={contract.party?.type === 'company' ? "Company Name" : "Full Name"} 
-                value={contract.party?.name} 
-                iconColor="text-orange-500" 
-              />
-              <InfoCard 
-                icon={FileText} 
-                label={contract.party?.type === 'company' ? "Matricule Fiscale" : "CIN / ID"} 
-                value={contract.party?.identifier} 
-                iconColor="text-blue-500" 
-              />
-              <InfoCard 
-                icon={Mail} 
-                label="Email" 
-                value={contract.party?.email} 
-                iconColor="text-purple-500" 
-              />
-              <InfoCard 
-                icon={Phone} 
-                label="Phone" 
-                value={contract.party?.phone} 
-                iconColor="text-green-500" 
-              />
-              {contract.party?.address && (
-                <div className="md:col-span-2">
-                   <InfoCard icon={MapPin} label="Address" value={contract.party.address} iconColor="text-red-500" />
+          {/* --- LEFT COLUMN: CONTENT --- */}
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* PARTY DETAILS */}
+            <DetailCard title={t("contracts.detail.sections.party")} icon={isCompany ? Building2 : Users}>
+              <div className="flex flex-col sm:flex-row gap-6">
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white ${isCompany ? 'bg-blue-500' : 'bg-orange-500'}`}>
+                      {contract.party?.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg text-gray-900 dark:text-white">{contract.party?.name}</p>
+                      <p className="text-sm text-gray-500">{isCompany ? t("common.company") : t("common.individual")}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                      <span className="text-xs text-gray-400 uppercase block mb-1">{t("contracts.detail.fields.taxId")}</span>
+                      <span className="font-mono font-medium text-gray-700 dark:text-gray-200">{contract.party?.identifier}</span>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                      <span className="text-xs text-gray-400 uppercase block mb-1">{t("contracts.detail.fields.contact")}</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-200">{contract.party?.representative || "-"}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+                
+                <div className="w-px bg-gray-200 dark:bg-gray-700 hidden sm:block" />
+                
+                <div className="flex-1 space-y-3 text-sm">
+                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <Phone size={16} className="text-gray-400" /> {contract.party?.phone}
+                  </div>
+                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <Mail size={16} className="text-gray-400" /> {contract.party?.email}
+                  </div>
+                  <div className="flex items-start gap-3 text-gray-600 dark:text-gray-300">
+                    <MapPin size={16} className="text-gray-400 mt-0.5" /> 
+                    <span className="flex-1">{contract.party?.address}</span>
+                  </div>
+                </div>
+              </div>
+            </DetailCard>
+
+            {/* LOGISTICS */}
+            <DetailCard title={t("contracts.detail.sections.logistics")} icon={Briefcase}>
+              <div className="flex flex-wrap gap-4 mb-6">
+                <div className="flex-1 min-w-[200px] bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-1 block">{t("contracts.detail.fields.start")}</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">{formatDate(contract.logistics?.startDate)}</span>
+                    <span className="text-sm text-gray-500">{t("contracts.detail.fields.from")} {contract.logistics?.checkInTime}</span>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-[200px] bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800/30">
+                  <span className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase mb-1 block">{t("contracts.detail.fields.end")}</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">{formatDate(contract.logistics?.endDate)}</span>
+                    <span className="text-sm text-gray-500">{t("contracts.detail.fields.until")} {contract.logistics?.checkOutTime}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SERVICES TABLE */}
+              <div className="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 dark:bg-gray-900 text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                      <th className={`px-4 py-3 w-1/2 ${isRTL ? 'text-right' : 'text-left'}`}>{t("contracts.detail.fields.description")}</th>
+                      <th className="px-4 py-3 text-center">{t("contracts.detail.fields.qty")}</th>
+                      <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'}`}>{t("contracts.detail.fields.rate")}</th>
+                      <th className={`px-4 py-3 bg-gray-100 dark:bg-gray-800 ${isRTL ? 'text-left' : 'text-right'}`}>{t("contracts.detail.fields.totalHT")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {contract.services?.map((item, i) => (
+                      <tr key={i}>
+                        <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{item.description}</td>
+                        <td className="px-4 py-3 text-center text-gray-500">{item.quantity}</td>
+                        <td className={`px-4 py-3 text-gray-500 ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrency(item.rate)}</td>
+                        <td className={`px-4 py-3 font-bold bg-gray-50/50 dark:bg-gray-800/50 ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrency(item.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </DetailCard>
+
+            {/* SIGNATURES */}
+            <DetailCard title={t("contracts.detail.sections.signatures")} icon={FileSignature}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Venue */}
+                <div className={`relative p-6 rounded-xl border-2 ${contract.signatures?.venueSignedAt ? 'border-green-500 bg-green-50 dark:bg-green-900/10' : 'border-dashed border-gray-300 bg-gray-50'}`}>
+                  <p className="text-xs uppercase tracking-widest font-bold text-gray-500 mb-4">{t("contracts.detail.signatures.venue")}</p>
+                  {contract.signatures?.venueSignedAt ? (
+                    <>
+                      <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} text-green-600`}><CheckCircle size={24} /></div>
+                      <p className="font-serif text-xl text-gray-800 dark:text-gray-200 italic mb-2">{t("contracts.detail.signatures.electronic")}</p>
+                      <p className="text-xs text-green-700 dark:text-green-400">{t("contracts.detail.signatures.signedOn")} {formatDateTime(contract.signatures.venueSignedAt)}</p>
+                      <p className="text-[10px] text-gray-400 font-mono mt-1">IP: {contract.signatures.venueSignerIp}</p>
+                    </>
+                  ) : (
+                    <div className="h-20 flex items-center justify-center text-gray-400 italic">{t("contracts.detail.signatures.pending")}</div>
+                  )}
+                </div>
+
+                {/* Client */}
+                <div className={`relative p-6 rounded-xl border-2 ${contract.signatures?.clientSignedAt ? 'border-green-500 bg-green-50 dark:bg-green-900/10' : 'border-dashed border-gray-300 bg-gray-50'}`}>
+                  <p className="text-xs uppercase tracking-widest font-bold text-gray-500 mb-4">{t("contracts.detail.signatures.client")}</p>
+                  {contract.signatures?.clientSignedAt ? (
+                    <>
+                      <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} text-green-600`}><CheckCircle size={24} /></div>
+                      <p className="font-serif text-xl text-gray-800 dark:text-gray-200 italic mb-2">{t("contracts.detail.signatures.electronic")}</p>
+                      <p className="text-xs text-green-700 dark:text-green-400">{t("contracts.detail.signatures.signedOn")} {formatDateTime(contract.signatures.clientSignedAt)}</p>
+                      <p className="text-[10px] text-gray-400 font-mono mt-1">IP: {contract.signatures.clientSignerIp}</p>
+                    </>
+                  ) : (
+                    <div className="h-20 flex items-center justify-center text-gray-400 italic">{t("contracts.detail.signatures.pending")}</div>
+                  )}
+                </div>
+              </div>
+            </DetailCard>
           </div>
 
-          {/* Logistics */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Clock size={18} className="text-blue-500" /> Logistics & Schedule
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
-                  <p className="text-xs uppercase text-gray-500 mb-1">Start Date</p>
-                  <p className="font-bold text-gray-900 dark:text-white">{formatDate(contract.logistics?.startDate)}</p>
-                  <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                     <Clock size={12}/> Check-in: {contract.logistics?.checkInTime || "10:00"}
-                  </p>
-               </div>
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
-                  <p className="text-xs uppercase text-gray-500 mb-1">End Date</p>
-                  <p className="font-bold text-gray-900 dark:text-white">{formatDate(contract.logistics?.endDate)}</p>
-                  <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                     <Clock size={12}/> Check-out: {contract.logistics?.checkOutTime || "00:00"}
-                  </p>
-               </div>
-            </div>
-          </div>
+          {/* --- RIGHT COLUMN: SIDEBAR --- */}
+          <div className="space-y-6">
+            
+            {/* FINANCIAL SUMMARY */}
+            <div className="sticky top-20">
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                <div className="bg-white text-gray-900 px-6 py-4 flex items-center justify-between">
+                  <span className="font-bold uppercase text-sm tracking-wider">{t("contracts.detail.sections.financial")}</span>
+                  <Receipt size={20} className="opacity-50" />
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <InfoRow label={t("contracts.detail.fields.totalHT")} value={formatCurrency(contract.financials?.amountHT)} />
+                  <InfoRow label={`${t("contracts.detail.fields.vat")} (${contract.financials?.vatRate}%)`} value={formatCurrency(contract.financials?.taxAmount)} />
+                  <InfoRow label={t("contracts.detail.fields.stamp")} value={formatCurrency(contract.financials?.stampDuty)} />
+                  
+                  <div className="pt-4 mt-4 border-t-2 border-gray-100 dark:border-gray-700 flex justify-between items-end">
+                    <span className="text-gray-500 font-medium">{t("contracts.detail.fields.netTTC")}</span>
+                    <span className="text-3xl font-black text-orange-600">{formatCurrency(contract.financials?.totalTTC)}</span>
+                  </div>
+                </div>
 
-          {/* Legal Clauses */}
-          {contract.legal && (
-             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                 <Scale size={18} className="text-purple-500" /> Legal Clauses
-               </h2>
-               <div className="space-y-4 text-sm">
-                  <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                     <span className="text-gray-500">Jurisdiction</span>
-                     <span className="font-medium text-gray-900 dark:text-white">{contract.legal.jurisdiction}</span>
+                <div className="bg-gray-50 dark:bg-gray-700/30 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-500">{t("contracts.detail.fields.deposit")}</span>
+                    <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(contract.paymentTerms?.depositAmount)}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                     <span className="text-gray-500">Cancellation Policy</span>
-                     <span className="font-medium capitalize text-gray-900 dark:text-white">{contract.legal.cancellationPolicy}</span>
-                  </div>
-                  {contract.legal.specialConditions && (
-                    <div className="pt-2">
-                       <span className="block text-gray-500 mb-1">Special Conditions</span>
-                       <p className="p-3 bg-gray-50 dark:bg-gray-900 rounded text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700">
-                          {contract.legal.specialConditions}
-                       </p>
+                  {contract.paymentTerms?.securityDeposit > 0 && (
+                    <div className="flex justify-between text-sm text-orange-600">
+                      <span className="flex items-center gap-1"><AlertCircle size={12}/> {t("contracts.detail.fields.security")}</span>
+                      <span className="font-bold">{formatCurrency(contract.paymentTerms?.securityDeposit)}</span>
                     </div>
                   )}
-               </div>
-             </div>
-          )}
-
-          {/* Signatures */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-               <FileSignature size={18} className="text-green-500" /> Signatures
-            </h2>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
-                <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Venue Representative</p>
-                {contract.signatures?.venueSignedAt ? (
-                  <div>
-                    <p className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle size={14}/> Signed</p>
-                    <p className="text-xs text-gray-400 mt-1">{formatDateTime(contract.signatures.venueSignedAt)}</p>
-                  </div>
-                ) : (
-                  <p className="text-gray-400 italic text-sm">Pending signature</p>
-                )}
+                </div>
               </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
-                <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Client / Partner</p>
-                {contract.signatures?.clientSignedAt ? (
+
+              {/* LEGAL SUMMARY */}
+              <div className="mt-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+                <div className="flex items-center gap-2 mb-4 text-purple-600">
+                  <Shield size={18} />
+                  <span className="font-bold uppercase text-xs tracking-wide">{t("contracts.detail.sections.legal")}</span>
+                </div>
+                <div className="space-y-3 text-sm">
                   <div>
-                    <p className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle size={14}/> Signed</p>
-                    <p className="text-xs text-gray-400 mt-1">{formatDateTime(contract.signatures.clientSignedAt)}</p>
+                    <span className="text-gray-400 text-xs block">{t("contracts.detail.fields.jurisdiction")}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{contract.legal?.jurisdiction}</span>
                   </div>
-                ) : (
-                  <p className="text-gray-400 italic text-sm">Pending signature</p>
-                )}
+                  <div>
+                    <span className="text-gray-400 text-xs block">{t("contracts.detail.fields.cancellation")}</span>
+                    <span className="capitalize font-medium text-gray-900 dark:text-white">{contract.legal?.cancellationPolicy}</span>
+                  </div>
+                  {contract.legal?.specialConditions && (
+                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700 mt-2">
+                      <span className="text-gray-400 text-xs block mb-1">{t("contracts.detail.fields.special")}</span>
+                      <p className="text-gray-600 dark:text-gray-300 italic text-xs leading-relaxed">
+                        "{contract.legal.specialConditions}"
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
           </div>
         </div>
+      </main>
 
-        {/* RIGHT COLUMN: FINANCIAL SUMMARY */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-               <h3 className="text-sm font-bold uppercase tracking-wide text-gray-500">Financial Breakdown</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Amount HT</span>
-                <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(contract.financials?.amountHT)}</span>
-              </div>
-              
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">TVA ({contract.financials?.vatRate}%)</span>
-                <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(contract.financials?.taxAmount)}</span>
-              </div>
-
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Timbre Fiscal</span>
-                <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(contract.financials?.stampDuty)}</span>
-              </div>
-
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <span className="font-bold text-gray-900 dark:text-white">Total TTC</span>
-                <span className="text-2xl font-bold text-orange-600">{formatCurrency(contract.financials?.totalTTC)}</span>
-              </div>
-            </div>
-            <div className="bg-orange-50 dark:bg-orange-900/10 p-4 border-t border-orange-100 dark:border-orange-900/20">
-               <div className="flex justify-between text-sm text-orange-800 dark:text-orange-300 mb-2">
-                  <span>Deposit (Avance)</span>
-                  <span className="font-medium">{formatCurrency(contract.paymentTerms?.depositAmount)}</span>
-               </div>
-               <div className="flex justify-between text-sm text-orange-800 dark:text-orange-300">
-                  <span>Security (Caution)</span>
-                  <span className="font-medium">{formatCurrency(contract.paymentTerms?.securityDeposit)}</span>
-               </div>
-            </div>
-          </div>
-
-          {/* Activity Timeline */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-4">Activity</h3>
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <div className="mt-1 w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0" />
-                <div>
-                   <p className="text-sm text-gray-900 dark:text-white font-medium">Contract Created</p>
-                   <p className="text-xs text-gray-500">{formatDateTime(contract.createdAt)}</p>
-                </div>
-              </div>
-              {contract.sentAt && (
-                <div className="flex gap-3">
-                  <div className="mt-1 w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                  <div>
-                     <p className="text-sm text-gray-900 dark:text-white font-medium">Sent to Client</p>
-                     <p className="text-xs text-gray-500">{formatDateTime(contract.sentAt)}</p>
-                  </div>
-                </div>
-              )}
-              {contract.viewedAt && (
-                <div className="flex gap-3">
-                  <div className="mt-1 w-2 h-2 rounded-full bg-purple-500 shrink-0" />
-                  <div>
-                     <p className="text-sm text-gray-900 dark:text-white font-medium">Viewed by Client</p>
-                     <p className="text-xs text-gray-500">{formatDateTime(contract.viewedAt)}</p>
-                  </div>
-                </div>
-              )}
-              {contract.status === 'signed' && (
-                <div className="flex gap-3">
-                  <div className="mt-1 w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                  <div>
-                     <p className="text-sm text-gray-900 dark:text-white font-medium">Contract Signed</p>
-                     <p className="text-xs text-gray-500">{formatDateTime(contract.updatedAt)}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Confirm Dialog */}
+      {/* CONFIRMATION DIALOG */}
       <ConfirmDialog
         isOpen={confirmDialog.open}
         onClose={() => setConfirmDialog({ open: false, action: "" })}
         onConfirm={handleConfirmAction}
         title={
-          confirmDialog.action === "delete" ? "Delete Contract" :
-          confirmDialog.action === "send" ? "Send Contract" : "Archive Contract"
+          confirmDialog.action === "delete" ? t("contracts.detail.dialog.deleteTitle") : t("contracts.detail.dialog.sendTitle")
         }
         message={
-          confirmDialog.action === "delete" ? "Are you sure you want to delete this contract? This action cannot be undone." :
-          confirmDialog.action === "send" ? "Send this contract for signing? The recipient will receive an email." :
-          "Archive this contract? It will be moved to the archive."
+          confirmDialog.action === "delete" 
+            ? t("contracts.detail.dialog.deleteMsg")
+            : t("contracts.detail.dialog.sendMsg")
         }
-        confirmText={confirmDialog.action === "delete" ? "Delete" : confirmDialog.action === "send" ? "Send" : "Archive"}
+        confirmText={confirmDialog.action === "delete" ? t("contracts.detail.dialog.confirmDelete") : t("contracts.detail.dialog.confirmSend")}
         variant={confirmDialog.action === "delete" ? "danger" : "primary"}
       />
     </div>

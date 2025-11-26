@@ -130,6 +130,19 @@
       "fetch_failed": "Failed to load dashboard data"
     }
   },
+  "home": {
+  "eventsDesc": "Calendar Management",
+  "clientsDesc": "Customer Database",
+  "contractsDesc": "Legal Agreements",
+  "invoicesDesc": "Billing & Charges",
+  "paymentsDesc": "Income Tracking",
+  "partnersDesc": "Vendor Relationships",
+  "tasksDesc": "To-Do Lists",
+  "remindersDesc": "Alerts & Notifications",
+  "docSettingsDesc": "Template Layouts",
+  "statsDesc": "Reports & Analytics",
+  "settingsDesc": "System Configuration"
+},
   "clients": {
     "title": "Clients",
     "description": "Manage your client relationships and information",
@@ -2109,6 +2122,7 @@
   },
   "common": {
     "contracts": "Contracts",
+    "documents": "Documents",
     "home": "Quick Access",
     "settings": "Settings",
     "profile": "Profile",
@@ -2155,7 +2169,13 @@
   "error": "Something went wrong",
   "date": "Date",
   "time": "Time",
-  "updateNow": "Update Now"
+  "updateNow": "Update Now",
+  "table": {
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results"
+  }
   },
   "notifications": {
     "upcomingReminders": "Upcoming Reminders",
@@ -2672,7 +2692,13 @@
     },
     "common": {
       "loading": "Loading settings...",
-      "tryAgain": "Try Again"
+      "tryAgain": "Try Again",
+      "table": {
+        "showing": "Showing",
+        "to": "to",
+        "of": "of",
+        "results": "results"
+      }
     },
     "validation": {
       "required": "This field is required",
@@ -2727,7 +2753,13 @@
     "common": {
       "loading": "Loading...",
       "tryAgain": "Try Again",
-      "save": "Save Changes"
+      "save": "Save Changes",
+      "table": {
+        "showing": "Showing",
+        "to": "to",
+        "of": "of",
+        "results": "results"
+      }
     },
     
     "personal": {
@@ -2932,5 +2964,323 @@
     "operations": "Operations",
     "financial": "Financial",
     "management": "Management"
+  },
+  "contracts": {
+    "settings": {
+      "title": "Contract Settings",
+      "subtitle": "Configure global defaults & styling",
+      "save": "Save Changes",
+      "tabs": {
+        "company": "Company Info",
+        "branding": "Branding",
+        "layout": "PDF Layout",
+        "financials": "Financials",
+        "clauses": "Clauses",
+        "cancellation": "Cancellation",
+        "labels": "Labels"
+      },
+      "company": {
+        "title": "Legal Entity Details",
+        "legalName": "Legal Name (Raison Sociale)",
+        "displayName": "Display Name (Commercial)",
+        "taxId": "Tax ID (Matricule Fiscale)",
+        "representative": "Legal Representative",
+        "rib": "RIB / IBAN",
+        "bank": "Bank Name",
+        "address": "Headquarters Address",
+        "email": "Email",
+        "phone": "Phone",
+        "website": "Website"
+      },
+      "branding": {
+        "title": "Branding & Colors",
+        "primary": "Primary Color",
+        "secondary": "Secondary Color",
+        "text": "Text Color",
+        "accent": "Accent Color",
+        "logoUrl": "Logo URL (Public)",
+        "logoHelp": "URL must be publicly accessible to appear on PDF."
+      },
+      "layout": {
+        "title": "PDF Layout Settings",
+        "showPageNumbers": "Show Page Numbers",
+        "showDate": "Show Creation Date"
+      },
+      "financials": {
+        "title": "Financial Defaults",
+        "vat": "Default VAT (%)",
+        "stamp": "Fiscal Stamp (TND)",
+        "deposit": "Required Deposit (%)",
+        "security": "Security Deposit (TND)"
+      },
+      "clauses": {
+        "title": "Contract Clauses",
+        "add": "Add Clause",
+        "articleTitle": "Article Title",
+        "content": "Clause Content...",
+        "required": "Required"
+      },
+      "cancellation": {
+        "title": "Cancellation Policy",
+        "add": "Add Tier",
+        "days": "Days Before (Min)",
+        "penalty": "Penalty (%)",
+        "description": "Description"
+      },
+      "labels": {
+        "title": "PDF Labels & Translations",
+        "mainTitle": "Main Title",
+        "parties": "Parties Header",
+        "provider": "Provider Label",
+        "client": "Client Label",
+        "partner": "Partner Label",
+        "services": "Services Header",
+        "payment": "Payment Header",
+        "signatures": "Signatures Header"
+      },
+      "messages": {
+        "saveSuccess": "Settings saved successfully",
+        "saveError": "Failed to save settings",
+        "loadError": "Failed to load settings"
+      }
+    },
+ "detail": {
+      "status": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "viewed": "Viewed",
+        "signed": "Signed",
+        "expired": "Expired",
+        "cancelled": "Cancelled"
+      },
+      "actions": {
+        "edit": "Edit",
+        "send": "Send",
+        "sign": "Sign",
+        "duplicate": "Duplicate",
+        "download": "PDF",
+        "delete": "Delete"
+      },
+      "tracker": {
+        "inactiveTitle": "Contract {{status}}",
+        "inactiveDesc": "This contract is no longer active."
+      },
+      "sections": {
+        "party": "Party Details",
+        "logistics": "Logistics & Dates",
+        "services": "Services & Pricing",
+        "signatures": "Signatures",
+        "financial": "Financial Summary",
+        "legal": "Legal Terms"
+      },
+      "fields": {
+        "name": "Name / Company",
+        "contact": "Contact",
+        "taxId": "Tax ID / CIN",
+        "phone": "Phone",
+        "email": "Email",
+        "address": "Address",
+        "start": "Start Date",
+        "end": "End Date",
+        "from": "From",
+        "until": "Until",
+        "description": "Description",
+        "qty": "Qty",
+        "rate": "Rate",
+        "totalHT": "Total HT",
+        "vat": "VAT",
+        "stamp": "Stamp Duty",
+        "netTTC": "Net Total",
+        "deposit": "Deposit Required",
+        "security": "Security Deposit",
+        "jurisdiction": "Jurisdiction",
+        "cancellation": "Cancellation Policy",
+        "special": "Special Conditions"
+      },
+      "signatures": {
+        "venue": "Venue Provider",
+        "client": "Client / Partner",
+        "signedOn": "Signed on",
+        "pending": "Pending Signature",
+        "electronic": "Electronically Signed"
+      },
+      "dialog": {
+        "deleteTitle": "Delete Contract",
+        "sendTitle": "Send Contract",
+        "deleteMsg": "Are you sure you want to delete this contract? It will be moved to archives.",
+        "sendMsg": "Send this contract via email for signing?",
+        "confirmDelete": "Delete",
+        "confirmSend": "Send"
+      },
+      "messages": {
+        "loadError": "Failed to load contract",
+        "duplicateSuccess": "Contract duplicated successfully",
+        "downloadStart": "Generating PDF...",
+        "downloadSuccess": "Download started",
+        "deleteSuccess": "Contract deleted",
+        "sendSuccess": "Contract sent successfully"
+      }
+    },
+ "form": {
+      "title": {
+        "create": "Create Contract",
+        "edit": "Edit Contract"
+      },
+      "steps": {
+        "parties": "Parties",
+        "dates": "Logistics",
+        "finance": "Financials",
+        "legal": "Legal"
+      },
+      "types": {
+        "client": "Client",
+        "partner": "Partner"
+      },
+      "search": {
+        "label": "Search",
+        "placeholderClient": "Search for a client...",
+        "placeholderPartner": "Search for a partner..."
+      },
+      "party": {
+        "title": "Party Details",
+        "name": "Name / Company Name",
+        "identifier": "Tax ID / ID Card",
+        "phone": "Phone",
+        "address": "Address",
+        "contractTitle": "Contract Title",
+        "contractTitlePlaceholder": "Ex: Wedding Mr & Mrs X...",
+        "rateType": "Rate Type"
+      },
+      "logistics": {
+        "start": "Start Date",
+        "end": "End Date",
+        "checkIn": "Check-in Time",
+        "checkOut": "Check-out Time",
+        "eventLink": "Link to Event (Optional)",
+        "select": "Select..."
+      },
+      "financials": {
+        "title": "Financial Details",
+        "partnerMode": "Partner Mode: Enter agreed rates. This document serves as a compensation agreement.",
+        "add": "Add Item",
+        "description": "Description",
+        "qty": "Qty",
+        "price": "Price",
+        "totalHT": "Total HT",
+        "vat": "VAT",
+        "stamp": "Stamp",
+        "totalTTC": "Total TTC",
+        "deposit": "Deposit (TND)"
+      },
+      "legal": {
+        "jurisdiction": "Jurisdiction",
+        "specialConditions": "Special Conditions",
+        "specialConditionsPlaceholder": "Add specific clauses...",
+        "warning": "Verify all information on the preview before saving."
+      },
+      "nav": {
+        "back": "Back",
+        "next": "Next",
+        "save": "Save",
+        "update": "Update"
+      },
+      "messages": {
+        "saveSuccess": "Contract saved successfully!",
+        "error": "Error occurred",
+        "loadError": "Failed to load data"
+      }
+    },
+    "loading": "Loading contracts...",
+    "noResults": "No results found",
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete",
+      "download": "Download",
+      "clear": "Clear",
+      "clearFilters": "Clear Filters",
+      "cancel": "Cancel"
+    },
+    "table": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "results": "results"
+    },
+    "status": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "viewed": "Viewed",
+      "signed": "Signed",
+      "expired": "Expired",
+      "cancelled": "Cancelled",
+      "rejected": "Rejected"
+    },
+    "types": {
+      "client": "Client Contracts",
+      "partner": "Partner Contracts"
+    },
+    "list": {
+      "title": "Contracts",
+      "subtitle": "Manage your agreements ({{count}})",
+      "newPartner": "Partner",
+      "newClient": "Contract",
+      "searchPlaceholder": "Search contracts...",
+      "untitled": "Untitled Contract",
+      "unknown": "Unknown Party",
+      "stats": {
+        "total": "Total Contracts",
+        "pending": "Pending Signature",
+        "signed": "Signed",
+        "value": "Total Value"
+      },
+      "filter": {
+        "allStatus": "All Status",
+        "allTypes": "All Types"
+      },
+      "columns": {
+        "info": "Contract Info",
+        "status": "Status",
+        "party": "Party / Event",
+        "amount": "Value",
+        "actions": "Actions"
+      },
+      "messages": {
+        "deleting": "Deleting...",
+        "deleteSuccess": "Contract deleted",
+        "deleteError": "Failed to delete contract",
+        "downloadStart": "Preparing download...",
+        "downloadSuccess": "Download started",
+        "downloadError": "Failed to download PDF"
+      },
+      "emptyTitle": "No contracts created yet",
+      "emptyDesc": "Create your first contract to get started. You can choose between a Client contract (for revenue) or a Partner contract (for expenses).",
+      "dialog": {
+        "deleteTitle": "Delete Contract",
+        "confirm": "Confirm Deletion",
+        "deleteMsg": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone."
+      }
+    },
+    "documents": {
+    "hub": {
+      "title": "Document Configuration",
+      "subtitle": "Customize the design, structure, and content for your business documents.",
+      "configureNow": "Configure Now",
+      "contracts": {
+        "title": "Contracts",
+        "desc": "Define legal terms, clauses, and branding for client and partner agreements.",
+        "feat1": "Custom Branding & Colors",
+        "feat2": "Legal Clauses & Jurisdiction",
+        "feat3": "Serialization (CTR-001)"
+      },
+      "invoices": {
+        "title": "Invoices",
+        "desc": "Set up billing preferences, tax rates, and payment instructions.",
+        "feat1": "Tax Rates & Currency",
+        "feat2": "Bank Details & Terms",
+        "feat3": "Serialization (INV-001)"
+      }
+    }
   }
-}
+  }
+  }

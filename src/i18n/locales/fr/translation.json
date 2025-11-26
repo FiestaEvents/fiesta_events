@@ -130,6 +130,19 @@
       "fetch_failed": "Échec du chargement des données"
     }
   },
+  "home": {
+  "eventsDesc": "Gestion de calendrier",
+  "clientsDesc": "Base de clients",
+  "contractsDesc": "Accords juridiques",
+  "invoicesDesc": "Facturation",
+  "paymentsDesc": "Suivi des revenus",
+  "partnersDesc": "Relations fournisseurs",
+  "tasksDesc": "Listes de tâches",
+  "remindersDesc": "Alertes et notifications",
+  "docSettingsDesc": "Mises en page",
+  "statsDesc": "Rapports et analyses",
+  "settingsDesc": "Configuration système"
+},
   "clients": {
     "title": "Clients",
     "description": "Gérez vos relations et informations clients",
@@ -2263,6 +2276,7 @@
   },
   "common": {
     "contracts": "Contrats",
+    "documents": "Documents",
     "home": "Accès Rapide",
     "team": "Équipe",
     "roles": "Rôles",
@@ -2313,8 +2327,14 @@
   "error": "Une erreur est survenue",
   "date": "Date",
   "time": "Heure",
-  "updateNow": "Mettre à jour maintenant"
-  },
+  "updateNow": "Mettre à jour maintenant",
+  "table": {
+    "showing": "Affichage",
+    "to": "à",
+    "of": "de",
+    "results": "résultats"
+  }
+},
   "notifications": {
     "upcomingReminders": "Rappels à venir",
     "today": "Aujourd'hui",
@@ -2958,5 +2978,324 @@
     "operations": "Opérations",
     "financial": "Financier",
     "management": "Gestion"
+  },
+
+  "contracts": {
+    "settings": {
+      "title": "Paramètres Contrats",
+      "subtitle": "Configuration globale et modèles",
+      "save": "Enregistrer",
+      "tabs": {
+        "company": "Info Société",
+        "branding": "Marque",
+        "layout": "Mise en Page",
+        "financials": "Finance",
+        "clauses": "Clauses",
+        "cancellation": "Annulation",
+        "labels": "Traductions"
+      },
+      "company": {
+        "title": "Informations Légales",
+        "legalName": "Raison Sociale",
+        "displayName": "Enseigne Commerciale",
+        "taxId": "Matricule Fiscale",
+        "representative": "Gérant / Représentant",
+        "rib": "RIB / IBAN",
+        "bank": "Banque",
+        "address": "Adresse du Siège",
+        "email": "Email",
+        "phone": "Téléphone",
+        "website": "Site Web"
+      },
+      "branding": {
+        "title": "Marque & Couleurs",
+        "primary": "Couleur Primaire",
+        "secondary": "Couleur Secondaire",
+        "text": "Couleur Texte",
+        "accent": "Couleur Accent",
+        "logoUrl": "URL du Logo (Public)",
+        "logoHelp": "L'URL doit être accessible publiquement."
+      },
+      "layout": {
+        "title": "Mise en Page PDF",
+        "showPageNumbers": "Afficher Numéros de Page",
+        "showDate": "Afficher Date Création"
+      },
+      "financials": {
+        "title": "Finance & Taxes (Défauts)",
+        "vat": "TVA par défaut (%)",
+        "stamp": "Timbre Fiscal (TND)",
+        "deposit": "Avance Requise (%)",
+        "security": "Caution (TND)"
+      },
+      "clauses": {
+        "title": "Clauses Contractuelles",
+        "add": "Ajouter Clause",
+        "articleTitle": "Titre de l'article",
+        "content": "Contenu de la clause...",
+        "required": "Obligatoire"
+      },
+      "cancellation": {
+        "title": "Politique d'Annulation",
+        "add": "Ajouter Palier",
+        "days": "Jours avant (Min)",
+        "penalty": "Pénalité (%)",
+        "description": "Description"
+      },
+      "labels": {
+        "title": "Labels & Traductions PDF",
+        "mainTitle": "Titre Principal",
+        "parties": "Titre Parties",
+        "provider": "Label Prestataire",
+        "client": "Label Client",
+        "partner": "Label Partenaire",
+        "services": "Titre Services",
+        "payment": "Titre Paiement",
+        "signatures": "Titre Signatures"
+      },
+      "messages": {
+        "saveSuccess": "Paramètres enregistrés avec succès",
+        "saveError": "Erreur lors de l'enregistrement",
+        "loadError": "Échec du chargement des paramètres"
+      }
+    },
+   "detail": {
+      "status": {
+        "draft": "Brouillon",
+        "sent": "Envoyé",
+        "viewed": "Vu",
+        "signed": "Signé",
+        "expired": "Expiré",
+        "cancelled": "Annulé"
+      },
+      "actions": {
+        "edit": "Modifier",
+        "send": "Envoyer",
+        "sign": "Signer",
+        "duplicate": "Dupliquer",
+        "download": "PDF",
+        "delete": "Supprimer"
+      },
+      "tracker": {
+        "inactiveTitle": "Contrat {{status}}",
+        "inactiveDesc": "Ce contrat n'est plus actif."
+      },
+      "sections": {
+        "party": "Détails du Tiers",
+        "logistics": "Logistique & Dates",
+        "services": "Prestations & Services",
+        "signatures": "Signatures",
+        "financial": "Résumé Financier",
+        "legal": "Juridique"
+      },
+      "fields": {
+        "name": "Nom / Raison Sociale",
+        "contact": "Contact / Représentant",
+        "taxId": "Matricule Fiscale / CIN",
+        "phone": "Téléphone",
+        "email": "Email",
+        "address": "Adresse",
+        "start": "Date Début",
+        "end": "Date Fin",
+        "from": "À partir de",
+        "until": "Jusqu'à",
+        "description": "Description",
+        "qty": "Qté",
+        "rate": "Prix Unitaire",
+        "totalHT": "Total HT",
+        "vat": "TVA",
+        "stamp": "Timbre Fiscal",
+        "netTTC": "Net à Payer",
+        "deposit": "Avance Requise",
+        "security": "Caution",
+        "jurisdiction": "Juridiction",
+        "cancellation": "Politique Annulation",
+        "special": "Note Spéciale"
+      },
+      "signatures": {
+        "venue": "Le Prestataire",
+        "client": "Le Client / Partenaire",
+        "signedOn": "Le",
+        "pending": "En attente de signature",
+        "electronic": "Signé électroniquement"
+      },
+      "dialog": {
+        "deleteTitle": "Supprimer le contrat",
+        "sendTitle": "Envoyer le contrat",
+        "deleteMsg": "Êtes-vous sûr de vouloir supprimer ce contrat ? Il sera déplacé dans les archives.",
+        "sendMsg": "Envoyer ce contrat par email pour signature ?",
+        "confirmDelete": "Supprimer",
+        "confirmSend": "Envoyer"
+      },
+      "messages": {
+        "loadError": "Impossible de charger le contrat",
+        "duplicateSuccess": "Contrat dupliqué",
+        "downloadStart": "Génération du PDF...",
+        "downloadSuccess": "Téléchargement terminé",
+        "deleteSuccess": "Contrat supprimé",
+        "sendSuccess": "Contrat envoyé"
+      }
+    },
+   "form": {
+      "title": {
+        "create": "Créer Contrat",
+        "edit": "Modifier Contrat"
+      },
+      "steps": {
+        "parties": "Tiers",
+        "dates": "Dates",
+        "finance": "Finance",
+        "legal": "Légal"
+      },
+      "types": {
+        "client": "Client",
+        "partner": "Partenaire"
+      },
+      "search": {
+        "label": "Rechercher",
+        "placeholderClient": "Chercher un client...",
+        "placeholderPartner": "Chercher un partenaire..."
+      },
+      "party": {
+        "title": "Détails Tiers",
+        "name": "Nom / Raison Sociale",
+        "identifier": "M.F / CIN",
+        "phone": "Téléphone",
+        "address": "Adresse",
+        "contractTitle": "Titre de l'accord",
+        "contractTitlePlaceholder": "Ex: Mariage X...",
+        "rateType": "Tarif"
+      },
+      "logistics": {
+        "start": "Début",
+        "end": "Fin",
+        "checkIn": "Heure Début",
+        "checkOut": "Heure Fin",
+        "eventLink": "Lier à un événement (Optionnel)",
+        "select": "Sélectionner..."
+      },
+      "financials": {
+        "title": "Détails Financiers",
+        "partnerMode": "Mode Partenaire : Saisissez les tarifs convenus. Ce document servira d'accord de compensation.",
+        "add": "AJOUTER",
+        "description": "Description",
+        "qty": "Qté",
+        "price": "Prix",
+        "totalHT": "Total HT",
+        "vat": "TVA",
+        "stamp": "Timbre",
+        "totalTTC": "Total TTC",
+        "deposit": "Avance (TND)"
+      },
+      "legal": {
+        "jurisdiction": "Juridiction",
+        "specialConditions": "Conditions Spéciales",
+        "specialConditionsPlaceholder": "Ajouter des clauses spécifiques...",
+        "warning": "Vérifiez toutes les informations sur l'aperçu avant d'enregistrer."
+      },
+      "nav": {
+        "back": "Précédent",
+        "next": "Suivant",
+        "save": "Enregistrer",
+        "update": "Mettre à jour"
+      },
+      "messages": {
+        "saveSuccess": "Contrat enregistré avec succès !",
+        "error": "Erreur lors de l'enregistrement",
+        "loadError": "Erreur de chargement des données"
+      }
+    },
+     "loading": "Chargement des contrats...",
+    "noResults": "Aucun résultat trouvé",
+    "actions": {
+      "view": "Voir",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "download": "Télécharger",
+      "clear": "Effacer",
+      "clearFilters": "Effacer les filtres",
+      "cancel": "Annuler"
+    },
+    "table": {
+      "showing": "Affichage de",
+      "to": "à",
+      "of": "sur",
+      "results": "résultats"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "sent": "Envoyé",
+      "viewed": "Vu",
+      "signed": "Signé",
+      "expired": "Expiré",
+      "cancelled": "Annulé",
+      "rejected": "Rejeté"
+    },
+    "types": {
+      "client": "Contrats Clients",
+      "partner": "Contrats Partenaires"
+    },
+    "list": {
+      "title": "Contrats",
+      "subtitle": "Gérez vos accords ({{count}})",
+      "newPartner": "Partenaire",
+      "newClient": "Contrat",
+      "searchPlaceholder": "Rechercher des contrats...",
+      "untitled": "Contrat sans titre",
+      "unknown": "Tiers inconnu",
+      "stats": {
+        "total": "Total Contrats",
+        "pending": "En attente de signature",
+        "signed": "Signés",
+        "value": "Valeur Totale"
+      },
+      "filter": {
+        "allStatus": "Tous les statuts",
+        "allTypes": "Tous les types"
+      },
+      "columns": {
+        "info": "Infos Contrat",
+        "status": "Statut",
+        "party": "Tiers / Événement",
+        "amount": "Montant",
+        "actions": "Actions"
+      },
+      "messages": {
+        "deleting": "Suppression...",
+        "deleteSuccess": "Contrat supprimé",
+        "deleteError": "Échec de la suppression",
+        "downloadStart": "Préparation du téléchargement...",
+        "downloadSuccess": "Téléchargement lancé",
+        "downloadError": "Échec du téléchargement du PDF"
+      },
+      "emptyTitle": "Aucun contrat créé",
+      "emptyDesc": "Créez votre premier contrat pour commencer. Vous pouvez choisir entre un contrat Client (revenus) ou un contrat Partenaire (dépenses).",
+      "dialog": {
+        "deleteTitle": "Supprimer le contrat",
+        "confirm": "Confirmer la suppression",
+        "deleteMsg": "Êtes-vous sûr de vouloir supprimer \"{{title}}\" ? Cette action est irréversible."
+      }
+    }
+  },
+   "documents": {
+    "hub": {
+      "title": "Configuration des Documents",
+      "subtitle": "Personnalisez le design, la structure et le contenu de vos documents.",
+      "configureNow": "Configurer maintenant",
+      "contracts": {
+        "title": "Contrats",
+        "desc": "Définissez les termes juridiques, les clauses et l'image de marque pour les accords.",
+        "feat1": "Marque & Couleurs",
+        "feat2": "Clauses & Juridiction",
+        "feat3": "Numérotation (CTR-001)"
+      },
+      "invoices": {
+        "title": "Factures",
+        "desc": "Configurez les préférences de facturation, les taxes et les instructions de paiement.",
+        "feat1": "Taxes & Devise",
+        "feat2": "Détails Bancaires",
+        "feat3": "Numérotation (INV-001)"
+      }
+    }
   }
 }

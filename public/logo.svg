@@ -1,0 +1,17 @@
+<svg width="50" height="60" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" aria-label="F Logo">
+  <!-- F Shape -->
+  <path d="M25 110 
+           C22 90 18 40 28 25 
+           C30 18 35 18 55 16 
+           C65 15 75 14 82 15 
+           L83 26 
+           C70 28 55 30 42 32 
+           L41 52 
+           C50 51 60 50 68 50 
+           L69 62 
+           C60 63 50 63 40 64 
+           C41 80 42 95 38 110 
+           Z" 
+        fill="#EF7D32" 
+        stroke="none"/>
+</svg>

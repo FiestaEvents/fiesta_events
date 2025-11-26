@@ -740,35 +740,6 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-              <LayoutDashboard size={18} /> 
-              {t('dashboard.quick_actions', 'Quick Actions')}
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <QuickActionBtn 
-                icon={Plus} 
-                label={t('dashboard.actions.new_event', "New Event")} 
-                onClick={() => navigate('/events/new')} 
-              />
-              <QuickActionBtn 
-                icon={Users} 
-                label={t('dashboard.actions.add_client', "Add Client")} 
-                onClick={() => navigate('/clients')} 
-              />
-              <QuickActionBtn 
-                icon={FileText} 
-                label={t('dashboard.actions.new_invoice', "New Invoice")} 
-                onClick={() => navigate('/invoices')} 
-              />
-              <QuickActionBtn 
-                icon={Settings} 
-                label={t('dashboard.actions.settings', "Settings")} 
-                onClick={() => navigate('/settings')} 
-              />
-            </div>
-          </div>
         </div>
       </div>
     </div>

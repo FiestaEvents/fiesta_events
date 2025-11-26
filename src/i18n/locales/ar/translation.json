@@ -130,6 +130,19 @@
       "fetch_failed": "فشل تحميل بيانات لوحة القيادة"
     }
   },
+  "home": {
+  "eventsDesc": "إدارة التقويم",
+  "clientsDesc": "قاعدة بيانات العملاء",
+  "contractsDesc": "الاتفاقيات القانونية",
+  "invoicesDesc": "الفواتير والرسوم",
+  "paymentsDesc": "تتبع الإيرادات",
+  "partnersDesc": "علاقات الموردين",
+  "tasksDesc": "قوائم المهام",
+  "remindersDesc": "التنبيهات والإشعارات",
+  "docSettingsDesc": "تخطيطات النماذج",
+  "statsDesc": "التقارير والتحليلات",
+  "settingsDesc": "إعدادات النظام"
+},
   "clients": {
     "title": "العملاء",
     "description": "إدارة علاقات ومعلومات العملاء",
@@ -2324,6 +2337,8 @@
   },
   "common": {
     "team": "الفريق",
+    "documents": "الوثائق",
+    "contracts": "العقود",
     "roles": "الأدوار",
     "settings": "الإعدادات",
     "profile": "الملف الشخصي",
@@ -2372,7 +2387,23 @@
   "error": "حدث خطأ ما",
   "date": "التاريخ",
   "time": "الوقت",
-  "updateNow": "تحديث الآن"
+  "updateNow": "تحديث الآن",
+    "noResults": "لا توجد نتائج",
+    "actions": {
+      "view": "عرض",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "download": "تنزيل",
+      "clear": "مسح",
+      "clearFilters": "مسح المرشحات",
+      "cancel": "إلغاء"
+    },
+    "table": {
+      "showing": "عرض",
+      "to": "إلى",
+      "of": "من",
+      "results": "نتائج"
+    }
   },
   "notifications": {
     "upcomingReminders": "التذكيرات القادمة",
@@ -3013,5 +3044,307 @@
     "financial": "المالية",
     "management": "الإدارة"
   },
-  "allRightsReserved": "جميع الحقوق محفوظة."
+  "allRightsReserved": "جميع الحقوق محفوظة.",
+
+  "contracts": {
+    "settings": {
+      "title": "إعدادات العقود",
+      "subtitle": "الإعدادات العامة والتصميم",
+      "save": "حفظ التغييرات",
+      "tabs": {
+        "company": "بيانات الشركة",
+        "branding": "العلامة التجارية",
+        "layout": "تخطيط PDF",
+        "financials": "المالية",
+        "clauses": "البنود",
+        "cancellation": "الإلغاء",
+        "labels": "تسميات"
+      },
+      "company": {
+        "title": "تفاصيل الكيان القانوني",
+        "legalName": "الاسم القانوني (Raison Sociale)",
+        "displayName": "الاسم التجاري",
+        "taxId": "المعرف الجبائي (Matricule Fiscale)",
+        "representative": "الممثل القانوني",
+        "rib": "رقم الحساب البنكي (RIB)",
+        "bank": "اسم البنك",
+        "address": "عنوان المقر الاجتماعي",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "website": "الموقع الإلكتروني"
+      },
+      "branding": {
+        "title": "العلامة التجارية والألوان",
+        "primary": "اللون الأساسي",
+        "secondary": "اللون الثانوي",
+        "text": "لون النص",
+        "accent": "لون التمييز",
+        "logoUrl": "رابط الشعار (عام)",
+        "logoHelp": "يجب أن يكون الرابط متاحاً للعامة للظهور في الملف."
+      },
+      "layout": {
+        "title": "إعدادات تخطيط PDF",
+        "showPageNumbers": "إظهار أرقام الصفحات",
+        "showDate": "إظهار تاريخ الإنشاء"
+      },
+      "financials": {
+        "title": "الافتراضيات المالية",
+        "vat": "الأداء على القيمة المضافة (%)",
+        "stamp": "الطابع الجبائي (د.ت)",
+        "deposit": "تسبقة مطلوبة (%)",
+        "security": "مبلغ الضمان (د.ت)"
+      },
+      "clauses": {
+        "title": "بنود العقد",
+        "add": "إضافة بند",
+        "articleTitle": "عنوان البند",
+        "content": "محتوى البند...",
+        "required": "إجباري"
+      },
+      "cancellation": {
+        "title": "سياسة الإلغاء",
+        "add": "إضافة مستوى",
+        "days": "الأيام قبل الحدث (الحد الأدنى)",
+        "penalty": "غرامة (%)",
+        "description": "الوصف"
+      },
+      "labels": {
+        "title": "تسميات وترجمات PDF",
+        "mainTitle": "العنوان الرئيسي",
+        "parties": "عنوان الأطراف",
+        "provider": "تسمية المزود",
+        "client": "تسمية الحريف",
+        "partner": "تسمية الشريك",
+        "services": "عنوان الخدمات",
+        "payment": "عنوان الدفع",
+        "signatures": "عنوان التوقيعات"
+      },
+      "messages": {
+        "saveSuccess": "تم حفظ الإعدادات بنجاح",
+        "saveError": "فشل في حفظ الإعدادات",
+        "loadError": "فشل في تحميل الإعدادات"
+      }
+    },
+    "detail": {
+      "status": {
+        "draft": "مسودة",
+        "sent": "مرسل",
+        "viewed": "تمت المشاهدة",
+        "signed": "موقع",
+        "expired": "منتهي",
+        "cancelled": "ملغى"
+      },
+      "actions": {
+        "edit": "تعديل",
+        "send": "إرسال",
+        "sign": "توقيع",
+        "duplicate": "نسخ",
+        "download": "PDF",
+        "delete": "حذف"
+      },
+      "tracker": {
+        "inactiveTitle": "العقد {{status}}",
+        "inactiveDesc": "هذا العقد لم يعد نشطاً."
+      },
+      "sections": {
+        "party": "تفاصيل الطرف المقابل",
+        "logistics": "اللوجستيات والتواريخ",
+        "services": "الخدمات والأسعار",
+        "signatures": "التوقيعات",
+        "financial": "الملخص المالي",
+        "legal": "الشروط القانونية"
+      },
+      "fields": {
+        "name": "الاسم / الشركة",
+        "contact": "الممثل القانوني",
+        "taxId": "المعرف الجبائي / ب.ت.و",
+        "phone": "الهاتف",
+        "email": "البريد الإلكتروني",
+        "address": "العنوان",
+        "start": "تاريخ البدء",
+        "end": "تاريخ الانتهاء",
+        "from": "من",
+        "until": "إلى",
+        "description": "الوصف",
+        "qty": "الكمية",
+        "rate": "السعر الفردي",
+        "totalHT": "المجموع (خ.أ)",
+        "vat": "أداء ق.م",
+        "stamp": "الطابع الجبائي",
+        "netTTC": "الصافي للدفع",
+        "deposit": "التسبقة المطلوبة",
+        "security": "مبلغ الضمان",
+        "jurisdiction": "الاختصاص القضائي",
+        "cancellation": "سياسة الإلغاء",
+        "special": "شروط خاصة"
+      },
+      "signatures": {
+        "venue": "المزود (القاعة)",
+        "client": "الحريف / الشريك",
+        "signedOn": "تم التوقيع في",
+        "pending": "بانتظار التوقيع",
+        "electronic": "موقع إلكترونياً"
+      },
+      "dialog": {
+        "deleteTitle": "حذف العقد",
+        "sendTitle": "إرسال العقد",
+        "deleteMsg": "هل أنت متأكد من رغبتك في حذف هذا العقد؟ سيتم نقله إلى الأرشيف.",
+        "sendMsg": "إرسال هذا العقد عبر البريد الإلكتروني للتوقيع؟",
+        "confirmDelete": "حذف",
+        "confirmSend": "إرسال"
+      },
+      "messages": {
+        "loadError": "فشل تحميل العقد",
+        "duplicateSuccess": "تم نسخ العقد بنجاح",
+        "downloadStart": "جاري إنشاء ملف PDF...",
+        "downloadSuccess": "بدأ التنزيل",
+        "deleteSuccess": "تم حذف العقد",
+        "sendSuccess": "تم إرسال العقد بنجاح"
+      }
+    },
+   "form": {
+      "title": {
+        "create": "إنشاء عقد",
+        "edit": "تعديل العقد"
+      },
+      "steps": {
+        "parties": "الأطراف",
+        "dates": "التواريخ",
+        "finance": "المالية",
+        "legal": "قانوني"
+      },
+      "types": {
+        "client": "حريف",
+        "partner": "شريك"
+      },
+      "search": {
+        "label": "بحث",
+        "placeholderClient": "ابحث عن حريف...",
+        "placeholderPartner": "ابحث عن شريك..."
+      },
+      "party": {
+        "title": "تفاصيل الطرف المقابل",
+        "name": "الاسم / الشركة",
+        "identifier": "المعرف الجبائي / ب.ت.و",
+        "phone": "الهاتف",
+        "address": "العنوان",
+        "contractTitle": "عنوان العقد",
+        "contractTitlePlaceholder": "مثال: زفاف السيد...",
+        "rateType": "نوع التعريفة"
+      },
+      "logistics": {
+        "start": "تاريخ البدء",
+        "end": "تاريخ الانتهاء",
+        "checkIn": "وقت الدخول",
+        "checkOut": "وقت الخروج",
+        "eventLink": "ربط بحدث (اختياري)",
+        "select": "اختر..."
+      },
+      "financials": {
+        "title": "التفاصيل المالية",
+        "partnerMode": "وضع الشريك: أدخل الأسعار المتفق عليها.",
+        "add": "إضافة",
+        "description": "الوصف",
+        "qty": "الكمية",
+        "price": "السعر",
+        "totalHT": "مجموع (خ.أ)",
+        "vat": "أداء ق.م",
+        "stamp": "طابع",
+        "totalTTC": "المجموع العام",
+        "deposit": "تسبقة (د.ت)"
+      },
+      "legal": {
+        "jurisdiction": "الاختصاص القضائي",
+        "specialConditions": "شروط خاصة",
+        "specialConditionsPlaceholder": "إضافة بنود خاصة...",
+        "warning": "الرجاء التثبت من جميع المعلومات في المعاينة قبل الحفظ."
+      },
+      "nav": {
+        "back": "سابق",
+        "next": "تـالي",
+        "save": "حفظ",
+        "update": "تحديث"
+      },
+      "messages": {
+        "saveSuccess": "تم حفظ العقد بنجاح!",
+        "error": "حدث خطأ أثناء الحفظ",
+        "loadError": "فشل تحميل البيانات"
+      }
+    },
+    "status": {
+      "draft": "مسودة",
+      "sent": "مرسل",
+      "viewed": "تمت المشاهدة",
+      "signed": "موقع",
+      "expired": "منتهي",
+      "cancelled": "ملغى",
+      "rejected": "مرفوض"
+    },
+    "types": {
+      "client": "عقود الحرفاء",
+      "partner": "عقود الشركاء"
+    },
+    "list": {
+      "title": "العقود",
+      "subtitle": "إدارة الاتفاقيات ({{count}})",
+      "newPartner": "شريك",
+      "newClient": "عقد",
+      "searchPlaceholder": "بحث في العقود...",
+      "untitled": "عقد بدون عنوان",
+      "unknown": "طرف غير معروف",
+      "stats": {
+        "total": "إجمالي العقود",
+        "pending": "بانتظار التوقيع",
+        "signed": "موقعة",
+        "value": "القيمة الإجمالية"
+      },
+      "filter": {
+        "allStatus": "كل الحالات",
+        "allTypes": "كل الأنواع"
+      },
+      "columns": {
+        "info": "معلومات العقد",
+        "status": "الحالة",
+        "party": "الطرف / الحدث",
+        "amount": "القيمة",
+        "actions": "إجراءات"
+      },
+      "messages": {
+        "deleting": "جاري الحذف...",
+        "deleteSuccess": "تم حذف العقد",
+        "deleteError": "فشل حذف العقد",
+        "downloadStart": "جاري تحضير التنزيل...",
+        "downloadSuccess": "بدأ التنزيل",
+        "downloadError": "فشل تنزيل PDF"
+      },
+      "emptyTitle": "لم يتم إنشاء عقود بعد",
+      "emptyDesc": "قم بإنشاء عقدك الأول للبدء. يمكنك الاختيار بين عقد حريف (للإيرادات) أو عقد شريك (للمصاريف).",
+      "dialog": {
+        "deleteTitle": "حذف العقد",
+        "confirm": "تأكيد الحذف",
+        "deleteMsg": "هل أنت متأكد أنك تريد حذف \"{{title}}\"؟ لا يمكن التراجع عن هذا الإجراء."
+      }
+    }
+},
+"documents": {
+    "hub": {
+      "title": "تكوين المستندات",
+      "subtitle": "تخصيص التصميم، الهيكل، والمحتوى لمستندات عملك. اختر نموذجاً للبدء.",
+      "configureNow": "ابدأ الإعداد",
+      "contracts": {
+        "title": "إعدادات العقود",
+        "desc": "تعريف الشروط القانونية، البنود، والعلامة التجارية لاتفاقيات الحرفاء والشركاء.",
+        "feat1": "تخصيص العلامة التجارية والألوان",
+        "feat2": "البنود القانونية والاختصاص القضائي",
+        "feat3": "هيكلة الترقيم (CTR-001)"
+      },
+      "invoices": {
+        "title": "إعدادات الفواتير",
+        "desc": "إعداد تفضيلات الفوترة، معدلات الضرائب، وتعليمات الدفع.",
+        "feat1": "معدلات الضرائب والعملة",
+        "feat2": "التفاصيل البنكية والشروط",
+        "feat3": "هيكلة الترقيم (INV-001)"
+      }
+    }
+  }
 }

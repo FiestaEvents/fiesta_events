@@ -1,7 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* 1. The Container Animation (Slide Down) */
+header {
+  animation: slideDown 0.8s ease-out forwards;
+}
 
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 2. The Logo Drawing Animation */
+.logo-path {
+  stroke: #EF7D32; /* Orange outline */
+  stroke-width: 3;
+  fill: transparent; /* Start empty */
+  stroke-dasharray: 400; /* Length of the line */
+  stroke-dashoffset: 400; /* Hide the line initially */
+  animation: drawAndFill 2.5s ease-in-out forwards;
+}
+
+@keyframes drawAndFill {
+  0% {
+    stroke-dashoffset: 400; /* Line is hidden */
+    fill: transparent;
+  }
+  60% {
+    stroke-dashoffset: 0; /* Line is fully drawn */
+    fill: transparent;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    fill: #EF7D32; /* Fills with orange */
+    stroke: none;   /* Removes outline */
+  }
+}
 /* Optional: global styles */
 body {
   @apply bg-gray-50 dark:bg-gray-900 antialiased;
@@ -75,9 +109,43 @@ body {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
-
+/* ============================================
+ TOP BAR ANIMATIONS 
+ ============================================*/
 /* Hide scrollbar for IE, Edge and Firefox */
 .hide-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+}
+/* 1. Swinging Bell Animation */
+@keyframes swing-bell {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(5deg); }
+  80% { transform: rotate(-5deg); }
+}
+
+.animate-swing {
+  animation: swing-bell 2s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* 2. Dropdown Entrance (Smooth Slide Down) */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-dropdown {
+  animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 3. Search Bar Focus Glow */
+.search-glow {
+  transition: all 0.3s ease;
+}
+.search-glow:focus-within {
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15); /* Orange Glow */
+  border-color: #F97316;
 }

@@ -17,8 +17,6 @@ import {
   DollarSign,
   CheckSquare,
   Bell,
-  Clock,
-  TrendingUp,
   ChevronRight,
   Loader2
 } from "lucide-react";
@@ -50,23 +48,20 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
   // Search state
   const [searchResults, setSearchResults] = useState({
-    events: [],
-    clients: [],
-    partners: [],
-    invoices: [],
-    payments: [],
-    tasks: [],
-    reminders: []
+    events: [], clients: [], partners: [], invoices: [], payments: [], tasks: [], reminders: []
   });
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [recentSearches, setRecentSearches] = useState([]);
-
+  
   // --- REFS ---
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const searchRef = useRef(null);
   const searchInputRef = useRef(null);
+  
+  // Audio Ref for Notification Sound
+  const audioRef = useRef(new Audio("/sounds/notification.mp3")); 
+  const prevNotificationCount = useRef(0);
 
   // Calculate positioning
   const topBarOffset = isCollapsed
@@ -74,26 +69,17 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     : (isRTL ? "lg:right-64" : "lg:left-64");
 
   // --- SEARCH LOGIC ---
-
-  // Debounced search
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (searchQuery.trim().length >= 2) {
         await performSearch(searchQuery);
       } else {
         setSearchResults({
-          events: [],
-          clients: [],
-          partners: [],
-          invoices: [],
-          payments: [],
-          tasks: [],
-          reminders: []
+          events: [], clients: [], partners: [], invoices: [], payments: [], tasks: [], reminders: []
         });
         setShowSearchResults(false);
       }
     }, 300);
-
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
@@ -102,7 +88,6 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     setShowSearchResults(true);
 
     try {
-      // Search all entities in parallel
       const [events, clients, partners, invoices, payments, tasks, reminders] = await Promise.allSettled([
         eventService.getAll({ search: query, limit: 3 }),
         clientService.getAll({ search: query, limit: 3 }),
@@ -113,43 +98,17 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
         reminderService.getAll({ search: query, limit: 3 })
       ]);
 
-      // Extract and filter results client-side
+      const processResult = (res, type) => 
+        res.status === 'fulfilled' ? filterBySearchQuery(extractData(res.value), query, type).slice(0, 3) : [];
+
       setSearchResults({
-        events: filterBySearchQuery(
-          events.status === 'fulfilled' ? extractData(events.value) : [],
-          query,
-          'events'
-        ).slice(0, 3),
-        clients: filterBySearchQuery(
-          clients.status === 'fulfilled' ? extractData(clients.value) : [],
-          query,
-          'clients'
-        ).slice(0, 3),
-        partners: filterBySearchQuery(
-          partners.status === 'fulfilled' ? extractData(partners.value) : [],
-          query,
-          'partners'
-        ).slice(0, 3),
-        invoices: filterBySearchQuery(
-          invoices.status === 'fulfilled' ? extractData(invoices.value) : [],
-          query,
-          'invoices'
-        ).slice(0, 3),
-        payments: filterBySearchQuery(
-          payments.status === 'fulfilled' ? extractData(payments.value) : [],
-          query,
-          'payments'
-        ).slice(0, 3),
-        tasks: filterBySearchQuery(
-          tasks.status === 'fulfilled' ? extractData(tasks.value) : [],
-          query,
-          'tasks'
-        ).slice(0, 3),
-        reminders: filterBySearchQuery(
-          reminders.status === 'fulfilled' ? extractData(reminders.value) : [],
-          query,
-          'reminders'
-        ).slice(0, 3)
+        events: processResult(events, 'events'),
+        clients: processResult(clients, 'clients'),
+        partners: processResult(partners, 'partners'),
+        invoices: processResult(invoices, 'invoices'),
+        payments: processResult(payments, 'payments'),
+        tasks: processResult(tasks, 'tasks'),
+        reminders: processResult(reminders, 'reminders')
       });
     } catch (error) {
       console.error("Search error:", error);
@@ -161,163 +120,70 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const extractData = (response) => {
     if (!response) return [];
     if (Array.isArray(response)) return response;
-    if (response.data && Array.isArray(response.data)) return response.data;
-    if (response.events && Array.isArray(response.events)) return response.events;
-    if (response.clients && Array.isArray(response.clients)) return response.clients;
-    if (response.partners && Array.isArray(response.partners)) return response.partners;
-    if (response.invoices && Array.isArray(response.invoices)) return response.invoices;
-    if (response.payments && Array.isArray(response.payments)) return response.payments;
-    if (response.tasks && Array.isArray(response.tasks)) return response.tasks;
-    if (response.reminders && Array.isArray(response.reminders)) return response.reminders;
+    // Check common data wrappers
+    if (Array.isArray(response.data)) return response.data;
+    if (response.data && Array.isArray(response.data.data)) return response.data.data;
+    
+    // Check named keys
+    const keys = ['events', 'clients', 'partners', 'invoices', 'payments', 'tasks', 'reminders'];
+    for (const key of keys) {
+      if (response[key] && Array.isArray(response[key])) return response[key];
+      if (response.data && response.data[key] && Array.isArray(response.data[key])) return response.data[key];
+    }
     return [];
   };
 
-  // Client-side filtering helper
   const filterBySearchQuery = (items, query, category) => {
     if (!query || !items || items.length === 0) return items;
-
     const searchLower = query.toLowerCase();
 
     return items.filter(item => {
-      // Search in different fields based on category
       switch (category) {
-        case 'events':
-          return (item.title?.toLowerCase().includes(searchLower) ||
-            item.description?.toLowerCase().includes(searchLower) ||
-            item.type?.toLowerCase().includes(searchLower));
-
-        case 'clients':
-        case 'partners':
-          return (item.name?.toLowerCase().includes(searchLower) ||
-            item.email?.toLowerCase().includes(searchLower) ||
-            item.phone?.includes(searchLower) ||
-            item.company?.toLowerCase().includes(searchLower));
-
-        case 'invoices':
-          return (item.invoiceNumber?.toLowerCase().includes(searchLower) ||
-            item.recipientName?.toLowerCase().includes(searchLower) ||
-            item.status?.toLowerCase().includes(searchLower));
-
-        case 'payments':
-          return (item.description?.toLowerCase().includes(searchLower) ||
-            item.reference?.toLowerCase().includes(searchLower) ||
-            item.status?.toLowerCase().includes(searchLower));
-
-        case 'tasks':
-          return (item.title?.toLowerCase().includes(searchLower) ||
-            item.description?.toLowerCase().includes(searchLower) ||
-            item.status?.toLowerCase().includes(searchLower) ||
-            item.category?.toLowerCase().includes(searchLower));
-
-        case 'reminders':
-          return (item.title?.toLowerCase().includes(searchLower) ||
-            item.description?.toLowerCase().includes(searchLower) ||
-            item.type?.toLowerCase().includes(searchLower));
-
-        default:
-          return false;
+        case 'events': return (item.title?.toLowerCase().includes(searchLower) || item.type?.toLowerCase().includes(searchLower));
+        case 'clients': case 'partners': return (item.name?.toLowerCase().includes(searchLower) || item.company?.toLowerCase().includes(searchLower));
+        case 'invoices': return (item.invoiceNumber?.toLowerCase().includes(searchLower) || item.recipientName?.toLowerCase().includes(searchLower));
+        case 'payments': return (item.reference?.toLowerCase().includes(searchLower));
+        case 'tasks': return (item.title?.toLowerCase().includes(searchLower));
+        case 'reminders': return (item.title?.toLowerCase().includes(searchLower));
+        default: return false;
       }
     });
   };
 
-  const handleSearchSubmit = () => {
-    if (searchQuery.trim()) {
-      saveRecentSearch(searchQuery);
-    }
-  };
-
-  const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSearchSubmit();
-    }
-  };
+  const handleSearchSubmit = () => { if (searchQuery.trim()) { /* Save recent if needed */ } };
+  const handleSearchKeyPress = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchSubmit(); } };
 
   const handleResultClick = (type, id) => {
-    saveRecentSearch(searchQuery);
     setShowSearchResults(false);
     setSearchQuery("");
-
     const routes = {
-      events: `/events/${id}/detail`,
-      clients: `/clients/${id}`,
-      partners: `/partners/${id}`,
-      invoices: `/invoices/${id}/edit`,
-      payments: `/payments/${id}`,
-      tasks: `/tasks/${id}`,
-      reminders: `/reminders/${id}`
+      events: `/events/${id}/detail`, clients: `/clients/${id}`, partners: `/partners/${id}`,
+      invoices: `/invoices/${id}/edit`, payments: `/payments/${id}`, tasks: `/tasks/${id}`, reminders: `/reminders/${id}`
     };
-
-    navigate(routes[type]);
+    navigate(routes[type] || '/');
   };
 
-  const saveRecentSearch = (query) => {
-    const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-    const updated = [query, ...recent.filter(q => q !== query)].slice(0, 5);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
-    setRecentSearches(updated);
-  };
-
-  const loadRecentSearches = () => {
-    const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-    setRecentSearches(recent);
-  };
-
-  useEffect(() => {
-    loadRecentSearches();
-  }, []);
-
-  // Click outside handler for search
+  // UI Event Handlers (Click Outside & Keyboard)
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowSearchResults(false);
-      }
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setNotificationDropdownOpen(false);
-      }
+      if (searchRef.current && !searchRef.current.contains(event.target)) setShowSearchResults(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setDropdownOpen(false);
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) setNotificationDropdownOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Cmd/Ctrl + K to focus search
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-      // Escape to close search
-      if (e.key === 'Escape') {
-        setShowSearchResults(false);
-        searchInputRef.current?.blur();
-      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchInputRef.current?.focus(); }
+      if (e.key === 'Escape') { setShowSearchResults(false); searchInputRef.current?.blur(); }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Count total results
-  const totalResults = Object.values(searchResults).reduce((acc, arr) => acc + arr.length, 0);
-  const hasResults = totalResults > 0;
-
-  // Search result categories config
-  const categoryConfig = {
-    events: { icon: Calendar, color: 'blue', label: t('common.events', 'Events') },
-    clients: { icon: Users, color: 'green', label: t('common.clients', 'Clients') },
-    partners: { icon: Briefcase, color: 'purple', label: t('common.partners', 'Partners') },
-    invoices: { icon: FileText, color: 'orange', label: t('common.invoices', 'Invoices') },
-    payments: { icon: DollarSign, color: 'emerald', label: t('common.payments', 'Payments') },
-    tasks: { icon: CheckSquare, color: 'indigo', label: t('common.tasks', 'Tasks') },
-    reminders: { icon: Bell, color: 'yellow', label: t('common.reminders', 'Reminders') }
-  };
-
-  // --- NOTIFICATION LOGIC (keeping existing) ---
+  // --- NOTIFICATIONS LOGIC ---
   useEffect(() => {
     let isMounted = true;
     const fetchNotifications = async () => {
@@ -327,61 +193,59 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
         let reminders = [];
         if (response?.data?.data?.reminders) reminders = response.data.data.reminders;
         else if (response?.data?.reminders) reminders = response.data.reminders;
-        else if (response?.reminders) reminders = response.reminders;
-        else if (Array.isArray(response?.data)) reminders = response.data;
         else if (Array.isArray(response)) reminders = response;
+        
         const activeReminders = reminders.filter(r => r.status === "active");
         if (isMounted) setNotifications(activeReminders);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-        if (isMounted) setNotifications([]);
-      }
+      } catch (error) { if (isMounted) setNotifications([]); }
     };
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 300000);
     return () => { isMounted = false; clearInterval(interval); };
   }, []);
+  // --- SOUND EFFECT LOGIC ---
+  useEffect(() => {
+    if (notifications.length > prevNotificationCount.current) {
+        if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(e => console.log("Sound autoplay blocked:", e));
+        }
+    }
+    prevNotificationCount.current = notifications.length;
+  }, [notifications.length]);
 
-  // --- HELPER FUNCTIONS (keeping existing) ---
+
+  // Formatting Helpers
   const formatReminderDate = (dateString, timeString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
     if (date.toDateString() === today.toDateString()) return `${t("notifications.today")} ${timeString || ""}`;
-    else if (date.toDateString() === tomorrow.toDateString()) return `${t("notifications.tomorrow")} ${timeString || ""}`;
-    else return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${timeString || ""}`;
+    return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${timeString || ""}`;
   };
 
   const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "urgent": return "text-red-600 dark:text-red-400";
-      case "high": return "text-orange-600 dark:text-orange-400";
-      case "medium": return "text-yellow-600 dark:text-yellow-400";
-      case "low": return "text-blue-600 dark:text-blue-400";
-      default: return "text-gray-600 dark:text-gray-400";
-    }
+    const colors = { urgent: "text-red-600", high: "text-orange-600", medium: "text-yellow-600", low: "text-blue-600" };
+    return colors[priority?.toLowerCase()] || "text-gray-600"; // Added toLowerCase safety
   };
 
   const getUserInitials = () => user?.name ? user.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) : "AV";
-  const getUserRole = () => {
-    const roleName = typeof user?.role === "string" ? user.role : user?.role?.name;
-    return roleName ? roleName.charAt(0).toUpperCase() + roleName.slice(1) : t("common.user");
-  };
-  const getRoleColor = () => {
-    const roleName = typeof user?.role === "string" ? user.role : user?.role?.name;
-    switch (roleName?.toLowerCase()) {
-      case "owner": return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case "admin": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "manager": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "staff": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
-    }
+
+  // Results & Config
+  const totalResults = Object.values(searchResults).reduce((acc, arr) => acc + arr.length, 0);
+  const hasResults = totalResults > 0;
+  const categoryConfig = {
+    events: { icon: Calendar, color: 'blue', label: t('common.events') },
+    clients: { icon: Users, color: 'green', label: t('common.clients') },
+    partners: { icon: Briefcase, color: 'purple', label: t('common.partners') },
+    invoices: { icon: FileText, color: 'orange', label: t('common.invoices') },
+    payments: { icon: DollarSign, color: 'emerald', label: t('common.payments') },
+    tasks: { icon: CheckSquare, color: 'indigo', label: t('common.tasks') },
+    reminders: { icon: Bell, color: 'yellow', label: t('common.reminders') }
   };
 
   return (
-    <header className={`fixed top-0 ${isRTL ? 'left-0 right-0' : 'left-0 right-0'} h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${topBarOffset} dark:bg-gray-900 dark:border-gray-700`}>
+    <header className={`fixed top-0 ${isRTL ? 'left-0 right-0' : 'left-0 right-0'} h-16 bg-white/90 backdrop-blur-md border-b border-gray-200/80 z-50 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/90 dark:border-gray-700`}>
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
 
         {/* LEFT SECTION */}
@@ -392,13 +256,11 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           <button onClick={onToggleCollapse} className="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
-          <Link
-            to="/home"
-            className="flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ml-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-            title={t("common.apps", "Apps")}
-          >
+          
+          <Link to="/home" className="flex items-center justify-center w-9 h-9 rounded-lg transition-transform duration-200 hover:scale-110 ml-1 text-gray-500 hover:text-orange-600 dark:text-gray-400 dark:hover:bg-gray-800">
             <LayoutGrid className="h-5 w-5" />
           </Link>
+          
           <Link to="/" className="flex items-center gap-2 lg:hidden ml-2">
             <div className="relative h-12 w-auto">
               <img src="/fiesta logo-01.png" alt="Fiesta Logo" className="h-full w-auto object-contain" onError={(e) => { e.target.style.display = "none"; }} />
@@ -406,190 +268,106 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           </Link>
         </div>
 
-        {/* CENTER SECTION - ENHANCED SEARCH */}
+        {/* CENTER SECTION - SEARCH */}
         <div className="hidden md:flex flex-1 max-w-2xl mx-8 relative" ref={searchRef}>
-          <div className="relative w-full">
-            <button
-              onClick={handleSearchSubmit}
-              className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 p-1 hover:text-blue-500 transition-colors z-10`}
-            >
-              {searchLoading ? (
-                <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
-              ) : (
-                <Search className="w-4 h-4 text-gray-400" />
-              )}
+          <div className={`relative w-full transition-transform duration-300 ${showSearchResults ? 'scale-[1.02]' : 'scale-100'}`}>
+            <button onClick={handleSearchSubmit} className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 p-1 hover:text-blue-500 transition-colors z-10`}>
+              {searchLoading ? <Loader2 className="w-4 h-4 text-orange-500 animate-spin" /> : <Search className="w-4 h-4 text-gray-400" />}
             </button>
             <input
               ref={searchInputRef}
               type="text"
-              placeholder={t("common.searchPlaceholder", "Search events, clients, tasks...")}
+              placeholder={t("common.searchPlaceholder", "Search events, clients...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleSearchKeyPress}
-              onFocus={() => {
-                if (searchQuery.trim().length >= 2) {
-                  setShowSearchResults(true);
-                }
-              }}
-              className={`w-full ${isRTL ? 'pr-10 pl-24' : 'pl-10 pr-24'} py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
+              onFocus={() => { if (searchQuery.trim().length >= 2) setShowSearchResults(true); }}
+              className={`search-glow w-full ${isRTL ? 'pr-10 pl-24' : 'pl-10 pr-24'} py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
               dir={isRTL ? 'rtl' : 'ltr'}
             />
-            <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 flex items-center gap-1`}>
-              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
-                {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
-              </kbd>
-              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
-                K
-              </kbd>
-            </div>
           </div>
 
           {/* SEARCH RESULTS DROPDOWN */}
           {showSearchResults && (
-            <div className={`absolute top-full ${isRTL ? 'right-0' : 'left-0'} mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl overflow-hidden z-50 max-h-[600px] overflow-y-auto`}>
-              {searchLoading ? (
-                <div className="p-8 text-center">
-                  <Loader2 className="w-6 h-6 text-gray-400 animate-spin mx-auto mb-2" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {t("common.searching", "Searching...")}
-                  </p>
-                </div>
-              ) : searchQuery.trim().length < 2 ? (
-                <div className="p-6">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    {t("common.searchMinChars", "Type at least 2 characters to search")}
-                  </p>
-                  {recentSearches.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 flex items-center gap-2">
-                        <Clock className="w-3 h-3" />
-                        {t("common.recentSearches", "Recent Searches")}
-                      </p>
-                      <div className="space-y-1">
-                        {recentSearches.map((recent, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setSearchQuery(recent)}
-                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                          >
-                            {recent}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : !hasResults ? (
-                <div className="p-8 text-center">
-                  <Search className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {t("common.noResults", "No results found for")} "{searchQuery}"
-                  </p>
-                </div>
-              ) : (
-                <div className="py-2">
-                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      {t("common.foundResults", "Found")} {totalResults} {t("common.results", "results")}
-                    </p>
-                  </div>
-
-                  {Object.entries(searchResults).map(([category, items]) => {
-                    if (items.length === 0) return null;
-                    const config = categoryConfig[category];
-                    const Icon = config.icon;
-
-                    return (
-                      <div key={category} className="py-2">
-                        <div className="px-4 py-2">
-                          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase flex items-center gap-2">
-                            <Icon className="w-3 h-3" />
-                            {config.label}
-                          </p>
-                        </div>
-                        {items.map((item) => (
-                          <button
-                            key={item._id}
-                            onClick={() => handleResultClick(category, item._id)}
-                            className="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group"
-                          >
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className={`w-8 h-8 rounded-lg bg-${config.color}-100 dark:bg-${config.color}-900/30 flex items-center justify-center flex-shrink-0`}>
-                                <Icon className={`w-4 h-4 text-${config.color}-600 dark:text-${config.color}-400`} />
-                              </div>
-                              <div className="flex-1 min-w-0 text-left">
-                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                  {item.title || item.name || item.invoiceNumber || item.description || 'Untitled'}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                  {category === 'events' && item.type}
-                                  {category === 'clients' && item.email}
-                                  {category === 'partners' && item.category}
-                                  {category === 'invoices' && `${item.status} • ${item.totalAmount || 0} TND`}
-                                  {category === 'payments' && `${item.status} • ${item.amount || 0} TND`}
-                                  {category === 'tasks' && item.status}
-                                  {category === 'reminders' && formatReminderDate(item.reminderDate, item.reminderTime)}
-                                </p>
-                              </div>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })}
-
-                  <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-                    <button
-                      onClick={() => setShowSearchResults(false)}
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-2"
-                    >
-                      <TrendingUp className="w-4 h-4" />
-                      {t("common.seeAllResults", "See all results")}
-                    </button>
-                  </div>
-                </div>
-              )}
+            <div className={`animate-dropdown absolute top-full ${isRTL ? 'right-0' : 'left-0'} mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl overflow-hidden z-50 max-h-[600px] overflow-y-auto`}>
+               {searchLoading ? (
+                 <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400"/></div>
+               ) : (
+                 <div className="py-2">
+                   {hasResults && <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Found {totalResults} results</p>
+                   </div>}
+                   
+                   {hasResults ? Object.entries(searchResults).map(([category, items]) => {
+                     if (items.length === 0) return null;
+                     const config = categoryConfig[category];
+                     const Icon = config.icon;
+                     return (
+                       <div key={category} className="py-2">
+                          <div className="px-4 py-1 text-xs font-bold text-gray-400 uppercase flex items-center gap-2">
+                             <Icon size={12}/> {config.label}
+                          </div>
+                          {items.map(item => (
+                             <button key={item._id} onClick={() => handleResultClick(category, item._id)} className="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between group">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{item.title || item.name || item.invoiceNumber}</span>
+                                <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"/>
+                             </button>
+                          ))}
+                       </div>
+                     );
+                   }) : <div className="p-8 text-center text-sm text-gray-500">No results found for "{searchQuery}"</div>}
+                 </div>
+               )}
             </div>
           )}
         </div>
 
-        {/* RIGHT SECTION (keeping existing) */}
+        {/* RIGHT SECTION */}
         <div className="flex items-center gap-2">
           <div className="hidden sm:block"><LanguageSwitcher /></div>
-          <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            {theme === "light" ? <MoonIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" /> : <SunIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />}
+          
+          <button onClick={toggleTheme} className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors overflow-hidden w-9 h-9">
+             <div className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-in-out ${theme === 'light' ? 'rotate-0 opacity-100' : 'rotate-90 opacity-0'}`}>
+               <SunIcon className="h-5 w-5 text-orange-500" />
+             </div>
+             <div className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-in-out ${theme === 'dark' ? 'rotate-0 opacity-100' : '-rotate-90 opacity-0'}`}>
+               <MoonIcon className="h-5 w-5 text-blue-300" />
+             </div>
           </button>
 
           {/* Notifications */}
-          <div className="relative z-50" ref={notificationRef}>
-            <button onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)} className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              <BellIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-              {notifications.length > 0 && <span className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} w-2 h-2 bg-red-500 rounded-full`}></span>}
+          <div className="relative" ref={notificationRef}>
+            <button onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)} className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group">
+              <div className={notifications.length > 0 ? "animate-swing origin-top" : "group-hover:scale-110 transition-transform"}>
+                 <BellIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+              </div>
+              
+              {notifications.length > 0 && (
+                 <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                 </span>
+              )}
             </button>
+            
             {notificationDropdownOpen && (
-              <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("notifications.upcomingReminders")}</h3>
-                    {notifications.length > 0 && <span className="text-xs font-semibold px-2 py-1 bg-red-500 text-white rounded-full">{notifications.length}</span>}
-                  </div>
+              <div className={`animate-dropdown absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl overflow-hidden z-50`} dir={isRTL ? 'rtl' : 'ltr'}>
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("notifications.upcomingReminders")}</h3>
+                  {notifications.length > 0 && <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">{notifications.length}</span>}
                 </div>
                 <div className="max-h-80 overflow-y-auto">
                   {notifications.length > 0 ? notifications.map((reminder) => (
-                    <div key={reminder._id} className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0" onClick={() => { navigate("/reminders"); setNotificationDropdownOpen(false); }}>
+                    <div key={reminder._id} className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700" onClick={() => { navigate("/reminders"); setNotificationDropdownOpen(false); }}>
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{reminder.title || t("notifications.untitledReminder")}</p>
-                            {reminder.priority && <span className={`text-xs font-semibold uppercase ${getPriorityColor(reminder.priority)}`}>{reminder.priority}</span>}
-                          </div>
-                          {reminder.description && <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-1">{reminder.description}</p>}
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{reminder.title}</p>
+                          <span className={`text-[10px] ${getPriorityColor(reminder.priority)} uppercase font-bold tracking-wider`}>{reminder.priority}</span>
                         </div>
-                        <span className="text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap flex-shrink-0">{formatReminderDate(reminder.reminderDate, reminder.reminderTime)}</span>
+                        <span className="text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap">{formatReminderDate(reminder.reminderDate, reminder.reminderTime)}</span>
                       </div>
                     </div>
-                  )) : <div className="px-4 py-8 text-center"><p className="text-sm text-gray-500 dark:text-gray-400">{t("notifications.noReminders")}</p></div>}
+                  )) : <div className="px-4 py-8 text-center text-sm text-gray-500">{t("notifications.noReminders")}</div>}
                 </div>
               </div>
             )}
@@ -597,31 +375,23 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
           {/* User Menu */}
           <div className="relative" ref={dropdownRef}>
-            <button onClick={() => setDropdownOpen(!dropdownOpen)} className={`flex items-center gap-3 ${isRTL ? 'pr-3 pl-2' : 'pl-3 pr-2'} py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors`}>
+            <button onClick={() => setDropdownOpen(!dropdownOpen)} className={`flex items-center gap-3 ${isRTL ? 'pr-3 pl-2' : 'pl-3 pr-2'} py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group`}>
               <div className={`hidden sm:block ${isRTL ? 'text-left' : 'text-right'}`}>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || t("common.user")}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{getUserRole()}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-orange-600 transition-colors">{user?.name || t("common.user")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role?.name || user?.role || "Staff"}</p>
               </div>
-              <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-orange-200 transition-all group-hover:scale-105">
                 <span className="text-white font-semibold text-sm">{getUserInitials()}</span>
               </div>
-              <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
+              <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block group-hover:text-orange-500 transition-colors" />
             </button>
             {dropdownOpen && (
-              <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
-                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || t("common.user")}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user?.email}</p>
-                  {user?.role && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${getRoleColor()}`}>{getUserRole()}</span>}
-                </div>
-                <button className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => { navigate("/settings"); setDropdownOpen(false); }}>
-                  <User className="w-4 h-4" /> {t("common.profile")}
-                </button>
-                <button className={`w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => { navigate("/settings"); setDropdownOpen(false); }}>
+              <div className={`animate-dropdown absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 py-1 z-50`} dir={isRTL ? 'rtl' : 'ltr'}>
+                <button className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2" onClick={() => { navigate("/settings"); setDropdownOpen(false); }}>
                   <Settings className="w-4 h-4" /> {t("common.settings")}
                 </button>
                 <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
-                  <button className={`w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => { logout(); setDropdownOpen(false); }}>
+                  <button className="w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2" onClick={() => { logout(); setDropdownOpen(false); }}>
                     <LogOut className="w-4 h-4" /> {t("common.logout")}
                   </button>
                 </div>

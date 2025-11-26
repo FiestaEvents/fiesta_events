@@ -1,9 +1,12 @@
+// src/routes/AppRoutes.jsx
 import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion"; // Optional: Used if you want exit animations on route switches
 import ProtectedRoute from "./ProtectedRoutes.jsx";
 
 // ✅ Keep LoadingSpinner static so it's available immediately
 import LoadingSpinner from "../components/common/LoadingSpinner.jsx";
+import PageTransition from "../components/common/PageTransition.jsx"; // ✅ Import the transition
 
 // ============================================
 // LAZY IMPORTS (Code Splitting)
@@ -27,12 +30,8 @@ const Landing = lazy(() => import("../pages/landing.jsx"));
 // Events
 const EventsList = lazy(() => import("../pages/events/EventsList.jsx"));
 const EventDetail = lazy(() => import("../pages/events/EventDetail.jsx"));
-const CreateEventPage = lazy(
-  () => import("../pages/events/EventForm/CreateEventPage.jsx")
-);
-const EditEventPage = lazy(
-  () => import("../pages/events/EventForm/EditEventPage.jsx")
-);
+const CreateEventPage = lazy(() => import("../pages/events/EventForm/CreateEventPage.jsx"));
+const EditEventPage = lazy(() => import("../pages/events/EventForm/EditEventPage.jsx"));
 
 // Clients
 const ClientsList = lazy(() => import("../pages/clients/ClientsList.jsx"));
@@ -51,12 +50,8 @@ const PaymentForm = lazy(() => import("../pages/payments/PaymentForm.jsx"));
 
 // Invoices
 const Invoices = lazy(() => import("../pages/invoices/InvoicesPage.jsx"));
-const InvoiceFormPage = lazy(
-  () => import("../pages/invoices/InvoiceFormPage.jsx")
-);
-const InvoiceSettingPage = lazy(
-  () => import("../pages/invoices/InvoiceCustomizationPage.jsx")
-);
+const InvoiceFormPage = lazy(() => import("../pages/invoices/InvoiceFormPage.jsx"));
+const InvoiceSettingPage = lazy(() => import("../pages/invoices/InvoiceCustomizationPage.jsx"));
 
 // Contracts
 const ContractsList = lazy(() => import("../pages/contracts/ContractListPage.jsx"));
@@ -76,19 +71,13 @@ const TaskDetail = lazy(() => import("../pages/tasks/TaskDetail.jsx"));
 const TaskForm = lazy(() => import("../pages/tasks/TaskForm.jsx"));
 
 // Reminders
-const RemindersList = lazy(
-  () => import("../pages/reminders/RemindersList.jsx")
-);
-const ReminderDetail = lazy(
-  () => import("../pages/reminders/ReminderDetails.jsx")
-);
+const RemindersList = lazy(() => import("../pages/reminders/RemindersList.jsx"));
+const ReminderDetail = lazy(() => import("../pages/reminders/ReminderDetails.jsx"));
 const ReminderForm = lazy(() => import("../pages/reminders/ReminderForm.jsx"));
 
 // Team
 const TeamList = lazy(() => import("../pages/team/TeamList.jsx"));
-const TeamMemberDetail = lazy(
-  () => import("../pages/team/TeamMemberDetail.jsx")
-);
+const TeamMemberDetail = lazy(() => import("../pages/team/TeamMemberDetail.jsx"));
 const InviteTeam = lazy(() => import("../pages/team/InviteTeam.jsx"));
 const TeamMemberEdit = lazy(() => import("../pages/team/TeamForm.jsx"));
 
@@ -98,6 +87,7 @@ const RoleForm = lazy(() => import("../pages/roles/RoleForm.jsx"));
 
 // Settings
 const VenueSettings = lazy(() => import("../pages/settings/VenueSettings.jsx"));
+const DocumentsSettings = lazy(() => import("../pages/settings/DocumentsSettings.jsx"));
 
 // ============================================
 // ROUTING CONFIGURATION
@@ -113,93 +103,95 @@ const AppRoutes = () => {
 
   return (
     <Suspense fallback={<LoadingFallback />}>
+
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/landing" element={<Landing />} />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/landing" element={<PageTransition><Landing /></PageTransition>} />
         <Route path="/" element={<Navigate to="/landing" replace />} />
 
         <Route element={<AuthLayout />}>
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+          <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+          <Route path="/reset-password/:token" element={<PageTransition><ResetPassword /></PageTransition>} />
         </Route>
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/home" element={<Home />} />
+            <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+            <Route path="/home" element={<PageTransition><Home /></PageTransition>} />
 
             {/* Events */}
-            <Route path="/events" element={<EventsList />} />
-            <Route path="/events/new" element={<CreateEventPage />} />
-            <Route path="/events/:id/edit" element={<EditEventPage />} />
-            <Route path="/events/:id/detail" element={<EventDetail />} />
-            <Route path="/events/:id" element={<EventDetail />} />
+            <Route path="/events" element={<PageTransition><EventsList /></PageTransition>} />
+            <Route path="/events/new" element={<PageTransition><CreateEventPage /></PageTransition>} />
+            <Route path="/events/:id/edit" element={<PageTransition><EditEventPage /></PageTransition>} />
+            <Route path="/events/:id/detail" element={<PageTransition><EventDetail /></PageTransition>} />
+            <Route path="/events/:id" element={<PageTransition><EventDetail /></PageTransition>} />
 
             {/* Clients */}
-            <Route path="/clients" element={<ClientsList />} />
-            <Route path="/clients/new" element={<ClientForm />} />
-            <Route path="/clients/:id" element={<ClientDetail />} />
-            <Route path="/clients/:id/edit" element={<ClientForm />} />
+            <Route path="/clients" element={<PageTransition><ClientsList /></PageTransition>} />
+            <Route path="/clients/new" element={<PageTransition><ClientForm /></PageTransition>} />
+            <Route path="/clients/:id" element={<PageTransition><ClientDetail /></PageTransition>} />
+            <Route path="/clients/:id/edit" element={<PageTransition><ClientForm /></PageTransition>} />
 
             {/* Partners */}
-            <Route path="/partners" element={<PartnersList />} />
-            <Route path="/partners/new" element={<PartnerForm />} />
-            <Route path="/partners/:id" element={<PartnerDetail />} />
-            <Route path="/partners/:id/edit" element={<PartnerForm />} />
+            <Route path="/partners" element={<PageTransition><PartnersList /></PageTransition>} />
+            <Route path="/partners/new" element={<PageTransition><PartnerForm /></PageTransition>} />
+            <Route path="/partners/:id" element={<PageTransition><PartnerDetail /></PageTransition>} />
+            <Route path="/partners/:id/edit" element={<PageTransition><PartnerForm /></PageTransition>} />
 
             {/* Payments */}
-            <Route path="/payments" element={<PaymentsList />} />
-            <Route path="/payments/new" element={<PaymentForm />} />
-            <Route path="/payments/:id" element={<PaymentDetail />} />
-            <Route path="/payments/:id/edit" element={<PaymentForm />} />
+            <Route path="/payments" element={<PageTransition><PaymentsList /></PageTransition>} />
+            <Route path="/payments/new" element={<PageTransition><PaymentForm /></PageTransition>} />
+            <Route path="/payments/:id" element={<PageTransition><PaymentDetail /></PageTransition>} />
+            <Route path="/payments/:id/edit" element={<PageTransition><PaymentForm /></PageTransition>} />
 
             {/* Invoices */}
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/invoices/new" element={<InvoiceFormPage />} />
-            <Route path="/invoices/:id/edit" element={<InvoiceFormPage />} />
-            <Route path="/invoices/settings" element={<InvoiceSettingPage />} />
+            <Route path="/invoices" element={<PageTransition><Invoices /></PageTransition>} />
+            <Route path="/invoices/new" element={<PageTransition><InvoiceFormPage /></PageTransition>} />
+            <Route path="/invoices/:id/edit" element={<PageTransition><InvoiceFormPage /></PageTransition>} />
+            <Route path="/invoices/settings" element={<PageTransition><InvoiceSettingPage /></PageTransition>} />
 
             {/* Contracts */}
-            <Route path="/contracts" element={<ContractsList />} />
-            <Route path="/contracts/new" element={<ContractFormPage />} />
-            <Route path="/contracts/:id" element={<ContractDetail />} />
-            <Route path="/contracts/:id/edit" element={<ContractFormPage />} />
-            <Route path="/contracts/settings" element={<ContractSettingsPage />} />
+            <Route path="/contracts" element={<PageTransition><ContractsList /></PageTransition>} />
+            <Route path="/contracts/new" element={<PageTransition><ContractFormPage /></PageTransition>} />
+            <Route path="/contracts/:id" element={<PageTransition><ContractDetail /></PageTransition>} />
+            <Route path="/contracts/:id/edit" element={<PageTransition><ContractFormPage /></PageTransition>} />
+            <Route path="/contracts/settings" element={<PageTransition><ContractSettingsPage /></PageTransition>} />
 
             {/* Finance */}
-            <Route path="/finance" element={<Finance />} />
-            <Route path="/finance/transactions" element={<Transactions />} />
-            <Route path="/finance/analytics" element={<Analytics />} />
-            <Route path="/finance/reports" element={<FinanceReports />} />
+            <Route path="/finance" element={<PageTransition><Finance /></PageTransition>} />
+            <Route path="/finance/transactions" element={<PageTransition><Transactions /></PageTransition>} />
+            <Route path="/finance/analytics" element={<PageTransition><Analytics /></PageTransition>} />
+            <Route path="/finance/reports" element={<PageTransition><FinanceReports /></PageTransition>} />
 
             {/* Tasks */}
-            <Route path="/tasks" element={<TasksList />} />
-            <Route path="/tasks/board" element={<TasksList />} />
-            <Route path="/tasks/:id" element={<TaskDetail />} />
-            <Route path="/tasks/:id/edit" element={<TaskForm />} />
+            <Route path="/tasks" element={<PageTransition><TasksList /></PageTransition>} />
+            <Route path="/tasks/board" element={<PageTransition><TasksList /></PageTransition>} />
+            <Route path="/tasks/:id" element={<PageTransition><TaskDetail /></PageTransition>} />
+            <Route path="/tasks/:id/edit" element={<PageTransition><TaskForm /></PageTransition>} />
 
             {/* Reminders */}
-            <Route path="/reminders" element={<RemindersList />} />
-            <Route path="/reminders/new" element={<ReminderForm />} />
-            <Route path="/reminders/:id" element={<ReminderDetail />} />
-            <Route path="/reminders/:id/edit" element={<ReminderForm />} />
+            <Route path="/reminders" element={<PageTransition><RemindersList /></PageTransition>} />
+            <Route path="/reminders/new" element={<PageTransition><ReminderForm /></PageTransition>} />
+            <Route path="/reminders/:id" element={<PageTransition><ReminderDetail /></PageTransition>} />
+            <Route path="/reminders/:id/edit" element={<PageTransition><ReminderForm /></PageTransition>} />
 
             {/* Team */}
-            <Route path="/team" element={<TeamList />} />
-            <Route path="/team/invite" element={<InviteTeam />} />
-            <Route path="/team/:id" element={<TeamMemberDetail />} />
-            <Route path="/team/:id/edit" element={<TeamMemberEdit />} />
+            <Route path="/team" element={<PageTransition><TeamList /></PageTransition>} />
+            <Route path="/team/invite" element={<PageTransition><InviteTeam /></PageTransition>} />
+            <Route path="/team/:id" element={<PageTransition><TeamMemberDetail /></PageTransition>} />
+            <Route path="/team/:id/edit" element={<PageTransition><TeamMemberEdit /></PageTransition>} />
 
             {/* Roles */}
-            <Route path="/roles" element={<RolesList />} />
-            <Route path="/roles/new" element={<RoleForm />} />
-            <Route path="/roles/:id/edit" element={<RoleForm />} />
+            <Route path="/roles" element={<PageTransition><RolesList /></PageTransition>} />
+            <Route path="/roles/new" element={<PageTransition><RoleForm /></PageTransition>} />
+            <Route path="/roles/:id/edit" element={<PageTransition><RoleForm /></PageTransition>} />
 
             {/* Settings  */}
-            <Route path="/settings" element={<VenueSettings />} />
+            <Route path="/settings" element={<PageTransition><VenueSettings /></PageTransition>} />
+            <Route path="/documents" element={<PageTransition><DocumentsSettings /></PageTransition>} />
           </Route>
         </Route>
 

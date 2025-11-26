@@ -2,17 +2,25 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Save, Plus, Trash2, Users, Calendar, 
-  DollarSign, Scale, Eye, Search, Building2, User, 
-  Check, ChevronRight, Settings, AlertCircle
+  DollarSign, Scale, Search, Check, ChevronRight, 
+  AlertCircle, Briefcase, Settings, Tag
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-// SERVICES (Keep your original imports)
+// Imports
 import { clientService, partnerService, eventService, contractService } from "../../api/index";
 import { useToast } from "../../hooks/useToast";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import LiveContractPreview from "./LiveContractPreview";
 
-// --- SUB-COMPONENTS ---
+// --- CONSTANTS ---
+const PARTNER_CATEGORIES = [
+  "driver", "bakery", "catering", "decoration", "photography", 
+  "music", "security", "cleaning", "audio_visual", "floral", 
+  "entertainment", "hairstyling", "other"
+];
+
+// --- UI HELPERS ---
 const StepButton = ({ isActive, isDone, icon: Icon, label, onClick }) => (
   <button
     onClick={onClick}
@@ -24,7 +32,7 @@ const StepButton = ({ isActive, isDone, icon: Icon, label, onClick }) => (
     `}
   >
     {isDone ? <Check size={16} /> : <Icon size={16} />}
-    <span>{label}</span>
+    <span className="hidden sm:inline">{label}</span>
   </button>
 );
 
@@ -33,14 +41,16 @@ const ContractFormPage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { showSuccess, apiError } = useToast();
+  const { t, i18n } = useTranslation();
   
   const isEditMode = Boolean(id);
   const initialType = searchParams.get("type") || "client";
+  const isRTL = i18n.dir() === "rtl";
 
   // --- STATE ---
   const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading] = useState(false); // Save loading
-  const [fetchLoading, setFetchLoading] = useState(true); // Initial data loading
+  const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
 
   // Data Sources
   const [clients, setClients] = useState([]);
@@ -48,62 +58,49 @@ const ContractFormPage = () => {
   const [events, setEvents] = useState([]);
   const [settings, setSettings] = useState(null);
 
-  // UI State
+  // Form UI State
   const [recipientSearch, setRecipientSearch] = useState("");
-  const [errors, setErrors] = useState({});
-
-  // Form State
-  const [services, setServices] = useState([{ description: "Location Salle", quantity: 1, rate: 0, amount: 0 }]);
+  const [services, setServices] = useState([{ description: "Prestation", quantity: 1, rate: 0, amount: 0 }]);
+  
   const [formData, setFormData] = useState({
     contractType: initialType,
     status: "draft",
     title: "",
-    contractNumber: "", 
     eventId: "",
-    
     party: {
+      id: "",
       type: "individual",
       name: "",
-      identifier: "", // CIN or MF
-      representative: "",
-      address: "",
+      identifier: "", // MF or CIN
+      email: "",
       phone: "",
-      email: ""
+      address: "",
+      representative: "",
+      category: "other", // Partner specific default
+      priceType: "fixed" // Partner specific default
     },
-
     logistics: {
       startDate: new Date().toISOString().split("T")[0],
       endDate: new Date().toISOString().split("T")[0],
       checkInTime: "10:00",
       checkOutTime: "00:00"
     },
-
     financials: {
-      currency: "TND",
       amountHT: 0,
-      vatRate: 19, // Default TN
+      vatRate: 19,
       taxAmount: 0,
-      stampDuty: 1.000, // Default TN
+      stampDuty: 1.000,
       totalTTC: 0
     },
-
-    paymentTerms: {
-      depositAmount: 0,
-      securityDeposit: 0
-    },
-
-    legal: {
-      jurisdiction: "Tribunal de Tunis",
-      specialConditions: ""
-    }
+    paymentTerms: { depositAmount: 0, securityDeposit: 0 },
+    legal: { jurisdiction: "Tribunal de Tunis", specialConditions: "" }
   });
 
-  // --- 1. FETCH DATA (Restored Logic) ---
+  // --- 1. FETCH DATA ---
   useEffect(() => {
     const fetchData = async () => {
       try {
         setFetchLoading(true);
-        // Fetch Settings, Clients, Partners, Events in parallel
         const [stRes, cRes, pRes, eRes] = await Promise.all([
           contractService.getSettings(),
           clientService.getAll({ limit: 100, status: "active" }),
@@ -113,27 +110,30 @@ const ContractFormPage = () => {
 
         const settingsData = stRes.data?.settings || stRes.settings || {};
         setSettings(settingsData);
+        
         setClients(cRes.data?.clients || cRes.clients || []);
         setPartners(pRes.data?.partners || pRes.partners || []);
         setEvents(eRes.data?.events || eRes.events || []);
 
-        // Apply Defaults if new
-        if (!isEditMode && settingsData) {
+        // Initialize defaults if creating new
+        if (!isEditMode) {
+          const isPartner = initialType === 'partner';
           setFormData(prev => ({
             ...prev,
             financials: {
               ...prev.financials,
-              vatRate: settingsData.financialDefaults?.defaultVatRate || 19,
-              stampDuty: settingsData.financialDefaults?.defaultStampDuty || 1.000
+              // Partners (Expense) usually 0 VAT if individual, Clients (Revenue) 19%
+              vatRate: isPartner ? 0 : (settingsData.financialDefaults?.defaultVatRate || 19),
+              stampDuty: isPartner ? 0 : (settingsData.financialDefaults?.defaultStampDuty || 1.000)
             },
             legal: { ...prev.legal, jurisdiction: "Tribunal de Tunis" }
           }));
         }
 
-        // If Edit Mode, Load Existing Contract
+        // Initialize data if Editing
         if (isEditMode) {
           const res = await contractService.getById(id);
-          const contract = res.data?.contract || res.contract;
+          const contract = res.data?.contract || res.contract || res.message?.contract;
           if (contract) {
             setFormData({
               ...contract,
@@ -144,41 +144,37 @@ const ContractFormPage = () => {
                 checkInTime: contract.logistics?.checkInTime,
                 checkOutTime: contract.logistics?.checkOutTime
               },
-              party: contract.party || { type: 'individual', name: '' },
-              financials: contract.financials || { amountHT: 0, vatRate: 19, stampDuty: 1.000 },
+              party: { ...formData.party, ...contract.party },
+              financials: contract.financials || { amountHT:0, vatRate:19, stampDuty:1.000 },
               paymentTerms: contract.paymentTerms || {},
               legal: contract.legal || {}
             });
             if (contract.services) setServices(contract.services);
+            if (contract.party?.name) setRecipientSearch(contract.party.name);
           }
         }
       } catch (err) {
-        apiError(err, "Impossible de charger les données");
+        apiError(err, t("contracts.form.messages.loadError"));
       } finally {
         setFetchLoading(false);
       }
     };
     fetchData();
-  }, [id, isEditMode]);
+  }, [id, isEditMode, initialType]);
 
-  // --- 2. CALCULATIONS (Restored Logic) ---
+  // --- 2. CALCULATIONS ENGINE ---
   useEffect(() => {
-    // 1. Calculate HT from Services
-    const calculatedHT = services.reduce((sum, item) => {
-      return sum + ((parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0));
-    }, 0);
-
-    // 2. Calculate Tax & TTC
+    // Calculate total of services
+    const calculatedHT = services.reduce((sum, item) => sum + ((parseFloat(item.quantity)||0) * (parseFloat(item.rate)||0)), 0);
+    
     const vatRate = parseFloat(formData.financials.vatRate) || 0;
     const stampDuty = parseFloat(formData.financials.stampDuty) || 0;
+    
     const taxAmount = (calculatedHT * vatRate) / 100;
     const totalTTC = calculatedHT + taxAmount + stampDuty;
 
-    // 3. Update State (avoid infinite loop by checking difference)
-    if (
-      Math.abs(calculatedHT - formData.financials.amountHT) > 0.001 ||
-      Math.abs(totalTTC - formData.financials.totalTTC) > 0.001
-    ) {
+    // Only update state if values differ (prevent infinite loop)
+    if (Math.abs(totalTTC - formData.financials.totalTTC) > 0.001 || Math.abs(calculatedHT - formData.financials.amountHT) > 0.001) {
       setFormData(prev => ({
         ...prev,
         financials: {
@@ -192,319 +188,350 @@ const ContractFormPage = () => {
   }, [services, formData.financials.vatRate, formData.financials.stampDuty]);
 
   // --- 3. HANDLERS ---
-
-  // Handle auto-fill when selecting a client/partner from search
+  
+  // Select Client/Partner from Search
   const handleRecipientSelect = (recipientId) => {
-    const list = formData.contractType === "client" ? clients : partners;
+    const isPartner = formData.contractType === 'partner';
+    const list = isPartner ? partners : clients;
     const selected = list.find(r => r._id === recipientId);
     
     if (selected) {
-      setFormData(prev => ({
-        ...prev,
-        party: {
-          type: selected.companyName ? "company" : "individual",
-          name: selected.companyName || selected.name, // Fallback logic
-          identifier: selected.taxId || selected.cin || "", // MF or CIN
-          email: selected.email,
-          phone: selected.phone,
-          address: selected.address?.street || selected.address || "",
-          representative: selected.contactPerson || ""
-        }
-      }));
-      setRecipientSearch(""); // Clear search
-    }
-  };
+      const isCompany = !!(selected.company || selected.companyName);
+      const displayAddress = selected.address?.street 
+        ? `${selected.address.street}, ${selected.address.city || ''}`
+        : (typeof selected.address === 'string' ? selected.address : "");
 
-  const handleEventSelect = (evtId) => {
-    const evt = events.find(e => e._id === evtId);
-    setFormData(prev => ({
-      ...prev,
-      eventId: evtId,
-      title: evt ? `Contrat - ${evt.title}` : prev.title,
-      logistics: {
-        ...prev.logistics,
-        startDate: evt?.startDate?.split("T")[0] || prev.logistics.startDate,
-        endDate: evt?.endDate?.split("T")[0] || prev.logistics.endDate
+      const newParty = {
+        id: selected._id,
+        type: isCompany ? "company" : "individual",
+        name: selected.company || selected.name,
+        identifier: selected.taxId || selected.cin || "", 
+        email: selected.email,
+        phone: selected.phone,
+        address: displayAddress,
+        representative: selected.contactPerson || "",
+        // Partner Specifics
+        category: selected.category || "other",
+        priceType: selected.priceType || "fixed"
+      };
+
+      // Reset Services based on Partner Type
+      let newServices = [];
+      if (isPartner) {
+        const desc = selected.category ? `Prestation ${selected.category}` : `Services Partenaire`;
+        // Auto-fill rate if available
+        const rate = selected.priceType === 'fixed' ? (selected.fixedRate || 0) : (selected.hourlyRate || 0);
+        newServices.push({ 
+          description: desc, 
+          quantity: 1, 
+          rate: rate, 
+          amount: rate 
+        });
+        
+        // Reset Taxes for individual partners (usually 0)
+        setFormData(prev => ({
+           ...prev, 
+           party: newParty,
+           financials: { ...prev.financials, vatRate: 0, stampDuty: 0 }
+        }));
+      } else {
+        newServices.push({ description: "Location Espace & Services", quantity: 1, rate: 0, amount: 0 });
+        setFormData(prev => ({ ...prev, party: newParty }));
       }
-    }));
-  };
 
-  const handleServiceChange = (index, field, value) => {
-    const newServices = [...services];
-    newServices[index] = { ...newServices[index], [field]: value };
-    // Recalc line amount for display
-    const qty = parseFloat(newServices[index].quantity) || 0;
-    const rate = parseFloat(newServices[index].rate) || 0;
-    newServices[index].amount = qty * rate;
-    setServices(newServices);
-  };
-
-  // Validation
-  const validateStep = () => {
-    const errs = {};
-    if (currentStep === 1) {
-      if (!formData.title) errs.title = "Le titre est obligatoire";
-      if (!formData.party.name) errs.party = "Veuillez sélectionner ou saisir un client";
+      setServices(newServices);
+      setRecipientSearch(""); 
     }
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateStep()) setCurrentStep(p => Math.min(p + 1, 4));
+  const handleServiceChange = (idx, field, val) => {
+    const updated = [...services];
+    updated[idx] = { ...updated[idx], [field]: val };
+    // Recalculate line amount
+    updated[idx].amount = (parseFloat(updated[idx].quantity)||0) * (parseFloat(updated[idx].rate)||0);
+    setServices(updated);
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const payload = {
-        ...formData,
-        event: formData.eventId || undefined,
-        services: services
-      };
-      
+      const payload = { ...formData, services };
+      // Backend handles contractNumber generation
+      if (!payload.contractNumber) delete payload.contractNumber;
+
       if (isEditMode) await contractService.update(id, payload);
       else await contractService.create(payload);
-
-      showSuccess(isEditMode ? "Contrat mis à jour" : "Contrat créé avec succès");
+      
+      showSuccess(t("contracts.form.messages.saveSuccess"));
       navigate("/contracts");
-    } catch (err) {
-      apiError(err, "Erreur lors de l'enregistrement");
+    } catch (e) {
+      apiError(e, t("contracts.form.messages.error"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter logic
-  const recipientList = formData.contractType === "client" ? clients : partners;
-  const filteredRecipients = recipientList.filter(r => 
-    (r.name || r.companyName || "").toLowerCase().includes(recipientSearch.toLowerCase())
-  );
+  // Filter Search List
+  const activeList = formData.contractType === 'client' ? clients : partners;
+  const filteredRecipients = activeList.filter(r => {
+    const term = recipientSearch.toLowerCase();
+    return (
+      (r.name && r.name.toLowerCase().includes(term)) ||
+      (r.company && r.company.toLowerCase().includes(term)) ||
+      (r.email && r.email.toLowerCase().includes(term))
+    );
+  });
+
+  const isPartnerMode = formData.contractType === 'partner';
+  const themeColor = isPartnerMode ? "purple" : "orange";
 
   if (fetchLoading) return <div className="h-screen flex items-center justify-center"><LoadingSpinner /></div>;
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden text-slate-800 font-sans">
+    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden text-slate-800 font-sans" dir={isRTL ? "rtl" : "ltr"}>
       
-      {/* --- LEFT: FORM PANEL (50%) --- */}
-      <div className="flex-1 flex flex-col h-full bg-white border-r border-gray-200 z-10 shadow-xl max-w-2xl">
+      {/* --- LEFT: FORM PANEL --- */}
+      <div className={`flex-1 flex flex-col h-full bg-white border-r border-gray-200 z-10 shadow-xl max-w-2xl ${isRTL ? 'border-l border-r-0' : ''}`}>
         
-        {/* HEADER */}
+        {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate("/contracts")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition">
-              <ArrowLeft size={20} />
+            <button onClick={() => navigate("/contracts")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+              <ArrowLeft size={20} className={isRTL ? "rotate-180" : ""}/>
             </button>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">{isEditMode ? "Modifier Contrat" : "Nouveau Contrat"}</h1>
-              <div className="flex gap-2 mt-1">
-                <button 
-                  onClick={() => setFormData(p => ({ ...p, contractType: "client" }))}
-                  className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${formData.contractType === 'client' ? 'bg-orange-100 text-orange-700' : 'text-gray-400 hover:bg-gray-100'}`}
-                >Client</button>
-                <button 
-                  onClick={() => setFormData(p => ({ ...p, contractType: "partner" }))}
-                  className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${formData.contractType === 'partner' ? 'bg-purple-100 text-purple-700' : 'text-gray-400 hover:bg-gray-100'}`}
-                >Partenaire</button>
-              </div>
-            </div>
+            <h1 className="text-lg font-bold text-gray-900">
+              {isEditMode ? t("contracts.form.title.edit") : t("contracts.form.title.create")}
+            </h1>
           </div>
-          <button className="text-gray-400 hover:text-gray-600"><Settings size={20}/></button>
+          <button className="text-gray-400 hover:text-gray-600" onClick={() => navigate("/contracts/settings")}>
+            <Settings size={20}/>
+          </button>
         </div>
 
-        {/* STEPPER */}
+        {/* Stepper */}
         <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex gap-1 overflow-x-auto shrink-0">
-          <StepButton isActive={currentStep===1} isDone={currentStep>1} icon={Users} label="Parties" onClick={()=>setCurrentStep(1)} />
-          <ChevronRight className="text-gray-300 self-center" size={16}/>
-          <StepButton isActive={currentStep===2} isDone={currentStep>2} icon={Calendar} label="Logistique" onClick={()=>setCurrentStep(2)} />
-          <ChevronRight className="text-gray-300 self-center" size={16}/>
-          <StepButton isActive={currentStep===3} isDone={currentStep>3} icon={DollarSign} label="Finance" onClick={()=>setCurrentStep(3)} />
-          <ChevronRight className="text-gray-300 self-center" size={16}/>
-          <StepButton isActive={currentStep===4} isDone={currentStep>4} icon={Scale} label="Légal" onClick={()=>setCurrentStep(4)} />
+          <StepButton isActive={currentStep===1} isDone={currentStep>1} icon={Users} label={t("contracts.form.steps.parties")} onClick={()=>setCurrentStep(1)} />
+          <ChevronRight className={`text-gray-300 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
+          <StepButton isActive={currentStep===2} isDone={currentStep>2} icon={Calendar} label={t("contracts.form.steps.dates")} onClick={()=>setCurrentStep(2)} />
+          <ChevronRight className={`text-gray-300 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
+          <StepButton isActive={currentStep===3} isDone={currentStep>3} icon={DollarSign} label={t("contracts.form.steps.finance")} onClick={()=>setCurrentStep(3)} />
+          <ChevronRight className={`text-gray-300 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
+          <StepButton isActive={currentStep===4} isDone={currentStep>4} icon={Scale} label={t("contracts.form.steps.legal")} onClick={()=>setCurrentStep(4)} />
         </div>
 
-        {/* SCROLLABLE FORM */}
+        {/* --- SCROLLABLE FORM AREA --- */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           
-          {/* STEP 1: PARTIES */}
+          {/* STEP 1: PARTY */}
           {currentStep === 1 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 space-y-5">
+            <div className="space-y-5 animate-in slide-in-from-right-4">
               
-              {/* Recipient Search */}
-              <div className="relative">
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher un {formData.contractType}</label>
+              {/* Type Toggle */}
+              <div className="flex gap-4 p-1 bg-gray-100 rounded-lg">
+                <button 
+                  onClick={() => { setFormData(p => ({ ...p, contractType: "client" })); setRecipientSearch(""); }}
+                  className={`flex-1 py-2 text-sm font-bold rounded shadow-sm transition ${!isPartnerMode ? 'bg-white text-orange-600' : 'text-gray-500'}`}
+                >
+                  {t("contracts.form.types.client")}
+                </button>
+                <button 
+                  onClick={() => { setFormData(p => ({ ...p, contractType: "partner" })); setRecipientSearch(""); }}
+                  className={`flex-1 py-2 text-sm font-bold rounded shadow-sm transition ${isPartnerMode ? 'bg-white text-purple-600' : 'text-gray-500'}`}
+                >
+                  {t("contracts.form.types.partner")}
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative z-50">
+                 <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.search.label")}</label>
                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                    <Search className={`absolute top-2.5 text-gray-400 ${isRTL ? 'right-3' : 'left-3'}`} size={18} />
                     <input 
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition"
-                      placeholder="Tapez pour rechercher..."
+                      className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-${themeColor}-500 outline-none ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                      placeholder={isPartnerMode ? t("contracts.form.search.placeholderPartner") : t("contracts.form.search.placeholderClient")}
                       value={recipientSearch}
                       onChange={(e) => setRecipientSearch(e.target.value)}
                     />
                  </div>
-                 {recipientSearch && (
-                   <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                 {/* Dropdown Results */}
+                 {recipientSearch && filteredRecipients.length > 0 && (
+                   <div className="absolute w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50">
                      {filteredRecipients.map(r => (
-                       <button key={r._id} onClick={() => handleRecipientSelect(r._id)} className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50">
-                         <div className="font-bold text-sm text-gray-800">{r.companyName || r.name}</div>
-                         <div className="text-xs text-gray-500">{r.email}</div>
+                       <button key={r._id} onClick={() => handleRecipientSelect(r._id)} className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50 flex justify-between items-center group">
+                         <div>
+                            <div className="font-bold text-sm text-gray-800">{r.company || r.name}</div>
+                            <div className="text-xs text-gray-500">{r.email}</div>
+                         </div>
+                         {isPartnerMode && r.category && (
+                           <div className="text-[10px] font-bold px-2 py-1 bg-purple-50 text-purple-700 rounded uppercase">
+                             {r.category}
+                           </div>
+                         )}
                        </button>
                      ))}
-                     {filteredRecipients.length === 0 && <div className="p-3 text-sm text-gray-500 italic">Aucun résultat</div>}
                    </div>
                  )}
               </div>
-
-              {/* Manual Entry Form */}
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <div className="flex justify-between items-center mb-3">
-                   <h3 className="font-bold text-sm uppercase text-gray-500">Détails du Tiers</h3>
-                   <div className="flex bg-white rounded-lg p-1 shadow-sm">
-                      <button onClick={() => setFormData(p=>({...p, party:{...p.party, type:'individual'}}))} className={`px-3 py-1 text-xs font-medium rounded ${formData.party.type==='individual' ? 'bg-orange-100 text-orange-700' : 'text-gray-500'}`}>Physique</button>
-                      <button onClick={() => setFormData(p=>({...p, party:{...p.party, type:'company'}}))} className={`px-3 py-1 text-xs font-medium rounded ${formData.party.type==='company' ? 'bg-orange-100 text-orange-700' : 'text-gray-500'}`}>Morale</button>
-                   </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                       <input 
-                         className="w-full p-2 border border-gray-300 rounded focus:border-orange-500 outline-none text-sm"
-                         placeholder={formData.party.type === 'company' ? "Nom de la Société" : "Nom complet"}
-                         value={formData.party.name}
-                         onChange={(e) => setFormData(p=>({...p, party:{...p.party, name: e.target.value}}))}
-                       />
-                       {errors.party && <span className="text-xs text-red-500">{errors.party}</span>}
-                    </div>
-                    <div>
-                       <input 
-                         className="w-full p-2 border border-gray-300 rounded focus:border-orange-500 outline-none text-sm"
-                         placeholder={formData.party.type === 'company' ? "Matricule Fiscale" : "N° CIN / Passeport"}
-                         value={formData.party.identifier}
-                         onChange={(e) => setFormData(p=>({...p, party:{...p.party, identifier: e.target.value}}))}
-                       />
-                    </div>
-                    <div>
-                       <input 
-                         className="w-full p-2 border border-gray-300 rounded focus:border-orange-500 outline-none text-sm"
-                         placeholder="Téléphone"
-                         value={formData.party.phone}
-                         onChange={(e) => setFormData(p=>({...p, party:{...p.party, phone: e.target.value}}))}
-                       />
-                    </div>
-                    <div className="col-span-2">
-                       <input 
-                         className="w-full p-2 border border-gray-300 rounded focus:border-orange-500 outline-none text-sm"
-                         placeholder="Adresse complète"
-                         value={formData.party.address}
-                         onChange={(e) => setFormData(p=>({...p, party:{...p.party, address: e.target.value}}))}
-                       />
-                    </div>
+              
+              {/* Partner Category Grid (NEW FEATURE) */}
+              {isPartnerMode && (
+                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                  <div className="flex items-center gap-2 mb-3 text-purple-800">
+                    <Tag size={16} />
+                    <h3 className="text-xs font-bold uppercase">{t("contracts.form.party.category")}</h3>
                   </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {PARTNER_CATEGORIES.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setFormData(p => ({ ...p, party: { ...p.party, category: cat } }))}
+                        className={`px-3 py-2 rounded text-xs font-medium capitalize border transition-all text-left truncate
+                          ${formData.party.category === cat 
+                            ? 'bg-purple-600 text-white border-purple-600 shadow-md' 
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
+                          }`}
+                      >
+                        {cat.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Party Details Inputs */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+                <div className="flex justify-between">
+                   <h3 className="text-xs font-bold uppercase text-gray-400">{t("contracts.form.party.title")}</h3>
+                   {isPartnerMode && formData.party.priceType && (
+                     <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold uppercase">
+                       {t("contracts.form.party.rateType")}: {formData.party.priceType}
+                     </span>
+                   )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                   <div className="col-span-2">
+                     <label className="text-xs text-gray-500">{t("contracts.form.party.name")}</label>
+                     <input className="w-full p-2 border border-gray-200 rounded text-sm" value={formData.party.name} onChange={e => setFormData(p=>({...p, party:{...p.party, name: e.target.value}}))} />
+                   </div>
+                   <div>
+                     <label className="text-xs text-gray-500">{t("contracts.form.party.identifier")}</label>
+                     <input className="w-full p-2 border border-gray-200 rounded text-sm" value={formData.party.identifier} onChange={e => setFormData(p=>({...p, party:{...p.party, identifier: e.target.value}}))} placeholder="MF / CIN" />
+                   </div>
+                   <div>
+                     <label className="text-xs text-gray-500">{t("contracts.form.party.phone")}</label>
+                     <input className="w-full p-2 border border-gray-200 rounded text-sm" value={formData.party.phone} onChange={e => setFormData(p=>({...p, party:{...p.party, phone: e.target.value}}))} />
+                   </div>
+                   <div className="col-span-2">
+                     <label className="text-xs text-gray-500">{t("contracts.form.party.address")}</label>
+                     <input className="w-full p-2 border border-gray-200 rounded text-sm" value={formData.party.address} onChange={e => setFormData(p=>({...p, party:{...p.party, address: e.target.value}}))} />
+                   </div>
                 </div>
               </div>
 
-              {/* Event Link */}
-              <div className="pt-2 border-t border-gray-100">
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Titre du Contrat *</label>
-                 <input 
-                    className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-                    value={formData.title}
-                    onChange={(e) => setFormData(p=>({...p, title: e.target.value}))}
-                    placeholder="Ex: Contrat de Mariage..."
-                 />
-                 {errors.title && <span className="text-xs text-red-500">{errors.title}</span>}
-                 
-                 <div className="mt-3">
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Lier à un événement (Optionnel)</label>
-                    <select 
-                      className="w-full p-2 border border-gray-300 rounded bg-white text-sm"
-                      value={formData.eventId}
-                      onChange={(e) => handleEventSelect(e.target.value)}
-                    >
-                      <option value="">Sélectionner...</option>
-                      {events.map(e => <option key={e._id} value={e._id}>{e.title} ({e.startDate.split('T')[0]})</option>)}
-                    </select>
-                 </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.party.contractTitle")}</label>
+                <input className="w-full p-2 border border-gray-300 rounded" value={formData.title} onChange={e => setFormData(p=>({...p, title: e.target.value}))} placeholder={t("contracts.form.party.contractTitlePlaceholder")} />
               </div>
             </div>
           )}
 
           {/* STEP 2: LOGISTICS */}
           {currentStep === 2 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 grid grid-cols-2 gap-5">
-               <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Date Début</label>
-                  <input type="date" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.startDate} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, startDate: e.target.value}}))} />
-               </div>
-               <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Date Fin</label>
-                  <input type="date" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.endDate} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, endDate: e.target.value}}))} />
-               </div>
-               <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Heure Accès</label>
-                  <input type="time" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.checkInTime} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, checkInTime: e.target.value}}))} />
-               </div>
-               <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Heure Libération</label>
-                  <input type="time" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.checkOutTime} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, checkOutTime: e.target.value}}))} />
-               </div>
+            <div className="space-y-4 animate-in slide-in-from-right-4">
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1">{t("contracts.form.logistics.start")}</label>
+                    <input type="date" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.startDate} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, startDate: e.target.value}}))} />
+                 </div>
+                 <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1">{t("contracts.form.logistics.end")}</label>
+                    <input type="date" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.endDate} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, endDate: e.target.value}}))} />
+                 </div>
+                 <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1">{t("contracts.form.logistics.checkIn")}</label>
+                    <input type="time" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.checkInTime} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, checkInTime: e.target.value}}))} />
+                 </div>
+                 <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1">{t("contracts.form.logistics.checkOut")}</label>
+                    <input type="time" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.checkOutTime} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, checkOutTime: e.target.value}}))} />
+                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.logistics.eventLink")}</label>
+                <select className="w-full p-2 border border-gray-300 rounded text-sm bg-white" value={formData.eventId} onChange={(e) => {
+                   const evt = events.find(ev => ev._id === e.target.value);
+                   setFormData(p => ({ ...p, eventId: e.target.value, title: evt ? `Contrat - ${evt.title}` : p.title }));
+                }}>
+                  <option value="">{t("contracts.form.logistics.select")}</option>
+                  {events.map(ev => <option key={ev._id} value={ev._id}>{ev.title}</option>)}
+                </select>
+              </div>
             </div>
           )}
 
           {/* STEP 3: FINANCIALS */}
           {currentStep === 3 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
-              
-              {/* Services List */}
-              <div className="space-y-3">
+            <div className="space-y-6 animate-in slide-in-from-right-4">
+               
+               {isPartnerMode && (
+                <div className="flex gap-2 p-3 bg-purple-50 text-purple-700 rounded-lg text-sm border border-purple-100">
+                  <Briefcase size={18} className="shrink-0"/>
+                  <p>{t("contracts.form.financials.partnerMode")}</p>
+                </div>
+               )}
+
+               <div className="space-y-3">
                  <div className="flex justify-between items-end">
-                    <label className="text-sm font-bold text-gray-700">Prestations / Services</label>
-                    <button onClick={() => setServices([...services, {description:'', quantity:1, rate:0, amount:0}])} className="text-orange-600 text-xs font-bold flex items-center gap-1 hover:underline"><Plus size={14}/> AJOUTER</button>
+                    <label className="text-sm font-bold text-gray-700">{t("contracts.form.financials.title")}</label>
+                    <button onClick={() => setServices([...services, {description:'', quantity:1, rate:0, amount:0}])} className={`text-xs font-bold text-${themeColor}-600 flex items-center gap-1`}>
+                      <Plus size={14}/> {t("contracts.form.financials.add")}
+                    </button>
                  </div>
+                 
+                 {/* Services List */}
                  {services.map((svc, idx) => (
                    <div key={idx} className="flex gap-2 items-center bg-gray-50 p-2 rounded border border-gray-200 group">
-                      <input className="flex-1 bg-transparent border-b border-transparent focus:border-orange-400 outline-none text-sm" placeholder="Description..." value={svc.description} onChange={e => handleServiceChange(idx, 'description', e.target.value)} />
-                      <input type="number" className="w-12 text-center bg-white border border-gray-200 rounded text-sm py-1" value={svc.quantity} onChange={e => handleServiceChange(idx, 'quantity', e.target.value)} />
-                      <input type="number" className="w-20 text-right bg-white border border-gray-200 rounded text-sm py-1" placeholder="Prix" value={svc.rate} onChange={e => handleServiceChange(idx, 'rate', e.target.value)} />
-                      <button onClick={() => setServices(services.filter((_,i)=>i!==idx))} className="text-gray-400 hover:text-red-500"><Trash2 size={16}/></button>
+                      <input className="flex-1 bg-transparent border-b border-transparent focus:border-orange-400 outline-none text-sm" placeholder={t("contracts.form.financials.description")} value={svc.description} onChange={e => handleServiceChange(idx, 'description', e.target.value)} />
+                      <input type="number" className="w-16 text-center bg-white border border-gray-200 rounded text-sm py-1" value={svc.quantity} onChange={e => handleServiceChange(idx, 'quantity', e.target.value)} placeholder={t("contracts.form.financials.qty")} />
+                      <input type="number" className="w-20 text-right bg-white border border-gray-200 rounded text-sm py-1" placeholder={t("contracts.form.financials.price")} value={svc.rate} onChange={e => handleServiceChange(idx, 'rate', e.target.value)} />
+                      <button onClick={() => setServices(services.filter((_,i)=>i!==idx))} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"><Trash2 size={16}/></button>
                    </div>
                  ))}
               </div>
 
-              {/* Summary Card */}
-              <div className="bg-slate-800 text-white rounded-xl p-5 shadow-lg">
-                 <div className="flex justify-between text-sm mb-2 text-slate-300">
-                    <span>Total HT</span>
+              {/* Totals Summary */}
+              <div className={`text-white rounded-xl p-5 shadow-lg ${isPartnerMode ? 'bg-slate-800' : 'bg-slate-900'}`}>
+                 <div className="flex justify-between text-sm mb-2 opacity-80">
+                    <span>{t("contracts.form.financials.totalHT")}</span>
                     <span>{formData.financials.amountHT.toFixed(3)}</span>
                  </div>
-                 <div className="flex justify-between text-sm mb-2 text-slate-300 items-center">
+                 
+                 {/* VAT & Stamp - Show for Client, Optional for Partner */}
+                 <div className="flex justify-between text-sm mb-2 items-center opacity-80">
                     <div className="flex items-center gap-2">
-                       <span>TVA</span>
-                       <input className="w-10 bg-slate-700 text-center rounded border-none text-xs py-0.5" value={formData.financials.vatRate} onChange={e => setFormData(p=>({...p, financials: {...p.financials, vatRate: e.target.value}}))} />
+                       <span>{t("contracts.form.financials.vat")}</span>
+                       <input className="w-10 bg-white/10 text-center rounded border-none text-xs py-0.5 text-white" value={formData.financials.vatRate} onChange={e => setFormData(p=>({...p, financials: {...p.financials, vatRate: e.target.value}}))} />
                        <span>%</span>
                     </div>
                     <span>{formData.financials.taxAmount}</span>
                  </div>
-                 <div className="flex justify-between text-sm mb-4 text-slate-300 pb-4 border-b border-slate-600">
-                    <span>Timbre Fiscal</span>
-                    <input className="w-16 bg-slate-700 text-right rounded border-none text-xs py-0.5" value={formData.financials.stampDuty} onChange={e => setFormData(p=>({...p, financials: {...p.financials, stampDuty: e.target.value}}))} />
+                 <div className="flex justify-between text-sm mb-4 items-center opacity-80 border-b border-white/20 pb-3">
+                    <span>{t("contracts.form.financials.stamp")}</span>
+                    <input className="w-14 bg-white/10 text-right rounded border-none text-xs py-0.5 text-white" value={formData.financials.stampDuty} onChange={e => setFormData(p=>({...p, financials: {...p.financials, stampDuty: e.target.value}}))} />
                  </div>
-                 <div className="flex justify-between text-xl font-bold text-white">
-                    <span>NET TTC</span>
+                 
+                 <div className="flex justify-between text-xl font-bold">
+                    <span>{isPartnerMode ? "NET À PAYER" : "TOTAL TTC"}</span>
                     <span>{formData.financials.totalTTC} TND</span>
                  </div>
               </div>
 
-              {/* Payment Terms */}
+              {/* Deposit */}
               <div className="grid grid-cols-2 gap-4">
                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Avance (TND)</label>
+                    <label className="text-xs text-gray-500 mb-1 block">{t("contracts.form.financials.deposit")}</label>
                     <input type="number" className="w-full p-2 border border-gray-300 rounded text-sm" value={formData.paymentTerms.depositAmount} onChange={e => setFormData(p=>({...p, paymentTerms: {...p.paymentTerms, depositAmount: e.target.value}}))} />
-                 </div>
-                 <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Caution (TND)</label>
-                    <input type="number" className="w-full p-2 border border-gray-300 rounded text-sm" value={formData.paymentTerms.securityDeposit} onChange={e => setFormData(p=>({...p, paymentTerms: {...p.paymentTerms, securityDeposit: e.target.value}}))} />
                  </div>
               </div>
             </div>
@@ -512,57 +539,54 @@ const ContractFormPage = () => {
 
           {/* STEP 4: LEGAL */}
           {currentStep === 4 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 space-y-4">
-               <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Juridiction Compétente</label>
-                  <select className="w-full p-2 border border-gray-300 rounded bg-white text-sm" value={formData.legal.jurisdiction} onChange={e => setFormData(p=>({...p, legal:{...p.legal, jurisdiction: e.target.value}}))}>
+             <div className="space-y-4 animate-in slide-in-from-right-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.legal.jurisdiction")}</label>
+                  <select className="w-full p-2 border border-gray-300 rounded text-sm bg-white" value={formData.legal.jurisdiction} onChange={e => setFormData(p=>({...p, legal:{...p.legal, jurisdiction: e.target.value}}))}>
                      <option value="Tribunal de Tunis">Tribunal de Tunis</option>
                      <option value="Tribunal de l'Ariana">Tribunal de l'Ariana</option>
                      <option value="Tribunal de Sousse">Tribunal de Sousse</option>
                   </select>
                </div>
                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Conditions Spéciales</label>
-                  <textarea rows={6} className="w-full p-3 border border-gray-300 rounded text-sm outline-none focus:border-orange-500" placeholder="Ajouter des clauses particulières ici..." value={formData.legal.specialConditions} onChange={e => setFormData(p=>({...p, legal:{...p.legal, specialConditions: e.target.value}}))} />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.legal.specialConditions")}</label>
+                  <textarea rows={5} className="w-full p-3 border border-gray-300 rounded text-sm" placeholder={t("contracts.form.legal.specialConditionsPlaceholder")} value={formData.legal.specialConditions} onChange={e => setFormData(p=>({...p, legal:{...p.legal, specialConditions: e.target.value}}))} />
                </div>
-               <div className="bg-blue-50 p-3 rounded flex gap-3 text-blue-700 text-xs">
-                  <AlertCircle size={16} className="shrink-0 mt-0.5"/>
-                  <p>Les clauses générales de vente (CGV) définies dans vos paramètres seront automatiquement annexées à ce contrat lors de l'impression PDF.</p>
+               <div className="flex gap-2 p-3 bg-blue-50 text-blue-700 rounded-lg text-xs border border-blue-100">
+                  <AlertCircle size={16} className="shrink-0"/>
+                  <p>{t("contracts.form.legal.warning")}</p>
                </div>
             </div>
           )}
         </div>
 
-        {/* FOOTER ACTIONS */}
+        {/* --- FOOTER NAV --- */}
         <div className="p-4 border-t border-gray-200 bg-white flex justify-between shrink-0">
           {currentStep > 1 ? (
-             <button onClick={() => setCurrentStep(c => c - 1)} className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg text-sm">Précédent</button>
+             <button onClick={() => setCurrentStep(c => c - 1)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium">
+               {t("contracts.form.nav.back")}
+             </button>
           ) : <div></div>}
           
           {currentStep < 4 ? (
-             <button onClick={handleNext} className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 text-sm shadow-md shadow-orange-200">
-               Suivant <ChevronRight size={16}/>
+             <button onClick={() => setCurrentStep(c => c + 1)} className={`flex items-center gap-2 px-6 py-2 bg-${themeColor}-500 text-white font-bold rounded-lg hover:bg-${themeColor}-600 shadow-md shadow-${themeColor}-200 text-sm`}>
+               {t("contracts.form.nav.next")} <ChevronRight className={isRTL ? "rotate-180" : ""} size={16}/>
              </button>
           ) : (
-             <button onClick={handleSubmit} disabled={loading} className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 text-sm shadow-md shadow-green-200 disabled:opacity-70">
-               {loading ? <LoadingSpinner size="sm" color="white" /> : <Save size={16}/>}
-               {isEditMode ? "Mettre à jour" : "Enregistrer le Contrat"}
+             <button onClick={handleSubmit} disabled={loading} className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-md shadow-green-200 text-sm">
+               {loading ? <LoadingSpinner size="sm"/> : <Save size={16}/>}
+               {isEditMode ? t("contracts.form.nav.update") : t("contracts.form.nav.save")}
              </button>
           )}
         </div>
       </div>
 
-      {/* --- RIGHT: PREVIEW PANEL (50%) --- */}
-      <div className="hidden lg:flex flex-1 bg-gray-900 items-center justify-center relative overflow-hidden">
-        <div className="absolute top-4 right-4 text-white/40 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-           <Eye size={14}/> Live Preview
-        </div>
-        {/* Scale the A4 Preview to fit screen */}
-        <div className="transform scale-[0.60] xl:scale-[0.70] shadow-2xl transition-transform duration-300 origin-center">
+      {/* --- RIGHT: PREVIEW --- */}
+      <div className={`hidden lg:flex flex-1 bg-gray-900 items-center justify-center relative ${isRTL ? 'border-r' : 'border-l'} border-gray-700`}>
+        <div className="transform scale-[0.70] shadow-2xl origin-center">
           <LiveContractPreview settings={settings} data={{...formData, services}} />
         </div>
       </div>
-
     </div>
   );
 };

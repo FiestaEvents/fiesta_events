@@ -1710,53 +1710,6 @@ const DashboardPage = () => {
             )}
           </div>
         </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-            <LayoutDashboard size={18} />
-            {t('dashboard.quick_actions.title')}
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => navigate('/events/new')}
-              className="flex flex-col items-center justify-center bg-white/5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all py-4 px-2 rounded-lg text-center group border border-gray-100 dark:border-gray-700"
-            >
-              <Plus size={20} className="mb-2 text-orange-500 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                {t('dashboard.quick_actions.new_event')}
-              </span>
-            </button>
-            <button
-              onClick={() => navigate('/clients')}
-              className="flex flex-col items-center justify-center bg-white/5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all py-4 px-2 rounded-lg text-center group border border-gray-100 dark:border-gray-700"
-            >
-              <Users size={20} className="mb-2 text-orange-500 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                {t('dashboard.quick_actions.add_client')}
-              </span>
-            </button>
-            <button
-              onClick={() => navigate('/invoices')}
-              className="flex flex-col items-center justify-center bg-white/5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all py-4 px-2 rounded-lg text-center group border border-gray-100 dark:border-gray-700"
-            >
-              <FileText size={20} className="mb-2 text-orange-500 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                {t('dashboard.quick_actions.new_invoice')}
-              </span>
-            </button>
-            <button
-              onClick={() => navigate('/settings')}
-              className="flex flex-col items-center justify-center bg-white/5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all py-4 px-2 rounded-lg text-center group border border-gray-100 dark:border-gray-700"
-            >
-              <Settings size={20} className="mb-2 text-orange-500 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                {t('dashboard.quick_actions.settings')}
-              </span>
-            </button>
-          </div>
-        </div>
-
       </div>
 
     </div>
