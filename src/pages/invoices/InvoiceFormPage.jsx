@@ -23,6 +23,7 @@ import Badge, { StatusBadge } from "../../components/common/Badge";
 // Hooks & Utils
 import { useToast } from "../../hooks/useToast";
 import formatCurrency from "../../utils/formatCurrency";
+import formatDate from "../../utils/formatDate";
 
 // Sub-components
 import LiveInvoicePreview from "./LiveInvoicePreview";
@@ -32,9 +33,7 @@ import LiveInvoicePreview from "./LiveInvoicePreview";
 // ============================================
 const DraftNotification = ({ draftData, onRestore, onDiscard }) => {
   if (!draftData) return null;
-  const formattedDate = new Date(draftData.timestamp).toLocaleString("en-GB", {
-    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
-  });
+  const formattedDate = formatDate(draftData.timestamp);
 
   return (
     <div className="mb-4 p-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800/30">
