@@ -35,7 +35,7 @@ export const ROUTES = {
   // Invoices
   INVOICES: '/invoices',
   INVOICE_DETAILS: (id) => `/invoices/${id}`,
-  CREATE_INVOICE: '/invoices/create',
+  CREATE_INVOICE: '/invoices/new',
 
   // Finance
   FINANCE: '/finance',

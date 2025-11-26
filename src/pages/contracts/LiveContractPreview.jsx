@@ -1,197 +1,208 @@
 import React from 'react';
-
-// Helper for Tunisian Currency (3 decimals)
-const formatTND = (amount) => {
-  return new Intl.NumberFormat('fr-TN', {
-    style: 'currency',
-    currency: 'TND',
-    minimumFractionDigits: 3
-  }).format(amount || 0);
-};
+import formatDate from '../../utils/formatDate.js';
+import formatCurrency from '../../utils/formatCurrency';
 
 const LiveContractPreview = ({ settings, data }) => {
   
-  // 1. Defaults tailored for Tunisia
-  const defaults = {
+  // 1. Defaults (Tunisian Context) combined with Settings Prop
+  const s = {
     branding: { 
-      color: '#F18237', // Orange accent
-      fontBody: 'Arial, sans-serif',
+      primary: settings?.branding?.colors?.primary || '#F18237', 
+      text: '#1F2937',
+      logo: settings?.branding?.logo 
     },
-    companyInfo: { 
-      displayName: 'VOTRE SOCIÉTÉ', 
-      legalName: 'NOM LÉGAL DE LA SOCIÉTÉ', 
-      matriculeFiscale: '0000000/A/M/000', 
-      address: 'Adresse de la société, Tunisie', 
-      rib: '00 000 000 0000000000 00',
-      phone: '+216 00 000 000'
+    company: { 
+      displayName: settings?.companyInfo?.displayName || 'VOTRE SOCIÉTÉ',
+      legalName: settings?.companyInfo?.legalName || '', 
+      matriculeFiscale: settings?.companyInfo?.matriculeFiscale || '', 
+      address: settings?.companyInfo?.address || '', 
+      rib: settings?.companyInfo?.rib || '',
+      phone: settings?.companyInfo?.phone || ''
     },
+    labels: settings?.labels || {
+      contractTitle: 'CONTRAT DE PRESTATION',
+      clientLabel: 'Le Client',
+      partnerLabel: 'Le Partenaire'
+    }
   };
 
-  const company = { ...defaults.companyInfo, ...settings?.companyInfo };
-  const primaryColor = settings?.branding?.colors?.primary || defaults.branding.color;
-
-  // 2. Data Accessors
+  // 2. Data Safe Accessors
   const party = data?.party || {};
-  const logistics = data?.logistics || {};
   const financials = data?.financials || {};
+  const logistics = data?.logistics || {};
   const legal = data?.legal || {};
-  const contractDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const services = data?.services || [];
+  
+  const partyLabel = data?.contractType === 'partner' ? s.labels.partnerLabel : s.labels.clientLabel;
 
-  // 3. Styles (Inline for PDF generation compatibility)
-  const s = {
+  // 3. CSS Styles for A4 Paper (Inline for reliable PDF generation)
+  const styles = {
     page: {
-      width: '794px', // A4 pixel width
-      minHeight: '1123px',
+      width: '794px', // Standard A4 pixel width at 96 DPI
+      minHeight: '1123px', 
       backgroundColor: 'white',
-      padding: '60px',
-      fontFamily: 'Helvetica, Arial, sans-serif',
-      fontSize: '11pt',
+      padding: '50px 60px',
+      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      fontSize: '11px',
       color: '#000',
-      lineHeight: '1.4',
+      lineHeight: '1.5',
       margin: '0 auto',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      boxShadow: '0 0 15px rgba(0,0,0,0.05)',
       position: 'relative'
     },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginBottom: '40px',
-      borderBottom: `2px solid ${primaryColor}`,
-      paddingBottom: '20px'
-    },
-    title: {
-      textAlign: 'center',
-      fontSize: '18pt',
-      fontWeight: 'bold',
-      textTransform: 'uppercase',
-      marginBottom: '30px',
-      letterSpacing: '1px'
-    },
-    sectionTitle: {
-      fontSize: '11pt',
-      fontWeight: 'bold',
-      textTransform: 'uppercase',
-      color: '#333',
-      borderBottom: '1px solid #ddd',
-      paddingBottom: '5px',
-      marginTop: '25px',
-      marginBottom: '10px'
-    },
-    row: { display: 'flex', justifyContent: 'space-between', marginBottom: '5px' },
-    label: { fontWeight: 'bold', width: '150px' },
-    value: { flex: 1 },
-    textJustify: { textAlign: 'justify' }
+    headerRow: { display: 'flex', justifyContent: 'space-between', borderBottom: `2px solid ${s.branding.primary}`, paddingBottom: '20px', marginBottom: '30px' },
+    title: { textAlign: 'center', fontSize: '16px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '25px', letterSpacing: '1px' },
+    h3: { fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '20px', marginBottom: '10px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' },
+    p: { marginBottom: '8px', textAlign: 'justify' },
+    bold: { fontWeight: 'bold' },
+    table: { width: '100%', borderCollapse: 'collapse', marginTop: '15px', fontSize: '10px' },
+    th: { borderBottom: '1px solid #000', textAlign: 'left', padding: '6px', fontWeight: 'bold' },
+    td: { borderBottom: '1px solid #eee', padding: '6px' },
+    tdNum: { textAlign: 'right' },
+    signatureBox: { height: '100px', border: '1px solid #ddd', borderRadius: '4px', marginTop: '10px', backgroundColor: '#f9fafb' }
   };
 
   return (
-    <div style={s.page} id="contract-preview">
+    <div style={styles.page} id="contract-preview">
       
       {/* --- HEADER --- */}
-      <div style={s.header}>
+      <div style={styles.headerRow}>
         <div>
-           {/* Logo placeholder or Company Name */}
-           <h2 style={{ color: primaryColor, fontWeight: '900', fontSize: '16pt', textTransform: 'uppercase', margin: 0 }}>
-             {company.displayName}
-           </h2>
-           <div style={{ fontSize: '9pt', marginTop: '5px', color: '#555' }}>
-             <p style={{margin: 0}}>{company.address}</p>
-             <p style={{margin: 0}}>MF: {company.matriculeFiscale}</p>
-             <p style={{margin: 0}}>Tél: {company.phone}</p>
-           </div>
+          {s.branding.logo?.url ? (
+            <img 
+              src={s.branding.logo.url.startsWith('http') ? s.branding.logo.url : `http://localhost:5000${s.branding.logo.url}`} 
+              alt="Logo" 
+              style={{ height: '50px', objectFit: 'contain', marginBottom: '5px' }} 
+            />
+          ) : (
+            <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: s.branding.primary }}>{s.company.displayName}</h2>
+          )}
+          <div style={{ fontSize: '9px', color: '#555' }}>
+            <p style={{ margin: 0 }}>{s.company.legalName}</p>
+            <p style={{ margin: 0 }}>{s.company.address}</p>
+            <p style={{ margin: 0 }}>MF: {s.company.matriculeFiscale}</p>
+          </div>
         </div>
-        <div style={{ textAlign: 'right', fontSize: '10pt' }}>
-          <p style={{ fontWeight: 'bold', margin: 0 }}>Réf: {data?.contractNumber || 'DRAFT-001'}</p>
-          <p style={{ margin: 0 }}>Tunis, le {contractDate}</p>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{s.labels.contractTitle}</p>
+          <p style={{ fontSize: '10px', fontFamily: 'monospace' }}>Réf: {data?.contractNumber || 'BROUILLON'}</p>
+          <p style={{ fontSize: '10px' }}>Date: {formatDate(new Date())}</p>
         </div>
       </div>
 
-      {/* --- TITLE --- */}
-      <h1 style={s.title}>
-        {data?.contractType === 'partner' ? 'CONTRAT DE PARTENARIAT' : 'CONTRAT DE PRESTATION'}
-      </h1>
-
-      {/* --- ENTRE LES SOUSSIGNÉS --- */}
-      <div style={{ marginBottom: '30px' }}>
-        <p style={{ marginBottom: '15px' }}><strong>ENTRE LES SOUSSIGNÉS :</strong></p>
+      {/* --- PARTIES --- */}
+      <div style={{ marginBottom: '25px' }}>
+        <p style={styles.p}><strong>ENTRE LES SOUSSIGNÉS :</strong></p>
         
-        {/* FIRST PARTY (US) */}
-        <div style={{ marginBottom: '15px', paddingLeft: '20px' }}>
-          <span style={{ fontWeight: 'bold' }}>La Société {company.legalName}</span>, 
-          immatriculée sous le M.F N° {company.matriculeFiscale}, 
-          dont le siège social est situé à {company.address},
-          <br/>Ci-après dénommée <strong>« Le Prestataire »</strong> d'une part.
+        {/* Provider */}
+        <div style={{ paddingLeft: '20px', marginBottom: '10px' }}>
+          <span style={styles.bold}>La Société {s.company.legalName}</span>, 
+          immatriculée sous le M.F N° {s.company.matriculeFiscale}, 
+          dont le siège social est sis à {s.company.address}.
+          <br/>Ci-après dénommée <strong>« Le Prestataire »</strong>.
         </div>
 
-        {/* SECOND PARTY (THEM) */}
+        {/* Client */}
         <div style={{ paddingLeft: '20px' }}>
-          <span style={{ fontWeight: 'bold' }}>
-            {party.type === 'company' ? `La Société ${party.name || '___________'}` : `Mr/Mme ${party.name || '___________'}`}
-          </span>,
+          <span style={styles.bold}>{party.name || '____________________'}</span>,
           {party.type === 'company' 
             ? ` immatriculée sous le M.F N° ${party.identifier || '___________'}` 
             : ` titulaire de la CIN N° ${party.identifier || '___________'}`
           },
-          dont l'adresse est située à {party.address || '______________________'},
-          <br/>Ci-après dénommé(e) <strong>« Le Client »</strong> d'autre part.
+          {party.address && ` demeurant à ${party.address}`}.
+          <br/>Ci-après dénommé(e) <strong>« {partyLabel} »</strong>.
         </div>
       </div>
 
-      <p style={{ textAlign: 'center', fontStyle: 'italic', margin: '20px 0' }}>
+      <div style={{ textAlign: 'center', fontStyle: 'italic', margin: '20px 0', fontSize: '10px' }}>
         Il a été convenu et arrêté ce qui suit :
-      </p>
+      </div>
 
       {/* --- CONTENT --- */}
-      
-      {/* ARTICLE 1 : OBJET */}
-      <div style={s.sectionTitle}>ARTICLE 1 : OBJET DU CONTRAT</div>
-      <p style={s.textJustify}>
-        Le présent contrat a pour objet la prestation de services suivante : <strong>{data?.title || 'Organisation d\'événement'}</strong>. 
-        L'événement est prévu du <strong>{logistics.startDate ? new Date(logistics.startDate).toLocaleDateString('fr-FR') : '...'}</strong> au <strong>{logistics.endDate ? new Date(logistics.endDate).toLocaleDateString('fr-FR') : '...'}</strong>.
+      <h3 style={styles.h3}>Article 1 : Objet du Contrat</h3>
+      <p style={styles.p}>
+        Le présent contrat a pour objet : <strong>{data?.title || 'Organisation d\'événement'}</strong>.
+        <br/>
+        L'événement aura lieu du <strong>{formatDate(logistics.startDate)}</strong> au <strong>{formatDate(logistics.endDate)}</strong>.
       </p>
 
-      {/* ARTICLE 2 : SERVICES & LOGISTIQUE */}
-      <div style={s.sectionTitle}>ARTICLE 2 : DÉTAILS DE LA PRESTATION</div>
-      <div style={{ fontSize: '10pt', marginLeft: '10px' }}>
-        <div style={s.row}><span style={s.label}>Date :</span> <span>{logistics.startDate || '...'}</span></div>
-        <div style={s.row}><span style={s.label}>Heure de mise en place :</span> <span>{logistics.checkInTime || '10:00'}</span></div>
-        <div style={s.row}><span style={s.label}>Heure de fin :</span> <span>{logistics.checkOutTime || '00:00'}</span></div>
+      <h3 style={styles.h3}>Article 2 : Détails Logistiques</h3>
+      <div style={{ display: 'flex', gap: '40px', fontSize: '10px', marginBottom: '10px' }}>
+        <div><span style={{opacity: 0.6}}>Mise en place :</span> <strong>{logistics.checkInTime || '10:00'}</strong></div>
+        <div><span style={{opacity: 0.6}}>Libération :</span> <strong>{logistics.checkOutTime || '00:00'}</strong></div>
       </div>
-      
-      {/* ARTICLE 3 : CONDITIONS FINANCIERES */}
-      <div style={s.sectionTitle}>ARTICLE 3 : CONDITIONS FINANCIÈRES</div>
-      <p style={s.textJustify}>
-        En contrepartie des services décrits ci-dessus, le Client s'engage à payer la somme détaillée ci-après.
-      </p>
 
-      {/* ARTICLE 4 : PAIEMENT */}
-      <div style={s.sectionTitle}>ARTICLE 4 : MODALITÉS DE PAIEMENT</div>
-      <p style={s.textJustify}>
-        Le règlement s'effectuera par chèque ou virement bancaire.
-        {financials.depositAmount > 0 && ` Une avance de ${formatTND(financials.depositAmount)} est exigée à la signature.`}
-        {company.rib && <><br/><strong>RIB : {company.rib}</strong></>}
-      </p>
+      {/* --- FINANCIALS --- */}
+      <h3 style={styles.h3}>Article 3 : Conditions Financières</h3>
+      <table style={styles.table}>
+        <thead>
+          <tr>
+            <th style={styles.th}>Désignation</th>
+            <th style={{...styles.th, textAlign: 'center'}}>Qté</th>
+            <th style={{...styles.th, textAlign: 'right'}}>P.U (HT)</th>
+            <th style={{...styles.th, textAlign: 'right'}}>Total (HT)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {services.map((svc, i) => (
+            <tr key={i}>
+              <td style={styles.td}>{svc.description || 'Prestation...'}</td>
+              <td style={{...styles.td, textAlign: 'center'}}>{svc.quantity}</td>
+              <td style={{...styles.td, textAlign: 'right'}}>{formatCurrency(svc.rate)}</td>
+              <td style={{...styles.td, textAlign: 'right'}}>{formatCurrency(svc.amount)}</td>
+            </tr>
+          ))}
+          {services.length === 0 && <tr><td colSpan="4" style={{...styles.td, textAlign: 'center', fontStyle: 'italic'}}>Aucun service ajouté</td></tr>}
+        </tbody>
+      </table>
 
-      {/* ARTICLE 5 : JURIDICTION */}
-      <div style={s.sectionTitle}>ARTICLE 5 : JURIDICTION</div>
-      <p style={s.textJustify}>
-        Tout litige relatif à l'interprétation ou à l'exécution du présent contrat sera de la compétence exclusive du {legal.jurisdiction || 'Tribunal de Tunis'}.
+      {/* TOTALS */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '15px' }}>
+        <div style={{ width: '220px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span>Total HT :</span> <strong>{formatCurrency(financials.amountHT)}</strong>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span>TVA ({financials.vatRate}%):</span> <span>{formatCurrency(financials.taxAmount)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span>Timbre Fiscal :</span> <span>{formatCurrency(financials.stampDuty)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', borderTop: '2px solid #000', paddingTop: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+            <span>NET À PAYER :</span> <span style={{color: s.branding.primary}}>{formatCurrency(financials.totalTTC)}</span>
+          </div>
+          {(data?.paymentTerms?.depositAmount > 0) && (
+            <div style={{ fontSize: '9px', textAlign: 'right', marginTop: '5px', color: '#666' }}>
+              Dont avance : {formatCurrency(data.paymentTerms.depositAmount)}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* --- LEGAL --- */}
+      <h3 style={styles.h3}>Article 4 : Dispositions Diverses</h3>
+      <p style={styles.p}>
+        <strong>Juridiction :</strong> En cas de litige, seuls les tribunaux de <strong>{legal.jurisdiction || 'Tunis'}</strong> seront compétents.
+        <br/>
+        {legal.specialConditions && <><strong>Conditions Spéciales :</strong> {legal.specialConditions}</>}
       </p>
 
       {/* --- SIGNATURES --- */}
-      <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'space-between', breakInside: 'avoid' }}>
+      <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'space-between', breakInside: 'avoid' }}>
         <div style={{ width: '45%' }}>
-          <p style={{ fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '50px' }}>POUR {company.displayName}</p>
-          <p style={{ fontSize: '9pt', color: '#888' }}>(Signature et Cachet)</p>
+          <p style={{ fontSize: '9px', textTransform: 'uppercase', fontWeight: 'bold', textAlign: 'center', marginBottom: '5px' }}>Pour Le Prestataire</p>
+          <div style={styles.signatureBox}></div>
         </div>
         <div style={{ width: '45%' }}>
-          <p style={{ fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '50px' }}>POUR LE CLIENT</p>
-          <p style={{ fontSize: '9pt', color: '#888' }}>(Lu et approuvé, Bon pour accord)</p>
+          <p style={{ fontSize: '9px', textTransform: 'uppercase', fontWeight: 'bold', textAlign: 'center', marginBottom: '5px' }}>Pour {partyLabel}</p>
+          <div style={styles.signatureBox}></div>
         </div>
       </div>
 
       {/* --- FOOTER --- */}
-      <div style={{ position: 'absolute', bottom: '40px', left: '60px', right: '60px', textAlign: 'center', fontSize: '8pt', color: '#999', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-        {company.legalName} - MF: {company.matriculeFiscale} - Adresse: {company.address}
+      <div style={{ position: 'absolute', bottom: '30px', left: '60px', right: '60px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', borderTop: '1px solid #f3f4f6', paddingTop: '10px' }}>
+        {s.company.displayName} - MF: {s.company.matriculeFiscale} - Adresse: {s.company.address}
+        {s.company.rib && <span> - RIB: {s.company.rib}</span>}
       </div>
 
     </div>

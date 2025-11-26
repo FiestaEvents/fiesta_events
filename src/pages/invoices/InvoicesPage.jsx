@@ -211,7 +211,7 @@ const InvoicesPage = () => {
 
   const handleCreateInvoice = () => {
     // Navigate to the Create Page with the correct type query param
-    navigate(`/invoices/create?type=${invoiceType}`);
+    navigate(`/invoices/new?type=${invoiceType}`);
   };
 
   const handleRowClick = useCallback((invoice) => {
@@ -221,7 +221,7 @@ const InvoicesPage = () => {
 
   const handleEditInvoice = (invoice) => {
     // Navigate to the Edit Page using ID
-    navigate(`/invoices/edit/${invoice._id}`);
+    navigate(`/invoices/${invoice._id}/edit`);
   };
 
   const handleDownloadInvoice = async (invoice) => {
