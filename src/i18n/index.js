@@ -22,7 +22,7 @@ i18n
         translation: frTranslations,
       },
     },
-    fallbackLng: 'en',
+    fallbackLng: 'fr',
     debug: true, // ← Set this to true temporarily
     interpolation: {
       escapeValue: false,
