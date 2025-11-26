@@ -3362,6 +3362,205 @@ export const userService = {
   },
 };
 // ============================================
+// CONTRACT SERVICE
+// ============================================
+export const contractService = {
+
+  // ============================================
+  // CRUD OPERATIONS
+  // ============================================
+
+  /**
+   * Get all contracts with filters (search, status, dates) and pagination
+   * Endpoint: GET /api/contracts
+   */
+  getAll: async (params = {}) => {
+    const response = await api.get("/contracts", { params });
+    return response.data;
+  },
+
+  /**
+   * Get single contract by ID with populated fields
+   * Endpoint: GET /api/contracts/:id
+   */
+  getById: async (id) => {
+    const response = await api.get(`/contracts/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Create new contract
+   * Endpoint: POST /api/contracts
+   */
+  create: async (data) => {
+    const response = await api.post("/contracts", data);
+    return response.data;
+  },
+
+  /**
+   * Update existing contract
+   * Endpoint: PUT /api/contracts/:id
+   */
+  update: async (id, data) => {
+    const response = await api.put(`/contracts/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete contract (Drafts only)
+   * Endpoint: DELETE /api/contracts/:id
+   */
+  delete: async (id) => {
+    const response = await api.delete(`/contracts/${id}`);
+    return response.data;
+  },
+
+  // ============================================
+  // ARCHIVE OPERATIONS
+  // ============================================
+
+  /**
+   * Archive contract (Soft delete)
+   * Endpoint: PATCH /api/contracts/:id/archive
+   */
+  archive: async (id) => {
+    const response = await api.patch(`/contracts/${id}/archive`);
+    return response.data;
+  },
+
+  /**
+   * Restore archived contract
+   * Endpoint: PATCH /api/contracts/:id/restore
+   */
+  restore: async (id) => {
+    const response = await api.patch(`/contracts/${id}/restore`);
+    return response.data;
+  },
+
+  // ============================================
+  // WORKFLOW ACTIONS
+  // ============================================
+
+  /**
+   * Send contract via email for signing
+   * Endpoint: POST /api/contracts/:id/send
+   */
+  send: async (id) => {
+    const response = await api.post(`/contracts/${id}/send`);
+    return response.data;
+  },
+
+  /**
+   * Mark contract as viewed by client
+   * Endpoint: PATCH /api/contracts/:id/view
+   */
+  markViewed: async (id) => {
+    const response = await api.patch(`/contracts/${id}/view`);
+    return response.data;
+  },
+
+  /**
+   * Sign contract (Digital Signature)
+   * Endpoint: POST /api/contracts/:id/sign
+   */
+  sign: async (id, signatureData) => {
+    const response = await api.post(`/contracts/${id}/sign`, signatureData);
+    return response.data;
+  },
+
+  /**
+   * Duplicate an existing contract
+   * Endpoint: POST /api/contracts/:id/duplicate
+   */
+  duplicate: async (id) => {
+    const response = await api.post(`/contracts/${id}/duplicate`);
+    return response.data;
+  },
+
+  // ============================================
+  // SETTINGS & CONFIG
+  // ============================================
+
+  /**
+   * Get venue contract settings (Branding, Defaults)
+   * Endpoint: GET /api/contracts/settings
+   */
+  getSettings: async () => {
+    const response = await api.get("/contracts/settings");
+    return response.data;
+  },
+
+  /**
+   * Update venue contract settings
+   * Endpoint: PUT /api/contracts/settings
+   */
+  updateSettings: async (data) => {
+    const response = await api.put("/contracts/settings", data);
+    return response.data;
+  },
+
+  // ============================================
+  // STATISTICS
+  // ============================================
+
+  /**
+   * Get contract dashboard statistics
+   * Endpoint: GET /api/contracts/stats
+   */
+  getStats: async () => {
+    const response = await api.get("/contracts/stats");
+    return response.data;
+  },
+
+  // ============================================
+  // HELPERS & FILTERS
+  // ============================================
+
+  /**
+   * Get contracts filtered by Event ID
+   */
+  getByEvent: async (eventId) => {
+    const response = await api.get("/contracts", { params: { event: eventId } });
+    return response.data;
+  },
+
+  /**
+   * Get contracts filtered by Client ID
+   */
+  getByClient: async (clientId) => {
+    const response = await api.get("/contracts", { params: { client: clientId } });
+    return response.data;
+  },
+
+  /**
+   * Get contracts filtered by Partner ID
+   */
+  getByPartner: async (partnerId) => {
+    const response = await api.get("/contracts", { params: { partner: partnerId } });
+    return response.data;
+  },
+
+  /**
+   * Get contracts pending action (Sent/Viewed)
+   */
+  getPending: async () => {
+    const response = await api.get("/contracts", {
+      params: { status: "sent,viewed" },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get signed contracts expiring soon
+   */
+  getExpiring: async (days = 30) => {
+    const response = await api.get("/contracts", {
+      params: { expiringSoon: days }, // Ensure backend controller handles this param if used
+    });
+    return response.data;
+  },
+};
+// ============================================
 // EXPORT ALL SERVICES
 // ============================================
 export default {
@@ -3379,4 +3578,5 @@ export default {
   dashboardService,
   invoiceService,
   userService,
+  contractService,
 };

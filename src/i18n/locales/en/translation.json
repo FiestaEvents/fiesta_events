@@ -2108,6 +2108,8 @@
     }
   },
   "common": {
+    "contracts": "Contracts",
+    "home": "Quick Access",
     "settings": "Settings",
     "profile": "Profile",
     "logout": "Logout",

@@ -25,16 +25,15 @@ import {
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { 
-  reminderService, 
-  eventService, 
-  clientService, 
+import {
+  reminderService,
+  eventService,
+  clientService,
   partnerService,
   invoiceService,
   paymentService,
-  taskService 
+  taskService
 } from "../../api/index";
-import AppLauncher from "./AppLauncher";
 
 const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const { theme, toggleTheme } = useTheme();
@@ -48,8 +47,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLauncherOpen, setIsLauncherOpen] = useState(false);
-  
+
   // Search state
   const [searchResults, setSearchResults] = useState({
     events: [],
@@ -67,17 +65,16 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   // --- REFS ---
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
-  const launcherToggleRef = useRef(null);
   const searchRef = useRef(null);
   const searchInputRef = useRef(null);
 
   // Calculate positioning
-  const topBarOffset = isCollapsed 
+  const topBarOffset = isCollapsed
     ? (isRTL ? "lg:right-20" : "lg:left-20")
     : (isRTL ? "lg:right-64" : "lg:left-64");
 
   // --- SEARCH LOGIC ---
-  
+
   // Debounced search
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -178,45 +175,45 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   // Client-side filtering helper
   const filterBySearchQuery = (items, query, category) => {
     if (!query || !items || items.length === 0) return items;
-    
+
     const searchLower = query.toLowerCase();
-    
+
     return items.filter(item => {
       // Search in different fields based on category
-      switch(category) {
+      switch (category) {
         case 'events':
           return (item.title?.toLowerCase().includes(searchLower) ||
-                  item.description?.toLowerCase().includes(searchLower) ||
-                  item.type?.toLowerCase().includes(searchLower));
-        
+            item.description?.toLowerCase().includes(searchLower) ||
+            item.type?.toLowerCase().includes(searchLower));
+
         case 'clients':
         case 'partners':
           return (item.name?.toLowerCase().includes(searchLower) ||
-                  item.email?.toLowerCase().includes(searchLower) ||
-                  item.phone?.includes(searchLower) ||
-                  item.company?.toLowerCase().includes(searchLower));
-        
+            item.email?.toLowerCase().includes(searchLower) ||
+            item.phone?.includes(searchLower) ||
+            item.company?.toLowerCase().includes(searchLower));
+
         case 'invoices':
           return (item.invoiceNumber?.toLowerCase().includes(searchLower) ||
-                  item.recipientName?.toLowerCase().includes(searchLower) ||
-                  item.status?.toLowerCase().includes(searchLower));
-        
+            item.recipientName?.toLowerCase().includes(searchLower) ||
+            item.status?.toLowerCase().includes(searchLower));
+
         case 'payments':
           return (item.description?.toLowerCase().includes(searchLower) ||
-                  item.reference?.toLowerCase().includes(searchLower) ||
-                  item.status?.toLowerCase().includes(searchLower));
-        
+            item.reference?.toLowerCase().includes(searchLower) ||
+            item.status?.toLowerCase().includes(searchLower));
+
         case 'tasks':
           return (item.title?.toLowerCase().includes(searchLower) ||
-                  item.description?.toLowerCase().includes(searchLower) ||
-                  item.status?.toLowerCase().includes(searchLower) ||
-                  item.category?.toLowerCase().includes(searchLower));
-        
+            item.description?.toLowerCase().includes(searchLower) ||
+            item.status?.toLowerCase().includes(searchLower) ||
+            item.category?.toLowerCase().includes(searchLower));
+
         case 'reminders':
           return (item.title?.toLowerCase().includes(searchLower) ||
-                  item.description?.toLowerCase().includes(searchLower) ||
-                  item.type?.toLowerCase().includes(searchLower));
-        
+            item.description?.toLowerCase().includes(searchLower) ||
+            item.type?.toLowerCase().includes(searchLower));
+
         default:
           return false;
       }
@@ -240,7 +237,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     saveRecentSearch(searchQuery);
     setShowSearchResults(false);
     setSearchQuery("");
-    
+
     const routes = {
       events: `/events/${id}/detail`,
       clients: `/clients/${id}`,
@@ -250,7 +247,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
       tasks: `/tasks/${id}`,
       reminders: `/reminders/${id}`
     };
-    
+
     navigate(routes[type]);
   };
 
@@ -386,7 +383,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   return (
     <header className={`fixed top-0 ${isRTL ? 'left-0 right-0' : 'left-0 right-0'} h-16 bg-white border-b border-gray-200 z-20 transition-all duration-300 ${topBarOffset} dark:bg-gray-900 dark:border-gray-700`}>
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
-        
+
         {/* LEFT SECTION */}
         <div className="flex items-center gap-2">
           <button onClick={onMenuClick} className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
@@ -395,18 +392,13 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           <button onClick={onToggleCollapse} className="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
-          <button 
-            ref={launcherToggleRef}
-            onClick={() => setIsLauncherOpen(!isLauncherOpen)}
-            className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ml-1 ${
-              isLauncherOpen 
-                ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400" 
-                : "text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-            }`}
+          <Link
+            to="/home"
+            className="flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ml-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
             title={t("common.apps", "Apps")}
           >
             <LayoutGrid className="h-5 w-5" />
-          </button>
+          </Link>
           <Link to="/" className="flex items-center gap-2 lg:hidden ml-2">
             <div className="relative h-12 w-auto">
               <img src="/fiesta logo-01.png" alt="Fiesta Logo" className="h-full w-auto object-contain" onError={(e) => { e.target.style.display = "none"; }} />
@@ -417,7 +409,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
         {/* CENTER SECTION - ENHANCED SEARCH */}
         <div className="hidden md:flex flex-1 max-w-2xl mx-8 relative" ref={searchRef}>
           <div className="relative w-full">
-            <button 
+            <button
               onClick={handleSearchSubmit}
               className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 p-1 hover:text-blue-500 transition-colors z-10`}
             >
@@ -501,12 +493,12 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                       {t("common.foundResults", "Found")} {totalResults} {t("common.results", "results")}
                     </p>
                   </div>
-                  
+
                   {Object.entries(searchResults).map(([category, items]) => {
                     if (items.length === 0) return null;
                     const config = categoryConfig[category];
                     const Icon = config.icon;
-                    
+
                     return (
                       <div key={category} className="py-2">
                         <div className="px-4 py-2">
@@ -546,7 +538,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                       </div>
                     );
                   })}
-                  
+
                   <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
                     <button
                       onClick={() => setShowSearchResults(false)}
@@ -638,12 +630,6 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
           </div>
         </div>
       </div>
-
-      <AppLauncher 
-        isOpen={isLauncherOpen} 
-        onClose={() => setIsLauncherOpen(false)} 
-        toggleRef={launcherToggleRef} 
-      />
     </header>
   );
 };
