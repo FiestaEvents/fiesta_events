@@ -26,23 +26,21 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
       to={to}
       end={to === "/"}
       className={({ isActive }) =>
-        `flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 group ${
-          isActive
-            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+        `flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive
+          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
         }`
       }
     >
       {({ isActive }) => (
         <>
           <div
-            className={`flex items-center min-w-0 ${
-              isCollapsed
-                ? "justify-center w-full"
-                : isRTL
-                  ? "gap-3 flex-row-reverse"
-                  : "gap-3"
-            }`}
+            className={`flex items-center min-w-0 ${isCollapsed
+              ? "justify-center w-full"
+              : isRTL
+                ? "gap-3 flex-row-reverse"
+                : "gap-3"
+              }`}
           >
             <Icon
               className={`flex-shrink-0 ${isCollapsed ? "w-5 h-5" : "w-4 h-4"}`}
@@ -53,9 +51,8 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
           </div>
           {!isCollapsed && badge && (
             <span
-              className={`flex-shrink-0 px-2 py-0.5 text-xs font-semibold bg-red-500 text-white rounded-full ${
-                isRTL ? "mr-auto" : "ml-auto"
-              }`}
+              className={`flex-shrink-0 px-2 py-0.5 text-xs font-semibold bg-red-500 text-white rounded-full ${isRTL ? "mr-auto" : "ml-auto"
+                }`}
             >
               {badge}
             </span>
@@ -74,9 +71,8 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
     <div>
       {!isCollapsed && (
         <h3
-          className={`px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 ${
-            isRTL ? "text-right" : "text-left"
-          }`}
+          className={`px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 ${isRTL ? "text-right" : "text-left"
+            }`}
         >
           {t(titleKey)}
         </h3>
@@ -94,9 +90,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     <>
       {/* Mobile Overlay */}
       <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden transition-opacity duration-300 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
         onClick={onClose}
       ></div>
 
@@ -105,24 +100,22 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
         className={`fixed top-0 bottom-0 bg-white z-40 transition-all duration-300 dark:bg-gray-900 dark:border-gray-700
         ${isCollapsed ? "w-20" : "w-64"}
         ${isRTL ? "right-0 border-l" : "left-0 border-r"}
-        ${
-          isOpen
+        ${isOpen
             ? "translate-x-0"
             : isRTL
               ? "translate-x-full lg:translate-x-0"
               : "-translate-x-full lg:translate-x-0"
-        }`}
+          }`}
       >
         <div className="flex flex-col h-full" dir={isRTL ? "rtl" : "ltr"}>
           {/* Header */}
           <div
-            className={`flex items-center h-16 m-4 shrink-0 dark:border-gray-700 ${
-              isCollapsed
-                ? "justify-center"
-                : isRTL
-                  ? "justify-between flex-row-reverse"
-                  : "justify-between"
-            }`}
+            className={`flex items-center h-16 m-4 shrink-0 dark:border-gray-700 ${isCollapsed
+              ? "justify-center"
+              : isRTL
+                ? "justify-between flex-row-reverse"
+                : "justify-between"
+              }`}
           >
             {!isCollapsed && (
               <Link to="/" className="flex-shrink-0">
@@ -140,8 +133,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             )}
             {isCollapsed && (
               <Link to="/" className="flex items-center justify-center">
-                 {/* Small logo or Icon here */}
-                 <div className="w-8 h-8 bg-orange-500 rounded-lg"></div>
+                {/* Small logo or Icon here */}
+                <div className="w-8 h-8 bg-orange-500 rounded-lg"></div>
               </Link>
             )}
             {!isCollapsed && (
@@ -156,8 +149,18 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4 space-y-6 hide-scrollbar">
-            {/* Overview Section */}
+
+
+
+            {/* Quick Access Section */}
             <NavSection titleKey="sidebar.overview" isCollapsed={isCollapsed}>
+              <NavLink
+                to="/home"
+                icon={LayoutDashboard}
+                labelKey="common.home"
+                isCollapsed={isCollapsed}
+              />
+              {/* Overview Section */}
               <NavLink
                 to="/dashboard"
                 icon={LayoutDashboard}
@@ -227,7 +230,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               <NavLink
                 to="/contracts"
                 icon={Settings}
-                labelKey="contracts"
+                labelKey="common.contracts"
                 isCollapsed={isCollapsed}
               />
               <NavLink
@@ -241,14 +244,12 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
 
           {/* Footer */}
           <div
-            className={`p-3 border-t border-gray-200 dark:border-gray-700 ${
-              isCollapsed ? "hidden" : "block"
-            }`}
+            className={`p-3 border-t border-gray-200 dark:border-gray-700 ${isCollapsed ? "hidden" : "block"
+              }`}
           >
             <p
-              className={`text-xs text-gray-500 dark:text-gray-400 mb-3 ${
-                isRTL ? "text-right" : "text-center"
-              }`}
+              className={`text-xs text-gray-500 dark:text-gray-400 mb-3 ${isRTL ? "text-right" : "text-center"
+                }`}
             >
               &copy; 2025 Fiesta Inc. {t("allRightsReserved")}
             </p>

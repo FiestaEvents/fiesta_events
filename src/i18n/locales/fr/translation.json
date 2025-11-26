@@ -2262,6 +2262,8 @@
     }
   },
   "common": {
+    "contracts": "Contrats",
+    "home": "Accès Rapide",
     "team": "Équipe",
     "roles": "Rôles",
     "settings": "Paramètres",

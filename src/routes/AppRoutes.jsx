@@ -20,6 +20,7 @@ const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword.jsx"));
 const ResetPassword = lazy(() => import("../pages/auth/ResetPassword.jsx"));
 
 // Main
+const Home = lazy(() => import("../pages/Home.jsx"));
 const Dashboard = lazy(() => import("../pages/Dashboard2.jsx"));
 const Landing = lazy(() => import("../pages/landing.jsx"));
 
@@ -128,6 +129,7 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/home" element={<Home />} />
 
             {/* Events */}
             <Route path="/events" element={<EventsList />} />
