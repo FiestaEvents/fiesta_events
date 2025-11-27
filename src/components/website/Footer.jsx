@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { Heart } from "lucide-react";
 
@@ -31,14 +30,14 @@ const Footer = () => {
               className="w-[100px] object-cover"
             />
             <p className="text-gray-400 text-sm">
-              The all-in-one management platform for venues in Tunisia.
+              {t("common.footer.description", "Description")}
             </p>
           </div>
 
           {/* Product Links */}
           <div>
             <h4 className="font-bold mb-4">
-              {t("landing.footer.product", "Product")}
+              {t("common.footer.product", "Product")}
             </h4>
             <ul className="space-y-2 text-gray-400 text-sm">
               <li>
@@ -46,7 +45,7 @@ const Footer = () => {
                   onClick={() => handleNavClick("venue-system")}
                   className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block"
                 >
-                  Venue System
+                  Fiesta Venue
                 </button>
               </li>
               <li>
@@ -54,7 +53,7 @@ const Footer = () => {
                   onClick={() => handleNavClick("features")}
                   className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block"
                 >
-                  {t("landing.nav.features", "Features")}
+                  {t("common.footer.features", "Features")}
                 </button>
               </li>
               <li>
@@ -62,7 +61,7 @@ const Footer = () => {
                   onClick={() => handlePageNavigation("/marketplace")}
                   className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block"
                 >
-                  {t("landing.nav.marketplace", "Marketplace")}
+                  {t("common.footer.marketplace", "Marketplace")}
                 </button>
               </li>
             </ul>
@@ -71,12 +70,12 @@ const Footer = () => {
           {/* Company Links */}
           <div>
             <h4 className="font-bold mb-4">
-              {t("landing.footer.company", "Company")}
+              {t("common.footer.company", "Company")}
             </h4>
             <ul className="space-y-2 text-gray-400 text-sm">
               <li>
                 <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                  {t("landing.footer.aboutUs", "About Us")}
+                  {t("common.footer.aboutUs", "About Us")}
                 </button>
               </li>
               <li>
@@ -84,7 +83,7 @@ const Footer = () => {
                   onClick={() => handleNavClick("contact")}
                   className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block"
                 >
-                  {t("landing.nav.contact", "Contact")}
+                  {t("common.footer.contact", "Contact")}
                 </button>
               </li>
             </ul>
@@ -93,17 +92,17 @@ const Footer = () => {
           {/* Legal Links */}
           <div>
             <h4 className="font-bold mb-4">
-              {t("landing.footer.legal", "Legal")}
+              {t("common.footer.legal", "Legal")}
             </h4>
             <ul className="space-y-2 text-gray-400 text-sm">
               <li>
                 <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                  {t("landing.footer.privacy", "Privacy Policy")}
+                  {t("common.footer.privacy", "Privacy Policy")}
                 </button>
               </li>
               <li>
                 <button className="hover:text-white transition-all duration-300 hover:translate-x-1 inline-block">
-                  {t("landing.footer.terms", "Terms of Service")}
+                  {t("common.footer.terms", "Terms of Service")}
                 </button>
               </li>
             </ul>
@@ -113,9 +112,9 @@ const Footer = () => {
         {/* Copyright */}
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
           <p>
-            {t("landing.footer.copyright", "© 2025 Fiesta Events.")}{" "}
+            {t("common.footer.copyright", "© 2025 Fiesta Events.")}{" "}
             <Heart className="w-4 h-4 inline text-orange-500 animate-pulse" />{" "}
-            {t("landing.footer.inTunisia", "Made in Tunisia")}
+            {t("common.footer.inTunisia", "Made in Tunisia")}
           </p>
         </div>
       </div>

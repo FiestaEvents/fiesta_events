@@ -1,29 +1,29 @@
-import React, { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import {
-  Calendar,
-  Users,
-  Sparkles,
-  Check,
-  MapPin,
-  Phone,
-  Mail,
   ArrowRight,
-  Smartphone,
-  Zap,
   Award,
-  Heart,
-  Shield,
-  Monitor,
-  Store,
-  LayoutDashboard,
+  Calendar,
+  Check,
   Clock,
-  PieChart,
   CreditCard,
+  Heart,
+  LayoutDashboard,
+  Mail,
+  MapPin,
+  Monitor,
+  Phone,
+  PieChart,
   Settings,
+  Shield,
+  Smartphone,
+  Sparkles,
+  Store,
+  Users,
+  Zap,
 } from "lucide-react";
-import Navbar from "../../components/website/Navbar";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Footer from "../../components/website/Footer";
+import Navbar from "../../components/website/Navbar";
 import { useLanguage } from "../../context/LanguageContext";
 
 // PLACEHOLDER IMAGES
@@ -67,7 +67,6 @@ const Landing = () => {
   };
 
   const handleNavigation = (path) => {
-    // In production, use your router's navigation method
     window.location.href = path;
   };
 
@@ -102,20 +101,19 @@ const Landing = () => {
                 className={`w-4 h-4 text-orange-600 ${isRTL ? "ml-2" : "mr-2"}`}
               />
               <span className="text-sm font-bold text-orange-700">
-                The #1 Platform for Venue Owners
+                {t("landing.hero.badge")}
               </span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-in fade-in slide-in-from-bottom duration-700 delay-100">
-              Simplify Your
+              {t("landing.hero.title.line1")}
               <span className="block bg-gradient-to-r from-orange-500 via-orange-600 to-pink-500 bg-clip-text text-transparent animate-gradient">
-                Venue Management
+                {t("landing.hero.title.line2")}
               </span>
             </h1>
 
             <p className="text-xl text-gray-600 mb-12 leading-relaxed max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-              Streamline bookings, manage finances, and organize events with our
-              comprehensive dashboard designed specifically for venue owners.
+              {t("landing.hero.description")}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom duration-700 delay-300 mb-16">
@@ -123,7 +121,7 @@ const Landing = () => {
                 onClick={() => handleNavigation("/fiesta-venue")}
                 className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-4 rounded-lg hover:shadow-2xl transition-all duration-300 flex items-center text-lg font-medium transform hover:scale-105"
               >
-                Discover the System
+                {t("landing.hero.buttons.discoverSystem")}
                 <ArrowRight
                   className={`w-5 h-5 ${isRTL ? "mr-2" : "ml-2"} group-hover:translate-x-1 transition-transform duration-300`}
                 />
@@ -132,7 +130,7 @@ const Landing = () => {
                 onClick={() => scrollToSection("contact")}
                 className="group border-2 border-orange-500 text-orange-500 px-8 py-4 rounded-lg hover:bg-orange-500 hover:text-white transition-all duration-300 text-lg font-medium transform hover:scale-105 hover:shadow-lg bg-white/50 backdrop-blur-sm"
               >
-                Contact Sales
+                {t("landing.hero.buttons.contactSales")}
               </button>
             </div>
 
@@ -157,7 +155,7 @@ const Landing = () => {
                     <img
                       key={index}
                       src={src}
-                      alt={`Fiesta Dashboard Preview ${index + 1}`}
+                      alt={t("landing.hero.previewAlt", { number: index + 1 })}
                       className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-700 ease-in-out ${
                         index === currentScreenshot
                           ? "opacity-100 z-10"
@@ -167,7 +165,7 @@ const Landing = () => {
                   ))}
                   <div className="absolute inset-0 flex items-center justify-center -z-10">
                     <span className="text-gray-400 text-sm">
-                      Loading Preview...
+                      {t("landing.hero.loadingPreview")}
                     </span>
                   </div>
                 </div>
@@ -182,7 +180,9 @@ const Landing = () => {
                           ? "bg-white w-4"
                           : "bg-white/50 hover:bg-white/80"
                       }`}
-                      aria-label={`Go to slide ${idx + 1}`}
+                      aria-label={t("landing.hero.slideAria", {
+                        number: idx + 1,
+                      })}
                     />
                   ))}
                 </div>
@@ -201,10 +201,10 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Our Solutions
+              {t("landing.products.title")}
             </h2>
             <p className="text-xl text-gray-600">
-              Tools built for the future of event management
+              {t("landing.products.subtitle")}
             </p>
           </div>
 
@@ -215,19 +215,17 @@ const Landing = () => {
               <div className="relative bg-white p-10 rounded-3xl border-2 border-orange-200 shadow-xl transition-all duration-500 transform hover:-translate-y-2 h-full">
                 <div className="absolute top-6 right-6 bg-green-100 text-green-700 px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  AVAILABLE NOW
+                  {t("landing.products.webApp.available")}
                 </div>
 
                 <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
                   <Monitor className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-3xl font-bold mb-4 text-gray-900">
-                  Venue Management System
+                  {t("landing.products.webApp.title")}
                 </h3>
                 <p className="text-gray-600 mb-6 text-lg leading-relaxed">
-                  The powerful web-based command center for your venue. Handle
-                  bookings, staff, finance, and client communications in one
-                  secure place.
+                  {t("landing.products.webApp.description")}
                 </p>
 
                 <div className="space-y-3 mb-8">
@@ -249,7 +247,7 @@ const Landing = () => {
                   onClick={() => handleNavigation("/fiesta-venue")}
                   className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
                 >
-                  Learn More
+                  {t("landing.products.webApp.learnMore")}
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
@@ -259,18 +257,17 @@ const Landing = () => {
             <div className="group relative opacity-90">
               <div className="relative bg-white/60 backdrop-blur-sm p-10 rounded-3xl border-2 border-gray-100 hover:border-gray-200 transition-all duration-500 h-full flex flex-col">
                 <div className="absolute top-6 right-6 bg-gray-100 text-gray-600 px-4 py-1 rounded-full text-sm font-bold border border-gray-200">
-                  COMING SOON
+                  {t("landing.products.mobileApp.comingSoon")}
                 </div>
 
                 <div className="w-20 h-20 bg-gray-200 rounded-2xl flex items-center justify-center mb-6 grayscale opacity-70">
                   <Smartphone className="w-10 h-10 text-gray-500" />
                 </div>
                 <h3 className="text-3xl font-bold mb-4 text-gray-700">
-                  Client Mobile App
+                  {t("landing.products.mobileApp.title")}
                 </h3>
                 <p className="text-gray-500 mb-6 text-lg leading-relaxed">
-                  A seamless experience for your clients to discover venues,
-                  make reservations, and manage their event details on the go.
+                  {t("landing.products.mobileApp.description")}
                 </p>
 
                 <div className="space-y-3 mb-8 flex-grow">
@@ -294,7 +291,7 @@ const Landing = () => {
                     disabled
                     className="w-full bg-gray-100 text-gray-400 py-4 rounded-xl font-bold text-lg cursor-not-allowed border border-gray-200 flex items-center justify-center gap-2"
                   >
-                    Join Waitlist
+                    {t("landing.products.mobileApp.joinWaitlist")}
                     <Clock className="w-5 h-5" />
                   </button>
                 </div>
@@ -309,10 +306,10 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Why Choose Fiesta?
+              {t("landing.features.title")}
             </h2>
             <p className="text-xl text-gray-600">
-              Designed to solve the real challenges of venue management
+              {t("landing.features.subtitle")}
             </p>
           </div>
 
@@ -324,12 +321,10 @@ const Landing = () => {
                   <LayoutDashboard className="w-7 h-7 text-orange-600" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-orange-600">
-                  Centralized Control
+                  {t("landing.features.centralized.title")}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Stop juggling notebooks and spreadsheets. Get a visual
-                  calendar, automated invoices, and team scheduling in one
-                  dashboard.
+                  {t("landing.features.centralized.description")}
                 </p>
               </div>
             </div>
@@ -339,10 +334,11 @@ const Landing = () => {
                 <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-6">
                   <PieChart className="w-7 h-7 text-green-600" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Financial Insights</h3>
+                <h3 className="text-2xl font-bold mb-4">
+                  {t("landing.features.financial.title")}
+                </h3>
                 <p className="text-gray-600 mb-6">
-                  Track revenue, expenses, and profitability per event. Generate
-                  professional reports with a single click.
+                  {t("landing.features.financial.description")}
                 </p>
               </div>
             </div>
@@ -353,11 +349,10 @@ const Landing = () => {
                   <Store className="w-7 h-7 text-blue-600" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">
-                  Built-in Marketplace
+                  {t("landing.features.marketplace.title")}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Showcase your venue to thousands of potential clients. Receive
-                  inquiries directly into your management system.
+                  {t("landing.features.marketplace.description")}
                 </p>
               </div>
             </div>
@@ -371,16 +366,14 @@ const Landing = () => {
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <div className="inline-block bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-6">
-                FEATURE SPOTLIGHT
+                {t("landing.detail.badge")}
               </div>
               <h2 className="text-4xl font-bold mb-6 leading-tight">
-                The Operating System for <br />
-                Modern Venues
+                {t("landing.detail.title.line1")} <br />
+                {t("landing.detail.title.line2")}
               </h2>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                Fiesta isn't just a calendar. It's a complete business suite
-                designed to help you scale. Manage your entire venue from a
-                single screen, accessible from anywhere.
+                {t("landing.detail.description")}
               </p>
 
               <div className="space-y-6">
@@ -390,11 +383,10 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold mb-1">
-                      Centralized Command
+                      {t("landing.detail.features.centralized.title")}
                     </h3>
                     <p className="text-gray-400">
-                      View bookings, pending inquiries, and daily schedules at a
-                      glance.
+                      {t("landing.detail.features.centralized.description")}
                     </p>
                   </div>
                 </div>
@@ -404,11 +396,10 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold mb-1">
-                      Financial Management
+                      {t("landing.detail.features.financial.title")}
                     </h3>
                     <p className="text-gray-400">
-                      Track deposits, payments, and generate automated invoices
-                      effortlessly.
+                      {t("landing.detail.features.financial.description")}
                     </p>
                   </div>
                 </div>
@@ -418,11 +409,10 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold mb-1">
-                      Custom Configurations
+                      {t("landing.detail.features.customization.title")}
                     </h3>
                     <p className="text-gray-400">
-                      Set dynamic pricing, manage multiple spaces, and define
-                      staff roles.
+                      {t("landing.detail.features.customization.description")}
                     </p>
                   </div>
                 </div>
@@ -434,31 +424,31 @@ const Landing = () => {
               <div className="relative bg-gray-800 border border-gray-700 rounded-2xl p-8 hover:transform hover:scale-[1.02] transition-transform duration-500">
                 <Monitor className="w-16 h-16 text-white mb-8" />
                 <h3 className="text-2xl font-bold mb-4">
-                  Web Management Portal
+                  {t("landing.detail.portal.title")}
                 </h3>
                 <ul className="space-y-4 mb-8">
                   <li className="flex items-center gap-3 text-gray-300">
-                    <Check className="w-5 h-5 text-green-500" /> Real-time
-                    Availability Calendar
+                    <Check className="w-5 h-5 text-green-500" />
+                    {t("landing.detail.portal.features.calendar")}
                   </li>
                   <li className="flex items-center gap-3 text-gray-300">
-                    <Check className="w-5 h-5 text-green-500" /> Client CRM
-                    Database
+                    <Check className="w-5 h-5 text-green-500" />
+                    {t("landing.detail.portal.features.crm")}
                   </li>
                   <li className="flex items-center gap-3 text-gray-300">
-                    <Check className="w-5 h-5 text-green-500" /> Revenue
-                    Analytics & Reports
+                    <Check className="w-5 h-5 text-green-500" />
+                    {t("landing.detail.portal.features.analytics")}
                   </li>
                   <li className="flex items-center gap-3 text-gray-300">
-                    <Check className="w-5 h-5 text-green-500" /> Staff
-                    Scheduling Tools
+                    <Check className="w-5 h-5 text-green-500" />
+                    {t("landing.detail.portal.features.staff")}
                   </li>
                 </ul>
                 <button
                   onClick={() => scrollToSection("contact")}
                   className="w-full bg-white text-gray-900 font-bold py-4 rounded-xl hover:bg-gray-100 transition-colors"
                 >
-                  Request Access
+                  {t("landing.detail.portal.button")}
                 </button>
               </div>
             </div>
@@ -477,7 +467,7 @@ const Landing = () => {
               {t("landing.howItWorks.title")}
             </h2>
             <p className="text-xl text-gray-600">
-              Get your venue up and running in minutes
+              {t("landing.howItWorks.subtitle")}
             </p>
           </div>
 
@@ -497,14 +487,16 @@ const Landing = () => {
               },
               {
                 num: 3,
-                title: "Configure Calendar",
-                desc: "Set your availability and pricing rules.",
+                title: t("landing.howItWorks.steps.configureCalendar.title"),
+                desc: t(
+                  "landing.howItWorks.steps.configureCalendar.description"
+                ),
                 icon: Calendar,
               },
               {
                 num: 4,
-                title: "Start Managing",
-                desc: "Receive bookings and manage events efficiently.",
+                title: t("landing.howItWorks.steps.startManaging.title"),
+                desc: t("landing.howItWorks.steps.startManaging.description"),
                 icon: Zap,
               },
             ].map((step, idx) => {
@@ -542,7 +534,7 @@ const Landing = () => {
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Get Custom Pricing
+              {t("landing.pricing.title")}
             </h2>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
               {t("landing.pricing.description")}
@@ -601,12 +593,12 @@ const Landing = () => {
           <div className="space-y-6">
             {[
               {
-                q: "Is the Web Management System available now?",
-                a: "Yes! The Venue Management System is live and ready to help you manage your business.",
+                q: t("landing.faq.questions.systemAvailable.q"),
+                a: t("landing.faq.questions.systemAvailable.a"),
               },
               {
-                q: "When will the Mobile App be released?",
-                a: "We are currently in the final stages of development. Join our waitlist to be notified when it launches.",
+                q: t("landing.faq.questions.mobileAppRelease.q"),
+                a: t("landing.faq.questions.mobileAppRelease.a"),
               },
               {
                 q: t("landing.faq.questions.getStarted.q"),
@@ -644,11 +636,10 @@ const Landing = () => {
 
         <div className="relative max-w-4xl mx-auto text-center text-white px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Ready to Optimize Your Venue?
+            {t("landing.contact.title")}
           </h2>
           <p className="text-xl mb-12 opacity-90">
-            Contact our team today to learn how Fiesta can transform your
-            business.
+            {t("landing.contact.subtitle")}
           </p>
 
           <div className="grid md:grid-cols-3 gap-6 mb-12">
@@ -693,7 +684,7 @@ const Landing = () => {
               className="group border-2 border-white text-white px-8 py-4 rounded-lg hover:bg-white hover:text-orange-500 transition-all duration-300 text-lg font-medium transform hover:scale-105 flex items-center justify-center gap-2"
             >
               <Store className="w-5 h-5" />
-              Visit Marketplace
+              {t("landing.contact.visitMarketplace")}
             </button>
           </div>
         </div>
@@ -702,7 +693,6 @@ const Landing = () => {
       <Footer />
 
       <style jsx>{`
-        /* Animations preserved from previous file */
         @keyframes fade-in {
           from {
             opacity: 0;

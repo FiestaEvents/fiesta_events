@@ -1,7 +1,7 @@
 {
   "dashboard": {
     "loading": "Loading Dashboard...",
-    
+
     "today": {
       "title": "Today's Command Center",
       "view_schedule": "View Schedule",
@@ -11,14 +11,14 @@
       "events_list": "Today's Events",
       "guests": "guests"
     },
-    
+
     "actions": {
       "title": "Action Center",
       "overdue_invoices": "{{count}} Overdue Invoices",
       "new_enquiries": "{{count}} New Enquiries",
       "urgent_tasks": "{{count}} Urgent Tasks"
     },
-    
+
     "financial": {
       "title": "Financial Command Center",
       "cash_position": "Cash Position",
@@ -46,7 +46,7 @@
       "revenue": "Revenue",
       "net": "Net"
     },
-    
+
     "calendar": {
       "title": "Calendar & Booking Overview",
       "occupancy": "Occupancy",
@@ -59,7 +59,7 @@
       "missing_vendors": "Events Missing Partners",
       "assign_now": "Assign Now"
     },
-    
+
     "performance": {
       "title": "Performance Metrics",
       "tabs": {
@@ -82,13 +82,13 @@
       "completed": "Completed",
       "conversion_rate": "Conversion Rate"
     },
-    
+
     "charts": {
       "current_year": "Current Year",
       "last_year": "Last Year",
       "total": "Total"
     },
-    
+
     "insights": {
       "title": "Business Insights",
       "response_time": "Lead Response Time",
@@ -104,20 +104,20 @@
       "revenue_lost": "Revenue Lost",
       "main_reason": "Main Reason"
     },
-    
+
     "leads": {
       "title": "Pending Leads",
       "unknown": "Unknown Client",
       "no_pending": "No pending leads"
     },
-    
+
     "activity": {
       "title": "Recent Activity",
       "payment_received": "Payment received: {{amount}} from {{client}}",
       "new_booking": "New booking: {{title}}",
       "no_recent": "No recent activity"
     },
-    
+
     "quick_actions": {
       "title": "Quick Actions",
       "new_event": "New Event",
@@ -125,24 +125,24 @@
       "new_invoice": "New Invoice",
       "settings": "Settings"
     },
-    
+
     "errors": {
       "fetch_failed": "Failed to load dashboard data"
     }
   },
   "home": {
-  "eventsDesc": "Calendar Management",
-  "clientsDesc": "Customer Database",
-  "contractsDesc": "Legal Agreements",
-  "invoicesDesc": "Billing & Charges",
-  "paymentsDesc": "Income Tracking",
-  "partnersDesc": "Vendor Relationships",
-  "tasksDesc": "To-Do Lists",
-  "remindersDesc": "Alerts & Notifications",
-  "docSettingsDesc": "Template Layouts",
-  "statsDesc": "Reports & Analytics",
-  "settingsDesc": "System Configuration"
-},
+    "eventsDesc": "Calendar Management",
+    "clientsDesc": "Customer Database",
+    "contractsDesc": "Legal Agreements",
+    "invoicesDesc": "Billing & Charges",
+    "paymentsDesc": "Income Tracking",
+    "partnersDesc": "Vendor Relationships",
+    "tasksDesc": "To-Do Lists",
+    "remindersDesc": "Alerts & Notifications",
+    "docSettingsDesc": "Template Layouts",
+    "statsDesc": "Reports & Analytics",
+    "settingsDesc": "System Configuration"
+  },
   "clients": {
     "title": "Clients",
     "description": "Manage your client relationships and information",
@@ -486,37 +486,37 @@
       "viewFullDetails": "More Details"
     }
   },
-"eventDetail": {
-  "loading": "Loading event details...",
-  "tabs": {
-    "partners": "Partners",
-    "payments": "Payments",
-    "activity": "Activity"
+  "eventDetail": {
+    "loading": "Loading event details...",
+    "tabs": {
+      "partners": "Partners",
+      "payments": "Payments",
+      "activity": "Activity"
+    },
+    "errors": {
+      "notFound": "Event not found",
+      "loading": "Error loading event",
+      "notFoundDescription": "The event you are looking for does not exist.",
+      "edit": "Unable to edit event: Event ID not found",
+      "delete": "Unable to delete event: Event ID not found",
+      "payment": "Unable to record payment: Event ID not found"
+    },
+    "actions": {
+      "backToEvents": "Back to Events",
+      "tryAgain": "Try again",
+      "retry": "Retrying...",
+      "deleteLoading": "Deleting event...",
+      "deleteSuccess": "Event deleted successfully",
+      "deleteError": "Failed to delete event",
+      "editSuccess": "Event updated successfully"
+    },
+    "deleteModal": {
+      "title": "Delete Event",
+      "message": "Are you sure you want to delete \"{{eventTitle}}\"? This action cannot be undone and will delete all associated data.",
+      "confirmText": "Delete Event",
+      "cancelText": "Cancel"
+    }
   },
-  "errors": {
-    "notFound": "Event not found",
-    "loading": "Error loading event",
-    "notFoundDescription": "The event you are looking for does not exist.",
-    "edit": "Unable to edit event: Event ID not found",
-    "delete": "Unable to delete event: Event ID not found",
-    "payment": "Unable to record payment: Event ID not found"
-  },
-  "actions": {
-    "backToEvents": "Back to Events",
-    "tryAgain": "Try again",
-    "retry": "Retrying...",
-    "deleteLoading": "Deleting event...",
-    "deleteSuccess": "Event deleted successfully",
-    "deleteError": "Failed to delete event",
-    "editSuccess": "Event updated successfully"
-  },
-  "deleteModal": {
-    "title": "Delete Event",
-    "message": "Are you sure you want to delete \"{{eventTitle}}\"? This action cannot be undone and will delete all associated data.",
-    "confirmText": "Delete Event",
-    "cancelText": "Cancel"
-  }
-},
   "eventActivityTab": {
     "title": "Activity Timeline",
     "subtitle": "Track all changes and updates to this event",
@@ -910,39 +910,39 @@
       "eventUpdated": "Event updated successfully!"
     }
   },
- "partnerDetailModal": {
-  "title": "Partner Details",
-  "stats": {
-    "rating": "Rating",
-    "jobs": "Jobs",
-    "hourly": "/HR",
-    "fixed": "FIXED"
+  "partnerDetailModal": {
+    "title": "Partner Details",
+    "stats": {
+      "rating": "Rating",
+      "jobs": "Jobs",
+      "hourly": "/HR",
+      "fixed": "FIXED"
+    },
+    "sections": {
+      "contact": "Contact Information"
+    },
+    "labels": {
+      "email": "Email",
+      "phone": "Phone",
+      "company": "Company",
+      "location": "Location",
+      "specialties": "Specialties"
+    },
+    "actions": {
+      "delete": "Delete",
+      "edit": "Edit",
+      "view": "View Details"
+    },
+    "delete": {
+      "title": "Delete Partner?",
+      "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel",
+      "loading": "Deleting...",
+      "success": "Partner deleted successfully",
+      "error": "Failed to delete partner"
+    }
   },
-  "sections": {
-    "contact": "Contact Information"
-  },
-  "labels": {
-    "email": "Email",
-    "phone": "Phone",
-    "company": "Company",
-    "location": "Location",
-    "specialties": "Specialties"
-  },
-  "actions": {
-    "delete": "Delete",
-    "edit": "Edit",
-    "view": "View Details"
-  },
-  "delete": {
-    "title": "Delete Partner?",
-    "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
-    "confirm": "Delete",
-    "cancel": "Cancel",
-    "loading": "Deleting...",
-    "success": "Partner deleted successfully",
-    "error": "Failed to delete partner"
-  }
-},
   "partnerHeader": {
     "status": {
       "active": "Active",
@@ -1257,7 +1257,7 @@
         "estimated": "Estimated",
         "actual": "Actual",
         "description": "Description",
-        "noDescription": "No description provided for this task.", 
+        "noDescription": "No description provided for this task.",
         "metrics": "Key Metrics"
       },
       "subtasks": {
@@ -1373,35 +1373,35 @@
     }
   },
   "taskDetailModal": {
-  "title": "Task Details",
-  "overdue": "Overdue",
-  "progress": "Progress",
-  "dueDate": "Due Date",
-  "assignedTo": "Assigned To",
-  "estimatedHours": "Est. Hours",
-  "description": "Description",
-  "actions": {
-    "moreDetails": "View Details",
-    "archive": {
-      "loading": "Archiving...",
-      "success": "Task archived",
-      "error": "Failed to archive task"
-    },
-    "restore": {
-      "loading": "Restoring...",
-      "success": "Task restored",
-      "error": "Failed to restore task"
+    "title": "Task Details",
+    "overdue": "Overdue",
+    "progress": "Progress",
+    "dueDate": "Due Date",
+    "assignedTo": "Assigned To",
+    "estimatedHours": "Est. Hours",
+    "description": "Description",
+    "actions": {
+      "moreDetails": "View Details",
+      "archive": {
+        "loading": "Archiving...",
+        "success": "Task archived",
+        "error": "Failed to archive task"
+      },
+      "restore": {
+        "loading": "Restoring...",
+        "success": "Task restored",
+        "error": "Failed to restore task"
+      },
+      "delete": {
+        "loading": "Deleting...",
+        "success": "Task deleted",
+        "error": "Failed to delete task"
+      }
     },
     "delete": {
-      "loading": "Deleting...",
-      "success": "Task deleted",
-      "error": "Failed to delete task"
+      "confirmMessage": "Are you sure you want to delete \"{{title}}\"? This cannot be undone."
     }
   },
-  "delete": {
-    "confirmMessage": "Are you sure you want to delete \"{{title}}\"? This cannot be undone."
-  }
-},
   "reminders": {
     "title": "Reminders",
     "subtitle": "Manage notifications, alerts, and follow-up reminders.",
@@ -2121,6 +2121,27 @@
     }
   },
   "common": {
+    "nav": {
+      "products": "Products",
+      "features": "Features",
+      "marketplace": "Marketplace",
+      "contact": "Contact",
+      "bookDemo": "Book Demo"
+    },
+    "footer": {
+      "description": "Tunisia's leading event management platform connecting venues, planners, and service partners.",
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "blog": "Blog",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "copyright": "© 2024 Fiesta Events. Made with",
+      "inTunisia": "in Tunisia"
+    },
     "contracts": "Contracts",
     "documents": "Documents",
     "home": "Quick Access",
@@ -2155,27 +2176,27 @@
     "finance": "Finance",
     "payments": "Payments",
     "invoices": "Invoices",
-     "edit": "Edit",
-  "delete": "Delete",
-  "archive": "Archive",
-  "restore": "Restore",
-  "save": "Save",
-  "create": "Create",
-  "update": "Update",
-  "viewDetails": "View Details",
-  "confirmDelete": "Confirm Delete",
-  "deleting": "Deleting...",
-  "loading": "Loading...",
-  "error": "Something went wrong",
-  "date": "Date",
-  "time": "Time",
-  "updateNow": "Update Now",
-  "table": {
-    "showing": "Showing",
-    "to": "to",
-    "of": "of",
-    "results": "results"
-  }
+    "edit": "Edit",
+    "delete": "Delete",
+    "archive": "Archive",
+    "restore": "Restore",
+    "save": "Save",
+    "create": "Create",
+    "update": "Update",
+    "viewDetails": "View Details",
+    "confirmDelete": "Confirm Delete",
+    "deleting": "Deleting...",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "date": "Date",
+    "time": "Time",
+    "updateNow": "Update Now",
+    "table": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "results": "results"
+    }
   },
   "notifications": {
     "upcomingReminders": "Upcoming Reminders",
@@ -2205,103 +2226,100 @@
     }
   },
   "landing": {
-    "nav": {
-      "products": "Products",
-      "features": "Features",
-      "marketplace": "Marketplace",
-      "contact": "Contact",
-      "bookDemo": "Book Demo"
-    },
     "hero": {
       "badge": "Tunisia's #1 Event Management Platform",
-      "title": "Transform Your Events",
-      "titleHighlight": "Into Unforgettable Experiences",
-      "description": "The all-in-one platform connecting venue owners, event planners, and service partners. Streamline bookings, manage operations, and grow your event business in Tunisia.",
-      "bookDemo": "Book a Demo",
-      "browseMarketplace": "Browse Marketplace",
-      "stats": {
-        "activeVenues": "Active Venues",
-        "eventsHosted": "Events Hosted",
-        "servicePartners": "Service Partners",
-        "satisfactionRate": "Satisfaction"
-      }
-    },
-    "mobileApp": {
-      "comingSoon": "Coming Soon",
-      "title": "Book Your Dream Event",
-      "titleSub": "Anytime, Anywhere",
-      "description": "Discover venues, connect with service partners, and manage your events on the go. Our mobile app brings the complete Fiesta experience to your fingertips.",
-      "instantBrowsing": "Instant Venue Browsing",
-      "realtimeBooking": "Real-time Booking"
+      "title": {
+        "line1": "Simplify Your",
+        "line2": "Venue Management"
+      },
+      "description": "Streamline bookings, manage finances, and organize events with our comprehensive dashboard designed specifically for venue owners.",
+      "buttons": {
+        "discoverSystem": "Discover the System",
+        "contactSales": "Contact Sales"
+      },
+      "previewAlt": "Fiesta Dashboard Preview {{number}}",
+      "loadingPreview": "Loading Preview...",
+      "slideAria": "Go to slide {{number}}"
     },
     "products": {
-      "title": "Two Powerful Products, One Ecosystem",
-      "subtitle": "Choose the right solution for your needs or use both together",
+      "title": "Our Solutions",
+      "subtitle": "Tools built for the future of event management",
       "webApp": {
-        "title": "Management System",
-        "description": "Comprehensive web-based platform for venue owners and service partners to manage their business operations efficiently.",
+        "available": "AVAILABLE NOW",
+        "title": "Venue Management System",
+        "description": "The powerful web-based command center for your venue. Handle bookings, staff, finance, and client communications in one secure place.",
+        "learnMore": "Learn More",
         "features": {
           "booking": "Event Booking & Calendar Management",
           "reports": "Financial Reports & Analytics",
           "collaboration": "Team Collaboration Tools",
           "database": "Client & Partner Database",
           "invoicing": "Automated Invoicing & Payments"
-        },
-        "learnMore": "Explore Management System"
+        }
       },
       "mobileApp": {
-        "title": "Mobile Marketplace",
-        "description": "Easy-to-use mobile app for clients to discover venues, browse services, and book events on the go.",
+        "comingSoon": "COMING SOON",
+        "title": "Client Mobile App",
+        "description": "A seamless experience for your clients to discover venues, make reservations, and manage their event details on the go.",
+        "joinWaitlist": "Join Waitlist",
         "features": {
           "discovery": "Venue Discovery & Search",
           "booking": "Quick Booking Process",
-          "tools": "Event Planning Tools",
-          "partners": "Service Partner Connections",
-          "updates": "Real-time Updates"
-        },
-        "learnMore": "Explore Mobile App"
+          "tools": "Event Planning Tools"
+        }
       }
     },
     "features": {
-      "title": "Built for Everyone in the Event Industry",
-      "subtitle": "Powerful features tailored to your specific needs",
-      "venueOwners": {
-        "title": "For Venue Owners",
-        "description": "Complete business management suite with real-time insights and automated workflows.",
-        "features": {
-          "calendar": "Smart calendar with availability tracking",
-          "analytics": "Real-time financial analytics",
-          "team": "Team management & permissions",
-          "invoicing": "Automated invoicing & payments"
-        },
-        "viewApp": "View Management System"
+      "title": "Why Choose Fiesta?",
+      "subtitle": "Designed to solve the real challenges of venue management",
+      "centralized": {
+        "title": "Centralized Control",
+        "description": "Stop juggling notebooks and spreadsheets. Get a visual calendar, automated invoices, and team scheduling in one dashboard."
       },
-      "eventPlanners": {
-        "title": "For Event Planners",
-        "description": "Everything you need to plan and execute perfect events, all in one place.",
-        "features": {
-          "browse": "Browse 500+ verified venues",
-          "connect": "Connect with trusted service partners",
-          "tracking": "Real-time budget tracking",
-          "dashboard": "Centralized event dashboard"
-        },
-        "viewApp": "View Mobile App"
+      "financial": {
+        "title": "Financial Insights",
+        "description": "Track revenue, expenses, and profitability per event. Generate professional reports with a single click."
       },
-      "servicePartners": {
-        "title": "For Service Partners",
-        "description": "Grow your business by connecting with more clients and managing jobs efficiently.",
-        "features": {
-          "connections": "Direct venue & client connections",
-          "dashboard": "Job management dashboard",
-          "reviews": "Build reputation with reviews",
-          "payments": "Secure payment processing"
+      "marketplace": {
+        "title": "Built-in Marketplace",
+        "description": "Showcase your venue to thousands of potential clients. Receive inquiries directly into your management system."
+      }
+    },
+    "detail": {
+      "badge": "FEATURE SPOTLIGHT",
+      "title": {
+        "line1": "The Operating System for",
+        "line2": "Modern Venues"
+      },
+      "description": "Fiesta isn't just a calendar. It's a complete business suite designed to help you scale. Manage your entire venue from a single screen, accessible from anywhere.",
+      "features": {
+        "centralized": {
+          "title": "Centralized Command",
+          "description": "View bookings, pending inquiries, and daily schedules at a glance."
         },
-        "viewApp": "View Management System"
+        "financial": {
+          "title": "Financial Management",
+          "description": "Track deposits, payments, and generate automated invoices effortlessly."
+        },
+        "customization": {
+          "title": "Custom Configurations",
+          "description": "Set dynamic pricing, manage multiple spaces, and define staff roles."
+        }
+      },
+      "portal": {
+        "title": "Web Management Portal",
+        "button": "Request Access",
+        "features": {
+          "calendar": "Real-time Availability Calendar",
+          "crm": "Client CRM Database",
+          "analytics": "Revenue Analytics & Reports",
+          "staff": "Staff Scheduling Tools"
+        }
       }
     },
     "howItWorks": {
       "title": "How Fiesta Works",
-      "subtitle": "Get started in minutes with our simple onboarding process",
+      "subtitle": "Get your venue up and running in minutes",
       "steps": {
         "createAccount": {
           "title": "Create Account",
@@ -2311,51 +2329,40 @@
           "title": "Setup Profile",
           "description": "Complete your profile with photos, services, and availability"
         },
-        "connectBook": {
-          "title": "Connect & Book",
-          "description": "Browse, connect, and book with verified partners"
+        "configureCalendar": {
+          "title": "Configure Calendar",
+          "description": "Set your availability and pricing rules."
         },
-        "manageEvents": {
-          "title": "Manage & Grow",
-          "description": "Track events, analyze performance, and scale your business"
+        "startManaging": {
+          "title": "Start Managing",
+          "description": "Receive bookings and manage events efficiently."
         }
       }
     },
-    "testimonials": {
-      "title": "Loved by Event Professionals Across Tunisia",
-      "subtitle": "Join thousands of satisfied users transforming their event businesses"
-    },
     "pricing": {
-      "title": "Custom Pricing for Your Business",
+      "title": "Get Custom Pricing",
       "description": "Every venue and service provider has unique needs. Contact our sales team to get a personalized quote that fits your business size and requirements.",
       "noHiddenFees": "No Hidden Fees",
-      "noHiddenFeesDesc": "Clear, transparent pricing with everything included",
       "flexiblePlans": "Flexible Plans",
-      "flexiblePlansDesc": "Choose monthly, annual, or custom billing cycles",
       "bestValue": "Best Value",
-      "bestValueDesc": "Competitive pricing with premium features",
-      "callUs": "Call for Pricing",
+      "callUs": "Call Us",
       "contactSales": "Contact Sales Team"
     },
     "faq": {
       "title": "Frequently Asked Questions",
       "subtitle": "Everything you need to know about Fiesta",
       "questions": {
-        "marketplace": {
-          "q": "What is the Fiesta marketplace?",
-          "a": "The Fiesta marketplace is a mobile platform where clients can discover and book venues, browse service partners (photographers, caterers, DJs, etc.), and plan complete events. It connects event planners with verified venues and service providers across Tunisia."
+        "systemAvailable": {
+          "q": "Is the Web Management System available now?",
+          "a": "Yes! The Venue Management System is live and ready to help you manage your business."
         },
-        "eventTypes": {
-          "q": "What types of events can I manage with Fiesta?",
-          "a": "Fiesta supports all types of events including weddings, birthdays, corporate events, conferences, parties, and more. Our platform is flexible and can be customized for any event type."
+        "mobileAppRelease": {
+          "q": "When will the Mobile App be released?",
+          "a": "We are currently in the final stages of development. Join our waitlist to be notified when it launches."
         },
         "getStarted": {
           "q": "How do I get started?",
           "a": "Simply book a demo with our team. We'll walk you through the platform, help you set up your account, and provide training to ensure you get the most out of Fiesta."
-        },
-        "tryBefore": {
-          "q": "Can I try Fiesta before committing?",
-          "a": "Yes! We offer demo sessions where you can explore all features. Contact our sales team to schedule a personalized demo and see how Fiesta fits your needs."
         },
         "support": {
           "q": "What kind of support do you provide?",
@@ -2364,27 +2371,12 @@
       }
     },
     "contact": {
-      "title": "Ready to Transform Your Event Business?",
-      "subtitle": "Get in touch with our team for a personalized demo",
+      "title": "Ready to Optimize Your Venue?",
+      "subtitle": "Contact our team today to learn how Fiesta can transform your business.",
       "callUs": "Call Us",
       "emailUs": "Email Us",
       "visitUs": "Visit Us",
-      "bookDemo": "Book Your Demo",
-      "browseMarketplace": "Browse Marketplace"
-    },
-    "footer": {
-      "description": "Tunisia's leading event management platform connecting venues, planners, and service partners.",
-      "product": "Product",
-      "company": "Company",
-      "legal": "Legal",
-      "aboutUs": "About Us",
-      "careers": "Careers",
-      "blog": "Blog",
-      "privacy": "Privacy Policy",
-      "terms": "Terms of Service",
-      "cookies": "Cookie Policy",
-      "copyright": "© 2024 Fiesta Events. Made with",
-      "inTunisia": "in Tunisia"
+      "visitMarketplace": "Visit Marketplace"
     }
   },
   "invoices": {
@@ -2741,7 +2733,7 @@
   "venueSettings": {
     "title": "Venue Settings",
     "subtitle": "Manage your venue information, operating hours, and team settings",
-    
+
     "tabs": {
       "personal": "Personal",
       "security": "Security",
@@ -2749,7 +2741,7 @@
       "amenities": "Amenities & Hours",
       "spaces": "Spaces"
     },
-    
+
     "common": {
       "loading": "Loading...",
       "tryAgain": "Try Again",
@@ -2761,7 +2753,7 @@
         "results": "results"
       }
     },
-    
+
     "personal": {
       "title": "Personal Information",
       "description": "Update your personal details and profile information",
@@ -2777,7 +2769,7 @@
       },
       "save": "Save Personal Info"
     },
-    
+
     "security": {
       "title": "Password & Security",
       "description": "Change your password and manage security settings",
@@ -2796,7 +2788,7 @@
       },
       "changePassword": "Change Password"
     },
-    
+
     "venue": {
       "basicInfo": {
         "title": "Basic Information",
@@ -2828,7 +2820,7 @@
       },
       "save": "Save Venue Settings"
     },
-    
+
     "amenities": {
       "title": "Amenities",
       "description": "Select the amenities and features available at your venue",
@@ -2868,7 +2860,7 @@
       },
       "save": "Save Amenities & Hours"
     },
-    
+
     "spaces": {
       "title": "Venue Spaces",
       "description": "Manage different rooms and areas within your venue",
@@ -2912,7 +2904,7 @@
       },
       "save": "Save Spaces"
     },
-    
+
     "validation": {
       "required": "This field is required",
       "email": "Please enter a valid email address",
@@ -2920,7 +2912,7 @@
       "passwordsMatch": "Passwords do not match",
       "capacityRange": "Maximum capacity must be greater than minimum capacity"
     },
-    
+
     "notifications": {
       "success": {
         "profileUpdated": "Profile updated successfully",
@@ -3044,7 +3036,7 @@
         "loadError": "Failed to load settings"
       }
     },
- "detail": {
+    "detail": {
       "status": {
         "draft": "Draft",
         "sent": "Sent",
@@ -3121,7 +3113,7 @@
         "sendSuccess": "Contract sent successfully"
       }
     },
- "form": {
+    "form": {
       "title": {
         "create": "Create Contract",
         "edit": "Edit Contract"
@@ -3262,25 +3254,182 @@
       }
     },
     "documents": {
-    "hub": {
-      "title": "Document Configuration",
-      "subtitle": "Customize the design, structure, and content for your business documents.",
-      "configureNow": "Configure Now",
-      "contracts": {
-        "title": "Contracts",
-        "desc": "Define legal terms, clauses, and branding for client and partner agreements.",
-        "feat1": "Custom Branding & Colors",
-        "feat2": "Legal Clauses & Jurisdiction",
-        "feat3": "Serialization (CTR-001)"
+      "hub": {
+        "title": "Document Configuration",
+        "subtitle": "Customize the design, structure, and content for your business documents.",
+        "configureNow": "Configure Now",
+        "contracts": {
+          "title": "Contracts",
+          "desc": "Define legal terms, clauses, and branding for client and partner agreements.",
+          "feat1": "Custom Branding & Colors",
+          "feat2": "Legal Clauses & Jurisdiction",
+          "feat3": "Serialization (CTR-001)"
+        },
+        "invoices": {
+          "title": "Invoices",
+          "desc": "Set up billing preferences, tax rates, and payment instructions.",
+          "feat1": "Tax Rates & Currency",
+          "feat2": "Bank Details & Terms",
+          "feat3": "Serialization (INV-001)"
+        }
+      }
+    }
+  },
+  "fiestaVenue": {
+    "hero": {
+      "badge": "The #1 Venue Management System",
+      "title": {
+        "line1": "Stop Managing.",
+        "line2": "Start Scaling."
       },
-      "invoices": {
-        "title": "Invoices",
-        "desc": "Set up billing preferences, tax rates, and payment instructions.",
-        "feat1": "Tax Rates & Currency",
-        "feat2": "Bank Details & Terms",
-        "feat3": "Serialization (INV-001)"
+      "description": {
+        "line1": "Ditch the notebook and the messy Excel sheets. Fiesta gives you a professional digital command center.",
+        "line2": "Start for free, upgrade when you grow."
+      },
+      "buttons": {
+        "startFree": "Start For Free",
+        "watchDemo": "Watch Demo"
+      },
+      "features": {
+        "noCreditCard": "No credit card required",
+        "quickSetup": "Setup in 2 minutes"
+      },
+      "imageAlt": "Fiesta Calendar Interface",
+      "floatingBadge": {
+        "label": "Productivity Boost",
+        "value": "+40% Time Saved"
+      }
+    },
+    "problem": {
+      "title": "Is your venue running you, or are you running your venue?",
+      "items": {
+        "doubleBookings": {
+          "title": "Double Bookings",
+          "description": "The nightmare of explaining to a client that their date was accidentally given to someone else."
+        },
+        "lostPayments": {
+          "title": "Lost Payments",
+          "description": "Forgetting who paid the deposit, who owes the balance, and losing track of expense receipts."
+        },
+        "messyContracts": {
+          "title": "Messy Contracts",
+          "description": "Word documents that look unprofessional and take 30 minutes to edit for every new client."
+        }
+      }
+    },
+    "features": {
+      "title": "Everything You Need to Succeed",
+      "subtitle": "From the first inquiry to the final invoice.",
+      "previewAlt": "Feature Preview",
+      "tabs": {
+        "calendar": {
+          "title": "Smart Calendar",
+          "description": "Visual schedule management with conflict detection.",
+          "badge": "INCLUDED IN FREE"
+        },
+        "finance": {
+          "title": "Financial Suite",
+          "description": "Invoices, expense tracking, and profit reports.",
+          "badge": "PRO FEATURE"
+        },
+        "legal": {
+          "title": "Auto-Contracts",
+          "description": "Generate legal contracts in one click.",
+          "badge": "PRO FEATURE"
+        }
+      },
+      "details": {
+        "calendar": {
+          "title": "Never Double Book Again",
+          "description": "The core of your business is the calendar. Our system prevents you from booking two events at the same time. You can see your schedule by Month, Week, or Day.",
+          "features": {
+            "dragDrop": "Drag & Drop Interface",
+            "eventStatus": "Event Status (Pending/Confirmed)",
+            "clientView": "Client Quick-View",
+            "mobile": "Mobile Friendly"
+          }
+        },
+        "finance": {
+          "title": "Know Your Numbers",
+          "description": "Stop guessing your profit. Track every dinar coming in and going out. Create professional PDF invoices that impress your clients.",
+          "features": {
+            "invoices": "Automated PDF Invoices",
+            "paymentTracking": "Payment Tracking (Deposit/Balance)",
+            "expenseManagement": "Expense Management",
+            "reports": "Monthly Profit Reports"
+          }
+        },
+        "legal": {
+          "title": "Legal Protection Made Easy",
+          "description": "Contracts protect your business, but they are a pain to write. Fiesta auto-fills your standard contract with the event details instantly.",
+          "features": {
+            "templates": "Custom Contract Templates",
+            "autoFill": "Auto-fill Client Data",
+            "pdf": "Print Ready PDFs",
+            "archives": "Digital Archives"
+          }
+        }
+      }
+    },
+    "pricing": {
+      "title": "Simple, Transparent Pricing",
+      "subtitle": "Start for free. Upgrade only when you need the power tools.",
+      "plans": {
+        "starter": {
+          "title": "Starter",
+          "description": "Perfect for getting organized.",
+          "price": "Free",
+          "period": " / forever",
+          "button": "Create Free Account",
+          "features": {
+            "events": "Unlimited Events Calendar",
+            "crm": "Client Database (CRM)",
+            "dashboard": "Basic Dashboard Access",
+            "reports": "Financial Reports",
+            "invoices": "Invoices & Contracts"
+          }
+        },
+        "pro": {
+          "badge": "RECOMMENDED",
+          "title": "Pro Business",
+          "description": "For venues serious about growth.",
+          "price": "Contact Us",
+          "contact": "for custom pricing",
+          "button": "Upgrade to Pro",
+          "features": {
+            "starter": "Everything in Starter",
+            "reports": "Advanced Financial Reports",
+            "invoices": "Invoices & Expense Tracking",
+            "contracts": "One-Click Contracts",
+            "staff": "Staff Task Management"
+          }
+        }
+      }
+    },
+    "faq": {
+      "title": "Common Questions",
+      "questions": {
+        "freeForever": {
+          "q": "Is the free version really free forever?",
+          "a": "Yes. If you only need to manage your calendar and client list, you will never have to pay. We hope you grow enough to need the Pro features later!"
+        },
+        "dataSecurity": {
+          "q": "Is my data secure?",
+          "a": "Absolutely. We use industry-standard encryption. Unlike a physical notebook, you can't lose your data if you lose your phone."
+        },
+        "dataExport": {
+          "q": "Can I export my data?",
+          "a": "Yes, Pro users can export financial reports and client lists to Excel or PDF at any time."
+        }
+      }
+    },
+    "cta": {
+      "title": "Ready to professionalize your venue?",
+      "description": "Join hundreds of Tunisian venue owners who are saving time and making more money with Fiesta.",
+      "buttons": {
+        "startFree": "Get Started for Free",
+        "contactSales": "Contact Sales"
       }
     }
   }
-  }
-  }
+}

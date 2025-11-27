@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { Menu, Store, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, X, Store } from "lucide-react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 
 const Navbar = () => {
@@ -59,31 +59,19 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => handleNavClick("venue-system")}
-              className="text-gray-600 hover:text-orange-600 font-medium transition-colors"
-            >
-              Venue System
-            </button>
+          <div className="hidden md:flex items-center gap-5 space-x-8">
             <button
               onClick={() => handleNavClick("features")}
               className="text-gray-600 hover:text-orange-600 font-medium transition-colors"
             >
-              {t("landing.nav.features", "Features")}
+              {t("common.nav.features", "Features")}
             </button>
             <button
               onClick={() => handlePageNavigation("/marketplace")}
               className="text-gray-600 hover:text-orange-600 font-medium transition-colors flex items-center gap-2"
             >
               <Store className="w-4 h-4" />
-              {t("landing.nav.marketplace", "Marketplace")}
-            </button>
-            <button
-              onClick={() => handleNavClick("contact")}
-              className="text-gray-600 hover:text-orange-600 font-medium transition-colors"
-            >
-              {t("landing.nav.contact", "Contact")}
+              {t("common.nav.marketplace", "Marketplace")}
             </button>
 
             <LanguageSwitcher />
@@ -92,7 +80,7 @@ const Navbar = () => {
               onClick={() => handleNavClick("contact")}
               className="bg-orange-600 text-white px-5 py-2 rounded-lg hover:bg-orange-700 transition-all shadow-md hover:shadow-lg font-medium"
             >
-              Contact Us
+              {t("common.nav.contact", "Contact")}
             </button>
           </div>
 
@@ -124,20 +112,20 @@ const Navbar = () => {
               onClick={() => handleNavClick("features")}
               className="block w-full text-left py-2 text-gray-700 font-medium border-b border-gray-100 hover:text-orange-600"
             >
-              {t("landing.nav.features", "Features")}
+              {t("common.nav.features", "Features")}
             </button>
             <button
               onClick={() => handlePageNavigation("/marketplace")}
-              className="block w-full text-left py-2 text-gray-700 font-medium border-b border-gray-100 hover:text-orange-600 flex items-center gap-2"
+              className="block w-full text-left py-2 text-gray-700 font-medium border-b border-gray-100 hover:text-orange-600 items-center gap-2"
             >
               <Store className="w-4 h-4" />
-              {t("landing.nav.marketplace", "Marketplace")}
+              {t("common.nav.marketplace", "Marketplace")}
             </button>
             <button
               onClick={() => handleNavClick("contact")}
               className="block w-full text-left py-2 text-orange-600 font-bold"
             >
-              {t("landing.nav.contact", "Contact")}
+              {t("common.nav.contact", "Contact")}
             </button>
             <div className="pt-2 flex justify-center">
               <LanguageSwitcher />

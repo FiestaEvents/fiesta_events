@@ -1,7 +1,7 @@
 {
   "dashboard": {
     "loading": "Chargement du tableau de bord...",
-    
+
     "today": {
       "title": "Centre de Commande d'Aujourd'hui",
       "view_schedule": "Voir le Planning",
@@ -11,14 +11,14 @@
       "events_list": "Événements d'Aujourd'hui",
       "guests": "invités"
     },
-    
+
     "actions": {
       "title": "Centre d'Action",
       "overdue_invoices": "{{count}} Factures en Retard",
       "new_enquiries": "{{count}} Nouvelles Demandes",
       "urgent_tasks": "{{count}} Tâches Urgentes"
     },
-    
+
     "financial": {
       "title": "Centre de Commande Financier",
       "cash_position": "Position de Trésorerie",
@@ -46,7 +46,7 @@
       "revenue": "Revenu",
       "net": "Net"
     },
-    
+
     "calendar": {
       "title": "Calendrier et Aperçu des Réservations",
       "occupancy": "Occupation",
@@ -59,7 +59,7 @@
       "missing_vendors": "Événements Sans Partenaires",
       "assign_now": "Assigner Maintenant"
     },
-    
+
     "performance": {
       "title": "Métriques de Performance",
       "tabs": {
@@ -82,13 +82,13 @@
       "completed": "Complétés",
       "conversion_rate": "Taux de Conversion"
     },
-    
+
     "charts": {
       "current_year": "Année Actuelle",
       "last_year": "Année Dernière",
       "total": "Total"
     },
-    
+
     "insights": {
       "title": "Aperçus Commerciaux",
       "response_time": "Temps de Réponse aux Prospects",
@@ -104,20 +104,20 @@
       "revenue_lost": "Revenu Perdu",
       "main_reason": "Raison Principale"
     },
-    
+
     "leads": {
       "title": "Prospects en Attente",
       "unknown": "Client Inconnu",
       "no_pending": "Aucun prospect en attente"
     },
-    
+
     "activity": {
       "title": "Activité Récente",
       "payment_received": "Paiement reçu : {{amount}} de {{client}}",
       "new_booking": "Nouvelle réservation : {{title}}",
       "no_recent": "Aucune activité récente"
     },
-    
+
     "quick_actions": {
       "title": "Actions Rapides",
       "new_event": "Nouvel Événement",
@@ -125,24 +125,24 @@
       "new_invoice": "Nouvelle Facture",
       "settings": "Paramètres"
     },
-    
+
     "errors": {
       "fetch_failed": "Échec du chargement des données"
     }
   },
   "home": {
-  "eventsDesc": "Gestion de calendrier",
-  "clientsDesc": "Base de clients",
-  "contractsDesc": "Accords juridiques",
-  "invoicesDesc": "Facturation",
-  "paymentsDesc": "Suivi des revenus",
-  "partnersDesc": "Relations fournisseurs",
-  "tasksDesc": "Listes de tâches",
-  "remindersDesc": "Alertes et notifications",
-  "docSettingsDesc": "Mises en page",
-  "statsDesc": "Rapports et analyses",
-  "settingsDesc": "Configuration système"
-},
+    "eventsDesc": "Gestion de calendrier",
+    "clientsDesc": "Base de clients",
+    "contractsDesc": "Accords juridiques",
+    "invoicesDesc": "Facturation",
+    "paymentsDesc": "Suivi des revenus",
+    "partnersDesc": "Relations fournisseurs",
+    "tasksDesc": "Listes de tâches",
+    "remindersDesc": "Alertes et notifications",
+    "docSettingsDesc": "Mises en page",
+    "statsDesc": "Rapports et analyses",
+    "settingsDesc": "Configuration système"
+  },
   "clients": {
     "title": "Clients",
     "description": "Gérez vos relations et informations clients",
@@ -595,37 +595,37 @@
       "viewFullDetails": "Plus de détails"
     }
   },
-"eventDetail": {
-  "loading": "Chargement des détails de l'événement...",
-  "tabs": {
-    "partners": "Partenaires",
-    "payments": "Paiements",
-    "activity": "Activité"
+  "eventDetail": {
+    "loading": "Chargement des détails de l'événement...",
+    "tabs": {
+      "partners": "Partenaires",
+      "payments": "Paiements",
+      "activity": "Activité"
+    },
+    "errors": {
+      "notFound": "Événement introuvable",
+      "loading": "Erreur de chargement",
+      "notFoundDescription": "L'événement que vous recherchez n'existe pas.",
+      "edit": "Impossible de modifier : ID d'événement introuvable",
+      "delete": "Impossible de supprimer : ID d'événement introuvable",
+      "payment": "Impossible d'enregistrer le paiement : ID introuvable"
+    },
+    "actions": {
+      "backToEvents": "Retour aux événements",
+      "tryAgain": "Réessayer",
+      "retry": "Nouvelle tentative...",
+      "deleteLoading": "Suppression de l'événement...",
+      "deleteSuccess": "Événement supprimé avec succès",
+      "deleteError": "Échec de la suppression de l'événement",
+      "editSuccess": "Événement mis à jour avec succès"
+    },
+    "deleteModal": {
+      "title": "Supprimer l'événement",
+      "message": "Êtes-vous sûr de vouloir supprimer \"{{eventTitle}}\" ? Cette action est irréversible et supprimera toutes les données associées.",
+      "confirmText": "Supprimer",
+      "cancelText": "Annuler"
+    }
   },
-  "errors": {
-    "notFound": "Événement introuvable",
-    "loading": "Erreur de chargement",
-    "notFoundDescription": "L'événement que vous recherchez n'existe pas.",
-    "edit": "Impossible de modifier : ID d'événement introuvable",
-    "delete": "Impossible de supprimer : ID d'événement introuvable",
-    "payment": "Impossible d'enregistrer le paiement : ID introuvable"
-  },
-  "actions": {
-    "backToEvents": "Retour aux événements",
-    "tryAgain": "Réessayer",
-    "retry": "Nouvelle tentative...",
-    "deleteLoading": "Suppression de l'événement...",
-    "deleteSuccess": "Événement supprimé avec succès",
-    "deleteError": "Échec de la suppression de l'événement",
-    "editSuccess": "Événement mis à jour avec succès"
-  },
-  "deleteModal": {
-    "title": "Supprimer l'événement",
-    "message": "Êtes-vous sûr de vouloir supprimer \"{{eventTitle}}\" ? Cette action est irréversible et supprimera toutes les données associées.",
-    "confirmText": "Supprimer",
-    "cancelText": "Annuler"
-  }
-},
   "eventActivityTab": {
     "title": "Chronologie des activités",
     "subtitle": "Suivez tous les changements et mises à jour de cet événement",
@@ -1019,38 +1019,38 @@
     }
   },
   "partnerDetailModal": {
-  "title": "Détails du Partenaire",
-  "stats": {
-    "rating": "Avis",
-    "jobs": "Missions",
-    "hourly": "/H",
-    "fixed": "FORFAIT"
+    "title": "Détails du Partenaire",
+    "stats": {
+      "rating": "Avis",
+      "jobs": "Missions",
+      "hourly": "/H",
+      "fixed": "FORFAIT"
+    },
+    "sections": {
+      "contact": "Coordonnées"
+    },
+    "labels": {
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "company": "Entreprise",
+      "location": "Adresse",
+      "specialties": "Spécialités"
+    },
+    "actions": {
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "view": "Voir Détails"
+    },
+    "delete": {
+      "title": "Supprimer le partenaire ?",
+      "message": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible.",
+      "confirm": "Supprimer",
+      "cancel": "Annuler",
+      "loading": "Suppression...",
+      "success": "Partenaire supprimé avec succès",
+      "error": "Échec de la suppression"
+    }
   },
-  "sections": {
-    "contact": "Coordonnées"
-  },
-  "labels": {
-    "email": "E-mail",
-    "phone": "Téléphone",
-    "company": "Entreprise",
-    "location": "Adresse",
-    "specialties": "Spécialités"
-  },
-  "actions": {
-    "delete": "Supprimer",
-    "edit": "Modifier",
-    "view": "Voir Détails"
-  },
-  "delete": {
-    "title": "Supprimer le partenaire ?",
-    "message": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible.",
-    "confirm": "Supprimer",
-    "cancel": "Annuler",
-    "loading": "Suppression...",
-    "success": "Partenaire supprimé avec succès",
-    "error": "Échec de la suppression"
-  }
-},
   "partnerHeader": {
     "status": {
       "active": "Actif",
@@ -1482,35 +1482,35 @@
     }
   },
   "taskDetailModal": {
-  "title": "Détails de la tâche",
-  "overdue": "En retard",
-  "progress": "Progression",
-  "dueDate": "Date d'échéance",
-  "assignedTo": "Assigné à",
-  "estimatedHours": "Heures est.",
-  "description": "Description",
-  "actions": {
-    "moreDetails": "Voir Détails",
-    "archive": {
-      "loading": "Archivage...",
-      "success": "Tâche archivée",
-      "error": "Échec de l'archivage"
-    },
-    "restore": {
-      "loading": "Restauration...",
-      "success": "Tâche restaurée",
-      "error": "Échec de la restauration"
+    "title": "Détails de la tâche",
+    "overdue": "En retard",
+    "progress": "Progression",
+    "dueDate": "Date d'échéance",
+    "assignedTo": "Assigné à",
+    "estimatedHours": "Heures est.",
+    "description": "Description",
+    "actions": {
+      "moreDetails": "Voir Détails",
+      "archive": {
+        "loading": "Archivage...",
+        "success": "Tâche archivée",
+        "error": "Échec de l'archivage"
+      },
+      "restore": {
+        "loading": "Restauration...",
+        "success": "Tâche restaurée",
+        "error": "Échec de la restauration"
+      },
+      "delete": {
+        "loading": "Suppression...",
+        "success": "Tâche supprimée",
+        "error": "Échec de la suppression"
+      }
     },
     "delete": {
-      "loading": "Suppression...",
-      "success": "Tâche supprimée",
-      "error": "Échec de la suppression"
+      "confirmMessage": "Voulez-vous vraiment supprimer \"{{title}}\" ? Cette action est irréversible."
     }
   },
-  "delete": {
-    "confirmMessage": "Voulez-vous vraiment supprimer \"{{title}}\" ? Cette action est irréversible."
-  }
-},
   "reminders": {
     "title": "Rappels",
     "subtitle": "Gérez les notifications, alertes et rappels de suivi.",
@@ -2275,6 +2275,29 @@
     }
   },
   "common": {
+    "nav": {
+      "products": "Produits",
+      "features": "Fonctionnalités",
+      "marketplace": "Marketplace",
+      "contact": "Contact",
+      "bookDemo": "Réserver une Démo"
+    },
+    "footer": {
+      "description": "La plateforme leader de gestion d'événements en Tunisie connectant salles, organisateurs et partenaires de services.",
+      "product": "Produit",
+      "company": "Entreprise",
+      "legal": "Légal",
+      "aboutUs": "À Propos",
+      "careers": "Carrières",
+      "blog": "Blog",
+      "privacy": "Politique de Confidentialité",
+      "terms": "Conditions de Service",
+      "cookies": "Politique des Cookies",
+      "copyright": "© 2024 Fiesta Events. Fait avec",
+      "inTunisia": "en Tunisie",
+      "features": "Fonctionnalités",
+      "marketplace": "Marketplace"
+    },
     "contracts": "Contrats",
     "documents": "Documents",
     "home": "Accès Rapide",
@@ -2313,28 +2336,28 @@
     "finance": "Finance",
     "payments": "Paiements",
     "invoices": "Factures",
-      "edit": "Modifier",
-  "delete": "Supprimer",
-  "archive": "Archiver",
-  "restore": "Restaurer",
-  "save": "Enregistrer",
-  "create": "Créer",
-  "update": "Mettre à jour",
-  "viewDetails": "Voir les détails",
-  "confirmDelete": "Confirmer la suppression",
-  "deleting": "Suppression...",
-  "loading": "Chargement...",
-  "error": "Une erreur est survenue",
-  "date": "Date",
-  "time": "Heure",
-  "updateNow": "Mettre à jour maintenant",
-  "table": {
-    "showing": "Affichage",
-    "to": "à",
-    "of": "de",
-    "results": "résultats"
-  }
-},
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "archive": "Archiver",
+    "restore": "Restaurer",
+    "save": "Enregistrer",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "viewDetails": "Voir les détails",
+    "confirmDelete": "Confirmer la suppression",
+    "deleting": "Suppression...",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "date": "Date",
+    "time": "Heure",
+    "updateNow": "Mettre à jour maintenant",
+    "table": {
+      "showing": "Affichage",
+      "to": "à",
+      "of": "de",
+      "results": "résultats"
+    }
+  },
   "notifications": {
     "upcomingReminders": "Rappels à venir",
     "today": "Aujourd'hui",
@@ -2343,186 +2366,314 @@
     "noReminders": "Aucun rappel à venir"
   },
   "landing": {
-    "nav": {
-      "products": "Produits",
-      "features": "Fonctionnalités",
-      "marketplace": "Marketplace",
-      "contact": "Contact",
-      "bookDemo": "Réserver une Démo"
-    },
     "hero": {
       "badge": "Plateforme N°1 de Gestion d'Événements en Tunisie",
-      "title": "Transformez Vos Événements",
-      "titleHighlight": "En Expériences Inoubliables",
+      "title": {
+        "line1": "Transformez Vos Événements",
+        "line2": "En Expériences Inoubliables"
+      },
       "description": "La plateforme tout-en-un qui connecte propriétaires de salles, organisateurs d'événements et partenaires de services. Simplifiez les réservations, gérez les opérations et développez votre activité événementielle en Tunisie.",
-      "bookDemo": "Réserver une Démo",
-      "browseMarketplace": "Parcourir le Marketplace",
-      "stats": {
-        "activeVenues": "Salles Actives",
-        "eventsHosted": "Événements Organisés",
-        "servicePartners": "Partenaires de Services",
-        "satisfactionRate": "Satisfaction"
-      }
-    },
-    "mobileApp": {
-      "comingSoon": "Bientôt Disponible",
-      "title": "Réservez l'Événement de Vos Rêves",
-      "titleSub": "N'importe Quand, N'importe Où",
-      "description": "Découvrez des salles, connectez-vous avec des partenaires de services et gérez vos événements en déplacement. Notre application mobile vous offre l'expérience Fiesta complète au bout des doigts.",
-      "instantBrowsing": "Navigation Instantanée des Salles",
-      "realtimeBooking": "Réservation en Temps Réel"
+      "buttons": {
+        "discoverSystem": "Découvrir le Système",
+        "contactSales": "Contacter Commercial"
+      },
+      "previewAlt": "Aperçu du tableau de bord {{number}}",
+      "loadingPreview": "Chargement de l'aperçu...",
+      "slideAria": "Aller à la diapositive {{number}}"
     },
     "products": {
       "title": "Deux Produits Puissants, Un Écosystème",
       "subtitle": "Choisissez la solution adaptée à vos besoins ou utilisez les deux ensemble",
       "webApp": {
-        "title": "Système de Gestion",
+        "available": "Disponible",
+        "title": "Système de Gestion Web",
         "description": "Plateforme web complète pour les propriétaires de salles et partenaires de services pour gérer efficacement leurs opérations commerciales.",
         "features": {
-          "booking": "Réservation d'Événements & Gestion de Calendrier",
+          "booking": "Réservation d'Événements & Calendrier",
           "reports": "Rapports Financiers & Analyses",
           "collaboration": "Outils de Collaboration d'Équipe",
           "database": "Base de Données Clients & Partenaires",
           "invoicing": "Facturation & Paiements Automatisés"
         },
-        "learnMore": "Explorer le Système de Gestion"
+        "learnMore": "Explorer le Système"
       },
       "mobileApp": {
-        "title": "Marketplace Mobile",
+        "comingSoon": "Bientôt Disponible",
+        "title": "Application Mobile",
         "description": "Application mobile facile à utiliser pour que les clients découvrent des salles, parcourent des services et réservent des événements en déplacement.",
         "features": {
           "discovery": "Découverte & Recherche de Salles",
           "booking": "Processus de Réservation Rapide",
-          "tools": "Outils de Planification d'Événements",
-          "partners": "Connexions avec Partenaires de Services",
-          "updates": "Mises à Jour en Temps Réel"
+          "tools": "Outils de Planification d'Événements"
         },
-        "learnMore": "Explorer l'Application Mobile"
+        "joinWaitlist": "Rejoindre la Liste d'Attente"
       }
     },
     "features": {
-      "title": "Conçu pour Tous dans l'Industrie Événementielle",
-      "subtitle": "Fonctionnalités puissantes adaptées à vos besoins spécifiques",
-      "venueOwners": {
-        "title": "Pour les Propriétaires de Salles",
-        "description": "Suite complète de gestion d'entreprise avec insights en temps réel et flux de travail automatisés.",
-        "features": {
-          "calendar": "Calendrier intelligent avec suivi de disponibilité",
-          "analytics": "Analyses financières en temps réel",
-          "team": "Gestion d'équipe & permissions",
-          "invoicing": "Facturation & paiements automatisés"
-        },
-        "viewApp": "Voir le Système de Gestion"
+      "title": "Fonctionnalités Principales",
+      "subtitle": "Tout ce dont vous avez besoin pour gérer votre activité événementielle",
+      "centralized": {
+        "title": "Gestion Centralisée",
+        "description": "Tous vos événements, clients et partenaires dans une seule plateforme unifiée"
       },
-      "eventPlanners": {
-        "title": "Pour les Organisateurs d'Événements",
-        "description": "Tout ce dont vous avez besoin pour planifier et exécuter des événements parfaits, le tout au même endroit.",
-        "features": {
-          "browse": "Parcourez 500+ salles vérifiées",
-          "connect": "Connectez-vous avec des partenaires de confiance",
-          "tracking": "Suivi du budget en temps réel",
-          "dashboard": "Tableau de bord événementiel centralisé"
-        },
-        "viewApp": "Voir l'Application Mobile"
+      "financial": {
+        "title": "Contrôle Financier",
+        "description": "Suivez les revenus, dépenses et générez des rapports financiers détaillés"
       },
-      "servicePartners": {
-        "title": "Pour les Partenaires de Services",
-        "description": "Développez votre entreprise en vous connectant avec plus de clients et en gérant les missions efficacement.",
-        "features": {
-          "connections": "Connexions directes avec salles & clients",
-          "dashboard": "Tableau de bord de gestion des missions",
-          "reviews": "Construire une réputation avec les avis",
-          "payments": "Traitement sécurisé des paiements"
+      "marketplace": {
+        "title": "Écosystème Marketplace",
+        "description": "Connectez-vous avec des partenaires de services et développez votre réseau"
+      }
+    },
+    "detail": {
+      "badge": "Pour les Professionnels",
+      "title": {
+        "line1": "Conçu pour les Propriétaires",
+        "line2": "de Salles et Prestataires"
+      },
+      "description": "Notre plateforme offre des outils spécialisés pour gérer efficacement votre activité événementielle, de la réservation à la facturation en passant par la collaboration avec les partenaires.",
+      "features": {
+        "centralized": {
+          "title": "Gestion Centralisée",
+          "description": "Tous vos outils dans une seule interface unifiée"
         },
-        "viewApp": "Voir le Système de Gestion"
+        "financial": {
+          "title": "Contrôle Financier Complet",
+          "description": "Suivi des revenus, dépenses et rapports détaillés"
+        },
+        "customization": {
+          "title": "Personnalisation Avancée",
+          "description": "Adaptez la plateforme à vos processus métier"
+        }
+      },
+      "portal": {
+        "title": "Portail de Gestion Complet",
+        "features": {
+          "calendar": "Calendrier Intelligent & Réservations",
+          "crm": "Gestion des Relations Clients (CRM)",
+          "analytics": "Analyses & Rapports en Temps Réel",
+          "staff": "Gestion d'Équipe & Permissions"
+        },
+        "button": "Démarrer Maintenant"
       }
     },
     "howItWorks": {
-      "title": "Comment Fonctionne Fiesta",
-      "subtitle": "Commencez en quelques minutes avec notre processus d'intégration simple",
+      "title": "Comment Ça Marche",
+      "subtitle": "Commencez en quelques minutes seulement",
       "steps": {
         "createAccount": {
-          "title": "Créer un Compte",
-          "description": "Inscrivez-vous en tant que propriétaire de salle, organisateur d'événements ou partenaire de services"
+          "title": "Créez un Compte",
+          "description": "Inscription simple et rapide pour votre entreprise"
         },
         "setupProfile": {
-          "title": "Configurer le Profil",
-          "description": "Complétez votre profil avec photos, services et disponibilité"
+          "title": "Configurez Votre Profil",
+          "description": "Ajoutez vos informations et personnalisez vos paramètres"
         },
-        "connectBook": {
-          "title": "Connecter & Réserver",
-          "description": "Parcourez, connectez-vous et réservez avec des partenaires vérifiés"
+        "configureCalendar": {
+          "title": "Configurez le Calendrier",
+          "description": "Définissez vos disponibilités et tarifs"
         },
-        "manageEvents": {
-          "title": "Gérer & Développer",
-          "description": "Suivez les événements, analysez les performances et développez votre entreprise"
+        "startManaging": {
+          "title": "Commencez à Gérer",
+          "description": "Recevez des réservations et gérez vos événements"
         }
       }
     },
-    "testimonials": {
-      "title": "Apprécié par les Professionnels de l'Événementiel à Travers la Tunisie",
-      "subtitle": "Rejoignez des milliers d'utilisateurs satisfaits qui transforment leurs activités événementielles"
-    },
     "pricing": {
-      "title": "Tarification Personnalisée pour Votre Entreprise",
-      "description": "Chaque salle et prestataire de services a des besoins uniques. Contactez notre équipe commerciale pour obtenir un devis personnalisé adapté à la taille et aux exigences de votre entreprise.",
+      "title": "Tarification Flexible",
+      "description": "Des plans adaptés à la taille de votre entreprise avec toutes les fonctionnalités incluses",
       "noHiddenFees": "Pas de Frais Cachés",
-      "noHiddenFeesDesc": "Tarification claire et transparente avec tout inclus",
       "flexiblePlans": "Plans Flexibles",
-      "flexiblePlansDesc": "Choisissez des cycles de facturation mensuels, annuels ou personnalisés",
       "bestValue": "Meilleur Rapport Qualité-Prix",
-      "bestValueDesc": "Tarification compétitive avec fonctionnalités premium",
-      "callUs": "Appelez pour les Tarifs",
-      "contactSales": "Contacter l'Équipe Commerciale"
+      "callUs": "Appelez-Nous",
+      "contactSales": "Contacter Commercial"
     },
     "faq": {
-      "title": "Questions Fréquemment Posées",
-      "subtitle": "Tout ce que vous devez savoir sur Fiesta",
+      "title": "Questions Fréquentes",
+      "subtitle": "Tout ce que vous devez savoir sur notre plateforme",
       "questions": {
-        "marketplace": {
-          "q": "Qu'est-ce que le marketplace Fiesta ?",
-          "a": "Le marketplace Fiesta est une plateforme mobile où les clients peuvent découvrir et réserver des salles, parcourir les partenaires de services (photographes, traiteurs, DJs, etc.) et planifier des événements complets. Il connecte les organisateurs d'événements avec des salles et prestataires vérifiés à travers la Tunisie."
+        "systemAvailable": {
+          "q": "Le système de gestion est-il disponible maintenant ?",
+          "a": "Oui, notre système de gestion web est entièrement opérationnel et vous pouvez commencer à l'utiliser immédiatement après votre inscription."
         },
-        "eventTypes": {
-          "q": "Quels types d'événements puis-je gérer avec Fiesta ?",
-          "a": "Fiesta prend en charge tous les types d'événements, y compris les mariages, anniversaires, événements d'entreprise, conférences, fêtes et plus encore. Notre plateforme est flexible et peut être personnalisée pour tout type d'événement."
+        "mobileAppRelease": {
+          "q": "Quand l'application mobile sera-t-elle disponible ?",
+          "a": "L'application mobile est en développement actif et sera lancée prochainement. Vous pouvez rejoindre notre liste d'attente pour être informé du lancement."
         },
         "getStarted": {
           "q": "Comment puis-je commencer ?",
-          "a": "Réservez simplement une démo avec notre équipe. Nous vous guiderons à travers la plateforme, vous aiderons à configurer votre compte et fournirons une formation pour vous assurer de tirer le meilleur parti de Fiesta."
-        },
-        "tryBefore": {
-          "q": "Puis-je essayer Fiesta avant de m'engager ?",
-          "a": "Oui ! Nous proposons des sessions de démonstration où vous pouvez explorer toutes les fonctionnalités. Contactez notre équipe commerciale pour planifier une démo personnalisée et voir comment Fiesta répond à vos besoins."
+          "a": "Vous pouvez soit découvrir notre système de gestion, soit contacter notre équipe commerciale pour une démonstration personnalisée et un accompagnement."
         },
         "support": {
-          "q": "Quel type de support fournissez-vous ?",
-          "a": "Nous fournissons un support complet comprenant une formation d'intégration, un support téléphonique, un support par e-mail et une base de connaissances détaillée. Notre équipe est là pour assurer votre succès."
+          "q": "Quel support fournissez-vous ?",
+          "a": "Nous offrons un support complet par email, téléphone et chat, ainsi qu'une documentation détaillée et des formations pour vous aider à réussir."
         }
       }
     },
     "contact": {
-      "title": "Prêt à Transformer Votre Activité Événementielle ?",
-      "subtitle": "Contactez notre équipe pour une démo personnalisée",
-      "callUs": "Appelez-nous",
-      "emailUs": "Écrivez-nous",
-      "visitUs": "Visitez-nous",
-      "bookDemo": "Réservez Votre Démo",
-      "browseMarketplace": "Parcourir le Marketplace"
+      "title": "Prêt à Commencer ?",
+      "subtitle": "Contactez notre équipe pour une démonstration personnalisée",
+      "callUs": "Appelez-Nous",
+      "emailUs": "Écrivez-Nous",
+      "visitUs": "Visitez-Nous",
+      "visitMarketplace": "Visiter le Marketplace"
+    }
+  },
+  "fiestaVenue": {
+    "hero": {
+      "badge": "N°1 Système de Gestion de Salle",
+      "title": {
+        "line1": "Gérez Votre Salle",
+        "line2": "Avec Confiance"
+      },
+      "description": {
+        "line1": "La plateforme tout-en-un pour les propriétaires de salles en Tunisie. Automatisez les réservations, gérez les finances et développez votre activité avec des outils puissants conçus spécifiquement pour l'industrie événementielle.",
+        "line2": "Rejoignez des centaines de salles qui font confiance à Fiesta pour leur gestion quotidienne."
+      },
+      "buttons": {
+        "startFree": "Commencer Gratuitement",
+        "watchDemo": "Voir la Démo"
+      },
+      "features": {
+        "noCreditCard": "Aucune carte de crédit requise",
+        "quickSetup": "Configuration en 5 minutes"
+      },
+      "imageAlt": "Aperçu du tableau de bord de gestion de salle",
+      "floatingBadge": {
+        "label": "Économie de temps moyenne",
+        "value": "10h/semaine"
+      }
     },
-    "footer": {
-      "description": "La plateforme leader de gestion d'événements en Tunisie connectant salles, organisateurs et partenaires de services.",
-      "product": "Produit",
-      "company": "Entreprise",
-      "legal": "Légal",
-      "aboutUs": "À Propos",
-      "careers": "Carrières",
-      "blog": "Blog",
-      "privacy": "Politique de Confidentialité",
-      "terms": "Conditions de Service",
-      "cookies": "Politique des Cookies",
-      "copyright": "© 2024 Fiesta Events. Fait avec",
-      "inTunisia": "en Tunisie"
+    "problem": {
+      "title": "Fatigué de Gérer Votre Salle Manuellement ?",
+      "items": {
+        "doubleBookings": {
+          "title": "Doubles Réservations",
+          "description": "Calendriers désynchronisés entraînant des conflits de réservation"
+        },
+        "lostPayments": {
+          "title": "Paiements Perdus",
+          "description": "Difficulté à suivre les paiements et relancer les impayés"
+        },
+        "messyContracts": {
+          "title": "Contrats Désorganisés",
+          "description": "Documents éparpillés dans les emails et dossiers papier"
+        }
+      }
+    },
+    "features": {
+      "title": "Fonctionnalités Puissantes pour Votre Salle",
+      "subtitle": "Tout ce dont vous avez besoin pour gérer efficacement votre activité",
+      "tabs": {
+        "calendar": {
+          "title": "Calendrier Intelligent",
+          "description": "Gestion visuelle des réservations et disponibilités",
+          "badge": "POPULAIRE"
+        },
+        "finance": {
+          "title": "Analyses Financières",
+          "description": "Suivi des revenus, dépenses et performance",
+          "badge": "ESSENTIEL"
+        },
+        "legal": {
+          "title": "Contrats & Documents",
+          "description": "Génération et gestion des documents légaux",
+          "badge": "SÉCURISÉ"
+        }
+      },
+      "previewAlt": "Aperçu de la fonctionnalité",
+      "details": {
+        "calendar": {
+          "title": "Calendrier Intelligent & Réservations",
+          "description": "Visualisez et gérez toutes vos réservations dans un calendrier interactif et facile à utiliser.",
+          "features": {
+            "dragDrop": "Glisser-Déposer des événements",
+            "eventStatus": "Statuts d'événements colorés",
+            "clientView": "Vue client partageable",
+            "mobile": "Accès mobile optimisé"
+          }
+        },
+        "finance": {
+          "title": "Tableau de Bord Financier",
+          "description": "Suivez vos performances financières avec des rapports détaillés et des analyses en temps réel.",
+          "features": {
+            "invoices": "Facturation automatisée",
+            "paymentTracking": "Suivi des paiements",
+            "expenseManagement": "Gestion des dépenses",
+            "reports": "Rapports personnalisables"
+          }
+        },
+        "legal": {
+          "title": "Gestion des Contrats",
+          "description": "Créez, envoyez et suivez vos contrats professionnels en quelques clics.",
+          "features": {
+            "templates": "Modèles personnalisables",
+            "autoFill": "Remplissage automatique",
+            "pdf": "Génération PDF instantanée",
+            "archives": "Archivage sécurisé"
+          }
+        }
+      }
+    },
+    "pricing": {
+      "title": "Tarification Simple & Transparente",
+      "subtitle": "Choisissez le plan qui correspond à vos besoins",
+      "plans": {
+        "starter": {
+          "title": "Starter",
+          "description": "Parfait pour commencer",
+          "price": "Gratuit",
+          "period": "/toujours",
+          "features": {
+            "events": "Événements illimités",
+            "crm": "Gestion clients de base",
+            "dashboard": "Tableau de bord essentiel",
+            "reports": "Rapports avancés",
+            "invoices": "Facturation professionnelle"
+          },
+          "button": "Commencer Gratuitement"
+        },
+        "pro": {
+          "badge": "RECOMMANDÉ",
+          "title": "Professionnel",
+          "description": "Pour les salles en croissance",
+          "price": "Sur Devis",
+          "contact": "Contactez-nous pour un devis personnalisé",
+          "features": {
+            "starter": "Toutes les fonctionnalités Starter",
+            "reports": "Rapports analytiques avancés",
+            "invoices": "Facturation et devis professionnels",
+            "contracts": "Contrats et documents légaux",
+            "staff": "Gestion d'équipe multi-utilisateurs"
+          },
+          "button": "Contacter Commercial"
+        }
+      }
+    },
+    "faq": {
+      "title": "Questions Fréquentes",
+      "questions": {
+        "freeForever": {
+          "q": "Le plan Starter est-il vraiment gratuit pour toujours ?",
+          "a": "Oui ! Le plan Starter reste gratuit indéfiniment avec toutes ses fonctionnalités essentielles. Aucune carte de crédit requise."
+        },
+        "dataSecurity": {
+          "q": "Mes données sont-elles sécurisées ?",
+          "a": "Absolument. Nous utilisons un chiffrement de niveau bancaire et sauvegardons vos données quotidiennement. Vos informations sont 100% confidentielles."
+        },
+        "dataExport": {
+          "q": "Puis-je exporter mes données ?",
+          "a": "Oui, vous pouvez exporter tous vos données (clients, événements, transactions) à tout moment dans des formats standards (CSV, PDF)."
+        }
+      }
+    },
+    "cta": {
+      "title": "Prêt à Transformer la Gestion de Votre Salle ?",
+      "description": "Rejoignez des centaines de propriétaires de salles en Tunisie qui utilisent déjà Fiesta pour simplifier leur gestion et développer leur activité.",
+      "buttons": {
+        "startFree": "Commencer Gratuitement",
+        "contactSales": "Contacter Commercial"
+      }
     }
   },
   "invoices": {
@@ -2698,69 +2849,69 @@
     "settings": "Settings"
   },
   "invoiceCustomization": {
-  "title": "Design de la Facture",
-  "subtitle": "Personnalisez votre modèle de facture",
-  "tabs": {
-    "brand": "Marque",
-    "layout": "Mise en page",
-    "table": "Tableau",
-    "style": "Style",
-    "content": "Contenu"
+    "title": "Design de la Facture",
+    "subtitle": "Personnalisez votre modèle de facture",
+    "tabs": {
+      "brand": "Marque",
+      "layout": "Mise en page",
+      "table": "Tableau",
+      "style": "Style",
+      "content": "Contenu"
+    },
+    "branding": {
+      "companyLogo": "Logo de l'entreprise",
+      "uploadLogo": "Cliquez pour télécharger",
+      "brandColors": "Couleurs",
+      "primaryColor": "Primaire",
+      "secondaryColor": "Secondaire"
+    },
+    "layout": {
+      "sections": "Sections"
+    },
+    "table": {
+      "style": "Apparence",
+      "visibleColumns": "Colonnes",
+      "headerBg": "Fond En-tête",
+      "striped": "Rayé",
+      "rounded": "Arrondi"
+    },
+    "style": {
+      "density": "Densité",
+      "fontSize": "Taille Police",
+      "radius": "Rayon"
+    },
+    "columns": {
+      "description": "Description",
+      "quantity": "Quantité",
+      "rate": "Prix",
+      "tax": "TVA",
+      "discount": "Remise",
+      "total": "Total"
+    },
+    "density": {
+      "compact": "Compact",
+      "standard": "Standard",
+      "spacious": "Spacieux"
+    },
+    "labels": {
+      "invoiceTitle": "Titre Facture",
+      "from": "De",
+      "to": "À",
+      "item": "Article",
+      "total": "Total",
+      "paymentInstructions": "Instructions de Paiement"
+    },
+    "toasts": {
+      "loadError": "Échec du chargement des paramètres.",
+      "imageUpdated": "Image mise à jour localement",
+      "saveSuccess": "Design enregistré avec succès !",
+      "saveError": "Échec de l'enregistrement des paramètres."
+    }
   },
-  "branding": {
-    "companyLogo": "Logo de l'entreprise",
-    "uploadLogo": "Cliquez pour télécharger",
-    "brandColors": "Couleurs",
-    "primaryColor": "Primaire",
-    "secondaryColor": "Secondaire"
-  },
-  "layout": {
-    "sections": "Sections"
-  },
-  "table": {
-    "style": "Apparence",
-    "visibleColumns": "Colonnes",
-    "headerBg": "Fond En-tête",
-    "striped": "Rayé",
-    "rounded": "Arrondi"
-  },
-  "style": {
-    "density": "Densité",
-    "fontSize": "Taille Police",
-    "radius": "Rayon"
-  },
-  "columns": {
-    "description": "Description",
-    "quantity": "Quantité",
-    "rate": "Prix",
-    "tax": "TVA",
-    "discount": "Remise",
-    "total": "Total"
-  },
-  "density": {
-    "compact": "Compact",
-    "standard": "Standard",
-    "spacious": "Spacieux"
-  },
-  "labels": {
-    "invoiceTitle": "Titre Facture",
-    "from": "De",
-    "to": "À",
-    "item": "Article",
-    "total": "Total",
-    "paymentInstructions": "Instructions de Paiement"
-  },
-  "toasts": {
-    "loadError": "Échec du chargement des paramètres.",
-    "imageUpdated": "Image mise à jour localement",
-    "saveSuccess": "Design enregistré avec succès !",
-    "saveError": "Échec de l'enregistrement des paramètres."
-  }
-},
-   "venueSettings": {
+  "venueSettings": {
     "title": "Paramètres de la salle",
     "subtitle": "Gérez les informations de votre salle, les horaires d'ouverture et les paramètres de l'équipe",
-    
+
     "tabs": {
       "personal": "Personnel",
       "security": "Sécurité",
@@ -2768,13 +2919,13 @@
       "amenities": "Équipements & Horaires",
       "spaces": "Espaces"
     },
-    
+
     "common": {
       "loading": "Chargement...",
       "tryAgain": "Réessayer",
       "save": "Enregistrer les modifications"
     },
-    
+
     "personal": {
       "title": "Informations personnelles",
       "description": "Mettez à jour vos informations personnelles et votre profil",
@@ -2790,7 +2941,7 @@
       },
       "save": "Enregistrer les infos personnelles"
     },
-    
+
     "security": {
       "title": "Mot de passe et sécurité",
       "description": "Changez votre mot de passe et gérez les paramètres de sécurité",
@@ -2809,7 +2960,7 @@
       },
       "changePassword": "Changer le mot de passe"
     },
-    
+
     "venue": {
       "basicInfo": {
         "title": "Informations de base",
@@ -2841,7 +2992,7 @@
       },
       "save": "Enregistrer les paramètres de la salle"
     },
-    
+
     "amenities": {
       "title": "Équipements",
       "description": "Sélectionnez les équipements et fonctionnalités disponibles dans votre salle",
@@ -2881,7 +3032,7 @@
       },
       "save": "Enregistrer équipements et horaires"
     },
-    
+
     "spaces": {
       "title": "Espaces de la salle",
       "description": "Gérez les différentes salles et zones de votre établissement",
@@ -2925,7 +3076,7 @@
       },
       "save": "Enregistrer les espaces"
     },
-    
+
     "validation": {
       "required": "Ce champ est obligatoire",
       "email": "Veuillez entrer une adresse e-mail valide",
@@ -2933,7 +3084,7 @@
       "passwordsMatch": "Les mots de passe ne correspondent pas",
       "capacityRange": "La capacité maximale doit être supérieure à la capacité minimale"
     },
-    
+
     "notifications": {
       "success": {
         "profileUpdated": "Profil mis à jour avec succès",
@@ -3059,7 +3210,7 @@
         "loadError": "Échec du chargement des paramètres"
       }
     },
-   "detail": {
+    "detail": {
       "status": {
         "draft": "Brouillon",
         "sent": "Envoyé",
@@ -3136,7 +3287,7 @@
         "sendSuccess": "Contrat envoyé"
       }
     },
-   "form": {
+    "form": {
       "title": {
         "create": "Créer Contrat",
         "edit": "Modifier Contrat"
@@ -3205,7 +3356,7 @@
         "loadError": "Erreur de chargement des données"
       }
     },
-     "loading": "Chargement des contrats...",
+    "loading": "Chargement des contrats...",
     "noResults": "Aucun résultat trouvé",
     "actions": {
       "view": "Voir",
@@ -3277,7 +3428,7 @@
       }
     }
   },
-   "documents": {
+  "documents": {
     "hub": {
       "title": "Configuration des Documents",
       "subtitle": "Personnalisez le design, la structure et le contenu de vos documents.",
