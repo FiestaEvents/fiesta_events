@@ -1,8 +1,11 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { Calendar, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const AuthLayout = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex flex-row w-full">
       {/* Left Side - Auth Form */}
@@ -28,13 +31,12 @@ const AuthLayout = () => {
               <Sparkles className="w-12 h-12 text-white drop-shadow-lg" />
             </div>
             <h1 className="text-4xl font-bold text-center text-white drop-shadow-md">
-              Manage Your Venue Like a Pro
+              {t("auth.layout.title")}
             </h1>
           </div>
 
           <p className="text-xl text-white/90 mb-8">
-            Streamline event planning, client management, and team collaboration
-            all in one place.
+            {t("auth.layout.subtitle")}
           </p>
 
           <div className="space-y-4">
@@ -44,11 +46,10 @@ const AuthLayout = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-lg mb-1">
-                  Effortless Event Management
+                  {t("auth.layout.features.eventsTitle")}
                 </h3>
                 <p className="text-white/80">
-                  Track bookings, manage calendars, and coordinate events
-                  seamlessly.
+                  {t("auth.layout.features.eventsDesc")}
                 </p>
               </div>
             </div>
@@ -59,10 +60,10 @@ const AuthLayout = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-lg mb-1">
-                  Financial Control
+                  {t("auth.layout.features.financialTitle")}
                 </h3>
                 <p className="text-white/80">
-                  Handle payments, invoices, and financial reporting with ease.
+                  {t("auth.layout.features.financialDesc")}
                 </p>
               </div>
             </div>
@@ -73,10 +74,10 @@ const AuthLayout = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-lg mb-1">
-                  Team Collaboration
+                  {t("auth.layout.features.teamTitle")}
                 </h3>
                 <p className="text-white/80">
-                  Assign tasks, set reminders, and keep everyone in sync.
+                  {t("auth.layout.features.teamDesc")}
                 </p>
               </div>
             </div>

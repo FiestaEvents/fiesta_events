@@ -1,224 +1,229 @@
 import React from 'react';
+import { Edit2 } from 'lucide-react';
 import formatCurrency from '../../utils/formatCurrency';
-import formatDate from '../../utils/formatDate';
 
-const LiveContractPreview = ({ settings, data }) => {
+// ==========================================
+// HELPER: EDITABLE WRAPPER
+// ==========================================
+const EditableBlock = ({ sectionId, onEdit, children, className = "" }) => {
+  return (
+    <div 
+      onClick={() => onEdit(sectionId)}
+      className={`relative group cursor-pointer border-2 border-transparent hover:border-orange-400 hover:bg-orange-50/10 rounded-lg transition-all duration-200 ${className}`}
+    >
+      {/* Edit Badge on Hover */}
+      <div className="absolute -top-2.5 -right-2.5 bg-orange-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 shadow-md transition-opacity z-20 scale-75 group-hover:scale-100">
+        <Edit2 size={12} />
+      </div>
+      {children}
+    </div>
+  );
+};
+
+const LiveContractPreview = ({ settings, data, onEditSection }) => {
   
-  // 1. Settings & Context Defaults
+  // Safe Defaults
   const s = {
-    branding: { 
-      primary: settings?.branding?.colors?.primary || '#F18237',
-      logo: settings?.branding?.logo 
-    },
-    company: { 
-      displayName: settings?.companyInfo?.displayName || 'VOTRE SOCIÉTÉ',
-      legalName: settings?.companyInfo?.legalName || '', 
-      matriculeFiscale: settings?.companyInfo?.matriculeFiscale || '', 
-      address: settings?.companyInfo?.address || '', 
-    }
+    colors: settings?.branding?.colors || { primary: '#F18237', text: '#1F2937', secondary: '#374151' },
+    company: settings?.companyInfo || {},
+    labels: settings?.labels || {},
+    layout: settings?.layout || {},
+    logo: settings?.branding?.logo?.url
   };
 
-  const isPartner = data?.contractType === 'partner';
-  const services = data?.services || [];
-  const financials = data?.financials || {};
-  const logistics = data?.logistics || {};
+  const isPartner = data.contractType === 'partner';
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '...';
 
-  // 2. Dynamic Text Labels
-  const titles = {
-    header: isPartner ? 'ACCORD DE PARTENARIAT' : 'CONTRAT DE PRESTATION',
-    party2Label: isPartner ? 'Le Partenaire' : 'Le Client',
-    financialSection: isPartner ? 'Article 3 : Rémunération & Conditions' : 'Article 3 : Conditions Financières'
-  };
-
-  // 3. A4 Styles
-  const styles = {
-    page: {
-      width: '794px', // A4 Width
-      minHeight: '1123px', // A4 Height
-      backgroundColor: 'white',
-      padding: '50px 60px',
-      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-      fontSize: '11px',
-      color: '#000',
-      lineHeight: '1.6',
-      margin: '0 auto',
-      position: 'relative',
-      boxShadow: '0 0 10px rgba(0,0,0,0.05)'
-    },
-    header: { display: 'flex', justifyContent: 'space-between', borderBottom: `2px solid ${s.branding.primary}`, paddingBottom: '20px', marginBottom: '30px' },
-    h1: { fontSize: '18px', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '5px' },
-    h3: { fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #eee', paddingBottom: '5px', marginTop: '25px', marginBottom: '10px' },
-    p: { marginBottom: '8px', textAlign: 'justify' },
-    bold: { fontWeight: 'bold' },
-    // Table (Client Only)
-    table: { width: '100%', borderCollapse: 'collapse', marginTop: '10px', fontSize: '10px' },
-    th: { borderBottom: '1px solid #000', textAlign: 'left', padding: '8px 5px', fontWeight: 'bold', backgroundColor: '#f9fafb' },
-    td: { borderBottom: '1px solid #eee', padding: '8px 5px' },
-    // Partner List
-    listContainer: { backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px', border: '1px solid #eee', marginTop: '10px' },
-    listItem: { marginBottom: '5px', display: 'flex', justifyContent: 'space-between' }
-  };
+  // Styles that depend on dynamic settings
+  const primaryStyle = { color: s.colors.primary };
+  const borderStyle = { borderColor: s.colors.primary };
 
   return (
-    <div style={styles.page} id="contract-preview">
+    <div className="w-full h-full flex justify-center items-start overflow-hidden bg-gray-800/50 py-8 select-none">
       
-      {/* --- HEADER --- */}
-      <div style={styles.header}>
-        <div>
-           {s.branding.logo?.url ? (
-            <img src={s.branding.logo.url} alt="Logo" style={{height: 50, marginBottom: 10}} />
-           ) : (
-            <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: s.branding.primary, margin: 0 }}>{s.company.displayName}</h2>
-           )}
-           <div style={{ fontSize: '9px', color: '#666', marginTop: '4px' }}>
-             {s.company.legalName}<br/>
-             {s.company.address}<br/>
-             MF: {s.company.matriculeFiscale}
-           </div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-           <div style={styles.h1}>{titles.header}</div>
-           <div style={{ fontSize: '10px', fontFamily: 'monospace' }}>RÉF: {data?.contractNumber || 'BROUILLON'}</div>
-           <div style={{ fontSize: '10px' }}>Fait à Tunis, le {formatDate(new Date())}</div>
-        </div>
-      </div>
-
-      {/* --- PARTIES --- */}
-      <div style={{ marginBottom: '20px' }}>
-        <p style={styles.p}><strong>ENTRE LES SOUSSIGNÉS :</strong></p>
+      {/* A4 PAGE CONTAINER (Scaled to fit) */}
+      <div 
+        className="bg-white shadow-2xl origin-top transform-gpu transition-transform duration-300"
+        style={{ 
+          width: '794px', // A4 width at 96 DPI
+          minHeight: '1123px', // A4 height
+          padding: '50px 60px',
+          color: s.colors.text,
+          fontFamily: 'Helvetica, Arial, sans-serif',
+          fontSize: '11px',
+          lineHeight: '1.5',
+          position: 'relative'
+        }}
+      >
         
-        {/* Us */}
-        <div style={{ paddingLeft: '20px', marginBottom: '15px' }}>
-          <span style={styles.bold}>La Société {s.company.legalName}</span>, 
-          immatriculée sous le M.F {s.company.matriculeFiscale}, 
-          sise à {s.company.address}.<br/>
-          Représentée par son gérant légal.<br/>
-          Ci-après dénommée <strong>« {isPartner ? 'Le Donneur d\'Ordre' : 'Le Prestataire'} »</strong> d'une part.
+        {/* --- HEADER --- */}
+        <div className="flex justify-between items-start mb-8 pb-4 border-b-2" style={borderStyle}>
+          {/* Company Info (Click to edit Company or Branding) */}
+          <EditableBlock sectionId={s.logo ? "branding" : "company"} onEdit={onEditSection} className="flex-1">
+             {s.logo ? (
+               <img src={s.logo} alt="Logo" className="h-16 object-contain mb-2" />
+             ) : (
+               <h1 className="text-xl font-bold uppercase" style={primaryStyle}>{s.company.displayName || "VOTRE SOCIÉTÉ"}</h1>
+             )}
+             <div className="text-[10px] text-gray-500 leading-tight mt-1">
+               <p className="font-bold text-gray-700">{s.company.legalName}</p>
+               <p>{s.company.address}</p>
+               <p>MF: {s.company.matriculeFiscale}</p>
+               <p>{s.company.email}</p>
+             </div>
+          </EditableBlock>
+
+          {/* Document Meta (Click to edit Labels) */}
+          <EditableBlock sectionId="labels" onEdit={onEditSection} className="text-right">
+             <h2 className="text-lg font-black uppercase mb-1" style={primaryStyle}>
+               {s.labels.contractTitle || "CONTRAT"}
+             </h2>
+             <p className="font-mono text-[10px] text-gray-600">Réf: {data.contractNumber}</p>
+             {s.layout.showDate && (
+                <p className="text-[10px] text-gray-600">Date: {formatDate(new Date())}</p>
+             )}
+          </EditableBlock>
         </div>
 
-        {/* Them */}
-        <div style={{ paddingLeft: '20px' }}>
-          <span style={styles.bold}>{data?.party?.name || '____________________'}</span>
-          {data?.party?.identifier ? `, identifié(e) par ${data.party.type === 'company' ? 'M.F' : 'CIN'} N° ${data.party.identifier}` : ''},
-          {data?.party?.address ? ` demeurant à ${data.party.address}` : ''}.<br/>
-          {data?.party?.representative ? `Représenté(e) par ${data.party.representative}.` : ''}<br/>
-          Ci-après dénommé(e) <strong>« {titles.party2Label} »</strong> d'autre part.
-        </div>
+        {/* --- PARTIES --- */}
+        <EditableBlock sectionId="labels" onEdit={onEditSection} className="mb-8 p-2">
+           <h3 className="text-xs font-bold uppercase mb-2 tracking-wide text-gray-400 border-b pb-1">
+             {s.labels.partiesTitle || "ENTRE LES SOUSSIGNÉS"}
+           </h3>
+           <div className="flex gap-8">
+             <div className="flex-1 pl-3 border-l-2" style={borderStyle}>
+                <p className="font-bold text-sm">{s.company.legalName || "Le Prestataire"}</p>
+                <p className="text-xs text-gray-500">Ci-après dénommé "{s.labels.serviceProvider || "Le Prestataire"}"</p>
+             </div>
+             <div className="flex-1 pl-3 border-l-2 border-gray-300">
+                <p className="font-bold text-sm">{data.party?.name || "Le Client"}</p>
+                <p className="text-xs text-gray-500">Ci-après dénommé(e) "{isPartner ? s.labels.partnerLabel : s.labels.clientLabel}"</p>
+             </div>
+           </div>
+        </EditableBlock>
+
+        {/* --- OBJECT / LOGISTICS --- */}
+        <EditableBlock sectionId="labels" onEdit={onEditSection} className="mb-6 p-2">
+           <h3 className="text-xs font-bold uppercase mb-2 tracking-wide" style={primaryStyle}>
+             {s.labels.servicesTitle || "OBJET DU CONTRAT"}
+           </h3>
+           <p className="text-justify mb-2">
+             Le présent contrat a pour objet : <strong>{data.title}</strong>.
+           </p>
+           <div className="grid grid-cols-2 gap-4 text-xs bg-gray-50 p-2 rounded border border-gray-100">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Début:</span>
+                <span className="font-bold">{formatDate(data.logistics?.startDate)} ({data.logistics?.checkInTime})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Fin:</span>
+                <span className="font-bold">{formatDate(data.logistics?.endDate)} ({data.logistics?.checkOutTime})</span>
+              </div>
+           </div>
+        </EditableBlock>
+
+        {/* --- FINANCIALS --- */}
+        <EditableBlock sectionId="financials" onEdit={onEditSection} className="mb-8 p-2">
+           <h3 className="text-xs font-bold uppercase mb-2 tracking-wide" style={primaryStyle}>
+             {s.labels.paymentTitle || "CONDITIONS FINANCIÈRES"}
+           </h3>
+
+           {isPartner ? (
+             <div className="text-xs">
+               <p className="mb-2 italic text-gray-500">Mode Partenaire (Liste Simple)</p>
+               <ul className="list-disc list-inside space-y-1">
+                 {data.services?.map((svc, i) => (
+                   <li key={i}><strong>{svc.description}</strong> : {formatCurrency(svc.amount)}</li>
+                 ))}
+               </ul>
+             </div>
+           ) : (
+             <table className="w-full text-xs border-collapse">
+               <thead>
+                 <tr className="text-white" style={{ backgroundColor: s.colors.primary }}>
+                   <th className="p-2 text-left">Désignation</th>
+                   <th className="p-2 text-center">Qté</th>
+                   <th className="p-2 text-right">P.U</th>
+                   <th className="p-2 text-right">Total HT</th>
+                 </tr>
+               </thead>
+               <tbody className="text-gray-700">
+                 {data.services?.map((svc, i) => (
+                   <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                     <td className="p-2 border-b border-gray-100">{svc.description}</td>
+                     <td className="p-2 border-b border-gray-100 text-center">{svc.quantity}</td>
+                     <td className="p-2 border-b border-gray-100 text-right">{formatCurrency(svc.rate)}</td>
+                     <td className="p-2 border-b border-gray-100 text-right">{formatCurrency(svc.amount)}</td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+           )}
+
+           {/* Totals */}
+           <div className="flex justify-end mt-4">
+             <div className="w-48 text-xs space-y-1">
+               <div className="flex justify-between"><span>Total HT:</span> <span>{formatCurrency(data.financials?.amountHT)}</span></div>
+               <div className="flex justify-between"><span>TVA ({data.financials?.vatRate}%):</span> <span>{formatCurrency(data.financials?.taxAmount)}</span></div>
+               <div className="flex justify-between"><span>Timbre:</span> <span>{formatCurrency(data.financials?.stampDuty)}</span></div>
+               <div className="flex justify-between border-t border-gray-300 pt-1 mt-1 font-bold text-sm" style={primaryStyle}>
+                 <span>NET À PAYER:</span>
+                 <span>{formatCurrency(data.financials?.totalTTC)}</span>
+               </div>
+             </div>
+           </div>
+        </EditableBlock>
+
+        {/* --- CLAUSES --- */}
+        <EditableBlock sectionId="sections" onEdit={onEditSection} className="mb-8 p-2 min-h-[100px]">
+           <h3 className="text-xs font-bold uppercase mb-2 tracking-wide" style={primaryStyle}>
+             CONDITIONS GÉNÉRALES
+           </h3>
+           <div className="space-y-3">
+             {settings.defaultSections?.length > 0 ? (
+               settings.defaultSections.map((sec, i) => (
+                 <div key={i}>
+                   <p className="font-bold text-[10px] uppercase mb-0.5">{sec.title}</p>
+                   <p className="text-[10px] text-justify text-gray-600 leading-relaxed">{sec.content}</p>
+                 </div>
+               ))
+             ) : (
+               <p className="text-center text-gray-400 italic py-4">Aucune clause définie (Cliquez pour ajouter)</p>
+             )}
+             
+             {/* Jurisdiction Helper */}
+             <div className="mt-4 pt-2 border-t border-gray-100">
+                <p className="font-bold text-[10px] uppercase">JURIDICTION</p>
+                <p className="text-[10px]">En cas de litige, compétence exclusive attribuée au {data.legal?.jurisdiction}.</p>
+             </div>
+           </div>
+        </EditableBlock>
+
+        {/* --- SIGNATURES --- */}
+        <EditableBlock sectionId="labels" onEdit={onEditSection} className="mt-auto p-2">
+           <h3 className="text-xs font-bold uppercase mb-6 text-center opacity-50 tracking-widest">
+             {s.labels.signaturesTitle || "SIGNATURES"}
+           </h3>
+           <div className="flex justify-between gap-10">
+             <div className="flex-1 h-24 border border-dashed border-gray-300 rounded p-2 relative">
+               <p className="text-[9px] uppercase font-bold text-gray-400 mb-1">Pour {s.company.displayName}</p>
+               <p className="text-[8px] text-gray-400 text-center absolute bottom-2 left-0 right-0">{s.labels.signatureLabel || "Lu et approuvé"}</p>
+             </div>
+             <div className="flex-1 h-24 border border-dashed border-gray-300 rounded p-2 relative">
+               <p className="text-[9px] uppercase font-bold text-gray-400 mb-1">Pour {isPartner ? "Le Partenaire" : "Le Client"}</p>
+               <p className="text-[8px] text-gray-400 text-center absolute bottom-2 left-0 right-0">{s.labels.signatureLabel || "Lu et approuvé"}</p>
+             </div>
+           </div>
+        </EditableBlock>
+
+        {/* --- FOOTER --- */}
+        <EditableBlock sectionId="company" onEdit={onEditSection} className="absolute bottom-10 left-10 right-10 text-center border-t border-gray-100 pt-2">
+           <p className="text-[9px] text-gray-400">
+             {s.company.legalName} - MF: {s.company.matriculeFiscale} - {s.company.address}
+           </p>
+        </EditableBlock>
+
       </div>
-
-      {/* --- OBJECT --- */}
-      <div style={styles.h3}>Article 1 : Objet du Contrat</div>
-      <p style={styles.p}>
-        Le présent contrat a pour objet de définir les conditions de collaboration pour l'événement <strong>« {data?.title || '...'} »</strong> 
-        qui se déroulera du <strong>{formatDate(logistics.startDate)}</strong> au <strong>{formatDate(logistics.endDate)}</strong>.
-      </p>
-
-      {/* --- FINANCIALS (The Logic Split) --- */}
-      <div style={styles.h3}>{titles.financialSection}</div>
-
-      {isPartner ? (
-        // === PARTNER VIEW (Compensation Clause - No Invoice Look) ===
-        <div>
-          <p style={styles.p}>
-            En contrepartie de la bonne exécution des prestations, le Donneur d'Ordre s'engage à rémunérer le Partenaire selon les tarifs convenus suivants :
-          </p>
-          <div style={styles.listContainer}>
-            {services.map((svc, i) => (
-              <div key={i} style={styles.listItem}>
-                <span><strong>• {svc.description}</strong> {svc.quantity > 1 ? `(x${svc.quantity})` : ''}</span>
-                <span>
-                  {svc.rate > 0 ? formatCurrency(svc.amount) : 'Tarif à définir'}
-                </span>
-              </div>
-            ))}
-            <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed #ccc', fontWeight: 'bold', textAlign: 'right' }}>
-              Total Estimé : {formatCurrency(financials.totalTTC)} TTC
-            </div>
-          </div>
-          <p style={{...styles.p, fontSize: '10px', fontStyle: 'italic', marginTop: '10px'}}>
-            * Le paiement sera effectué sur présentation d'une facture conforme ou note d'honoraires après service fait.
-            {data.paymentTerms?.depositAmount > 0 && ` Une avance de ${formatCurrency(data.paymentTerms.depositAmount)} a été convenue.`}
-          </p>
-        </div>
-      ) : (
-        // === CLIENT VIEW (Schedule of Services - Invoice Look) ===
-        <div>
-          <p style={styles.p}>
-            Le Client s'engage à régler le montant global détaillé ci-après pour les services fournis :
-          </p>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>Désignation</th>
-                <th style={{...styles.th, textAlign: 'center'}}>Qté</th>
-                <th style={{...styles.th, textAlign: 'right'}}>P.U (HT)</th>
-                <th style={{...styles.th, textAlign: 'right'}}>Total (HT)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {services.map((svc, i) => (
-                <tr key={i}>
-                  <td style={styles.td}>{svc.description}</td>
-                  <td style={{...styles.td, textAlign: 'center'}}>{svc.quantity}</td>
-                  <td style={{...styles.td, textAlign: 'right'}}>{formatCurrency(svc.rate)}</td>
-                  <td style={{...styles.td, textAlign: 'right'}}>{formatCurrency(svc.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          {/* Client Totals */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '15px' }}>
-            <div style={{ width: '220px', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span>Total HT :</span> <strong>{formatCurrency(financials.amountHT)}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '10px', color: '#666' }}>
-                <span>TVA ({financials.vatRate}%):</span> <span>{formatCurrency(financials.taxAmount)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '10px', color: '#666' }}>
-                <span>Timbre Fiscal :</span> <span>{formatCurrency(financials.stampDuty)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ddd', paddingTop: '5px', marginTop: '5px', fontWeight: 'bold' }}>
-                <span>NET À PAYER :</span> <span style={{color: s.branding.primary}}>{formatCurrency(financials.totalTTC)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- LEGAL & JURISDICTION --- */}
-      <div style={styles.h3}>Article 4 : Juridiction & Litiges</div>
-      <p style={styles.p}>
-        Le présent contrat est régi par la loi tunisienne. 
-        En cas de litige, et à défaut d'accord amiable, compétence exclusive est attribuée au <strong>{data?.legal?.jurisdiction || 'Tribunal de Tunis'}</strong>.
-      </p>
-      {data?.legal?.specialConditions && (
-        <>
-          <div style={styles.h3}>Article 5 : Conditions Particulières</div>
-          <p style={styles.p}>{data.legal.specialConditions}</p>
-        </>
-      )}
-
-      {/* --- SIGNATURES --- */}
-      <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'space-between', breakInside: 'avoid' }}>
-        <div style={{ width: '45%' }}>
-          <p style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '40px', borderBottom: '1px solid #eee' }}>
-            POUR {s.company.displayName}
-          </p>
-        </div>
-        <div style={{ width: '45%' }}>
-          <p style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '40px', borderBottom: '1px solid #eee' }}>
-            POUR {titles.party2Label.toUpperCase()}
-          </p>
-        </div>
-      </div>
-
-      {/* --- FOOTER --- */}
-      <div style={{ position: 'absolute', bottom: '30px', left: '0', right: '0', textAlign: 'center', fontSize: '8px', color: '#999', borderTop: '1px solid #f3f4f6', paddingTop: '10px' }}>
-        {s.company.legalName} - MF: {s.company.matriculeFiscale} - {s.company.address}
-      </div>
-
     </div>
   );
 };

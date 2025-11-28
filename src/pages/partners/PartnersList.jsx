@@ -12,6 +12,7 @@ import {
   Users,
   Star,
   AlertTriangle,
+  FolderOpen // ✅ Added for No Results state
 } from "lucide-react";
 
 // ✅ API & Services
@@ -24,9 +25,10 @@ import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
+import Pagination from "../../components/common/Pagination"; // ✅ Added for unified footer
 
 // ✅ Context
-import { useToast } from "../../hooks/useToast";
+import { useToast } from "../../context/ToastContext"; // Ensure correct path based on previous files
 
 // ✅ Sub-components
 import PartnerForm from "./PartnerForm";
@@ -34,12 +36,13 @@ import PartnerDetailModal from "./PartnerDetailModal";
 
 const PartnersList = () => {
   const navigate = useNavigate();
-  const { showSuccess, apiError, showInfo, promise } = useToast();
+  const { showSuccess, showError, showInfo, promise } = useToast();
   const { t } = useTranslation();
 
   // State
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -83,6 +86,7 @@ const PartnersList = () => {
   const fetchPartners = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
 
       const params = {
         page,
@@ -104,18 +108,20 @@ const PartnersList = () => {
         total: data.length
       };
 
-      setPartners(data.filter(p => p && p._id)); // Basic safety filter
+      setPartners(data.filter(p => p && p._id));
       setTotalPages(pagination.pages || 1);
       setTotalCount(pagination.total || data.length);
       setHasInitialLoad(true);
     } catch (err) {
-      apiError(err, t("partners.errors.loading"));
+      const msg = err.response?.data?.message || t("partners.errors.loading");
+      setError(msg);
+      showError(msg);
       setPartners([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [search, status, category, page, limit, t, apiError]);
+  }, [search, status, category, page, limit, t, showError]);
 
   useEffect(() => {
     fetchPartners();
@@ -164,9 +170,11 @@ const PartnersList = () => {
 
   const formatCategory = (cat) => categoryOptions.find((opt) => opt.value === cat)?.label || cat;
 
+  // Logic States
   const hasActiveFilters = search.trim() !== "" || status !== "all" || category !== "all";
-  const showEmptyState = !loading && partners.length === 0 && !hasActiveFilters && hasInitialLoad;
-  const showNoResults = !loading && partners.length === 0 && hasActiveFilters && hasInitialLoad;
+  const showEmptyState = !loading && !error && partners.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !loading && !error && partners.length === 0 && hasActiveFilters && hasInitialLoad;
+  const showData = !loading && hasInitialLoad && partners.length > 0;
 
   // Table Columns
   const columns = [
@@ -242,7 +250,6 @@ const PartnersList = () => {
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
-          {/* ✅ FIX: Explicit children icons and classes */}
           <Button 
             variant="ghost" 
             size="sm" 
@@ -251,7 +258,6 @@ const PartnersList = () => {
           >
             <Eye className="h-4 w-4" />
           </Button>
-          
           <Button 
             variant="ghost" 
             size="sm" 
@@ -260,7 +266,6 @@ const PartnersList = () => {
           >
             <Edit className="h-4 w-4" />
           </Button>
-          
           <Button 
             variant="ghost" 
             size="sm" 
@@ -274,10 +279,49 @@ const PartnersList = () => {
     },
   ];
 
+  // ✅ Unified Pagination Footer
+  const renderPagination = () => {
+    const start = Math.min((page - 1) * limit + 1, totalCount);
+    const end = Math.min(page * limit, totalCount);
+
+    return (
+      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+        <div>
+          Showing <span className="font-medium text-gray-900 dark:text-white">{start}</span> to{" "}
+          <span className="font-medium text-gray-900 dark:text-white">{end}</span> of{" "}
+          <span className="font-medium text-gray-900 dark:text-white">{totalCount}</span> results
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              pageSize={null} 
+            />
+          )}
+          <div className="flex items-center gap-2">
+            <span>Per page:</span>
+            <select
+              value={limit}
+              onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+            >
+              {[10, 25, 50, 100].map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
+      
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("partners.title")}</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
@@ -285,16 +329,17 @@ const PartnersList = () => {
             {hasInitialLoad && totalCount > 0 && ` • ${t("partners.showingResults", { count: partners.length, total: totalCount })}`}
           </p>
         </div>
-        {totalCount > 0 && (
+        {/* Only show header Add button if NOT in empty state */}
+        {!showEmptyState && (
           <Button variant="primary" icon={Plus} onClick={() => { setSelectedPartner(null); setIsFormOpen(true); }}>
             {t("partners.actions.addPartner")}
           </Button>
         )}
       </div>
 
-      {/* Filters */}
+      {/* Filters (Hide in pure empty state) */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shrink-0">
           <div className="flex flex-col sm:flex-row gap-4">
             <Input 
               className="flex-1" 
@@ -331,39 +376,74 @@ const PartnersList = () => {
         </div>
       )}
 
-      {/* Content */}
-      {showNoResults ? (
-        <div className="text-center py-12">
-          <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("partners.table.noResults.title")}</h3>
-          <Button onClick={handleClearFilters} variant="outline">{t("partners.actions.clearFilters")}</Button>
-        </div>
-      ) : showEmptyState ? (
-        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
-          <Users className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("partners.emptyState.title")}</h3>
-          <Button onClick={() => { setSelectedPartner(null); setIsFormOpen(true); }} variant="primary" icon={Plus}>
-            {t("partners.emptyState.addFirst")}
-          </Button>
-        </div>
-      ) : (
-        <Table
-          columns={columns}
-          data={partners}
-          loading={loading}
-          emptyMessage={t("partners.table.empty")}
-          onRowClick={(row) => { setSelectedPartner(row); setIsDetailModalOpen(true); }}
-          striped
-          hoverable
-          pagination={totalPages}
-          currentPage={page}
-          totalPages={totalPages}
-          pageSize={limit}
-          totalItems={totalCount}
-          onPageChange={setPage}
-          onPageSizeChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
-        />
-      )}
+      {/* Content Area */}
+      <div className="flex-1 flex flex-col relative">
+        
+        {/* Loading Overlay */}
+        {loading && !hasInitialLoad && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+                <p className="text-gray-500 dark:text-gray-400">{t("partners.loading.initial", "Loading...")}</p>
+            </div>
+        )}
+
+        {/* Data Table */}
+        {showData && (
+            <>
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <Table
+                        columns={columns}
+                        data={partners}
+                        loading={loading}
+                        onRowClick={(row) => { setSelectedPartner(row); setIsDetailModalOpen(true); }}
+                        striped
+                        hoverable
+                    />
+                </div>
+                {renderPagination()}
+            </>
+        )}
+
+        {/* ✅ NO RESULTS (Active Filter) */}
+        {showNoResults && (
+            <div className="flex flex-col items-center justify-center flex-1 py-12">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
+                    <FolderOpen className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("partners.table.noResults.title")}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
+                    {t("partners.notifications.filtersCleared", "Adjust your filters to find who you're looking for.")}
+                </p>
+                <Button onClick={handleClearFilters} variant="outline" icon={X}>
+                    {t("partners.actions.clearFilters")}
+                </Button>
+            </div>
+        )}
+
+        {/* ✅ EMPTY STATE (No Data) - Enhanced Design */}
+        {showEmptyState && (
+            <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
+                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
+                        <Users className="h-12 w-12 text-orange-500" strokeWidth={1.5} />
+                    </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("partners.emptyState.title")}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
+                   {t("partners.emptyState.description", "Collaborate with trusted vendors. Add your first partner to start managing contracts and services.")}
+                </p>
+                <Button 
+                    onClick={() => { setSelectedPartner(null); setIsFormOpen(true); }} 
+                    variant="primary" 
+                    size="lg"
+                    icon={Plus}
+                    className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
+                >
+                    {t("partners.emptyState.addFirst")}
+                </Button>
+            </div>
+        )}
+      </div>
 
       {/* Modals */}
       <PartnerDetailModal

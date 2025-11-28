@@ -1,5 +1,127 @@
 {
-  "dashboard": {
+   "auth": {
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Entrez vos identifiants pour accéder à votre compte",
+      "emailLabel": "Adresse Email",
+      "emailPlaceholder": "vous@exemple.com",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié ?",
+      "submit": "Se connecter",
+      "submitting": "Connexion...",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "signUp": "Inscrivez-vous gratuitement",
+      "success": "Connexion réussie !",
+      "errors": {
+        "emailRequired": "L'email est requis",
+        "passwordRequired": "Le mot de passe est requis",
+        "invalidCredentials": "Identifiants invalides",
+        "invalidEmail": "Email invalide",
+        "invalidPassword": "Ou mot de passe invalide"
+      }
+    },
+       "register": {
+      "title": "Créer un compte",
+      "subtitle": "Commencez la gestion de votre lieu",
+      "fullName": "Nom Complet",
+      "email": "Adresse Email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "continue": "Continuer",
+      "signIn": "Se connecter",
+      "haveAccount": "Vous avez déjà un compte ?",
+      "passwordStrength": "Force du mot de passe",
+      "strength": {
+        "weak": "Faible",
+        "medium": "Moyen",
+        "strong": "Fort"
+      },
+      "requirements": {
+        "title": "Exigences du mot de passe",
+        "length": "Au moins 8 caractères",
+        "lowercase": "Une lettre minuscule",
+        "uppercase": "Une lettre majuscule",
+        "number": "Un chiffre",
+        "special": "Un caractère spécial",
+        "allowed": "Caractères spéciaux autorisés :"
+      },
+      "errors": {
+        "nameRequired": "Le nom est requis",
+        "emailRequired": "L'email est requis",
+        "passwordRequired": "Le mot de passe est requis",
+        "confirmMatch": "Les mots de passe ne correspondent pas"
+      },
+      "steps": {
+        "business": "Type d'activité",
+        "venue": "Détails du lieu",
+        "spaces": "Espaces",
+        "address": "Adresse",
+        "review": "Vérification"
+      },
+      "businessType": {
+        "title": "Choisissez votre type d'activité",
+        "subtitle": "Sélectionnez comment vous utiliserez Fiesta",
+        "venueOwner": "Propriétaire de lieu",
+        "venueDesc": "Gérez votre lieu d'événement, vos réservations et votre personnel",
+        "serviceBusiness": "Prestataire de services",
+        "serviceDesc": "Proposez traiteur, photographie ou autres services",
+        "comingSoon": "Bientôt disponible"
+      },
+      "venueDetails": {
+        "title": "Parlez-nous de votre lieu",
+        "subtitle": "Fournissez les informations de base",
+        "name": "Nom du lieu",
+        "desc": "Description",
+        "descPlaceholder": "Décrivez votre lieu...",
+        "phone": "Numéro de téléphone"
+      },
+      "spaces": {
+        "title": "Ajoutez vos espaces",
+        "subtitle": "Définissez différentes zones ou salles (max {{max}})",
+        "spaceName": "Nom de l'espace",
+        "basePrice": "Prix de base (TND)",
+        "minCap": "Capacité Min",
+        "maxCap": "Capacité Max",
+        "add": "Ajouter un autre espace",
+        "maxReached": "Nombre maximum atteint"
+      },
+      "address": {
+        "title": "Adresse du lieu",
+        "subtitle": "Où est situé votre lieu ?",
+        "fullAddress": "Adresse complète",
+        "city": "Ville",
+        "state": "Gouvernorat / Région",
+        "zip": "Code Postal",
+        "country": "Pays"
+      },
+      "review": {
+        "title": "Vérifiez vos informations",
+        "subtitle": "Veuillez vérifier tous les détails avant de continuer",
+        "accountInfo": "Informations du compte",
+        "venueInfo": "Informations du lieu"
+      },
+      "actions": {
+        "back": "Retour",
+        "continue": "Continuer",
+        "complete": "Terminer l'inscription"
+      }
+    },
+    "layout": {
+      "title": "Gérez votre lieu comme un pro",
+      "subtitle": "Rationalisez la planification d'événements, la gestion des clients et la collaboration d'équipe.",
+      "features": {
+        "eventsTitle": "Gestion d'événements simplifiée",
+        "eventsDesc": "Suivez les réservations, gérez les calendriers et coordonnez les événements.",
+        "financialTitle": "Contrôle Financier",
+        "financialDesc": "Gérez les paiements, les factures et les rapports financiers facilement.",
+        "teamTitle": "Collaboration d'équipe",
+        "teamDesc": "Assignez des tâches, définissez des rappels et gardez tout le monde synchronisé."
+      }
+    }
+  },
+ "dashboard": {
     "loading": "Chargement du tableau de bord...",
 
     "today": {
@@ -2909,113 +3031,127 @@
     }
   },
   "venueSettings": {
-    "title": "Paramètres de la salle",
-    "subtitle": "Gérez les informations de votre salle, les horaires d'ouverture et les paramètres de l'équipe",
-
+    "title": "Paramètres du Lieu",
+    "subtitle": "Gérez votre profil et préférences de lieu",
     "tabs": {
       "personal": "Personnel",
       "security": "Sécurité",
-      "venue": "Salle",
+      "venue": "Lieu",
       "amenities": "Équipements & Horaires",
       "spaces": "Espaces"
     },
-
     "common": {
+      "saveChanges": "Enregistrer les modifications",
+      "cancel": "Annuler",
+      "add": "Ajouter",
+      "clearAll": "Tout effacer",
       "loading": "Chargement...",
+      "saving": "Enregistrement...",
+      "saved": "Enregistré",
       "tryAgain": "Réessayer",
-      "save": "Enregistrer les modifications"
+      "active": "Actif",
+      "inactive": "Inactif",
+      "open": "Ouvert",
+      "closed": "Fermé"
     },
-
     "personal": {
-      "title": "Informations personnelles",
-      "description": "Mettez à jour vos informations personnelles et votre profil",
+      "title": "Informations du profil",
+      "description": "Mettez à jour vos informations personnelles",
+      "venueOwner": "Propriétaire du Lieu",
+      "profilePicture": "Photo de profil",
       "fields": {
         "fullName": "Nom complet",
-        "email": "Adresse e-mail",
         "phone": "Numéro de téléphone",
+        "email": "Adresse e-mail",
         "avatar": "URL de l'avatar"
       },
-      "avatarPreview": {
-        "title": "Aperçu de l'avatar",
-        "description": "Voici comment votre avatar apparaîtra sur la plateforme"
-      },
-      "save": "Enregistrer les infos personnelles"
+      "placeholders": {
+        "fullName": "Votre nom complet",
+        "phone": "+216 XX XXX XXX",
+        "avatar": "https://exemple.com/avatar.jpg"
+      }
     },
-
     "security": {
-      "title": "Mot de passe et sécurité",
-      "description": "Changez votre mot de passe et gérez les paramètres de sécurité",
+      "title": "Paramètres de sécurité",
+      "description": "Mettez à jour votre mot de passe et préférences de sécurité",
+      "updatePassword": "Mettre à jour le mot de passe",
       "fields": {
         "currentPassword": "Mot de passe actuel",
         "newPassword": "Nouveau mot de passe",
-        "confirmPassword": "Confirmer le nouveau mot de passe"
+        "confirmPassword": "Confirmer le mot de passe"
+      },
+      "placeholders": {
+        "currentPassword": "Entrez le mot de passe actuel",
+        "newPassword": "Minimum 6 caractères",
+        "confirmPassword": "Ressaisissez le nouveau mot de passe"
+      },
+      "strength": {
+        "tooShort": "Trop court",
+        "weak": "Faible",
+        "fair": "Moyen",
+        "good": "Bon",
+        "strong": "Fort"
       },
       "requirements": {
         "title": "Exigences du mot de passe",
-        "items": [
-          "Au moins 6 caractères",
-          "Mélange de majuscules et minuscules recommandé",
-          "Inclure des chiffres ou des caractères spéciaux pour plus de sécurité"
-        ]
-      },
-      "changePassword": "Changer le mot de passe"
+        "minLength": "Au moins 6 caractères",
+        "uppercase": "Une lettre majuscule",
+        "number": "Un chiffre"
+      }
     },
-
     "venue": {
       "basicInfo": {
         "title": "Informations de base",
-        "description": "Détails essentiels sur votre salle",
-        "fields": {
-          "venueName": "Nom de la salle",
-          "description": "Description",
-          "descriptionPlaceholder": "Décrivez votre salle, ses caractéristiques uniques et ce qui la rend spéciale..."
-        }
+        "description": "Le profil public de votre lieu"
       },
-      "address": {
-        "title": "Localisation et adresse",
-        "description": "Où se trouve votre salle",
-        "fields": {
-          "street": "Adresse",
-          "city": "Ville",
-          "state": "État/Province",
-          "zipCode": "Code postal",
-          "country": "Pays"
-        }
+      "location": {
+        "title": "Localisation",
+        "description": "Où les clients peuvent vous trouver"
       },
       "contact": {
-        "title": "Coordonnées",
-        "description": "Comment les clients peuvent vous contacter",
-        "fields": {
-          "phone": "Numéro de téléphone",
-          "email": "Adresse e-mail"
-        }
+        "title": "Informations de contact",
+        "description": "Comment les clients peuvent vous joindre"
       },
-      "save": "Enregistrer les paramètres de la salle"
+      "fields": {
+        "name": "Nom du lieu",
+        "description": "Description",
+        "street": "Adresse",
+        "city": "Ville",
+        "state": "État/Région",
+        "zipCode": "Code postal",
+        "country": "Pays",
+        "phone": "Téléphone de contact",
+        "email": "E-mail de contact"
+      },
+      "placeholders": {
+        "name": "ex. La Grande Salle de Bal",
+        "description": "Décrivez votre lieu, ses caractéristiques uniques et ce qui le rend spécial...",
+        "street": "123 Rue Principale",
+        "city": "Tunis",
+        "state": "Tunis",
+        "zipCode": "1000",
+        "country": "Tunisie",
+        "phone": "+216 XX XXX XXX",
+        "email": "contact@lieu.com"
+      }
     },
-
     "amenities": {
       "title": "Équipements",
-      "description": "Sélectionnez les équipements et fonctionnalités disponibles dans votre salle",
-      "quickAdd": {
-        "title": "Ajout rapide d'équipements",
-        "description": "Cliquez pour ajouter des équipements populaires à votre salle"
-      },
-      "customAmenity": {
-        "title": "Ajouter un équipement personnalisé",
-        "placeholder": "Entrez le nom de l'équipement personnalisé",
-        "add": "Ajouter"
-      },
-      "selectedAmenities": {
-        "title": "Équipements sélectionnés ({{count}})",
-        "clearAll": "Tout effacer",
-        "empty": {
-          "title": "Aucun équipement ajouté",
-          "description": "Commencez à ajouter des équipements en utilisant les options ci-dessus"
-        }
+      "subtitle": "Équipements & Caractéristiques",
+      "description": "Mettez en avant ce que votre lieu offre pour attirer les clients",
+      "selected": "Sélectionnés",
+      "quickAdd": "Ajout rapide",
+      "addCustom": "Ajouter un équipement personnalisé",
+      "clickToAdd": "Cliquez sur les équipements ci-dessous pour les ajouter",
+      "placeholders": {
+        "custom": "ex. Héliport"
       },
       "operatingHours": {
         "title": "Horaires d'ouverture",
-        "description": "Définissez les horaires d'ouverture réguliers de votre salle pour chaque jour de la semaine",
+        "description": "Définissez quand votre lieu est disponible pour les réservations",
+        "allDays": "Ouvert tous les jours",
+        "weekdays": "Jours de semaine uniquement",
+        "weekends": "Week-ends uniquement",
         "days": {
           "monday": "Lundi",
           "tuesday": "Mardi",
@@ -3024,97 +3160,60 @@
           "friday": "Vendredi",
           "saturday": "Samedi",
           "sunday": "Dimanche"
-        },
-        "labels": {
-          "to": "à",
-          "closed": "Fermé"
         }
-      },
-      "save": "Enregistrer équipements et horaires"
-    },
-
-    "spaces": {
-      "title": "Espaces de la salle",
-      "description": "Gérez les différentes salles et zones de votre établissement",
-      "existingSpaces": {
-        "title": "Vos espaces ({{count}})",
-        "description": "Tous les espaces disponibles dans votre salle",
-        "capacity": "Capacité",
-        "price": "Prix de base",
-        "status": {
-          "active": "Actif",
-          "inactive": "Inactif"
-        },
-        "actions": {
-          "edit": "Modifier l'espace",
-          "delete": "Supprimer l'espace"
-        }
-      },
-      "form": {
-        "addTitle": "Ajouter un nouvel espace",
-        "addDescription": "Créez un nouvel espace réservable dans votre salle",
-        "editTitle": "Modifier l'espace",
-        "editDescription": "Mettez à jour les détails de cet espace",
-        "fields": {
-          "spaceName": "Nom de l'espace",
-          "description": "Description",
-          "descriptionPlaceholder": "Décrivez cet espace, ses caractéristiques et ses utilisations idéales...",
-          "basePrice": "Prix de base",
-          "minCapacity": "Capacité min",
-          "maxCapacity": "Capacité max"
-        },
-        "activeLabel": "L'espace est actif et réservable",
-        "actions": {
-          "add": "Ajouter l'espace",
-          "update": "Mettre à jour l'espace",
-          "cancel": "Annuler"
-        }
-      },
-      "emptyState": {
-        "title": "Aucun espace encore",
-        "description": "Créez votre premier espace pour commencer à gérer les réservations pour différentes zones"
-      },
-      "save": "Enregistrer les espaces"
-    },
-
-    "validation": {
-      "required": "Ce champ est obligatoire",
-      "email": "Veuillez entrer une adresse e-mail valide",
-      "minLength": "Doit contenir au moins {{min}} caractères",
-      "passwordsMatch": "Les mots de passe ne correspondent pas",
-      "capacityRange": "La capacité maximale doit être supérieure à la capacité minimale"
-    },
-
-    "notifications": {
-      "success": {
-        "profileUpdated": "Profil mis à jour avec succès",
-        "passwordChanged": "Mot de passe modifié avec succès",
-        "venueUpdated": "Paramètres de la salle enregistrés avec succès",
-        "amenityAdded": "Équipement ajouté avec succès",
-        "customAmenityAdded": "Équipement personnalisé ajouté avec succès",
-        "amenitiesCleared": "Tous les équipements ont été supprimés",
-        "spaceCreated": "Espace créé avec succès",
-        "spaceUpdated": "Espace mis à jour avec succès",
-        "spaceDeleted": "Espace supprimé avec succès",
-        "imageUploaded": "Image téléchargée avec succès",
-        "imageRemoved": "Image supprimée avec succès"
-      },
-      "error": {
-        "loadFailed": "Échec du chargement des paramètres. Veuillez réessayer.",
-        "saveFailed": "Échec de l'enregistrement des modifications. Veuillez réessayer.",
-        "generic": "Veuillez corriger les erreurs avant d'enregistrer",
-        "amenityExists": "Cet équipement a déjà été ajouté",
-        "spaceNameRequired": "Le nom de l'espace est obligatoire",
-        "capacityRequired": "Les informations de capacité sont obligatoires",
-        "priceRequired": "Le prix de base est obligatoire",
-        "uploadFailed": "Échec du téléchargement de l'image",
-        "deleteFailed": "Échec de la suppression",
-        "saveSpaceFirst": "Veuillez enregistrer l'espace avant de télécharger des images"
-      },
-      "confirm": {
-        "deleteSpace": "Êtes-vous sûr de vouloir supprimer cet espace ? Cette action ne peut pas être annulée.",
-        "clearAllAmenities": "Êtes-vous sûr de vouloir supprimer tous les équipements ?"
       }
+    },
+    "spaces": {
+      "title": "Espaces du lieu",
+      "addNew": "Ajouter un nouvel espace",
+      "addFirst": "Ajoutez votre premier espace",
+      "addDescription": "Créer une zone réservable",
+      "edit": "Modifier",
+      "editDescription": "Mettez à jour les détails de l'espace ci-dessous",
+      "create": "Créer l'espace",
+      "emptyTitle": "Pas encore d'espaces",
+      "emptyDescription": "Créez votre premier espace pour commencer à accepter des réservations.",
+      "capacity": "Capacité",
+      "basePrice": "Prix de base",
+      "availableForBooking": "Disponible pour réservation",
+      "availableDescription": "Décochez pour masquer temporairement cet espace",
+      "fields": {
+        "name": "Nom de l'espace",
+        "description": "Description",
+        "minCapacity": "Capacité minimale",
+        "maxCapacity": "Capacité maximale",
+        "basePrice": "Prix de base (TND)"
+      },
+      "placeholders": {
+        "name": "ex. Grande Salle, Terrasse Jardin",
+        "description": "Décrivez cet espace, ses caractéristiques et ce qui le rend spécial...",
+        "basePrice": "5000"
+      },
+      "validation": {
+        "capacity": "Les capacités minimale et maximale sont requises",
+        "price": "Le prix de base est requis"
+      },
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet espace ?",
+      "created": "Espace créé avec succès",
+      "updated": "Espace mis à jour avec succès",
+      "deleted": "Espace supprimé avec succès"
+    },
+    "validation": {
+      "required": "Ce champ est requis",
+      "minLength": "Le mot de passe doit contenir au moins 6 caractères",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "emailInvalid": "Veuillez fournir une adresse e-mail valide",
+      "fixErrors": "Veuillez corriger les erreurs avant d'enregistrer"
+    },
+    "notifications": {
+      "profileUpdated": "Profil mis à jour avec succès",
+      "passwordChanged": "Mot de passe modifié avec succès",
+      "venueUpdated": "Informations du lieu mises à jour avec succès"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des paramètres",
+      "saveFailed": "Échec de l'enregistrement des modifications",
+      "deleteFailed": "Échec de la suppression"
     }
   },
   "notFound": {
@@ -3133,81 +3232,123 @@
 
   "contracts": {
     "settings": {
-      "title": "Paramètres Contrats",
-      "subtitle": "Configuration globale et modèles",
+      "title": "Paramètres des Contrats",
+      "subtitle": "Configuration globale pour tous les contrats",
+      "loading": "Chargement des paramètres...",
       "save": "Enregistrer",
+      
       "tabs": {
-        "company": "Info Société",
-        "branding": "Marque",
+        "company": "Société",
+        "structure": "Structure & ID",
+        "branding": "Identité Visuelle",
+        "financials": "Finances",
         "layout": "Mise en Page",
-        "financials": "Finance",
         "clauses": "Clauses",
         "cancellation": "Annulation",
-        "labels": "Traductions"
+        "labels": "Libellés"
       },
+      
       "company": {
-        "title": "Informations Légales",
+        "title": "Informations de la Société",
         "legalName": "Raison Sociale",
-        "displayName": "Enseigne Commerciale",
-        "taxId": "Matricule Fiscale",
-        "representative": "Gérant / Représentant",
-        "rib": "RIB / IBAN",
-        "bank": "Banque",
+        "displayName": "Nom Commercial",
+        "matriculeFiscale": "Matricule Fiscale",
         "address": "Adresse du Siège",
-        "email": "Email",
         "phone": "Téléphone",
-        "website": "Site Web"
+        "email": "Email",
+        "website": "Site Web",
+        "rib": "RIB / IBAN",
+        "bankName": "Nom de la Banque",
+        "representative": "Représentant Légal (Gérant)"
       },
+      
+      "structure": {
+        "title": "Configuration de la Séquence",
+        "preview": "Aperçu du Prochain Numéro",
+        "prefix": "Préfixe",
+        "separator": "Séparateur",
+        "includeYear": "Inclure l'Année",
+        "yearFormat": "Format de l'Année",
+        "sequenceDigits": "Nombre de Zéros (Padding)",
+        "sequenceDigitsHelp": "Exemple : 4 donne « 0001 », 3 donne « 001 ».",
+        "resetYearly": "Réinitialiser la séquence chaque année",
+        "resetYearlyHelp": "La numérotation recommence à 0001 au 1er janvier"
+      },
+      
       "branding": {
-        "title": "Marque & Couleurs",
-        "primary": "Couleur Primaire",
+        "title": "Identité Visuelle & Couleurs",
+        "primary": "Couleur Principale",
         "secondary": "Couleur Secondaire",
-        "text": "Couleur Texte",
-        "accent": "Couleur Accent",
-        "logoUrl": "URL du Logo (Public)",
-        "logoHelp": "L'URL doit être accessible publiquement."
+        "accent": "Couleur d'Accent",
+        "text": "Couleur du Texte",
+        "background": "Couleur de Fond",
+        "logo": "Logo",
+        "logoUrl": "URL du Logo (HTTPS)",
+        "logoHelp": "Pour de meilleurs résultats PDF, utilisez un lien direct vers une image PNG ou JPG.",
+        "logoPreview": "Aperçu"
       },
+      
+      "financials": {
+        "title": "Paramètres Financiers",
+        "currency": "Devise",
+        "vatRate": "Taux TVA par Défaut (%)",
+        "stampDuty": "Timbre Fiscal (TND)",
+        "depositPercentage": "Acompte Requis (%)",
+        "securityDeposit": "Caution de Garantie (TND)",
+        "lateFee": "Pénalité de Retard (%)"
+      },
+      
       "layout": {
         "title": "Mise en Page PDF",
-        "showPageNumbers": "Afficher Numéros de Page",
-        "showDate": "Afficher Date Création"
+        "template": "Style du Template",
+        "paperSize": "Format du Papier",
+        "showPageNumbers": "Afficher les Numéros de Page",
+        "showDate": "Afficher la Date"
       },
-      "financials": {
-        "title": "Finance & Taxes (Défauts)",
-        "vat": "TVA par défaut (%)",
-        "stamp": "Timbre Fiscal (TND)",
-        "deposit": "Avance Requise (%)",
-        "security": "Caution (TND)"
-      },
+      
       "clauses": {
-        "title": "Clauses Contractuelles",
-        "add": "Ajouter Clause",
-        "articleTitle": "Titre de l'article",
+        "title": "Clauses par Défaut",
+        "add": "Ajouter une Clause",
+        "articleTitle": "Titre de l'Article",
         "content": "Contenu de la clause...",
-        "required": "Obligatoire"
+        "required": "Obligatoire",
+        "empty": "Aucune clause par défaut. Cliquez sur « Ajouter » pour créer votre première clause.",
+        "dragHint": "Glissez pour réorganiser"
       },
+      
       "cancellation": {
         "title": "Politique d'Annulation",
-        "add": "Ajouter Palier",
-        "days": "Jours avant (Min)",
-        "penalty": "Pénalité (%)",
-        "description": "Description"
+        "enabled": "Politique d'Annulation Activée",
+        "add": "Ajouter un Palier",
+        "daysBeforeEvent": "Jours Avant (Min)",
+        "penaltyPercentage": "Pénalité (%)",
+        "description": "Description",
+        "empty": "Aucun palier d'annulation défini."
       },
+      
       "labels": {
-        "title": "Labels & Traductions PDF",
-        "mainTitle": "Titre Principal",
-        "parties": "Titre Parties",
-        "provider": "Label Prestataire",
-        "client": "Label Client",
-        "partner": "Label Partenaire",
-        "services": "Titre Services",
-        "payment": "Titre Paiement",
-        "signatures": "Titre Signatures"
+        "title": "Libellés du Document",
+        "contractTitle": "Titre du Contrat",
+        "partiesTitle": "Titre de la Section Parties",
+        "serviceProvider": "Libellé du Prestataire",
+        "clientLabel": "Libellé du Client",
+        "partnerLabel": "Libellé du Partenaire",
+        "servicesTitle": "Titre de la Section Services",
+        "paymentTitle": "Titre de la Section Paiement",
+        "signaturesTitle": "Titre de la Section Signatures",
+        "dateLabel": "Libellé de la Date",
+        "signatureLabel": "Libellé de la Signature"
       },
+      
+      "preview": {
+        "title": "Aperçu PDF",
+        "clickToEdit": "Cliquez pour modifier"
+      },
+      
       "messages": {
+        "loadError": "Échec du chargement des paramètres",
         "saveSuccess": "Paramètres enregistrés avec succès",
-        "saveError": "Erreur lors de l'enregistrement",
-        "loadError": "Échec du chargement des paramètres"
+        "saveError": "Échec de l'enregistrement des paramètres"
       }
     },
     "detail": {

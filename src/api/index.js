@@ -3450,15 +3450,61 @@ export const contractService = {
   // ============================================
 
   getSettings: async () => {
-    const response = await api.get("/contracts/settings");
-    return response.data;
+  const response = await api.get("/contracts/settings");
+  return response.data;
   },
 
   updateSettings: async (data) => {
-    const response = await api.put("/contracts/settings", data);
-    return response.data;
-  },
+  // Use longer timeout for settings update (large payload)
+  const response = await api.put("/contracts/settings", data, {
+    timeout: 60000, // 60 seconds timeout
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  return response.data;
+},
 
+// ============================================
+// ALTERNATIVE: Split into smaller updates
+// ============================================
+
+// If the above still times out, use these granular update methods:
+
+updateCompanyInfo: async (companyInfo) => {
+  const response = await api.patch("/contracts/settings/company", { companyInfo });
+  return response.data;
+},
+
+updateBranding: async (branding) => {
+  const response = await api.patch("/contracts/settings/branding", { branding });
+  return response.data;
+},
+
+updateFinancials: async (financialDefaults) => {
+  const response = await api.patch("/contracts/settings/financials", { financialDefaults });
+  return response.data;
+},
+
+updateSections: async (defaultSections) => {
+  const response = await api.patch("/contracts/settings/sections", { defaultSections });
+  return response.data;
+},
+
+updateCancellationPolicy: async (defaultCancellationPolicy) => {
+  const response = await api.patch("/contracts/settings/cancellation", { defaultCancellationPolicy });
+  return response.data;
+},
+
+updateLabels: async (labels) => {
+  const response = await api.patch("/contracts/settings/labels", { labels });
+  return response.data;
+},
+
+updateStructure: async (structure) => {
+  const response = await api.patch("/contracts/settings/structure", { structure });
+  return response.data;
+},
   // ============================================
   // STATISTICS
   // ============================================

@@ -10,7 +10,8 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
-  Users
+  Users,
+  FolderOpen
 } from "lucide-react";
 
 // ✅ API & Services
@@ -146,14 +147,12 @@ const ClientsList = () => {
     showInfo(t("clients.toast.filtersCleared"));
   };
 
-  const handleRetry = () => {
-    fetchClients();
-    showInfo(t("clients.loading.retrying"));
-  };
-
   const hasActiveFilters = search.trim() !== "" || status !== "all";
+  
+  // ✅ States for UI Logic
   const showEmptyState = !loading && !error && clients.length === 0 && !hasActiveFilters && hasInitialLoad;
   const showNoResults = !loading && !error && clients.length === 0 && hasActiveFilters && hasInitialLoad;
+  const showData = !loading && hasInitialLoad && clients.length > 0;
 
   // Columns
   const columns = [
@@ -242,70 +241,74 @@ const ClientsList = () => {
     },
   ];
 
-  // ✅ Helper to render custom footer if Pagination component hides itself on single page
+  // ✅ UNIFIED PAGINATION FOOTER
+  // Matches "Showing type in all of them" request
   const renderPagination = () => {
-    if (totalPages > 1) {
-      return (
-        <div className="mt-6">
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            pageSize={limit}
-            onPageSizeChange={(val) => { setLimit(val); setPage(1); }}
-            totalItems={totalCount}
-          />
-        </div>
-      );
-    }
-
-    // Custom single page footer
     const start = Math.min((page - 1) * limit + 1, totalCount);
     const end = Math.min(page * limit, totalCount);
 
     return (
       <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+        
+        {/* Left: Info Text */}
         <div>
           Showing <span className="font-medium text-gray-900 dark:text-white">{start}</span> to{" "}
           <span className="font-medium text-gray-900 dark:text-white">{end}</span> of{" "}
           <span className="font-medium text-gray-900 dark:text-white">{totalCount}</span> results
         </div>
-        <div className="flex items-center gap-2">
-          <span>Per page:</span>
-          <select
-            value={limit}
-            onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
-            className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
-          >
-            {[10, 25, 50, 100].map((size) => (
-              <option key={size} value={size}>{size}</option>
-            ))}
-          </select>
+
+        {/* Right: Controls */}
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          
+          {/* Pagination Buttons (Only show if multiple pages) */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              pageSize={null} // Disable internal page size dropdown if present
+            />
+          )}
+
+          {/* Per Page Dropdown - Always Visible */}
+          <div className="flex items-center gap-2">
+            <span>Per page:</span>
+            <select
+              value={limit}
+              onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+            >
+              {[10, 25, 50, 100].map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
+        <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("clients.title")}</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-500 dark:text-gray-400">
             {t("clients.description")} {hasInitialLoad && totalCount > 0 && `(${totalCount})`}
           </p>
         </div>
-        {totalCount > 0 && (
+        {/* Only show header Add button if we have data or are filtering (not empty state) */}
+        {!showEmptyState && (
           <Button variant="primary" onClick={() => { setSelectedClient(null); setIsFormOpen(true); }} className="flex items-center gap-2">
             <Plus className="h-4 w-4" /> {t("clients.buttons.addClient")}
           </Button>
         )}
       </div>
 
-      {/* Filters */}
-      {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Filters (Hide in pure empty state) */}
+      {!showEmptyState && (
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm shrink-0">
           <div className="flex flex-col sm:flex-row gap-4">
             <Input className="flex-1" icon={Search} placeholder={t("clients.search.placeholder")} value={search} onChange={(e) => { setPage(1); setSearch(e.target.value); }} />
             <div className="sm:w-48">
@@ -327,47 +330,82 @@ const ClientsList = () => {
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && !hasInitialLoad && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400">{t("clients.loading.initial")}</p>
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && hasInitialLoad && clients.length > 0 && (
-        <>
-          <div className="overflow-x-auto">
-            <Table
-              columns={columns}
-              data={clients}
-              loading={loading}
-              onRowClick={(row) => { setSelectedClient(row); setIsDetailModalOpen(true); }}
-              striped
-              hoverable
-            />
+      {/* Content Area */}
+      <div className="flex-1 flex flex-col relative">
+        
+        {/* Loading State */}
+        {loading && !hasInitialLoad && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+            <p className="text-gray-500 dark:text-gray-400">{t("clients.loading.initial")}</p>
           </div>
-          
-          {/* ✅ Pagination (Always Visible if data exists) */}
-          {renderPagination()}
-        </>
-      )}
+        )}
 
-      {/* Empty / No Results */}
-      {showNoResults ? (
-        <div className="text-center py-12">
-          <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("clients.search.noResults")}</h3>
-          <Button onClick={handleClearFilters} variant="outline">{t("clients.buttons.clearAllFilters")}</Button>
-        </div>
-      ) : showEmptyState ? (
-        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
-          <Users className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("clients.empty.title")}</h3>
-          <Button onClick={() => setIsFormOpen(true)} variant="primary" icon={Plus}>{t("clients.buttons.addFirstClient")}</Button>
-        </div>
-      ) : null}
+        {/* Table Data */}
+        {showData && (
+          <>
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+              <Table
+                columns={columns}
+                data={clients}
+                loading={loading}
+                onRowClick={(row) => { setSelectedClient(row); setIsDetailModalOpen(true); }}
+                striped
+                hoverable
+              />
+            </div>
+            {/* ✅ Render Unified Footer */}
+            {renderPagination()}
+          </>
+        )}
+
+        {/* ✅ NO RESULTS (Active Filter) */}
+        {showNoResults && (
+          <div className="flex flex-col items-center justify-center flex-1 py-12">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
+              <FolderOpen className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("clients.search.noResults")}</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
+              {t("clients.search.noResultsDesc", "We couldn't find any clients matching your current filters.")}
+            </p>
+            <Button onClick={handleClearFilters} variant="outline" icon={X}>
+              {t("clients.buttons.clearAllFilters")}
+            </Button>
+          </div>
+        )}
+
+        {/* ✅ EMPTY STATE (No Data) - Enhanced Design */}
+        {showEmptyState && (
+          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
+            {/* Icon Circle */}
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
+               <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
+                 <Users className="h-12 w-12 text-orange-500" strokeWidth={1.5} />
+               </div>
+            </div>
+            
+            {/* Text */}
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              {t("clients.empty.title")}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
+              {t("clients.empty.description", "Get started by adding your first client. Manage their details, track events, and improved interactions all in one place.")}
+            </p>
+
+            {/* CTA Button */}
+            <Button 
+                onClick={() => setIsFormOpen(true)} 
+                variant="primary" 
+                size="lg"
+                icon={Plus}
+                className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
+            >
+              {t("clients.buttons.addFirstClient")}
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* Modals */}
       <ClientDetailModal

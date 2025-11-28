@@ -72,6 +72,14 @@ const TaskDetail = () => {
       minute: "2-digit",
     });
   }, []);
+const formatShortDate = useCallback((date) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}, []);
 
   // ✅ Is Overdue Helper
   const isOverdue = useCallback((date, status) => {
@@ -323,6 +331,7 @@ const TaskDetail = () => {
                     completedSubtasks={completedSubtasks}
                     totalSubtasks={totalSubtasks}
                     refreshData={refreshData}
+                    formatShortDate={formatShortDate}
                   />
                 )}
 

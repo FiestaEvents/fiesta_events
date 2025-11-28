@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Briefcase,
@@ -21,25 +21,29 @@ import {
   CheckCircle,
   XCircle,
   FileText,
+  Filter,
+  X,
+  FolderOpen
 } from "lucide-react";
 
 // ✅ Generic Components
 import Badge, { StatusBadge } from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable"; // Internal pagination supported
+import Table from "../../components/common/NewTable";
 import Select from "../../components/common/Select";
+import Pagination from "../../components/common/Pagination";
 
 // ✅ Services & Utils
 import { invoiceService } from "../../api/index";
-import { useToast } from "../../hooks/useToast";
+import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
-  const { showSuccess, apiError, showInfo, promise } = useToast();
+  const location = useLocation();
+  const { showSuccess, showError, showInfo, promise } = useToast();
   const { t } = useTranslation();
 
   // ==========================================
@@ -48,33 +52,33 @@ const InvoicesPage = () => {
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   
-  // Filters & Search
-  const [searchTerm, setSearchTerm] = useState("");
+  // Logic State
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [invoiceType, setInvoiceType] = useState("client"); // 'client' or 'partner'
+
+  // Filters
+  const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    status: "",
+    status: "all",
     startDate: "",
     endDate: "",
   });
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Selection
+  // Selection & Modals
   const [selectedRows, setSelectedRows] = useState([]);
-  const [hasInitialLoad, setHasInitialLoad] = useState(false);
-
-  // Modals State
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
-  // Action Modals
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     invoiceId: null,
@@ -117,9 +121,7 @@ const InvoicesPage = () => {
       status: invoice.status || "draft",
       issueDate: invoice.issueDate || new Date().toISOString(),
       dueDate: invoice.dueDate || new Date().toISOString(),
-      currency: invoice.currency || "TND",
       items: invoice.items || [],
-      paymentStatus: invoice.paymentStatus || { amountPaid: 0, amountDue: invoice.totalAmount || 0 },
     };
   };
 
@@ -137,26 +139,16 @@ const InvoicesPage = () => {
       });
 
       const data = response?.stats || response?.data?.stats || {};
+      const statsData = Array.isArray(data) ? (data.find((s) => s._id === invoiceType) || {}) : data;
 
-      if (Array.isArray(data)) {
-        const typeStats = data.find((s) => s._id === invoiceType) || {};
-        setStats({
-          totalRevenue: typeStats.totalRevenue || 0,
-          paid: typeStats.paid || 0,
-          totalDue: typeStats.totalDue || 0,
-          overdue: typeStats.overdue || 0
-        });
-      } else {
-        setStats({
-          totalRevenue: data.totalRevenue || 0,
-          paid: data.paid || 0,
-          totalDue: data.totalDue || 0,
-          overdue: data.overdue || 0
-        });
-      }
+      setStats({
+        totalRevenue: statsData.totalRevenue || 0,
+        paid: statsData.paid || 0,
+        totalDue: statsData.totalDue || 0,
+        overdue: statsData.overdue || 0
+      });
     } catch (error) {
       console.error("Error fetching stats:", error);
-      setStats({ totalRevenue: 0, paid: 0, totalDue: 0, overdue: 0 });
     } finally {
       setStatsLoading(false);
     }
@@ -165,64 +157,61 @@ const InvoicesPage = () => {
   const fetchInvoices = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
 
       const params = {
-        search: searchTerm || undefined,
+        search: searchTerm.trim() || undefined,
         invoiceType: invoiceType,
-        status: filters.status || undefined,
+        status: filters.status !== "all" ? filters.status : undefined,
         startDate: filters.startDate || undefined,
         endDate: filters.endDate || undefined,
-        page: currentPage,
-        limit: pageSize,
+        page,
+        limit,
         sort: "-createdAt",
       };
 
       const response = await invoiceService.getAll(params);
-      let invoicesData = response?.invoices || response?.data?.invoices || [];
+      
+      let rawData = response?.invoices || response?.data?.invoices || [];
+      const data = rawData.map(normalizeInvoiceData).filter(Boolean);
+      
+      const pTotalPages = response?.pagination?.pages || response?.data?.pagination?.pages || 1;
+      const pTotalCount = response?.pagination?.total || response?.data?.pagination?.total || data.length;
 
-      invoicesData = invoicesData
-        .map(normalizeInvoiceData)
-        .filter((invoice) => invoice !== null);
-
-      const paginationData = response?.pagination || response?.data?.pagination || {
-          current: currentPage, pages: 1, total: invoicesData.length
-      };
-
-      setInvoices(invoicesData);
-      setTotalPages(paginationData.pages || 1);
-      setTotalItems(paginationData.total || invoicesData.length);
+      setInvoices(data);
+      setTotalPages(pTotalPages);
+      setTotalCount(pTotalCount);
       setHasInitialLoad(true);
-    } catch (error) {
-      apiError(error, t("invoices.errors.loadInvoicesFailed"));
+    } catch (err) {
+      const msg = err.response?.data?.message || t("invoices.errors.loadInvoicesFailed");
+      setError(msg);
+      showError(msg);
       setInvoices([]);
       setHasInitialLoad(true);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters, currentPage, pageSize, invoiceType, t, apiError]);
+  }, [searchTerm, filters, page, limit, invoiceType, t, showError]);
 
   useEffect(() => { fetchInvoices(); }, [fetchInvoices]);
   useEffect(() => { fetchStats(); }, [fetchStats]);
-  useEffect(() => { setCurrentPage(1); setSelectedRows([]); }, [invoiceType]);
+  useEffect(() => { 
+      setPage(1); 
+      setSelectedRows([]); 
+  }, [invoiceType]);
 
   // ==========================================
   // HANDLERS
   // ==========================================
 
-  const handleCreateInvoice = () => {
-    // Navigate to the Create Page with the correct type query param
-    navigate(`/invoices/new?type=${invoiceType}`);
-  };
+  const handleCreateInvoice = () => navigate(`/invoices/new?type=${invoiceType}`);
+  
+  const handleEditInvoice = (invoice) => navigate(`/invoices/${invoice._id}/edit`);
 
   const handleRowClick = useCallback((invoice) => {
     setSelectedInvoice(invoice);
     setIsDetailModalOpen(true);
   }, []);
-
-  const handleEditInvoice = (invoice) => {
-    // Navigate to the Edit Page using ID
-    navigate(`/invoices/${invoice._id}/edit`);
-  };
 
   const handleDownloadInvoice = async (invoice) => {
     try {
@@ -241,7 +230,23 @@ const InvoicesPage = () => {
       
       showSuccess(t("invoices.download.success"));
     } catch (err) {
-      apiError(err, t("invoices.download.errors.generic"));
+      showError(t("invoices.download.errors.generic"));
+    }
+  };
+
+  const handleDeleteConfirm = async (id, name) => {
+    try {
+        await promise(invoiceService.delete(id), {
+            loading: t("invoices.delete.loading"),
+            success: t("invoices.delete.success"),
+            error: t("invoices.delete.error")
+        });
+        fetchInvoices();
+        fetchStats();
+        setConfirmationModal({ isOpen: false, invoiceId: null, invoiceName: "", onConfirm: null });
+        if (selectedInvoice?._id === id) setIsDetailModalOpen(false);
+    } catch (e) {
+        // Handled by promise
     }
   };
 
@@ -250,39 +255,77 @@ const InvoicesPage = () => {
       isOpen: true,
       invoiceId: id,
       invoiceName: name,
-      onConfirm: async () => {
-        try {
-          await invoiceService.delete(id);
-          showSuccess(t("invoices.delete.success"));
-          fetchInvoices();
-          fetchStats();
-          setConfirmationModal({ isOpen: false, invoiceId: null, invoiceName: "", onConfirm: null });
-        } catch (err) {
-          apiError(err, t("invoices.delete.error"));
-        }
-      }
+      onConfirm: () => handleDeleteConfirm(id, name)
     });
   };
 
-  const handleBulkSend = async () => {
-    if (!selectedRows.length) return;
-    try {
-      const promises = selectedRows.map(id => invoiceService.send(id).catch(e => null));
-      await promise(Promise.all(promises), {
-        loading: "Sending...", success: "Batch sent!", error: "Error sending batch"
-      });
-      setSelectedRows([]);
-      fetchInvoices();
-    } catch (e) { console.error(e); }
+  const handleClearFilters = () => {
+    setFilters({ status: "all", startDate: "", endDate: "" });
+    setSearchTerm("");
+    setPage(1);
+    showInfo(t("common.filtersCleared"));
   };
 
-  const handleClearFilters = () => {
-    setFilters({ status: "", startDate: "", endDate: "" });
-    setSearchTerm("");
+  // Logic for UI States
+  const hasActiveFilters = searchTerm.trim() !== "" || filters.status !== "all" || filters.startDate !== "" || filters.endDate !== "";
+  const showEmptyState = !loading && !error && invoices.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !loading && !error && invoices.length === 0 && hasActiveFilters && hasInitialLoad;
+  const showData = !loading && hasInitialLoad && invoices.length > 0;
+
+  // ==========================================
+  // RENDER HELPERS
+  // ==========================================
+  
+  // ✅ UNIFIED PAGINATION FOOTER
+  // This layout matches the screenshot "Showing type in all of them"
+  const renderPagination = () => {
+    const start = Math.min((page - 1) * limit + 1, totalCount);
+    const end = Math.min(page * limit, totalCount);
+
+    return (
+      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+        
+        {/* Left: Info Text */}
+        <div>
+          Showing <span className="font-medium text-gray-900 dark:text-white">{start}</span> to{" "}
+          <span className="font-medium text-gray-900 dark:text-white">{end}</span> of{" "}
+          <span className="font-medium text-gray-900 dark:text-white">{totalCount}</span> results
+        </div>
+
+        {/* Right: Pagination Buttons + Per Page Dropdown */}
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          
+          {/* Page Buttons (Hidden if only 1 page, or you can keep them disabled) */}
+          {totalPages > 1 && (
+             <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                // Pass false/null for pageSize so internal dropdown doesn't render if it conflicts
+                pageSize={null} 
+             />
+          )}
+
+          {/* Explicit "Per page" Dropdown */}
+          <div className="flex items-center gap-2">
+            <span>Per page:</span>
+            <select
+              value={limit}
+              onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+            >
+              {[10, 25, 50, 100].map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // ==========================================
-  // TABLE CONFIG
+  // COLUMNS
   // ==========================================
   const columns = [
     {
@@ -293,7 +336,7 @@ const InvoicesPage = () => {
     },
     {
       accessor: "recipientName",
-      header: "Recipient",
+      header: t("invoices.table.headers.recipient"),
       width: "25%",
       render: (row) => (
         <div>
@@ -306,7 +349,7 @@ const InvoicesPage = () => {
       accessor: "dueDate",
       header: t("invoices.table.headers.dueDate"),
       width: "15%",
-      render: (row) => <div className="text-gray-600 dark:text-gray-400 font-mono">{formatDate(row.dueDate)}</div>
+      render: (row) => <div className="text-gray-600 dark:text-gray-400 font-mono text-sm">{formatDate(row.dueDate)}</div>
     },
     {
       accessor: "totalAmount",
@@ -321,26 +364,26 @@ const InvoicesPage = () => {
       render: (row) => <StatusBadge status={row.status} size="sm" />
     },
     {
-      header: "Actions",
+      header: t("common.actions"),
       width: "20%",
       className: "text-center",
       render: (row) => {
         const canEdit = ["draft", "sent"].includes(row.status);
         return (
           <div className="flex justify-center gap-2">
-            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleRowClick(row); }} className="text-gray-500 hover:text-blue-600">
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleRowClick(row); }} className="text-gray-500 hover:text-blue-600" title={t("common.view")}>
               <Eye size={16} />
             </Button>
             {canEdit && (
-              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleEditInvoice(row); }} className="text-gray-500 hover:text-orange-600">
+              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleEditInvoice(row); }} className="text-gray-500 hover:text-orange-600" title={t("common.edit")}>
                 <Edit size={16} />
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(row); }} className="text-gray-500 hover:text-green-600">
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(row); }} className="text-gray-500 hover:text-green-600" title={t("common.download")}>
               <Download size={16} />
             </Button>
             {row.status === "draft" && (
-               <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClick(row._id, row.invoiceNumber); }} className="text-gray-500 hover:text-red-600">
+               <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClick(row._id, row.invoiceNumber); }} className="text-gray-500 hover:text-red-600" title={t("common.delete")}>
                  <Trash2 size={16} />
                </Button>
             )}
@@ -350,202 +393,244 @@ const InvoicesPage = () => {
     }
   ];
 
-  if (loading && !hasInitialLoad) return <div className="h-screen flex items-center justify-center"><LoadingSpinner /></div>;
-
   return (
-    <div className="p-6 bg-white space-y-6 dark:bg-gray-900 min-h-screen">
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
       
       {/* 1. HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+        <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("invoices.title")}</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your {invoiceType} invoices</p>
+          <p className="text-gray-500 dark:text-gray-400">
+             Manage your {invoiceType === 'client' ? 'client invoices' : 'partner bills'} and payments.
+             {hasInitialLoad && totalCount > 0 && ` (${totalCount})`}
+          </p>
         </div>
         
-        <div className="flex items-center gap-3">
-           <Button variant="outline" icon={Settings} onClick={() => navigate("/invoices/settings")}>
-              {t("invoices.settings", "Settings")}
-           </Button>
-
-           {selectedRows.length > 0 && (
-             <Button variant="outline" icon={Mail} onClick={handleBulkSend}>
-               Bulk Send ({selectedRows.length})
-             </Button>
-           )}
-
-           <Button variant="primary" icon={Plus} onClick={handleCreateInvoice}>
-              {t("invoices.create.button", { type: invoiceType === "client" ? "Invoice" : "Bill" })}
-           </Button>
-        </div>
-      </div>
-
-      {/* 2. STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatBox label="Total Revenue" value={stats?.totalRevenue} loading={statsLoading} icon={TrendingUp} color="blue" />
-        <StatBox label="Paid" value={stats?.paid} loading={statsLoading} icon={CheckCircle} color="green" />
-        <StatBox label="Pending" value={stats?.totalDue} loading={statsLoading} icon={Clock} color="yellow" />
-        <StatBox label="Overdue" value={stats?.overdue} loading={statsLoading} icon={XCircle} color="red" />
-      </div>
-
-      {/* 3. CONTROLS */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
-           {/* Type Toggle */}
-           <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-              <button 
-                onClick={() => setInvoiceType("client")}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                  invoiceType === "client" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
-                }`}
-              >
-                <Users size={16} /> Client Invoices
-              </button>
-              <button 
-                onClick={() => setInvoiceType("partner")}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                  invoiceType === "partner" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
-                }`}
-              >
-                <Briefcase size={16} /> Partner Bills
-              </button>
-           </div>
-
-           {/* Search & Filter */}
-           <div className="flex gap-3 flex-1 justify-end w-full md:w-auto">
-              <div className="w-full md:w-64">
-                 <Input 
-                   icon={Search} 
-                   placeholder="Search..." 
-                   value={searchTerm} 
-                   onChange={(e) => setSearchTerm(e.target.value)} 
-                 />
-              </div>
-              <Button variant="outline" icon={showFilters ? ChevronUp : ChevronDown} onClick={() => setShowFilters(!showFilters)}>
-                 Filter
-              </Button>
-           </div>
-        </div>
-
-        {/* Expanded Filters */}
-        {showFilters && (
-           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <Select 
-                label="Status" 
-                value={filters.status} 
-                onChange={(e) => setFilters(p => ({...p, status: e.target.value}))}
-                options={[
-                  { value: "", label: "All Statuses" },
-                  { value: "draft", label: "Draft" },
-                  { value: "sent", label: "Sent" },
-                  { value: "paid", label: "Paid" },
-                  { value: "overdue", label: "Overdue" }
-                ]}
-              />
-              <Input type="date" label="Start Date" value={filters.startDate} onChange={(e) => setFilters(p => ({...p, startDate: e.target.value}))} />
-              <Input type="date" label="End Date" value={filters.endDate} onChange={(e) => setFilters(p => ({...p, endDate: e.target.value}))} />
-              <div className="sm:col-span-3 flex justify-end">
-                 <Button variant="ghost" onClick={handleClearFilters}>Clear Filters</Button>
-              </div>
-           </div>
+        {/* Actions */}
+        {!showEmptyState && (
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+                <Button variant="outline" icon={Settings} onClick={() => navigate("/invoices/settings")} className="hidden md:flex">
+                    {t("invoices.settings", "Settings")}
+                </Button>
+                <Button variant="primary" icon={Plus} onClick={handleCreateInvoice} className="flex-1 sm:flex-none justify-center">
+                    {t("invoices.create.button", "Create Invoice")}
+                </Button>
+            </div>
         )}
       </div>
 
-      {/* 4. TABLE WITH INTEGRATED PAGINATION */}
-      {invoices.length > 0 ? (
-        <Table 
-           columns={columns} 
-           data={invoices} 
-           onRowClick={handleRowClick}
-           selectable={true}
-           selectedRows={selectedRows}
-           onSelectionChange={setSelectedRows}
-           striped
-           // Pagination props
-           pagination={true}
-           currentPage={currentPage}
-           totalPages={totalPages}
-           totalItems={totalItems}
-           onPageChange={setCurrentPage}
-           pageSize={pageSize}
-           onPageSizeChange={setPageSize}
-        />
-      ) : (
-         <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-300 dark:bg-gray-800 dark:border-gray-700">
-            <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No invoices found</h3>
-            <Button variant="primary" icon={Plus} onClick={handleCreateInvoice} className="mt-4">Create Invoice</Button>
-         </div>
+      {/* 2. STATS & TABS */}
+      {!showEmptyState && (
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
+                <StatBox label="Total Revenue" value={stats?.totalRevenue} loading={statsLoading} icon={TrendingUp} color="blue" />
+                <StatBox label="Paid" value={stats?.paid} loading={statsLoading} icon={CheckCircle} color="green" />
+                <StatBox label="Pending" value={stats?.totalDue} loading={statsLoading} icon={Clock} color="yellow" />
+                <StatBox label="Overdue" value={stats?.overdue} loading={statsLoading} icon={XCircle} color="red" />
+            </div>
+
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm shrink-0 flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
+                    <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 self-start md:self-auto">
+                        <button 
+                            onClick={() => setInvoiceType("client")}
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                            invoiceType === "client" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
+                            }`}
+                        >
+                            <Users size={16} /> Clients
+                        </button>
+                        <button 
+                            onClick={() => setInvoiceType("partner")}
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                            invoiceType === "partner" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
+                            }`}
+                        >
+                            <Briefcase size={16} /> Partners
+                        </button>
+                    </div>
+
+                    <div className="flex gap-3 flex-1 justify-end w-full md:w-auto">
+                        <Input 
+                            className="w-full md:w-64"
+                            icon={Search} 
+                            placeholder={t("common.searchPlaceholder", "Search by number or name...")} 
+                            value={searchTerm} 
+                            onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }} 
+                        />
+                        <Button variant="outline" icon={Filter} onClick={() => setShowFilters(!showFilters)} className={showFilters ? "bg-gray-100 dark:bg-gray-700" : ""}>
+                            {t("common.filters")}
+                        </Button>
+                        {hasActiveFilters && (
+                            <Button variant="ghost" icon={X} onClick={handleClearFilters} className="text-gray-500">
+                                {t("common.clear")}
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {showFilters && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
+                        <Select 
+                            label={t("invoices.filters.status")} 
+                            value={filters.status} 
+                            onChange={(e) => { setPage(1); setFilters(p => ({...p, status: e.target.value})) }}
+                            options={[
+                            { value: "all", label: t("common.allStatus") },
+                            { value: "draft", label: "Draft" },
+                            { value: "sent", label: "Sent" },
+                            { value: "paid", label: "Paid" },
+                            { value: "overdue", label: "Overdue" }
+                            ]}
+                        />
+                        <Input type="date" label={t("common.startDate")} value={filters.startDate} onChange={(e) => setFilters(p => ({...p, startDate: e.target.value}))} />
+                        <Input type="date" label={t("common.endDate")} value={filters.endDate} onChange={(e) => setFilters(p => ({...p, endDate: e.target.value}))} />
+                    </div>
+                )}
+            </div>
+        </>
       )}
 
+      {/* 3. CONTENT AREA */}
+      <div className="flex-1 flex flex-col relative">
+         {loading && !hasInitialLoad && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+                <p className="text-gray-500 dark:text-gray-400">{t("common.loading")}</p>
+            </div>
+         )}
 
-      {/* Detail Modal */}
+         {/* Data & Pagination */}
+         {showData && (
+            <>
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <Table 
+                        columns={columns} 
+                        data={invoices} 
+                        onRowClick={handleRowClick}
+                        selectable={true}
+                        selectedRows={selectedRows}
+                        onSelectionChange={setSelectedRows}
+                        striped
+                        hoverable
+                    />
+                </div>
+                {/* ✅ Render the Unified Pagination Footer */}
+                {renderPagination()}
+            </>
+         )}
+
+         {/* No Results & Empty States */}
+         {showNoResults && (
+            <div className="flex flex-col items-center justify-center flex-1 py-12">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
+                    <FolderOpen className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("common.noResults", "No invoices found")}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
+                    {t("common.noResultsDesc", "We couldn't find any invoices matching your current filters.")}
+                </p>
+                <Button onClick={handleClearFilters} variant="outline" icon={X}>{t("common.clearAllFilters")}</Button>
+            </div>
+         )}
+
+         {showEmptyState && (
+            <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
+                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
+                        <FileText className="h-12 w-12 text-orange-500" strokeWidth={1.5} />
+                    </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("invoices.empty.title", "No invoices yet")}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
+                    {t("invoices.empty.description", "Create professional invoices, track payments, and manage your financials all in one place.")}
+                </p>
+                <Button onClick={handleCreateInvoice} variant="primary" size="lg" icon={Plus} className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow">
+                    {t("invoices.create.button", "Create First Invoice")}
+                </Button>
+            </div>
+         )}
+      </div>
+
+      {/* ================= MODALS ================= */}
       {selectedInvoice && isDetailModalOpen && (
          <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} size="lg" title={`Invoice ${selectedInvoice.invoiceNumber}`}>
             <div className="p-6 space-y-6">
                <div className="flex justify-between border-b pb-4 border-gray-100 dark:border-gray-700">
                   <div>
-                     <h3 className="text-xl font-bold">{selectedInvoice.recipientName}</h3>
+                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">{selectedInvoice.recipientName}</h3>
                      <p className="text-gray-500">{selectedInvoice.recipientEmail}</p>
+                     <p className="text-xs text-gray-400 mt-1">{selectedInvoice.recipientCompany}</p>
                   </div>
-                  <StatusBadge status={selectedInvoice.status} size="lg" />
+                  <div className="text-right">
+                    <StatusBadge status={selectedInvoice.status} size="lg" />
+                    <p className="text-xs text-gray-400 mt-2">Due: {formatDate(selectedInvoice.dueDate)}</p>
+                  </div>
                </div>
-
-               <table className="w-full text-sm">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
-                     <tr>
-                        <th className="p-3 text-left">Description</th>
-                        <th className="p-3 text-right">Qty</th>
-                        <th className="p-3 text-right">Price</th>
-                        <th className="p-3 text-right">Total</th>
-                     </tr>
-                  </thead>
-                  <tbody>
-                     {selectedInvoice.items.map((item, i) => (
-                        <tr key={i} className="border-b border-gray-100 dark:border-gray-700">
-                           <td className="p-3">{item.description}</td>
-                           <td className="p-3 text-right">{item.quantity}</td>
-                           <td className="p-3 text-right">{formatCurrency(item.rate)}</td>
-                           <td className="p-3 text-right font-medium">{formatCurrency(item.amount)}</td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
-               
-               <div className="flex justify-end pt-4">
+               <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
+                   <table className="w-full text-sm">
+                      <thead className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                         <tr>
+                            <th className="p-3 text-left">Description</th>
+                            <th className="p-3 text-right">Qty</th>
+                            <th className="p-3 text-right">Price</th>
+                            <th className="p-3 text-right">Total</th>
+                         </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                         {selectedInvoice.items.map((item, i) => (
+                            <tr key={i}>
+                               <td className="p-3 text-gray-900 dark:text-white">{item.description}</td>
+                               <td className="p-3 text-right text-gray-600 dark:text-gray-400">{item.quantity}</td>
+                               <td className="p-3 text-right text-gray-600 dark:text-gray-400">{formatCurrency(item.rate)}</td>
+                               <td className="p-3 text-right font-medium text-gray-900 dark:text-white">{formatCurrency(item.amount)}</td>
+                            </tr>
+                         ))}
+                      </tbody>
+                   </table>
+               </div>
+               <div className="flex justify-end pt-2">
                   <div className="w-64 space-y-2 text-right">
-                     <div className="flex justify-between text-lg font-bold"><span>Total:</span> <span>{formatCurrency(selectedInvoice.totalAmount)}</span></div>
+                     <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white">
+                         <span>Total:</span> <span>{formatCurrency(selectedInvoice.totalAmount)}</span>
+                     </div>
                   </div>
                </div>
-
                <div className="flex justify-end gap-2 pt-6 border-t border-gray-100 dark:border-gray-700">
-                  <Button variant="outline" onClick={() => handleDownloadInvoice(selectedInvoice)} icon={Download}>Download PDF</Button>
+                  <Button variant="outline" onClick={() => handleDownloadInvoice(selectedInvoice)} icon={Download}>{t("common.download", "PDF")}</Button>
                   {selectedInvoice.status === 'draft' && (
-                    <Button variant="primary" onClick={() => handleEditInvoice(selectedInvoice)} icon={Edit}>
-                      Edit Invoice
-                    </Button>
+                    <Button variant="primary" onClick={() => { setIsDetailModalOpen(false); handleEditInvoice(selectedInvoice); }} icon={Edit}>{t("common.edit", "Edit")}</Button>
                   )}
                </div>
             </div>
          </Modal>
       )}
 
-      {/* Delete Confirmation */}
-      <Modal isOpen={confirmationModal.isOpen} onClose={() => setConfirmationModal({...confirmationModal, isOpen: false})} title="Confirm Deletion" size="sm">
-         <div className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="mb-6 text-gray-600">Are you sure you want to delete <strong>{confirmationModal.invoiceName}</strong>?</p>
-            <div className="flex justify-center gap-3">
-               <Button variant="outline" onClick={() => setConfirmationModal({...confirmationModal, isOpen: false})}>Cancel</Button>
-               <Button variant="danger" onClick={confirmationModal.onConfirm}>Delete</Button>
+      <Modal isOpen={confirmationModal.isOpen} onClose={() => setConfirmationModal(p => ({ ...p, isOpen: false }))} title={t("common.confirmDelete")} size="md">
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-full p-2">
+              <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
-         </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("invoices.delete.title", "Delete Invoice")}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  {t("invoices.delete.message", { name: confirmationModal.invoiceName, defaultValue: `Are you sure you want to delete ${confirmationModal.invoiceName}?` })}
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setConfirmationModal(p => ({ ...p, isOpen: false }))}>{t("common.cancel")}</Button>
+                <Button variant="danger" onClick={confirmationModal.onConfirm} icon={Trash2}>{t("common.delete")}</Button>
+              </div>
+            </div>
+          </div>
+        </div>
       </Modal>
 
     </div>
   );
 };
 
-// --- Helper Sub-component ---
+// --- Helper Component ---
 const StatBox = ({ label, value, loading, icon: Icon, color }) => {
   const colors = {
     blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
@@ -553,17 +638,12 @@ const StatBox = ({ label, value, loading, icon: Icon, color }) => {
     yellow: "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400",
     red: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
   };
-
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4">
-      <div className={`p-3 rounded-lg ${colors[color]}`}>
-        <Icon className="w-6 h-6" />
-      </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4 transition-all hover:shadow-md">
+      <div className={`p-3 rounded-lg ${colors[color]}`}><Icon className="w-6 h-6" /></div>
       <div>
         <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-        <p className="text-2xl font-bold text-gray-900 dark:text-white">
-          {loading ? "..." : formatCurrency(value)}
-        </p>
+        <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? "..." : formatCurrency(value)}</p>
       </div>
     </div>
   );

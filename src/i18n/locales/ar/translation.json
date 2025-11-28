@@ -1,4 +1,125 @@
 {
+    "auth": {
+    "login": {
+      "title": "تسجيل الدخول",
+      "subtitle": "أدخل بيانات الاعتماد الخاصة بك للوصول إلى حسابك",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "rememberMe": "تذكرني",
+      "forgotPassword": "نسيت كلمة المرور؟",
+      "submit": "دخول",
+      "submitting": "جاري تسجيل الدخول...",
+      "noAccount": "ليس لديك حساب؟",
+      "signUp": "سجل مجاناً",
+      "success": "تم تسجيل الدخول بنجاح!",
+      "errors": {
+        "emailRequired": "البريد الإلكتروني مطلوب",
+        "passwordRequired": "كلمة المرور مطلوبة",
+        "invalidCredentials": "بيانات الاعتماد غير صالحة",
+        "invalidEmail": "بريد إلكتروني غير صالح",
+        "invalidPassword": "أو كلمة مرور غير صالحة"
+      }
+    },   "register": {
+      "title": "إنشاء حساب",
+      "subtitle": "ابدأ في إدارة مكان المناسبات الخاص بك",
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "confirmPassword": "تأكيد كلمة المرور",
+      "continue": "متابعة",
+      "signIn": "تسجيل الدخول",
+      "haveAccount": "لديك حساب بالفعل؟",
+      "passwordStrength": "قوة كلمة المرور",
+      "strength": {
+        "weak": "ضعيف",
+        "medium": "متوسط",
+        "strong": "قوي"
+      },
+      "requirements": {
+        "title": "متطلبات كلمة المرور",
+        "length": "8 أحرف على الأقل",
+        "lowercase": "حرف صغير واحد",
+        "uppercase": "حرف كبير واحد",
+        "number": "رقم واحد",
+        "special": "حرف خاص واحد",
+        "allowed": "الأحرف الخاصة المسموح بها:"
+      },
+      "errors": {
+        "nameRequired": "الاسم مطلوب",
+        "emailRequired": "البريد الإلكتروني مطلوب",
+        "passwordRequired": "كلمة المرور مطلوبة",
+        "confirmMatch": "كلمات المرور غير متطابقة"
+      },
+      "steps": {
+        "business": "نوع العمل",
+        "venue": "تفاصيل المكان",
+        "spaces": "القاعات",
+        "address": "العنوان",
+        "review": "المراجعة"
+      },
+      "businessType": {
+        "title": "اختر نوع عملك",
+        "subtitle": "حدد كيف ستستخدم فيستا",
+        "venueOwner": "مالك قاعة",
+        "venueDesc": "إدارة مكان المناسبات والحجوزات والموظفين",
+        "serviceBusiness": "مقدم خدمات",
+        "serviceDesc": "تقديم خدمات الطعام، التصوير، أو خدمات أخرى",
+        "comingSoon": "قريباً"
+      },
+      "venueDetails": {
+        "title": "أخبرنا عن مكانك",
+        "subtitle": "قدم المعلومات الأساسية حول مكانك",
+        "name": "اسم المكان",
+        "desc": "الوصف",
+        "descPlaceholder": "صف مكانك...",
+        "phone": "رقم الهاتف"
+      },
+      "spaces": {
+        "title": "أضف القاعات",
+        "subtitle": "حدد المناطق أو القاعات المختلفة (الحد الأقصى {{max}})",
+        "spaceName": "اسم القاعة",
+        "basePrice": "السعر الأساسي (د.ت)",
+        "minCap": "السعة الدنيا",
+        "maxCap": "السعة القصوى",
+        "add": "إضافة قاعة أخرى",
+        "maxReached": "تم الوصول للحد الأقصى"
+      },
+      "address": {
+        "title": "عنوان المكان",
+        "subtitle": "أين يقع مكانك؟",
+        "fullAddress": "العنوان الكامل",
+        "city": "المدينة",
+        "state": "الولاية / المنطقة",
+        "zip": "الرمز البريدي",
+        "country": "البلد"
+      },
+      "review": {
+        "title": "راجع معلوماتك",
+        "subtitle": "يرجى التحقق من جميع التفاصيل قبل المتابعة",
+        "accountInfo": "معلومات الحساب",
+        "venueInfo": "معلومات المكان"
+      },
+      "actions": {
+        "back": "رجوع",
+        "continue": "متابعة",
+        "complete": "إتمام التسجيل"
+      }
+    },
+     "layout": {
+      "title": "أدر مكانك باحترافية",
+      "subtitle": "بسط تخطيط الفعاليات، إدارة الحرفاء، والتعاون مع الفريق في مكان واحد.",
+      "features": {
+        "eventsTitle": "إدارة فعاليات سلسة",
+        "eventsDesc": "تتبع الحجوزات، أدر التقويمات، ونسق الفعاليات بسهولة تامة.",
+        "financialTitle": "الرقابة المالية",
+        "financialDesc": "تعامل مع المدفوعات، الفواتير، والتقارير المالية بكل سهولة.",
+        "teamTitle": "تعاون الفريق",
+        "teamDesc": "عيّن المهام، ضع تذكيرات، وابق الجميع على اطلاع دائم."
+      }
+    }
+  },
   "dashboard": {
     "loading": "جاري تحميل لوحة القيادة...",
 
@@ -2977,212 +3098,189 @@
     }
   },
   "venueSettings": {
-    "title": "إعدادات القاعة",
-    "subtitle": "إدارة معلومات القاعة وأوقات العمل وإعدادات الفريق",
-
+    "title": "إعدادات المكان",
+    "subtitle": "إدارة ملف تعريف المكان والتفضيلات",
     "tabs": {
       "personal": "شخصي",
       "security": "الأمان",
-      "venue": "القاعة",
-      "amenities": "المرافق والأوقات",
+      "venue": "المكان",
+      "amenities": "المرافق والمواعيد",
       "spaces": "المساحات"
     },
-
     "common": {
+      "saveChanges": "حفظ التغييرات",
+      "cancel": "إلغاء",
+      "add": "إضافة",
+      "clearAll": "مسح الكل",
       "loading": "جاري التحميل...",
+      "saving": "جاري الحفظ...",
+      "saved": "تم الحفظ",
       "tryAgain": "حاول مرة أخرى",
-      "save": "حفظ التغييرات"
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "open": "مفتوح",
+      "closed": "مغلق"
     },
-
     "personal": {
-      "title": "المعلومات الشخصية",
-      "description": "تحديث بياناتك الشخصية ومعلومات الملف الشخصي",
+      "title": "معلومات الملف الشخصي",
+      "description": "تحديث بياناتك الشخصية",
+      "venueOwner": "مالك المكان",
+      "profilePicture": "صورة الملف الشخصي",
       "fields": {
         "fullName": "الاسم الكامل",
-        "email": "البريد الإلكتروني",
         "phone": "رقم الهاتف",
-        "avatar": "رابط الصورة الشخصية"
+        "email": "البريد الإلكتروني",
+        "avatar": "رابط الصورة الرمزية"
       },
-      "avatarPreview": {
-        "title": "معاينة الصورة الشخصية",
-        "description": "هذه هي الطريقة التي ستظهر بها صورتك الشخصية على المنصة"
-      },
-      "save": "حفظ المعلومات الشخصية"
+      "placeholders": {
+        "fullName": "اسمك الكامل",
+        "phone": "+216 XX XXX XXX",
+        "avatar": "https://example.com/avatar.jpg"
+      }
     },
-
     "security": {
-      "title": "كلمة المرور والأمان",
-      "description": "تغيير كلمة المرور وإدارة إعدادات الأمان",
+      "title": "إعدادات الأمان",
+      "description": "تحديث كلمة المرور وتفضيلات الأمان",
+      "updatePassword": "تحديث كلمة المرور",
       "fields": {
         "currentPassword": "كلمة المرور الحالية",
         "newPassword": "كلمة المرور الجديدة",
-        "confirmPassword": "تأكيد كلمة المرور الجديدة"
+        "confirmPassword": "تأكيد كلمة المرور"
+      },
+      "placeholders": {
+        "currentPassword": "أدخل كلمة المرور الحالية",
+        "newPassword": "6 أحرف على الأقل",
+        "confirmPassword": "أعد إدخال كلمة المرور الجديدة"
+      },
+      "strength": {
+        "tooShort": "قصيرة جداً",
+        "weak": "ضعيفة",
+        "fair": "متوسطة",
+        "good": "جيدة",
+        "strong": "قوية"
       },
       "requirements": {
         "title": "متطلبات كلمة المرور",
-        "items": [
-          "6 أحرف على الأقل",
-          "يُنصح بمزيج من الأحرف الكبيرة والصغيرة",
-          "قم بتضمين أرقام أو أحرف خاصة لمزيد من الأمان"
-        ]
-      },
-      "changePassword": "تغيير كلمة المرور"
+        "minLength": "6 أحرف على الأقل",
+        "uppercase": "حرف كبير واحد",
+        "number": "رقم واحد"
+      }
     },
-
     "venue": {
       "basicInfo": {
         "title": "المعلومات الأساسية",
-        "description": "التفاصيل الأساسية حول قاعتك",
-        "fields": {
-          "venueName": "اسم القاعة",
-          "description": "الوصف",
-          "descriptionPlaceholder": "صف قاعتك ومميزاتها الفريدة وما يجعلها مميزة..."
-        }
+        "description": "الملف العام لمكانك"
       },
-      "address": {
-        "title": "الموقع والعنوان",
-        "description": "موقع قاعتك",
-        "fields": {
-          "street": "العنوان",
-          "city": "المدينة",
-          "state": "الولاية/المحافظة",
-          "zipCode": "الرمز البريدي",
-          "country": "البلد"
-        }
+      "location": {
+        "title": "الموقع",
+        "description": "حيث يمكن للعملاء العثور عليك"
       },
       "contact": {
         "title": "معلومات الاتصال",
-        "description": "كيف يمكن للعملاء الوصول إليك",
-        "fields": {
-          "phone": "رقم الهاتف",
-          "email": "البريد الإلكتروني"
-        }
+        "description": "كيف يمكن للعملاء التواصل معك"
       },
-      "save": "حفظ إعدادات القاعة"
+      "fields": {
+        "name": "اسم المكان",
+        "description": "الوصف",
+        "street": "عنوان الشارع",
+        "city": "المدينة",
+        "state": "الولاية/المنطقة",
+        "zipCode": "الرمز البريدي",
+        "country": "البلد",
+        "phone": "هاتف الاتصال",
+        "email": "البريد الإلكتروني للاتصال"
+      },
+      "placeholders": {
+        "name": "مثال: قاعة الاحتفالات الكبرى",
+        "description": "صف مكانك وميزاته الفريدة وما يجعله مميزاً...",
+        "street": "123 شارع الرئيسي",
+        "city": "تونس",
+        "state": "تونس",
+        "zipCode": "1000",
+        "country": "تونس",
+        "phone": "+216 XX XXX XXX",
+        "email": "contact@venue.com"
+      }
     },
-
     "amenities": {
       "title": "المرافق",
-      "description": "حدد المرافق والمميزات المتاحة في قاعتك",
-      "quickAdd": {
-        "title": "إضافة سريعة للمرافق",
-        "description": "انقر لإضافة المرافق الشائعة إلى قاعتك"
-      },
-      "customAmenity": {
-        "title": "إضافة مرفق مخصص",
-        "placeholder": "أدخل اسم المرفق المخصص",
-        "add": "إضافة"
-      },
-      "selectedAmenities": {
-        "title": "المرافق المحددة ({{count}})",
-        "clearAll": "مسح الكل",
-        "empty": {
-          "title": "لم تتم إضافة مرافق بعد",
-          "description": "ابدأ بإضافة المرافق باستخدام الخيارات أعلاه"
-        }
+      "subtitle": "المرافق والمميزات",
+      "description": "سلط الضوء على ما يقدمه مكانك لجذب العملاء",
+      "selected": "المحدد",
+      "quickAdd": "إضافة سريعة",
+      "addCustom": "إضافة مرفق مخصص",
+      "clickToAdd": "انقر على المرافق أدناه لإضافتها",
+      "placeholders": {
+        "custom": "مثال: مهبط طائرات هليكوبتر"
       },
       "operatingHours": {
         "title": "ساعات العمل",
-        "description": "حدد ساعات العمل المعتادة لقاعتك لكل يوم من أيام الأسبوع",
+        "description": "حدد متى يكون مكانك متاحاً للحجوزات",
+        "allDays": "مفتوح جميع الأيام",
+        "weekdays": "أيام الأسبوع فقط",
+        "weekends": "عطلات نهاية الأسبوع فقط",
         "days": {
-          "monday": "الاثنين",
+          "monday": "الإثنين",
           "tuesday": "الثلاثاء",
           "wednesday": "الأربعاء",
           "thursday": "الخميس",
           "friday": "الجمعة",
           "saturday": "السبت",
           "sunday": "الأحد"
-        },
-        "labels": {
-          "to": "إلى",
-          "closed": "مغلق"
         }
-      },
-      "save": "حفظ المرافق والأوقات"
+      }
     },
-
     "spaces": {
-      "title": "مساحات القاعة",
-      "description": "إدارة الغرف والمناطق المختلفة داخل القاعة",
-      "existingSpaces": {
-        "title": "مساحاتك ({{count}})",
-        "description": "جميع المساحات المتاحة في قاعتك",
-        "capacity": "السعة",
-        "price": "السعر الأساسي",
-        "status": {
-          "active": "نشط",
-          "inactive": "غير نشط"
-        },
-        "actions": {
-          "edit": "تعديل المساحة",
-          "delete": "حذف المساحة"
-        }
+      "title": "مساحات المكان",
+      "addNew": "إضافة مساحة جديدة",
+      "addFirst": "أضف مساحتك الأولى",
+      "addDescription": "إنشاء منطقة قابلة للحجز",
+      "edit": "تعديل",
+      "editDescription": "قم بتحديث تفاصيل المساحة أدناه",
+      "create": "إنشاء المساحة",
+      "emptyTitle": "لا توجد مساحات بعد",
+      "emptyDescription": "أنشئ مساحتك الأولى للبدء في قبول الحجوزات.",
+      "capacity": "السعة",
+      "basePrice": "السعر الأساسي",
+      "availableForBooking": "متاح للحجز",
+      "availableDescription": "قم بإلغاء التحديد لإخفاء هذه المساحة مؤقتاً",
+      "fields": {
+        "name": "اسم المساحة",
+        "description": "الوصف",
+        "minCapacity": "الحد الأدنى للسعة",
+        "maxCapacity": "الحد الأقصى للسعة",
+        "basePrice": "السعر الأساسي (دينار)"
       },
-      "form": {
-        "addTitle": "إضافة مساحة جديدة",
-        "addDescription": "إنشاء مساحة جديدة قابلة للحجز في قاعتك",
-        "editTitle": "تعديل المساحة",
-        "editDescription": "تحديث تفاصيل هذه المساحة",
-        "fields": {
-          "spaceName": "اسم المساحة",
-          "description": "الوصف",
-          "descriptionPlaceholder": "صف هذه المساحة ومميزاتها والاستخدامات المثالية لها...",
-          "basePrice": "السعر الأساسي",
-          "minCapacity": "الحد الأدنى للسعة",
-          "maxCapacity": "الحد الأقصى للسعة"
-        },
-        "activeLabel": "المساحة نشطة وقابلة للحجز",
-        "actions": {
-          "add": "إضافة مساحة",
-          "update": "تحديث المساحة",
-          "cancel": "إلغاء"
-        }
+      "placeholders": {
+        "name": "مثال: القاعة الكبرى، تراس الحديقة",
+        "description": "صف هذه المساحة وميزاتها وما يجعلها مميزة...",
+        "basePrice": "5000"
       },
-      "emptyState": {
-        "title": "لا توجد مساحات بعد",
-        "description": "أنشئ أول مساحة لقاعتك للبدء في إدارة الحجوزات للمناطق المختلفة"
+      "validation": {
+        "capacity": "الحد الأدنى والأقصى للسعة مطلوبان",
+        "price": "السعر الأساسي مطلوب"
       },
-      "save": "حفظ المساحات"
+      "confirmDelete": "هل أنت متأكد من حذف هذه المساحة؟",
+      "created": "تم إنشاء المساحة بنجاح",
+      "updated": "تم تحديث المساحة بنجاح",
+      "deleted": "تم حذف المساحة بنجاح"
     },
-
     "validation": {
       "required": "هذا الحقل مطلوب",
-      "email": "يرجى إدخال بريد إلكتروني صحيح",
-      "minLength": "يجب أن يحتوي على {{min}} أحرف على الأقل",
-      "passwordsMatch": "كلمات المرور غير متطابقة",
-      "capacityRange": "يجب أن تكون السعة القصوى أكبر من السعة الدنيا"
+      "minLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+      "passwordMismatch": "كلمات المرور غير متطابقة",
+      "emailInvalid": "يرجى تقديم عنوان بريد إلكتروني صالح",
+      "fixErrors": "يرجى إصلاح الأخطاء قبل الحفظ"
     },
-
     "notifications": {
-      "success": {
-        "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
-        "passwordChanged": "تم تغيير كلمة المرور بنجاح",
-        "venueUpdated": "تم حفظ إعدادات القاعة بنجاح",
-        "amenityAdded": "تمت إضافة المرفق بنجاح",
-        "customAmenityAdded": "تمت إضافة المرفق المخصص بنجاح",
-        "amenitiesCleared": "تم حذف جميع المرافق",
-        "spaceCreated": "تم إنشاء المساحة بنجاح",
-        "spaceUpdated": "تم تحديث المساحة بنجاح",
-        "spaceDeleted": "تم حذف المساحة بنجاح",
-        "imageUploaded": "تم رفع الصورة بنجاح",
-        "imageRemoved": "تم حذف الصورة بنجاح"
-      },
-      "error": {
-        "loadFailed": "فشل تحميل الإعدادات. يرجى المحاولة مرة أخرى.",
-        "saveFailed": "فشل حفظ التغييرات. يرجى المحاولة مرة أخرى.",
-        "generic": "يرجى تصحيح الأخطاء قبل الحفظ",
-        "amenityExists": "تمت إضافة هذا المرفق مسبقاً",
-        "spaceNameRequired": "اسم المساحة مطلوب",
-        "capacityRequired": "معلومات السعة مطلوبة",
-        "priceRequired": "السعر الأساسي مطلوب",
-        "uploadFailed": "فشل رفع الصورة",
-        "deleteFailed": "فشل الحذف",
-        "saveSpaceFirst": "يرجى حفظ المساحة قبل رفع الصور"
-      },
-      "confirm": {
-        "deleteSpace": "هل أنت متأكد من حذف هذه المساحة؟ لا يمكن التراجع عن هذا الإجراء.",
-        "clearAllAmenities": "هل أنت متأكد من حذف جميع المرافق؟"
-      }
+      "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+      "passwordChanged": "تم تغيير كلمة المرور بنجاح",
+      "venueUpdated": "تم تحديث معلومات المكان بنجاح"
+    },
+    "errors": {
+      "loadFailed": "فشل تحميل الإعدادات",
+      "saveFailed": "فشل حفظ التغييرات",
+      "deleteFailed": "فشل الحذف"
     }
   },
   "notFound": {
@@ -3201,80 +3299,122 @@
   "contracts": {
     "settings": {
       "title": "إعدادات العقود",
-      "subtitle": "الإعدادات العامة والتصميم",
+      "subtitle": "التكوين العام لجميع العقود",
+      "loading": "جاري تحميل الإعدادات...",
       "save": "حفظ التغييرات",
+      
       "tabs": {
         "company": "بيانات الشركة",
-        "branding": "العلامة التجارية",
-        "layout": "تخطيط PDF",
-        "financials": "المالية",
+        "structure": "الهيكل والترقيم",
+        "branding": "الهوية البصرية",
+        "financials": "الإعدادات المالية",
+        "layout": "تخطيط الصفحة",
         "clauses": "البنود",
-        "cancellation": "الإلغاء",
-        "labels": "تسميات"
+        "cancellation": "سياسة الإلغاء",
+        "labels": "العناوين"
       },
+      
       "company": {
-        "title": "تفاصيل الكيان القانوني",
-        "legalName": "الاسم القانوني (Raison Sociale)",
+        "title": "معلومات الشركة",
+        "legalName": "الاسم القانوني",
         "displayName": "الاسم التجاري",
-        "taxId": "المعرف الجبائي (Matricule Fiscale)",
-        "representative": "الممثل القانوني",
-        "rib": "رقم الحساب البنكي (RIB)",
-        "bank": "اسم البنك",
-        "address": "عنوان المقر الاجتماعي",
-        "email": "البريد الإلكتروني",
+        "matriculeFiscale": "المعرّف الجبائي",
+        "address": "عنوان المقر",
         "phone": "الهاتف",
-        "website": "الموقع الإلكتروني"
+        "email": "البريد الإلكتروني",
+        "website": "الموقع الإلكتروني",
+        "rib": "رقم الحساب البنكي (RIB)",
+        "bankName": "اسم البنك",
+        "representative": "الممثل القانوني"
       },
+      
+      "structure": {
+        "title": "تكوين التسلسل",
+        "preview": "معاينة الرقم التالي",
+        "prefix": "البادئة",
+        "separator": "الفاصل",
+        "includeYear": "تضمين السنة",
+        "yearFormat": "صيغة السنة",
+        "sequenceDigits": "عدد الأصفار",
+        "sequenceDigitsHelp": "مثال: 4 يعطي \"0001\"، و3 يعطي \"001\".",
+        "resetYearly": "إعادة تعيين التسلسل سنوياً",
+        "resetYearlyHelp": "يبدأ الترقيم من 0001 في 1 يناير من كل سنة"
+      },
+      
       "branding": {
-        "title": "العلامة التجارية والألوان",
-        "primary": "اللون الأساسي",
+        "title": "الهوية البصرية والألوان",
+        "primary": "اللون الرئيسي",
         "secondary": "اللون الثانوي",
-        "text": "لون النص",
         "accent": "لون التمييز",
-        "logoUrl": "رابط الشعار (عام)",
-        "logoHelp": "يجب أن يكون الرابط متاحاً للعامة للظهور في الملف."
+        "text": "لون النص",
+        "background": "لون الخلفية",
+        "logo": "الشعار",
+        "logoUrl": "رابط الشعار (HTTPS)",
+        "logoHelp": "للحصول على أفضل النتائج في PDF، استخدم رابطًا مباشرًا لصورة PNG أو JPG.",
+        "logoPreview": "معاينة"
       },
-      "layout": {
-        "title": "إعدادات تخطيط PDF",
-        "showPageNumbers": "إظهار أرقام الصفحات",
-        "showDate": "إظهار تاريخ الإنشاء"
-      },
+      
       "financials": {
-        "title": "الافتراضيات المالية",
-        "vat": "الأداء على القيمة المضافة (%)",
-        "stamp": "الطابع الجبائي (د.ت)",
-        "deposit": "تسبقة مطلوبة (%)",
-        "security": "مبلغ الضمان (د.ت)"
+        "title": "الإعدادات المالية الافتراضية",
+        "currency": "العملة",
+        "vatRate": "نسبة الأداء على القيمة المضافة (%)",
+        "stampDuty": "الطابع الجبائي (د.ت)",
+        "depositPercentage": "نسبة التسبقة المطلوبة (%)",
+        "securityDeposit": "مبلغ الضمان (د.ت)",
+        "lateFee": "غرامة التأخير (%)"
       },
+      
+      "layout": {
+        "title": "تخطيط ملف PDF",
+        "template": "نمط القالب",
+        "paperSize": "حجم الورق",
+        "showPageNumbers": "عرض أرقام الصفحات",
+        "showDate": "عرض التاريخ"
+      },
+      
       "clauses": {
-        "title": "بنود العقد",
+        "title": "البنود الافتراضية",
         "add": "إضافة بند",
-        "articleTitle": "عنوان البند",
+        "articleTitle": "عنوان المادة",
         "content": "محتوى البند...",
-        "required": "إجباري"
+        "required": "إلزامي",
+        "empty": "لا توجد بنود افتراضية. انقر على \"إضافة\" لإنشاء أول بند.",
+        "dragHint": "اسحب لإعادة الترتيب"
       },
+      
       "cancellation": {
         "title": "سياسة الإلغاء",
+        "enabled": "تفعيل سياسة الإلغاء",
         "add": "إضافة مستوى",
-        "days": "الأيام قبل الحدث (الحد الأدنى)",
-        "penalty": "غرامة (%)",
-        "description": "الوصف"
+        "daysBeforeEvent": "الأيام قبل الحدث (الحد الأدنى)",
+        "penaltyPercentage": "نسبة الغرامة (%)",
+        "description": "الوصف",
+        "empty": "لم يتم تحديد مستويات الإلغاء."
       },
+      
       "labels": {
-        "title": "تسميات وترجمات PDF",
-        "mainTitle": "العنوان الرئيسي",
-        "parties": "عنوان الأطراف",
-        "provider": "تسمية المزود",
-        "client": "تسمية الحريف",
-        "partner": "تسمية الشريك",
-        "services": "عنوان الخدمات",
-        "payment": "عنوان الدفع",
-        "signatures": "عنوان التوقيعات"
+        "title": "عناوين المستند",
+        "contractTitle": "عنوان العقد",
+        "partiesTitle": "عنوان قسم الأطراف",
+        "serviceProvider": "تسمية مقدم الخدمة",
+        "clientLabel": "تسمية العميل",
+        "partnerLabel": "تسمية الشريك",
+        "servicesTitle": "عنوان قسم الخدمات",
+        "paymentTitle": "عنوان قسم الدفع",
+        "signaturesTitle": "عنوان قسم التوقيعات",
+        "dateLabel": "تسمية التاريخ",
+        "signatureLabel": "تسمية التوقيع"
       },
+      
+      "preview": {
+        "title": "معاينة PDF",
+        "clickToEdit": "انقر للتعديل"
+      },
+      
       "messages": {
+        "loadError": "فشل في تحميل إعدادات العقود",
         "saveSuccess": "تم حفظ الإعدادات بنجاح",
-        "saveError": "فشل في حفظ الإعدادات",
-        "loadError": "فشل في تحميل الإعدادات"
+        "saveError": "فشل في حفظ الإعدادات"
       }
     },
     "detail": {
