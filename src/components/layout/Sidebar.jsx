@@ -207,7 +207,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
           width: isCollapsed ? 80 : 288, // w-20 = 80px, w-72 = 288px
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-40 shadow-xl
+        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-40 shadow-xl
         ${isRTL ? "right-0" : "left-0"}
         ${
           isOpen
@@ -219,7 +219,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       >
         <div className="flex flex-col h-full">
           {/* Header / Logo Area */}
-          <div className="h-20 flex items-center justify-center shrink-0 px-4 relative border-b border-gray-100 dark:border-gray-800">
+          <div className="h-20 flex items-center justify-center shrink-0 px-4 relativ">
             <Link to="/" className="flex items-center justify-center w-full">
               <motion.img
                 src="/fiesta logo-01.png"
@@ -354,7 +354,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               >
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
                   <Sparkles className="w-3 h-3" />
-                  <span>© 2025 Fiesta Inc.</span>
+                  <span>{t("allRightsReserved")} © 2025 Fiesta Inc.</span>
                 </div>
               </motion.div>
             )}

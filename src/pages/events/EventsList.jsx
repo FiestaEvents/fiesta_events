@@ -707,7 +707,7 @@ const EventList = () => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
             >
               {[10, 25, 50, 100].map((size) => (
                 <option key={size} value={size}>
@@ -790,7 +790,7 @@ const EventList = () => {
 
       {/* Filters (Hide in pure empty state) */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row gap-4 shrink-0">
+        <div className="p-4 bg-white dark:bg-gray-800/50 flex flex-col md:flex-row gap-4 shrink-0">
           <Input
             icon={Search}
             placeholder={t("eventList.search.placeholder")}

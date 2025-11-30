@@ -54,7 +54,7 @@ const MainLayout = () => {
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
         />
-        <main className="pt-16">
+        <main className="p-16">
           <div className="p-4">
             <div className="w-full min-h-[calc(100vh-4rem-3rem)]">
               <Outlet />

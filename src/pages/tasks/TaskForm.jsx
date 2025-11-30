@@ -397,7 +397,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       case 1:
         return (
           <div className="space-y-4 animate-fadeIn">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               {t('tasks.form.steps.basicInfo')}
             </h3>
             <Input

@@ -217,7 +217,7 @@ const InvoicesPage = () => {
     try {
       showInfo(t("invoices.download.generating"));
       const blob = await invoiceService.download(invoice._id);
-      if (!blob || blob.size === 0) throw new Error("Empty file");
+      if (!blob || blob.size === 0) throw new Error(t("invoices.errors.emptyFile"));
       
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -228,7 +228,7 @@ const InvoicesPage = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      showSuccess(t("invoices.download.success"));
+      showSuccess(t("invoices.download.success", { invoiceNumber: invoice.invoiceNumber }));
     } catch (err) {
       showError(t("invoices.download.errors.generic"));
     }
@@ -238,8 +238,8 @@ const InvoicesPage = () => {
     try {
         await promise(invoiceService.delete(id), {
             loading: t("invoices.delete.loading"),
-            success: t("invoices.delete.success"),
-            error: t("invoices.delete.error")
+            success: t("invoices.delete.success", { invoiceName: name }),
+            error: t("invoices.delete.error", { invoiceName: name })
         });
         fetchInvoices();
         fetchStats();
@@ -263,7 +263,7 @@ const InvoicesPage = () => {
     setFilters({ status: "all", startDate: "", endDate: "" });
     setSearchTerm("");
     setPage(1);
-    showInfo(t("common.filtersCleared"));
+    showInfo(t("invoices.filters.clear"));
   };
 
   // Logic for UI States
@@ -276,8 +276,6 @@ const InvoicesPage = () => {
   // RENDER HELPERS
   // ==========================================
   
-  // ✅ UNIFIED PAGINATION FOOTER
-  // This layout matches the screenshot "Showing type in all of them"
   const renderPagination = () => {
     const start = Math.min((page - 1) * limit + 1, totalCount);
     const end = Math.min(page * limit, totalCount);
@@ -287,32 +285,28 @@ const InvoicesPage = () => {
         
         {/* Left: Info Text */}
         <div>
-          Showing <span className="font-medium text-gray-900 dark:text-white">{start}</span> to{" "}
-          <span className="font-medium text-gray-900 dark:text-white">{end}</span> of{" "}
-          <span className="font-medium text-gray-900 dark:text-white">{totalCount}</span> results
+          {t("invoices.pagination.showing", { start, end, total: totalCount })}
         </div>
 
         {/* Right: Pagination Buttons + Per Page Dropdown */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           
-          {/* Page Buttons (Hidden if only 1 page, or you can keep them disabled) */}
           {totalPages > 1 && (
              <Pagination
                 currentPage={page}
                 totalPages={totalPages}
                 onPageChange={setPage}
-                // Pass false/null for pageSize so internal dropdown doesn't render if it conflicts
                 pageSize={null} 
              />
           )}
 
           {/* Explicit "Per page" Dropdown */}
           <div className="flex items-center gap-2">
-            <span>Per page:</span>
+            <span>{t("invoices.pagination.perPage")}</span>
             <select
               value={limit}
               onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
-              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
             >
               {[10, 25, 50, 100].map((size) => (
                 <option key={size} value={size}>{size}</option>
@@ -364,26 +358,26 @@ const InvoicesPage = () => {
       render: (row) => <StatusBadge status={row.status} size="sm" />
     },
     {
-      header: t("common.actions"),
+      header: t("invoices.table.headers.actions"),
       width: "20%",
       className: "text-center",
       render: (row) => {
         const canEdit = ["draft", "sent"].includes(row.status);
         return (
           <div className="flex justify-center gap-2">
-            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleRowClick(row); }} className="text-gray-500 hover:text-blue-600" title={t("common.view")}>
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleRowClick(row); }} className="text-gray-500 hover:text-blue-600" title={t("invoices.actions.view")}>
               <Eye size={16} />
             </Button>
             {canEdit && (
-              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleEditInvoice(row); }} className="text-gray-500 hover:text-orange-600" title={t("common.edit")}>
+              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleEditInvoice(row); }} className="text-gray-500 hover:text-orange-600" title={t("invoices.actions.edit")}>
                 <Edit size={16} />
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(row); }} className="text-gray-500 hover:text-green-600" title={t("common.download")}>
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(row); }} className="text-gray-500 hover:text-green-600" title={t("invoices.actions.download")}>
               <Download size={16} />
             </Button>
             {row.status === "draft" && (
-               <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClick(row._id, row.invoiceNumber); }} className="text-gray-500 hover:text-red-600" title={t("common.delete")}>
+               <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClick(row._id, row.invoiceNumber); }} className="text-gray-500 hover:text-red-600" title={t("invoices.actions.delete")}>
                  <Trash2 size={16} />
                </Button>
             )}
@@ -401,7 +395,7 @@ const InvoicesPage = () => {
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("invoices.title")}</h1>
           <p className="text-gray-500 dark:text-gray-400">
-             Manage your {invoiceType === 'client' ? 'client invoices' : 'partner bills'} and payments.
+             {t("invoices.subtitle", { type: invoiceType === 'client' ? t("invoices.recipient.client") : t("invoices.recipient.partner") })}
              {hasInitialLoad && totalCount > 0 && ` (${totalCount})`}
           </p>
         </div>
@@ -410,10 +404,10 @@ const InvoicesPage = () => {
         {!showEmptyState && (
             <div className="flex items-center gap-3 w-full sm:w-auto">
                 <Button variant="outline" icon={Settings} onClick={() => navigate("/invoices/settings")} className="hidden md:flex">
-                    {t("invoices.settings", "Settings")}
+                    {t("invoices.settings")}
                 </Button>
                 <Button variant="primary" icon={Plus} onClick={handleCreateInvoice} className="flex-1 sm:flex-none justify-center">
-                    {t("invoices.create.button", "Create Invoice")}
+                    {t("invoices.create.button", { type: t("invoices.types.invoice") })}
                 </Button>
             </div>
         )}
@@ -423,13 +417,13 @@ const InvoicesPage = () => {
       {!showEmptyState && (
         <>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
-                <StatBox label="Total Revenue" value={stats?.totalRevenue} loading={statsLoading} icon={TrendingUp} color="blue" />
-                <StatBox label="Paid" value={stats?.paid} loading={statsLoading} icon={CheckCircle} color="green" />
-                <StatBox label="Pending" value={stats?.totalDue} loading={statsLoading} icon={Clock} color="yellow" />
-                <StatBox label="Overdue" value={stats?.overdue} loading={statsLoading} icon={XCircle} color="red" />
+                <StatBox label={t("invoices.stats.totalRevenue")} value={stats?.totalRevenue} loading={statsLoading} icon={TrendingUp} color="blue" />
+                <StatBox label={t("invoices.stats.paid")} value={stats?.paid} loading={statsLoading} icon={CheckCircle} color="green" />
+                <StatBox label={t("invoices.stats.pending")} value={stats?.totalDue} loading={statsLoading} icon={Clock} color="yellow" />
+                <StatBox label={t("invoices.stats.overdue")} value={stats?.overdue} loading={statsLoading} icon={XCircle} color="red" />
             </div>
 
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm shrink-0 flex flex-col gap-4">
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shrink-0 flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
                     <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 self-start md:self-auto">
                         <button 
@@ -438,7 +432,7 @@ const InvoicesPage = () => {
                             invoiceType === "client" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
                             }`}
                         >
-                            <Users size={16} /> Clients
+                            <Users size={16} /> {t("invoices.tabs.clients")}
                         </button>
                         <button 
                             onClick={() => setInvoiceType("partner")}
@@ -446,7 +440,7 @@ const InvoicesPage = () => {
                             invoiceType === "partner" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
                             }`}
                         >
-                            <Briefcase size={16} /> Partners
+                            <Briefcase size={16} /> {t("invoices.tabs.partners")}
                         </button>
                     </div>
 
@@ -454,16 +448,16 @@ const InvoicesPage = () => {
                         <Input 
                             className="w-full md:w-64"
                             icon={Search} 
-                            placeholder={t("common.searchPlaceholder", "Search by number or name...")} 
+                            placeholder={t("invoices.recipient.searchPlaceholder")} 
                             value={searchTerm} 
                             onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }} 
                         />
                         <Button variant="outline" icon={Filter} onClick={() => setShowFilters(!showFilters)} className={showFilters ? "bg-gray-100 dark:bg-gray-700" : ""}>
-                            {t("common.filters")}
+                            {t("invoices.filters.status")}
                         </Button>
                         {hasActiveFilters && (
                             <Button variant="ghost" icon={X} onClick={handleClearFilters} className="text-gray-500">
-                                {t("common.clear")}
+                                {t("invoices.filters.clear")}
                             </Button>
                         )}
                     </div>
@@ -476,15 +470,15 @@ const InvoicesPage = () => {
                             value={filters.status} 
                             onChange={(e) => { setPage(1); setFilters(p => ({...p, status: e.target.value})) }}
                             options={[
-                            { value: "all", label: t("common.allStatus") },
-                            { value: "draft", label: "Draft" },
-                            { value: "sent", label: "Sent" },
-                            { value: "paid", label: "Paid" },
-                            { value: "overdue", label: "Overdue" }
+                            { value: "all", label: t("invoices.status.all") },
+                            { value: "draft", label: t("invoices.status.draft") },
+                            { value: "sent", label: t("invoices.status.sent") },
+                            { value: "paid", label: t("invoices.status.paid") },
+                            { value: "overdue", label: t("invoices.status.overdue") }
                             ]}
                         />
-                        <Input type="date" label={t("common.startDate")} value={filters.startDate} onChange={(e) => setFilters(p => ({...p, startDate: e.target.value}))} />
-                        <Input type="date" label={t("common.endDate")} value={filters.endDate} onChange={(e) => setFilters(p => ({...p, endDate: e.target.value}))} />
+                        <Input type="date" label={t("invoices.filters.startDate")} value={filters.startDate} onChange={(e) => setFilters(p => ({...p, startDate: e.target.value}))} />
+                        <Input type="date" label={t("invoices.filters.endDate")} value={filters.endDate} onChange={(e) => setFilters(p => ({...p, endDate: e.target.value}))} />
                     </div>
                 )}
             </div>
@@ -496,7 +490,7 @@ const InvoicesPage = () => {
          {loading && !hasInitialLoad && (
             <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
-                <p className="text-gray-500 dark:text-gray-400">{t("common.loading")}</p>
+                <p className="text-gray-500 dark:text-gray-400">{t("invoices.create.loading")}</p>
             </div>
          )}
 
@@ -526,11 +520,11 @@ const InvoicesPage = () => {
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
                     <FolderOpen className="h-12 w-12 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("common.noResults", "No invoices found")}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("invoices.empty.noResults")}</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-                    {t("common.noResultsDesc", "We couldn't find any invoices matching your current filters.")}
+                    {t("invoices.empty.noResultsDesc")}
                 </p>
-                <Button onClick={handleClearFilters} variant="outline" icon={X}>{t("common.clearAllFilters")}</Button>
+                <Button onClick={handleClearFilters} variant="outline" icon={X}>{t("invoices.empty.clearAll")}</Button>
             </div>
          )}
 
@@ -541,12 +535,12 @@ const InvoicesPage = () => {
                         <FileText className="h-12 w-12 text-orange-500" strokeWidth={1.5} />
                     </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("invoices.empty.title", "No invoices yet")}</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("invoices.empty.title")}</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-                    {t("invoices.empty.description", "Create professional invoices, track payments, and manage your financials all in one place.")}
+                    {t("invoices.empty.description")}
                 </p>
                 <Button onClick={handleCreateInvoice} variant="primary" size="lg" icon={Plus} className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow">
-                    {t("invoices.create.button", "Create First Invoice")}
+                    {t("invoices.create.firstButton")}
                 </Button>
             </div>
          )}
@@ -554,7 +548,7 @@ const InvoicesPage = () => {
 
       {/* ================= MODALS ================= */}
       {selectedInvoice && isDetailModalOpen && (
-         <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} size="lg" title={`Invoice ${selectedInvoice.invoiceNumber}`}>
+         <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} size="lg" title={t("invoices.modal.title", { number: selectedInvoice.invoiceNumber })}>
             <div className="p-6 space-y-6">
                <div className="flex justify-between border-b pb-4 border-gray-100 dark:border-gray-700">
                   <div>
@@ -564,17 +558,17 @@ const InvoicesPage = () => {
                   </div>
                   <div className="text-right">
                     <StatusBadge status={selectedInvoice.status} size="lg" />
-                    <p className="text-xs text-gray-400 mt-2">Due: {formatDate(selectedInvoice.dueDate)}</p>
+                    <p className="text-xs text-gray-400 mt-2">{t("invoices.modal.due")} {formatDate(selectedInvoice.dueDate)}</p>
                   </div>
                </div>
                <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
                    <table className="w-full text-sm">
                       <thead className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                          <tr>
-                            <th className="p-3 text-left">Description</th>
-                            <th className="p-3 text-right">Qty</th>
-                            <th className="p-3 text-right">Price</th>
-                            <th className="p-3 text-right">Total</th>
+                            <th className="p-3 text-left">{t("invoices.modal.headers.description")}</th>
+                            <th className="p-3 text-right">{t("invoices.modal.headers.qty")}</th>
+                            <th className="p-3 text-right">{t("invoices.modal.headers.price")}</th>
+                            <th className="p-3 text-right">{t("invoices.modal.headers.total")}</th>
                          </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -592,34 +586,34 @@ const InvoicesPage = () => {
                <div className="flex justify-end pt-2">
                   <div className="w-64 space-y-2 text-right">
                      <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white">
-                         <span>Total:</span> <span>{formatCurrency(selectedInvoice.totalAmount)}</span>
+                         <span>{t("invoices.modal.total")}</span> <span>{formatCurrency(selectedInvoice.totalAmount)}</span>
                      </div>
                   </div>
                </div>
                <div className="flex justify-end gap-2 pt-6 border-t border-gray-100 dark:border-gray-700">
-                  <Button variant="outline" onClick={() => handleDownloadInvoice(selectedInvoice)} icon={Download}>{t("common.download", "PDF")}</Button>
+                  <Button variant="outline" onClick={() => handleDownloadInvoice(selectedInvoice)} icon={Download}>{t("invoices.actions.download")}</Button>
                   {selectedInvoice.status === 'draft' && (
-                    <Button variant="primary" onClick={() => { setIsDetailModalOpen(false); handleEditInvoice(selectedInvoice); }} icon={Edit}>{t("common.edit", "Edit")}</Button>
+                    <Button variant="primary" onClick={() => { setIsDetailModalOpen(false); handleEditInvoice(selectedInvoice); }} icon={Edit}>{t("invoices.actions.edit")}</Button>
                   )}
                </div>
             </div>
          </Modal>
       )}
 
-      <Modal isOpen={confirmationModal.isOpen} onClose={() => setConfirmationModal(p => ({ ...p, isOpen: false }))} title={t("common.confirmDelete")} size="md">
+      <Modal isOpen={confirmationModal.isOpen} onClose={() => setConfirmationModal(p => ({ ...p, isOpen: false }))} title={t("invoices.delete.title")} size="md">
         <div className="p-6">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-full p-2">
               <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("invoices.delete.title", "Delete Invoice")}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("invoices.delete.title")}</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  {t("invoices.delete.message", { name: confirmationModal.invoiceName, defaultValue: `Are you sure you want to delete ${confirmationModal.invoiceName}?` })}
+                  {t("invoices.delete.message", { name: confirmationModal.invoiceName })}
               </p>
               <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setConfirmationModal(p => ({ ...p, isOpen: false }))}>{t("common.cancel")}</Button>
-                <Button variant="danger" onClick={confirmationModal.onConfirm} icon={Trash2}>{t("common.delete")}</Button>
+                <Button variant="outline" onClick={() => setConfirmationModal(p => ({ ...p, isOpen: false }))}>{t("invoices.actions.cancel")}</Button>
+                <Button variant="danger" onClick={confirmationModal.onConfirm} icon={Trash2}>{t("invoices.actions.delete")}</Button>
               </div>
             </div>
           </div>

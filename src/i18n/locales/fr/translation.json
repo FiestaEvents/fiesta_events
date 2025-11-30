@@ -2798,57 +2798,96 @@
       }
     }
   },
-  "invoices": {
+    "invoices": {
     "title": "Factures",
-    "createClientInvoice": "Créer une Facture Client",
-    "createPartnerBill": "Créer une Facture Partenaire",
-    "editClientInvoice": "Modifier la Facture Client",
-    "editPartnerBill": "Modifier la Facture Partenaire",
-    "backToInvoices": "Retour aux Factures",
-    "priceSummary": "Récapitulatif des Prix",
-    "subtotal": "Sous-total",
-    "tax": "Taxe",
-    "discount": "Remise",
-    "total": "Total",
+    "subtitle": "Gérez vos factures et paiements {{type}}.",
+    "settings": "Paramètres",
     "types": {
       "invoice": "Facture",
-      "bill": "Facture"
+      "bill": "Note"
+    },
+    "tabs": {
+      "clients": "Clients",
+      "partners": "Partenaires"
+    },
+    "stats": {
+      "totalRevenue": "Revenu Total",
+      "paid": "Payé",
+      "pending": "En attente",
+      "overdue": "En retard"
     },
     "recipient": {
       "client": "Client",
       "partner": "Partenaire",
-      "searchPlaceholder": "Rechercher des {{recipient}}s...",
+      "searchPlaceholder": "Rechercher par numéro ou nom...",
       "selectRecipient": "Sélectionner {{recipient}}",
-      "chooseRecipient": "Choisissez à qui cette {{type}} est destinée",
-      "billTo": "Facturer à",
-      "payTo": "Payer à",
-      "noRecipients": "Aucun {recipient} trouvé",
-      "clientEvent": "Client Event",
-      "relatedEvent": "Related Event"
+      "noRecipients": "Aucun {{recipient}} trouvé"
     },
-    "errors": {
-      "loadInvoicesFailed": "Échec du chargement des factures. Veuillez réessayer.",
-      "loadDetailsFailed": "Échec du chargement des détails de la facture",
-      "saveFailed": "Échec de l'enregistrement de la facture"
+    "filters": {
+      "status": "Statut",
+      "startDate": "Date début",
+      "endDate": "Date fin",
+      "clear": "Effacer les filtres"
+    },
+    "status": {
+      "all": "Tous les statuts",
+      "draft": "Brouillon",
+      "sent": "Envoyé",
+      "paid": "Payé",
+      "overdue": "En retard"
+    },
+    "table": {
+      "headers": {
+        "invoiceNumber": "N° Facture",
+        "recipient": "Destinataire",
+        "dueDate": "Échéance",
+        "amount": "Montant",
+        "status": "Statut",
+        "actions": "Actions"
+      }
+    },
+    "pagination": {
+      "showing": "Affichage de {{start}} à {{end}} sur {{total}} résultats",
+      "perPage": "Par page :"
+    },
+    "actions": {
+      "view": "Voir",
+      "edit": "Modifier",
+      "download": "Télécharger",
+      "delete": "Supprimer",
+      "cancel": "Annuler",
+      "confirm": "Confirmer"
+    },
+    "create": {
+      "button": "Créer {{type}}",
+      "firstButton": "Créer la première facture",
+      "loading": "Chargement...",
+      "success": "Facture créée avec succès"
+    },
+    "empty": {
+      "noResults": "Aucune facture trouvée",
+      "noResultsDesc": "Nous n'avons trouvé aucune facture correspondant à vos filtres actuels.",
+      "clearAll": "Effacer tous les filtres",
+      "title": "Pas encore de factures",
+      "description": "Créez des factures professionnelles, suivez les paiements et gérez vos finances au même endroit."
+    },
+    "modal": {
+      "title": "Facture {{number}}",
+      "due": "Échéance :",
+      "total": "Total :",
+      "headers": {
+        "description": "Description",
+        "qty": "Qté",
+        "price": "Prix",
+        "total": "Total"
+      }
     },
     "delete": {
+      "title": "Supprimer la facture",
+      "message": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
+      "loading": "Suppression de la facture...",
       "success": "{{invoiceName}} supprimée avec succès",
       "error": "Échec de la suppression de {{invoiceName}}"
-    },
-    "cancel": {
-      "loading": "Annulation de la facture...",
-      "success": "Facture annulée avec succès",
-      "error": "Échec de l'annulation de la facture"
-    },
-    "send": {
-      "loading": "Envoi de la facture...",
-      "success": "Facture envoyée avec succès",
-      "error": "Échec de l'envoi de la facture"
-    },
-    "markAsPaid": {
-      "loading": "Marquage de la facture comme payée...",
-      "success": "Facture marquée comme payée",
-      "error": "Échec du marquage de la facture comme payée"
     },
     "download": {
       "generating": "Génération du PDF... Veuillez patienter",
@@ -2857,118 +2896,10 @@
         "generic": "Échec du téléchargement de la facture"
       }
     },
-    "status": {
-      "draft": "Brouillon",
-      "sent": "Envoyée",
-      "paid": "Payée"
-    },
-    "table": {
-      "headers": {
-        "invoiceNumber": "Facture #",
-        "dueDate": "Date d'Échéance",
-        "amount": "Montant",
-        "status": "Statut"
-      }
-    },
-    "create": {
-      "button": "Créer une {{type}}",
-      "loading": "Loading",
-      "error": "Error"
-    },
-    "actions": {
-      "previous": "Précédent",
-      "continue": "Continuer",
-      "create": "Créer {{type}}",
-      "update": "Modifier {{type}}"
-    },
-    "steps": {
-      "recipient": "Destinataire",
-      "itemsPricing": "Articles & Prix",
-      "details": "Détails",
-      "review": "Vérification"
-    },
-    "stepDescriptions": {
-      "selectRecipient": "Sélectionner {{recipient}}",
-      "addServices": "Ajouter services et articles",
-      "invoiceDetails": "Détails de la facture",
-      "finalReview": "Vérification finale"
-    },
-    "items": {
-      "title": "Articles de Facture",
-      "description": "Ajouter services et articles avec prix",
-      "addItem": "Ajouter Article",
-      "descriptionLabel": "Description",
-      "descriptionPlaceholder": "Entrer la description du service",
-      "quantity": "Quantité",
-      "rate": "Taux",
-      "amount": "Montant",
-      "itemTotal": "Total Article",
-      "remove": "Supprimer",
-      "atLeastOne": "Au moins un article est requis",
-      "descriptionRequired": "La description est requise",
-      "quantityPositive": "La quantité doit être supérieure à 0",
-      "rateNonNegative": "Le taux ne peut pas être négatif"
-    },
-    "events": {
-      "linkEvent": "Lier à un Événement (Optionnel)",
-      "linkDescription": "Connecter à un événement pour pré-remplir les articles",
-      "selectEvent": "Sélectionner un Événement",
-      "noEvent": "Aucun événement sélectionné - Ajouter articles manuellement",
-      "noEvents": "Aucun événement trouvé",
-      "noEventsDescription": "Aucun événement trouvé pour ce {{recipient}}. Vous pouvez ajouter des articles manuellement à l'étape suivante."
-    },
-    "dates": {
-      "title": "Dates de Facture",
-      "description": "Définir dates d'émission et d'échéance",
-      "issueDate": "Date d'Émission",
-      "dueDate": "Date d'Échéance",
-      "issueDateRequired": "La date d'émission est requise",
-      "dueDateRequired": "La date d'échéance est requise",
-      "dueDateAfterIssue": "La date d'échéance doit être après la date d'émission"
-    },
-    "payment": {
-      "title": "Paramètres de Paiement",
-      "description": "Configurer méthode de paiement et devise",
-      "currency": "Devise",
-      "paymentMethod": "Méthode de Paiement",
-      "status": "Statut"
-    },
-    "additionalInfo": {
-      "title": "Informations Supplémentaires",
-      "description": "Ajouter notes et conditions",
-      "notes": "Notes",
-      "notesPlaceholder": "Ajouter des notes supplémentaires...",
-      "terms": "Conditions Générales",
-      "termsPlaceholder": "Conditions de paiement..."
-    },
-    "review": {
-      "title": "Vérifier & Confirmer",
-      "description": "Veuillez vérifier tous les détails avant de {{action} la {{type}}",
-      "recipientInfo": "Informations {recipient}",
-      "itemsSummary": "Récapitulatif des Articles ({{count}})",
-      "finalAmount": "Montant Final"
-    },
-    "success": {
-      "success": "Facture créée avec succès"
-    },
-    "update": {
-      "success": "Facture mise à jour avec succès",
-      "loading": "Loading",
-      "error": "Error"
-    },
-    "validation": {
-      "selectClient": "Veuillez sélectionner un client",
-      "selectPartner": "Veuillez sélectionner un partenaire",
-      "fixErrors": "Veuillez corriger les erreurs avant de continuer"
-    },
-    "taxAndDiscount": {
-      "title": "Title",
-      "taxRate": "Tax Rate",
-      "type": "Type",
-      "fixed": "Fixed",
-      "percentage": "Percentage"
-    },
-    "settings": "Settings"
+    "errors": {
+      "loadInvoicesFailed": "Échec du chargement des factures. Veuillez réessayer.",
+      "emptyFile": "Le fichier est vide ou corrompu"
+    }
   },
   "invoiceCustomization": {
     "title": "Design de la Facture",

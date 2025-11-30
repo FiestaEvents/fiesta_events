@@ -469,7 +469,7 @@ const PaymentsList = () => {
             <select
               value={filters.limit}
               onChange={(e) => { updateFilter('limit', Number(e.target.value)); }}
-              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
             >
               {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
             </select>
@@ -555,7 +555,7 @@ const PaymentsList = () => {
 
       {/* 3. Filters (Hidden if empty) */}
       {!showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4 shrink-0">
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4 shrink-0">
             <Input className="flex-1" icon={Search} placeholder={t('payments.searchPlaceholder')} value={filters.search} onChange={(e) => updateFilter('search', e.target.value)} />
             <div className="sm:w-40">
             <Select value={filters.type} onChange={(e) => updateFilter('type', e.target.value)} options={[{ value: "all", label: "All Types" }, { value: "income", label: "Income" }, { value: "expense", label: "Expense" }]} />

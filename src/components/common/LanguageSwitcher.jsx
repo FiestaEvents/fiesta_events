@@ -10,7 +10,7 @@ const LanguageSwitcher = () => {
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'ar', name: 'العربية', flag: '🇹🇳' }, // Using Tunisia flag based on context, or use 🇸🇦
+    { code: 'ar', name: 'العربية', flag: '🇹🇳' },
   ];
 
   useEffect(() => {

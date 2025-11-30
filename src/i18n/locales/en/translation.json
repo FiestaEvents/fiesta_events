@@ -2512,56 +2512,96 @@
       "visitMarketplace": "Visit Marketplace"
     }
   },
-  "invoices": {
+   "invoices": {
     "title": "Invoices",
-    "createClientInvoice": "Create Client Invoice",
-    "createPartnerBill": "Create Partner Bill",
-    "editClientInvoice": "Edit Client Invoice",
-    "editPartnerBill": "Edit Partner Bill",
-    "backToInvoices": "Back to Invoices",
-    "priceSummary": "Price Summary",
-    "subtotal": "Subtotal",
-    "tax": "Tax",
-    "discount": "Discount",
-    "total": "Total",
+    "subtitle": "Manage your {{type}} invoices and payments.",
+    "settings": "Settings",
     "types": {
       "invoice": "Invoice",
       "bill": "Bill"
     },
+    "tabs": {
+      "clients": "Clients",
+      "partners": "Partners"
+    },
+    "stats": {
+      "totalRevenue": "Total Revenue",
+      "paid": "Paid",
+      "pending": "Pending",
+      "overdue": "Overdue"
+    },
     "recipient": {
       "client": "Client",
       "partner": "Partner",
-      "searchPlaceholder": "Search {{recipient}}s...",
+      "searchPlaceholder": "Search by number or name...",
       "selectRecipient": "Select {{recipient}}",
-      "billTo": "Bill To",
-      "payTo": "Pay To",
-      "noRecipients": "No {{recipient}}s found",
-      "chooseRecipient": "Choose who this {{type}} is for",
-      "clientEvent": "Client Event",
-      "relatedEvent": "Related Event"
+      "noRecipients": "No {{recipient}}s found"
     },
-    "errors": {
-      "loadInvoicesFailed": "Failed to load invoices. Please try again.",
-      "loadDetailsFailed": "Failed to load invoice details"
+    "filters": {
+      "status": "Status",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "clear": "Clear Filters"
+    },
+    "status": {
+      "all": "All Status",
+      "draft": "Draft",
+      "sent": "Sent",
+      "paid": "Paid",
+      "overdue": "Overdue"
+    },
+    "table": {
+      "headers": {
+        "invoiceNumber": "Invoice #",
+        "recipient": "Recipient",
+        "dueDate": "Due Date",
+        "amount": "Amount",
+        "status": "Status",
+        "actions": "Actions"
+      }
+    },
+    "pagination": {
+      "showing": "Showing {{start}} to {{end}} of {{total}} results",
+      "perPage": "Per page:"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "download": "Download",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "create": {
+      "button": "Create {{type}}",
+      "firstButton": "Create First Invoice",
+      "loading": "Loading...",
+      "success": "Invoice created successfully"
+    },
+    "empty": {
+      "noResults": "No invoices found",
+      "noResultsDesc": "We couldn't find any invoices matching your current filters.",
+      "clearAll": "Clear All Filters",
+      "title": "No invoices yet",
+      "description": "Create professional invoices, track payments, and manage your financials all in one place."
+    },
+    "modal": {
+      "title": "Invoice {{number}}",
+      "due": "Due:",
+      "total": "Total:",
+      "headers": {
+        "description": "Description",
+        "qty": "Qty",
+        "price": "Price",
+        "total": "Total"
+      }
     },
     "delete": {
+      "title": "Delete Invoice",
+      "message": "Are you sure you want to delete {{name}}? This action cannot be undone.",
+      "loading": "Deleting invoice...",
       "success": "{{invoiceName}} deleted successfully",
       "error": "Failed to delete {{invoiceName}}"
-    },
-    "cancel": {
-      "loading": "Cancelling invoice...",
-      "success": "Invoice cancelled successfully",
-      "error": "Failed to cancel invoice"
-    },
-    "send": {
-      "loading": "Sending invoice...",
-      "success": "Invoice sent successfully",
-      "error": "Failed to send invoice"
-    },
-    "markAsPaid": {
-      "loading": "Marking invoice as paid...",
-      "success": "Invoice marked as paid",
-      "error": "Failed to mark invoice as paid"
     },
     "download": {
       "generating": "Generating PDF... Please wait",
@@ -2570,116 +2610,10 @@
         "generic": "Failed to download invoice"
       }
     },
-    "status": {
-      "draft": "Draft",
-      "sent": "Sent",
-      "paid": "Paid"
-    },
-    "table": {
-      "headers": {
-        "invoiceNumber": "Invoice #",
-        "dueDate": "Due Date",
-        "amount": "Amount",
-        "status": "Status"
-      }
-    },
-    "create": {
-      "button": "Create {{type}}",
-      "success": "Invoice created successfully",
-      "loading": "Loading",
-      "error": "Error"
-    },
-    "update": {
-      "success": "Invoice updated successfully",
-      "loading": "Loading",
-      "error": "Error"
-    },
-    "actions": {
-      "previous": "Previous",
-      "continue": "Continue",
-      "create": "Create {{type}}",
-      "update": "Update {{type}}"
-    },
-    "steps": {
-      "recipient": "Recipient",
-      "itemsPricing": "Items & Pricing",
-      "details": "Details",
-      "review": "Review"
-    },
-    "stepDescriptions": {
-      "selectRecipient": "Select {{recipient}}",
-      "addServices": "Add services and items",
-      "invoiceDetails": "Invoice details",
-      "finalReview": "Final review"
-    },
-    "items": {
-      "title": "Invoice Items",
-      "description": "Add services and items with pricing",
-      "addItem": "Add Item",
-      "descriptionLabel": "Description",
-      "descriptionPlaceholder": "Enter service description",
-      "quantity": "Quantity",
-      "rate": "Rate",
-      "amount": "Amount",
-      "itemTotal": "Item Total",
-      "remove": "Remove",
-      "atLeastOne": "At least one item is required",
-      "descriptionRequired": "Description is required",
-      "quantityPositive": "Quantity must be greater than 0",
-      "rateNonNegative": "Rate cannot be negative"
-    },
-    "events": {
-      "linkEvent": "Link to Event (Optional)",
-      "linkDescription": "Connect to an event to auto-populate items",
-      "selectEvent": "Select Event",
-      "noEvent": "No event selected - Add items manually",
-      "noEvents": "No events found",
-      "noEventsDescription": "No events found for this {{recipient}}. You can add items manually in the next step."
-    },
-    "dates": {
-      "title": "Invoice Dates",
-      "description": "Set issue and due dates",
-      "issueDate": "Issue Date",
-      "dueDate": "Due Date",
-      "issueDateRequired": "Issue date is required",
-      "dueDateRequired": "Due date is required",
-      "dueDateAfterIssue": "Due date must be after issue date"
-    },
-    "payment": {
-      "title": "Payment Settings",
-      "description": "Configure payment method and currency",
-      "currency": "Currency",
-      "paymentMethod": "Payment Method",
-      "status": "Status"
-    },
-    "additionalInfo": {
-      "title": "Additional Information",
-      "description": "Add notes and terms",
-      "notes": "Notes",
-      "notesPlaceholder": "Add any additional notes...",
-      "terms": "Terms & Conditions",
-      "termsPlaceholder": "Payment terms and conditions..."
-    },
-    "review": {
-      "title": "Review & Confirm",
-      "description": "Please review all details before {{action}} the {{type}}",
-      "recipientInfo": "{{recipient}} Information",
-      "itemsSummary": "Items Summary ({{count}})",
-      "finalAmount": "Final Amount"
-    },
-    "validation": {
-      "selectClient": "Please select a client",
-      "selectPartner": "Please select a partner",
-      "fixErrors": "Please fix the errors before continuing"
-    },
-    "taxAndDiscount": {
-      "title": "Title",
-      "taxRate": "Tax Rate",
-      "type": "Type",
-      "fixed": "Fixed",
-      "percentage": "Percentage"
-    },
-    "settings": "Settings"
+    "errors": {
+      "loadInvoicesFailed": "Failed to load invoices. Please try again.",
+      "emptyFile": "File is empty or corrupted"
+    }
   },
   "invoiceCustomization": {
     "title": "Invoice Customization",

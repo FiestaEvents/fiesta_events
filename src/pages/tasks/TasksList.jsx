@@ -771,7 +771,7 @@ const handleDragEnd = async (result) => {
                 updateFilter("limit", Number(e.target.value));
                 updateFilter("page", 1);
               }}
-              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
             >
               {[10, 25, 50, 100].map((size) => (
                 <option key={size} value={size}>
@@ -810,49 +810,58 @@ const handleDragEnd = async (result) => {
 
       {!showEmptyState && (
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          {!showArchived && (
-            <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
-              <button
-                onClick={() => setViewMode(VIEW_MODES.LIST)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  viewMode === VIEW_MODES.LIST
-                    ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
-                }`}
-              >
-                <ListIcon className="w-4 h-4" />
-                {t("tasks.view.list", "List")}
-              </button>
-              <button
-                onClick={() => setViewMode(VIEW_MODES.KANBAN)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  viewMode === VIEW_MODES.KANBAN
-                    ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
-                }`}
-              >
-                <KanbanIcon className="w-4 h-4" />
-                {t("tasks.view.kanban", "Kanban")}
-              </button>
-            </div>
-          )}
-
-          <Button
-            variant="outline"
-            onClick={() => setShowArchived(!showArchived)}
-            icon={showArchived ? LayoutGrid : Archive}
-          >
-            {showArchived ? t("tasks.activeTasks") : t("tasks.archived")}
-          </Button>
-
-          {!showArchived && (
+          {showArchived ? (
+            // Return button when viewing archived tasks
             <Button
-              variant="primary"
-              icon={Plus}
-              onClick={() => openTaskForm()}
+              variant="danger"
+              onClick={() => setShowArchived(false)}
+              icon={X}
             >
-              {t("tasks.createTask")}
+              {t("tasks.returnToActive", "Return to Active Tasks")}
             </Button>
+          ) : (
+            <>
+              <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                <button
+                  onClick={() => setViewMode(VIEW_MODES.LIST)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === VIEW_MODES.LIST
+                      ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
+                  }`}
+                >
+                  <ListIcon className="w-4 h-4" />
+                  {t("tasks.view.list", "List")}
+                </button>
+                <button
+                  onClick={() => setViewMode(VIEW_MODES.KANBAN)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === VIEW_MODES.KANBAN
+                      ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
+                  }`}
+                >
+                  <KanbanIcon className=" w-4 h-4" />
+                  {t("tasks.view.kanban", "Kanban")}
+                </button>
+              </div>
+
+              <Button
+                variant="outline"
+                onClick={() => setShowArchived(true)}
+                icon={Archive}
+              >
+                {t("tasks.archived")}
+              </Button>
+
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => openTaskForm()}
+              >
+                {t("tasks.createTask")}
+              </Button>
+            </>
           )}
         </div>
       )}
@@ -888,7 +897,7 @@ const handleDragEnd = async (result) => {
     if (!hasInitialLoad || showEmptyState) return null;
 
     return (
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4 shrink-0">
+      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4 shrink-0">
         <Input
           className="flex-1"
           icon={Search}

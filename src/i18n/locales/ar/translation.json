@@ -2868,174 +2868,108 @@
       }
     }
   },
-  "invoices": {
+   "invoices": {
     "title": "الفواتير",
-    "createClientInvoice": "إنشاء فاتورة عميل",
-    "createPartnerBill": "إنشاء فاتورة شريك",
-    "editClientInvoice": "تعديل فاتورة العميل",
-    "editPartnerBill": "تعديل فاتورة الشريك",
-    "backToInvoices": "العودة إلى الفواتير",
-    "priceSummary": "ملخص الأسعار",
-    "subtotal": "المجموع الجزئي",
-    "tax": "الضريبة",
-    "discount": "الخصم",
-    "total": "المجموع الكلي",
+    "subtitle": "إدارة فواتير ومدفوعات {{type}} الخاصة بك.",
+    "settings": "الإعدادات",
     "types": {
       "invoice": "فاتورة",
-      "bill": "فاتورة"
+      "bill": "سند"
+    },
+    "tabs": {
+      "clients": "العملاء",
+      "partners": "الشركاء"
+    },
+    "stats": {
+      "totalRevenue": "إجمالي الإيرادات",
+      "paid": "مدفوعة",
+      "pending": "معلقة",
+      "overdue": "متأخرة"
     },
     "recipient": {
-      "client": "العميل",
-      "partner": "الشريك",
-      "searchPlaceholder": "ابحث في {{recipient}}...",
+      "client": "عميل",
+      "partner": "شريك",
+      "searchPlaceholder": "البحث برقم الفاتورة أو الاسم...",
       "selectRecipient": "اختر {{recipient}}",
-      "chooseRecipient": "اختر لمن هذه {{type}}",
-      "billTo": "الفاتورة إلى",
-      "payTo": "الدفع إلى",
-      "noRecipients": "لم يتم العثور على {{recipient}}",
-      "clientEvent": "Client Event",
-      "relatedEvent": "Related Event"
+      "noRecipients": "لم يتم العثور على {{recipient}}"
     },
-    "errors": {
-      "loadInvoicesFailed": "فشل في تحميل الفواتير. يرجى المحاولة مرة أخرى.",
-      "loadDetailsFailed": "فشل في تحميل تفاصيل الفاتورة"
-    },
-    "delete": {
-      "success": "تم حذف {{invoiceName}} بنجاح",
-      "error": "فشل في حذف {{invoiceName}}"
-    },
-    "cancel": {
-      "loading": "جاري إلغاء الفاتورة...",
-      "success": "تم إلغاء الفاتورة بنجاح",
-      "error": "فشل في إلغاء الفاتورة"
-    },
-    "send": {
-      "loading": "جاري إرسال الفاتورة...",
-      "success": "تم إرسال الفاتورة بنجاح",
-      "error": "فشل في إرسال الفاتورة"
-    },
-    "markAsPaid": {
-      "loading": "جاري تعليم الفاتورة كمدفوعة...",
-      "success": "تم تعليم الفاتورة كمدفوعة",
-      "error": "فشل في تعليم الفاتورة كمدفوعة"
-    },
-    "download": {
-      "generating": "جاري إنشاء PDF... يرجى الانتظار",
-      "success": "تم تحميل الفاتورة {{invoiceNumber}} بنجاح",
-      "errors": {
-        "generic": "فشل في تحميل الفاتورة"
-      }
+    "filters": {
+      "status": "الحالة",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "clear": "مسح التصفية"
     },
     "status": {
+      "all": "جميع الحالات",
       "draft": "مسودة",
       "sent": "مرسلة",
-      "paid": "مدفوعة"
+      "paid": "مدفوعة",
+      "overdue": "متأخرة"
     },
     "table": {
       "headers": {
         "invoiceNumber": "رقم الفاتورة",
+        "recipient": "المستلم",
         "dueDate": "تاريخ الاستحقاق",
         "amount": "المبلغ",
-        "status": "الحالة"
+        "status": "الحالة",
+        "actions": "إجراءات"
       }
+    },
+    "pagination": {
+      "showing": "عرض {{start}} إلى {{end}} من {{total}} نتيجة",
+      "perPage": "لكل صفحة:"
+    },
+    "actions": {
+      "view": "عرض",
+      "edit": "تعديل",
+      "download": "تحميل",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "confirm": "تأكيد"
     },
     "create": {
       "button": "إنشاء {{type}}",
-      "success": "تم إنشاء الفاتورة بنجاح",
-      "loading": "Loading",
-      "error": "Error"
+      "firstButton": "إنشاء أول فاتورة",
+      "loading": "جاري التحميل...",
+      "success": "تم إنشاء الفاتورة بنجاح"
     },
-    "update": {
-      "success": "تم تحديث الفاتورة بنجاح",
-      "loading": "Loading",
-      "error": "Error"
+    "empty": {
+      "noResults": "لم يتم العثور على فواتير",
+      "noResultsDesc": "لم نتمكن من العثور على أي فواتير تطابق فلاتر البحث الحالية.",
+      "clearAll": "مسح جميع الفلاتر",
+      "title": "لا توجد فواتير بعد",
+      "description": "أنشئ فواتير احترافية، وتابع المدفوعات، وأدر أموالك في مكان واحد."
     },
-    "actions": {
-      "previous": "السابق",
-      "continue": "متابعة",
-      "create": "إنشاء {{type}}",
-      "update": "تحديث {{type}}"
+    "modal": {
+      "title": "فاتورة {{number}}",
+      "due": "الاستحقاق:",
+      "total": "الإجمالي:",
+      "headers": {
+        "description": "الوصف",
+        "qty": "الكمية",
+        "price": "السعر",
+        "total": "الإجمالي"
+      }
     },
-    "steps": {
-      "recipient": "المستلم",
-      "itemsPricing": "العناصر والأسعار",
-      "details": "التفاصيل",
-      "review": "مراجعة"
+    "delete": {
+      "title": "حذف الفاتورة",
+      "message": "هل أنت متأكد أنك تريد حذف {{name}}؟ لا يمكن التراجع عن هذا الإجراء.",
+      "loading": "جاري حذف الفاتورة...",
+      "success": "تم حذف {{invoiceName}} بنجاح",
+      "error": "فشل حذف {{invoiceName}}"
     },
-    "stepDescriptions": {
-      "selectRecipient": "اختر {{recipient}}",
-      "addServices": "إضافة الخدمات والعناصر",
-      "invoiceDetails": "تفاصيل الفاتورة",
-      "finalReview": "المراجعة النهائية"
+    "download": {
+      "generating": "جاري إنشاء ملف PDF... يرجى الانتظار",
+      "success": "تم تحميل الفاتورة {{invoiceNumber}} بنجاح",
+      "errors": {
+        "generic": "فشل تحميل الفاتورة"
+      }
     },
-    "items": {
-      "title": "عناصر الفاتورة",
-      "description": "إضافة الخدمات والعناصر مع الأسعار",
-      "addItem": "إضافة عنصر",
-      "descriptionLabel": "الوصف",
-      "descriptionPlaceholder": "أدخل وصف الخدمة",
-      "quantity": "الكمية",
-      "rate": "السعر",
-      "amount": "المبلغ",
-      "itemTotal": "المجموع للعنصر",
-      "remove": "إزالة",
-      "atLeastOne": "مطلوب عنصر واحد على الأقل",
-      "descriptionRequired": "الوصف مطلوب",
-      "quantityPositive": "يجب أن تكون الكمية أكبر من 0",
-      "rateNonNegative": "لا يمكن أن يكون السعر سالباً"
-    },
-    "events": {
-      "linkEvent": "ربط بحدث (اختياري)",
-      "linkDescription": "الاتصال بحدث لملء العناصر تلقائياً",
-      "selectEvent": "اختر حدث",
-      "noEvent": "لم يتم اختيار حدث - أضف العناصر يدوياً",
-      "noEvents": "لم يتم العثور على أحداث",
-      "noEventsDescription": "لم يتم العثور على أحداث لهذا {{recipient}}. يمكنك إضافة العناصر يدوياً في الخطوة التالية."
-    },
-    "dates": {
-      "title": "تواريخ الفاتورة",
-      "description": "تعيين تاريخ الإصدار وتاريخ الاستحقاق",
-      "issueDate": "تاريخ الإصدار",
-      "dueDate": "تاريخ الاستحقاق",
-      "issueDateRequired": "تاريخ الإصدار مطلوب",
-      "dueDateRequired": "تاريخ الاستحقاق مطلوب",
-      "dueDateAfterIssue": "يجب أن يكون تاريخ الاستحقاق بعد تاريخ الإصدار"
-    },
-    "payment": {
-      "title": "إعدادات الدفع",
-      "description": "تكوين طريقة الدفع والعملة",
-      "currency": "العملة",
-      "paymentMethod": "طريقة الدفع",
-      "status": "الحالة"
-    },
-    "additionalInfo": {
-      "title": "معلومات إضافية",
-      "description": "إضافة ملاحظات وشروط",
-      "notes": "ملاحظات",
-      "notesPlaceholder": "أضف أي ملاحظات إضافية...",
-      "terms": "الشروط والأحكام",
-      "termsPlaceholder": "شروط الدفع..."
-    },
-    "review": {
-      "title": "مراجعة وتأكيد",
-      "description": "يرجى مراجعة جميع التفاصيل قبل {{action}} {{type}}",
-      "recipientInfo": "معلومات {{recipient}}",
-      "itemsSummary": "ملخص العناصر ({{count}})",
-      "finalAmount": "المبلغ النهائي"
-    },
-    "validation": {
-      "selectClient": "يرجى اختيار عميل",
-      "selectPartner": "يرجى اختيار شريك",
-      "fixErrors": "يرجى تصحيح الأخطاء قبل المتابعة"
-    },
-    "taxAndDiscount": {
-      "title": "Title",
-      "taxRate": "Tax Rate",
-      "type": "Type",
-      "fixed": "Fixed",
-      "percentage": "Percentage"
-    },
-    "settings": "Settings"
+    "errors": {
+      "loadInvoicesFailed": "فشل تحميل الفواتير. يرجى المحاولة مرة أخرى.",
+      "emptyFile": "الملف فارغ أو تالف"
+    }
   },
   "invoiceCustomization": {
     "title": "تصميم الفاتورة",

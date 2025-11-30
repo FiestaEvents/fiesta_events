@@ -15,7 +15,7 @@ import {
   AlertTriangle,
   Bell,
   Calendar,
-  FolderOpen, // ✅ Added for No Results
+  FolderOpen,
 } from "lucide-react";
 
 // ✅ API & Services
@@ -474,7 +474,7 @@ const RemindersList = () => {
                 setLimit(Number(e.target.value));
                 setPage(1);
               }}
-              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
             >
               {[10, 25, 50, 100].map((size) => (
                 <option key={size} value={size}>
@@ -518,7 +518,7 @@ const RemindersList = () => {
 
       {/* Filters (Hide in pure empty state) */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4 shrink-0">
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4 shrink-0">
           <Input
             className="flex-1"
             icon={Search}

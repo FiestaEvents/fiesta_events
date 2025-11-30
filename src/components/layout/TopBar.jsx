@@ -459,7 +459,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
   return (
     <header
-      className={`fixed top-0 ${isRTL ? "left-0 right-0" : "left-0 right-0"} h-16 bg-white/95 backdrop-blur-md border-b border-gray-200 z-50 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/95 dark:border-gray-800`}
+      className={`fixed top-0 ${isRTL ? "left-0 right-0" : "left-0 right-0"} h-16 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm z-50 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/95 dark:border-gray-800`}
     >
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
         {/* LEFT SECTION */}
@@ -825,7 +825,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                   dir={isRTL ? "rtl" : "ltr"}
                 >
                   {/* Profile Section */}
-                  <div className="px-4 py-4 bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-900/10 border-b border-gray-200 dark:border-gray-700">
+                  <div className="px-4 py-4 bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-900/10">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
                         <span className="text-white font-bold">
@@ -858,7 +858,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                   </div>
 
                   {/* Logout */}
-                  <div className="border-t border-gray-200 dark:border-gray-700 py-2">
+                  <div>
                     <button
                       onClick={() => {
                         logout();

@@ -295,7 +295,7 @@ const ContractListPage = () => {
             <select
               value={limit}
               onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
-              className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
+              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
             >
               {[10, 25, 50, 100].map((size) => (
                 <option key={size} value={size}>{size}</option>
@@ -432,7 +432,7 @@ const ContractListPage = () => {
         <>
             <StatsCards stats={stats} t={t} />
 
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shrink-0">
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shrink-0">
                 <div className="flex flex-col sm:flex-row gap-4">
                 <Input className="flex-1" icon={Search} placeholder={t("contracts.list.searchPlaceholder")} value={search} onChange={(e) => { setPage(1); setSearch(e.target.value); }} />
                 <div className="sm:w-48">
