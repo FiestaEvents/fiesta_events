@@ -29,9 +29,10 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { t } = useTranslation();
-  const { showSuccess, apiError, showError } = useToast();
+  const { apiError, showError } = useToast();
 
   const isEditMode = !!payment || Boolean(id);
+  const isModalMode = Boolean(onSuccess && onCancel);
 
   // State
   const [currentStep, setCurrentStep] = useState(1);
@@ -48,7 +49,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     paidDate: "",
     event: "",
     client: "",
-    fees: { processingFee: "0", platformFee: "0", otherFees: "0" },
+    fees: { processingFee: "", platformFee: "", otherFees: "" },
   });
 
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
 
   // --- Helper: Load Payment Data ---
   const loadPaymentData = useCallback((data) => {
+    if (!data) return;
     setFormData({
       type: data.type || "income",
       amount: data.amount?.toString() || "",
@@ -72,9 +74,9 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
       event: data.event?._id || data.event || "",
       client: data.client?._id || data.client || "",
       fees: {
-        processingFee: data.fees?.processingFee?.toString() || "0",
-        platformFee: data.fees?.platformFee?.toString() || "0",
-        otherFees: data.fees?.otherFees?.toString() || "0",
+        processingFee: data.fees?.processingFee?.toString() || "",
+        platformFee: data.fees?.platformFee?.toString() || "",
+        otherFees: data.fees?.otherFees?.toString() || "",
       },
     });
   }, []);
@@ -117,7 +119,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             loadPaymentData(res.payment || res);
           } catch (err) {
             apiError(err, t('payments.notifications.loadError'));
-            navigate("/payments");
+            if (!isModalMode) navigate("/payments");
           } finally {
             setLoadingData(false);
           }
@@ -125,7 +127,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
       }
     };
     initForm();
-  }, [isEditMode, payment, id, loadPaymentData, apiError, t, navigate]);
+  }, [isEditMode, payment, id, loadPaymentData, apiError, t, navigate, isModalMode]);
 
   useEffect(() => {
     if (formData.client) {
@@ -184,12 +186,26 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) setCurrentStep(p => Math.min(p + 1, totalSteps));
-    else showError(t('payments.form.errors.fixErrors'));
+  // Navigation Logic
+  const handleNext = (e) => {
+    if (e) e.preventDefault();
+    if (validateStep(currentStep)) {
+        setCurrentStep(p => Math.min(p + 1, totalSteps));
+    } else {
+        showError(t('payments.form.errors.fixErrors'));
+    }
   };
 
-  // ✅ Reusable Submission Logic
+  const handlePrevious = (e) => {
+    if (e) e.preventDefault();
+    setCurrentStep(p => Math.max(p - 1, 1));
+  };
+  
+  const handleStepClick = (step) => {
+      if (step < currentStep || validateStep(currentStep)) setCurrentStep(step);
+  };
+
+  // Submit Logic
   const submitData = async () => {
     try {
       setLoading(true);
@@ -213,12 +229,11 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
 
       if (isEditMode) {
         await paymentService.update(payment?._id || id, payload);
-        showSuccess(t('payments.notifications.updateSuccess'));
       } else {
         await paymentService.create(payload);
-        showSuccess(t('payments.notifications.createSuccess'));
       }
 
+      // Parent handles success UI
       if (onSuccess) onSuccess();
       else navigate("/payments");
 
@@ -233,7 +248,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     e.preventDefault();
     // If not on last step, treat as Next
     if (currentStep < totalSteps) {
-      handleNext();
+      handleNext(e);
       return;
     }
     // If on last step, validate and submit
@@ -241,12 +256,10 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     await submitData();
   };
 
-  // ✅ Quick Update Handler
   const handleQuickUpdate = async (e) => {
     e.preventDefault();
-    // Ensure basic requirements are met (Step 1 holds mandatory fields)
     if (!validateStep(1)) {
-      setCurrentStep(1); // Jump back to step 1 if invalid
+      setCurrentStep(1); 
       return showError(t('payments.form.errors.fixErrors'));
     }
     await submitData();
@@ -263,10 +276,20 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   if (loadingData) return <div className="flex h-96 justify-center items-center"><LoadingSpinner size="lg" /></div>;
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+    <div className="p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-sm">
       
+      {!isModalMode && (
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {isEditMode ? t('payments.form.editTitle') : t('payments.form.createTitle')}
+          </h1>
+        </div>
+      )}
+
       {/* Step Indicator */}
       <div className="flex justify-between mb-8 px-4">
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-100 dark:bg-gray-700 -z-10" />
+        
         {steps.map((step, idx) => {
           const isActive = step.number === currentStep;
           const isDone = step.number < currentStep;
@@ -282,7 +305,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                       ? "bg-green-500 border-green-500 text-white" 
                       : "bg-white border-gray-300 text-gray-400 dark:bg-gray-700 dark:border-gray-600"
                 }`}
-                onClick={() => { if (isDone) setCurrentStep(step.number); }}
+                onClick={() => handleStepClick(step.number)}
               >
                 {isDone ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
               </div>
@@ -301,155 +324,180 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* STEP 1: Basic Info */}
-        {currentStep === 1 && (
-          <div className="space-y-4 animate-in fade-in">
-            <Select
-              label={t('payments.form.type')}
-              value={formData.type}
-              onChange={(e) => handleChange("type", e.target.value)}
-              options={[
-                { value: "income", label: t('payments.types.income') },
-                { value: "expense", label: t('payments.types.expense') }
-              ]}
-              error={errors.type}
-              required
-            />
+        <div className="flex-1 mt-4 mb-8">
+            {/* STEP 1: Basic Info */}
+            {currentStep === 1 && (
+            <div className="space-y-6 animate-fadeIn">
+                <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('payments.steps.basicInfo')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Core payment details.</p>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label={t('payments.form.amount')}
-                type="number"
-                value={formData.amount}
-                onChange={(e) => handleChange("amount", e.target.value)}
-                error={errors.amount}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                required
-                icon={DollarSign}
-              />
-              
-              <Select
-                label={t('payments.form.method')}
-                value={formData.method}
-                onChange={(e) => handleChange("method", e.target.value)}
-                error={errors.method}
-                required
-                options={[
-                  { value: "cash", label: t('payments.methods.cash') },
-                  { value: "card", label: t('payments.methods.card') },
-                  { value: "bank_transfer", label: t('payments.methods.bank_transfer') },
-                  { value: "check", label: t('payments.methods.check') },
-                ]}
-              />
+                <Select
+                    label={t('payments.form.type')}
+                    value={formData.type}
+                    onChange={(e) => handleChange("type", e.target.value)}
+                    options={[
+                        { value: "income", label: t('payments.types.income') },
+                        { value: "expense", label: t('payments.types.expense') }
+                    ]}
+                    error={errors.type}
+                    required
+                    className="w-full"
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                        label={t('payments.form.amount')}
+                        type="number"
+                        value={formData.amount}
+                        onChange={(e) => handleChange("amount", e.target.value)}
+                        error={errors.amount}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        required
+                        icon={DollarSign}
+                    />
+                    <Select
+                        label={t('payments.form.method')}
+                        value={formData.method}
+                        onChange={(e) => handleChange("method", e.target.value)}
+                        error={errors.method}
+                        required
+                        options={[
+                            { value: "cash", label: t('payments.methods.cash') },
+                            { value: "card", label: t('payments.methods.card') },
+                            { value: "bank_transfer", label: t('payments.methods.bank_transfer') },
+                            { value: "check", label: t('payments.methods.check') },
+                        ]}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Select
+                        label={t('payments.form.status')}
+                        value={formData.status}
+                        onChange={(e) => handleChange("status", e.target.value)}
+                        options={[
+                            { value: "pending", label: t('payments.statuses.pending') },
+                            { value: "completed", label: t('payments.statuses.completed') },
+                            { value: "failed", label: t('payments.statuses.failed') },
+                        ]}
+                    />
+                    <Input
+                        label={t('payments.form.reference')}
+                        value={formData.reference}
+                        onChange={(e) => handleChange("reference", e.target.value)}
+                        placeholder="REF-001"
+                    />
+                </div>
+
+                <Textarea
+                    label={t('payments.form.description')}
+                    value={formData.description}
+                    onChange={(e) => handleChange("description", e.target.value)}
+                    rows={3}
+                    className="w-full"
+                />
             </div>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                label={t('payments.form.status')}
-                value={formData.status}
-                onChange={(e) => handleChange("status", e.target.value)}
-                options={[
-                  { value: "pending", label: t('payments.statuses.pending') },
-                  { value: "completed", label: t('payments.statuses.completed') },
-                  { value: "failed", label: t('payments.statuses.failed') },
-                ]}
-              />
-              <Input
-                label={t('payments.form.reference')}
-                value={formData.reference}
-                onChange={(e) => handleChange("reference", e.target.value)}
-                placeholder="REF-001"
-              />
+            {/* STEP 2: Related Info */}
+            {currentStep === 2 && (
+            <div className="space-y-6 animate-fadeIn">
+                <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('payments.steps.relatedInfo')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Link payment to client or event.</p>
+                </div>
+
+                <Select
+                    label={t('payments.form.client')}
+                    value={formData.client}
+                    onChange={handleClientChange}
+                    options={[
+                        { value: "", label: t('payments.form.selectClient') },
+                        ...clients.map(c => ({ value: c._id, label: c.name }))
+                    ]}
+                    className="w-full"
+                />
+
+                <Select
+                    label={t('payments.form.event')}
+                    value={formData.event}
+                    onChange={handleEventChange}
+                    options={[
+                        { value: "", label: t('payments.form.selectEvent') },
+                        ...filteredEvents.map(e => ({ value: e._id, label: e.title }))
+                    ]}
+                    className="w-full"
+                />
             </div>
+            )}
 
-            <Textarea
-              label={t('payments.form.description')}
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              rows={3}
-            />
-          </div>
-        )}
-
-        {/* STEP 2: Related Info */}
-        {currentStep === 2 && (
-          <div className="space-y-4 animate-in fade-in">
-            <Select
-              label={t('payments.form.client')}
-              value={formData.client}
-              onChange={handleClientChange}
-              options={[
-                { value: "", label: t('payments.form.selectClient') },
-                ...clients.map(c => ({ value: c._id, label: c.name }))
-              ]}
-            />
-
-            <Select
-              label={t('payments.form.event')}
-              value={formData.event}
-              onChange={handleEventChange}
-              options={[
-                { value: "", label: t('payments.form.selectEvent') },
-                ...filteredEvents.map(e => ({ value: e._id, label: e.title }))
-              ]}
-            />
-          </div>
-        )}
-
-        {/* STEP 3: Dates */}
-        {currentStep === 3 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in">
-            <Input
-              label={t('payments.form.dueDate')}
-              type="date"
-              value={formData.dueDate}
-              onChange={(e) => handleChange("dueDate", e.target.value)}
-            />
-            <Input
-              label={t('payments.form.paidDate')}
-              type="date"
-              value={formData.paidDate}
-              onChange={(e) => handleChange("paidDate", e.target.value)}
-              error={errors.paidDate}
-            />
-          </div>
-        )}
-
-        {/* STEP 4: Fees */}
-        {currentStep === 4 && (
-          <div className="space-y-6 animate-in fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                label={t('payments.form.fees.processingFee')}
-                type="number"
-                value={formData.fees.processingFee}
-                onChange={(e) => handleChange("fees.processingFee", e.target.value)}
-                placeholder="0.00"
-              />
-              <Input
-                label={t('payments.form.fees.platformFee')}
-                type="number"
-                value={formData.fees.platformFee}
-                onChange={(e) => handleChange("fees.platformFee", e.target.value)}
-                placeholder="0.00"
-              />
-              <Input
-                label={t('payments.form.fees.otherFees')}
-                type="number"
-                value={formData.fees.otherFees}
-                onChange={(e) => handleChange("fees.otherFees", e.target.value)}
-                placeholder="0.00"
-              />
+            {/* STEP 3: Dates */}
+            {currentStep === 3 && (
+            <div className="space-y-6 animate-fadeIn">
+                <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('payments.steps.dates')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Schedule due dates and payment dates.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                        label={t('payments.form.dueDate')}
+                        type="date"
+                        value={formData.dueDate}
+                        onChange={(e) => handleChange("dueDate", e.target.value)}
+                    />
+                    <Input
+                        label={t('payments.form.paidDate')}
+                        type="date"
+                        value={formData.paidDate}
+                        onChange={(e) => handleChange("paidDate", e.target.value)}
+                        error={errors.paidDate}
+                    />
+                </div>
             </div>
-          </div>
-        )}
+            )}
+
+            {/* STEP 4: Fees */}
+            {currentStep === 4 && (
+            <div className="space-y-6 animate-in fade-in">
+                <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('payments.steps.feesReview')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Additional processing fees.</p>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <Input
+                        label={t('payments.form.fees.processingFee')}
+                        type="number"
+                        value={formData.fees.processingFee}
+                        onChange={(e) => handleChange("fees.processingFee", e.target.value)}
+                        placeholder="0.00"
+                    />
+                    <Input
+                        label={t('payments.form.fees.platformFee')}
+                        type="number"
+                        value={formData.fees.platformFee}
+                        onChange={(e) => handleChange("fees.platformFee", e.target.value)}
+                        placeholder="0.00"
+                    />
+                    <Input
+                        label={t('payments.form.fees.otherFees')}
+                        type="number"
+                        value={formData.fees.otherFees}
+                        onChange={(e) => handleChange("fees.otherFees", e.target.value)}
+                        placeholder="0.00"
+                    />
+                </div>
+            </div>
+            )}
+        </div>
 
         {/* Footer Navigation */}
-        <div className="flex justify-between pt-6 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex justify-between pt-6 border-t border-gray-100 dark:border-gray-700 mt-auto">
           {currentStep > 1 ? (
-            <Button type="button" variant="outline" onClick={() => setCurrentStep(p => p - 1)}>
+            <Button type="button" variant="outline" onClick={handlePrevious}>
               <ChevronLeft className="w-4 h-4 mr-2" /> {t('common.previous')}
             </Button>
           ) : (
@@ -459,7 +507,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
           )}
 
           <div className="flex gap-3">
-            {/* ✅ Quick Save Button (Only in Edit Mode & Not Last Step) */}
+            {/* Quick Save Button */}
             {isEditMode && currentStep < totalSteps && (
               <Button 
                 type="button" 
@@ -473,11 +521,11 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             )}
 
             {currentStep < totalSteps ? (
-              <Button type="button" variant="primary" onClick={handleNext}>
-                {t('common.next')} <ChevronRight className="w-4 h-4 ml-2" />
+              <Button type="button" variant="primary" onClick={handleNext} className="px-6">
+                <span className="flex items-center">{t('common.next')} <ChevronRight className="w-4 h-4 ml-2" /></span>
               </Button>
             ) : (
-              <Button type="submit" variant="primary" loading={loading} icon={Save}>
+              <Button type="submit" variant="primary" loading={loading} icon={Save} className="px-6">
                 {isEditMode ? t('payments.form.update') : t('payments.form.create')}
               </Button>
             )}

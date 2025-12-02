@@ -2491,6 +2491,10 @@
     "user": "مستخدم",
     "toggleTheme": "تبديل المظهر",
     "notifications": "الإشعارات",
+    "company": "شركة",
+    "guests": "ضيوف",
+    "individual": "فرد",
+    "optional": "اختياري",
     "searchPlaceholder": "البحث في الفعاليات والعملاء والمهام...",
     "today": "اليوم",
     "other": "أخرى",
@@ -2508,7 +2512,7 @@
     "next": "التالي",
     "previous": "السابق",
     "reset": "Reset",
-    "saveChanges": "Save Changes",
+    "saveChanges": "حفظ التغييرات",
     "dashboard": "لوحة القيادة",
     "events": "الفعاليات",
     "clients": "العملاء",
@@ -2529,6 +2533,8 @@
     "confirmDelete": "تأكيد الحذف",
     "deleting": "جاري الحذف...",
     "loading": "جاري التحميل...",
+    "completed": "مكتمل",
+    "earnings": "الأرباح",
     "error": "حدث خطأ ما",
     "date": "التاريخ",
     "time": "الوقت",
@@ -2547,7 +2553,8 @@
       "showing": "عرض",
       "to": "إلى",
       "of": "من",
-      "results": "نتائج"
+      "results": "نتائج",
+      "per_page": "لكل صفحة:"
     }
   },
   "notifications": {
@@ -2868,7 +2875,7 @@
       }
     }
   },
-   "invoices": {
+  "invoices": {
     "title": "الفواتير",
     "subtitle": "إدارة فواتير ومدفوعات {{type}} الخاصة بك.",
     "settings": "الإعدادات",

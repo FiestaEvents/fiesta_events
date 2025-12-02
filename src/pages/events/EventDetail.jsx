@@ -72,13 +72,9 @@ const EventDetail = () => {
   }, []);
 
   // Event handlers
-  const handleEditEvent = useCallback(() => {
-    if (!id) {
-      apiError(null, t("eventDetail.errors.edit"));
-      return;
-    }
-    setIsEditModalOpen(true);
-  }, [id, apiError, t]);
+const handleEditEvent = useCallback(() => {
+  navigate(`/events/${id}/edit`);
+}, [navigate, id]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);

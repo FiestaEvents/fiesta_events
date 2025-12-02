@@ -334,7 +334,7 @@ const VenueDetailsStep = ({ data, onChange, errors, t }) => {
       </div>
       <div className="space-y-4">
         <Input
-          required="true"
+          required
           label={t("auth.register.venueDetails.name")}
           value={data.venueName}
           onChange={(e) => onChange({ venueName: e.target.value })}
@@ -360,6 +360,7 @@ const VenueDetailsStep = ({ data, onChange, errors, t }) => {
           )}
         </div>
         <Input
+          required
           label={t("auth.register.venueDetails.phone")}
           value={data.phone}
           onChange={handlePhoneChange}
@@ -478,6 +479,7 @@ const SpacesStep = ({ data, onChange, errors, t }) => {
             </div>
             <div className="grid grid-cols-1 gap-4">
               <Input
+                required
                 label={t("auth.register.spaces.spaceName")}
                 value={space.name}
                 onChange={(e) => updateSpace(space.id, "name", e.target.value)}
@@ -486,6 +488,7 @@ const SpacesStep = ({ data, onChange, errors, t }) => {
                 fullWidth
               />
               <Input
+                required
                 label={t("auth.register.spaces.basePrice")}
                 type="number"
                 value={space.basePrice}
@@ -499,6 +502,7 @@ const SpacesStep = ({ data, onChange, errors, t }) => {
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input
+                  required
                   label={t("auth.register.spaces.minCap")}
                   type="number"
                   value={space.minCapacity}
@@ -511,6 +515,7 @@ const SpacesStep = ({ data, onChange, errors, t }) => {
                   fullWidth
                 />
                 <Input
+                  required
                   label={t("auth.register.spaces.maxCap")}
                   type="number"
                   value={space.maxCapacity}
@@ -561,6 +566,7 @@ const AddressStep = ({ data, onChange, errors, t }) => (
     </div>
     <div className="space-y-4">
       <Input
+        required
         label={t("auth.register.address.fullAddress")}
         value={data.address?.street || ""}
         onChange={(e) =>
@@ -572,6 +578,7 @@ const AddressStep = ({ data, onChange, errors, t }) => (
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
+          required
           label={t("auth.register.address.city")}
           value={data.address?.city || ""}
           onChange={(e) =>
@@ -628,7 +635,7 @@ const ReviewStep = ({ data, t }) => (
       <p className="text-gray-600">{t("auth.register.review.subtitle")}</p>
     </div>
     <div className="space-y-4">
-      <div className="p-4 bg-gray-50 rounded-xl">
+      <div className="p-4 bg-white rounded-xl">
         <h4 className="font-semibold text-gray-900 mb-3">
           {t("auth.register.review.accountInfo")}
         </h4>
@@ -645,7 +652,7 @@ const ReviewStep = ({ data, t }) => (
           </div>
         </div>
       </div>
-      <div className="p-4 bg-gray-50 rounded-xl">
+      <div className="p-4 bg-white rounded-xl">
         <h4 className="font-semibold text-gray-900 mb-3">
           {t("auth.register.review.venueInfo")}
         </h4>
@@ -673,7 +680,7 @@ const ReviewStep = ({ data, t }) => (
         </div>
       </div>
       {data.spaces && data.spaces.length > 0 && (
-        <div className="p-4 bg-gray-50 rounded-xl">
+        <div className="p-4 bg-white rounded-xl">
           <h4 className="font-semibold text-gray-900 mb-3">
             {t("auth.register.spaces.title")} ({data.spaces.length})
           </h4>
@@ -696,7 +703,7 @@ const ReviewStep = ({ data, t }) => (
         </div>
       )}
       {data.address && (
-        <div className="p-4 bg-gray-50 rounded-xl">
+        <div className="p-4 bg-white rounded-xl">
           <h4 className="font-semibold text-gray-900 mb-3">
             {t("auth.register.address.title")}
           </h4>
@@ -760,6 +767,9 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
     const newErrors = {};
 
     switch (currentStep) {
+      case 0: // Business Type - auto-advances, no validation needed
+        return true;
+
       case 1: // Venue Details
         if (!formData.venueName?.trim()) {
           newErrors.venueName = t("auth.register.errors.nameRequired");
@@ -767,12 +777,17 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
           formData.venueName.length < 2 ||
           formData.venueName.length > 100
         ) {
-          newErrors.venueName =
-            "Venue name must be between 2 and 100 characters";
+          newErrors.venueName = "Venue name must be between 2 and 100 characters";
         }
 
         const phoneError = validationUtils.validatePhone(formData.phone);
-        if (phoneError) newErrors.phone = phoneError;
+        if (phoneError) {
+          newErrors.phone = phoneError;
+        }
+
+        if (formData.description && formData.description.length > 500) {
+          newErrors.description = "Description must be less than 500 characters";
+        }
         break;
 
       case 2: // Spaces
@@ -787,7 +802,44 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
             newErrors[`space-${space.id}-name`] = "Space name is required";
             hasInvalidSpace = true;
           }
-          // ... other space validations
+
+          const basePriceError = validationUtils.validatePositiveNumber(
+            space.basePrice,
+            "Base price"
+          );
+          if (basePriceError) {
+            newErrors[`space-${space.id}-basePrice`] = basePriceError;
+            hasInvalidSpace = true;
+          }
+
+          const minCapError = validationUtils.validatePositiveNumber(
+            space.minCapacity,
+            "Min capacity"
+          );
+          if (minCapError) {
+            newErrors[`space-${space.id}-minCapacity`] = minCapError;
+            hasInvalidSpace = true;
+          }
+
+          const maxCapError = validationUtils.validatePositiveNumber(
+            space.maxCapacity,
+            "Max capacity"
+          );
+          if (maxCapError) {
+            newErrors[`space-${space.id}-maxCapacity`] = maxCapError;
+            hasInvalidSpace = true;
+          }
+
+          if (!minCapError && !maxCapError) {
+            const capacityError = validationUtils.validateCapacity(
+              space.minCapacity,
+              space.maxCapacity
+            );
+            if (capacityError) {
+              newErrors[`space-${space.id}-capacity`] = capacityError;
+              hasInvalidSpace = true;
+            }
+          }
         });
 
         if (hasInvalidSpace) {
@@ -804,10 +856,17 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
           newErrors.city = "City is required";
         }
         break;
+
+      case 4: // Review - no validation needed
+        return true;
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+      toast("Please fix all errors before continuing", "error");
+      return false;
+    }
+    return true;
   };
 
   const handleNext = () => {
@@ -837,10 +896,10 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
     setLoading(true);
     try {
       await register(formData);
-      navigate("/dashboard");
+      navigate("/home");
       toast(t("auth.login.success"), "success");
     } catch (err) {
-      toast("Registration failed", "error");
+      toast(err.response?.data?.message || "Registration failed", "error");
     } finally {
       setLoading(false);
     }
@@ -902,12 +961,10 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
           </button>
         </div>
 
-        {/* Smaller stepper */}
         <div className="px-4 pt-3">
           <ProgressSteps currentStep={currentStep} t={t} />
         </div>
 
-        {/* More focused content area */}
         <div className="overflow-y-auto hide-scrollbar flex flex-1 justify-center items-start">
           <div
             className="transition-all duration-300 w-full max-w-2xl px-4 py-4"
@@ -920,7 +977,6 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
           </div>
         </div>
 
-        {/* Compact footer */}
         <div className="p-4 border-t border-gray-200 bg-gray-50">
           <div className="flex justify-between gap-3">
             <Button
@@ -957,35 +1013,17 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
   );
 };
 
-// Password Requirements Tooltip Component
+// Password Requirements Tooltip Component (Simplified)
 const PasswordRequirementsTooltip = ({ password, isOpen, onClose, t }) => {
   if (!isOpen) return null;
 
-  const requirements = [
-    {
-      label: t("auth.register.requirements.length"),
-      met: password.length >= 8,
-    },
-    {
-      label: t("auth.register.requirements.lowercase"),
-      met: /[a-z]/.test(password),
-    },
-    {
-      label: t("auth.register.requirements.uppercase"),
-      met: /[A-Z]/.test(password),
-    },
-    {
-      label: t("auth.register.requirements.number"),
-      met: /\d/.test(password),
-    },
-    {
-      label: t("auth.register.requirements.special"),
-      met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
-    },
-  ];
+  const requirement = {
+    label: t("auth.register.requirements.length"),
+    met: password.length >= 8,
+  };
 
   return (
-    <div className="absolute z-10 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 mt-2">
+    <div className="absolute z-10 w-72 bg-white border border-gray-200 rounded-lg shadow-lg p-4 mt-2">
       <div className="flex justify-between items-center mb-3">
         <h4 className="font-semibold text-gray-900">
           {t("auth.register.requirements.title")}
@@ -998,49 +1036,28 @@ const PasswordRequirementsTooltip = ({ password, isOpen, onClose, t }) => {
         </button>
       </div>
 
-      <div className="space-y-2 mb-3">
-        {requirements.map((req, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <div
-              className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                req.met
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-400"
-              }`}
-            >
-              {req.met && <Check size={10} />}
-            </div>
-            <span
-              className={`text-sm ${
-                req.met ? "text-green-600 font-medium" : "text-gray-600"
-              }`}
-            >
-              {req.label}
-            </span>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-4 h-4 rounded-full flex items-center justify-center ${
+              requirement.met
+                ? "bg-green-500 text-white"
+                : "bg-gray-200 text-gray-400"
+            }`}
+          >
+            {requirement.met && <Check size={10} />}
           </div>
-        ))}
-      </div>
-
-      <div className="border-t border-gray-200 pt-3">
-        <p className="text-xs text-blue-600 font-medium mb-1">
-          {t("auth.register.requirements.allowed")}
-        </p>
-        <p className="text-xs text-gray-600 break-words">
-          ! @ # $ % ^ & * ( ) _ + - = [ ] &#123; &#125; ; ' : " \ | , . &lt;
-          &gt; / ?
-        </p>
+          <span
+            className={`text-sm ${
+              requirement.met ? "text-green-600 font-medium" : "text-gray-600"
+            }`}
+          >
+            {requirement.label}
+          </span>
+        </div>
       </div>
     </div>
   );
-};
-
-// Helper function to detect invalid characters in real-time
-const getInvalidPasswordCharacters = (password) => {
-  if (!password) return [];
-  const invalidChars = password.match(
-    /[^A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g
-  );
-  return invalidChars ? [...new Set(invalidChars)] : [];
 };
 
 // ==========================================
@@ -1061,6 +1078,8 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPasswordTooltip, setShowPasswordTooltip] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.dir() === "rtl";
 
@@ -1069,7 +1088,6 @@ const Register = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
 
-    // Update password strength in real-time
     if (name === "password") {
       setPasswordStrength(calculatePasswordStrength(value));
     }
@@ -1078,54 +1096,81 @@ const Register = () => {
   const calculatePasswordStrength = (password) => {
     if (!password) return 0;
     let strength = 0;
-    if (password.length >= 8) strength += 1;
-    if (/[a-z]/.test(password)) strength += 1;
-    if (/[A-Z]/.test(password)) strength += 1;
-    if (/[0-9]/.test(password)) strength += 1;
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength += 1;
-    return strength;
+    
+    // Length check (most important)
+    if (password.length >= 8) strength += 2;
+    if (password.length >= 12) strength += 1;
+    
+    // Complexity bonuses
+    if (/[a-z]/.test(password)) strength += 0.5;
+    if (/[A-Z]/.test(password)) strength += 0.5;
+    if (/[0-9]/.test(password)) strength += 0.5;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength += 0.5;
+    
+    return Math.min(5, strength);
   };
 
   const getPasswordStrengthColor = (strength) => {
-    if (strength <= 2) return "bg-red-500";
-    if (strength <= 3) return "bg-yellow-500";
+    if (strength < 2) return "bg-red-500";
+    if (strength < 3.5) return "bg-yellow-500";
     return "bg-green-500";
   };
 
   const getPasswordStrengthText = (strength) => {
-    if (strength <= 2) return t("auth.register.strength.weak");
-    if (strength <= 3) return t("auth.register.strength.medium");
+    if (strength < 2) return t("auth.register.strength.weak");
+    if (strength < 3.5) return t("auth.register.strength.medium");
     return t("auth.register.strength.strong");
   };
 
   const handleInitialSubmit = async () => {
-    // Simplified initial validation
     const newErrors = {};
-    if (!formData.name) newErrors.name = t("auth.register.errors.nameRequired");
-    if (!formData.email)
-      newErrors.email = t("auth.register.errors.emailRequired");
-    if (!formData.password)
-      newErrors.password = t("auth.register.errors.passwordRequired");
-    if (formData.password && calculatePasswordStrength(formData.password) < 3) {
-      newErrors.password = "Password too weak"; // Consider translation
+    
+    // Name validation
+    if (!formData.name?.trim()) {
+      newErrors.name = t("auth.register.errors.nameRequired");
+    } else if (formData.name.length < 2 || formData.name.length > 50) {
+      newErrors.name = "Name must be between 2 and 50 characters";
     }
-    if (formData.password !== formData.confirmPassword) {
+
+    // Email validation
+    const emailError = validationUtils.validateEmail(formData.email);
+    if (emailError) {
+      newErrors.email = emailError;
+    }
+
+    // Password validation (simplified - only length check)
+    if (!formData.password) {
+      newErrors.password = t("auth.register.errors.passwordRequired");
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long";
+    } else if (formData.password.length > 128) {
+      newErrors.password = "Password must be less than 128 characters";
+    }
+
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = t("auth.register.errors.confirmMatch");
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      toast("Please fix all errors before continuing", "error");
       return;
     }
 
+    setLoading(true);
     try {
       await verifyEmail(formData.email);
       setShowSlider(true);
     } catch (error) {
-      console.log("error", error);
       setErrors({
-        email: "Email verification failed", // Use translation
+        email: error.response?.data?.message || "Email verification failed",
       });
+      toast(error.response?.data?.message || "Email verification failed", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1134,11 +1179,9 @@ const Register = () => {
       className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      {/* Language Switcher */}
       <AuthLanguageSwitcher />
 
       <div className="flex-1 flex items-center justify-center p-0 md:p-4 relative z-10">
-        {/* Background decoration */}
         <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
           <div
@@ -1190,7 +1233,6 @@ const Register = () => {
                 dir="ltr"
               />
 
-              {/* Password Field */}
               <div className="relative">
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-medium text-gray-700">
@@ -1200,8 +1242,6 @@ const Register = () => {
                     type="button"
                     onClick={() => setShowPasswordTooltip(!showPasswordTooltip)}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
-                    onMouseEnter={() => setShowPasswordTooltip(true)}
-                    onMouseLeave={() => setShowPasswordTooltip(false)}
                   >
                     <HelpCircle size={16} />
                   </button>
@@ -1213,15 +1253,11 @@ const Register = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    iconRight={showPassword ? EyeOff : Eye}
-                    onIconClick={() => setShowPassword(!showPassword)}
                     placeholder="••••••••"
                     error={errors.password}
-                    // Direction handling for icon
                     className={`w-full ${isRTL ? "pl-10" : "pr-10"}`}
                     fullWidth
                   />
-                  {/* Manually placed toggle button for custom positioning if Input component's icon prop doesn't support dynamic RTL styling fully */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -1231,7 +1267,6 @@ const Register = () => {
                   </button>
                 </div>
 
-                {/* Password Strength Indicator */}
                 {formData.password && (
                   <div className="mt-2 space-y-1">
                     <div className="flex justify-between text-xs">
@@ -1239,7 +1274,13 @@ const Register = () => {
                         {t("auth.register.passwordStrength")}
                       </span>
                       <span
-                        className={`font-medium ${passwordStrength <= 2 ? "text-red-500" : passwordStrength <= 3 ? "text-yellow-500" : "text-green-500"}`}
+                        className={`font-medium ${
+                          passwordStrength < 2
+                            ? "text-red-500"
+                            : passwordStrength < 3.5
+                              ? "text-yellow-500"
+                              : "text-green-500"
+                        }`}
                       >
                         {getPasswordStrengthText(passwordStrength)}
                       </span>
@@ -1250,13 +1291,6 @@ const Register = () => {
                         style={{ width: `${(passwordStrength / 5) * 100}%` }}
                       />
                     </div>
-
-                    {getInvalidPasswordCharacters(formData.password).length >
-                      0 && (
-                      <div className="text-xs text-red-500 p-2 bg-red-50 rounded border border-red-200 mt-2 text-start">
-                        {t("auth.register.errors.invalidChars")}
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -1275,8 +1309,6 @@ const Register = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  // iconRight={showConfirmPassword ? EyeOff : Eye} // Using manual button for better RTL control
-                  // onIconClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   placeholder="••••••••"
                   error={errors.confirmPassword}
                   className={`w-full ${isRTL ? "pl-10" : "pr-10"}`}
@@ -1297,6 +1329,7 @@ const Register = () => {
 
               <Button
                 onClick={handleInitialSubmit}
+                loading={loading}
                 variant="primary"
                 className="w-full py-3"
               >

@@ -184,7 +184,7 @@ const Table = ({
                       selectedRows.size === data.length && data.length > 0
                     }
                     onChange={handleSelectAll}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
+                    className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500"
                   />
                 </th>
               )}

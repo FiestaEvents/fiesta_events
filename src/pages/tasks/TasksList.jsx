@@ -18,22 +18,22 @@ import {
   LayoutGrid,
   Calendar,
   Eye,
-  FolderOpen, // ✅ Added for No Results
+  FolderOpen,
 } from "lucide-react";
 
-// API & Services
+// ✅ API & Services
 import { taskService } from "../../api/index";
 
-// Components
+// ✅ Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Pagination from "../../components/common/Pagination"; // ✅ Ensure this is imported
+import Pagination from "../../components/common/Pagination";
 import Badge from "../../components/common/Badge";
 
-// Context & Sub-components
+// ✅ Context & Sub-components
 import { useToast } from "../../context/ToastContext";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskForm from "./TaskForm";
@@ -168,28 +168,6 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString("en-GB");
 };
 
-const normalizeTasksResponse = (response) => {
-  const dataRoot = response?.data?.data || response?.data || response;
-
-  if (dataRoot?.tasks) {
-    return {
-      tasks: dataRoot.tasks,
-      totalPages: dataRoot.totalPages || 1,
-      totalCount: dataRoot.totalCount || dataRoot.tasks.length,
-    };
-  }
-
-  if (Array.isArray(dataRoot)) {
-    return {
-      tasks: dataRoot,
-      totalPages: 1,
-      totalCount: dataRoot.length,
-    };
-  }
-
-  return { tasks: [], totalPages: 1, totalCount: 0 };
-};
-
 const getStoredViewMode = () => {
   return localStorage.getItem("tasksViewMode") || VIEW_MODES.KANBAN;
 };
@@ -206,11 +184,7 @@ const TasksList = () => {
   const { t } = useTranslation();
   const { showSuccess, showError, promise } = useToast();
 
-  // ============================================================
-  // STATE MANAGEMENT
-  // ============================================================
-
-  // Data States
+  // State
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -228,7 +202,7 @@ const TasksList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Confirmation Modal State
+  // Confirmation Modal
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     title: "",
@@ -239,7 +213,7 @@ const TasksList = () => {
   });
 
   // ============================================================
-  // COMPUTED VALUES
+  // COMPUTED VALUES (Stats)
   // ============================================================
 
   const stats = {
@@ -249,26 +223,6 @@ const TasksList = () => {
     completed: tasks.filter((t) => t.status === "completed").length,
     blocked: tasks.filter((t) => t.status === "blocked").length,
   };
-
-  const hasActiveFilters =
-    filters.search.trim() !== "" ||
-    filters.status !== "all" ||
-    filters.priority !== "all" ||
-    filters.category !== "all";
-
-  const showEmptyState =
-    !loading &&
-    !error &&
-    tasks.length === 0 &&
-    !hasActiveFilters &&
-    hasInitialLoad;
-
-  const showNoResults =
-    !loading &&
-    !error &&
-    tasks.length === 0 &&
-    hasActiveFilters &&
-    hasInitialLoad;
 
   const statCards = [
     {
@@ -326,23 +280,32 @@ const TasksList = () => {
         ? await taskService.getArchived(params)
         : await taskService.getAll(params);
 
-      const {
-        tasks: tasksData,
-        totalPages: pages,
-        totalCount: count,
-      } = normalizeTasksResponse(response);
+      // Normalize Response
+      let data =
+        response?.data?.data?.tasks ||
+        response?.data?.tasks ||
+        response?.tasks ||
+        [];
+      if (!Array.isArray(data)) data = [];
 
-      setTasks(tasksData);
-      setTotalPages(pages);
-      setTotalCount(count);
-      setHasInitialLoad(true);
+      let pTotalPages =
+        response?.data?.data?.totalPages || response?.pagination?.pages || 1;
+      let pTotalCount =
+        response?.data?.data?.totalCount ||
+        response?.pagination?.total ||
+        data.length;
+
+      setTasks(data);
+      setTotalPages(pTotalPages);
+      setTotalCount(pTotalCount);
     } catch (err) {
       console.error("Fetch tasks error:", err);
       setError(t("tasks.messages.error.load"));
       setTasks([]);
-      setHasInitialLoad(true);
+      setTotalCount(0);
     } finally {
       setLoading(false);
+      setHasInitialLoad(true);
     }
   }, [filters, showArchived, viewMode, t]);
 
@@ -355,7 +318,7 @@ const TasksList = () => {
   }, [viewMode]);
 
   // ============================================================
-  // FILTER HANDLERS
+  // HANDLERS
   // ============================================================
 
   const updateFilter = useCallback((key, value) => {
@@ -370,79 +333,79 @@ const TasksList = () => {
     setFilters(INITIAL_STATE);
   }, []);
 
-  // ============================================================
-  // TASK ACTIONS
-  // ============================================================
-
-const handleDragEnd = async (result) => {
-  const { destination, source, draggableId } = result;
-
-  // No changes needed
-  if (
-    !destination ||
-    (destination.droppableId === source.droppableId &&
-      destination.index === source.index)
-  ) {
-    return;
-  }
-
-  const newStatus = destination.droppableId;
-  const oldStatus = source.droppableId;
-
-  // Find the task being moved
-  const taskToUpdate = tasks.find((t) => t._id === draggableId);
-  
-  if (!taskToUpdate) {
-    showError(t("tasks.toasts.status.error"));
-    return;
-  }
-
-  console.log("🔄 Updating task:", {
-    taskId: draggableId,
-    oldStatus,
-    newStatus,
-    task: taskToUpdate
-  });
-
-  // Optimistic UI Update
-  setTasks((prevTasks) =>
-    prevTasks.map((task) =>
-      task._id === draggableId ? { ...task, status: newStatus } : task
-    )
-  );
-
-  try {
-    // Option 1: If you have an updateStatus method
-    const response = await taskService.updateStatus(draggableId, newStatus);
-    
-    console.log("✅ Update response:", response);
-    
+  const handleFormSuccess = useCallback(() => {
+    fetchTasks();
+    setIsFormOpen(false);
+    setSelectedTask(null);
     showSuccess(
-      t("tasks.toasts.status.success", {
-        status: t(`tasks.status.${newStatus}`),
-      })
+      selectedTask
+        ? t("tasks.messages.success.updated")
+        : t("tasks.messages.success.created")
     );
+  }, [fetchTasks, selectedTask, showSuccess, t]);
 
-    // Verify the update by refetching (optional but recommended)
-    // await fetchTasks();
+  const handleDragEnd = async (result) => {
+    const { destination, source, draggableId } = result;
+    if (
+      !destination ||
+      (destination.droppableId === source.droppableId &&
+        destination.index === source.index)
+    )
+      return;
 
-  } catch (error) {
-    console.error("❌ Update failed:", error);
-    
-    // Revert optimistic update
+    const newStatus = destination.droppableId;
+    const oldStatus = source.droppableId;
+
+    // Optimistic UI Update
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
-        task._id === draggableId ? { ...task, status: oldStatus } : task
+        task._id === draggableId ? { ...task, status: newStatus } : task
       )
     );
-    
-    showError(
-      error?.response?.data?.message || 
-      error?.message || 
-      t("tasks.toasts.status.error")
-    );
-  }
-};
+
+    try {
+      await taskService.updateStatus(draggableId, newStatus);
+      showSuccess(
+        t("tasks.toasts.status.success", {
+          status: t(`tasks.status.${newStatus}`),
+        })
+      );
+    } catch (error) {
+      // Revert UI on failure
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === draggableId ? { ...task, status: oldStatus } : task
+        )
+      );
+      showError(t("tasks.toasts.status.error"));
+    }
+  };
+
+  // Logic for UI States
+  const hasActiveFilters =
+    filters.search.trim() !== "" ||
+    filters.status !== "all" ||
+    filters.priority !== "all" ||
+    filters.category !== "all";
+
+  // Empty State: No loading, no error, 0 tasks, no filters, NOT viewing archive
+  const showEmptyState =
+    !loading &&
+    !error &&
+    tasks.length === 0 &&
+    !hasActiveFilters &&
+    !showArchived &&
+    hasInitialLoad;
+
+  // No Results: No loading, no error, 0 tasks, BUT filters active or in archive
+  const showNoResults =
+    !loading &&
+    !error &&
+    tasks.length === 0 &&
+    (hasActiveFilters || showArchived) &&
+    hasInitialLoad;
+
+  // Confirmation Modal Handler
   const showConfirmation = useCallback(
     (title, message, confirmText, type, onConfirm) => {
       setConfirmationModal({
@@ -463,7 +426,6 @@ const handleDragEnd = async (result) => {
   const handleTaskAction = useCallback(
     (task, action) => {
       const taskTitle = task.title || t("tasks.messages.thisTask");
-
       const executeAction = async (apiMethod, loadingMsg, successMsg) => {
         try {
           await promise(apiMethod(task._id), {
@@ -472,12 +434,8 @@ const handleDragEnd = async (result) => {
             error: t("common.error"),
           });
           fetchTasks();
-          if (selectedTask?._id === task._id) {
-            setIsDetailModalOpen(false);
-          }
-        } catch (err) {
-          // Error handled by promise
-        }
+          if (selectedTask?._id === task._id) setIsDetailModalOpen(false);
+        } catch (err) {}
       };
 
       const actionConfigs = {
@@ -526,7 +484,7 @@ const handleDragEnd = async (result) => {
       };
 
       const config = actionConfigs[action];
-      if (config) {
+      if (config)
         showConfirmation(
           config.title,
           config.message,
@@ -534,54 +492,18 @@ const handleDragEnd = async (result) => {
           config.type,
           config.action
         );
-      }
     },
     [showConfirmation, t, fetchTasks, selectedTask, promise]
   );
 
   // ============================================================
-  // MODAL HANDLERS
-  // ============================================================
-
-  const openTaskDetail = useCallback((task) => {
-    setSelectedTask(task);
-    setIsDetailModalOpen(true);
-  }, []);
-
-  const openTaskForm = useCallback((task = null) => {
-    setSelectedTask(task);
-    setIsFormOpen(true);
-  }, []);
-
-  const closeTaskDetail = useCallback(() => {
-    setIsDetailModalOpen(false);
-  }, []);
-
-  const closeTaskForm = useCallback(() => {
-    setIsFormOpen(false);
-    setSelectedTask(null);
-  }, []);
-
-  const handleFormSuccess = useCallback(() => {
-    fetchTasks();
-    closeTaskForm();
-  }, [fetchTasks, closeTaskForm]);
-
-  const handleEditFromDetail = useCallback((task) => {
-    setSelectedTask(task);
-    setIsDetailModalOpen(false);
-    setIsFormOpen(true);
-  }, []);
-
-  // ============================================================
-  // TABLE COLUMNS CONFIGURATION
+  // RENDERERS
   // ============================================================
 
   const tableColumns = [
     {
       header: t("tasks.table.title"),
       accessor: "title",
-      sortable: true,
       width: "25%",
       render: (row) => (
         <div className="flex flex-col">
@@ -597,13 +519,9 @@ const handleDragEnd = async (result) => {
     {
       header: t("tasks.table.status"),
       accessor: "status",
-      sortable: true,
       width: "12%",
       render: (row) => (
-        <Badge
-          variant={getBadgeVariant(row.status, "status")}
-          className="capitalize"
-        >
+        <Badge variant={getBadgeVariant(row.status, "status")}>
           {t(`tasks.status.${row.status}`)}
         </Badge>
       ),
@@ -611,13 +529,9 @@ const handleDragEnd = async (result) => {
     {
       header: t("tasks.table.priority"),
       accessor: "priority",
-      sortable: true,
       width: "12%",
       render: (row) => (
-        <Badge
-          variant={getBadgeVariant(row.priority, "priority")}
-          className="capitalize"
-        >
+        <Badge variant={getBadgeVariant(row.priority, "priority")}>
           {t(`tasks.priority.${row.priority}`)}
         </Badge>
       ),
@@ -625,15 +539,10 @@ const handleDragEnd = async (result) => {
     {
       header: t("tasks.table.dueDate"),
       accessor: "dueDate",
-      sortable: true,
       width: "15%",
       render: (row) => (
         <div
-          className={`flex items-center gap-1.5 ${
-            isOverdue(row.dueDate, row.status)
-              ? "text-red-600 font-medium"
-              : "text-gray-600 dark:text-gray-400"
-          }`}
+          className={`flex items-center gap-1.5 ${isOverdue(row.dueDate, row.status) ? "text-red-600 font-medium" : "text-gray-600 dark:text-gray-400"}`}
         >
           <Calendar className="w-3.5 h-3.5" />
           {formatDate(row.dueDate)}
@@ -643,7 +552,6 @@ const handleDragEnd = async (result) => {
     {
       header: t("tasks.table.assignedTo"),
       accessor: "assignedTo",
-      sortable: true,
       width: "15%",
       render: (row) =>
         row.assignedTo ? (
@@ -671,7 +579,8 @@ const handleDragEnd = async (result) => {
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              openTaskDetail(row);
+              setSelectedTask(row);
+              setIsDetailModalOpen(true);
             }}
           >
             <Eye className="w-4 h-4 text-blue-500" />
@@ -683,7 +592,8 @@ const handleDragEnd = async (result) => {
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  openTaskForm(row);
+                  setSelectedTask(row);
+                  setIsFormOpen(true);
                 }}
               >
                 <Edit className="w-4 h-4 text-green-500" />
@@ -727,10 +637,6 @@ const handleDragEnd = async (result) => {
       ),
     },
   ];
-
-  // ============================================================
-  // PAGINATION RENDERER
-  // ============================================================
 
   // ✅ Unified Pagination Footer
   const renderPagination = () => {
@@ -785,210 +691,189 @@ const handleDragEnd = async (result) => {
     );
   };
 
-  // ============================================================
-  // RENDER HELPERS
-  // ============================================================
+  return (
+    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            {showArchived ? t("tasks.archivedTasks") : t("tasks.title")}
+            {showArchived && (
+              <Badge variant="warning" size="lg">
+                Archived
+              </Badge>
+            )}
+          </h1>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">
+            {showArchived ? t("tasks.archivedSubtitle") : t("tasks.subtitle")}
+            {hasInitialLoad &&
+              totalCount > 0 &&
+              ` • ${t("tasks.messages.resultsCount", { count: totalCount })}`}
+          </p>
+        </div>
 
-  const renderHeader = () => (
-    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-          {showArchived ? t("tasks.archivedTasks") : t("tasks.title")}
-          {showArchived && (
-            <Badge variant="warning" size="lg">
-              Archived
-            </Badge>
-          )}
-        </h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">
-          {showArchived ? t("tasks.archivedSubtitle") : t("tasks.subtitle")}
-          {hasInitialLoad && !showEmptyState && (
-            <span className="ml-1 text-gray-400">({totalCount} items)</span>
-          )}
-        </p>
+        {!showEmptyState && (
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {showArchived ? (
+              <Button
+                variant="danger"
+                onClick={() => setShowArchived(false)}
+                icon={X}
+              >
+                {t("tasks.returnToActive")}
+              </Button>
+            ) : (
+              <>
+                <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                  <button
+                    onClick={() => setViewMode(VIEW_MODES.LIST)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === VIEW_MODES.LIST ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400 hover:text-gray-700"}`}
+                  >
+                    <ListIcon className="w-4 h-4" />
+                    {t("tasks.view.list")}
+                  </button>
+                  <button
+                    onClick={() => setViewMode(VIEW_MODES.KANBAN)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === VIEW_MODES.KANBAN ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400 hover:text-gray-700"}`}
+                  >
+                    <KanbanIcon className=" w-4 h-4" />
+                    {t("tasks.view.kanban")}
+                  </button>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowArchived(true)}
+                  icon={Archive}
+                >
+                  {t("tasks.archived")}
+                </Button>
+                <Button
+                  variant="primary"
+                  icon={Plus}
+                  onClick={() => {
+                    setSelectedTask(null);
+                    setIsFormOpen(true);
+                  }}
+                >
+                  {t("tasks.createTask")}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {!showEmptyState && (
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {showArchived ? (
-            // Return button when viewing archived tasks
-            <Button
-              variant="danger"
-              onClick={() => setShowArchived(false)}
-              icon={X}
-            >
-              {t("tasks.returnToActive", "Return to Active Tasks")}
-            </Button>
-          ) : (
-            <>
-              <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                <button
-                  onClick={() => setViewMode(VIEW_MODES.LIST)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    viewMode === VIEW_MODES.LIST
-                      ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
-                  }`}
-                >
-                  <ListIcon className="w-4 h-4" />
-                  {t("tasks.view.list", "List")}
-                </button>
-                <button
-                  onClick={() => setViewMode(VIEW_MODES.KANBAN)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    viewMode === VIEW_MODES.KANBAN
-                      ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
-                  }`}
-                >
-                  <KanbanIcon className=" w-4 h-4" />
-                  {t("tasks.view.kanban", "Kanban")}
-                </button>
+      {/* Stats (Hide in empty/archive state) */}
+      {!showEmptyState &&
+        !showArchived &&
+        hasInitialLoad &&
+        tasks.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 shrink-0">
+            {statCards.map((stat) => (
+              <div
+                key={stat.label}
+                className={`p-4 rounded-lg border flex items-center justify-between ${STAT_STYLES[stat.color]}`}
+              >
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    {stat.label}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {stat.value}
+                  </p>
+                </div>
+                <stat.icon className={`w-8 h-8 opacity-20 text-gray-600`} />
               </div>
+            ))}
+          </div>
+        )}
 
-              <Button
-                variant="outline"
-                onClick={() => setShowArchived(true)}
-                icon={Archive}
-              >
-                {t("tasks.archived")}
-              </Button>
-
-              <Button
-                variant="primary"
-                icon={Plus}
-                onClick={() => openTaskForm()}
-              >
-                {t("tasks.createTask")}
-              </Button>
-            </>
+      {/* Filters */}
+      {!showEmptyState && hasInitialLoad && (
+        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4 shrink-0">
+          <Input
+            className="flex-1"
+            icon={Search}
+            placeholder={t("tasks.searchPlaceholder")}
+            value={filters.search}
+            onChange={(e) => updateFilter("search", e.target.value)}
+          />
+          <div className="sm:w-40">
+            <Select
+              value={filters.status}
+              onChange={(e) => updateFilter("status", e.target.value)}
+              options={[
+                { value: "all", label: t("tasks.filters.allStatus") },
+                { value: "pending", label: t("tasks.status.pending") },
+                { value: "todo", label: t("tasks.status.todo") },
+                { value: "in_progress", label: t("tasks.status.in_progress") },
+                { value: "blocked", label: t("tasks.status.blocked") },
+                { value: "completed", label: t("tasks.status.completed") },
+              ]}
+            />
+          </div>
+          <div className="sm:w-40">
+            <Select
+              value={filters.priority}
+              onChange={(e) => updateFilter("priority", e.target.value)}
+              options={[
+                { value: "all", label: t("tasks.filters.allPriorities") },
+                { value: "low", label: t("tasks.priority.low") },
+                { value: "medium", label: t("tasks.priority.medium") },
+                { value: "high", label: t("tasks.priority.high") },
+                { value: "urgent", label: t("tasks.priority.urgent") },
+              ]}
+            />
+          </div>
+          {hasActiveFilters && (
+            <Button variant="outline" icon={X} onClick={handleClearFilters}>
+              {t("tasks.filters.clearFilters")}
+            </Button>
           )}
         </div>
       )}
-    </div>
-  );
-
-  const renderStats = () => {
-    if (showArchived || showEmptyState || tasks.length === 0) return null;
-
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 shrink-0">
-        {statCards.map((stat) => (
-          <div
-            key={stat.label}
-            className={`p-4 rounded-lg border flex items-center justify-between ${STAT_STYLES[stat.color]}`}
-          >
-            <div>
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                {stat.label}
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {stat.value}
-              </p>
-            </div>
-            <stat.icon className={`w-8 h-8 opacity-20 text-gray-600`} />
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderFilters = () => {
-    if (!hasInitialLoad || showEmptyState) return null;
-
-    return (
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4 shrink-0">
-        <Input
-          className="flex-1"
-          icon={Search}
-          placeholder={t(
-            showArchived
-              ? "tasks.searchArchivedPlaceholder"
-              : "tasks.searchPlaceholder"
-          )}
-          value={filters.search}
-          onChange={(e) => updateFilter("search", e.target.value)}
-        />
-        <div className="sm:w-40">
-          <Select
-            value={filters.status}
-            onChange={(e) => updateFilter("status", e.target.value)}
-            options={[
-              { value: "all", label: t("tasks.filters.allStatus") },
-              { value: "pending", label: t("tasks.status.pending") },
-              { value: "todo", label: t("tasks.status.todo") },
-              { value: "in_progress", label: t("tasks.status.in_progress") },
-              { value: "blocked", label: t("tasks.status.blocked") },
-              { value: "completed", label: t("tasks.status.completed") },
-            ]}
-          />
-        </div>
-        <div className="sm:w-40">
-          <Select
-            value={filters.priority}
-            onChange={(e) => updateFilter("priority", e.target.value)}
-            options={[
-              { value: "all", label: t("tasks.filters.allPriorities") },
-              { value: "low", label: t("tasks.priority.low") },
-              { value: "medium", label: t("tasks.priority.medium") },
-              { value: "high", label: t("tasks.priority.high") },
-              { value: "urgent", label: t("tasks.priority.urgent") },
-            ]}
-          />
-        </div>
-        {hasActiveFilters && (
-          <Button variant="outline" icon={X} onClick={handleClearFilters}>
-            {t("tasks.filters.clearFilters")}
-          </Button>
-        )}
-      </div>
-    );
-  };
-
-  // ============================================================
-  // RENDER: MAIN CONTENT
-  // ============================================================
-
-  return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
-      {renderHeader()}
-      {renderStats()}
-      {renderFilters()}
 
       {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
-        {/* Loading Overlay */}
+        {/* Loading */}
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
             <p className="text-gray-500 dark:text-gray-400">
-              {t("common.loading", "Loading...")}
+              {t("common.loading")}
             </p>
           </div>
         )}
 
         {/* List View */}
-        {viewMode === VIEW_MODES.LIST && !showEmptyState && !showNoResults && (
-          <>
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <Table
-                columns={tableColumns}
-                data={tasks}
-                loading={loading}
-                onRowClick={openTaskDetail}
-                striped
-                hoverable
-              />
-            </div>
-            {renderPagination()}
-          </>
-        )}
+        {viewMode === VIEW_MODES.LIST &&
+          !showEmptyState &&
+          !showNoResults &&
+          hasInitialLoad && (
+            <>
+              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <Table
+                  columns={tableColumns}
+                  data={tasks}
+                  loading={loading}
+                  onRowClick={(row) => {
+                    setSelectedTask(row);
+                    setIsDetailModalOpen(true);
+                  }}
+                  striped
+                  hoverable
+                />
+              </div>
+              {renderPagination()}
+            </>
+          )}
 
         {/* Kanban View */}
         {viewMode === VIEW_MODES.KANBAN &&
           !showEmptyState &&
           !showNoResults &&
-          !showArchived && (
+          !showArchived &&
+          hasInitialLoad && (
             <div className="overflow-x-auto pb-4">
               <div className="min-w-[1000px]">
                 <DragDropContext onDragEnd={handleDragEnd}>
@@ -1002,7 +887,6 @@ const handleDragEnd = async (result) => {
                           key={column.id}
                           className="flex flex-col h-full rounded-xl bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
                         >
-                          {/* Column Header */}
                           <div
                             className={`p-3 border-b rounded-t-xl flex items-center justify-between ${COLUMN_STYLES.BG[column.color]}`}
                           >
@@ -1026,7 +910,6 @@ const handleDragEnd = async (result) => {
                               {columnTasks.length}
                             </Badge>
                           </div>
-                          {/* Droppable Area */}
                           <Droppable droppableId={column.status}>
                             {(provided, snapshot) => (
                               <div
@@ -1045,7 +928,10 @@ const handleDragEnd = async (result) => {
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        onClick={() => openTaskDetail(task)}
+                                        onClick={() => {
+                                          setSelectedTask(task);
+                                          setIsDetailModalOpen(true);
+                                        }}
                                         style={{
                                           ...provided.draggableProps.style,
                                         }}
@@ -1114,7 +1000,7 @@ const handleDragEnd = async (result) => {
             </div>
           )}
 
-        {/* ✅ NO RESULTS (Active Filter) */}
+        {/* ✅ NO RESULTS */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -1124,10 +1010,7 @@ const handleDragEnd = async (result) => {
               {t("tasks.messages.noResults")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t(
-                "tasks.messages.noResultsDescription",
-                "Try adjusting your filters to find what you're looking for."
-              )}
+              {t("tasks.messages.noResultsDescription")}
             </p>
             <Button onClick={handleClearFilters} variant="outline" icon={X}>
               {t("tasks.filters.clearFilters")}
@@ -1135,7 +1018,7 @@ const handleDragEnd = async (result) => {
           </div>
         )}
 
-        {/* ✅ EMPTY STATE (No Data) - Enhanced Design */}
+        {/* ✅ EMPTY STATE */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -1150,22 +1033,20 @@ const handleDragEnd = async (result) => {
               {t("tasks.messages.noTasks")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-              {t(
-                "tasks.messages.noTasksDescription",
-                "Get started by creating your first task to track your progress and manage your work efficiently."
-              )}
+              {t("tasks.messages.noTasksDescription")}
             </p>
-            {!showArchived && (
-              <Button
-                onClick={() => openTaskForm()}
-                variant="primary"
-                size="lg"
-                icon={Plus}
-                className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
-              >
-                {t("tasks.createFirstTask")}
-              </Button>
-            )}
+            <Button
+              onClick={() => {
+                setSelectedTask(null);
+                setIsFormOpen(true);
+              }}
+              variant="primary"
+              size="lg"
+              icon={Plus}
+              className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
+            >
+              {t("tasks.createFirstTask")}
+            </Button>
           </div>
         )}
       </div>
@@ -1173,33 +1054,32 @@ const handleDragEnd = async (result) => {
       {/* Modals */}
       <TaskDetailModal
         isOpen={isDetailModalOpen}
-        onClose={closeTaskDetail}
+        onClose={() => setIsDetailModalOpen(false)}
         task={selectedTask}
-        onEdit={handleEditFromDetail}
+        onEdit={(t) => {
+          setSelectedTask(t);
+          setIsDetailModalOpen(false);
+          setIsFormOpen(true);
+        }}
         refreshData={fetchTasks}
         showArchived={showArchived}
       />
 
-      {isFormOpen && (
-        <Modal
-          isOpen={isFormOpen}
-          onClose={closeTaskForm}
-          title={
-            selectedTask
-              ? t("tasks.form.editTitle")
-              : t("tasks.form.createTitle")
-          }
-          size="lg"
-        >
-          <TaskForm
-            task={selectedTask}
-            onSuccess={handleFormSuccess}
-            onCancel={closeTaskForm}
-          />
-        </Modal>
-      )}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        title={
+          selectedTask ? t("tasks.form.editTitle") : t("tasks.form.createTitle")
+        }
+        size="lg"
+      >
+        <TaskForm
+          task={selectedTask}
+          onSuccess={handleFormSuccess}
+          onCancel={() => setIsFormOpen(false)}
+        />
+      </Modal>
 
-      {/* Confirmation Modal */}
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() =>
@@ -1209,16 +1089,17 @@ const handleDragEnd = async (result) => {
         size="sm"
       >
         <div className="p-6 text-center">
-          {confirmationModal.type === "danger" ? (
-            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
-            </div>
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-4">
-              <Info className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-          )}
-          <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+          {/* ... Modal content matching reference ... */}
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmationModal.type === "danger" ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}
+          >
+            {confirmationModal.type === "danger" ? (
+              <Trash2 className="w-6 h-6" />
+            ) : (
+              <Info className="w-6 h-6" />
+            )}
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
             {confirmationModal.message}
           </p>
           <div className="flex justify-center gap-3">

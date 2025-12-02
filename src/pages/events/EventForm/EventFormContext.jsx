@@ -21,32 +21,39 @@ export const EventFormProvider = ({
   const totalSteps = 5;
 
   // 3. Navigation & Validation Logic
-  const goToNextStep = useCallback(() => {
-    // Validate current step before moving
+  const validateCurrentStep = useCallback(() => {
     const errors = validateStep(currentStep, formLogic.formData, formLogic.selectedClient);
     formLogic.setErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [currentStep, formLogic.formData, formLogic.selectedClient, validateStep, formLogic.setErrors]);
 
-    if (Object.keys(errors).length === 0) {
+  const goToNextStep = useCallback(() => {
+    if (validateCurrentStep()) {
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return true;
     }
     return false;
-  }, [currentStep, formLogic.formData, formLogic.selectedClient, validateStep, formLogic.setErrors]);
+  }, [validateCurrentStep, totalSteps]);
 
   const goToPrevStep = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const goToStep = useCallback((step) => {
-    // Only allow jumping back, or jumping forward if current step is valid (optional strictness)
+    // Only allow jumping forward if strictly strictly validating, 
+    // but for UX, we usually allow jumping back.
     if (step < currentStep) {
       setCurrentStep(step);
+    } else {
+      // If jumping forward, validate current first
+      if (validateCurrentStep()) {
+        setCurrentStep(step);
+      }
     }
-  }, [currentStep]);
+  }, [currentStep, validateCurrentStep]);
 
-  // 4. Calculations (Price, etc.)
+  // 4. Calculations
   const calculations = useMemo(() => {
     const { formData } = formLogic;
     
@@ -125,6 +132,7 @@ export const EventFormProvider = ({
     goToNextStep,
     goToPrevStep,
     goToStep,
+    validateCurrentStep,
     calculations, 
     meta: { isEditMode, eventId, prefillClient, prefillPartner }
   };

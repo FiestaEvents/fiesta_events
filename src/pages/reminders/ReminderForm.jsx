@@ -28,7 +28,8 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Textarea from '../../components/common/Textarea';
 import Select from '../../components/common/Select';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import LoadingSpinner from '../../components/common/LoadingSpinner'; // Optional, or use simple div
+import DateInput from '../../components/common/DateInput'; // Assuming this exists based on TaskForm
 
 // ✅ Hooks
 import { useToast } from '../../hooks/useToast';
@@ -78,7 +79,8 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { showSuccess, apiError, showError } = useToast();
+  // ✅ Removed showSuccess (Parent handles it)
+  const { apiError, showError } = useToast(); 
   
   const isEditMode = Boolean(id || reminderProp?._id);
   const reminderId = id || reminderProp?._id;
@@ -94,7 +96,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
   const [events, setEvents] = useState([]);
   const [clients, setClients] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [payments, setPayments] = useState([]);
+  // const [payments, setPayments] = useState([]); // Kept if you plan to use it later
 
   const [formData, setFormData] = useState({
     title: '',
@@ -153,21 +155,16 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
     const init = async () => {
       setIsLoading(true);
       try {
-        // 1. Load Dropdown Data
-        const [eventsRes, clientsRes, tasksRes, paymentsRes] = await Promise.all([
+        const [eventsRes, clientsRes, tasksRes] = await Promise.all([
           eventService.getAll(),
           clientService.getAll(),
           taskService.getAll(),
-          paymentService.getAll(),
         ]);
         
-        // Robust data extraction
         setEvents(eventsRes?.events || eventsRes?.data || []);
         setClients(clientsRes?.clients || clientsRes?.data || []);
         setTasks(tasksRes?.tasks || tasksRes?.data || []);
-        setPayments(paymentsRes?.payments || paymentsRes?.data || []);
 
-        // 2. Load Reminder if Edit Mode
         if (isEditMode && !reminderProp) {
           const res = await reminderService.getById(reminderId);
           loadReminderData(res.reminder || res);
@@ -228,12 +225,26 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) setCurrentStep(p => Math.min(p + 1, totalSteps));
-    else showError(t('reminders.validation.fixErrors'));
+  // Navigation Logic
+  const handleNext = (e) => {
+    if (e) e.preventDefault();
+    if (validateStep(currentStep)) {
+        setCurrentStep(p => Math.min(p + 1, totalSteps));
+    } else {
+        showError(t('reminders.validation.fixErrors'));
+    }
+  };
+  
+  const handlePrevious = (e) => {
+    if (e) e.preventDefault();
+    setCurrentStep(p => Math.max(p - 1, 1));
+  };
+  
+  const handleStepClick = (step) => {
+      if (step < currentStep || validateStep(currentStep)) setCurrentStep(step);
   };
 
-  // Shared Submit Logic
+  // Submit Logic
   const submitData = async () => {
     setIsSaving(true);
     try {
@@ -246,7 +257,6 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
         } : undefined
       };
 
-      // Cleanup empty relation fields
       if (!payload.relatedEvent) delete payload.relatedEvent;
       if (!payload.relatedClient) delete payload.relatedClient;
       if (!payload.relatedTask) delete payload.relatedTask;
@@ -254,14 +264,14 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
 
       if (isEditMode) {
         await reminderService.update(reminderId, payload);
-        showSuccess(t('reminders.notifications.updated'));
       } else {
         await reminderService.create(payload);
-        showSuccess(t('reminders.notifications.created'));
       }
-
+      
+      // ✅ Parent handles success UI
       if (onSuccess) onSuccess();
       else navigate('/reminders');
+
     } catch (error) {
       apiError(error, t('reminders.notifications.saveError'));
     } finally {
@@ -271,15 +281,11 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (currentStep < totalSteps) {
-      handleNext();
-      return;
-    }
+    // Validate final step before submitting
     if (!validateStep(4)) return showError(t('reminders.validation.fixAllErrors'));
     await submitData();
   };
 
-  // Quick Update Handler
   const handleQuickUpdate = async (e) => {
     e.preventDefault();
     if (!validateStep(1)) {
@@ -289,255 +295,296 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
     await submitData();
   };
 
-  // Render Helpers
-  const renderStepIndicator = () => (
-    <div className="flex justify-between mb-8 px-4">
-      {[
-        { icon: Bell, title: t('reminders.form.basicInfo') },
-        { icon: Link2, title: t('reminders.form.relatedItems') },
-        { icon: BellRing, title: t('reminders.form.notifications') },
-        { icon: Repeat, title: t('reminders.form.recurrence') }
-      ].map((step, idx) => {
-        const stepNum = idx + 1;
-        const isActive = stepNum === currentStep;
-        const isDone = stepNum < currentStep;
-        const Icon = step.icon;
+  // --- Render Components ---
 
-        return (
-          <div key={stepNum} className="flex flex-col items-center relative z-10">
-            <div 
-              className={`w-10 h-10 rounded-full flex items-center justify-center border-2 cursor-pointer transition-all ${
-                isActive ? "bg-orange-600 border-orange-600 text-white scale-110" 
-                : isDone ? "bg-green-500 border-green-500 text-white" 
-                : "bg-white border-gray-300 text-gray-400 dark:bg-gray-700 dark:border-gray-600"
+  const renderStepIndicator = () => (
+    <div className="mb-8 px-4">
+      <div className="flex items-center justify-between relative max-w-2xl mx-auto">
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-100 dark:bg-gray-700 -z-10" />
+        
+        {[
+          { icon: Bell, title: t('reminders.form.basicInfo') },
+          { icon: Link2, title: t('reminders.form.relatedItems') },
+          { icon: BellRing, title: t('reminders.form.notifications') },
+          { icon: Repeat, title: t('reminders.form.recurrence') }
+        ].map((step, idx) => {
+          const stepNum = idx + 1;
+          const isCompleted = stepNum < currentStep;
+          const isCurrent = stepNum === currentStep;
+          const StepIcon = step.icon;
+
+          return (
+            <button
+              key={stepNum}
+              type="button"
+              onClick={() => handleStepClick(stepNum)}
+              disabled={!isCompleted && !isCurrent}
+              className={`group flex flex-col items-center gap-2 bg-white dark:bg-[#1f2937] px-2 transition-all ${
+                isCompleted || isCurrent ? "cursor-pointer" : "cursor-default"
               }`}
-              onClick={() => { if (isDone) setCurrentStep(stepNum); }}
             >
-              {isDone ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
-            </div>
-            <span className={`text-xs font-medium mt-2 ${isActive ? "text-orange-600" : "text-gray-500"}`}>
-              {step.title}
-            </span>
-            {idx < 3 && (
-              <div className={`absolute top-5 left-1/2 w-full h-0.5 -z-10 ${
-                isDone ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"
-              }`} style={{ width: "calc(100% * 4)" }} />
-            )} 
-          </div>
-        );
-      })}
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
+                isCompleted 
+                  ? "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400" 
+                  : isCurrent 
+                    ? "bg-orange-500 text-white shadow-orange-200 dark:shadow-none" 
+                    : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+              }`}>
+                {isCompleted ? <Check className="w-6 h-6" /> : <StepIcon className="w-5 h-5" />}
+              </div>
+              <span className={`text-xs font-semibold whitespace-nowrap ${
+                isCurrent ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"
+              }`}>
+                {step.title}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 
-  if (isLoading) return <div className="flex justify-center py-12"><LoadingSpinner size="lg" /></div>;
+  if (isLoading) return <div className="flex justify-center py-12 text-gray-500">{t('common.loading')}</div>;
 
   return (
-    <div className="p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-sm">
+    <div className="bg-white dark:bg-[#1f2937] h-full flex flex-col p-4 sm:p-6 rounded-lg">
       {!isModalMode && (
-        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-          {isEditMode ? t('reminders.form.editTitle') : t('reminders.form.createTitle')}
-        </h1>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {isEditMode ? t('reminders.form.editTitle') : t('reminders.form.createTitle')}
+          </h1>
+        </div>
       )}
 
       {renderStepIndicator()}
 
-      <form onSubmit={handleSubmit} className="space-y-6 min-h-[400px]">
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
         
-        {/* STEP 1: BASIC INFO */}
-        {currentStep === 1 && (
-          <div className="space-y-4 animate-in fade-in">
-            <Input 
-              label={t('reminders.form.fields.title')}
-              value={formData.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-              error={errors.title}
-              required
-            />
-            <Textarea 
-              label={t('reminders.form.fields.description')}
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              rows={3}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <Select 
-                label={t('reminders.form.fields.type')}
-                value={formData.type}
-                onChange={(e) => handleChange("type", e.target.value)}
-                options={Object.values(REMINDER_TYPES).map(v => ({ value: v, label: t(`reminders.type.${v}`) }))}
-              />
-              <Select 
-                label={t('reminders.form.fields.priority')}
-                value={formData.priority}
-                onChange={(e) => handleChange("priority", e.target.value)}
-                options={Object.values(REMINDER_PRIORITIES).map(v => ({ value: v, label: t(`reminders.priority.${v}`) }))}
-              />
+        <div className="flex-1 mt-4 mb-8">
+            {/* STEP 1: BASIC INFO */}
+            {currentStep === 1 && (
+            <div className="space-y-6 animate-fadeIn">
+                <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('reminders.form.basicInfo')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Set the main details for your reminder.</p>
+                </div>
+                <Input 
+                    label={t('reminders.form.fields.title')}
+                    value={formData.title}
+                    onChange={(e) => handleChange("title", e.target.value)}
+                    error={errors.title}
+                    required
+                    className="w-full"
+                />
+                <Textarea 
+                    label={t('reminders.form.fields.description')}
+                    value={formData.description}
+                    onChange={(e) => handleChange("description", e.target.value)}
+                    rows={3}
+                    className="w-full"
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Select 
+                        label={t('reminders.form.fields.type')}
+                        value={formData.type}
+                        onChange={(e) => handleChange("type", e.target.value)}
+                        options={Object.values(REMINDER_TYPES).map(v => ({ value: v, label: t(`reminders.type.${v}`) }))}
+                    />
+                    <Select 
+                        label={t('reminders.form.fields.priority')}
+                        value={formData.priority}
+                        onChange={(e) => handleChange("priority", e.target.value)}
+                        options={Object.values(REMINDER_PRIORITIES).map(v => ({ value: v, label: t(`reminders.priority.${v}`) }))}
+                    />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input 
+                        label={t('reminders.form.fields.date')}
+                        type="date"
+                        value={formData.reminderDate}
+                        onChange={(e) => handleChange("reminderDate", e.target.value)}
+                        error={errors.reminderDate}
+                        required
+                    />
+                    <Input 
+                        label={t('reminders.form.fields.time')}
+                        type="time"
+                        value={formData.reminderTime}
+                        onChange={(e) => handleChange("reminderTime", e.target.value)}
+                        error={errors.reminderTime}
+                        required
+                    />
+                </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input 
-                label={t('reminders.form.fields.date')}
-                type="date"
-                value={formData.reminderDate}
-                onChange={(e) => handleChange("reminderDate", e.target.value)}
-                error={errors.reminderDate}
-                required
-              />
-              <Input 
-                label={t('reminders.form.fields.time')}
-                type="time"
-                value={formData.reminderTime}
-                onChange={(e) => handleChange("reminderTime", e.target.value)}
-                error={errors.reminderTime}
-                required
-              />
+            )}
+
+            {/* STEP 2: RELATED ITEMS */}
+            {currentStep === 2 && (
+            <div className="space-y-6 animate-fadeIn">
+                <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('reminders.form.relatedItems')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Connect this reminder to other items.</p>
+                </div>
+                <Select 
+                    label={t('reminders.form.fields.relatedEvent')}
+                    value={formData.relatedEvent}
+                    onChange={(e) => handleChange("relatedEvent", e.target.value)}
+                    options={[{ value: "", label: "None" }, ...events.map(e => ({ value: e._id, label: e.title }))]}
+                    className="w-full"
+                />
+                <Select 
+                    label={t('reminders.form.fields.relatedClient')}
+                    value={formData.relatedClient}
+                    onChange={(e) => handleChange("relatedClient", e.target.value)}
+                    options={[{ value: "", label: "None" }, ...clients.map(c => ({ value: c._id, label: c.name }))]}
+                    className="w-full"
+                />
+                <Select 
+                    label={t('reminders.form.fields.relatedTask')}
+                    value={formData.relatedTask}
+                    onChange={(e) => handleChange("relatedTask", e.target.value)}
+                    options={[{ value: "", label: "None" }, ...tasks.map(t => ({ value: t._id, label: t.title }))]}
+                    className="w-full"
+                />
             </div>
-          </div>
-        )}
+            )}
 
-        {/* STEP 2: RELATED ITEMS */}
-        {currentStep === 2 && (
-          <div className="space-y-4 animate-in fade-in">
-            <Select 
-              label={t('reminders.form.fields.relatedEvent')}
-              value={formData.relatedEvent}
-              onChange={(e) => handleChange("relatedEvent", e.target.value)}
-              options={[{ value: "", label: "None" }, ...events.map(e => ({ value: e._id, label: e.title }))]}
-            />
-            <Select 
-              label={t('reminders.form.fields.relatedClient')}
-              value={formData.relatedClient}
-              onChange={(e) => handleChange("relatedClient", e.target.value)}
-              options={[{ value: "", label: "None" }, ...clients.map(c => ({ value: c._id, label: c.name }))]}
-            />
-            <Select 
-              label={t('reminders.form.fields.relatedTask')}
-              value={formData.relatedTask}
-              onChange={(e) => handleChange("relatedTask", e.target.value)}
-              options={[{ value: "", label: "None" }, ...tasks.map(t => ({ value: t._id, label: t.title }))]}
-            />
-          </div>
-        )}
-
-        {/* STEP 3: NOTIFICATIONS */}
-        {currentStep === 3 && (
-          <div className="space-y-4 animate-in fade-in">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('reminders.form.fields.notificationMethods')} *
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {Object.values(NOTIFICATION_METHODS).map((method) => (
-                <label key={method} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={formData.notificationMethods.includes(method)}
-                    onChange={() => handleNotificationToggle(method)}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                  />
-                  <span className="text-sm capitalize">{method.replace('_', ' ')}</span>
-                </label>
-              ))}
+            {/* STEP 3: NOTIFICATIONS */}
+            {currentStep === 3 && (
+            <div className="space-y-6 animate-fadeIn">
+                 <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('reminders.form.notifications')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">How should we alert you?</p>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                        {t('reminders.form.fields.notificationMethods')} *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.values(NOTIFICATION_METHODS).map((method) => (
+                            <label key={method} className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${formData.notificationMethods.includes(method) ? 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800' : 'bg-white dark:bg-gray-800 dark:border-gray-700'}`}>
+                                <input
+                                    type="checkbox"
+                                    checked={formData.notificationMethods.includes(method)}
+                                    onChange={() => handleNotificationToggle(method)}
+                                    className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
+                                />
+                                <span className="text-sm font-medium capitalize">{method.replace('_', ' ')}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+                {errors.notificationMethods && <p className="text-red-500 text-sm mt-1">{errors.notificationMethods}</p>}
             </div>
-            {errors.notificationMethods && <p className="text-red-500 text-sm mt-1">{errors.notificationMethods}</p>}
-          </div>
-        )}
+            )}
 
-        {/* STEP 4: RECURRENCE */}
-        {currentStep === 4 && (
-          <div className="space-y-4 animate-in fade-in">
-            <div className="flex items-center gap-2 mb-4">
-              <input 
-                type="checkbox" 
-                checked={formData.isRecurring} 
-                onChange={(e) => handleChange("isRecurring", e.target.checked)}
-                className="w-4 h-4 text-orange-600 rounded"
-              />
-              <span className="text-sm font-medium">{t('reminders.form.enableRecurrence')}</span>
-            </div>
-
-            {formData.isRecurring && (
-              <div className="space-y-4 pl-6 border-l-2 border-gray-200 dark:border-gray-700">
-                <div className="grid grid-cols-2 gap-4">
-                  <Select 
-                    label={t('reminders.form.fields.frequency')}
-                    value={formData.recurrence.frequency}
-                    onChange={(e) => handleChange("recurrence.frequency", e.target.value)}
-                    options={Object.values(RECURRENCE_FREQUENCIES).map(v => ({ value: v, label: t(`reminders.recurrence.${v}`) }))}
-                  />
-                  <Input 
-                    label={t('reminders.form.fields.interval')}
-                    type="number"
-                    min="1"
-                    value={formData.recurrence.interval}
-                    onChange={(e) => handleChange("recurrence.interval", e.target.value)}
-                  />
+            {/* STEP 4: RECURRENCE */}
+            {currentStep === 4 && (
+            <div className="space-y-6 animate-fadeIn">
+                 <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('reminders.form.recurrence')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Repeat settings and final notes.</p>
                 </div>
                 
-                {formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY && (
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t('reminders.form.fields.daysOfWeek')}</label>
-                    <div className="flex flex-wrap gap-2">
-                      {DAYS_OF_WEEK.map(day => (
-                        <button
-                          key={day.value}
-                          type="button"
-                          onClick={() => handleDayToggle(day.value)}
-                          className={`px-3 py-1 rounded text-xs border ${
-                            formData.recurrence.daysOfWeek.includes(day.value) 
-                              ? "bg-orange-500 text-white border-orange-500" 
-                              : "bg-white text-gray-700 border-gray-300"
-                          }`}
-                        >
-                          {t(`reminders.weekdays.${day.label.toLowerCase()}`).substring(0, 3)}
-                        </button>
-                      ))}
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={formData.isRecurring} 
+                            onChange={(e) => handleChange("isRecurring", e.target.checked)}
+                            className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
+                        />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{t('reminders.form.enableRecurrence')}</span>
+                    </label>
+
+                    {formData.isRecurring && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Select 
+                                label={t('reminders.form.fields.frequency')}
+                                value={formData.recurrence.frequency}
+                                onChange={(e) => handleChange("recurrence.frequency", e.target.value)}
+                                options={Object.values(RECURRENCE_FREQUENCIES).map(v => ({ value: v, label: t(`reminders.recurrence.${v}`) }))}
+                            />
+                            <Input 
+                                label={t('reminders.form.fields.interval')}
+                                type="number"
+                                min="1"
+                                value={formData.recurrence.interval}
+                                onChange={(e) => handleChange("recurrence.interval", e.target.value)}
+                            />
+                        </div>
+                        
+                        {formData.recurrence.frequency === RECURRENCE_FREQUENCIES.WEEKLY && (
+                        <div>
+                            <label className="block text-sm font-medium mb-2">{t('reminders.form.fields.daysOfWeek')}</label>
+                            <div className="flex flex-wrap gap-2">
+                            {DAYS_OF_WEEK.map(day => (
+                                <button
+                                key={day.value}
+                                type="button"
+                                onClick={() => handleDayToggle(day.value)}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                                    formData.recurrence.daysOfWeek.includes(day.value) 
+                                    ? "bg-orange-500 text-white border-orange-500" 
+                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                }`}
+                                >
+                                {t(`reminders.weekdays.${day.label.toLowerCase()}`).substring(0, 3)}
+                                </button>
+                            ))}
+                            </div>
+                        </div>
+                        )}
                     </div>
-                  </div>
-                )}
-              </div>
+                    )}
+                </div>
+                
+                <Textarea 
+                    label={t('reminders.form.fields.notes')}
+                    value={formData.notes}
+                    onChange={(e) => handleChange("notes", e.target.value)}
+                    rows={4}
+                    className="w-full"
+                />
+            </div>
             )}
-            
-            <Textarea 
-              label={t('reminders.form.fields.notes')}
-              value={formData.notes}
-              onChange={(e) => handleChange("notes", e.target.value)}
-              rows={3}
-            />
-          </div>
-        )}
+        </div>
 
         {/* Footer Navigation */}
-        <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-          {currentStep > 1 ? (
-            <Button type="button" variant="outline" onClick={() => setCurrentStep(p => p - 1)} icon={ChevronLeft}>
-              {t('reminders.form.buttons.previous')}
-            </Button>
-          ) : (
-            <Button type="button" variant="ghost" onClick={onCancel || (() => navigate('/reminders'))}>
-              {t('reminders.form.buttons.cancel')}
-            </Button>
-          )}
+        <div className="flex items-center justify-between pt-6 mt-auto">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            onClick={currentStep === 1 ? (onCancel || (() => navigate('/reminders'))) : handlePrevious}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+          >
+             {currentStep === 1 ? t('reminders.form.buttons.cancel') : (
+                <span className="flex items-center"><ChevronLeft className="w-4 h-4 mr-1" /> {t('reminders.form.buttons.previous')}</span>
+             )}
+          </Button>
 
-          <div className="flex gap-3">
-            {/* Quick Update Button */}
+          <div className="flex items-center gap-3">
+            {/* Quick Update */}
             {isEditMode && currentStep < totalSteps && (
               <Button 
                 type="button" 
-                variant="outline" 
+                variant="ghost" 
                 onClick={handleQuickUpdate}
                 loading={isSaving}
-                className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                className="text-orange-600 hover:bg-orange-50"
               >
                 <Save className="w-4 h-4 mr-2" /> {t('reminders.form.buttons.updateNow')}
               </Button>
             )}
             
             {currentStep < totalSteps ? (
-              <Button type="button" variant="primary" onClick={handleNext}>
-                {t('reminders.form.buttons.next')} <ChevronRight className="w-4 h-4 ml-2" />
+              <Button type="button" variant="primary" onClick={handleNext} className="px-6">
+                <span className="flex items-center">{t('reminders.form.buttons.next')} <ChevronRight className="w-4 h-4 ml-1" /></span>
               </Button>
             ) : (
-              <Button type="submit" variant="primary" loading={isSaving} icon={Save}>
-                {isEditMode ? t('reminders.form.buttons.update') : t('reminders.form.buttons.create')}
+              <Button type="submit" variant="primary" loading={isSaving} className="px-6">
+                <span className="flex items-center"><Save className="w-4 h-4 mr-2" />{isEditMode ? t('reminders.form.buttons.update') : t('reminders.form.buttons.create')}</span>
               </Button>
             )}
           </div>

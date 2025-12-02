@@ -1,22 +1,30 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { EventFormProvider } from "./EventFormContext";
 import SharedEventForm from "./SharedEventForm";
+import { useToast } from "../../../hooks/useToast";
 
 const EditEventPage = () => {
   const { t } = useTranslation();
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { showSuccess } = useToast();
 
   if (!id) return <div>Invalid Event ID</div>;
 
+  const handleSuccess = (response) => {
+    showSuccess(t('eventForm.messages.eventUpdated', 'Event updated successfully'));
+    navigate("/events");
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl bg-white dark:bg-gray-800">
+    <div className="container mx-auto max-w-5xl">
       <EventFormProvider 
         eventId={id} 
         isEditMode={true}
       >
-        <SharedEventForm />
+        <SharedEventForm onSuccess={handleSuccess} />
       </EventFormProvider>
     </div>
   );

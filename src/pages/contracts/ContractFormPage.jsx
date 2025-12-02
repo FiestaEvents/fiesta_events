@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-// Imports
+// ✅ Imports
 import { clientService, partnerService, eventService, contractService } from "../../api/index";
 import { useToast } from "../../hooks/useToast";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -26,9 +26,15 @@ const StepButton = ({ isActive, isDone, icon: Icon, label, onClick }) => (
     onClick={onClick}
     disabled={!isActive && !isDone}
     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0
-      ${isActive ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-500' : ''}
-      ${isDone ? 'bg-green-50 text-green-700' : ''}
-      ${!isActive && !isDone ? 'text-gray-400 cursor-not-allowed' : ''}
+      ${isActive 
+        ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-500 dark:bg-orange-900/40 dark:text-orange-300 dark:ring-orange-400' 
+        : ''}
+      ${isDone 
+        ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' 
+        : ''}
+      ${!isActive && !isDone 
+        ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' 
+        : ''}
     `}
   >
     {isDone ? <Check size={16} /> : <Icon size={16} />}
@@ -71,13 +77,13 @@ const ContractFormPage = () => {
       id: "",
       type: "individual",
       name: "",
-      identifier: "", // MF or CIN
+      identifier: "",
       email: "",
       phone: "",
       address: "",
       representative: "",
-      category: "other", // Partner specific default
-      priceType: "fixed" // Partner specific default
+      category: "other",
+      priceType: "fixed"
     },
     logistics: {
       startDate: new Date().toISOString().split("T")[0],
@@ -115,14 +121,12 @@ const ContractFormPage = () => {
         setPartners(pRes.data?.partners || pRes.partners || []);
         setEvents(eRes.data?.events || eRes.events || []);
 
-        // Initialize defaults if creating new
         if (!isEditMode) {
           const isPartner = initialType === 'partner';
           setFormData(prev => ({
             ...prev,
             financials: {
               ...prev.financials,
-              // Partners (Expense) usually 0 VAT if individual, Clients (Revenue) 19%
               vatRate: isPartner ? 0 : (settingsData.financialDefaults?.defaultVatRate || 19),
               stampDuty: isPartner ? 0 : (settingsData.financialDefaults?.defaultStampDuty || 1.000)
             },
@@ -130,7 +134,6 @@ const ContractFormPage = () => {
           }));
         }
 
-        // Initialize data if Editing
         if (isEditMode) {
           const res = await contractService.getById(id);
           const contract = res.data?.contract || res.contract || res.message?.contract;
@@ -162,18 +165,14 @@ const ContractFormPage = () => {
     fetchData();
   }, [id, isEditMode, initialType]);
 
-  // --- 2. CALCULATIONS ENGINE ---
+  // --- 2. CALCULATIONS ---
   useEffect(() => {
-    // Calculate total of services
     const calculatedHT = services.reduce((sum, item) => sum + ((parseFloat(item.quantity)||0) * (parseFloat(item.rate)||0)), 0);
-    
     const vatRate = parseFloat(formData.financials.vatRate) || 0;
     const stampDuty = parseFloat(formData.financials.stampDuty) || 0;
-    
     const taxAmount = (calculatedHT * vatRate) / 100;
     const totalTTC = calculatedHT + taxAmount + stampDuty;
 
-    // Only update state if values differ (prevent infinite loop)
     if (Math.abs(totalTTC - formData.financials.totalTTC) > 0.001 || Math.abs(calculatedHT - formData.financials.amountHT) > 0.001) {
       setFormData(prev => ({
         ...prev,
@@ -188,8 +187,6 @@ const ContractFormPage = () => {
   }, [services, formData.financials.vatRate, formData.financials.stampDuty]);
 
   // --- 3. HANDLERS ---
-  
-  // Select Client/Partner from Search
   const handleRecipientSelect = (recipientId) => {
     const isPartner = formData.contractType === 'partner';
     const list = isPartner ? partners : clients;
@@ -210,16 +207,13 @@ const ContractFormPage = () => {
         phone: selected.phone,
         address: displayAddress,
         representative: selected.contactPerson || "",
-        // Partner Specifics
         category: selected.category || "other",
         priceType: selected.priceType || "fixed"
       };
 
-      // Reset Services based on Partner Type
       let newServices = [];
       if (isPartner) {
         const desc = selected.category ? `Prestation ${selected.category}` : `Services Partenaire`;
-        // Auto-fill rate if available
         const rate = selected.priceType === 'fixed' ? (selected.fixedRate || 0) : (selected.hourlyRate || 0);
         newServices.push({ 
           description: desc, 
@@ -227,8 +221,6 @@ const ContractFormPage = () => {
           rate: rate, 
           amount: rate 
         });
-        
-        // Reset Taxes for individual partners (usually 0)
         setFormData(prev => ({
            ...prev, 
            party: newParty,
@@ -247,7 +239,6 @@ const ContractFormPage = () => {
   const handleServiceChange = (idx, field, val) => {
     const updated = [...services];
     updated[idx] = { ...updated[idx], [field]: val };
-    // Recalculate line amount
     updated[idx].amount = (parseFloat(updated[idx].quantity)||0) * (parseFloat(updated[idx].rate)||0);
     setServices(updated);
   };
@@ -256,7 +247,6 @@ const ContractFormPage = () => {
     setLoading(true);
     try {
       const payload = { ...formData, services };
-      // Backend handles contractNumber generation
       if (!payload.contractNumber) delete payload.contractNumber;
 
       if (isEditMode) await contractService.update(id, payload);
@@ -271,7 +261,6 @@ const ContractFormPage = () => {
     }
   };
 
-  // Filter Search List
   const activeList = formData.contractType === 'client' ? clients : partners;
   const filteredRecipients = activeList.filter(r => {
     const term = recipientSearch.toLowerCase();
@@ -283,39 +272,39 @@ const ContractFormPage = () => {
   });
 
   const isPartnerMode = formData.contractType === 'partner';
-  const themeColor = isPartnerMode ? "purple" : "orange";
+  const themeColor = isPartnerMode ? "orange" : "orange";
 
-  if (fetchLoading) return <div className="h-screen flex items-center justify-center"><LoadingSpinner /></div>;
+  if (fetchLoading) return <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><LoadingSpinner /></div>;
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden text-slate-800 font-sans" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden text-slate-800 dark:text-slate-100 font-sans" dir={isRTL ? "rtl" : "ltr"}>
       
       {/* --- LEFT: FORM PANEL --- */}
-      <div className={`flex-1 flex flex-col h-full bg-white border-r border-gray-200 z-10 shadow-xl max-w-2xl ${isRTL ? 'border-l border-r-0' : ''}`}>
+      <div className={`flex-1 flex flex-col h-full bg-white dark:bg-[#1f2937] border-r border-gray-200 dark:border-gray-700 z-10 shadow-xl max-w-2xl ${isRTL ? 'border-l border-r-0' : ''}`}>
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate("/contracts")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+            <button onClick={() => navigate("/contracts")} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400">
               <ArrowLeft size={20} className={isRTL ? "rotate-180" : ""}/>
             </button>
-            <h1 className="text-lg font-bold text-gray-900">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
               {isEditMode ? t("contracts.form.title.edit") : t("contracts.form.title.create")}
             </h1>
           </div>
-          <button className="text-gray-400 hover:text-gray-600" onClick={() => navigate("/contracts/settings")}>
+          <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onClick={() => navigate("/contracts/settings")}>
             <Settings size={20}/>
           </button>
         </div>
 
         {/* Stepper */}
-        <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex gap-1 overflow-x-auto shrink-0">
+        <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex gap-1 overflow-x-auto shrink-0">
           <StepButton isActive={currentStep===1} isDone={currentStep>1} icon={Users} label={t("contracts.form.steps.parties")} onClick={()=>setCurrentStep(1)} />
-          <ChevronRight className={`text-gray-300 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
+          <ChevronRight className={`text-gray-300 dark:text-gray-600 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
           <StepButton isActive={currentStep===2} isDone={currentStep>2} icon={Calendar} label={t("contracts.form.steps.dates")} onClick={()=>setCurrentStep(2)} />
-          <ChevronRight className={`text-gray-300 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
+          <ChevronRight className={`text-gray-300 dark:text-gray-600 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
           <StepButton isActive={currentStep===3} isDone={currentStep>3} icon={DollarSign} label={t("contracts.form.steps.finance")} onClick={()=>setCurrentStep(3)} />
-          <ChevronRight className={`text-gray-300 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
+          <ChevronRight className={`text-gray-300 dark:text-gray-600 self-center ${isRTL ? "rotate-180" : ""}`} size={16}/>
           <StepButton isActive={currentStep===4} isDone={currentStep>4} icon={Scale} label={t("contracts.form.steps.legal")} onClick={()=>setCurrentStep(4)} />
         </div>
 
@@ -327,16 +316,16 @@ const ContractFormPage = () => {
             <div className="space-y-5 animate-in slide-in-from-right-4">
               
               {/* Type Toggle */}
-              <div className="flex gap-4 p-1 bg-gray-100 rounded-lg">
+              <div className="flex gap-4 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
                 <button 
                   onClick={() => { setFormData(p => ({ ...p, contractType: "client" })); setRecipientSearch(""); }}
-                  className={`flex-1 py-2 text-sm font-bold rounded shadow-sm transition ${!isPartnerMode ? 'bg-white text-orange-600' : 'text-gray-500'}`}
+                  className={`flex-1 py-2 text-sm font-bold rounded shadow-sm transition ${!isPartnerMode ? 'bg-white dark:bg-gray-600 text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'}`}
                 >
                   {t("contracts.form.types.client")}
                 </button>
                 <button 
                   onClick={() => { setFormData(p => ({ ...p, contractType: "partner" })); setRecipientSearch(""); }}
-                  className={`flex-1 py-2 text-sm font-bold rounded shadow-sm transition ${isPartnerMode ? 'bg-white text-purple-600' : 'text-gray-500'}`}
+                  className={`flex-1 py-2 text-sm font-bold rounded shadow-sm transition ${isPartnerMode ? 'bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`}
                 >
                   {t("contracts.form.types.partner")}
                 </button>
@@ -344,11 +333,11 @@ const ContractFormPage = () => {
 
               {/* Search Bar */}
               <div className="relative z-50">
-                 <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.search.label")}</label>
+                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("contracts.form.search.label")}</label>
                  <div className="relative">
                     <Search className={`absolute top-2.5 text-gray-400 ${isRTL ? 'right-3' : 'left-3'}`} size={18} />
                     <input 
-                      className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-${themeColor}-500 outline-none ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                      className={`w-full py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-${themeColor}-500 outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
                       placeholder={isPartnerMode ? t("contracts.form.search.placeholderPartner") : t("contracts.form.search.placeholderClient")}
                       value={recipientSearch}
                       onChange={(e) => setRecipientSearch(e.target.value)}
@@ -356,15 +345,15 @@ const ContractFormPage = () => {
                  </div>
                  {/* Dropdown Results */}
                  {recipientSearch && filteredRecipients.length > 0 && (
-                   <div className="absolute w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50">
+                   <div className="absolute w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50">
                      {filteredRecipients.map(r => (
-                       <button key={r._id} onClick={() => handleRecipientSelect(r._id)} className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50 flex justify-between items-center group">
+                       <button key={r._id} onClick={() => handleRecipientSelect(r._id)} className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center group">
                          <div>
-                            <div className="font-bold text-sm text-gray-800">{r.company || r.name}</div>
-                            <div className="text-xs text-gray-500">{r.email}</div>
+                            <div className="font-bold text-sm text-gray-800 dark:text-gray-200">{r.company || r.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{r.email}</div>
                          </div>
                          {isPartnerMode && r.category && (
-                           <div className="text-[10px] font-bold px-2 py-1 bg-purple-50 text-purple-700 rounded uppercase">
+                           <div className="text-[10px] font-bold px-2 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded uppercase">
                              {r.category}
                            </div>
                          )}
@@ -374,10 +363,10 @@ const ContractFormPage = () => {
                  )}
               </div>
               
-              {/* Partner Category Grid (NEW FEATURE) */}
+              {/* Partner Category Grid */}
               {isPartnerMode && (
-                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                  <div className="flex items-center gap-2 mb-3 text-purple-800">
+                <div className="bg-purple-50 dark:bg-purple-900/10 p-4 rounded-xl border border-purple-100 dark:border-purple-800">
+                  <div className="flex items-center gap-2 mb-3 text-purple-800 dark:text-purple-300">
                     <Tag size={16} />
                     <h3 className="text-xs font-bold uppercase">{t("contracts.form.party.category")}</h3>
                   </div>
@@ -389,7 +378,7 @@ const ContractFormPage = () => {
                         className={`px-3 py-2 rounded text-xs font-medium capitalize border transition-all text-left truncate
                           ${formData.party.category === cat 
                             ? 'bg-purple-600 text-white border-purple-600 shadow-md' 
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
+                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-500'
                           }`}
                       >
                         {cat.replace('_', ' ')}
@@ -400,38 +389,38 @@ const ContractFormPage = () => {
               )}
 
               {/* Party Details Inputs */}
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
                 <div className="flex justify-between">
-                   <h3 className="text-xs font-bold uppercase text-gray-400">{t("contracts.form.party.title")}</h3>
+                   <h3 className="text-xs font-bold uppercase text-gray-400 dark:text-gray-500">{t("contracts.form.party.title")}</h3>
                    {isPartnerMode && formData.party.priceType && (
-                     <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold uppercase">
+                     <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded font-bold uppercase">
                        {t("contracts.form.party.rateType")}: {formData.party.priceType}
                      </span>
                    )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                    <div className="col-span-2">
-                     <label className="text-xs text-gray-500">{t("contracts.form.party.name")}</label>
-                     <input className="w-full p-2 border border-gray-200 rounded text-sm" value={formData.party.name} onChange={e => setFormData(p=>({...p, party:{...p.party, name: e.target.value}}))} />
+                     <label className="text-xs text-gray-500 dark:text-gray-400">{t("contracts.form.party.name")}</label>
+                     <input className="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-white" value={formData.party.name} onChange={e => setFormData(p=>({...p, party:{...p.party, name: e.target.value}}))} />
                    </div>
                    <div>
-                     <label className="text-xs text-gray-500">{t("contracts.form.party.identifier")}</label>
-                     <input className="w-full p-2 border border-gray-200 rounded text-sm" value={formData.party.identifier} onChange={e => setFormData(p=>({...p, party:{...p.party, identifier: e.target.value}}))} placeholder="MF / CIN" />
+                     <label className="text-xs text-gray-500 dark:text-gray-400">{t("contracts.form.party.identifier")}</label>
+                     <input className="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-white" value={formData.party.identifier} onChange={e => setFormData(p=>({...p, party:{...p.party, identifier: e.target.value}}))} placeholder="MF / CIN" />
                    </div>
                    <div>
-                     <label className="text-xs text-gray-500">{t("contracts.form.party.phone")}</label>
-                     <input className="w-full p-2 border border-gray-200 rounded text-sm" value={formData.party.phone} onChange={e => setFormData(p=>({...p, party:{...p.party, phone: e.target.value}}))} />
+                     <label className="text-xs text-gray-500 dark:text-gray-400">{t("contracts.form.party.phone")}</label>
+                     <input className="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-white" value={formData.party.phone} onChange={e => setFormData(p=>({...p, party:{...p.party, phone: e.target.value}}))} />
                    </div>
                    <div className="col-span-2">
-                     <label className="text-xs text-gray-500">{t("contracts.form.party.address")}</label>
-                     <input className="w-full p-2 border border-gray-200 rounded text-sm" value={formData.party.address} onChange={e => setFormData(p=>({...p, party:{...p.party, address: e.target.value}}))} />
+                     <label className="text-xs text-gray-500 dark:text-gray-400">{t("contracts.form.party.address")}</label>
+                     <input className="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-white" value={formData.party.address} onChange={e => setFormData(p=>({...p, party:{...p.party, address: e.target.value}}))} />
                    </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.party.contractTitle")}</label>
-                <input className="w-full p-2 border border-gray-300 rounded" value={formData.title} onChange={e => setFormData(p=>({...p, title: e.target.value}))} placeholder={t("contracts.form.party.contractTitlePlaceholder")} />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("contracts.form.party.contractTitle")}</label>
+                <input className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded text-gray-900 dark:text-white" value={formData.title} onChange={e => setFormData(p=>({...p, title: e.target.value}))} placeholder={t("contracts.form.party.contractTitlePlaceholder")} />
               </div>
             </div>
           )}
@@ -441,25 +430,25 @@ const ContractFormPage = () => {
             <div className="space-y-4 animate-in slide-in-from-right-4">
                <div className="grid grid-cols-2 gap-4">
                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1">{t("contracts.form.logistics.start")}</label>
-                    <input type="date" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.startDate} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, startDate: e.target.value}}))} />
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">{t("contracts.form.logistics.start")}</label>
+                    <input type="date" className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded text-gray-900 dark:text-white" value={formData.logistics.startDate} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, startDate: e.target.value}}))} />
                  </div>
                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1">{t("contracts.form.logistics.end")}</label>
-                    <input type="date" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.endDate} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, endDate: e.target.value}}))} />
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">{t("contracts.form.logistics.end")}</label>
+                    <input type="date" className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded text-gray-900 dark:text-white" value={formData.logistics.endDate} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, endDate: e.target.value}}))} />
                  </div>
                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1">{t("contracts.form.logistics.checkIn")}</label>
-                    <input type="time" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.checkInTime} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, checkInTime: e.target.value}}))} />
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">{t("contracts.form.logistics.checkIn")}</label>
+                    <input type="time" className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded text-gray-900 dark:text-white" value={formData.logistics.checkInTime} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, checkInTime: e.target.value}}))} />
                  </div>
                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1">{t("contracts.form.logistics.checkOut")}</label>
-                    <input type="time" className="w-full p-2 border border-gray-300 rounded" value={formData.logistics.checkOutTime} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, checkOutTime: e.target.value}}))} />
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">{t("contracts.form.logistics.checkOut")}</label>
+                    <input type="time" className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded text-gray-900 dark:text-white" value={formData.logistics.checkOutTime} onChange={e => setFormData(p=>({...p, logistics: {...p.logistics, checkOutTime: e.target.value}}))} />
                  </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.logistics.eventLink")}</label>
-                <select className="w-full p-2 border border-gray-300 rounded text-sm bg-white" value={formData.eventId} onChange={(e) => {
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("contracts.form.logistics.eventLink")}</label>
+                <select className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white" value={formData.eventId} onChange={(e) => {
                    const evt = events.find(ev => ev._id === e.target.value);
                    setFormData(p => ({ ...p, eventId: e.target.value, title: evt ? `Contrat - ${evt.title}` : p.title }));
                 }}>
@@ -475,7 +464,7 @@ const ContractFormPage = () => {
             <div className="space-y-6 animate-in slide-in-from-right-4">
                
                {isPartnerMode && (
-                <div className="flex gap-2 p-3 bg-purple-50 text-purple-700 rounded-lg text-sm border border-purple-100">
+                <div className="flex gap-2 p-3 bg-purple-50 dark:bg-purple-900/10 text-purple-700 dark:text-purple-300 rounded-lg text-sm border border-purple-100 dark:border-purple-800">
                   <Briefcase size={18} className="shrink-0"/>
                   <p>{t("contracts.form.financials.partnerMode")}</p>
                 </div>
@@ -483,31 +472,30 @@ const ContractFormPage = () => {
 
                <div className="space-y-3">
                  <div className="flex justify-between items-end">
-                    <label className="text-sm font-bold text-gray-700">{t("contracts.form.financials.title")}</label>
-                    <button onClick={() => setServices([...services, {description:'', quantity:1, rate:0, amount:0}])} className={`text-xs font-bold text-${themeColor}-600 flex items-center gap-1`}>
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">{t("contracts.form.financials.title")}</label>
+                    <button onClick={() => setServices([...services, {description:'', quantity:1, rate:0, amount:0}])} className={`text-xs font-bold text-${themeColor}-600 dark:text-${themeColor}-400 flex items-center gap-1`}>
                       <Plus size={14}/> {t("contracts.form.financials.add")}
                     </button>
                  </div>
                  
                  {/* Services List */}
                  {services.map((svc, idx) => (
-                   <div key={idx} className="flex gap-2 items-center bg-gray-50 p-2 rounded border border-gray-200 group">
-                      <input className="flex-1 bg-transparent border-b border-transparent focus:border-orange-400 outline-none text-sm" placeholder={t("contracts.form.financials.description")} value={svc.description} onChange={e => handleServiceChange(idx, 'description', e.target.value)} />
-                      <input type="number" className="w-16 text-center bg-white border border-gray-200 rounded text-sm py-1" value={svc.quantity} onChange={e => handleServiceChange(idx, 'quantity', e.target.value)} placeholder={t("contracts.form.financials.qty")} />
-                      <input type="number" className="w-20 text-right bg-white border border-gray-200 rounded text-sm py-1" placeholder={t("contracts.form.financials.price")} value={svc.rate} onChange={e => handleServiceChange(idx, 'rate', e.target.value)} />
+                   <div key={idx} className="flex gap-2 items-center bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 group">
+                      <input className="flex-1 bg-transparent border-b border-transparent focus:border-orange-400 outline-none text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" placeholder={t("contracts.form.financials.description")} value={svc.description} onChange={e => handleServiceChange(idx, 'description', e.target.value)} />
+                      <input type="number" className="w-16 text-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-sm py-1 text-gray-900 dark:text-white" value={svc.quantity} onChange={e => handleServiceChange(idx, 'quantity', e.target.value)} placeholder={t("contracts.form.financials.qty")} />
+                      <input type="number" className="w-20 text-right bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-sm py-1 text-gray-900 dark:text-white" placeholder={t("contracts.form.financials.price")} value={svc.rate} onChange={e => handleServiceChange(idx, 'rate', e.target.value)} />
                       <button onClick={() => setServices(services.filter((_,i)=>i!==idx))} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"><Trash2 size={16}/></button>
                    </div>
                  ))}
               </div>
 
               {/* Totals Summary */}
-              <div className={`text-white rounded-xl p-5 shadow-lg ${isPartnerMode ? 'bg-slate-800' : 'bg-slate-900'}`}>
+              <div className={`text-gray-900 rounded-xl p-5 shadow-lg ${isPartnerMode ? 'bg-white' : 'bg-white'} dark:bg-gray-700 dark:text-white`}>
                  <div className="flex justify-between text-sm mb-2 opacity-80">
                     <span>{t("contracts.form.financials.totalHT")}</span>
                     <span>{formData.financials.amountHT.toFixed(3)}</span>
                  </div>
                  
-                 {/* VAT & Stamp - Show for Client, Optional for Partner */}
                  <div className="flex justify-between text-sm mb-2 items-center opacity-80">
                     <div className="flex items-center gap-2">
                        <span>{t("contracts.form.financials.vat")}</span>
@@ -530,8 +518,8 @@ const ContractFormPage = () => {
               {/* Deposit */}
               <div className="grid grid-cols-2 gap-4">
                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{t("contracts.form.financials.deposit")}</label>
-                    <input type="number" className="w-full p-2 border border-gray-300 rounded text-sm" value={formData.paymentTerms.depositAmount} onChange={e => setFormData(p=>({...p, paymentTerms: {...p.paymentTerms, depositAmount: e.target.value}}))} />
+                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{t("contracts.form.financials.deposit")}</label>
+                    <input type="number" className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-white" value={formData.paymentTerms.depositAmount} onChange={e => setFormData(p=>({...p, paymentTerms: {...p.paymentTerms, depositAmount: e.target.value}}))} />
                  </div>
               </div>
             </div>
@@ -541,18 +529,18 @@ const ContractFormPage = () => {
           {currentStep === 4 && (
              <div className="space-y-4 animate-in slide-in-from-right-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.legal.jurisdiction")}</label>
-                  <select className="w-full p-2 border border-gray-300 rounded text-sm bg-white" value={formData.legal.jurisdiction} onChange={e => setFormData(p=>({...p, legal:{...p.legal, jurisdiction: e.target.value}}))}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("contracts.form.legal.jurisdiction")}</label>
+                  <select className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white" value={formData.legal.jurisdiction} onChange={e => setFormData(p=>({...p, legal:{...p.legal, jurisdiction: e.target.value}}))}>
                      <option value="Tribunal de Tunis">Tribunal de Tunis</option>
                      <option value="Tribunal de l'Ariana">Tribunal de l'Ariana</option>
                      <option value="Tribunal de Sousse">Tribunal de Sousse</option>
                   </select>
                </div>
                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("contracts.form.legal.specialConditions")}</label>
-                  <textarea rows={5} className="w-full p-3 border border-gray-300 rounded text-sm" placeholder={t("contracts.form.legal.specialConditionsPlaceholder")} value={formData.legal.specialConditions} onChange={e => setFormData(p=>({...p, legal:{...p.legal, specialConditions: e.target.value}}))} />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("contracts.form.legal.specialConditions")}</label>
+                  <textarea rows={5} className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder={t("contracts.form.legal.specialConditionsPlaceholder")} value={formData.legal.specialConditions} onChange={e => setFormData(p=>({...p, legal:{...p.legal, specialConditions: e.target.value}}))} />
                </div>
-               <div className="flex gap-2 p-3 bg-blue-50 text-blue-700 rounded-lg text-xs border border-blue-100">
+               <div className="flex gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs border border-blue-100 dark:border-blue-800">
                   <AlertCircle size={16} className="shrink-0"/>
                   <p>{t("contracts.form.legal.warning")}</p>
                </div>
@@ -561,19 +549,19 @@ const ContractFormPage = () => {
         </div>
 
         {/* --- FOOTER NAV --- */}
-        <div className="p-4 border-t border-gray-200 bg-white flex justify-between shrink-0">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1f2937] flex justify-between shrink-0">
           {currentStep > 1 ? (
-             <button onClick={() => setCurrentStep(c => c - 1)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium">
+             <button onClick={() => setCurrentStep(c => c - 1)} className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm font-medium">
                {t("contracts.form.nav.back")}
              </button>
           ) : <div></div>}
           
           {currentStep < 4 ? (
-             <button onClick={() => setCurrentStep(c => c + 1)} className={`flex items-center gap-2 px-6 py-2 bg-${themeColor}-500 text-white font-bold rounded-lg hover:bg-${themeColor}-600 shadow-md shadow-${themeColor}-200 text-sm`}>
+             <button onClick={() => setCurrentStep(c => c + 1)} className={`flex items-center gap-2 px-6 py-2 bg-${themeColor}-500 text-white font-bold rounded-lg hover:bg-${themeColor}-600 shadow-md shadow-${themeColor}-200/50 text-sm`}>
                {t("contracts.form.nav.next")} <ChevronRight className={isRTL ? "rotate-180" : ""} size={16}/>
              </button>
           ) : (
-             <button onClick={handleSubmit} disabled={loading} className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-md shadow-green-200 text-sm">
+             <button onClick={handleSubmit} disabled={loading} className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 shadow-md shadow-orange-200/50 text-sm">
                {loading ? <LoadingSpinner size="sm"/> : <Save size={16}/>}
                {isEditMode ? t("contracts.form.nav.update") : t("contracts.form.nav.save")}
              </button>

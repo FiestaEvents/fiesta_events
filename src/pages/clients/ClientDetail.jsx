@@ -79,7 +79,7 @@ const ClientDetail = () => {
     if (e && e.stopPropagation) e.stopPropagation();
     navigate(`/events/${eventId}/detail`, { state: { fromClient: id, clientData } });
   }, [navigate, id, clientData]);
-
+  
   const handleEditClient = useCallback(() => {
     if (!id) return apiError(null, t("clients.errors.invalidId"));
     setIsEditModalOpen(true);

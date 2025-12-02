@@ -1,27 +1,35 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { EventFormProvider } from "./EventFormContext";
 import SharedEventForm from "./SharedEventForm";
+import { useToast } from "../../../hooks/useToast";
 
 const CreateEventPage = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { showSuccess } = useToast();
 
-  // Handle data passed via navigation state (e.g. from calendar click or client page)
+  // Handle data passed via navigation state
   const initialDate = location.state?.initialDate;
   const prefillClient = location.state?.prefillClient;
   const prefillPartner = location.state?.prefillPartner;
 
+  const handleSuccess = (response) => {
+    showSuccess(t('eventForm.messages.eventCreated', 'Event created successfully'));
+    navigate("/events");
+  };
+
   return (
-    <div className="w-full mx-auto max-w-7xl bg-white dark:bg-gray-800">
+    <div className="w-full mx-auto max-w-5xl">
       <EventFormProvider 
         isEditMode={false}
         initialDate={initialDate}
         prefillClient={prefillClient}
         prefillPartner={prefillPartner}
       >
-        <SharedEventForm />
+        <SharedEventForm onSuccess={handleSuccess} />
       </EventFormProvider>
     </div>
   );

@@ -66,9 +66,9 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
         to={to}
         end={to === "/"}
         className={({ isActive }) =>
-          `relative flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+          `relative flex items-center px-2 py-2 rounded-lg transition-all duration-200 group ${
             isActive
-              ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30"
+              ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/20"
               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
           }`
         }
@@ -76,8 +76,9 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
         {({ isActive }) => (
           <motion.div
             className={`flex items-center w-full ${isCollapsed ? "justify-center" : ""}`}
-            whileHover={{ scale: 1.02, x: isRTL ? -2 : 2 }}
-            whileTap={{ scale: 0.98 }}
+            // ✅ CHANGED: Only apply hover/tap scale effects if the item is NOT active
+            whileHover={isActive ? {} : { scale: 1.02, x: isRTL ? -2 : 2 }}
+            whileTap={isActive ? {} : { scale: 0.98 }}
           >
             {/* Active Indicator */}
             {isActive && !isCollapsed && (
@@ -92,7 +93,7 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
             <div className="relative">
               <Icon
                 className={`flex-shrink-0 transition-all duration-300 ${
-                  isCollapsed ? "w-6 h-6" : "w-5 h-5"
+                  isCollapsed ? "w-5 h-5" : "w-4 h-4"
                 }`}
               />
               {isActive && (
@@ -113,7 +114,7 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: isRTL ? 10 : -10 }}
                   transition={{ duration: 0.2 }}
-                  className={`whitespace-nowrap font-medium text-sm ${
+                  className={`whitespace-nowrap font-medium text-xs ${
                     isRTL ? "mr-3" : "ml-3"
                   }`}
                 >
@@ -128,7 +129,7 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 whileHover={{ scale: 1.1 }}
-                className={`${isRTL ? "mr-auto" : "ml-auto"} px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full shadow-sm`}
+                className={`${isRTL ? "mr-auto" : "ml-auto"} px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full shadow-sm`}
               >
                 {badge}
               </motion.span>
@@ -148,7 +149,7 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
   const { isRTL } = useLanguage();
 
   return (
-    <div className="mb-6">
+    <div className="mb-4">
       <AnimatePresence>
         {!isCollapsed && (
           <motion.div
@@ -158,7 +159,7 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
             transition={{ duration: 0.2 }}
           >
             <h3
-              className={`px-3 mb-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2 ${
+              className={`px-2 mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2 ${
                 isRTL ? "text-right" : "text-left"
               }`}
             >
@@ -169,10 +170,10 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
           </motion.div>
         )}
         {isCollapsed && (
-          <div className="my-4 mx-auto w-8 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
+          <div className="my-2 mx-auto w-6 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
         )}
       </AnimatePresence>
-      <div className="space-y-1">{children}</div>
+      <div className="space-y-0.5">{children}</div>
     </div>
   );
 };
@@ -204,11 +205,11 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       <motion.aside
         initial={false}
         animate={{
-          width: isCollapsed ? 80 : 288, // w-20 = 80px, w-72 = 288px
+          width: isCollapsed ? 64 : 200,
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-40 shadow-xl
-        ${isRTL ? "right-0" : "left-0"}
+        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-40 shadow-xl border-r border-gray-100 dark:border-gray-800
+        ${isRTL ? "right-0 border-r-0 border-l" : "left-0"}
         ${
           isOpen
             ? "translate-x-0"
@@ -219,34 +220,34 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       >
         <div className="flex flex-col h-full">
           {/* Header / Logo Area */}
-          <div className="h-20 flex items-center justify-center shrink-0 px-4 relativ">
-            <Link to="/" className="flex items-center justify-center w-full">
+          <div className="h-16 flex items-center justify-center shrink-0 px-4 relative border-b border-gray-50 dark:border-gray-800/50">
+            <Link to="/" className="flex items-center justify-center w-full overflow-hidden">
               <motion.img
                 src="/fiesta logo-01.png"
                 alt="Fiesta Logo"
                 animate={{
-                  height: isCollapsed ? "32px" : "40px",
+                  height: isCollapsed ? "24px" : "32px",
                 }}
                 transition={{
                   type: "spring",
                   stiffness: 400,
                   damping: 25,
                 }}
-                className="object-contain"
+                className="object-contain max-w-full"
               />
             </Link>
 
             {/* Mobile Close Button */}
             <button
               onClick={onClose}
-              className="lg:hidden absolute right-4 p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              className="lg:hidden absolute right-4 p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-2 hide-scrollbar">
+          <nav className="flex-1 overflow-y-auto p-3 space-y-2 hide-scrollbar">
             {/* Overview Section */}
             <NavSection titleKey="sidebar.overview" isCollapsed={isCollapsed}>
               <NavLink
@@ -350,11 +351,11 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="p-4 border-t border-gray-100 dark:border-gray-800"
+                className="p-3 border-t border-gray-100 dark:border-gray-800"
               >
-                <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-                  <Sparkles className="w-3 h-3" />
-                  <span>{t("allRightsReserved")} © 2025 Fiesta Inc.</span>
+                <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap overflow-hidden">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  <span>{t("allRightsReserved")} © 2025</span>
                 </div>
               </motion.div>
             )}

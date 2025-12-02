@@ -9,7 +9,6 @@ const MainLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { isRTL } = useLanguage();
 
-  // Load collapse state from localStorage on mount
   useEffect(() => {
     const savedState = localStorage.getItem("sidebarCollapsed");
     if (savedState !== null) {
@@ -33,14 +32,13 @@ const MainLayout = () => {
     });
   }, []);
 
-  // Calculate padding based on RTL and collapse state
   const sidebarPadding = isCollapsed
     ? (isRTL ? "lg:pr-20" : "lg:pl-20")
     : (isRTL ? "lg:pr-64" : "lg:pl-64");
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Standard Sidebar */}
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900 text-sm font-medium text-gray-600 dark:text-gray-300">
+      
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
@@ -54,11 +52,9 @@ const MainLayout = () => {
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
         />
-        <main className="p-16">
-          <div className="p-4">
-            <div className="w-full min-h-[calc(100vh-4rem-3rem)]">
-              <Outlet />
-            </div>
+        <main className="pt-16">
+          <div className="w-full min-h-[calc(100vh-4rem-2rem)] hidden-scroll">
+            <Outlet />
           </div>
         </main>
       </div>

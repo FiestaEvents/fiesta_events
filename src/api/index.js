@@ -201,6 +201,7 @@ export const authService = {
 export const eventService = {
   /**
    * Get all events with optional filters
+   * Backend handles: status, type, clientId, startDate, endDate, search, includeArchived
    * @param {Object} params - { status, startDate, endDate, clientId, page, limit, includeArchived }
    * @returns {Promise<{ events: Array, pagination }>}
    */
@@ -229,27 +230,13 @@ export const eventService = {
 
   /**
    * Create new event
+   * Includes pricing, partners (as services), and basic info
    * @param {Object} data - Event data
    * @returns {Promise<{ event }>}
    */
   create: async (data) => {
     try {
       const response = await api.post("/events", data);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get events by client ID
-   * @param {string} clientId - Client ID
-   * @param {Object} params - Query parameters
-   * @returns {Promise<{ events: Array, client: Object, stats: Object, pagination: Object }>}
-   */
-  getByClientId: async (clientId, params = {}) => {
-    try {
-      const response = await api.get(`/events/client/${clientId}`, { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -272,7 +259,8 @@ export const eventService = {
   },
 
   /**
-   * Archive event (soft delete)
+   * Archive event (Soft Delete)
+   * Maps to DELETE /api/v1/events/:id
    * @param {string} id - Event ID
    * @returns {Promise<{ event }>}
    */
@@ -287,6 +275,7 @@ export const eventService = {
 
   /**
    * Restore archived event
+   * Maps to PATCH /api/v1/events/:id/restore
    * @param {string} id - Event ID
    * @returns {Promise<{ event }>}
    */
@@ -300,42 +289,14 @@ export const eventService = {
   },
 
   /**
-   * Get archived events
+   * Get events by client ID
+   * @param {string} clientId - Client ID
    * @param {Object} params - Query parameters
-   * @returns {Promise<{ events: Array, pagination: Object }>}
+   * @returns {Promise<{ events: Array, client: Object, stats: Object, pagination: Object }>}
    */
-  getArchived: async (params = {}) => {
+  getByClientId: async (clientId, params = {}) => {
     try {
-      const response = await api.get("/events/archived", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Update event status
-   * @param {string} id - Event ID
-   * @param {string} status - New status (pending, confirmed, in-progress, completed, cancelled)
-   * @returns {Promise<{ event }>}
-   */
-  updateStatus: async (id, status) => {
-    try {
-      const response = await api.patch(`/events/${id}/status`, { status });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get calendar view of events
-   * @param {Object} params - { month, year, includeArchived }
-   * @returns {Promise<{ events: Array }>}
-   */
-  getCalendar: async (params = {}) => {
-    try {
-      const response = await api.get("/events/calendar", { params });
+      const response = await api.get(`/events/client/${clientId}`, { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -344,6 +305,7 @@ export const eventService = {
 
   /**
    * Get event statistics
+   * Maps to GET /api/v1/events/stats
    * @returns {Promise<{ statusStats: Array, typeStats: Array, summary: Object }>}
    */
   getStats: async () => {
@@ -355,155 +317,39 @@ export const eventService = {
     }
   },
 
+  // ============================================
+  // HELPER METHODS (Adapters for UI Convenience)
+  // ============================================
+
   /**
-   * Check date availability for event
-   * @param {Object} data - { startDate, endDate, excludeEventId }
-   * @returns {Promise<{ available: boolean, conflictingEvent: Object|null }>}
+   * Get archived events
+   * Uses getAll with includeArchived filter
    */
-  checkAvailability: async (data) => {
-    try {
-      const response = await api.post("/events/check-availability", data);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+  getArchived: async (params = {}) => {
+    return eventService.getAll({ ...params, includeArchived: true });
   },
 
   /**
-   * Add payment to event
-   * @param {string} id - Event ID
-   * @param {Object} paymentData - Payment data
-   * @returns {Promise<{ event }>}
+   * Get calendar view of events
+   * Uses getAll with date range filters
+   * @param {Object} params - { month, year, start, end }
    */
-  addPayment: async (id, paymentData) => {
-    try {
-      const response = await api.post(`/events/${id}/payments`, paymentData);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+  getCalendar: async (params = {}) => {
+    // If specific start/end provided, use them, otherwise calculate based on month/year
+    const queryParams = { ...params };
+    delete queryParams.month; // Cleanup
+    delete queryParams.year;  // Cleanup
+    
+    return eventService.getAll({ ...queryParams, limit: 100 }); // Fetch more items for calendar view
   },
 
   /**
-   * Add partner to event
-   * @param {string} id - Event ID
-   * @param {Object} partnerData - Partner data
-   * @returns {Promise<{ event }>}
+   * Update event status helper
+   * Wraps the generic update method
    */
-  addPartner: async (id, partnerData) => {
-    try {
-      const response = await api.post(`/events/${id}/partners`, partnerData);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Update event partner
-   * @param {string} id - Event ID
-   * @param {string} partnerId - Partner ID
-   * @param {Object} partnerData - Partner data to update
-   * @returns {Promise<{ event }>}
-   */
-  updatePartner: async (id, partnerId, partnerData) => {
-    try {
-      const response = await api.put(
-        `/events/${id}/partners/${partnerId}`,
-        partnerData
-      );
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Remove partner from event
-   * @param {string} id - Event ID
-   * @param {string} partnerId - Partner ID
-   * @returns {Promise<{ event }>}
-   */
-  removePartner: async (id, partnerId) => {
-    try {
-      const response = await api.delete(`/events/${id}/partners/${partnerId}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get event timeline (upcoming events)
-   * @param {Object} params - { days, limit }
-   * @returns {Promise<{ events: Array }>}
-   */
-  getTimeline: async (params = {}) => {
-    try {
-      const response = await api.get("/events/timeline", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Duplicate existing event
-   * @param {string} id - Event ID to duplicate
-   * @param {Object} overrides - Data to override in duplicated event
-   * @returns {Promise<{ event }>}
-   */
-  duplicate: async (id, overrides = {}) => {
-    try {
-      const response = await api.post(`/events/${id}/duplicate`, overrides);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Bulk update events
-   * @param {Array} ids - Array of event IDs
-   * @param {Object} data - Data to update
-   * @returns {Promise<{ updatedCount: number }>}
-   */
-  bulkUpdate: async (ids, data) => {
-    try {
-      const response = await api.patch("/events/bulk-update", { ids, data });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Bulk archive events
-   * @param {Array} ids - Array of event IDs
-   * @returns {Promise<{ archivedCount: number }>}
-   */
-  bulkArchive: async (ids) => {
-    try {
-      const response = await api.post("/events/bulk-archive", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Bulk restore events
-   * @param {Array} ids - Array of event IDs
-   * @returns {Promise<{ restoredCount: number }>}
-   */
-  bulkRestore: async (ids) => {
-    try {
-      const response = await api.post("/events/bulk-restore", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
+  updateStatus: async (id, status) => {
+    return eventService.update(id, { status });
+  }
 };
 
 // ============================================
@@ -994,9 +840,9 @@ export const financeService = {
 // ============================================
 export const taskService = {
   /**
-   * Get all tasks with advanced filtering and pagination
-   * @param {Object} params - Filter parameters
-   * @returns {Promise<{ tasks: Array, pagination: Object, stats: Object }>}
+   * Get all tasks with filtering and pagination
+   * @param {Object} params - Filter parameters (page, limit, status, priority, etc.)
+   * @returns {Promise<{ tasks: Array, pagination: Object }>}
    */
   getAll: async (params = {}) => {
     try {
@@ -1008,16 +854,13 @@ export const taskService = {
   },
 
   /**
-   * Get single task by ID with full details
+   * Get single task by ID
    * @param {string} id - Task ID
-   * @param {boolean} trackView - Whether to track this as a view
    * @returns {Promise<{ task: Object }>}
    */
-  getById: async (id, trackView = true) => {
+  getById: async (id) => {
     try {
-      const response = await api.get(`/tasks/${id}`, {
-        params: { trackView },
-      });
+      const response = await api.get(`/tasks/${id}`);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1052,20 +895,6 @@ export const taskService = {
       return handleError(error);
     }
   },
-  /**
-   * Partially update task (PATCH)
-   * @param {string} id - Task ID
-   * @param {Object} data - Fields to update
-   * @returns {Promise<{ task: Object }>}
-   */
-  patch: async (id, data) => {
-    try {
-      const response = await api.patch(`/tasks/${id}`, data);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
 
   /**
    * Delete task
@@ -1081,37 +910,19 @@ export const taskService = {
     }
   },
 
-  /**
-   * Bulk delete tasks
-   * @param {Array<string>} ids - Array of task IDs
-   * @returns {Promise<{ success: boolean, deleted: number }>}
-   */
-  bulkDelete: async (ids) => {
-    try {
-      const response = await api.post("/tasks/bulk-delete", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
   // ============================================
-  // STATUS MANAGEMENT
+  // STATUS & ASSIGNMENT
   // ============================================
 
   /**
    * Update task status
    * @param {string} id - Task ID
    * @param {string} status - New status
-   * @param {Object} metadata - Additional data (e.g., reason for blocking/cancellation)
    * @returns {Promise<{ task: Object }>}
    */
-  updateStatus: async (id, status, metadata = {}) => {
+  updateStatus: async (id, status) => {
     try {
-      const response = await api.patch(`/tasks/${id}/status`, {
-        status,
-        ...metadata,
-      });
+      const response = await api.patch(`/tasks/${id}/status`, { status });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1131,54 +942,6 @@ export const taskService = {
       return handleError(error);
     }
   },
-
-  /**
-   * Cancel a task
-   * @param {string} id - Task ID
-   * @param {string} reason - Cancellation reason
-   * @returns {Promise<{ task: Object }>}
-   */
-  cancel: async (id, reason) => {
-    try {
-      const response = await api.post(`/tasks/${id}/cancel`, { reason });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Block a task
-   * @param {string} id - Task ID
-   * @param {string} reason - Reason for blocking
-   * @returns {Promise<{ task: Object }>}
-   */
-  block: async (id, reason) => {
-    try {
-      const response = await api.post(`/tasks/${id}/block`, { reason });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Unblock a task
-   * @param {string} id - Task ID
-   * @returns {Promise<{ task: Object }>}
-   */
-  unblock: async (id) => {
-    try {
-      const response = await api.post(`/tasks/${id}/unblock`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  // ============================================
-  // ASSIGNMENT & COLLABORATION
-  // ============================================
 
   /**
    * Assign task to a user
@@ -1209,92 +972,6 @@ export const taskService = {
     }
   },
 
-  /**
-   * Add watcher to task
-   * @param {string} id - Task ID
-   * @param {string} userId - User ID to add as watcher
-   * @returns {Promise<{ task: Object }>}
-   */
-  addWatcher: async (id, userId) => {
-    try {
-      const response = await api.post(`/tasks/${id}/watchers`, { userId });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Remove watcher from task
-   * @param {string} id - Task ID
-   * @param {string} userId - User ID to remove
-   * @returns {Promise<{ task: Object }>}
-   */
-  removeWatcher: async (id, userId) => {
-    try {
-      const response = await api.delete(`/tasks/${id}/watchers/${userId}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  // ============================================
-  // COMMENTS
-  // ============================================
-
-  /**
-   * Add comment to task
-   * @param {string} id - Task ID
-   * @param {string} text - Comment text
-   * @param {Array<string>} mentions - Array of user IDs mentioned
-   * @returns {Promise<{ task: Object, comment: Object }>}
-   */
-  addComment: async (id, text, mentions = []) => {
-    try {
-      const response = await api.post(`/tasks/${id}/comments`, {
-        text,
-        mentions,
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Edit comment
-   * @param {string} id - Task ID
-   * @param {string} commentId - Comment ID
-   * @param {string} text - Updated comment text
-   * @returns {Promise<{ task: Object }>}
-   */
-  editComment: async (id, commentId, text) => {
-    try {
-      const response = await api.put(`/tasks/${id}/comments/${commentId}`, {
-        text,
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Delete comment
-   * @param {string} id - Task ID
-   * @param {string} commentId - Comment ID
-   * @returns {Promise<{ task: Object }>}
-   */
-  deleteComment: async (id, commentId) => {
-    try {
-      const response = await api.delete(`/tasks/${id}/comments/${commentId}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
   // ============================================
   // SUBTASKS
   // ============================================
@@ -1302,7 +979,7 @@ export const taskService = {
   /**
    * Add subtask
    * @param {string} id - Task ID
-   * @param {Object} subtask - Subtask data { title, description }
+   * @param {Object} subtask - Subtask data { title }
    * @returns {Promise<{ task: Object, subtask: Object }>}
    */
   addSubtask: async (id, subtask) => {
@@ -1383,64 +1060,6 @@ export const taskService = {
   },
 
   // ============================================
-  // ATTACHMENTS
-  // ============================================
-
-  /**
-   * Add attachment to task
-   * @param {string} id - Task ID
-   * @param {File} file - File to attach
-   * @returns {Promise<{ task: Object, attachment: Object }>}
-   */
-  addAttachment: async (id, file) => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await api.post(`/tasks/${id}/attachments`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Delete attachment
-   * @param {string} id - Task ID
-   * @param {string} attachmentId - Attachment ID
-   * @returns {Promise<{ task: Object }>}
-   */
-  deleteAttachment: async (id, attachmentId) => {
-    try {
-      const response = await api.delete(
-        `/tasks/${id}/attachments/${attachmentId}`
-      );
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Download attachment
-   * @param {string} id - Task ID
-   * @param {string} attachmentId - Attachment ID
-   * @returns {Promise<Blob>}
-   */
-  downloadAttachment: async (id, attachmentId) => {
-    try {
-      const response = await api.get(
-        `/tasks/${id}/attachments/${attachmentId}/download`,
-        { responseType: "blob" }
-      );
-      return response.data;
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  // ============================================
   // TAGS
   // ============================================
 
@@ -1469,84 +1088,6 @@ export const taskService = {
     try {
       const response = await api.delete(`/tasks/${id}/tags`, {
         data: { tags },
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  // ============================================
-  // DEPENDENCIES
-  // ============================================
-
-  /**
-   * Add dependency to task
-   * @param {string} id - Task ID
-   * @param {string} dependencyTaskId - ID of task to create dependency with
-   * @param {string} type - Dependency type: 'blocks', 'blocked_by', 'relates_to'
-   * @returns {Promise<{ task: Object }>}
-   */
-  addDependency: async (id, dependencyTaskId, type = "relates_to") => {
-    try {
-      const response = await api.post(`/tasks/${id}/dependencies`, {
-        dependencyTaskId,
-        type,
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Remove dependency from task
-   * @param {string} id - Task ID
-   * @param {string} dependencyId - Dependency ID
-   * @returns {Promise<{ task: Object }>}
-   */
-  removeDependency: async (id, dependencyId) => {
-    try {
-      const response = await api.delete(
-        `/tasks/${id}/dependencies/${dependencyId}`
-      );
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  // ============================================
-  // PROGRESS TRACKING
-  // ============================================
-
-  /**
-   * Update task progress
-   * @param {string} id - Task ID
-   * @param {number} progress - Progress percentage (0-100)
-   * @returns {Promise<{ task: Object }>}
-   */
-  updateProgress: async (id, progress) => {
-    try {
-      const response = await api.patch(`/tasks/${id}/progress`, { progress });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Log time spent on task
-   * @param {string} id - Task ID
-   * @param {number} hours - Hours spent
-   * @param {string} description - Description of work done
-   * @returns {Promise<{ task: Object }>}
-   */
-  logTime: async (id, hours, description = "") => {
-    try {
-      const response = await api.post(`/tasks/${id}/time-log`, {
-        hours,
-        description,
       });
       return handleResponse(response);
     } catch (error) {
@@ -1607,7 +1148,7 @@ export const taskService = {
   /**
    * Get task board view (Kanban style)
    * @param {Object} filters - Additional filters
-   * @returns {Promise<{ columns: Object }>}
+   * @returns {Promise<{ board: Object }>}
    */
   getBoard: async (filters = {}) => {
     try {
@@ -1621,7 +1162,7 @@ export const taskService = {
   /**
    * Get my tasks (assigned to current user)
    * @param {Object} params - Filter parameters
-   * @returns {Promise<{ tasks: Array }>}
+   * @returns {Promise<{ tasks: Object }>}
    */
   getMyTasks: async (params = {}) => {
     try {
@@ -1634,12 +1175,11 @@ export const taskService = {
 
   /**
    * Get overdue tasks
-   * @param {Object} params - Filter parameters
-   * @returns {Promise<{ tasks: Array }>}
+   * @returns {Promise<{ tasks: Array, count: number }>}
    */
-  getOverdue: async (params = {}) => {
+  getOverdue: async () => {
     try {
-      const response = await api.get("/tasks/overdue", { params });
+      const response = await api.get("/tasks/overdue");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1648,7 +1188,7 @@ export const taskService = {
 
   /**
    * Get tasks due today
-   * @returns {Promise<{ tasks: Array }>}
+   * @returns {Promise<{ tasks: Array, count: number }>}
    */
   getDueToday: async () => {
     try {
@@ -1662,7 +1202,7 @@ export const taskService = {
   /**
    * Get upcoming tasks (due within specified days)
    * @param {number} days - Number of days to look ahead
-   * @returns {Promise<{ tasks: Array }>}
+   * @returns {Promise<{ tasks: Array, count: number }>}
    */
   getUpcoming: async (days = 7) => {
     try {
@@ -1674,52 +1214,10 @@ export const taskService = {
   },
 
   /**
-   * Get tasks by event
-   * @param {string} eventId - Event ID
-   * @returns {Promise<{ tasks: Array }>}
-   */
-  getByEvent: async (eventId) => {
-    try {
-      const response = await api.get(`/tasks/event/${eventId}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get tasks by client
-   * @param {string} clientId - Client ID
-   * @returns {Promise<{ tasks: Array }>}
-   */
-  getByClient: async (clientId) => {
-    try {
-      const response = await api.get(`/tasks/client/${clientId}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get tasks by partner
-   * @param {string} partnerId - Partner ID
-   * @returns {Promise<{ tasks: Array }>}
-   */
-  getByPartner: async (partnerId) => {
-    try {
-      const response = await api.get(`/tasks/partner/${partnerId}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Search tasks
+   * Search tasks (Full text search on title/description)
    * @param {string} query - Search query
    * @param {Object} filters - Additional filters
-   * @returns {Promise<{ tasks: Array }>}
+   * @returns {Promise<{ tasks: Array, count: number }>}
    */
   search: async (query, filters = {}) => {
     try {
@@ -1733,67 +1231,16 @@ export const taskService = {
   },
 
   // ============================================
-  // STATISTICS & ANALYTICS
+  // STATISTICS
   // ============================================
 
   /**
-   * Get task statistics
-   * @param {Object} params - Filter parameters (dateRange, userId, etc.)
+   * Get general task statistics
    * @returns {Promise<{ stats: Object }>}
    */
-  getStats: async (params = {}) => {
+  getStats: async () => {
     try {
-      const response = await api.get("/tasks/stats", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get task completion rate over time
-   * @param {Object} params - { startDate, endDate, groupBy }
-   * @returns {Promise<{ data: Array }>}
-   */
-  getCompletionRate: async (params = {}) => {
-    try {
-      const response = await api.get("/tasks/analytics/completion-rate", {
-        params,
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get task distribution by category/priority/status
-   * @param {string} groupBy - Field to group by
-   * @returns {Promise<{ distribution: Object }>}
-   */
-  getDistribution: async (groupBy = "status") => {
-    try {
-      const response = await api.get("/tasks/analytics/distribution", {
-        params: { groupBy },
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get user productivity metrics
-   * @param {string} userId - User ID (optional, defaults to current user)
-   * @param {Object} params - Date range parameters
-   * @returns {Promise<{ metrics: Object }>}
-   */
-  getUserProductivity: async (userId = null, params = {}) => {
-    try {
-      const url = userId
-        ? `/tasks/analytics/user/${userId}`
-        : "/tasks/analytics/me";
-      const response = await api.get(url, { params });
+      const response = await api.get("/tasks/stats");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1808,7 +1255,7 @@ export const taskService = {
    * Bulk update tasks
    * @param {Array<string>} ids - Array of task IDs
    * @param {Object} data - Fields to update
-   * @returns {Promise<{ updated: number, tasks: Array }>}
+   * @returns {Promise<{ updated: number }>}
    */
   bulkUpdate: async (ids, data) => {
     try {
@@ -1820,56 +1267,23 @@ export const taskService = {
   },
 
   /**
-   * Bulk assign tasks
+   * Bulk delete tasks
    * @param {Array<string>} ids - Array of task IDs
-   * @param {string} userId - User ID to assign to
-   * @returns {Promise<{ updated: number }>}
+   * @returns {Promise<{ deleted: number }>}
    */
-  bulkAssign: async (ids, userId) => {
+  bulkDelete: async (ids) => {
     try {
-      const response = await api.patch("/tasks/bulk-assign", { ids, userId });
+      const response = await api.post("/tasks/bulk-delete", { ids });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
-
-  /**
-   * Bulk complete tasks
-   * @param {Array<string>} ids - Array of task IDs
-   * @returns {Promise<{ completed: number }>}
-   */
-  bulkComplete: async (ids) => {
-    try {
-      const response = await api.post("/tasks/bulk-complete", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Bulk archive tasks
-   * @param {Array<string>} ids - Array of task IDs
-   * @returns {Promise<{ archived: number }>}
-   */
-  bulkArchive: async (ids) => {
-    try {
-      const response = await api.post("/tasks/bulk-archive", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  // ============================================
-  // TEMPLATES & DUPLICATION
-  // ============================================
 
   /**
    * Duplicate/clone a task
    * @param {string} id - Task ID to duplicate
-   * @param {Object} overrides - Fields to override in the duplicate
+   * @param {Object} overrides - Fields to override
    * @returns {Promise<{ task: Object }>}
    */
   duplicate: async (id, overrides = {}) => {
@@ -1882,31 +1296,9 @@ export const taskService = {
   },
 
   /**
-   * Create task from template
-   * @param {string} templateId - Template ID
-   * @param {Object} data - Task-specific data
-   * @returns {Promise<{ task: Object }>}
-   */
-  createFromTemplate: async (templateId, data = {}) => {
-    try {
-      const response = await api.post(
-        `/tasks/templates/${templateId}/create`,
-        data
-      );
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  // ============================================
-  // EXPORT & REPORTING
-  // ============================================
-
-  /**
    * Export tasks to CSV/Excel
    * @param {Object} filters - Filter parameters
-   * @param {string} format - Export format: 'csv' or 'excel'
+   * @param {string} format - Export format
    * @returns {Promise<Blob>}
    */
   export: async (filters = {}, format = "csv") => {
@@ -1916,20 +1308,6 @@ export const taskService = {
         responseType: "blob",
       });
       return response.data;
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Generate task report
-   * @param {Object} params - Report parameters
-   * @returns {Promise<{ report: Object }>}
-   */
-  generateReport: async (params = {}) => {
-    try {
-      const response = await api.post("/tasks/reports/generate", params);
-      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }

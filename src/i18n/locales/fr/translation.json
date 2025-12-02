@@ -1278,6 +1278,14 @@
       "clearFilters": "Effacer les Filtres",
       "activeFilters": "Filtres actifs"
     },
+    "returnToActive": "Retour aux Actives",
+    "unassigned": "Non assigné",
+    "untitled": "Tâche sans titre",
+    "toasts": {
+      "status": {
+        "error": "Échec de la mise à jour du statut"
+      }
+    },
     "status": {
       "pending": "En Attente",
       "todo": "À Faire",
@@ -1397,7 +1405,9 @@
         "basicInfo": "Informations de Base",
         "scheduling": "Planification & Suivi du Temps",
         "assignment": "Affectation & Collaboration",
-        "details": "Détails Supplémentaires"
+        "details": "Détails Supplémentaires",
+        "checklist": "Liste de contrôle",
+        "planning": "Planification"
       },
       "fields": {
         "title": "Titre de la Tâche",
@@ -1497,7 +1507,8 @@
         "noSubtasks": "Aucune sous-tâche",
         "noSubtasksDescription": "Ajoutez des sous-tâches pour décomposer cette tâche en étapes plus petites.",
         "completedBy": "Terminé le {{date}} par {{user}}",
-        "completedDate": "Terminé le {{date}}"
+        "completedDate": "Terminé le {{date}}",
+        "errorToggle": "Échec du basculement de la sous-tâche"
       },
       "comments": {
         "title": "Commentaires",
@@ -2431,6 +2442,17 @@
     "user": "Utilisateur",
     "toggleTheme": "Basculer le thème",
     "notifications": "Notifications",
+    "actions": {
+      "cancel": "Annuler",
+      "clear": "Effacer",
+      "clearFilters": "Effacer les filtres",
+      "delete": "Supprimer"
+    },
+    "company": "Entreprise",
+    "guests": "Invités",
+    "individual": "Particulier",
+    "noResults": "Aucun résultat trouvé",
+    "optional": "Optionnel",
     "searchPlaceholder": "Rechercher des événements, clients, tâches...",
     "today": "Aujourd'hui",
     "other": "Autre",
@@ -2469,6 +2491,8 @@
     "confirmDelete": "Confirmer la suppression",
     "deleting": "Suppression...",
     "loading": "Chargement...",
+    "completed": "Terminé",
+    "earnings": "Gains",
     "error": "Une erreur est survenue",
     "date": "Date",
     "time": "Heure",
@@ -2798,7 +2822,7 @@
       }
     }
   },
-    "invoices": {
+  "invoices": {
     "title": "Factures",
     "subtitle": "Gérez vos factures et paiements {{type}}.",
     "settings": "Paramètres",

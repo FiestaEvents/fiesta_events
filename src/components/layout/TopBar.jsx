@@ -209,14 +209,13 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     audioRef.current = new Audio("/sounds/notification.mp3");
   }, []);
 
-  // Calculate positioning
   const topBarOffset = isCollapsed
     ? isRTL
-      ? "lg:right-20"
-      : "lg:left-20"
+      ? "lg:right-16"
+      : "lg:left-16"
     : isRTL
-      ? "lg:right-72"
-      : "lg:left-72";
+      ? "lg:right-48"
+      : "lg:left-48";
 
   // --- SEARCH LOGIC ---
   useEffect(() => {
@@ -459,7 +458,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
   return (
     <header
-      className={`fixed top-0 ${isRTL ? "left-0 right-0" : "left-0 right-0"} h-16 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm z-50 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/95 dark:border-gray-800`}
+      className={`fixed top-0 ${isRTL ? "left-0 right-0" : "left-0 right-0"} h-14 bg-white/95 backdrop-blur-md shadow-sm z-50 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/95`}
     >
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
         {/* LEFT SECTION */}

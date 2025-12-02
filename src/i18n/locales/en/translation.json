@@ -276,6 +276,27 @@
     "statsDesc": "Reports & Analytics",
     "settingsDesc": "System Configuration"
   },
+  "documents": {
+    "hub": {
+      "title": "Document Configuration",
+      "subtitle": "Customize the design, structure, and legal terms for your generated documents. Choose a module to start.",
+      "configureNow": "Configure Now",
+      "contracts": {
+        "title": "Contract Settings",
+        "desc": "Manage legal agreements, clauses, and digital signature workflows.",
+        "feat1": "Custom Branding & Colors",
+        "feat2": "Legal Clauses & Jurisdiction",
+        "feat3": "Numbering Structure (CTR-...)"
+      },
+      "invoices": {
+        "title": "Invoice Settings",
+        "desc": "Configure billing layouts, tax rates, and payment terms.",
+        "feat1": "Tax Rates & Currency",
+        "feat2": "Bank Details & Footer",
+        "feat3": "Numbering Structure (INV-...)"
+      }
+    }
+  },
   "clients": {
     "title": "Clients",
     "description": "Manage your client relationships and information",
@@ -978,7 +999,7 @@
       "hourly": "Hourly Rate",
       "fixed": "Fixed Amount"
     },
-    "actions": {
+    "buttons": {
       "previous": "Previous",
       "next": "Next",
       "cancel": "Cancel",
@@ -1181,6 +1202,14 @@
       "clearFilters": "Clear Filters",
       "activeFilters": "Active filters"
     },
+    "returnToActive": "Return to Active",
+    "unassigned": "Unassigned",
+    "untitled": "Untitled Task",
+    "toasts": {
+      "status": {
+        "error": "Failed to update status"
+      }
+    },
     "retry": "Retry",
     "search": "Search",
     "estimated": "estimated",
@@ -1298,7 +1327,9 @@
         "basicInfo": "Basic Information",
         "scheduling": "Scheduling & Time Tracking",
         "assignment": "Assignment & Collaboration",
-        "details": "Additional Details"
+        "details": "Additional Details",
+        "checklist": "Checklist",
+        "planning": "Planning"
       },
       "fields": {
         "title": "Task Title",
@@ -1399,7 +1430,8 @@
         "noSubtasks": "No subtasks",
         "noSubtasksDescription": "Add subtasks to break down this task into smaller steps.",
         "completedBy": "Completed {{date}} by {{user}}",
-        "completedDate": "Completed {{date}}"
+        "completedDate": "Completed {{date}}",
+        "errorToggle": "Failed to toggle subtask"
       },
       "comments": {
         "title": "Comments",
@@ -2297,6 +2329,17 @@
     "searchPlaceholder": "Search events, clients, tasks...",
     "toggleTheme": "Toggle theme",
     "notifications": "Notifications",
+    "actions": {
+      "cancel": "Cancel",
+      "clear": "Clear",
+      "clearFilters": "Clear Filters",
+      "delete": "Delete"
+    },
+    "company": "Company",
+    "guests": "Guests",
+    "individual": "Individual",
+    "noResults": "No results found",
+    "optional": "Optional",
     "user": "User",
     "reset": "Reset",
     "saveChanges": "Save Changes",
@@ -2320,6 +2363,8 @@
     "confirmDelete": "Confirm Delete",
     "deleting": "Deleting...",
     "loading": "Loading...",
+    "completed": "Completed",
+    "earnings": "Earnings",
     "error": "Something went wrong",
     "date": "Date",
     "time": "Time",

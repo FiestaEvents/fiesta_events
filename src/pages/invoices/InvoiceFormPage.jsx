@@ -143,21 +143,6 @@ const EventDetailsCard = ({ event, onClear, showPricingBreakdown = false, invoic
     other: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700"
   };
 
-  // ... (getImportSummary logic remains same) ...
-  const getImportSummary = () => {
-    let itemCount = 0;
-    let totalValue = 0;
-    if (invoiceType === "client") {
-      if (event.pricing?.basePrice > 0) { itemCount++; totalValue += event.pricing.basePrice; }
-      if (event.pricing?.additionalServices?.length > 0) {
-        itemCount += event.pricing.additionalServices.length;
-        totalValue += event.pricing.additionalServices.reduce((sum, s) => sum + (s.price || 0), 0);
-      }
-    }
-    return { itemCount, totalValue };
-  };
-  const importSummary = getImportSummary();
-
   return (
     <div className="p-5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -257,7 +242,7 @@ const StepIndicator = ({ currentStep, onStepClick, invoiceType }) => {
                 isActive 
                   ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 ring-1 ring-orange-200 dark:ring-orange-800" 
                   : isCompleted 
-                  ? "text-orange-600 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" 
+                  ? "text-orange-600 dark:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" 
                   : "text-gray-400 dark:text-gray-600 cursor-not-allowed"
               }`}
             >
@@ -278,7 +263,7 @@ const StepIndicator = ({ currentStep, onStepClick, invoiceType }) => {
 // PRICE SUMMARY SIDEBAR
 // ============================================
 const PriceSummary = ({ calculations, currency }) => (
-  <div className="bg-white dark:bg-black rounded-xl p-6 text-gray-600 shadow-lg">
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-gray-600 dark:text-gray-300 shadow-lg">
     <div className="flex items-center gap-3 mb-5">
       <div className="p-2 bg-white rounded-lg">
         <DollarSign size={18} className="text-orange-400" />
@@ -287,13 +272,13 @@ const PriceSummary = ({ calculations, currency }) => (
     </div>
 
     <div className="space-y-3 text-sm">
-      <div className="flex justify-between text-gray-600">
+      <div className="flex justify-between text-gray-600 dark:text-gray-300">
         <span>Subtotal</span>
-        <span className="font-mono text-gray-900">{formatCurrency(calculations.subtotal, currency)}</span>
+        <span className="font-mono text-gray-600 dark:text-gray-300">{formatCurrency(calculations.subtotal, currency)}</span>
       </div>
-      <div className="flex justify-between text-gray-600">
+      <div className="flex justify-between text-gray-600 dark:text-gray-300">
         <span>Tax</span>
-        <span className="font-mono text-gray-900">{formatCurrency(calculations.tax, currency)}</span>
+        <span className="font-mono text-gray-600 dark:text-gray-300">{formatCurrency(calculations.tax, currency)}</span>
       </div>
       {calculations.discountAmount > 0 && (
         <div className="flex justify-between text-red-300">
@@ -303,7 +288,7 @@ const PriceSummary = ({ calculations, currency }) => (
       )}
       
       <div className="pt-4 mt-2 border-t border-gray-700 flex justify-between items-end">
-        <span className="font-bold text-base text-gray-900">Total</span>
+        <span className="font-bold text-base text-gray-600 dark:text-gray-300">Total</span>
         <span className="text-2xl font-black text-orange-400 font-mono tracking-tight">
           {formatCurrency(calculations.totalAmount, currency)}
         </span>

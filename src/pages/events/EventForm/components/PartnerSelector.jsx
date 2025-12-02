@@ -1,41 +1,56 @@
-import React from "react";
+import React, { useState } from "react";
 import { 
-  X, 
-  Clock, 
-  DollarSign, 
-  Users, 
-  Music, 
-  Utensils, 
-  Camera, 
-  Zap, 
-  Briefcase 
+  X, Plus, Save, User, Tag, MapPin, 
+  Clock, DollarSign, Briefcase, Mail, Phone // ✅ Added Icons
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../../../../hooks/useToast";
+import { partnerService } from "../../../../api/index";
 
 // ✅ Generic Components
 import Select from "../../../../components/common/Select";
-import Badge from "../../../../components/common/Badge";
 import Button from "../../../../components/common/Button";
+import Input from "../../../../components/common/Input";
+import Badge from "../../../../components/common/Badge";
 
 const PartnerSelector = ({ partners, selectedPartners, onAddPartner, onRemovePartner, calculateEventHours }) => {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   
-  // Ensure we can call the function, otherwise default to 1
-  const hours = typeof calculateEventHours === 'function' ? calculateEventHours() : 1;
+  // --- STATE ---
+  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const availablePartners = partners.filter(
-    (p) => !selectedPartners.some((sp) => sp.partner === p._id)
-  );
+  // Quick Create Form State
+  const [newPartner, setNewPartner] = useState({
+    name: "",
+    email: "", // ✅ Added
+    phone: "", // ✅ Added
+    category: "",
+    priceType: "hourly",
+    hourlyRate: "",
+    fixedRate: "",
+    location: "" 
+  });
 
-  // Helper: Get icon based on service category
-  const getServiceIcon = (category = "") => {
-    const cat = category.toLowerCase();
-    if (cat.includes("music") || cat.includes("dj")) return Music;
-    if (cat.includes("cater") || cat.includes("food")) return Utensils;
-    if (cat.includes("photo") || cat.includes("video")) return Camera;
-    if (cat.includes("light") || cat.includes("decor")) return Zap;
-    return Briefcase;
-  };
+  // --- OPTIONS ---
+  const categoryOptions = [
+    { value: "driver", label: "Driver" },
+    { value: "bakery", label: "Bakery" },
+    { value: "catering", label: "Catering" },
+    { value: "decoration", label: "Decoration" },
+    { value: "photography", label: "Photography" },
+    { value: "music", label: "Music" },
+    { value: "security", label: "Security" },
+    { value: "cleaning", label: "Cleaning" },
+    { value: "audio_visual", label: "Audio/Visual" },
+    { value: "floral", label: "Floral" },
+    { value: "entertainment", label: "Entertainment" },
+    { value: "hairstyling", label: "Hair Styling" },
+    { value: "other", label: "Other" },
+  ];
+
+  // --- HANDLERS ---
 
   const handleSelect = (e) => {
     const partnerId = e.target.value;
@@ -43,110 +58,271 @@ const PartnerSelector = ({ partners, selectedPartners, onAddPartner, onRemovePar
     
     const p = partners.find(x => x._id === partnerId);
     if (p) {
-      const priceType = p.priceType || "fixed";
-      const rate = priceType === "hourly" ? (p.hourlyRate || 0) : (p.fixedRate || 0);
-      const cost = priceType === "hourly" ? rate * hours : rate;
-
-      onAddPartner({
-        partner: p._id,
-        partnerName: p.name,
-        service: p.category || "Service",
-        priceType: priceType,
-        rate: rate,
-        hours: priceType === "hourly" ? 1 : undefined,
-        cost: cost,
-        status: "confirmed"
-      });
+      addPartnerToEvent(p);
     }
   };
 
-  return (
-    <div className="space-y-4 sm:space-y-5">
-      
-      {/* --- Selection Input --- */}
-      <Select
-        label={t('eventForm.components.partnerSelector.addLabel', 'Add Service Partner')}
-        value=""
-        onChange={handleSelect}
-        options={[
-          { value: "", label: t('eventForm.components.partnerSelector.selectPartner') || "Select Partner..." },
-          ...availablePartners.map(p => ({
-            value: p._id,
-            label: `${p.name} - ${p.category} (${p.priceType === 'hourly' ? p.hourlyRate + '/hr' : p.fixedRate})`
-          }))
-        ]}
-      />
+  const addPartnerToEvent = (p) => {
+    const hours = typeof calculateEventHours === 'function' ? calculateEventHours() : 1;
+    const rate = p.priceType === 'hourly' ? (p.hourlyRate || 0) : (p.fixedRate || 0);
+    const cost = p.priceType === 'hourly' ? rate * hours : rate;
 
-      {/* --- Selected Partners List --- */}
-      <div className="space-y-2 sm:space-y-3">
-        {selectedPartners.length > 0 ? (
-          selectedPartners.map((p, idx) => {
-            const ServiceIcon = getServiceIcon(p.service);
-            
-            return (
-              <div 
-                key={idx} 
-                className="group flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-3 p-3 sm:p-3 bg-white dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm hover:border-blue-300 dark:hover:border-blue-500 transition-all"
-              >
-                {/* FIXED: Better mobile layout with stacked info and cost/action */}
-                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                  {/* Icon Box */}
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0">
-                    <ServiceIcon size={16} className="sm:w-[18px] sm:h-[18px]" />
-                  </div>
-                  
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white leading-tight truncate">
-                      {p.partnerName}
-                    </p>
-                    <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
-                      <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">{p.service}</span>
-                      <Badge 
-                        variant="secondary" 
-                        size="sm" 
-                        className="h-4 sm:h-5 px-1 sm:px-1.5 text-[9px] sm:text-[10px] uppercase tracking-wider shrink-0"
-                        icon={p.priceType === 'hourly' ? <Clock size={8} className="sm:w-[10px] sm:h-[10px]" /> : <DollarSign size={8} className="sm:w-[10px] sm:h-[10px]" />}
-                      >
-                        {p.priceType}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Cost & Action */}
-                <div className="flex items-center justify-between xs:justify-end gap-2 sm:gap-4 xs:flex-shrink-0 border-t xs:border-t-0 pt-2 xs:pt-0 border-gray-100 dark:border-gray-600">
-                  <div className="text-left xs:text-right">
-                    <p className="font-bold text-orange-600 dark:text-orange-400 text-xs sm:text-sm leading-none">
-                      {(p.cost || 0).toFixed(2)} <span className="text-[10px] sm:text-xs font-normal text-gray-500">TND</span>
-                    </p>
-                    {p.priceType === 'hourly' && (
-                      <p className="text-[9px] sm:text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
-                        ({p.hours || hours}h × {p.rate})
-                      </p>
-                    )}
-                  </div>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => onRemovePartner(idx)} 
-                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 sm:p-2 h-7 w-7 sm:h-8 sm:w-8 shrink-0"
+    onAddPartner({
+      partner: p._id,
+      partnerName: p.name,
+      service: p.category || "Service",
+      priceType: p.priceType || "fixed",
+      rate: rate,
+      hours: p.priceType === 'hourly' ? 1 : undefined,
+      cost: cost,
+      status: "confirmed"
+    });
+  };
+
+  const handleCreatePartner = async () => {
+    // Validation
+    if (!newPartner.name.trim()) return showError("Partner Name is required");
+    if (!newPartner.email.trim()) return showError("Email is required"); // ✅ Added Validation
+    if (!newPartner.phone.trim()) return showError("Phone is required"); // ✅ Added Validation
+    if (!newPartner.category) return showError("Category is required");
+    
+    const rateCheck = newPartner.priceType === 'hourly' ? newPartner.hourlyRate : newPartner.fixedRate;
+    if (!rateCheck || parseFloat(rateCheck) <= 0) return showError("Valid rate is required");
+
+    try {
+      setLoading(true);
+
+      // Construct API Payload
+      const payload = {
+        name: newPartner.name,
+        email: newPartner.email, // ✅ Added
+        phone: newPartner.phone, // ✅ Added
+        category: newPartner.category,
+        priceType: newPartner.priceType,
+        location: newPartner.location,
+        status: 'active',
+        hourlyRate: newPartner.priceType === 'hourly' ? parseFloat(newPartner.hourlyRate) : undefined,
+        fixedRate: newPartner.priceType === 'fixed' ? parseFloat(newPartner.fixedRate) : undefined,
+      };
+
+      const response = await partnerService.create(payload);
+      const createdPartner = response.partner || response.data;
+
+      // Add to event immediately
+      addPartnerToEvent(createdPartner);
+      
+      // Reset & UI Feedback
+      showSuccess(`Partner "${createdPartner.name}" created and added.`);
+      setIsCreating(false);
+      setNewPartner({ 
+        name: "", email: "", phone: "", 
+        category: "", priceType: "hourly", 
+        hourlyRate: "", fixedRate: "", location: "" 
+      });
+      
+    } catch (error) {
+      console.error(error);
+      // Display the specific error message from backend if available
+      const msg = error.response?.data?.message || "Failed to create partner";
+      showError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const availablePartners = partners.filter(
+    (p) => !selectedPartners.some((sp) => sp.partner === p._id)
+  );
+
+  return (
+    <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
+      
+      {/* --- Header / Toggle --- */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-gray-100 dark:border-gray-700">
+         <h5 className="font-semibold text-gray-900 dark:text-white text-sm">
+           {isCreating ? "Create New Service Partner" : "Select Service Partner"}
+         </h5>
+         <Button 
+            type="button" 
+            variant={isCreating ? "ghost" : "primary"} 
+            size="sm" 
+            icon={isCreating ? X : Plus} 
+            onClick={() => setIsCreating(!isCreating)}
+            className="text-xs"
+          >
+            {isCreating ? t('common.cancel') : "New Partner"}
+          </Button>
+      </div>
+
+      {/* --- Main Interaction Area --- */}
+      {isCreating ? (
+        /* --- QUICK CREATE FORM --- */
+        <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-600 space-y-4">
+           
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             {/* Name */}
+             <Input 
+                label="Partner Name *"
+                placeholder="e.g. DJ Khaled"
+                value={newPartner.name}
+                onChange={(e) => setNewPartner({...newPartner, name: e.target.value})}
+                icon={User}
+                className="bg-white dark:bg-gray-800"
+             />
+
+             {/* Category */}
+             <Select
+                label="Category *"
+                options={[{value:"", label:"Select Category"}, ...categoryOptions]}
+                value={newPartner.category}
+                onChange={(e) => setNewPartner({...newPartner, category: e.target.value})}
+                icon={Briefcase}
+                className="bg-white dark:bg-gray-800"
+             />
+           </div>
+
+           {/* ✅ NEW ROW: Contact Info */}
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <Input 
+                label="Email *"
+                type="email"
+                placeholder="partner@example.com"
+                value={newPartner.email}
+                onChange={(e) => setNewPartner({...newPartner, email: e.target.value})}
+                icon={Mail}
+                className="bg-white dark:bg-gray-800"
+             />
+             <Input 
+                label="Phone *"
+                type="tel"
+                placeholder="12 345 678"
+                value={newPartner.phone}
+                onChange={(e) => setNewPartner({...newPartner, phone: e.target.value})}
+                icon={Phone}
+                className="bg-white dark:bg-gray-800"
+             />
+           </div>
+
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             {/* Price Type Toggle */}
+             <div>
+               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Price Model *</label>
+               <div className="flex bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <button
+                    type="button"
+                    onClick={() => setNewPartner({...newPartner, priceType: 'hourly'})}
+                    className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors ${newPartner.priceType === 'hourly' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' : 'text-gray-500'}`}
                   >
-                    <X size={14} className="sm:w-4 sm:h-4" />
-                  </Button>
+                    Hourly
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewPartner({...newPartner, priceType: 'fixed'})}
+                    className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors ${newPartner.priceType === 'fixed' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' : 'text-gray-500'}`}
+                  >
+                    Fixed
+                  </button>
+               </div>
+             </div>
+
+             {/* Rate Input */}
+             <div>
+                <Input 
+                  label={newPartner.priceType === 'hourly' ? "Hourly Rate (TND) *" : "Fixed Cost (TND) *"}
+                  type="number"
+                  placeholder="0.00"
+                  value={newPartner.priceType === 'hourly' ? newPartner.hourlyRate : newPartner.fixedRate}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if(newPartner.priceType === 'hourly') setNewPartner({...newPartner, hourlyRate: val});
+                    else setNewPartner({...newPartner, fixedRate: val});
+                  }}
+                  icon={newPartner.priceType === 'hourly' ? Clock : DollarSign}
+                  className="bg-white dark:bg-gray-800"
+                />
+             </div>
+           </div>
+
+           <div className="flex justify-end pt-2">
+             <Button 
+               type="button" 
+               variant="success" 
+               size="sm" 
+               onClick={handleCreatePartner}
+               loading={loading}
+               icon={Save}
+             >
+               Create & Add
+             </Button>
+           </div>
+        </div>
+      ) : (
+        /* --- SELECT DROPDOWN --- */
+        <Select
+          value=""
+          onChange={handleSelect}
+          options={[
+            { value: "", label: t('eventForm.components.partnerSelector.selectPartner') || "Select Partner..." },
+            ...availablePartners.map(p => ({
+              value: p._id,
+              label: `${p.name} - ${p.category} (${p.priceType === 'hourly' ? p.hourlyRate + '/hr' : p.fixedRate})`
+            }))
+          ]}
+        />
+      )}
+
+      {/* --- SELECTED LIST --- */}
+      <div className="space-y-2.5">
+        {selectedPartners.length > 0 ? (
+          selectedPartners.map((p, idx) => (
+            <div 
+              key={idx} 
+              className="group flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:border-blue-300 dark:hover:border-blue-500 transition-all"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                  <Tag size={18} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{p.partnerName}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.service}</span>
+                    <Badge variant="secondary" size="sm" className="px-1.5 py-0 text-[10px] uppercase">
+                      {p.priceType}
+                    </Badge>
+                  </div>
                 </div>
               </div>
-            );
-          })
+
+              <div className="flex items-center gap-4 shrink-0 pl-2">
+                <div className="text-right">
+                  <p className="font-bold text-orange-600 dark:text-orange-400 text-sm">
+                    {p.cost.toFixed(2)} <span className="text-xs text-gray-400 font-normal">TND</span>
+                  </p>
+                  {p.priceType === 'hourly' && (
+                    <p className="text-[10px] text-gray-400">
+                      {p.rate}/hr
+                    </p>
+                  )}
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onRemovePartner(idx)} 
+                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 h-8 w-8"
+                >
+                  <X size={16} />
+                </Button>
+              </div>
+            </div>
+          ))
         ) : (
-          /* --- Empty State --- */
-          <div className="flex flex-col items-center justify-center py-6 sm:py-8 px-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/50 dark:bg-gray-800/30">
-            <Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300 dark:text-gray-600 mb-2" />
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 italic text-center">
-              {t('eventForm.components.partnerSelector.noPartners', 'No partners added yet.')}
-            </p>
-          </div>
+          !isCreating && (
+            <div className="flex flex-col items-center justify-center py-8 px-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/50 dark:bg-gray-800/30">
+              <Briefcase className="w-8 h-8 text-gray-300 dark:text-gray-600 mb-2" />
+              <p className="text-sm text-gray-500 dark:text-gray-400 italic">No partners added yet.</p>
+            </div>
+          )
         )}
       </div>
     </div>

@@ -23,28 +23,28 @@ import {
   AlertTriangle,
   X,
   Download,
-  FolderOpen // ✅ Added for No Results state
+  FolderOpen 
 } from "lucide-react";
 
-// Services
+// ✅ Services
 import { contractService } from "../../api/index";
 
-// Components
+// ✅ Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Pagination from "../../components/common/Pagination"; // ✅ Ensure this is imported
+import Pagination from "../../components/common/Pagination";
 
-// Context & Hooks
+// ✅ Context & Hooks
 import { useToast } from "../../hooks/useToast";
 import formatCurrency from "../../utils/formatCurrency";
 
 // ============================================
 // STATS CARDS
 // ============================================
-const StatsCards = ({ stats, t }) => {
+const StatsCards = ({ stats }) => {
   if (!stats) return null;
 
   const cards = [
@@ -171,7 +171,14 @@ const ContractListPage = () => {
       let dataList = [];
       let paginationData = {};
 
-      if (contractsRes?.contracts) {
+      // ✅ FIX: Handle the specific JSON structure provided
+      // Structure: { success: true, message: { contracts: [], pagination: {} } }
+      if (contractsRes?.message?.contracts) {
+        dataList = contractsRes.message.contracts;
+        paginationData = contractsRes.message.pagination || {};
+      } 
+      // Fallback for other potential structures
+      else if (contractsRes?.contracts) {
         dataList = contractsRes.contracts;
         paginationData = contractsRes.pagination || {};
       } else if (contractsRes?.data?.contracts) {
@@ -182,21 +189,24 @@ const ContractListPage = () => {
       setContracts(Array.isArray(dataList) ? dataList : []);
       setTotalPages(paginationData.pages || 1);
       setTotalCount(paginationData.total || (Array.isArray(dataList) ? dataList.length : 0));
+      
+      // Handle Stats structure if similar
       setStats(statsRes?.message || statsRes?.data || statsRes || {});
-      setHasInitialLoad(true);
-
+      
+      // Update URL params
       const urlParams = {};
       if (search) urlParams.search = search;
       if (statusFilter) urlParams.status = statusFilter;
       if (typeFilter) urlParams.type = typeFilter;
       setSearchParams(urlParams);
+
     } catch (err) {
       console.error("Fetch error:", err);
       setContracts([]);
       setTotalCount(0);
-      setHasInitialLoad(true);
     } finally {
       setLoading(false);
+      setHasInitialLoad(true);
     }
   }, [page, limit, search, statusFilter, typeFilter, setSearchParams]);
 
@@ -260,9 +270,16 @@ const ContractListPage = () => {
   // LOGIC STATES
   // ============================================
   const hasActiveFilters = search.trim() !== "" || statusFilter !== "" || typeFilter !== "";
+  
+  // Empty State: No loading, no data, no filters, but HAS loaded once
   const showEmptyState = !loading && contracts.length === 0 && !hasActiveFilters && hasInitialLoad;
+  
+  // No Results: No loading, no data, BUT filters active
   const showNoResults = !loading && contracts.length === 0 && hasActiveFilters && hasInitialLoad;
+  
+  // Data: Not loading, has loaded once, has data
   const showData = !loading && hasInitialLoad && contracts.length > 0;
+  
   const isRTL = i18n.dir() === "rtl";
 
   // ============================================
@@ -352,7 +369,8 @@ const ContractListPage = () => {
       width: "25%",
       render: (row) => {
         const isClient = row.contractType === "client";
-        const partyName = row.partyName || (isClient ? row.client?.name : row.partner?.name) || t("contracts.list.unknown");
+        // ✅ FIX: Access party.name based on your JSON structure
+        const partyName = row.party?.name || row.partyName || t("contracts.list.unknown");
         return (
           <div className="text-sm">
             <div className="flex items-center gap-1.5 text-gray-900 dark:text-white font-medium">
@@ -372,7 +390,12 @@ const ContractListPage = () => {
       header: t("contracts.list.columns.amount"),
       accessor: "totalAmount",
       width: "10%",
-      render: (row) => <div className="font-bold text-gray-700 dark:text-gray-300">{formatCurrency(row.totalAmount)}</div>,
+      // ✅ FIX: Access financials.totalTTC based on your JSON
+      render: (row) => (
+        <div className="font-bold text-green-600 dark:text-green-300">
+            {formatCurrency(row.financials?.totalTTC || row.totalAmount || 0)}
+        </div>
+      ),
     },
     {
       header: t("contracts.list.columns.actions"),
@@ -383,15 +406,18 @@ const ContractListPage = () => {
         return (
           <div className="flex justify-center gap-2">
             <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleView(row); }} className="text-gray-500 hover:text-blue-600 hover:bg-blue-50">
-              <Eye size={16} />
+              <Eye size={16}
+              className="text-orange-600" />
             </Button>
             {canEdit && (
               <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="text-gray-500 hover:text-orange-600 hover:bg-orange-50">
-                <Edit size={16} />
+                <Edit size={16} 
+                className="text-blue-600"/>
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownload(row); }} className="text-gray-500 hover:text-green-600 hover:bg-green-50">
-              <Download size={16} />
+              <Download size={16} 
+              className="text-green-600"/>
             </Button>
             {row.status === "draft" && (
               <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClick(row); }} className="text-gray-500 hover:text-red-600 hover:bg-red-50">
@@ -412,7 +438,8 @@ const ContractListPage = () => {
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("contracts.list.title")}</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {t("contracts.list.subtitle", { count: totalCount })}
+            {t("contracts.list.subtitle")}
+            {hasInitialLoad && totalCount > 0 && ` • ${t("contracts.list.showingResults", { count: contracts.length, total: totalCount })}`}
           </p>
         </div>
         {!showEmptyState && (
@@ -428,9 +455,9 @@ const ContractListPage = () => {
       </div>
 
       {/* 2. Stats & Filters (Hidden if empty) */}
-      {!showEmptyState && (
+      {!showEmptyState && hasInitialLoad && (
         <>
-            <StatsCards stats={stats} t={t} />
+            <StatsCards stats={stats} />
 
             <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shrink-0">
                 <div className="flex flex-col sm:flex-row gap-4">
