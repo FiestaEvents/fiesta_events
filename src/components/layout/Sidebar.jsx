@@ -21,7 +21,7 @@ import {
   X,
   Home,
   TrendingUp,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 
 // ============================================================
@@ -45,7 +45,9 @@ const Tooltip = ({ children, text, isRTL, show }) => {
           className={`absolute top-1/2 -translate-y-1/2 ${
             isRTL ? "right-0 translate-x-full" : "left-0 -translate-x-full"
           } w-0 h-0 border-t-4 border-b-4 border-transparent ${
-            isRTL ? "border-r-4 border-r-gray-900 dark:border-r-gray-700" : "border-l-4 border-l-gray-900 dark:border-l-gray-700"
+            isRTL
+              ? "border-r-4 border-r-gray-900 dark:border-r-gray-700"
+              : "border-l-4 border-l-gray-900 dark:border-l-gray-700"
           }`}
         />
       </motion.div>
@@ -208,20 +210,23 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
           width: isCollapsed ? 64 : 200,
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-40 shadow-xl border-r border-gray-100 dark:border-gray-800
+        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-40 shadow-xl dark:border-gray-800
         ${isRTL ? "right-0 border-r-0 border-l" : "left-0"}
         ${
           isOpen
             ? "translate-x-0"
             : isRTL
-            ? "translate-x-full lg:translate-x-0"
-            : "-translate-x-full lg:translate-x-0"
+              ? "translate-x-full lg:translate-x-0"
+              : "-translate-x-full lg:translate-x-0"
         } transition-transform duration-300 ease-in-out`}
       >
         <div className="flex flex-col h-full">
           {/* Header / Logo Area */}
-          <div className="h-16 flex items-center justify-center shrink-0 px-4 relative border-b border-gray-50 dark:border-gray-800/50">
-            <Link to="/" className="flex items-center justify-center w-full overflow-hidden">
+          <div className="h-16 flex items-center justify-center shrink-0 px-4 relative dark:border-gray-800/50">
+            <Link
+              to="/"
+              className="flex items-center justify-center w-full overflow-hidden"
+            >
               <motion.img
                 src="/fiesta logo-01.png"
                 alt="Fiesta Logo"

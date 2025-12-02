@@ -1,26 +1,26 @@
-import React, { useState } from "react";
 import {
-  X,
-  Plus,
-  Save,
-  User,
-  Tag,
-  MapPin,
+  Briefcase,
   Clock,
   DollarSign,
-  Briefcase,
   Mail,
-  Phone, // ✅ Added Icons
+  Phone,
+  Plus,
+  Save,
+  Tag,
+  User,
+  X,
+  XIcon,
 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useToast } from "../../../../hooks/useToast";
 import { partnerService } from "../../../../api/index";
+import { useToast } from "../../../../hooks/useToast";
 
 // ✅ Generic Components
-import Select from "../../../../components/common/Select";
+import Badge from "../../../../components/common/Badge";
 import Button from "../../../../components/common/Button";
 import Input from "../../../../components/common/Input";
-import Badge from "../../../../components/common/Badge";
+import Select from "../../../../components/common/Select";
 
 const PartnerSelector = ({
   partners,
@@ -170,17 +170,19 @@ const PartnerSelector = ({
       {/* --- Header / Toggle --- */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-gray-100 dark:border-gray-700">
         <h5 className="font-semibold text-gray-900 dark:text-white text-sm">
-          {isCreating ? "Create New Service Partner" : "Select Service Partner"}
+          {isCreating
+            ? t("eventForm.step3.createNewPartner")
+            : t("eventForm.step3.selectPartners")}
         </h5>
         <Button
           type="button"
-          variant={isCreating ? "ghost" : "primary"}
-          size="sm"
-          icon={isCreating ? X : Plus}
+          variant={isCreating ? "outline" : "primary"}
+          size="lg"
+          icon={isCreating ? <XIcon size={16} /> : <Plus size={16} />}
           onClick={() => setIsCreating(!isCreating)}
           className="text-xs"
         >
-          {isCreating ? t("common.cancel") : "New Partner"}
+          {isCreating ? t("common.cancel") : t("eventForm.step3.createAndAdd")}
         </Button>
       </div>
 
@@ -191,21 +193,21 @@ const PartnerSelector = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Name */}
             <Input
-              label="Partner Name *"
+              label={t("eventForm.step3.partnerName")}
               placeholder="e.g. DJ Khaled"
               value={newPartner.name}
               onChange={(e) =>
                 setNewPartner({ ...newPartner, name: e.target.value })
               }
               icon={User}
-              className="bg-white dark:bg-gray-800"
+              className="bg-white dark:bg-gray-800 w-full"
             />
 
             {/* Category */}
             <Select
-              label="Category *"
+              label={t("eventForm.step3.category")}
               options={[
-                { value: "", label: "Select Category" },
+                { value: "", label: t("eventForm.step3.selectCategory") },
                 ...categoryOptions,
               ]}
               value={newPartner.category}
@@ -213,14 +215,14 @@ const PartnerSelector = ({
                 setNewPartner({ ...newPartner, category: e.target.value })
               }
               icon={Briefcase}
-              className="bg-white dark:bg-gray-800"
+              className="bg-white dark:bg-gray-800 w-full"
             />
           </div>
 
           {/* ✅ NEW ROW: Contact Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Email *"
+              label="Email"
               type="email"
               placeholder="partner@example.com"
               value={newPartner.email}
@@ -228,10 +230,10 @@ const PartnerSelector = ({
                 setNewPartner({ ...newPartner, email: e.target.value })
               }
               icon={Mail}
-              className="bg-white dark:bg-gray-800"
+              className="bg-white dark:bg-gray-800 w-full"
             />
             <Input
-              label="Phone *"
+              label={t("eventForm.step3.partnerPhone")}
               type="tel"
               placeholder="12 345 678"
               value={newPartner.phone}
@@ -239,7 +241,7 @@ const PartnerSelector = ({
                 setNewPartner({ ...newPartner, phone: e.target.value })
               }
               icon={Phone}
-              className="bg-white dark:bg-gray-800"
+              className="bg-white dark:bg-gray-800 w-full"
             />
           </div>
 
@@ -247,7 +249,7 @@ const PartnerSelector = ({
             {/* Price Type Toggle */}
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Price Model *
+                {t("eventForm.step3.priceModel")}
               </label>
               <div className="flex bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
                 <button
@@ -255,18 +257,18 @@ const PartnerSelector = ({
                   onClick={() =>
                     setNewPartner({ ...newPartner, priceType: "hourly" })
                   }
-                  className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors ${newPartner.priceType === "hourly" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" : "text-gray-500"}`}
+                  className={`flex-1 py-2 text-xs font-medium rounded transition-colors ${newPartner.priceType === "hourly" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" : "text-gray-500"}`}
                 >
-                  Hourly
+                  {t("eventForm.step3.hourly")}
                 </button>
                 <button
                   type="button"
                   onClick={() =>
                     setNewPartner({ ...newPartner, priceType: "fixed" })
                   }
-                  className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors ${newPartner.priceType === "fixed" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" : "text-gray-500"}`}
+                  className={`flex-1 py-2 text-xs font-medium rounded transition-colors ${newPartner.priceType === "fixed" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" : "text-gray-500"}`}
                 >
-                  Fixed
+                  {t("eventForm.step3.fixed")}
                 </button>
               </div>
             </div>
@@ -276,8 +278,8 @@ const PartnerSelector = ({
               <Input
                 label={
                   newPartner.priceType === "hourly"
-                    ? "Hourly Rate (TND) *"
-                    : "Fixed Cost (TND) *"
+                    ? t("eventForm.step3.hourlyRate")
+                    : t("eventForm.step3.fixedCost")
                 }
                 type="number"
                 placeholder="0.00"
@@ -301,13 +303,13 @@ const PartnerSelector = ({
           <div className="flex justify-end pt-2">
             <Button
               type="button"
-              variant="success"
-              size="sm"
+              variant="primary"
+              size="md"
               onClick={handleCreatePartner}
               loading={loading}
-              icon={Save}
+              icon={<Save />}
             >
-              Create & Add
+              {t("eventForm.step3.createAndAdd")}
             </Button>
           </div>
         </div>
@@ -377,11 +379,10 @@ const PartnerSelector = ({
                   <Button
                     variant="outline"
                     size="sm"
+                    icon={<XIcon size={16} />}
                     onClick={() => onRemovePartner(idx)}
-                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 h-8 w-8"
-                  >
-                    <X size={16} />
-                  </Button>
+                    className="text-gray-400 hover:text-red-500 hover:bg-red-50"
+                  ></Button>
                 </div>
               </div>
             ))
@@ -389,7 +390,7 @@ const PartnerSelector = ({
               <div className="flex flex-col items-center justify-center py-8 px-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/50 dark:bg-gray-800/30">
                 <Briefcase className="w-8 h-8 text-gray-300 dark:text-gray-600 mb-2" />
                 <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-                  No partners added yet.
+                  {t("eventForm.step3.noPartnersSelected")}
                 </p>
               </div>
             )}

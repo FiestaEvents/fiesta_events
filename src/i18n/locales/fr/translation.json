@@ -509,6 +509,9 @@
       "calendar": "Calendrier"
     },
     "actions": {
+      "advancedFilters": "Filtres Avancés",
+      "reset": "Réinitialiser les Filtres",
+      "applyFilters": "Appliquer les Filtres",
       "createEvent": "Créer un Événement",
       "createFirstEvent": "Créer le Premier Événement",
       "createEventOnDate": "Créer un Événement à Cette Date",
@@ -534,6 +537,7 @@
       "date": "Date"
     },
     "filters": {
+      "filterOptions": "Options de Filtrage",
       "startDate": "Date de début",
       "endDate": "Date de fin",
       "allStatus": "Tous les Statuts",
@@ -611,6 +615,7 @@
       "warningMessage": "Cette action est irréversible et toutes les données associées seront définitivement supprimées."
     },
     "notifications": {
+      "filtersApplied": "Filtres appliqués",
       "filtersCleared": "Filtres effacés",
       "retrying": "Nouvelle tentative de chargement des événements...",
       "navigatedToToday": "Navigation vers aujourd'hui",
@@ -843,22 +848,48 @@
       }
     },
     "step2": {
+      "createClient": "Créer un Nouveau Client",
       "clientSelection": "Sélection du Client",
+      "clientSelectionDescription": "Choisissez un client existant ou créez-en un nouveau pour cet événement.",
       "newClient": "Nouveau Client",
       "cancel": "Annuler",
       "clientNamePlaceholder": "Nom du Client",
       "emailPlaceholder": "Adresse Email",
       "phonePlaceholder": "Numéro de Téléphone (8 chiffres)",
-      "createAndSelect": "Créer et Sélectionner"
+      "createAndSelect": "Créer et Sélectionner",
+      "newClientDetails": "Détails du Nouveau Client",
+      "clientEmail": "Email du Client",
+      "clientName": "Nom du Client",
+      "clientPhone": "Téléphone du Client",
+      "searchClients": "Rechercher des clients par nom, email ou téléphone..."
     },
     "step3": {
+      "noPartnersSelected": "Aucun partenaire sélectionné",
+      "fixedCost": "Coût Fixe (TND)",
+      "hourlyRate": "Taux Horaire (TND)",
+      "hourly": "Horaire",
+      "priceModel": "Modèle de Prix",
+      "partnerPhone": "Numéro de Téléphone du Partenaire",
+      "selectCategory": "Sélectionner une Catégorie",
+      "category": "Catégorie",
+      "partnerName": "Nom du Partenaire",
+      "taxRate": "Taux de Taxe (%)",
+      "discountAmount": "Montant de la Remise",
+      "fixed": "Montant Fixe",
+      "percentage": "Percentage",
+      "venueSpace": "Espace de la Salle",
       "venueSpaceSelection": "Sélection de l'Espace",
       "selectVenueSpace": "Sélectionner un Espace",
       "selectVenueSpacePlaceholder": "Choisir un espace...",
       "pricing": "Tarification",
       "basePriceLabel": "Prix de Base (de la salle)",
       "discount": "Remise (Optionnel)",
-      "servicePartners": "Prestataires de Service"
+      "servicePartners": "Prestataires de Service",
+      "createAndAdd": "Créer et Ajouter",
+      "additionalServices": "Services Supplémentaires",
+      "adjustments": "Ajustements",
+      "selectPartners": "Sélectionner des Partenaires",
+      "createNewPartner": "Créer un Nouveau Partenaire"
     },
     "step4": {
       "recordPayment": "Enregistrer un Paiement Initial",

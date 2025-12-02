@@ -287,7 +287,7 @@ const SharedEventForm = ({ onSuccess }) => {
       />
 
       {/* MAIN CONTENT: Grows to fill space (flex-1) */}
-      <div className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-12">
+      <div className="flex-1 w-full px-4 mt-8 pb-12">
         {/* Validation Banner */}
         {Object.keys(errors).length > 0 && (
           <div className="mb-6 animate-in slide-in-from-top-2">

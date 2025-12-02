@@ -22,7 +22,7 @@
         "invalidPassword": "Or invalid password"
       }
     },
-        "register": {
+    "register": {
       "title": "Create an account",
       "subtitle": "Get started with your venue management",
       "fullName": "Full Name",
@@ -130,7 +130,6 @@
         "teamDesc": "Assign tasks, set reminders, and keep everyone in sync."
       }
     }
-
   },
   "dashboard": {
     "title": "Dashboard",
@@ -207,7 +206,7 @@
       }
     }
   },
-   "clients": {
+  "clients": {
     "title": "Clients",
     "description": "Manage your client relationships and information",
     "buttons": {
@@ -280,7 +279,7 @@
     }
   },
 
-   "clientForm": {
+  "clientForm": {
     "title": {
       "add": "إضافة عميل جديد",
       "edit": "تعديل بيانات العميل"
@@ -430,6 +429,9 @@
       "calendar": "Calendar"
     },
     "actions": {
+      "advancedFilters": "Advanced Filters",
+      "reset": "Reset Filters",
+      "applyFilters": "Apply Filters",
       "createEvent": "Create Event",
       "createFirstEvent": "Create First Event",
       "createEventOnDate": "Create Event on This Date",
@@ -455,6 +457,7 @@
       "date": "Date"
     },
     "filters": {
+      "filterOptions": "Filter Options",
       "allStatus": "All Statuses",
       "draft": "Draft",
       "pending": "Pending",
@@ -530,6 +533,7 @@
       "warningMessage": "This action is irreversible and all associated data will be permanently deleted."
     },
     "notifications": {
+      "filtersApplied": "Filters applied",
       "filtersCleared": "Filters cleared",
       "retrying": "Retrying to load events...",
       "navigatedToToday": "Navigated to today",
@@ -763,22 +767,48 @@
       }
     },
     "step2": {
+      "createClient": "Create New Client",
       "clientSelection": "Client Selection",
+      "clientSelectionDescription": "Select an existing client or create a new one for this event.",
       "newClient": "New Client",
       "cancel": "Cancel",
       "clientNamePlaceholder": "Client Name",
       "emailPlaceholder": "Email Address",
       "phonePlaceholder": "Phone Number (8 digits)",
-      "createAndSelect": "Create & Select"
+      "createAndSelect": "Create & Select",
+      "newClientDetails": "New Client Details",
+      "clientEmail": "Client Email",
+      "clientName": "Create Name",
+      "clientPhone": "Client Phone",
+      "searchClients": "Search Clients..."
     },
     "step3": {
+      "noPartnersSelected": "No partners selected",
+      "fixedCost": "Fixed Cost (TND)",
+      "hourlyRate": "Hourly Rate (TND)",
+      "hourly": "Hourly",
+      "priceModel": "Price Model",
+      "partnerPhone": "Partner Phone",
+      "selectCategory": "Select Category",
+      "category": "Category",
+      "partnerName": "Partner Name",
+      "taxRate": "Tax Rate (%)",
+      "discountAmount": "Discount Amount",
+      "fixed": "Fixed",
+      "percentage": "Percentage",
+      "venueSpace": "Venue Space",
       "venueSpaceSelection": "Venue Space Selection",
       "selectVenueSpace": "Select Venue Space",
       "selectVenueSpacePlaceholder": "Choose a space...",
       "pricing": "Pricing",
       "basePriceLabel": "Base Price (from venue)",
       "discount": "Discount (Optional)",
-      "servicePartners": "Service Partners"
+      "servicePartners": "Service Partners",
+      "createAndAdd": "Create & Add",
+      "additionalServices": "Additional Services",
+      "adjustments": "Adjustments",
+      "selectPartners": "Select Partners to Add",
+      "createNewPartner": "Create New Partner"
     },
     "step4": {
       "recordPayment": "Record Initial Payment",
@@ -2318,7 +2348,7 @@
       "visitMarketplace": "Visit Marketplace"
     }
   },
-   "invoices": {
+  "invoices": {
     "title": "Invoices",
     "subtitle": "Manage your {{type}} invoices and payments.",
     "settings": "Settings",

@@ -235,6 +235,43 @@ const EventList = () => {
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Local state for the inputs (buffers changes until "Apply" is clicked)
+  const [localStatus, setLocalStatus] = useState(status);
+  const [localEventType, setLocalEventType] = useState(eventType);
+  const [localStartDate, setLocalStartDate] = useState(filterStartDate);
+  const [localEndDate, setLocalEndDate] = useState(filterEndDate);
+
+  // Sync local state with active state when panel opens
+  useEffect(() => {
+    if (isFilterOpen) {
+      setLocalStatus(status);
+      setLocalEventType(eventType);
+      setLocalStartDate(filterStartDate);
+      setLocalEndDate(filterEndDate);
+    }
+  }, [isFilterOpen, status, eventType, filterStartDate, filterEndDate]);
+
+  const handleApplyFilters = () => {
+    setStatus(localStatus);
+    setEventType(localEventType);
+    setFilterStartDate(localStartDate);
+    setFilterEndDate(localEndDate);
+    setCurrentPage(1);
+    setIsFilterOpen(false);
+    showSuccess(
+      t("eventList.notifications.filtersApplied") || "Filters applied"
+    );
+  };
+
+  const handleResetLocalFilters = () => {
+    setLocalStatus("all");
+    setLocalEventType("all");
+    setLocalStartDate("");
+    setLocalEndDate("");
+  };
+
   // Calendar helpers
   const currentYear = currentDate.getFullYear();
   // Generate a range of years for the dropdown (e.g., current year +/- 5 years)
@@ -708,7 +745,7 @@ const EventList = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col md:flex-row items-center gap-3">
           <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
             <button
               onClick={() => {
@@ -733,6 +770,7 @@ const EventList = () => {
           {/* Create Button (Shows in Calendar view or if data exists) */}
           {(!showEmptyState || viewMode === "calendar") && (
             <Button
+              className="shrink-0 whitespace-nowrap"
               variant="primary"
               icon={<Plus className="size-4" />}
               onClick={() => handleCreateEvent()}
@@ -753,91 +791,155 @@ const EventList = () => {
         </div>
       )}
 
-      {/* ✅ ENHANCED FILTERS (List View) */}
+      {/* ✅ ENHANCED FILTERS (List View) - Search Left, Advanced Right */}
       {hasInitialLoad && !showEmptyState && viewMode === "list" && (
-        <div className="p-4 bg-white dark:bg-gray-800/50 rounded-lg shrink-0">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Left side: Search & Dropdowns */}
-            <div className="flex-1 flex flex-col sm:flex-row gap-4">
+        <div className="relative mb-6 z-20">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            {/* 1. Search Bar (Far Left) */}
+            <div className="w-full sm:max-w-md relative">
               <Input
                 icon={Search}
                 placeholder={t("eventList.search.placeholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 min-w-0"
-              />
-              <Select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                options={[
-                  { value: "all", label: t("eventList.filters.allStatus") },
-                  { value: "draft", label: t("eventList.filters.draft") },
-                  { value: "pending", label: t("eventList.filters.pending") },
-                  {
-                    value: "confirmed",
-                    label: t("eventList.filters.confirmed"),
-                  },
-                  {
-                    value: "completed",
-                    label: t("eventList.filters.completed"),
-                  },
-                  {
-                    value: "cancelled",
-                    label: t("eventList.filters.cancelled"),
-                  },
-                ]}
-                className="w-full sm:w-48"
-              />
-              <Select
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
-                options={[
-                  { value: "all", label: t("eventList.filters.allTypes") },
-                  { value: "wedding", label: t("eventList.filters.wedding") },
-                  {
-                    value: "corporate",
-                    label: t("eventList.filters.corporate"),
-                  },
-                  { value: "birthday", label: t("eventList.filters.birthday") },
-                  {
-                    value: "conference",
-                    label: t("eventList.filters.conference"),
-                  },
-                  { value: "other", label: t("eventList.filters.other") },
-                ]}
-                className="w-full sm:w-48"
+                className="w-full"
               />
             </div>
 
-            {/* Right side: Date Range & Clear */}
-            <div className="flex flex-col sm:flex-row items-end gap-4 lg:gap-3">
-              <DateInput
-                label={t("eventList.filters.startDate")}
-                value={filterStartDate}
-                onChange={(e) => setFilterStartDate(e.target.value)}
-                className="w-full sm:w-44"
-              />
-              <DateInput
-                label={t("eventList.filters.endDate")}
-                value={filterEndDate}
-                onChange={(e) => setFilterEndDate(e.target.value)}
-                className="w-full sm:w-44"
-              />
+            {/* 2. Advanced Filters Button (Far Right) */}
+            <Button
+              variant={hasActiveFilters ? "primary" : "outline"}
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+            >
+              <Filter className="w-4 h-4" />
+              {t("eventList.actions.advancedFilters") || "Advanced Filters"}
               {hasActiveFilters && (
+                <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                  !
+                </span>
+              )}
+            </Button>
+          </div>
+
+          {/* 3. Expandable Filter Panel (Push Down) */}
+          {isFilterOpen && (
+            <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+                  {t("eventList.filters.filterOptions") || "Filter Options"}
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
+                {/* WRAPPER 1: Status */}
+                <div className="w-full min-w-0">
+                  <Select
+                    label={t("eventList.table.status")}
+                    value={localStatus}
+                    onChange={(e) => setLocalStatus(e.target.value)}
+                    options={[
+                      { value: "all", label: t("eventList.filters.allStatus") },
+                      { value: "draft", label: t("eventList.filters.draft") },
+                      {
+                        value: "pending",
+                        label: t("eventList.filters.pending"),
+                      },
+                      {
+                        value: "confirmed",
+                        label: t("eventList.filters.confirmed"),
+                      },
+                      {
+                        value: "completed",
+                        label: t("eventList.filters.completed"),
+                      },
+                      {
+                        value: "cancelled",
+                        label: t("eventList.filters.cancelled"),
+                      },
+                    ]}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* WRAPPER 2: Type */}
+                <div className="w-full min-w-0">
+                  <Select
+                    label={t("eventList.table.type")}
+                    value={localEventType}
+                    onChange={(e) => setLocalEventType(e.target.value)}
+                    options={[
+                      { value: "all", label: t("eventList.filters.allTypes") },
+                      {
+                        value: "wedding",
+                        label: t("eventList.filters.wedding"),
+                      },
+                      {
+                        value: "corporate",
+                        label: t("eventList.filters.corporate"),
+                      },
+                      {
+                        value: "birthday",
+                        label: t("eventList.filters.birthday"),
+                      },
+                      {
+                        value: "conference",
+                        label: t("eventList.filters.conference"),
+                      },
+                      { value: "other", label: t("eventList.filters.other") },
+                    ]}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* WRAPPER 3: Start Date */}
+                <div className="w-full">
+                  <DateInput
+                    label={t("eventList.filters.startDate")}
+                    value={localStartDate}
+                    onChange={(e) => setLocalStartDate(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* WRAPPER 4: End Date */}
+                <div className="w-full">
+                  <DateInput
+                    label={t("eventList.filters.endDate")}
+                    value={localEndDate}
+                    onChange={(e) => setLocalEndDate(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
                 <Button
                   variant="outline"
-                  icon={X}
-                  onClick={handleClearFilters}
-                  className="h-10 w-full sm:w-auto whitespace-nowrap"
+                  onClick={handleResetLocalFilters}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 >
-                  {t("eventList.actions.clear")}
+                  {t("eventList.actions.reset") || "Reset"}
                 </Button>
-              )}
+                <Button
+                  variant="primary"
+                  onClick={handleApplyFilters}
+                  className="px-6"
+                >
+                  {t("eventList.actions.applyFilters") || "Apply Filters"}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
-
       {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
         {loading && !hasInitialLoad && (

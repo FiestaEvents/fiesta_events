@@ -33,12 +33,15 @@ const MainLayout = () => {
   }, []);
 
   const sidebarPadding = isCollapsed
-    ? (isRTL ? "lg:pr-20" : "lg:pl-20")
-    : (isRTL ? "lg:pr-64" : "lg:pl-64");
+    ? isRTL
+      ? "lg:pr-20"
+      : "lg:pl-20"
+    : isRTL
+      ? "lg:pr-48"
+      : "lg:pl-48";
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-900 text-sm font-medium text-gray-600 dark:text-gray-300">
-      
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
@@ -52,7 +55,7 @@ const MainLayout = () => {
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
         />
-        <main className="pt-16">
+        <main className="md:p-20 p-16 px-0 md:pt-24 pt-20 flex justify-center ">
           <div className="w-full min-h-[calc(100vh-4rem-2rem)] hidden-scroll">
             <Outlet />
           </div>

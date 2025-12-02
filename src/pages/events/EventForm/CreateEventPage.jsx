@@ -17,13 +17,15 @@ const CreateEventPage = () => {
   const prefillPartner = location.state?.prefillPartner;
 
   const handleSuccess = (response) => {
-    showSuccess(t('eventForm.messages.eventCreated', 'Event created successfully'));
+    showSuccess(
+      t("eventForm.messages.eventCreated", "Event created successfully")
+    );
     navigate("/events");
   };
 
   return (
-    <div className="w-full mx-auto max-w-5xl">
-      <EventFormProvider 
+    <div className="w-full ">
+      <EventFormProvider
         isEditMode={false}
         initialDate={initialDate}
         prefillClient={prefillClient}
