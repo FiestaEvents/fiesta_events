@@ -123,43 +123,65 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
-    "welcome_msg": "Voici ce qui se passe dans votre établissement aujourd'hui.",
-    "all_caught_up": "Tout est à jour !",
-    "view_all": "Voir tout",
-    "recent_inflow": "Entrées récentes",
-    "no_payments": "Aucun paiement récent.",
-    "metrics": {
-      "revenue": "Revenu mensuel",
-      "pending": "En attente",
-      "occupancy": "Taux d'occupation",
-      "events_this_month": "Événements ce mois-ci",
-      "conversion": "Conversion prospects",
-      "pending_enquiries": "Demandes en attente",
-      "tasks": "Opérations",
-      "urgent_items": "Éléments urgents"
+    "welcome": "Bon retour. Voici ce qui se passe aujourd'hui.",
+    "currentDate": "Date actuelle",
+    "buttons": {
+      "today": "Aujourd'hui",
+      "newEvent": "Nouvel événement",
+      "viewAll": "Voir tout",
+      "export": "Exporter",
+      "viewTransactions": "Voir toutes les transactions",
+      "scheduleOne": "En planifier un ?"
     },
-    "charts": {
-      "revenue_trend": "Tendance des revenus",
-      "event_status": "Statut des événements",
-      "total": "Total"
+    "tabs": {
+      "overview": "Aperçu",
+      "expenses": "Dépenses",
+      "finance": "Finance"
     },
-    "alerts": {
-      "missing_partners": "Partenaires manquants"
-    },
-    "actions": {
-      "assign": "Assigner"
-    },
-    "upcoming": {
-      "title": "Calendrier à venir",
-      "no_events": "Aucun événement prévu."
-    },
-    "calendar": {
-      "occupancy_view": "Occupation"
-    },
-    "leads": {
-      "title": "Prospects en attente",
-      "no_leads": "Aucun prospect en attente"
+    "status": {
+      "systemOperational": "Système opérationnel",
+      "noEvents": "Aucun événement prévu pour aujourd'hui.",
+      "noUpcoming": "Aucun événement à venir trouvé",
+      "noTransactions": "Aucune transaction récente"
     }
+  },
+  "metrics": {
+    "totalEvents": "Total événements",
+    "allTimeCount": "Compte de tous les temps",
+    "confirmed": "Confirmé",
+    "lockedIn": "Verrouillé dans le planning",
+    "thisMonth": "Ce mois-ci",
+    "occupancyRate": "Taux d'occupation",
+    "pendingActions": "Actions en attente",
+    "requiresReview": "Nécessite une révision",
+    "totalSpent": "Total dépensé",
+    "partnerCosts": "Coûts partenaires",
+    "vendors": "Vendeurs",
+    "operations": "Opérations",
+    "utilities": "Utilitaires",
+    "misc": "Divers",
+    "other": "Autre",
+    "totalRevenue": "Revenu total",
+    "netCashFlow": "Flux de trésorerie net",
+    "inflowOutflow": "Entrées vs Sorties",
+    "unpaidInvoices": "Factures impayées",
+    "actionNeeded": "Action requise"
+  },
+  "sections": {
+    "todaysAgenda": "L'ordre du jour",
+    "upcomingEvents": "Événements à venir",
+    "expenseTrends": "Tendances des dépenses",
+    "spendingSubtitle": "Dépenses sur les 6 derniers mois",
+    "breakdown": "Répartition",
+    "byCategory": "Par catégorie",
+    "revenuePerformance": "Performance des revenus",
+    "revenueSubtitle": "Analyse du revenu brut",
+    "recentTransactions": "Transactions récentes"
+  },
+  "common": {
+    "guests": "Invités",
+    "pax": "Pax",
+    "client": "Client"
   },
   "home": {
     "eventsDesc": "Gestion de calendrier",
@@ -1608,6 +1630,13 @@
     "noReminders": "Aucun rappel pour le moment",
     "untitled": "Rappel sans titre",
     "errorLoading": "Erreur de chargement des rappels",
+    "backToReminders": "Retour aux rappels",
+    "every": "Chaque",
+    "loadingDetails": "Chargement des détails du rappel...",
+    "notFound": "Rappel non trouvé",
+    "notFoundDescription": "Le rappel que vous recherchez n'existe pas.",
+    "tryAgain": "Réessayer",
+    "yes": "Oui",
     "status": {
       "all": "Tous les statuts",
       "active": "Actif",
@@ -1615,7 +1644,10 @@
       "snoozed": "Mis en attente"
     },
     "type": {
-      "all": "Tous les types"
+      "all": "Tous les types",
+      "client": "Client",
+      "event": "Événement",
+      "task": "Tâche"
     },
     "priority": {
       "all": "Toutes les priorités",
@@ -1635,7 +1667,44 @@
     },
     "form": {
       "createTitle": "Créer un nouveau rappel",
-      "editTitle": "Modifier le rappel"
+      "editTitle": "Modifier le rappel",
+      "basicInfo": "Informations de base",
+      "enableRecurrence": "Activer la récurrence",
+      "notifications": "Notifications",
+      "recurrence": "Récurrence",
+      "relatedItems": "Éléments associés",
+      "buttons": {
+        "cancel": "Annuler",
+        "create": "Créer un rappel",
+        "next": "Suivant",
+        "previous": "Précédent",
+        "update": "Mettre à jour le rappel",
+        "updateNow": "Mettre à jour maintenant"
+      },
+      "fields": {
+        "date": "Date",
+        "daysOfWeek": "Jours de la semaine",
+        "description": "Description",
+        "frequency": "Fréquence",
+        "interval": "Intervalle",
+        "notes": "Notes",
+        "notificationMethods": "Méthodes de notification",
+        "priority": "Priorité",
+        "relatedClient": "Client associé",
+        "relatedEvent": "Événement associé",
+        "relatedTask": "Tâche associée",
+        "time": "Heure",
+        "title": "Titre",
+        "type": "Type"
+      }
+    },
+    "details": {
+      "activityHistory": "Historique d'activité",
+      "additionalInfo": "Informations supplémentaires",
+      "notificationMethods": "Méthodes de notification",
+      "recurrenceSettings": "Paramètres de récurrence",
+      "reminderInfo": "Infos rappel",
+      "tab": "Détails"
     },
     "modals": {
       "snooze": {
@@ -1643,7 +1712,9 @@
       },
       "delete": {
         "title": "Supprimer le rappel",
-        "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible."
+        "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible.",
+        "cancel": "Annuler",
+        "confirm": "Supprimer"
       }
     },
     "notifications": {
@@ -1659,7 +1730,32 @@
       "snoozing": "Mise en attente...",
       "snoozeError": "Échec de la mise en attente",
       "activating": "Activation...",
-      "activateError": "Échec de l'activation du rappel"
+      "activateError": "Échec de l'activation du rappel",
+      "cancelError": "Échec de l'annulation",
+      "cancelled": "Annulé",
+      "cancelling": "Annulation...",
+      "completeError": "Échec de la complétion",
+      "completed": "Terminé",
+      "completing": "Complétion...",
+      "loadError": "Échec du chargement",
+      "loadingDetails": "Chargement des détails...",
+      "saveError": "Échec de l'enregistrement"
+    },
+    "recurrence": {
+      "day": "Jour",
+      "dayOfMonth": "Jour du mois",
+      "endDate": "Date de fin",
+      "forever": "Toujours",
+      "label": "Récurrence",
+      "oneTime": "Une fois"
+    },
+    "validation": {
+      "dateRequired": "La date est requise",
+      "fixAllErrors": "Veuillez corriger toutes les erreurs",
+      "fixErrors": "Veuillez corriger les erreurs",
+      "invalidId": "ID invalide",
+      "timeRequired": "L'heure est requise",
+      "titleRequired": "Le titre est requis"
     }
   },
   "payments": {
@@ -3195,7 +3291,8 @@
         "address": "Adresse",
         "contractTitle": "Titre du contrat",
         "contractTitlePlaceholder": "Ex : Mariage M. et Mme X...",
-        "rateType": "Type de tarif"
+        "rateType": "Type de tarif",
+        "category": "Catégorie"
       },
       "logistics": {
         "start": "Date de début",

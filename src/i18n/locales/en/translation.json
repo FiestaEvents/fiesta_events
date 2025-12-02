@@ -131,45 +131,67 @@
       }
     }
   },
-  "dashboard": {
+   "dashboard": {
     "title": "Dashboard",
-    "welcome_msg": "Here is what is happening at your venue today.",
-    "all_caught_up": "All caught up!",
-    "view_all": "View All",
-    "recent_inflow": "Recent Inflow",
-    "no_payments": "No recent payments.",
-    "metrics": {
-      "revenue": "Monthly Revenue",
-      "pending": "Pending",
-      "occupancy": "Occupancy",
-      "events_this_month": "Events this month",
-      "conversion": "Lead Conversion",
-      "pending_enquiries": "Pending Enquiries",
-      "tasks": "Operations",
-      "urgent_items": "Urgent Items"
+    "welcome": "Welcome back. Here's what's happening today.",
+    "currentDate": "Current Date",
+    "buttons": {
+      "today": "Today",
+      "newEvent": "New Event",
+      "viewAll": "View All",
+      "export": "Export",
+      "viewTransactions": "View All Transactions",
+      "scheduleOne": "Schedule one?"
     },
-    "charts": {
-      "revenue_trend": "Revenue Trend",
-      "event_status": "Event Status",
-      "total": "Total"
+    "tabs": {
+      "overview": "Overview",
+      "expenses": "Expenses",
+      "finance": "Finance"
     },
-    "alerts": {
-      "missing_partners": "Events Missing Partners"
-    },
-    "actions": {
-      "assign": "Assign"
-    },
-    "upcoming": {
-      "title": "Upcoming Schedule",
-      "no_events": "No upcoming events scheduled."
-    },
-    "calendar": {
-      "occupancy_view": "Occupancy"
-    },
-    "leads": {
-      "title": "Pending Leads",
-      "no_leads": "No pending leads"
+    "status": {
+      "systemOperational": "System Operational",
+      "noEvents": "No events scheduled for today.",
+      "noUpcoming": "No upcoming events found",
+      "noTransactions": "No recent transactions"
     }
+  },
+  "metrics": {
+    "totalEvents": "Total Events",
+    "allTimeCount": "All time count",
+    "confirmed": "Confirmed",
+    "lockedIn": "Locked in schedule",
+    "thisMonth": "This Month",
+    "occupancyRate": "Occupancy Rate",
+    "pendingActions": "Pending Actions",
+    "requiresReview": "Requires Review",
+    "totalSpent": "Total Spent",
+    "partnerCosts": "Partner Costs",
+    "vendors": "Vendors",
+    "operations": "Operations",
+    "utilities": "Utilities",
+    "misc": "Misc",
+    "other": "Other",
+    "totalRevenue": "Total Revenue",
+    "netCashFlow": "Net Cash Flow",
+    "inflowOutflow": "Inflow vs Outflow",
+    "unpaidInvoices": "Unpaid Invoices",
+    "actionNeeded": "Action Needed"
+  },
+  "sections": {
+    "todaysAgenda": "Today's Agenda",
+    "upcomingEvents": "Upcoming Events",
+    "expenseTrends": "Expense Trends",
+    "spendingSubtitle": "Spending over last 6 months",
+    "breakdown": "Breakdown",
+    "byCategory": "By Category",
+    "revenuePerformance": "Revenue Performance",
+    "revenueSubtitle": "Gross income analytics",
+    "recentTransactions": "Recent Transactions"
+  },
+  "common": {
+    "guests": "Guests",
+    "pax": "Pax",
+    "client": "Client"
   },
   "home": {
     "eventsDesc": "Calendar Management",
@@ -279,76 +301,55 @@
     }
   },
 
-  "clientForm": {
-    "title": {
-      "add": "إضافة عميل جديد",
-      "edit": "تعديل بيانات العميل"
-    },
-    "description": {
-      "add": "إنشاء ملف تعريف جديد للعميل",
-      "edit": "تحديث معلومات العميل"
-    },
+"clientForm": {
     "steps": {
-      "basicInfo": "المعلومات الأساسية",
-      "address": "العنوان",
-      "notes": "ملاحظات"
-    },
-    "sections": {
-      "personal": "المعلومات الشخصية",
-      "address": "معلومات العنوان",
-      "additional": "معلومات إضافية"
+      "basicInfo": "Basic Info",
+      "address": "Address",
+      "notes": "Notes"
     },
     "fields": {
-      "name": "الاسم الكامل",
-      "email": "البريد الإلكتروني",
-      "phone": "رقم الهاتف",
-      "company": "الشركة",
-      "street": "العنوان الكامل",
-      "city": "المدينة",
-      "state": "الولاية / المحافظة",
-      "zipCode": "الرمز البريدي",
-      "country": "البلد",
-      "notes": "ملاحظات العميل",
-      "status": "الحالة"
+      "name": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "company": "Company Name",
+      "status": "Status",
+      "street": "Street Address",
+      "city": "City",
+      "state": "State / Province",
+      "zipCode": "Zip Code",
+      "country": "Country",
+      "notes": "Additional Notes"
     },
     "placeholders": {
-      "name": "مثال: محمد علي",
-      "email": "name@company.com",
-      "phone": "مثال: 12345678",
-      "company": "اسم الشركة أو المنظمة",
-      "street": "123 شارع الرئيسي",
-      "city": "تونس",
-      "state": "تونس",
-      "zipCode": "1000",
-      "country": "تونس",
-      "notes": "ملاحظات اختيارية أو تعليقات أو معلومات إضافية...",
-      "cityPlaceholder": "اسم المدينة",
-      "statePlaceholder": "اسم الولاية",
-      "zipCodePlaceholder": "الرمز البريدي",
-      "countryPlaceholder": "اسم البلد"
+      "name": "e.g. John Doe",
+      "email": "e.g. john@example.com",
+      "phone": "e.g. 20 123 456",
+      "company": "Optional",
+      "street": "e.g. 123 Main St",
+      "city": "e.g. Tunis",
+      "state": "e.g. Tunis",
+      "zipCode": "e.g. 1000",
+      "country": "e.g. Tunisia",
+      "notes": "Add any specific preferences or details about this client..."
     },
     "errors": {
-      "nameRequired": "الاسم الكامل مطلوب",
-      "nameMinLength": "يجب أن يتكون الاسم من حرفين على الأقل",
-      "emailRequired": "البريد الإلكتروني مطلوب",
-      "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صحيح",
-      "phoneRequired": "رقم الهاتف مطلوب",
-      "phoneInvalid": "يجب أن يتكون رقم الهاتف من 8 أرقام بالضبط",
-      "checkFields": "يرجى التحقق من الحقول المطلوبة",
-      "loading": "خطأ في تحميل العميل",
-      "creating": "خطأ في إنشاء العميل",
-      "saving": "فشل حفظ العميل. حاول مرة اخرى."
+      "nameRequired": "Client name is required",
+      "emailRequired": "Email address is required",
+      "emailInvalid": "Please enter a valid email address",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Phone number must be at least 8 digits",
+      "checkFields": "Please check the required fields",
+      "saving": "Error saving client"
     },
     "buttons": {
-      "cancel": "إلغاء",
-      "previous": "السابق",
-      "next": "التالي",
-      "create": "إضافة العميل",
-      "update": "تحديث العميل",
-      "creating": "جاري الإنشاء...",
-      "updating": "جاري التحديث..."
+      "cancel": "Cancel",
+      "next": "Next Step",
+      "previous": "Back",
+      "create": "Create Client",
+      "update": "Update Client"
     }
   },
+
   "clientDetail": {
     "loading": "Loading client details...",
     "notFound": "Client Not Found",
@@ -1526,6 +1527,13 @@
     "noReminders": "No reminders yet",
     "untitled": "Untitled Reminder",
     "errorLoading": "Error Loading Reminders",
+    "backToReminders": "Back to Reminders",
+    "every": "Every",
+    "loadingDetails": "Loading reminder details...",
+    "notFound": "Reminder Not Found",
+    "notFoundDescription": "The reminder you are looking for does not exist.",
+    "tryAgain": "Try Again",
+    "yes": "Yes",
     "status": {
       "all": "All Status",
       "active": "Active",
@@ -1533,7 +1541,10 @@
       "snoozed": "Snoozed"
     },
     "type": {
-      "all": "All Types"
+      "all": "All Types",
+      "client": "Client",
+      "event": "Event",
+      "task": "Task"
     },
     "priority": {
       "all": "All Priorities",
@@ -1553,7 +1564,44 @@
     },
     "form": {
       "createTitle": "Create New Reminder",
-      "editTitle": "Edit Reminder"
+      "editTitle": "Edit Reminder",
+      "basicInfo": "Basic Information",
+      "enableRecurrence": "Enable Recurrence",
+      "notifications": "Notifications",
+      "recurrence": "Recurrence",
+      "relatedItems": "Related Items",
+      "buttons": {
+        "cancel": "Cancel",
+        "create": "Create Reminder",
+        "next": "Next",
+        "previous": "Previous",
+        "update": "Update Reminder",
+        "updateNow": "Update Now"
+      },
+      "fields": {
+        "date": "Date",
+        "daysOfWeek": "Days of Week",
+        "description": "Description",
+        "frequency": "Frequency",
+        "interval": "Interval",
+        "notes": "Notes",
+        "notificationMethods": "Notification Methods",
+        "priority": "Priority",
+        "relatedClient": "Related Client",
+        "relatedEvent": "Related Event",
+        "relatedTask": "Related Task",
+        "time": "Time",
+        "title": "Title",
+        "type": "Type"
+      }
+    },
+    "details": {
+      "activityHistory": "Activity History",
+      "additionalInfo": "Additional Information",
+      "notificationMethods": "Notification Methods",
+      "recurrenceSettings": "Recurrence Settings",
+      "reminderInfo": "Reminder Info",
+      "tab": "Details"
     },
     "modals": {
       "snooze": {
@@ -1561,7 +1609,9 @@
       },
       "delete": {
         "title": "Delete Reminder",
-        "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+        "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
       }
     },
     "notifications": {
@@ -1577,7 +1627,32 @@
       "snoozing": "Snoozing...",
       "snoozeError": "Failed to snooze reminder",
       "activating": "Activating...",
-      "activateError": "Failed to activate reminder"
+      "activateError": "Failed to activate reminder",
+      "cancelError": "Failed to cancel",
+      "cancelled": "Cancelled",
+      "cancelling": "Cancelling...",
+      "completeError": "Failed to complete",
+      "completed": "Completed",
+      "completing": "Completing...",
+      "loadError": "Failed to load",
+      "loadingDetails": "Loading details...",
+      "saveError": "Failed to save"
+    },
+    "recurrence": {
+      "day": "Day",
+      "dayOfMonth": "Day of Month",
+      "endDate": "End Date",
+      "forever": "Forever",
+      "label": "Recurrence",
+      "oneTime": "One Time"
+    },
+    "validation": {
+      "dateRequired": "Date is required",
+      "fixAllErrors": "Please fix all errors",
+      "fixErrors": "Please fix errors",
+      "invalidId": "Invalid ID",
+      "timeRequired": "Time is required",
+      "titleRequired": "Title is required"
     }
   },
   "payments": {
@@ -3046,7 +3121,8 @@
         "address": "Address",
         "contractTitle": "Contract Title",
         "contractTitlePlaceholder": "Ex: Wedding Mr & Mrs X...",
-        "rateType": "Rate Type"
+        "rateType": "Rate Type",
+        "category": "Category"
       },
       "logistics": {
         "start": "Start Date",

@@ -40,6 +40,13 @@ header {
 body {
   @apply bg-gray-50 dark:bg-gray-900 antialiased;
 }
+
+/* ADD THIS SECTION: Zooms out to 70% on Desktop only (screens larger than 1024px) */
+@media (min-width: 1024px) {
+  body {
+    zoom: 70%; 
+  }
+}
 /* RTL specific styles */
 [dir="rtl"] .ltr-only {
   display: none;

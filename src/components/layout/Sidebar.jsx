@@ -207,7 +207,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       <motion.aside
         initial={false}
         animate={{
-          width: isCollapsed ? 64 : 200,
+          width: isCollapsed ? 64 : 240,
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-40 shadow-xl dark:border-gray-800

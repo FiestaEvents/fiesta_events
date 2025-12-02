@@ -123,43 +123,65 @@
   },
   "dashboard": {
     "title": "لوحة التحكم",
-    "welcome_msg": "إليك نظرة عامة عما يحدث في المكان اليوم.",
-    "all_caught_up": "كل شيء محدث!",
-    "view_all": "عرض الكل",
-    "recent_inflow": "المدفوعات الأخيرة",
-    "no_payments": "لا توجد مدفوعات حديثة.",
-    "metrics": {
-      "revenue": "الإيرادات الشهرية",
-      "pending": "قيد الانتظار",
-      "occupancy": "نسبة الإشغال",
-      "events_this_month": "فعاليات هذا الشهر",
-      "conversion": "تحويل العملاء",
-      "pending_enquiries": "استفسارات معلقة",
-      "tasks": "العمليات",
-      "urgent_items": "عناصر عاجلة"
+    "welcome": "مرحباً بعودتك. إليك ما يحدث اليوم.",
+    "currentDate": "التاريخ الحالي",
+    "buttons": {
+      "today": "اليوم",
+      "newEvent": "حدث جديد",
+      "viewAll": "عرض الكل",
+      "export": "تصدير",
+      "viewTransactions": "عرض جميع المعاملات",
+      "scheduleOne": "جدولة واحد؟"
     },
-    "charts": {
-      "revenue_trend": "اتجاه الإيرادات",
-      "event_status": "حالة الفعاليات",
-      "total": "المجموع"
+    "tabs": {
+      "overview": "نظرة عامة",
+      "expenses": "النفقات",
+      "finance": "المالية"
     },
-    "alerts": {
-      "missing_partners": "فعاليات تنقصها شركاء"
-    },
-    "actions": {
-      "assign": "تعيين"
-    },
-    "upcoming": {
-      "title": "الجدول الزمني القادم",
-      "no_events": "لا توجد فعاليات قادمة."
-    },
-    "calendar": {
-      "occupancy_view": "الإشغال"
-    },
-    "leads": {
-      "title": "العملاء المحتملين",
-      "no_leads": "لا يوجد عملاء محتملين"
+    "status": {
+      "systemOperational": "النظام يعمل",
+      "noEvents": "لا توجد أحداث مقررة اليوم.",
+      "noUpcoming": "لم يتم العثور على أحداث قادمة",
+      "noTransactions": "لا توجد معاملات حديثة"
     }
+  },
+  "metrics": {
+    "totalEvents": "إجمالي الأحداث",
+    "allTimeCount": "العدد الكلي",
+    "confirmed": "مؤكد",
+    "lockedIn": "مثبت في الجدول",
+    "thisMonth": "هذا الشهر",
+    "occupancyRate": "معدل الإشغال",
+    "pendingActions": "إجراءات معلقة",
+    "requiresReview": "يتطلب مراجعة",
+    "totalSpent": "إجمالي الإنفاق",
+    "partnerCosts": "تكاليف الشركاء",
+    "vendors": "البائعين",
+    "operations": "العمليات",
+    "utilities": "المرافق",
+    "misc": "متفرقات",
+    "other": "أخرى",
+    "totalRevenue": "إجمالي الإيرادات",
+    "netCashFlow": "صافي التدفق النقدي",
+    "inflowOutflow": "التدفق الداخل مقابل الخارج",
+    "unpaidInvoices": "فواتير غير مدفوعة",
+    "actionNeeded": "إجراء مطلوب"
+  },
+  "sections": {
+    "todaysAgenda": "جدول أعمال اليوم",
+    "upcomingEvents": "الأحداث القادمة",
+    "expenseTrends": "اتجاهات النفقات",
+    "spendingSubtitle": "الإنفاق خلال آخر 6 أشهر",
+    "breakdown": "توزيع",
+    "byCategory": "حسب الفئة",
+    "revenuePerformance": "أداء الإيرادات",
+    "revenueSubtitle": "تحليلات الدخل الإجمالي",
+    "recentTransactions": "المعاملات الأخيرة"
+  },
+  "common": {
+    "guests": "ضيوف",
+    "pax": "شخص",
+    "client": "عميل"
   },
 
   "home": {
@@ -1099,6 +1121,14 @@
       "clearFilters": "مسح الفلاتر",
       "activeFilters": "الفلاتر النشطة"
     },
+    "returnToActive": "العودة إلى النشطة",
+    "unassigned": "غير معين",
+    "untitled": "مهمة بدون عنوان",
+    "toasts": {
+      "status": {
+        "error": "فشل في تحديث الحالة"
+      }
+    },
     "status": {
       "pending": "قيد الانتظار",
       "todo": "مطلوب عمله",
@@ -1219,7 +1249,9 @@
         "basicInfo": "المعلومات الأساسية",
         "scheduling": "الجدولة وتتبع الوقت",
         "assignment": "التعيين والتعاون",
-        "details": "تفاصيل إضافية"
+        "details": "تفاصيل إضافية",
+        "checklist": "قائمة التحقق",
+        "planning": "التخطيط"
       },
       "fields": {
         "title": "عنوان المهمة",
@@ -1318,7 +1350,8 @@
         "noSubtasks": "لا توجد مهام فرعية",
         "noSubtasksDescription": "أضف مهام فرعية لتقسيم هذه المهمة إلى خطوات أصغر.",
         "completedBy": "تم الإكمال في {{date}} بواسطة {{user}}",
-        "completedDate": "تم الإكمال في {{date}}"
+        "completedDate": "تم الإكمال في {{date}}",
+        "errorToggle": "فشل في تبديل المهمة الفرعية"
       },
       "comments": {
         "title": "التعليقات",
@@ -1465,6 +1498,13 @@
     "noReminders": "لا توجد تذكيرات بعد",
     "untitled": "تذكير بدون عنوان",
     "errorLoading": "خطأ في تحميل التذكيرات",
+    "backToReminders": "العودة إلى التذكيرات",
+    "every": "كل",
+    "loadingDetails": "جاري تحميل تفاصيل التذكير...",
+    "notFound": "التذكير غير موجود",
+    "notFoundDescription": "التذكير الذي تبحث عنه غير موجود.",
+    "tryAgain": "حاول مرة أخرى",
+    "yes": "نعم",
     "status": {
       "all": "كل الحالات",
       "active": "نشط",
@@ -1472,7 +1512,10 @@
       "snoozed": "مؤجل"
     },
     "type": {
-      "all": "كل الأنواع"
+      "all": "كل الأنواع",
+      "client": "عميل",
+      "event": "فعالية",
+      "task": "مهمة"
     },
     "priority": {
       "all": "كل الأولويات",
@@ -1492,7 +1535,44 @@
     },
     "form": {
       "createTitle": "إنشاء تذكير جديد",
-      "editTitle": "تعديل التذكير"
+      "editTitle": "تعديل التذكير",
+      "basicInfo": "المعلومات الأساسية",
+      "enableRecurrence": "تفعيل التكرار",
+      "notifications": "الإشعارات",
+      "recurrence": "التكرار",
+      "relatedItems": "العناصر ذات الصلة",
+      "buttons": {
+        "cancel": "إلغاء",
+        "create": "إنشاء تذكير",
+        "next": "التالي",
+        "previous": "السابق",
+        "update": "تحديث التذكير",
+        "updateNow": "تحديث الآن"
+      },
+      "fields": {
+        "date": "التاريخ",
+        "daysOfWeek": "أيام الأسبوع",
+        "description": "الوصف",
+        "frequency": "التكرار",
+        "interval": "الفاصل الزمني",
+        "notes": "ملاحظات",
+        "notificationMethods": "طرق الإشعار",
+        "priority": "الأولوية",
+        "relatedClient": "العميل ذو الصلة",
+        "relatedEvent": "الفعالية ذات الصلة",
+        "relatedTask": "المهمة ذات الصلة",
+        "time": "الوقت",
+        "title": "العنوان",
+        "type": "النوع"
+      }
+    },
+    "details": {
+      "activityHistory": "سجل النشاط",
+      "additionalInfo": "معلومات إضافية",
+      "notificationMethods": "طرق الإشعار",
+      "recurrenceSettings": "إعدادات التكرار",
+      "reminderInfo": "معلومات التذكير",
+      "tab": "التفاصيل"
     },
     "modals": {
       "snooze": {
@@ -1500,7 +1580,9 @@
       },
       "delete": {
         "title": "حذف التذكير",
-        "description": "هل أنت متأكد أنك تريد حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء."
+        "description": "هل أنت متأكد أنك تريد حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+        "cancel": "إلغاء",
+        "confirm": "حذف"
       }
     },
     "notifications": {
@@ -1516,7 +1598,32 @@
       "snoozing": "جاري التأجيل...",
       "snoozeError": "فشل تأجيل التذكير",
       "activating": "جاري التفعيل...",
-      "activateError": "فشل تفعيل التذكير"
+      "activateError": "فشل تفعيل التذكير",
+      "cancelError": "فشل الإلغاء",
+      "cancelled": "تم الإلغاء",
+      "cancelling": "جاري الإلغاء...",
+      "completeError": "فشل الإكمال",
+      "completed": "مكتمل",
+      "completing": "جاري الإكمال...",
+      "loadError": "فشل التحميل",
+      "loadingDetails": "جاري تحميل التفاصيل...",
+      "saveError": "فشل الحفظ"
+    },
+    "recurrence": {
+      "day": "يوم",
+      "dayOfMonth": "يوم من الشهر",
+      "endDate": "تاريخ الانتهاء",
+      "forever": "إلى الأبد",
+      "label": "التكرار",
+      "oneTime": "مرة واحدة"
+    },
+    "validation": {
+      "dateRequired": "التاريخ مطلوب",
+      "fixAllErrors": "يرجى إصلاح جميع الأخطاء",
+      "fixErrors": "يرجى إصلاح الأخطاء",
+      "invalidId": "معرف غير صالح",
+      "timeRequired": "الوقت مطلوب",
+      "titleRequired": "العنوان مطلوب"
     }
   },
   "payments": {

@@ -25,7 +25,7 @@ const ResetPassword = lazy(() => import("../pages/auth/ResetPassword.jsx"));
 
 // Main
 const Home = lazy(() => import("../pages/Home.jsx"));
-const Dashboard = lazy(() => import("../pages/Dashboard2.jsx"));
+const Dashboard = lazy(() => import("../pages/Dashboard.jsx"));
 const Landing = lazy(() => import("../pages/website/landing.jsx"));
 
 // Events
