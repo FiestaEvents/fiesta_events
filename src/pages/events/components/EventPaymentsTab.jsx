@@ -1,13 +1,13 @@
 import React from "react";
-import { 
-  CreditCard, 
-  Plus, 
-  DollarSign, 
+import {
+  CreditCard,
+  Plus,
+  DollarSign,
   Calendar,
   TrendingUp,
   TrendingDown,
   CheckCircle,
-  FileText
+  FileText,
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { useTranslation } from "react-i18next";
@@ -20,20 +20,24 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
   const { t } = useTranslation();
 
   const getPaymentMethodLabel = (method) => {
-    return t(`eventPaymentsTab.payment.method.${method}`) || method.replace('_', ' ');
+    return (
+      t(`eventPaymentsTab.payment.method.${method}`) || method.replace("_", " ")
+    );
   };
 
   // Calculate payment summary
   const totalAmount = event?.pricing?.totalAmount || 0;
-  const totalPaid = payments?.reduce((sum, payment) => {
-    if (payment.status === "completed") {
-      return sum + (payment.amount || 0);
-    }
-    return sum;
-  }, 0) || 0;
-  
+  const totalPaid =
+    payments?.reduce((sum, payment) => {
+      if (payment.status === "completed") {
+        return sum + (payment.amount || 0);
+      }
+      return sum;
+    }, 0) || 0;
+
   const remainingAmount = Math.max(0, totalAmount - totalPaid);
-  const paymentPercentage = totalAmount > 0 ? (totalPaid / totalAmount) * 100 : 0;
+  const paymentPercentage =
+    totalAmount > 0 ? (totalPaid / totalAmount) * 100 : 0;
 
   return (
     <div>
@@ -47,7 +51,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
         </div>
         <Button
           variant="primary"
-          icon={Plus}
+          icon={<Plus className="size-4" />}
           onClick={onRecordPayment}
         >
           {t("eventPaymentsTab.actions.recordPayment")}
@@ -56,19 +60,19 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
 
       {/* Payment Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <StatCard 
+        <StatCard
           icon={DollarSign}
           color="bg-blue-500"
           value={formatCurrency(totalAmount)}
           label={t("eventPaymentsTab.summary.totalAmount")}
         />
-        <StatCard 
+        <StatCard
           icon={TrendingUp}
           color="bg-green-500"
           value={formatCurrency(totalPaid)}
           label={`${t("eventPaymentsTab.summary.paid")} (${paymentPercentage.toFixed(0)}%)`}
         />
-        <StatCard 
+        <StatCard
           icon={TrendingDown}
           color="bg-orange-500"
           value={formatCurrency(remainingAmount)}
@@ -89,7 +93,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
         <div className="w-full bg-gray-100 rounded-full h-3 dark:bg-gray-800 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              paymentPercentage >= 100 ? 'bg-green-500' : 'bg-orange-500'
+              paymentPercentage >= 100 ? "bg-green-500" : "bg-orange-500"
             }`}
             style={{ width: `${Math.min(paymentPercentage, 100)}%` }}
           ></div>
@@ -104,10 +108,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
             {t("eventPaymentsTab.emptyState.title")}
           </p>
           <div className="mt-4">
-            <Button
-              variant="outline"
-              onClick={onRecordPayment}
-            >
+            <Button variant="outline" onClick={onRecordPayment}>
               {t("eventPaymentsTab.actions.recordFirstPayment")}
             </Button>
           </div>
@@ -165,11 +166,16 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
 // --- Helper Component for Stats ---
 const StatCard = ({ icon: Icon, color, value, label }) => (
   <div className="bg-white border border-gray-200 rounded-lg p-4 dark:bg-gray-800 dark:border-gray-700 flex items-center gap-4">
-    <div className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center shadow-sm flex-shrink-0`}>
+    <div
+      className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center shadow-sm flex-shrink-0`}
+    >
       <Icon className="w-6 h-6 text-white" />
     </div>
     <div className="overflow-hidden">
-      <div className="text-xl font-bold text-gray-900 dark:text-white truncate" title={value}>
+      <div
+        className="text-xl font-bold text-gray-900 dark:text-white truncate"
+        title={value}
+      >
         {value}
       </div>
       <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide truncate">

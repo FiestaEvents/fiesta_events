@@ -13,7 +13,7 @@ import {
   Plus,
   Trash2,
   Clock,
-  X
+  X,
 } from "lucide-react";
 
 // ✅ API & Services
@@ -84,11 +84,17 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   ];
 
   const TASK_CATEGORIES = [
-    { value: "event_preparation", label: t("tasks.category.event_preparation") },
+    {
+      value: "event_preparation",
+      label: t("tasks.category.event_preparation"),
+    },
     { value: "marketing", label: t("tasks.category.marketing") },
     { value: "maintenance", label: t("tasks.category.maintenance") },
     { value: "client_followup", label: t("tasks.category.client_followup") },
-    { value: "partner_coordination", label: t("tasks.category.partner_coordination") },
+    {
+      value: "partner_coordination",
+      label: t("tasks.category.partner_coordination"),
+    },
     { value: "administrative", label: t("tasks.category.administrative") },
     { value: "finance", label: t("tasks.category.finance") },
     { value: "setup", label: t("tasks.category.setup") },
@@ -115,7 +121,9 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       priority: taskData.priority || "medium",
       status: taskData.status || "todo",
       category: taskData.category || "other",
-      dueDate: taskData.dueDate ? formatDateForInput(taskData.dueDate) : getTodayDate(),
+      dueDate: taskData.dueDate
+        ? formatDateForInput(taskData.dueDate)
+        : getTodayDate(),
       assignedTo: taskData.assignedTo?._id || taskData.assignedTo || "",
       tags: taskData.tags || [],
       subtasks: taskData.subtasks || [],
@@ -128,7 +136,9 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     const initData = async () => {
       setFetchLoading(true);
       try {
-        const teamRes = await teamService.getAll({ page: 1, limit: 100 }).catch(() => ({ data: [] }));
+        const teamRes = await teamService
+          .getAll({ page: 1, limit: 100 })
+          .catch(() => ({ data: [] }));
         setTeamMembers(teamRes?.team || teamRes?.data?.team || []);
 
         if (isEditMode && !taskProp) {
@@ -146,7 +156,16 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       }
     };
     initData();
-  }, [isEditMode, taskProp, taskId, loadTaskData, isModalMode, navigate, t, showError]);
+  }, [
+    isEditMode,
+    taskProp,
+    taskId,
+    loadTaskData,
+    isModalMode,
+    navigate,
+    t,
+    showError,
+  ]);
 
   // Handlers
   const handleChange = (e) => {
@@ -156,7 +175,10 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   };
 
   const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim().toLowerCase())) {
+    if (
+      tagInput.trim() &&
+      !formData.tags.includes(tagInput.trim().toLowerCase())
+    ) {
       setFormData((prev) => ({
         ...prev,
         tags: [...prev.tags, tagInput.trim().toLowerCase()],
@@ -168,7 +190,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const handleRemoveTag = (tagToRemove) => {
     setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };
 
@@ -191,7 +213,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const handleRemoveSubtask = (index) => {
     setFormData((prev) => ({
       ...prev,
-      subtasks: prev.subtasks.filter((_, i) => i !== index)
+      subtasks: prev.subtasks.filter((_, i) => i !== index),
     }));
   };
 
@@ -199,11 +221,14 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const validateStep = (step) => {
     const newErrors = {};
     if (step === 1) {
-      if (!formData.title.trim()) newErrors.title = t("tasks.form.validation.titleRequired");
-      if (!formData.category) newErrors.category = t("tasks.form.validation.categoryRequired");
+      if (!formData.title.trim())
+        newErrors.title = t("tasks.form.validation.titleRequired");
+      if (!formData.category)
+        newErrors.category = t("tasks.form.validation.categoryRequired");
     }
     if (step === 2) {
-      if (!formData.dueDate) newErrors.dueDate = t("tasks.form.validation.dueDateRequired");
+      if (!formData.dueDate)
+        newErrors.dueDate = t("tasks.form.validation.dueDateRequired");
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -211,8 +236,10 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
   const validateAllRequired = () => {
     const newErrors = {};
-    if (!formData.title.trim()) newErrors.title = t("tasks.form.validation.titleRequired");
-    if (!formData.dueDate) newErrors.dueDate = t("tasks.form.validation.dueDateRequired");
+    if (!formData.title.trim())
+      newErrors.title = t("tasks.form.validation.titleRequired");
+    if (!formData.dueDate)
+      newErrors.dueDate = t("tasks.form.validation.dueDateRequired");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -254,8 +281,8 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
         tags: formData.tags,
         subtasks: formData.subtasks,
         // ✅ Send null if empty string to handle optional relation correctly
-        assignedTo: formData.assignedTo || null, 
-        isArchived: formData.isArchived
+        assignedTo: formData.assignedTo || null,
+        isArchived: formData.isArchived,
       };
 
       if (isEditMode) {
@@ -279,7 +306,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   // Main Form Submit (triggered by Enter key or Final Button)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // If not on the last step, treat 'Enter' as 'Next'
     if (currentStep < totalSteps) {
       handleNext();
@@ -300,9 +327,9 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     e.preventDefault();
     // Ensure minimal required fields (Title) are present
     if (!validateStep(1)) {
-        setCurrentStep(1);
-        showWarning(t("tasks.form.validation.fixErrors"));
-        return;
+      setCurrentStep(1);
+      showWarning(t("tasks.form.validation.fixErrors"));
+      return;
     }
     await submitData();
   };
@@ -338,7 +365,11 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                       : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
                 }`}
               >
-                {isCompleted ? <Check className="w-6 h-6" /> : <StepIcon className="w-5 h-5" />}
+                {isCompleted ? (
+                  <Check className="w-6 h-6" />
+                ) : (
+                  <StepIcon className="w-5 h-5" />
+                )}
               </div>
               <span
                 className={`text-xs font-semibold whitespace-nowrap ${
@@ -464,7 +495,11 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               </div>
               <div className="flex flex-wrap gap-2 min-h-[40px]">
                 {formData.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="pl-2 pr-1 py-1">
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="pl-2 pr-1 py-1"
+                  >
                     {tag}
                     <X
                       className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
@@ -484,16 +519,29 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 <Input
                   value={newSubtask.title}
                   onChange={(e) => setNewSubtask({ title: e.target.value })}
-                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddSubtask())}
+                  onKeyPress={(e) =>
+                    e.key === "Enter" &&
+                    (e.preventDefault(), handleAddSubtask())
+                  }
                   placeholder={t("tasks.form.fields.subtaskTitlePlaceholder")}
                   className="flex-1"
                 />
-                <Button type="button" variant="outline" icon={Plus} onClick={handleAddSubtask} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  icon={<Plus className="size-4" />}
+                  onClick={handleAddSubtask}
+                />
               </div>
               <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
                 {formData.subtasks.map((subtask, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700 group">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{subtask.title}</span>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700 group"
+                  >
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {subtask.title}
+                    </span>
                     <button
                       type="button"
                       onClick={() => handleRemoveSubtask(index)}
@@ -504,7 +552,9 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   </div>
                 ))}
                 {formData.subtasks.length === 0 && (
-                    <p className="text-xs text-gray-400 text-center py-2 italic">No subtasks added yet.</p>
+                  <p className="text-xs text-gray-400 text-center py-2 italic">
+                    No subtasks added yet.
+                  </p>
                 )}
               </div>
             </div>
@@ -516,7 +566,11 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   };
 
   if (fetchLoading && isEditMode) {
-    return <div className="p-10 text-center text-gray-500">{t("common.loading")}</div>;
+    return (
+      <div className="p-10 text-center text-gray-500">
+        {t("common.loading")}
+      </div>
+    );
   }
 
   return (
@@ -524,12 +578,17 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       {!isModalMode && (
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {isEditMode ? t("tasks.form.editTitle") : t("tasks.form.createTitle")}
+            {isEditMode
+              ? t("tasks.form.editTitle")
+              : t("tasks.form.createTitle")}
           </h1>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+      <form
+        onSubmit={handleSubmit}
+        className="flex-1 flex flex-col max-w-4xl mx-auto w-full"
+      >
         {renderStepIndicator()}
 
         <div className="flex-1 mt-4 mb-8">{renderStepContent()}</div>
@@ -537,10 +596,12 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
         <div className="flex items-center justify-between pt-6 mt-auto">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={
               currentStep === 1
-                ? isModalMode && onCancel ? onCancel : () => navigate("/tasks")
+                ? isModalMode && onCancel
+                  ? onCancel
+                  : () => navigate("/tasks")
                 : handlePrevious
             }
             disabled={loading}
@@ -550,7 +611,8 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               t("common.cancel")
             ) : (
               <span className="flex items-center">
-                <ChevronLeft className="w-4 h-4 mr-1" /> {t("tasks.form.buttons.previous")}
+                <ChevronLeft className="w-4 h-4 mr-1" />{" "}
+                {t("tasks.form.buttons.previous")}
               </span>
             )}
           </Button>
@@ -560,12 +622,13 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
             {isEditMode && currentStep < totalSteps && (
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={handleQuickUpdate}
                 disabled={loading}
                 className="text-orange-600 hover:bg-orange-50"
               >
-                <Save className="w-4 h-4 mr-2" /> {t("tasks.form.buttons.updateNow")}
+                <Save className="w-4 h-4 mr-2" />{" "}
+                {t("tasks.form.buttons.updateNow")}
               </Button>
             )}
 
@@ -578,7 +641,8 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 className="px-6"
               >
                 <span className="flex items-center">
-                  {t("tasks.form.buttons.next")} <ChevronRight className="w-4 h-4 ml-1" />
+                  {t("tasks.form.buttons.next")}{" "}
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </span>
               </Button>
             ) : (
@@ -590,7 +654,9 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               >
                 <span className="flex items-center">
                   <Save className="w-4 h-4 mr-2" />
-                  {isEditMode ? t("tasks.form.buttons.update") : t("tasks.form.buttons.create")}
+                  {isEditMode
+                    ? t("tasks.form.buttons.update")
+                    : t("tasks.form.buttons.create")}
                 </span>
               </Button>
             )}

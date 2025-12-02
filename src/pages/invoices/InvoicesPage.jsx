@@ -433,7 +433,7 @@ const InvoicesPage = () => {
         return (
           <div className="flex justify-center gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
@@ -446,7 +446,7 @@ const InvoicesPage = () => {
             </Button>
             {canEdit && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -459,7 +459,7 @@ const InvoicesPage = () => {
               </Button>
             )}
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
@@ -472,7 +472,7 @@ const InvoicesPage = () => {
             </Button>
             {row.status === "draft" && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -524,7 +524,7 @@ const InvoicesPage = () => {
             </Button>
             <Button
               variant="primary"
-              icon={Plus}
+              icon={<Plus className="size-4" />}
               onClick={handleCreateInvoice}
               className="flex-1 sm:flex-none justify-center"
             >
@@ -616,7 +616,7 @@ const InvoicesPage = () => {
                 </Button>
                 {hasActiveFilters && (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     icon={X}
                     onClick={handleClearFilters}
                     className="text-gray-500"
@@ -737,7 +737,7 @@ const InvoicesPage = () => {
               onClick={handleCreateInvoice}
               variant="primary"
               size="lg"
-              icon={Plus}
+              icon={<Plus className="size-4" />}
               className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
             >
               {t("invoices.create.firstButton")}

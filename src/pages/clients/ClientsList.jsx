@@ -84,18 +84,28 @@ const ClientsList = () => {
       const response = await clientService.getAll(params);
 
       // Robust data extraction
-      let data = response?.data?.data?.clients || response?.data?.clients || response?.clients || [];
+      let data =
+        response?.data?.data?.clients ||
+        response?.data?.clients ||
+        response?.clients ||
+        [];
       if (!Array.isArray(data)) data = [];
 
-      let pTotalPages = response?.data?.data?.totalPages || response?.pagination?.pages || 1;
-      let pTotalCount = response?.data?.data?.totalCount || response?.pagination?.total || data.length;
+      let pTotalPages =
+        response?.data?.data?.totalPages || response?.pagination?.pages || 1;
+      let pTotalCount =
+        response?.data?.data?.totalCount ||
+        response?.pagination?.total ||
+        data.length;
 
       setClients(data);
       setTotalPages(pTotalPages);
       setTotalCount(pTotalCount);
-      
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || t("clients.errors.loadingDefault");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        t("clients.errors.loadingDefault");
       setError(errorMessage);
       showError(errorMessage);
       setClients([]);
@@ -121,7 +131,12 @@ const ClientsList = () => {
           error: t("clients.toast.deleteError", { name: clientName }),
         });
         fetchClients();
-        setConfirmationModal({ isOpen: false, clientId: null, clientName: "", onConfirm: null });
+        setConfirmationModal({
+          isOpen: false,
+          clientId: null,
+          clientName: "",
+          onConfirm: null,
+        });
         if (selectedClient?._id === clientId) setIsDetailModalOpen(false);
       } catch (err) {
         // Promise handles UI feedback
@@ -161,11 +176,21 @@ const ClientsList = () => {
   const hasActiveFilters = search.trim() !== "" || status !== "all";
 
   // Show Empty State: No loading, no error, empty list, no filters
-  const showEmptyState = !loading && !error && clients.length === 0 && !hasActiveFilters && hasInitialLoad;
-  
+  const showEmptyState =
+    !loading &&
+    !error &&
+    clients.length === 0 &&
+    !hasActiveFilters &&
+    hasInitialLoad;
+
   // Show No Results: No loading, no error, empty list, BUT filters are active
-  const showNoResults = !loading && !error && clients.length === 0 && hasActiveFilters && hasInitialLoad;
-  
+  const showNoResults =
+    !loading &&
+    !error &&
+    clients.length === 0 &&
+    hasActiveFilters &&
+    hasInitialLoad;
+
   // Show Data
   const showData = !loading && hasInitialLoad && clients.length > 0;
 
@@ -225,7 +250,7 @@ const ClientsList = () => {
       render: (row) => (
         <div className="flex justify-center gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -236,7 +261,7 @@ const ClientsList = () => {
             <Eye className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -248,7 +273,7 @@ const ClientsList = () => {
             <Edit className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -271,9 +296,19 @@ const ClientsList = () => {
     return (
       <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
         <div>
-          Showing <span className="font-medium text-gray-900 dark:text-white">{start}</span> to{" "}
-          <span className="font-medium text-gray-900 dark:text-white">{end}</span> of{" "}
-          <span className="font-medium text-gray-900 dark:text-white">{totalCount}</span> results
+          Showing{" "}
+          <span className="font-medium text-gray-900 dark:text-white">
+            {start}
+          </span>{" "}
+          to{" "}
+          <span className="font-medium text-gray-900 dark:text-white">
+            {end}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium text-gray-900 dark:text-white">
+            {totalCount}
+          </span>{" "}
+          results
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -282,7 +317,7 @@ const ClientsList = () => {
               currentPage={page}
               totalPages={totalPages}
               onPageChange={setPage}
-              pageSize={null} 
+              pageSize={null}
             />
           )}
 
@@ -297,7 +332,9 @@ const ClientsList = () => {
               className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
             >
               {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>{size}</option>
+                <option key={size} value={size}>
+                  {size}
+                </option>
               ))}
             </select>
           </div>
@@ -308,7 +345,6 @@ const ClientsList = () => {
 
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
-      
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div className="flex flex-col gap-1">
@@ -317,10 +353,12 @@ const ClientsList = () => {
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
             {t("clients.description")}
-            {hasInitialLoad && totalCount > 0 && ` • ${t("clients.toast.showingResults", { count: clients.length, total: totalCount })}`}
+            {hasInitialLoad &&
+              totalCount > 0 &&
+              ` • ${t("clients.toast.showingResults", { count: clients.length, total: totalCount })}`}
           </p>
         </div>
-        
+
         {/* Only show header Add button if NOT in empty state */}
         {!showEmptyState && (
           <Button
@@ -376,7 +414,6 @@ const ClientsList = () => {
 
       {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
-        
         {/* Loading Overlay */}
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg min-h-[300px]">
@@ -417,7 +454,10 @@ const ClientsList = () => {
               {t("clients.search.noResults")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t("clients.search.noResultsDesc", "We couldn't find any clients matching your current filters.")}
+              {t(
+                "clients.search.noResultsDesc",
+                "We couldn't find any clients matching your current filters."
+              )}
             </p>
             <Button onClick={handleClearFilters} variant="outline" icon={X}>
               {t("clients.buttons.clearAllFilters")}
@@ -430,7 +470,10 @@ const ClientsList = () => {
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
               <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
-                <Users className="h-12 w-12 text-orange-500" strokeWidth={1.5} />
+                <Users
+                  className="h-12 w-12 text-orange-500"
+                  strokeWidth={1.5}
+                />
               </div>
             </div>
 
@@ -438,14 +481,20 @@ const ClientsList = () => {
               {t("clients.empty.title")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-              {t("clients.empty.description", "Get started by adding your first client. Manage their details and interactions all in one place.")}
+              {t(
+                "clients.empty.description",
+                "Get started by adding your first client. Manage their details and interactions all in one place."
+              )}
             </p>
 
             <Button
-              onClick={() => { setSelectedClient(null); setIsFormOpen(true); }}
+              onClick={() => {
+                setSelectedClient(null);
+                setIsFormOpen(true);
+              }}
               variant="primary"
               size="lg"
-              icon={Plus}
+              icon={<Plus className="size-4" />}
               className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
             >
               {t("clients.buttons.addFirstClient")}
@@ -469,7 +518,11 @@ const ClientsList = () => {
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
-        title={selectedClient ? t("clients.modal.editTitle") : t("clients.modal.addTitle")}
+        title={
+          selectedClient
+            ? t("clients.modal.editTitle")
+            : t("clients.modal.addTitle")
+        }
         size="lg"
       >
         <ClientForm
@@ -491,12 +544,16 @@ const ClientsList = () => {
             <h3 className="font-semibold">{t("clients.modal.deleteTitle")}</h3>
           </div>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {t("clients.modal.deleteMessage", { name: confirmationModal.clientName })}
+            {t("clients.modal.deleteMessage", {
+              name: confirmationModal.clientName,
+            })}
           </p>
           <div className="flex justify-end gap-3">
             <Button
               variant="outline"
-              onClick={() => setConfirmationModal((p) => ({ ...p, isOpen: false }))}
+              onClick={() =>
+                setConfirmationModal((p) => ({ ...p, isOpen: false }))
+              }
             >
               {t("clients.buttons.cancel")}
             </Button>

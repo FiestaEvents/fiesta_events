@@ -283,13 +283,16 @@ const PartnersList = () => {
       header: t("partners.table.columns.price"),
       accessor: "price",
       width: "10%",
-      render: (row) => (
-        <div className="text-sm text-gray-900 dark:text-white">
-          {row.priceType === "hourly"
-            ? `${row.hourlyRate} TND/hr`
-            : `${row.fixedRate} TND`}
-        </div>
-      ),
+      render: (row) => {
+        console.log("row ===============>", row);
+        return (
+          <div className="text-sm text-gray-900 dark:text-white">
+            {row.priceType === "hourly"
+              ? `${row.hourlyRate} TND/hr`
+              : `${row.fixedRate} TND`}
+          </div>
+        );
+      },
     },
     {
       header: t("partners.table.columns.actions"),
@@ -299,7 +302,7 @@ const PartnersList = () => {
       render: (row) => (
         <div className="flex justify-center gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -310,7 +313,7 @@ const PartnersList = () => {
             <Eye className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -322,7 +325,7 @@ const PartnersList = () => {
             <Edit className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -409,7 +412,7 @@ const PartnersList = () => {
         {!showEmptyState && (
           <Button
             variant="primary"
-            icon={Plus}
+            icon={<Plus className="size-4" />}
             onClick={() => {
               setSelectedPartner(null);
               setIsFormOpen(true);
@@ -557,7 +560,7 @@ const PartnersList = () => {
               }}
               variant="primary"
               size="lg"
-              icon={Plus}
+              icon={<Plus className="size-4" />}
               className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
             >
               {t("partners.emptyState.addFirst")}

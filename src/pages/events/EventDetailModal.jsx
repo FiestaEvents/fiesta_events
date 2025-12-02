@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import {
-  Trash2, Edit, Calendar, Clock, MapPin, Users, ArrowRight, 
-  AlertTriangle, AlignLeft, DollarSign
+  Trash2,
+  Edit,
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  ArrowRight,
+  AlertTriangle,
+  AlignLeft,
+  DollarSign,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -22,17 +30,19 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
   if (!event) return null;
 
   // Date formatting helpers
-  const formatDate = (dateString) => 
-    new Date(dateString).toLocaleDateString("en-GB", { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     });
-  
+
   const getDay = (dateString) => new Date(dateString).getDate();
-  
-  const getMonth = (dateString) => 
-    new Date(dateString).toLocaleDateString("en-GB", { month: 'short' }).toUpperCase();
+
+  const getMonth = (dateString) =>
+    new Date(dateString)
+      .toLocaleDateString("en-GB", { month: "short" })
+      .toUpperCase();
 
   // Format time from HH:mm string
   const formatTime = (timeString) => {
@@ -47,9 +57,9 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
   // Format currency
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return "0.00 TND";
-    return `${amount.toLocaleString("en-US", { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
+    return `${amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     })} TND`;
   };
 
@@ -59,15 +69,15 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
       await promise(eventService.delete(event._id), {
         loading: t("eventDetailModal.actions.delete.deleting"),
         success: t("eventDetailModal.actions.delete.success"),
-        error: t("eventDetailModal.actions.delete.error")
+        error: t("eventDetailModal.actions.delete.error"),
       });
       setShowDeleteConfirm(false);
       onClose();
       if (refreshData) refreshData();
-    } catch (e) { 
-      console.error(e); 
-    } finally { 
-      setIsDeleting(false); 
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -117,36 +127,36 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
 
           {/* Details Grid */}
           <div className="grid grid-cols-1 gap-2">
-            <InfoItem 
-              icon={Calendar} 
-              label={t("common.date")} 
-              value={formatDate(event.startDate)} 
+            <InfoItem
+              icon={Calendar}
+              label={t("common.date")}
+              value={formatDate(event.startDate)}
             />
-            
-            <InfoItem 
-              icon={Clock} 
-              label={t("common.time")} 
-              value={`${formatTime(event.startTime)} - ${formatTime(event.endTime)}`} 
+
+            <InfoItem
+              icon={Clock}
+              label={t("common.time")}
+              value={`${formatTime(event.startTime)} - ${formatTime(event.endTime)}`}
             />
-            
-            <InfoItem 
-              icon={Users} 
-              label={t("eventDetailModal.client")} 
-              value={event.clientId?.name || "N/A"} 
+
+            <InfoItem
+              icon={Users}
+              label={t("eventDetailModal.client")}
+              value={event.clientId?.name || "N/A"}
             />
-            
-            <InfoItem 
-              icon={MapPin} 
-              label={t("eventDetailModal.guests")} 
-              value={`${event.guestCount || 0} ${t("common.guests")}`} 
+
+            <InfoItem
+              icon={MapPin}
+              label={t("eventDetailModal.guests")}
+              value={`${event.guestCount || 0} ${t("common.guests")}`}
             />
 
             {/* Financial Information */}
             {event.pricing?.totalPriceAfterTax > 0 && (
-              <InfoItem 
-                icon={DollarSign} 
-                label={t("eventDetailModal.totalAmount")} 
-                value={formatCurrency(event.pricing.totalPriceAfterTax)} 
+              <InfoItem
+                icon={DollarSign}
+                label={t("eventDetailModal.totalAmount")}
+                value={formatCurrency(event.pricing.totalPriceAfterTax)}
               />
             )}
           </div>
@@ -158,13 +168,15 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
                 <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase">
                   {t("eventDetailModal.paymentStatus")}
                 </span>
-                <span className={`text-xs font-bold px-2 py-1 rounded ${
-                  event.paymentSummary.status === 'paid' 
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : event.paymentSummary.status === 'partial'
-                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                    : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
-                }`}>
+                <span
+                  className={`text-xs font-bold px-2 py-1 rounded ${
+                    event.paymentSummary.status === "paid"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : event.paymentSummary.status === "partial"
+                        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+                  }`}
+                >
                   {event.paymentSummary.status.toUpperCase()}
                 </span>
               </div>
@@ -191,33 +203,33 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
 
           {/* Footer */}
           <div className="flex justify-between gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-            <Button 
-              variant="ghost" 
-              className="text-red-600 hover:bg-red-50" 
-              icon={Trash2} 
+            <Button
+              variant="outline"
+              className="text-red-600 hover:bg-red-50"
+              icon={Trash2}
               onClick={() => setShowDeleteConfirm(true)}
             >
               {t("eventDetailModal.actions.delete.button")}
             </Button>
-            
+
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                icon={Edit} 
-                onClick={() => { 
-                  onClose(); 
-                  navigate(`/events/${event._id}/edit`); 
+              <Button
+                variant="outline"
+                icon={Edit}
+                onClick={() => {
+                  onClose();
+                  navigate(`/events/${event._id}/edit`);
                 }}
               >
                 {t("eventDetailModal.actions.edit")}
               </Button>
-              
-              <Button 
-                variant="primary" 
-                icon={ArrowRight} 
-                onClick={() => { 
-                  onClose(); 
-                  navigate(`/events/${event._id}/detail`); 
+
+              <Button
+                variant="primary"
+                icon={ArrowRight}
+                onClick={() => {
+                  onClose();
+                  navigate(`/events/${event._id}/detail`);
                 }}
               >
                 {t("eventDetailModal.actions.viewFullDetails")}
@@ -228,22 +240,31 @@ const EventDetailModal = ({ isOpen, onClose, event, onEdit, refreshData }) => {
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal 
-        isOpen={showDeleteConfirm} 
-        onClose={() => setShowDeleteConfirm(false)} 
-        title={t("common.confirmDelete")} 
+      <Modal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title={t("common.confirmDelete")}
         size="sm"
       >
         <div className="p-4 text-center">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            {t("eventDetailModal.actions.delete.confirm", { eventTitle: event.title })}
+            {t("eventDetailModal.actions.delete.confirm", {
+              eventTitle: event.title,
+            })}
           </p>
           <div className="flex justify-center gap-3">
-            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
               {t("eventDetailModal.close")}
             </Button>
-            <Button variant="danger" loading={isDeleting} onClick={handleDelete}>
+            <Button
+              variant="danger"
+              loading={isDeleting}
+              onClick={handleDelete}
+            >
               {t("eventDetailModal.actions.delete.button")}
             </Button>
           </div>

@@ -1,15 +1,15 @@
 import React from "react";
-import { 
-  ArrowLeft, 
-  Edit, 
-  Trash2, 
-  Calendar, 
-  Users, 
-  Briefcase, 
-  Gift, 
-  Video, 
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Calendar,
+  Users,
+  Briefcase,
+  Gift,
+  Video,
   PartyPopper,
-  Sparkles 
+  Sparkles,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -56,7 +56,7 @@ const EventHeader = ({ event, onBack, onEdit, onDelete }) => {
       {/* Back Button */}
       <div className="mb-6">
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={onBack}
           className="pl-0 text-gray-500 hover:text-orange-600 dark:text-gray-400 dark:hover:text-orange-400 hover:bg-transparent"
@@ -83,8 +83,8 @@ const EventHeader = ({ event, onBack, onEdit, onDelete }) => {
       <div className="mb-6 space-y-3">
         {event.type && (
           <div className="flex items-center gap-4">
-            <Badge 
-              variant={getTypeVariant(event.type)} 
+            <Badge
+              variant={getTypeVariant(event.type)}
               className="capitalize flex items-center gap-4"
               size="sm"
             >
@@ -108,8 +108,9 @@ const EventHeader = ({ event, onBack, onEdit, onDelete }) => {
               </p>
             </div>
           )}
-          
-          {(event.pricing?.totalPriceAfterTax || event.pricing?.totalAmount) && (
+
+          {(event.pricing?.totalPriceAfterTax ||
+            event.pricing?.totalAmount) && (
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 rounded-lg p-3 border border-green-200 dark:border-green-800/30">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide">
@@ -117,7 +118,9 @@ const EventHeader = ({ event, onBack, onEdit, onDelete }) => {
                 </span>
               </div>
               <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(event.pricing.totalPriceAfterTax || event.pricing.totalAmount)}
+                {formatCurrency(
+                  event.pricing.totalPriceAfterTax || event.pricing.totalAmount
+                )}
               </p>
             </div>
           )}
@@ -134,7 +137,7 @@ const EventHeader = ({ event, onBack, onEdit, onDelete }) => {
         >
           {t("eventHeader.actions.edit", "Edit Event")}
         </Button>
-        
+
         <Button
           onClick={onDelete}
           variant="outline"

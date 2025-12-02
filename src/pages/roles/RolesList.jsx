@@ -63,14 +63,14 @@ const RolesPage = () => {
     }
   };
 
-const formatDate = (date) => {
-  if (!date) return '-';
-  const d = new Date(date);
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+  const formatDate = (date) => {
+    if (!date) return "-";
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   const columns = [
     {
@@ -136,7 +136,7 @@ const formatDate = (date) => {
       render: (role) => (
         <div className="flex items-center space-x-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             icon={Eye}
             onClick={() => navigate(`/roles/${role._id}`)}
@@ -146,7 +146,7 @@ const formatDate = (date) => {
           {!role.isSystemRole && (
             <>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 icon={Edit}
                 onClick={() => navigate(`/roles/${role._id}/edit`)}
@@ -154,7 +154,7 @@ const formatDate = (date) => {
                 Edit
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 icon={Trash2}
                 onClick={() => {
@@ -185,7 +185,7 @@ const formatDate = (date) => {
         </div>
         <Button
           variant="primary"
-          icon={Plus}
+          icon={<Plus className="size-4" />}
           onClick={() => navigate("/roles/new")}
         >
           Create Role

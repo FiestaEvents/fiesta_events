@@ -1,5 +1,13 @@
 import React from "react";
-import { Users, ExternalLink, Briefcase, DollarSign, Loader2, Clock, CheckCircle2 } from "lucide-react";
+import {
+  Users,
+  ExternalLink,
+  Briefcase,
+  DollarSign,
+  Loader2,
+  Clock,
+  CheckCircle2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatCurrency } from "../../../utils/formatCurrency";
 
@@ -52,7 +60,8 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
               {t("eventPartnersTab.title", { count: partners.length })}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {partners.filter(p => p.status === 'confirmed').length} confirmed
+              {partners.filter((p) => p.status === "confirmed").length}{" "}
+              confirmed
             </p>
           </div>
           <div className="text-right">
@@ -71,7 +80,8 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
         {partners.map((partner, index) => {
           // Get partner info from populated partner object or fallback
           const partnerData = partner.partner || {};
-          const partnerName = partnerData.name || t("eventPartnersTab.partner.unknown");
+          const partnerName =
+            partnerData.name || t("eventPartnersTab.partner.unknown");
           const partnerEmail = partnerData.email;
           const partnerPhone = partnerData.phone;
           const partnerCategory = partnerData.category;
@@ -84,14 +94,13 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  
                   {/* Partner Header */}
                   <div className="flex items-center gap-4 mb-4">
                     {/* Avatar */}
                     <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400 font-bold text-lg shadow-sm">
                       {initial}
                     </div>
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="text-base font-bold text-gray-900 dark:text-white">
@@ -103,7 +112,7 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
                       </div>
                       {partnerCategory && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                          {partnerCategory.replace('_', ' ')}
+                          {partnerCategory.replace("_", " ")}
                         </p>
                       )}
                     </div>
@@ -156,7 +165,8 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
                               {t("eventPartnersTab.partner.hours")}
                             </p>
                             <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                              {partner.hours} {partner.hours === 1 ? 'hour' : 'hours'}
+                              {partner.hours}{" "}
+                              {partner.hours === 1 ? "hour" : "hours"}
                             </p>
                           </div>
                         </div>
@@ -188,7 +198,7 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
                 {/* Actions */}
                 {partnerData._id && (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => onNavigateToPartner(partnerData._id)}
                     title={t("eventPartnersTab.partner.viewDetails")}
@@ -216,7 +226,9 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
                   {t("eventPartnersTab.summary.title")}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {partners.length} partner{partners.length !== 1 ? 's' : ''} • {partners.filter(p => p.status === 'confirmed').length} confirmed
+                  {partners.length} partner{partners.length !== 1 ? "s" : ""} •{" "}
+                  {partners.filter((p) => p.status === "confirmed").length}{" "}
+                  confirmed
                 </p>
               </div>
             </div>

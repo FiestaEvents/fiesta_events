@@ -84,8 +84,8 @@ const FinanceReports = () => {
     }
 
     return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
     };
   };
 
@@ -93,7 +93,7 @@ const FinanceReports = () => {
     try {
       setIsGenerating(true);
       const dateRange = getDateRange(period);
-      
+
       if (!dateRange) {
         setIsGenerating(false);
         return;
@@ -144,7 +144,7 @@ const FinanceReports = () => {
       let csvContent = "";
       // Format filename date as dd-mm-yyyy
       const now = new Date();
-      const timestamp = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+      const timestamp = `${String(now.getDate()).padStart(2, "0")}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
 
       switch (reportType) {
         case "profit-loss":
@@ -187,8 +187,8 @@ const FinanceReports = () => {
   const generateProfitLossCSV = (data) => {
     const revenue = data?.revenue || 0;
     const expenses = data?.expenses || 0;
-    const profitability = data?.profitability || (revenue - expenses);
-    
+    const profitability = data?.profitability || revenue - expenses;
+
     let csv = "Category,Amount\n";
     csv += `Total Revenue,${revenue}\n`;
     csv += `Total Expenses,${expenses}\n`;
@@ -200,13 +200,13 @@ const FinanceReports = () => {
     const cashFlow = data?.cashFlow || [];
     const currentBalance = data?.currentBalance || 0;
     let csv = "Period,Inflow,Outflow,Net Cash Flow\n";
-    
+
     if (cashFlow.length > 0) {
       cashFlow.forEach((flow) => {
         const period = flow.period || flow.month || "N/A";
         const inflow = flow.inflow || 0;
         const outflow = flow.outflow || 0;
-        const net = flow.net || (inflow - outflow);
+        const net = flow.net || inflow - outflow;
         csv += `${period},${inflow},${outflow},${net}\n`;
       });
     } else {
@@ -222,7 +222,8 @@ const FinanceReports = () => {
     breakdown.forEach((item) => {
       const category = item.category || item._id || "Other";
       const amount = item.amount || item.total || 0;
-      const percentage = totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(2) : 0;
+      const percentage =
+        totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(2) : 0;
       csv += `${category},${amount},${percentage}%\n`;
     });
     csv += `Total,${totalExpenses},100%\n`;
@@ -236,7 +237,8 @@ const FinanceReports = () => {
     breakdown.forEach((item) => {
       const category = item.category || item._id || "Other";
       const amount = item.amount || item.total || 0;
-      const percentage = totalIncome > 0 ? ((amount / totalIncome) * 100).toFixed(2) : 0;
+      const percentage =
+        totalIncome > 0 ? ((amount / totalIncome) * 100).toFixed(2) : 0;
       csv += `${category},${amount},${percentage}%\n`;
     });
     csv += `Total,${totalIncome},100%\n`;
@@ -258,8 +260,14 @@ const FinanceReports = () => {
   const reportTypeOptions = [
     { value: "profit-loss", label: t("reports.types.profitLoss.name") },
     { value: "cash-flow", label: t("reports.types.cashFlow.name") },
-    { value: "expense-breakdown", label: t("reports.types.expenseBreakdown.name") },
-    { value: "revenue-analysis", label: t("reports.types.revenueAnalysis.name") }, // Added missing translation key assumption
+    {
+      value: "expense-breakdown",
+      label: t("reports.types.expenseBreakdown.name"),
+    },
+    {
+      value: "revenue-analysis",
+      label: t("reports.types.revenueAnalysis.name"),
+    }, // Added missing translation key assumption
     { value: "tax-summary", label: t("reports.types.taxSummary.name") },
   ];
 
@@ -393,14 +401,12 @@ const FinanceReports = () => {
             loading={isGenerating}
             disabled={isGenerating}
           >
-            {isGenerating ? t("reports.configuration.generating") : t("reports.configuration.generate")}
+            {isGenerating
+              ? t("reports.configuration.generating")
+              : t("reports.configuration.generate")}
           </Button>
           {reportData && (
-            <Button
-              variant="outline"
-              icon={Download}
-              onClick={handleExportCSV}
-            >
+            <Button variant="outline" icon={Download} onClick={handleExportCSV}>
               {t("reports.configuration.export")}
             </Button>
           )}
@@ -415,7 +421,7 @@ const FinanceReports = () => {
               {t("reports.preview.title")}
             </h3>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setShowPreview(false)}
             >
@@ -427,20 +433,23 @@ const FinanceReports = () => {
             {reportType === "profit-loss" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <MetricPreviewBox 
-                    label={t("reports.preview.totalRevenue")} 
-                    value={formatCurrency(reportData?.revenue || 0)} 
-                    color="green" 
+                  <MetricPreviewBox
+                    label={t("reports.preview.totalRevenue")}
+                    value={formatCurrency(reportData?.revenue || 0)}
+                    color="green"
                   />
-                  <MetricPreviewBox 
-                    label={t("reports.preview.totalExpenses")} 
-                    value={formatCurrency(reportData?.expenses || 0)} 
-                    color="red" 
+                  <MetricPreviewBox
+                    label={t("reports.preview.totalExpenses")}
+                    value={formatCurrency(reportData?.expenses || 0)}
+                    color="red"
                   />
-                  <MetricPreviewBox 
-                    label={t("reports.preview.netProfit")} 
-                    value={formatCurrency(reportData?.profitability || (reportData?.revenue || 0) - (reportData?.expenses || 0))} 
-                    color="blue" 
+                  <MetricPreviewBox
+                    label={t("reports.preview.netProfit")}
+                    value={formatCurrency(
+                      reportData?.profitability ||
+                        (reportData?.revenue || 0) - (reportData?.expenses || 0)
+                    )}
+                    color="blue"
                   />
                 </div>
               </div>
@@ -449,30 +458,47 @@ const FinanceReports = () => {
             {reportType === "cash-flow" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <MetricPreviewBox 
-                    label={t("reports.preview.currentBalance")} 
-                    value={formatCurrency(reportData?.currentBalance || 0)} 
-                    color="green" 
+                  <MetricPreviewBox
+                    label={t("reports.preview.currentBalance")}
+                    value={formatCurrency(reportData?.currentBalance || 0)}
+                    color="green"
                   />
                 </div>
                 {reportData?.cashFlow && reportData.cashFlow.length > 0 && (
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("reports.preview.period")}</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.inflow")}</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.outflow")}</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.netFlow")}</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          {t("reports.preview.period")}
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                          {t("reports.preview.inflow")}
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                          {t("reports.preview.outflow")}
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                          {t("reports.preview.netFlow")}
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                       {reportData.cashFlow.map((flow, index) => (
                         <tr key={index}>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{flow.period || flow.month || "N/A"}</td>
-                          <td className="px-6 py-4 text-sm text-right text-green-600">{formatCurrency(flow.inflow || 0)}</td>
-                          <td className="px-6 py-4 text-sm text-right text-red-600">{formatCurrency(flow.outflow || 0)}</td>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {flow.period || flow.month || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-right text-green-600">
+                            {formatCurrency(flow.inflow || 0)}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-right text-red-600">
+                            {formatCurrency(flow.outflow || 0)}
+                          </td>
                           <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900 dark:text-white">
-                            {formatCurrency(flow.net || (flow.inflow || 0) - (flow.outflow || 0))}
+                            {formatCurrency(
+                              flow.net ||
+                                (flow.inflow || 0) - (flow.outflow || 0)
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -482,45 +508,62 @@ const FinanceReports = () => {
               </div>
             )}
 
-            {(reportType === "expense-breakdown" || reportType === "revenue-analysis") && (
+            {(reportType === "expense-breakdown" ||
+              reportType === "revenue-analysis") && (
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    {reportType === "expense-breakdown" 
+                    {reportType === "expense-breakdown"
                       ? t("reports.preview.totalExpenses")
-                      : t("reports.preview.totalRevenue")
-                    }
+                      : t("reports.preview.totalRevenue")}
                   </p>
-                  <p className={`text-2xl font-bold ${
-                    reportType === "expense-breakdown" ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
-                  }`}>
+                  <p
+                    className={`text-2xl font-bold ${
+                      reportType === "expense-breakdown"
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-green-600 dark:text-green-400"
+                    }`}
+                  >
                     {formatCurrency(
-                      reportType === "expense-breakdown" 
+                      reportType === "expense-breakdown"
                         ? reportData?.totalExpenses || 0
                         : reportData?.totalIncome || 0
                     )}
                   </p>
                 </div>
-                
+
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("reports.preview.category")}</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.amount")}</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t("reports.preview.percentage")}</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        {t("reports.preview.category")}
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        {t("reports.preview.amount")}
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        {t("reports.preview.percentage")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                     {(reportData?.breakdown || []).map((item, index) => {
-                      const total = reportType === "expense-breakdown" 
-                        ? reportData?.totalExpenses || 1
-                        : reportData?.totalIncome || 1;
-                      const percentage = ((item.amount || item.total || 0) / total * 100).toFixed(1);
-                      
+                      const total =
+                        reportType === "expense-breakdown"
+                          ? reportData?.totalExpenses || 1
+                          : reportData?.totalIncome || 1;
+                      const percentage = (
+                        ((item.amount || item.total || 0) / total) *
+                        100
+                      ).toFixed(1);
+
                       return (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize">
-                            {(item.category || item._id || "Other").replace(/_/g, " ")}
+                            {(item.category || item._id || "Other").replace(
+                              /_/g,
+                              " "
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold">
                             {formatCurrency(item.amount || item.total || 0)}
@@ -539,10 +582,26 @@ const FinanceReports = () => {
             {reportType === "tax-summary" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <MetricPreviewBox label={t("reports.preview.totalRevenue")} value={formatCurrency(reportData?.totalIncome || 0)} color="green" />
-                  <MetricPreviewBox label={t("reports.preview.totalExpenses")} value={formatCurrency(reportData?.totalExpense || 0)} color="red" />
-                  <MetricPreviewBox label={t("reports.preview.taxableIncome")} value={formatCurrency(reportData?.taxableIncome || 0)} color="blue" />
-                  <MetricPreviewBox label={t("reports.preview.totalTaxPaid")} value={formatCurrency(reportData?.totalTaxPaid || 0)} color="yellow" />
+                  <MetricPreviewBox
+                    label={t("reports.preview.totalRevenue")}
+                    value={formatCurrency(reportData?.totalIncome || 0)}
+                    color="green"
+                  />
+                  <MetricPreviewBox
+                    label={t("reports.preview.totalExpenses")}
+                    value={formatCurrency(reportData?.totalExpense || 0)}
+                    color="red"
+                  />
+                  <MetricPreviewBox
+                    label={t("reports.preview.taxableIncome")}
+                    value={formatCurrency(reportData?.taxableIncome || 0)}
+                    color="blue"
+                  />
+                  <MetricPreviewBox
+                    label={t("reports.preview.totalTaxPaid")}
+                    value={formatCurrency(reportData?.totalTaxPaid || 0)}
+                    color="yellow"
+                  />
                 </div>
               </div>
             )}
@@ -564,8 +623,8 @@ const FinanceReports = () => {
               <div
                 key={type.id}
                 className={`cursor-pointer transition-all hover:shadow-lg border rounded-lg ${
-                  isSelected 
-                    ? "ring-2 ring-blue-500 border-blue-300 dark:border-blue-600" 
+                  isSelected
+                    ? "ring-2 ring-blue-500 border-blue-300 dark:border-blue-600"
                     : "border-gray-200 dark:border-gray-700"
                 }`}
                 onClick={() => setReportType(type.id)}
@@ -597,25 +656,41 @@ const FinanceReports = () => {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <QuickReportButton 
-            icon={Calendar} 
+          <QuickReportButton
+            icon={Calendar}
             text={t("reports.quickReports.monthlyPL")}
-            onClick={() => { setReportType("profit-loss"); setPeriod("month"); handleGenerateReport(); }} 
+            onClick={() => {
+              setReportType("profit-loss");
+              setPeriod("month");
+              handleGenerateReport();
+            }}
           />
-          <QuickReportButton 
-            icon={DollarSign} 
+          <QuickReportButton
+            icon={DollarSign}
             text={t("reports.quickReports.quarterlyCashFlow")}
-            onClick={() => { setReportType("cash-flow"); setPeriod("quarter"); handleGenerateReport(); }} 
+            onClick={() => {
+              setReportType("cash-flow");
+              setPeriod("quarter");
+              handleGenerateReport();
+            }}
           />
-          <QuickReportButton 
-            icon={PieChart} 
+          <QuickReportButton
+            icon={PieChart}
             text={t("reports.quickReports.annualExpenses")}
-            onClick={() => { setReportType("expense-breakdown"); setPeriod("year"); handleGenerateReport(); }} 
+            onClick={() => {
+              setReportType("expense-breakdown");
+              setPeriod("year");
+              handleGenerateReport();
+            }}
           />
-          <QuickReportButton 
-            icon={FileText} 
+          <QuickReportButton
+            icon={FileText}
             text={t("reports.quickReports.taxSummary")}
-            onClick={() => { setReportType("tax-summary"); setPeriod("year"); handleGenerateReport(); }} 
+            onClick={() => {
+              setReportType("tax-summary");
+              setPeriod("year");
+              handleGenerateReport();
+            }}
           />
         </div>
       </Card>
@@ -627,16 +702,22 @@ const FinanceReports = () => {
 
 const MetricPreviewBox = ({ label, value, color }) => {
   const colors = {
-    green: "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400",
+    green:
+      "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400",
     red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
     blue: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
-    yellow: "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400",
+    yellow:
+      "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400",
   };
 
   return (
-    <div className={`p-4 rounded-lg ${colors[color].split(" ")[0]} ${colors[color].split(" ")[1]}`}>
+    <div
+      className={`p-4 rounded-lg ${colors[color].split(" ")[0]} ${colors[color].split(" ")[1]}`}
+    >
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${colors[color].split(" ").slice(2).join(" ")}`}>
+      <p
+        className={`text-2xl font-bold ${colors[color].split(" ").slice(2).join(" ")}`}
+      >
         {value}
       </p>
     </div>

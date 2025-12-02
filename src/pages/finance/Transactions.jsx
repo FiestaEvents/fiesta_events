@@ -13,7 +13,7 @@ import {
   Download,
   DollarSign,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -66,46 +66,50 @@ const Transactions = () => {
   };
 
   // Fetch transactions
-  const fetchTransactions = useCallback(async (page = 1) => {
-    try {
-      setIsLoading(true);
+  const fetchTransactions = useCallback(
+    async (page = 1) => {
+      try {
+        setIsLoading(true);
 
-      const params = {
-        search: searchQuery || undefined,
-        type: filters.type || undefined,
-        category: filters.category || undefined,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
-        minAmount: filters.minAmount || undefined,
-        maxAmount: filters.maxAmount || undefined,
-        page,
-        limit: pageSize,
-      };
+        const params = {
+          search: searchQuery || undefined,
+          type: filters.type || undefined,
+          category: filters.category || undefined,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined,
+          minAmount: filters.minAmount || undefined,
+          maxAmount: filters.maxAmount || undefined,
+          page,
+          limit: pageSize,
+        };
 
-      // Remove undefined values
-      Object.keys(params).forEach(key => {
-        if (params[key] === undefined) delete params[key];
-      });
+        // Remove undefined values
+        Object.keys(params).forEach((key) => {
+          if (params[key] === undefined) delete params[key];
+        });
 
-      const response = await financeService.getAll(params);
+        const response = await financeService.getAll(params);
 
-      const financeData = response?.finance || response?.data?.records || [];
-      const paginationData = response?.pagination || response?.data?.pagination || {
-        page: page,
-        pages: 1,
-        total: financeData.length,
-      };
+        const financeData = response?.finance || response?.data?.records || [];
+        const paginationData = response?.pagination ||
+          response?.data?.pagination || {
+            page: page,
+            pages: 1,
+            total: financeData.length,
+          };
 
-      setTransactions(financeData);
-      setPagination(paginationData);
-    } catch (error) {
-      apiError(error, t("transactions.errors.loadFailed"));
-      setTransactions([]);
-      setPagination({ page: 1, pages: 1, total: 0 });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchQuery, filters, pageSize, t, apiError]);
+        setTransactions(financeData);
+        setPagination(paginationData);
+      } catch (error) {
+        apiError(error, t("transactions.errors.loadFailed"));
+        setTransactions([]);
+        setPagination({ page: 1, pages: 1, total: 0 });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [searchQuery, filters, pageSize, t, apiError]
+  );
 
   // Reset to page 1 when search or filters change
   useEffect(() => {
@@ -147,7 +151,8 @@ const Transactions = () => {
         return;
       }
 
-      let csvContent = "Date,Description,Type,Category,Amount,Payment Method,Reference,Status\n";
+      let csvContent =
+        "Date,Description,Type,Category,Amount,Payment Method,Reference,Status\n";
 
       transactions.forEach((transaction) => {
         const date = formatDate(transaction.date);
@@ -155,7 +160,10 @@ const Transactions = () => {
         const type = transaction.type || "";
         const category = (transaction.category || "").replace(/_/g, " ");
         const amount = transaction.amount || 0;
-        const paymentMethod = (transaction.paymentMethod || "").replace(/_/g, " ");
+        const paymentMethod = (transaction.paymentMethod || "").replace(
+          /_/g,
+          " "
+        );
         const reference = (transaction.reference || "").replace(/,/g, " ");
         const status = transaction.status || "";
 
@@ -205,7 +213,8 @@ const Transactions = () => {
             {row.description || t("transactions.table.noDescription")}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-0.5">
-            {t(`transactions.categories.${row.category}`) || (row.category || "").replace(/_/g, " ")}
+            {t(`transactions.categories.${row.category}`) ||
+              (row.category || "").replace(/_/g, " ")}
           </div>
         </div>
       ),
@@ -217,9 +226,15 @@ const Transactions = () => {
       render: (row) => (
         <Badge variant={getTypeVariant(row.type)} size="sm">
           <div className="flex items-center gap-1">
-            {row.type === "income" ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            {row.type === "income" ? (
+              <TrendingUp className="w-3 h-3" />
+            ) : (
+              <TrendingDown className="w-3 h-3" />
+            )}
             <span className="capitalize">
-              {row.type === "income" ? t("transactions.filters.income") : t("transactions.filters.expense")}
+              {row.type === "income"
+                ? t("transactions.filters.income")
+                : t("transactions.filters.expense")}
             </span>
           </div>
         </Badge>
@@ -231,7 +246,9 @@ const Transactions = () => {
       sortable: true,
       width: "15%",
       render: (row) => (
-        <div className={`font-bold ${row.type === "income" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+        <div
+          className={`font-bold ${row.type === "income" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+        >
           {row.type === "income" ? "+" : "-"}
           {formatCurrency(Math.abs(row.amount || 0))}
         </div>
@@ -265,7 +282,7 @@ const Transactions = () => {
       render: (row) => (
         <div className="flex items-center justify-center gap-1">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             icon={Eye}
             onClick={(e) => {
@@ -275,7 +292,7 @@ const Transactions = () => {
             className="text-gray-500 hover:text-blue-600"
           />
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             icon={Edit}
             onClick={(e) => {
@@ -285,7 +302,7 @@ const Transactions = () => {
             className="text-gray-500 hover:text-orange-600"
           />
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             icon={Trash2}
             onClick={(e) => {
@@ -300,50 +317,81 @@ const Transactions = () => {
   ];
 
   // Calculate statistics
-  const stats = useMemo(() => [
-    {
-      label: t("transactions.stats.totalIncome"),
-      value: formatCurrency(transactions.filter((t) => t.type === "income").reduce((sum, t) => sum + (t.amount || 0), 0)),
-      icon: TrendingUp,
-      bgColor: "bg-green-50 dark:bg-green-900/20",
-      iconColor: "text-green-600 dark:text-green-400",
-    },
-    {
-      label: t("transactions.stats.totalExpenses"),
-      value: formatCurrency(transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + (t.amount || 0), 0)),
-      icon: TrendingDown,
-      bgColor: "bg-red-50 dark:bg-red-900/20",
-      iconColor: "text-red-600 dark:text-red-400",
-    },
-    {
-      label: t("transactions.stats.netAmount"),
-      value: formatCurrency(transactions.reduce((sum, t) => t.type === "income" ? sum + (t.amount || 0) : sum - (t.amount || 0), 0)),
-      icon: DollarSign,
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
-      iconColor: "text-blue-600 dark:text-blue-400",
-    },
-    {
-      label: t("transactions.stats.totalTransactions"),
-      value: transactions.length,
-      icon: Wallet,
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
-      iconColor: "text-purple-600 dark:text-purple-400",
-    },
-  ], [transactions, t]);
+  const stats = useMemo(
+    () => [
+      {
+        label: t("transactions.stats.totalIncome"),
+        value: formatCurrency(
+          transactions
+            .filter((t) => t.type === "income")
+            .reduce((sum, t) => sum + (t.amount || 0), 0)
+        ),
+        icon: TrendingUp,
+        bgColor: "bg-green-50 dark:bg-green-900/20",
+        iconColor: "text-green-600 dark:text-green-400",
+      },
+      {
+        label: t("transactions.stats.totalExpenses"),
+        value: formatCurrency(
+          transactions
+            .filter((t) => t.type === "expense")
+            .reduce((sum, t) => sum + (t.amount || 0), 0)
+        ),
+        icon: TrendingDown,
+        bgColor: "bg-red-50 dark:bg-red-900/20",
+        iconColor: "text-red-600 dark:text-red-400",
+      },
+      {
+        label: t("transactions.stats.netAmount"),
+        value: formatCurrency(
+          transactions.reduce(
+            (sum, t) =>
+              t.type === "income"
+                ? sum + (t.amount || 0)
+                : sum - (t.amount || 0),
+            0
+          )
+        ),
+        icon: DollarSign,
+        bgColor: "bg-blue-50 dark:bg-blue-900/20",
+        iconColor: "text-blue-600 dark:text-blue-400",
+      },
+      {
+        label: t("transactions.stats.totalTransactions"),
+        value: transactions.length,
+        icon: Wallet,
+        bgColor: "bg-purple-50 dark:bg-purple-900/20",
+        iconColor: "text-purple-600 dark:text-purple-400",
+      },
+    ],
+    [transactions, t]
+  );
 
-  const categoryOptions = useMemo(() => [
-    { value: "", label: t("transactions.filters.allCategories") },
-    { value: "event_revenue", label: t("transactions.categories.event_revenue") },
-    { value: "partner_payment", label: t("transactions.categories.partner_payment") },
-    { value: "utilities", label: t("transactions.categories.utilities") },
-    { value: "maintenance", label: t("transactions.categories.maintenance") },
-    { value: "marketing", label: t("transactions.categories.marketing") },
-    { value: "staff_salary", label: t("transactions.categories.staff_salary") },
-    { value: "equipment", label: t("transactions.categories.equipment") },
-    { value: "insurance", label: t("transactions.categories.insurance") },
-    { value: "taxes", label: t("transactions.categories.taxes") },
-    { value: "other", label: t("transactions.categories.other") },
-  ], [t]);
+  const categoryOptions = useMemo(
+    () => [
+      { value: "", label: t("transactions.filters.allCategories") },
+      {
+        value: "event_revenue",
+        label: t("transactions.categories.event_revenue"),
+      },
+      {
+        value: "partner_payment",
+        label: t("transactions.categories.partner_payment"),
+      },
+      { value: "utilities", label: t("transactions.categories.utilities") },
+      { value: "maintenance", label: t("transactions.categories.maintenance") },
+      { value: "marketing", label: t("transactions.categories.marketing") },
+      {
+        value: "staff_salary",
+        label: t("transactions.categories.staff_salary"),
+      },
+      { value: "equipment", label: t("transactions.categories.equipment") },
+      { value: "insurance", label: t("transactions.categories.insurance") },
+      { value: "taxes", label: t("transactions.categories.taxes") },
+      { value: "other", label: t("transactions.categories.other") },
+    ],
+    [t]
+  );
 
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-gray-800 rounded-lg dark:border-gray-700">
@@ -363,7 +411,7 @@ const Transactions = () => {
           </Button>
           <Button
             variant="primary"
-            icon={Plus}
+            icon={<Plus className="size-4" />}
             onClick={() => navigate("/finance/transactions/new")}
           >
             {t("transactions.actions.addTransaction")}
@@ -377,7 +425,10 @@ const Transactions = () => {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+              <div
+                key={index}
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm"
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -430,7 +481,10 @@ const Transactions = () => {
                 options={[
                   { value: "", label: t("transactions.filters.allTypes") },
                   { value: "income", label: t("transactions.filters.income") },
-                  { value: "expense", label: t("transactions.filters.expense") }
+                  {
+                    value: "expense",
+                    label: t("transactions.filters.expense"),
+                  },
                 ]}
               />
 
@@ -445,7 +499,9 @@ const Transactions = () => {
                 label={t("transactions.filters.startDate")}
                 type="date"
                 value={filters.startDate}
-                onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("startDate", e.target.value)
+                }
               />
 
               <Input
@@ -460,7 +516,9 @@ const Transactions = () => {
                 label={t("transactions.filters.minAmount")}
                 type="number"
                 value={filters.minAmount}
-                onChange={(e) => handleFilterChange("minAmount", e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("minAmount", e.target.value)
+                }
                 placeholder="0.00"
                 min="0"
                 step="0.01"
@@ -471,7 +529,9 @@ const Transactions = () => {
                 label={t("transactions.filters.maxAmount")}
                 type="number"
                 value={filters.maxAmount}
-                onChange={(e) => handleFilterChange("maxAmount", e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("maxAmount", e.target.value)
+                }
                 placeholder="0.00"
                 min="0"
                 step="0.01"
@@ -480,7 +540,7 @@ const Transactions = () => {
 
               <div className="flex items-end md:col-span-3">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   onClick={handleClearFilters}
                   className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400"
                 >
@@ -523,7 +583,9 @@ const Transactions = () => {
         <div className="space-y-4">
           <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg flex items-center gap-3 text-red-700 dark:text-red-300">
             <AlertTriangle className="w-5 h-5" />
-            <p className="font-medium">{t("transactions.deleteModal.warning") || "Are you sure?"}</p>
+            <p className="font-medium">
+              {t("transactions.deleteModal.warning") || "Are you sure?"}
+            </p>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
             {t("transactions.deleteModal.message")}

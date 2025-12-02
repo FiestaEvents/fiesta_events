@@ -253,12 +253,16 @@ const Finance = () => {
           </div>
 
           <div className="space-y-4">
-            <FinancialRow 
+            <FinancialRow
               label={t("finance.eventFinancials.eventRevenue")}
-              amount={(financialData.incomeBreakdown || []).find(inc => inc.category === "event_revenue")?.totalAmount || 0}
+              amount={
+                (financialData.incomeBreakdown || []).find(
+                  (inc) => inc.category === "event_revenue"
+                )?.totalAmount || 0
+              }
               color="green"
             />
-            <FinancialRow 
+            <FinancialRow
               label={t("finance.eventFinancials.partnerCosts")}
               amount={eventExpenses}
               color="red"
@@ -271,7 +275,9 @@ const Finance = () => {
                 </span>
                 <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                   {formatCurrency(
-                    ((financialData.incomeBreakdown || []).find(inc => inc.category === "event_revenue")?.totalAmount || 0) - eventExpenses
+                    ((financialData.incomeBreakdown || []).find(
+                      (inc) => inc.category === "event_revenue"
+                    )?.totalAmount || 0) - eventExpenses
                   )}
                 </span>
               </div>
@@ -297,10 +303,16 @@ const Finance = () => {
 
           <div className="space-y-4">
             {(financialData.expensesBreakdown || [])
-              .filter(exp => !["partner_payment", "event_revenue"].includes(exp.category))
+              .filter(
+                (exp) =>
+                  !["partner_payment", "event_revenue"].includes(exp.category)
+              )
               .slice(0, 5)
               .map((expense, index) => {
-                const percentage = venueExpenses > 0 ? ((expense.totalAmount || 0) / venueExpenses) * 100 : 0;
+                const percentage =
+                  venueExpenses > 0
+                    ? ((expense.totalAmount || 0) / venueExpenses) * 100
+                    : 0;
                 return (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-1">
@@ -337,7 +349,6 @@ const Finance = () => {
 
       {/* Cash Flow & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* Cash Flow */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
@@ -350,7 +361,10 @@ const Finance = () => {
           {financialData.cashflow && financialData.cashflow.length > 0 ? (
             <div className="space-y-3">
               {financialData.cashflow.slice(-3).map((period, index) => (
-                <div key={index} className="p-3 bg-white dark:bg-gray-800/50 rounded-lg">
+                <div
+                  key={index}
+                  className="p-3 bg-white dark:bg-gray-800/50 rounded-lg"
+                >
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                     {period.period}
                   </p>
@@ -358,7 +372,9 @@ const Finance = () => {
                     <span className="text-sm text-gray-700 dark:text-gray-300">
                       {t("finance.cashFlow.net")}
                     </span>
-                    <span className={`text-sm font-bold ${period.net >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    <span
+                      className={`text-sm font-bold ${period.net >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
                       {formatCurrency(period.net)}
                     </span>
                   </div>
@@ -379,7 +395,9 @@ const Finance = () => {
           ) : (
             <div className="text-center py-8">
               <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">{t("finance.cashFlow.noData")}</p>
+              <p className="text-sm text-gray-500">
+                {t("finance.cashFlow.noData")}
+              </p>
             </div>
           )}
         </Card>
@@ -392,7 +410,7 @@ const Finance = () => {
                 {t("finance.recentTransactions.title")}
               </h3>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 className="dark:text-gray-600"
                 onClick={() => navigate("/finance/transactions")}
@@ -403,42 +421,59 @@ const Finance = () => {
 
             {financialData.recentTransactions?.length > 0 ? (
               <div className="space-y-2">
-                {financialData.recentTransactions.slice(0, 5).map((transaction) => {
-                  const isIncome = transaction.type === "income";
-                  return (
-                    <div
-                      key={transaction._id}
-                      className="flex items-center justify-between p-3 bg-white dark:bg-gray-800/50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3 ">
-                        <div className={`p-2 rounded-lg ${isIncome ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                          {isIncome ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                {financialData.recentTransactions
+                  .slice(0, 5)
+                  .map((transaction) => {
+                    const isIncome = transaction.type === "income";
+                    return (
+                      <div
+                        key={transaction._id}
+                        className="flex items-center justify-between p-3 bg-white dark:bg-gray-800/50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3 ">
+                          <div
+                            className={`p-2 rounded-lg ${isIncome ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
+                          >
+                            {isIncome ? (
+                              <TrendingUp className="w-4 h-4" />
+                            ) : (
+                              <TrendingDown className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm text-gray-900  dark:text-gray-100">
+                              {transaction.description ||
+                                t("finance.recentTransactions.transaction")}
+                            </p>
+                            <p className="text-xs text-gray-500 capitalize">
+                              {(transaction.category || "other").replace(
+                                /_/g,
+                                " "
+                              )}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-sm text-gray-900  dark:text-gray-100">
-                            {transaction.description || t("finance.recentTransactions.transaction")}
+                        <div className="text-right">
+                          <p
+                            className={`text-sm font-bold ${isIncome ? "text-green-600" : "text-red-600"}`}
+                          >
+                            {isIncome ? "+" : "-"}
+                            {formatCurrency(transaction.amount)}
                           </p>
-                          <p className="text-xs text-gray-500 capitalize">
-                            {(transaction.category || "other").replace(/_/g, " ")}
+                          <p className="text-xs text-gray-500">
+                            {formatDate(transaction.date)}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-sm font-bold ${isIncome ? "text-green-600" : "text-red-600"}`}>
-                          {isIncome ? "+" : "-"}{formatCurrency(transaction.amount)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatDate(transaction.date)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             ) : (
               <div className="text-center py-8">
                 <Wallet className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">{t("finance.recentTransactions.noData")}</p>
+                <p className="text-sm text-gray-500">
+                  {t("finance.recentTransactions.noData")}
+                </p>
               </div>
             )}
           </Card>
@@ -453,7 +488,7 @@ const Finance = () => {
               {t("finance.upcomingPayments.title")}
             </h3>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => navigate("/payments")}
             >
@@ -467,20 +502,33 @@ const Finance = () => {
               const isUrgent = daysUntil <= 3;
 
               let dueText = "";
-              if (daysUntil === 0) dueText = t("finance.upcomingPayments.dueToday");
-              else if (daysUntil === 1) dueText = t("finance.upcomingPayments.dueTomorrow");
-              else dueText = t("finance.upcomingPayments.dueInDays", { days: daysUntil });
+              if (daysUntil === 0)
+                dueText = t("finance.upcomingPayments.dueToday");
+              else if (daysUntil === 1)
+                dueText = t("finance.upcomingPayments.dueTomorrow");
+              else
+                dueText = t("finance.upcomingPayments.dueInDays", {
+                  days: daysUntil,
+                });
 
               return (
-                <div key={payment._id} className="p-4 bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                <div
+                  key={payment._id}
+                  className="p-4 bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700"
+                >
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="font-medium text-sm text-gray-900 dark:text-white">
-                        {payment.description || t("finance.upcomingPayments.payment")}
+                        {payment.description ||
+                          t("finance.upcomingPayments.payment")}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <Clock className={`w-3 h-3 ${isUrgent ? "text-red-500" : "text-gray-400"}`} />
-                        <span className={`text-xs ${isUrgent ? "text-red-500 font-medium" : "text-gray-500"}`}>
+                        <Clock
+                          className={`w-3 h-3 ${isUrgent ? "text-red-500" : "text-gray-400"}`}
+                        />
+                        <span
+                          className={`text-xs ${isUrgent ? "text-red-500 font-medium" : "text-gray-500"}`}
+                        >
                           {dueText}
                         </span>
                       </div>
@@ -535,10 +583,12 @@ const Finance = () => {
 
 const MetricCard = ({ label, value, icon: Icon, color, description }) => {
   const colorClasses = {
-    green: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
+    green:
+      "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
     red: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
     blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
-    purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
+    purple:
+      "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
   };
 
   return (
@@ -548,28 +598,43 @@ const MetricCard = ({ label, value, icon: Icon, color, description }) => {
           <Icon className="w-6 h-6" />
         </div>
       </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value}</p>
-      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{description}</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+        {label}
+      </p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+        {value}
+      </p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        {description}
+      </p>
     </Card>
   );
 };
 
 const FinancialRow = ({ label, amount, color }) => {
   const bgColors = {
-    green: "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400",
-    red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+    green:
+      "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400",
+    red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
   };
 
   return (
-    <div className={`flex items-center justify-between p-3 rounded-lg ${bgColors[color]}`}>
+    <div
+      className={`flex items-center justify-between p-3 rounded-lg ${bgColors[color]}`}
+    >
       <span className="text-sm font-medium opacity-80">{label}</span>
       <span className="text-base font-bold">{formatCurrency(amount)}</span>
     </div>
   );
 };
 
-const QuickActionCard = ({ icon: Icon, title, description, onClick, color }) => {
+const QuickActionCard = ({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+  color,
+}) => {
   const colorClasses = {
     blue: "bg-blue-50 text-blue-600",
     purple: "bg-purple-50 text-purple-600",
@@ -578,15 +643,24 @@ const QuickActionCard = ({ icon: Icon, title, description, onClick, color }) => 
   };
 
   return (
-    <div onClick={onClick} className="cursor-pointer transition-transform hover:-translate-y-1">
+    <div
+      onClick={onClick}
+      className="cursor-pointer transition-transform hover:-translate-y-1"
+    >
       <Card className="h-full hover:shadow-md transition-shadow">
         <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-lg dark:bg-opacity-20 ${colorClasses[color]}`}>
+          <div
+            className={`p-3 rounded-lg dark:bg-opacity-20 ${colorClasses[color]}`}
+          >
             <Icon className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{title}</h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>
+            <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+              {title}
+            </h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {description}
+            </p>
           </div>
         </div>
       </Card>

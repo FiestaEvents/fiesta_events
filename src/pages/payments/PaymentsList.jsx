@@ -468,7 +468,7 @@ const PaymentsList = () => {
       render: (row) => (
         <div className="flex justify-center gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -480,7 +480,7 @@ const PaymentsList = () => {
             <Eye className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -496,7 +496,7 @@ const PaymentsList = () => {
               row.status?.toLowerCase()
             ) && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -509,7 +509,7 @@ const PaymentsList = () => {
               </Button>
             )}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -810,7 +810,7 @@ const PaymentsList = () => {
               }}
               variant="primary"
               size="lg"
-              icon={Plus}
+              icon={<Plus className="size-4" />}
               className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
             >
               {t("payments.recordFirstPayment")}

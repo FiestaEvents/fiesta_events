@@ -36,17 +36,21 @@ const EventsTab = ({
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-orange-500" />
-            {t("clientDetail.labels.eventHistory")} 
-            <span className="text-gray-400 text-sm font-normal">({events.length})</span>
+            {t("clientDetail.labels.eventHistory")}
+            <span className="text-gray-400 text-sm font-normal">
+              ({events.length})
+            </span>
           </h3>
           {loading && (
-            <p className="text-sm text-gray-500 mt-1 animate-pulse">{t("clientDetail.loading")}</p>
+            <p className="text-sm text-gray-500 mt-1 animate-pulse">
+              {t("clientDetail.loading")}
+            </p>
           )}
         </div>
         {events.length > 0 && (
           <Button
             variant="primary"
-            icon={Plus}
+            icon={<Plus className="size-4" />}
             onClick={onCreateEvent}
           >
             {t("clientDetail.buttons.createEvent")}
@@ -57,25 +61,25 @@ const EventsTab = ({
       {/* Stats Grid */}
       {events.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <StatCard 
-            icon={TrendingUp} 
-            value={eventsStats.totalEvents} 
-            label={t("clientDetail.labels.totalEvents")} 
+          <StatCard
+            icon={TrendingUp}
+            value={eventsStats.totalEvents}
+            label={t("clientDetail.labels.totalEvents")}
           />
-          <StatCard 
-            icon={Star} 
-            value={eventsStats.upcomingEvents} 
-            label={t("clientDetail.labels.upcomingEvents")} 
+          <StatCard
+            icon={Star}
+            value={eventsStats.upcomingEvents}
+            label={t("clientDetail.labels.upcomingEvents")}
           />
-          <StatCard 
-            icon={DollarSign} 
-            value={formatCurrency(eventsStats.totalRevenue)} 
-            label={t("clientDetail.labels.totalRevenue")} 
+          <StatCard
+            icon={DollarSign}
+            value={formatCurrency(eventsStats.totalRevenue)}
+            label={t("clientDetail.labels.totalRevenue")}
           />
-          <StatCard 
-            icon={Clock} 
-            value={formatCurrency(eventsStats.pendingAmount)} 
-            label={t("clientDetail.labels.outstanding")} 
+          <StatCard
+            icon={Clock}
+            value={formatCurrency(eventsStats.pendingAmount)}
+            label={t("clientDetail.labels.outstanding")}
           />
         </div>
       )}
@@ -89,7 +93,7 @@ const EventsTab = ({
           </p>
           <Button
             variant="primary"
-            icon={Plus}
+            icon={<Plus className="size-4" />}
             onClick={onCreateEvent}
           >
             {t("clientDetail.buttons.createFirstEvent")}
@@ -120,18 +124,25 @@ const EventsTab = ({
                       <Calendar className="w-4 h-4 text-gray-400" />
                       {formatDate(event.startDate)}
                     </div>
-                    
+
                     {event.guestCount && (
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-gray-400" />
-                        {event.guestCount} {t("clientDetail.labels.guests", { count: event.guestCount })}
+                        {event.guestCount}{" "}
+                        {t("clientDetail.labels.guests", {
+                          count: event.guestCount,
+                        })}
                       </div>
                     )}
-                    
+
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4 text-gray-400" />
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {formatCurrency(event.pricing?.totalAmount || event.pricing?.basePrice || 0)}
+                        {formatCurrency(
+                          event.pricing?.totalAmount ||
+                            event.pricing?.basePrice ||
+                            0
+                        )}
                       </span>
                     </div>
 
@@ -139,9 +150,9 @@ const EventsTab = ({
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4 text-gray-400" />
                         {/* ✅ Using Generic StatusBadge for Payment */}
-                        <StatusBadge 
-                          status={event.paymentSummary?.status || "pending"} 
-                          size="xs" 
+                        <StatusBadge
+                          status={event.paymentSummary?.status || "pending"}
+                          size="xs"
                           dot={false}
                         />
                       </div>
@@ -151,7 +162,7 @@ const EventsTab = ({
 
                 {/* External Link Action */}
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={(e) => onNavigateToEvent(event._id, e)}
                   title={t("clientDetail.actions.viewFullEvent")}
@@ -175,7 +186,10 @@ const StatCard = ({ icon: Icon, value, label }) => (
       <Icon className="w-6 h-6 text-orange-600 dark:text-orange-500" />
     </div>
     <div className="overflow-hidden">
-      <div className="text-xl font-bold text-gray-900 dark:text-white truncate" title={value}>
+      <div
+        className="text-xl font-bold text-gray-900 dark:text-white truncate"
+        title={value}
+      >
         {value}
       </div>
       <div className="text-xs font-medium text-gray-500 uppercase tracking-wide truncate">

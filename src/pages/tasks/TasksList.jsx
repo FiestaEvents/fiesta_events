@@ -575,7 +575,7 @@ const TasksList = () => {
       render: (row) => (
         <div className="flex justify-center gap-1">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -588,7 +588,7 @@ const TasksList = () => {
           {!showArchived ? (
             <>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -599,7 +599,7 @@ const TasksList = () => {
                 <Edit className="w-4 h-4 text-green-500" />
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -612,7 +612,7 @@ const TasksList = () => {
           ) : (
             <>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -622,7 +622,7 @@ const TasksList = () => {
                 <RotateCcw className="w-4 h-4 text-green-500" />
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -749,7 +749,7 @@ const TasksList = () => {
                 </Button>
                 <Button
                   variant="primary"
-                  icon={Plus}
+                  icon={<Plus className="size-4" />}
                   onClick={() => {
                     setSelectedTask(null);
                     setIsFormOpen(true);
@@ -1042,7 +1042,7 @@ const TasksList = () => {
               }}
               variant="primary"
               size="lg"
-              icon={Plus}
+              icon={<Plus className="size-4" />}
               className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
             >
               {t("tasks.createFirstTask")}

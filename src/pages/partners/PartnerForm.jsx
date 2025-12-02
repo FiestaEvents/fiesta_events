@@ -316,15 +316,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       case 1:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("partnerForm.steps.basicInfo")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Enter the core details for this partner.
-              </p>
-            </div>
-
             <Input
               label={t("partnerForm.fields.name")}
               name="name"
@@ -390,15 +381,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       case 2:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("partnerForm.steps.professional")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Define services and pricing structures.
-              </p>
-            </div>
-
             <Select
               label={t("partnerForm.fields.category")}
               name="category"
@@ -514,15 +496,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       case 3:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("partnerForm.steps.address")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Physical address details.
-              </p>
-            </div>
-
             <Input
               label={t("partnerForm.fields.street")}
               name="address.street"
@@ -567,14 +540,6 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       case 4:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("partnerForm.steps.notes")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Additional internal information.
-              </p>
-            </div>
             <Textarea
               label={t("partnerForm.fields.notes")}
               name="notes"
@@ -609,7 +574,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         <div className="flex items-center justify-between pt-6 mt-auto">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={
               currentStep === 1
                 ? onCancel
@@ -633,7 +598,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
             {isEditMode && currentStep < totalSteps && (
               <Button
                 type="submit"
-                variant="ghost"
+                variant="outline"
                 disabled={saving}
                 className="text-orange-600 hover:bg-orange-50"
               >

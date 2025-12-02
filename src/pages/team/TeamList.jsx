@@ -217,7 +217,7 @@ const TeamList = () => {
                 <div key={`actions-${member.id}`} className="flex gap-2">
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="outline"
                     onClick={() => handleViewMember(member)}
                   >
                     View

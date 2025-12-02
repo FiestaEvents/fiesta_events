@@ -16,12 +16,7 @@ const getInitials = (name = "") =>
     .join("")
     .toUpperCase();
 
-const ClientHeader = ({
-  client,
-  onBack,
-  onEdit,
-  onDelete,
-}) => {
+const ClientHeader = ({ client, onBack, onEdit, onDelete }) => {
   const { t } = useTranslation();
 
   return (
@@ -29,21 +24,23 @@ const ClientHeader = ({
       {/* Action Buttons */}
       <div className="flex justify-between items-center gap-2 mb-6">
         <div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onBack}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("clientDetail.buttons.backToClients")}</span>
+            <span className="hidden sm:inline">
+              {t("clientDetail.buttons.backToClients")}
+            </span>
             <span className="sm:hidden">{t("common.back")}</span>
           </Button>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={onEdit}
             title={t("clientDetail.actions.edit")}
@@ -51,9 +48,9 @@ const ClientHeader = ({
           >
             <Edit className="w-4 h-4" />
           </Button>
-          
+
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={onDelete}
             title={t("clientDetail.actions.delete")}
@@ -70,7 +67,7 @@ const ClientHeader = ({
         <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto shadow-md">
           {getInitials(client.name) || "?"}
         </div>
-        
+
         {/* Name */}
         <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white break-words">
           {client.name || t("clients.table.defaultValues.unnamed")}
@@ -86,10 +83,10 @@ const ClientHeader = ({
 
         {/* Status Badge */}
         <div className="mt-4 flex justify-center">
-          <StatusBadge 
-            status={client.status} 
-            size="md" 
-            dot={true} 
+          <StatusBadge
+            status={client.status}
+            size="md"
+            dot={true}
             className="px-4 py-1"
           />
         </div>

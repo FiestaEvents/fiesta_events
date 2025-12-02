@@ -1,5 +1,5 @@
 {
-   "auth": {
+  "auth": {
     "login": {
       "title": "Connexion",
       "subtitle": "Entrez vos identifiants pour accéder à votre compte",
@@ -22,7 +22,7 @@
         "invalidPassword": "Ou mot de passe invalide"
       }
     },
-       "register": {
+    "register": {
       "title": "Créer un compte",
       "subtitle": "Commencez la gestion de votre lieu",
       "fullName": "Nom Complet",
@@ -121,7 +121,7 @@
       }
     }
   },
-   "dashboard": {
+  "dashboard": {
     "title": "Tableau de bord",
     "welcome_msg": "Voici ce qui se passe dans votre établissement aujourd'hui.",
     "all_caught_up": "Tout est à jour !",
@@ -160,8 +160,7 @@
       "title": "Prospects en attente",
       "no_leads": "Aucun prospect en attente"
     }
-  }
-,
+  },
   "home": {
     "eventsDesc": "Gestion de calendrier",
     "clientsDesc": "Base de clients",
@@ -174,9 +173,9 @@
     "docSettingsDesc": "Mises en page",
     "statsDesc": "Rapports et analyses",
     "settingsDesc": "Configuration système",
-     "dashboardDesc": "Rapports et analyses"
+    "dashboardDesc": "Rapports et analyses"
   },
-    "clients": {
+  "clients": {
     "title": "Clients",
     "description": "Gérer les relations et les informations de vos clients",
     "buttons": {
@@ -499,6 +498,9 @@
     }
   },
   "eventList": {
+    "loading": {
+      "initial": "Chargement des evenements..."
+    },
     "title": "Calendrier des Événements",
     "subtitle": "Voir et gérer les événements de votre salle",
     "showingEvents": "Affichage de {{count}} sur {{total}} événements",
@@ -532,6 +534,8 @@
       "date": "Date"
     },
     "filters": {
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
       "allStatus": "Tous les Statuts",
       "draft": "Brouillon",
       "pending": "En Attente",
@@ -3216,7 +3220,7 @@
     },
     "list": {
       "title": "Contrats",
-      "subtitle": "Gérez vos accords",
+      "subtitle": "Gérez vos accords.",
       "showingResults": "Affichage de {{count}} sur {{total}} contrats",
       "newPartner": "Partenaire",
       "newClient": "Contrat",

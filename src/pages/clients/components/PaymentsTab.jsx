@@ -45,9 +45,9 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
       {/* Top Action Bar */}
       {events.length > 0 && (
         <div className="flex items-center justify-end mb-6">
-          <Button 
-            variant="primary" 
-            icon={Plus} 
+          <Button
+            variant="primary"
+            icon={<Plus className="size-4" />}
             onClick={handleRecordPaymentClick}
           >
             {t("payments.buttons.recordPayment")}
@@ -58,22 +58,22 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
       {/* Payment Statistics Cards */}
       {events.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <StatCard 
+          <StatCard
             icon={DollarSign}
             value={formatCurrency(eventsStats.totalRevenue)}
             label={t("payments.statistics.totalRevenue")}
           />
-          <StatCard 
+          <StatCard
             icon={CheckCircle2}
             value={formatCurrency(eventsStats.totalPaid)}
             label={t("payments.statistics.totalPaid")}
           />
-          <StatCard 
+          <StatCard
             icon={Clock}
             value={formatCurrency(eventsStats.pendingAmount)}
             label={t("payments.statistics.outstanding")}
           />
-          <StatCard 
+          <StatCard
             icon={TrendingUp}
             value={eventsStats.totalEvents}
             label={t("payments.statistics.totalEvents")}
@@ -90,7 +90,8 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
           </h4>
           <div className="space-y-4">
             {events.map((event) => {
-              const totalAmount = event.pricing?.totalAmount || event.pricing?.basePrice || 0;
+              const totalAmount =
+                event.pricing?.totalAmount || event.pricing?.basePrice || 0;
               const paidAmount = event.paymentSummary?.paidAmount || 0;
               const balance = totalAmount - paidAmount;
               const paymentStatus = event.paymentSummary?.status || "pending";
@@ -232,7 +233,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
               </p>
               <Button
                 variant="primary"
-                icon={Plus}
+                icon={<Plus className="size-4" />}
                 onClick={handleRecordPaymentClick}
               >
                 {t("payments.buttons.recordFirstPayment")}
@@ -252,7 +253,10 @@ const StatCard = ({ icon: Icon, value, label }) => (
       <Icon className="w-6 h-6 text-white" />
     </div>
     <div className="overflow-hidden">
-      <div className="text-xl font-bold text-gray-900 dark:text-white truncate" title={value}>
+      <div
+        className="text-xl font-bold text-gray-900 dark:text-white truncate"
+        title={value}
+      >
         {value}
       </div>
       <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide truncate">
