@@ -328,11 +328,6 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             {/* STEP 1: Basic Info */}
             {currentStep === 1 && (
             <div className="space-y-6 animate-fadeIn">
-                <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('payments.steps.basicInfo')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Core payment details.</p>
-                </div>
-
                 <Select
                     label={t('payments.form.type')}
                     value={formData.type}
@@ -406,11 +401,6 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             {/* STEP 2: Related Info */}
             {currentStep === 2 && (
             <div className="space-y-6 animate-fadeIn">
-                <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('payments.steps.relatedInfo')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Link payment to client or event.</p>
-                </div>
-
                 <Select
                     label={t('payments.form.client')}
                     value={formData.client}
@@ -438,10 +428,6 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             {/* STEP 3: Dates */}
             {currentStep === 3 && (
             <div className="space-y-6 animate-fadeIn">
-                <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('payments.steps.dates')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Schedule due dates and payment dates.</p>
-                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Input
                         label={t('payments.form.dueDate')}
@@ -463,10 +449,6 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
             {/* STEP 4: Fees */}
             {currentStep === 4 && (
             <div className="space-y-6 animate-in fade-in">
-                <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('payments.steps.feesReview')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Additional processing fees.</p>
-                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <Input
                         label={t('payments.form.fees.processingFee')}

@@ -361,15 +361,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       case 1:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("tasks.form.steps.basicInfo")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Core details about the task.
-              </p>
-            </div>
-
             <Input
               label={t("tasks.form.fields.title")}
               name="title"
@@ -422,15 +413,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       case 2:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("tasks.form.steps.planning")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Timelines and assignment.
-              </p>
-            </div>
-
             <div className="grid grid-cols-1 gap-6">
               <DateInput
                 label={t("tasks.form.fields.dueDate")}
@@ -460,15 +442,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
       case 3:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("tasks.form.steps.checklist")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Organize with tags and subtasks.
-              </p>
-            </div>
-
             {/* TAGS */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

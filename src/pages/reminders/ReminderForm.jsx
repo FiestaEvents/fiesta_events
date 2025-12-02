@@ -364,10 +364,6 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             {/* STEP 1: BASIC INFO */}
             {currentStep === 1 && (
             <div className="space-y-6 animate-fadeIn">
-                <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('reminders.form.basicInfo')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Set the main details for your reminder.</p>
-                </div>
                 <Input 
                     label={t('reminders.form.fields.title')}
                     value={formData.title}
@@ -421,10 +417,6 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             {/* STEP 2: RELATED ITEMS */}
             {currentStep === 2 && (
             <div className="space-y-6 animate-fadeIn">
-                <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('reminders.form.relatedItems')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Connect this reminder to other items.</p>
-                </div>
                 <Select 
                     label={t('reminders.form.fields.relatedEvent')}
                     value={formData.relatedEvent}
@@ -452,10 +444,6 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             {/* STEP 3: NOTIFICATIONS */}
             {currentStep === 3 && (
             <div className="space-y-6 animate-fadeIn">
-                 <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('reminders.form.notifications')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">How should we alert you?</p>
-                </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                         {t('reminders.form.fields.notificationMethods')} *
@@ -480,12 +468,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
 
             {/* STEP 4: RECURRENCE */}
             {currentStep === 4 && (
-            <div className="space-y-6 animate-fadeIn">
-                 <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('reminders.form.recurrence')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Repeat settings and final notes.</p>
-                </div>
-                
+            <div className="space-y-6 animate-fadeIn">                
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
                     <label className="flex items-center gap-3 cursor-pointer">
                         <input 

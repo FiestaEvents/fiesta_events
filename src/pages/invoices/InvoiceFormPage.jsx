@@ -810,14 +810,7 @@ const InvoiceFormPage = () => {
           {/* STEP 4: REVIEW */}
           {currentStep === 4 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-              <div className="text-center py-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100 dark:bg-green-900/30 text-orange-600 dark:text-orange-400 mb-4">
-                  <Sparkles size={32} color="orange" />
-                </div>
-                <h2 className="text-2xl font-bold text-orange-600 dark:text-white mb-2">Ready to Finalize</h2>
-                <p className="text-gray-500 dark:text-gray-400">Review the details on the right before saving.</p>
-              </div>
-              
+             
               <PriceSummary calculations={calculations} currency={formData.currency} />
               {activeRecipient && <RecipientDetailsCard recipient={activeRecipient} type={invoiceType} />}
             </div>

@@ -132,135 +132,44 @@
     }
 
   },
- "dashboard": {
-    "loading": "Loading Dashboard...",
-
-    "today": {
-      "title": "Today's Command Center",
-      "view_schedule": "View Schedule",
-      "events": "Events Today",
-      "expected_revenue": "Expected Revenue",
-      "pending_tasks": "Pending Tasks",
-      "events_list": "Today's Events",
-      "guests": "guests"
-    },
-
-    "actions": {
-      "title": "Action Center",
-      "overdue_invoices": "{{count}} Overdue Invoices",
-      "new_enquiries": "{{count}} New Enquiries",
-      "urgent_tasks": "{{count}} Urgent Tasks"
-    },
-
-    "financial": {
-      "title": "Financial Command Center",
-      "cash_position": "Cash Position",
-      "net_cash": "Net Cash",
-      "monthly_revenue": "Monthly Revenue",
-      "vs_last_month": "vs Last Month",
-      "bookings": "Bookings",
-      "conversion": "Conversion",
-      "avg_value": "Avg Event Value",
-      "per_event": "Per Event",
-      "cash_flow_details": "Cash Flow Details",
-      "money_in": "Money In",
-      "money_out": "Money Out",
-      "upcoming": "Upcoming",
-      "receivables": "Receivables",
-      "payables": "Payables",
-      "invoice_aging": "Invoice Aging Report",
-      "outstanding": "Outstanding",
-      "aging_0_30": "0-30 Days",
-      "aging_31_60": "31-60 Days",
-      "aging_60_plus": "60+ Days",
-      "invoices": "invoices",
-      "critical": "CRITICAL",
-      "goals_this_month": "Goals This Month",
-      "revenue": "Revenue",
-      "net": "Net"
-    },
-
-    "calendar": {
-      "title": "Calendar & Booking Overview",
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome_msg": "Here is what is happening at your venue today.",
+    "all_caught_up": "All caught up!",
+    "view_all": "View All",
+    "recent_inflow": "Recent Inflow",
+    "no_payments": "No recent payments.",
+    "metrics": {
+      "revenue": "Monthly Revenue",
+      "pending": "Pending",
       "occupancy": "Occupancy",
-      "occupancy_rate": "Occupancy Rate",
-      "days_booked": "Days Booked",
-      "upcoming_events": "Upcoming Events",
-      "unknown_client": "Unknown Client",
-      "guests": "Guests",
-      "no_upcoming": "No upcoming events scheduled.",
-      "missing_vendors": "Events Missing Partners",
-      "assign_now": "Assign Now"
+      "events_this_month": "Events this month",
+      "conversion": "Lead Conversion",
+      "pending_enquiries": "Pending Enquiries",
+      "tasks": "Operations",
+      "urgent_items": "Urgent Items"
     },
-
-    "performance": {
-      "title": "Performance Metrics",
-      "tabs": {
-        "revenue": "Revenue",
-        "events": "Events",
-        "clients": "Clients"
-      },
-      "current_month": "Current Month",
-      "last_month": "Last Month",
-      "growth": "Growth",
-      "event_breakdown": "Event Breakdown",
-      "client_retention": "Client Retention",
-      "new_clients": "New Clients",
-      "returning_clients": "Returning Clients",
-      "avg_ltv": "Avg Lifetime Value",
-      "sales_pipeline": "Sales Pipeline",
-      "enquiries": "Enquiries",
-      "quoted": "Quoted",
-      "confirmed": "Confirmed",
-      "completed": "Completed",
-      "conversion_rate": "Conversion Rate"
-    },
-
     "charts": {
-      "current_year": "Current Year",
-      "last_year": "Last Year",
+      "revenue_trend": "Revenue Trend",
+      "event_status": "Event Status",
       "total": "Total"
     },
-
-    "insights": {
-      "title": "Business Insights",
-      "response_time": "Lead Response Time",
-      "avg": "Avg",
-      "average": "Average Response Time",
-      "target": "Target",
-      "slowest": "Slowest Response",
-      "on_target": "✓ Meeting target response time",
-      "needs_improvement": "⚠ Response time needs improvement",
-      "cancellation": "Cancellation Analysis",
-      "rate": "Rate",
-      "cancellation_rate": "Cancellation Rate",
-      "revenue_lost": "Revenue Lost",
-      "main_reason": "Main Reason"
+    "alerts": {
+      "missing_partners": "Events Missing Partners"
     },
-
+    "actions": {
+      "assign": "Assign"
+    },
+    "upcoming": {
+      "title": "Upcoming Schedule",
+      "no_events": "No upcoming events scheduled."
+    },
+    "calendar": {
+      "occupancy_view": "Occupancy"
+    },
     "leads": {
       "title": "Pending Leads",
-      "unknown": "Unknown Client",
-      "no_pending": "No pending leads"
-    },
-
-    "activity": {
-      "title": "Recent Activity",
-      "payment_received": "Payment received: {{amount}} from {{client}}",
-      "new_booking": "New booking: {{title}}",
-      "no_recent": "No recent activity"
-    },
-
-    "quick_actions": {
-      "title": "Quick Actions",
-      "new_event": "New Event",
-      "add_client": "Add Client",
-      "new_invoice": "New Invoice",
-      "settings": "Settings"
-    },
-
-    "errors": {
-      "fetch_failed": "Failed to load dashboard data"
+      "no_leads": "No pending leads"
     }
   },
   "home": {
@@ -274,7 +183,8 @@
     "remindersDesc": "Alerts & Notifications",
     "docSettingsDesc": "Template Layouts",
     "statsDesc": "Reports & Analytics",
-    "settingsDesc": "System Configuration"
+    "settingsDesc": "System Configuration",
+    "dashboardDesc": "Reports & Analytics"
   },
   "documents": {
     "hub": {
@@ -297,15 +207,14 @@
       }
     }
   },
-  "clients": {
+   "clients": {
     "title": "Clients",
     "description": "Manage your client relationships and information",
-    "showingCount": "Showing {{count}} of {{total}} clients",
     "buttons": {
       "addClient": "Add Client",
       "addFirstClient": "Add First Client",
       "retry": "Retry",
-      "clear": "Clear Filters",
+      "clear": "Clear",
       "clearAllFilters": "Clear All Filters",
       "cancel": "Cancel",
       "deleteClient": "Delete Client"
@@ -313,7 +222,7 @@
     "search": {
       "placeholder": "Search clients...",
       "noResults": "No clients found",
-      "noResultsDescription": "Try adjusting your search or filters to find what you're looking for"
+      "noResultsDesc": "We couldn't find any clients matching your current filters."
     },
     "filters": {
       "allStatus": "All Status",
@@ -339,11 +248,6 @@
         "noEmail": "No email",
         "noPhone": "No phone",
         "noDate": "No date"
-      },
-      "actions": {
-        "view": "View Details",
-        "edit": "Edit Client",
-        "delete": "Delete Client"
       }
     },
     "loading": {
@@ -352,7 +256,7 @@
     },
     "empty": {
       "title": "No clients yet",
-      "description": "Get started by adding your first client to the system"
+      "description": "Get started by adding your first client. Manage their details and interactions all in one place."
     },
     "errors": {
       "loadingTitle": "Error loading clients",
@@ -360,6 +264,7 @@
       "invalidId": "Invalid client ID"
     },
     "toast": {
+      "showingResults": "Showing {{count}} of {{total}} clients",
       "deleting": "Deleting {{name}}...",
       "deleteSuccess": "{{name}} deleted successfully",
       "deleteError": "Failed to delete {{name}}",
@@ -374,62 +279,75 @@
       "deleteMessage": "Are you sure you want to delete {{name}}? This action cannot be undone."
     }
   },
-  "clientForm": {
+
+   "clientForm": {
     "title": {
-      "add": "Add New Client",
-      "edit": "Edit Client"
+      "add": "إضافة عميل جديد",
+      "edit": "تعديل بيانات العميل"
     },
     "description": {
-      "add": "Create a new client profile",
-      "edit": "Update client information"
+      "add": "إنشاء ملف تعريف جديد للعميل",
+      "edit": "تحديث معلومات العميل"
+    },
+    "steps": {
+      "basicInfo": "المعلومات الأساسية",
+      "address": "العنوان",
+      "notes": "ملاحظات"
     },
     "sections": {
-      "personal": "Personal Information",
-      "address": "Address Information",
-      "additional": "Additional Information"
+      "personal": "المعلومات الشخصية",
+      "address": "معلومات العنوان",
+      "additional": "معلومات إضافية"
     },
     "fields": {
-      "name": "Full Name",
-      "email": "Email Address",
-      "phone": "Phone Number",
-      "company": "Company",
-      "street": "Full Address",
-      "city": "City",
-      "state": "State/Province",
-      "zipCode": "ZIP/Postal Code",
-      "country": "Country",
-      "notes": "Client Notes",
-      "status": "Status"
+      "name": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "company": "الشركة",
+      "street": "العنوان الكامل",
+      "city": "المدينة",
+      "state": "الولاية / المحافظة",
+      "zipCode": "الرمز البريدي",
+      "country": "البلد",
+      "notes": "ملاحظات العميل",
+      "status": "الحالة"
     },
     "placeholders": {
-      "name": "e.g. Jane Doe",
+      "name": "مثال: محمد علي",
       "email": "name@company.com",
-      "phone": "e.g. 12345678",
-      "company": "Company or organization",
-      "street": "123 Main Street",
-      "city": "New York",
-      "state": "NY",
-      "zipCode": "10001",
-      "country": "United States",
-      "notes": "Optional notes, comments, or additional information about this client..."
+      "phone": "مثال: 12345678",
+      "company": "اسم الشركة أو المنظمة",
+      "street": "123 شارع الرئيسي",
+      "city": "تونس",
+      "state": "تونس",
+      "zipCode": "1000",
+      "country": "تونس",
+      "notes": "ملاحظات اختيارية أو تعليقات أو معلومات إضافية...",
+      "cityPlaceholder": "اسم المدينة",
+      "statePlaceholder": "اسم الولاية",
+      "zipCodePlaceholder": "الرمز البريدي",
+      "countryPlaceholder": "اسم البلد"
     },
     "errors": {
-      "nameRequired": "Full name is required",
-      "nameMinLength": "Name must be at least 2 characters",
-      "emailRequired": "Email is required",
-      "emailInvalid": "Please enter a valid email address",
-      "phoneRequired": "Phone number is required",
-      "phoneInvalid": "Phone number must be exactly 8 digits",
-      "loading": "Error Loading Client",
-      "creating": "Error Creating Client",
-      "saving": "Failed to save client. Please try again."
+      "nameRequired": "الاسم الكامل مطلوب",
+      "nameMinLength": "يجب أن يتكون الاسم من حرفين على الأقل",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صحيح",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "phoneInvalid": "يجب أن يتكون رقم الهاتف من 8 أرقام بالضبط",
+      "checkFields": "يرجى التحقق من الحقول المطلوبة",
+      "loading": "خطأ في تحميل العميل",
+      "creating": "خطأ في إنشاء العميل",
+      "saving": "فشل حفظ العميل. حاول مرة اخرى."
     },
     "buttons": {
-      "cancel": "Cancel",
-      "create": "Create Client",
-      "update": "Update Client",
-      "creating": "Creating...",
-      "updating": "Updating..."
+      "cancel": "إلغاء",
+      "previous": "السابق",
+      "next": "التالي",
+      "create": "إضافة العميل",
+      "update": "تحديث العميل",
+      "creating": "جاري الإنشاء...",
+      "updating": "جاري التحديث..."
     }
   },
   "clientDetail": {
@@ -1570,73 +1488,29 @@
   "reminders": {
     "title": "Reminders",
     "subtitle": "Manage notifications, alerts, and follow-up reminders.",
-    "showing": "Showing {count} of {total} reminders",
-    "noReminders": "No reminders yet",
-    "noRemindersDesc": "Get started by creating your first reminder.",
-    "noResults": "No reminders found",
-    "noResultsDesc": "No reminders match your current search or filter criteria.",
-    "createFirst": "Create First Reminder",
     "addReminder": "Add Reminder",
+    "createFirst": "Create First Reminder",
     "searchPlaceholder": "Search reminders by title or description...",
     "clearFilters": "Clear Filters",
-    "activeFilters": "Active filters",
-    "loading": "Loading reminders...",
-    "errorLoading": "Error Loading Reminders",
-    "retry": "Retry",
+    "noResults": "No reminders found",
+    "noReminders": "No reminders yet",
     "untitled": "Untitled Reminder",
-    "noDescription": "No description",
-    "noDate": "No date",
-    "unknown": "Unknown",
-    "noRelatedEntities": "No related entities",
-    "noNotificationMethods": "No notification methods configured",
-    "close": "Close",
-    "every": "every",
-    "days": "day(s)",
-    "weeks": "week(s)",
-    "months": "month(s)",
-    "years": "year(s)",
-    "hour": "hour",
-    "hours": "hours",
-    "day": "day",
-    "backToReminders": "Back to Reminders",
-    "tryAgain": "Try Again",
-    "snooze1Hour": "Snooze 1 Hour",
-    "markComplete": "Mark Complete",
-    "cancelReminder": "Cancel Reminder",
-    "snoozing": "Snoozing...",
-    "completing": "Completing...",
-    "cancelling": "Cancelling...",
-    "deleting": "Deleting...",
-    "loadingDetails": "Loading reminder details...",
-    "notFound": "Reminder Not Found",
-    "notFoundDescription": "The reminder you're looking for doesn't exist.",
+    "errorLoading": "Error Loading Reminders",
     "status": {
       "all": "All Status",
       "active": "Active",
       "completed": "Completed",
-      "snoozed": "Snoozed",
-      "cancelled": "Cancelled",
-      "label": "Status"
+      "snoozed": "Snoozed"
     },
     "type": {
-      "all": "All Types",
-      "event": "Event",
-      "payment": "Payment",
-      "task": "Task",
-      "maintenance": "Maintenance",
-      "followup": "Follow-up",
-      "other": "Other",
-      "client": "Client",
-      "general": "General",
-      "label": "Type"
+      "all": "All Types"
     },
     "priority": {
       "all": "All Priorities",
       "urgent": "Urgent",
       "high": "High",
       "medium": "Medium",
-      "low": "Low",
-      "label": "Priority"
+      "low": "Low"
     },
     "columns": {
       "title": "Title",
@@ -1647,147 +1521,34 @@
       "status": "Status",
       "actions": "Actions"
     },
-    "actions": {
-      "view": "View Reminder",
-      "edit": "Edit Reminder",
-      "delete": "Delete Reminder",
-      "snooze": "Snooze Reminder",
-      "unsnooze": "Unsnooze Reminder",
-      "viewDetails": "View Details",
-      "moreDetails": "More Details"
-    },
     "form": {
       "createTitle": "Create New Reminder",
-      "editTitle": "Edit Reminder",
-      "createSubtitle": "Set up notifications for important deadlines",
-      "editSubtitle": "Update reminder details",
-      "basicInfo": "Basic Information",
-      "relatedItems": "Related Items",
-      "notifications": "Notifications",
-      "recurrence": "Recurrence Settings",
-      "enableRecurrence": "Enable Recurrence",
-      "intervalPlaceholder": "e.g., 1",
-      "fields": {
-        "title": "Title",
-        "description": "Description",
-        "type": "Type",
-        "priority": "Priority",
-        "date": "Date",
-        "time": "Time",
-        "notificationMethods": "Notification Methods",
-        "frequency": "Frequency",
-        "interval": "Interval",
-        "daysOfWeek": "Days of Week",
-        "notes": "Notes",
-        "relatedEvent": "Related Event",
-        "relatedClient": "Related Client",
-        "relatedTask": "Related Task",
-        "relatedPayment": "Related Payment"
-      },
-      "placeholders": {
-        "title": "Enter reminder title...",
-        "description": "Add a description for this reminder...",
-        "notes": "Add any additional notes about this reminder...",
-        "selectEvent": "Select an event...",
-        "selectClient": "Select a client...",
-        "selectTask": "Select a task...",
-        "selectPayment": "Select a payment..."
-      },
-      "buttons": {
-        "cancel": "Cancel",
-        "previous": "Previous",
-        "next": "Next",
-        "create": "Create Reminder",
-        "update": "Update Reminder",
-        "updateNow": "Update Now"
-      }
-    },
-    "details": {
-      "description": "Description",
-      "reminderDetails": "Reminder Details",
-      "dateTime": "Date & Time",
-      "snoozedUntil": "Snoozed Until",
-      "createdBy": "Created By",
-      "relatedTo": "Related To",
-      "recurrence": "Recurrence",
-      "notificationMethods": "Notification Methods",
-      "activityHistory": "Activity History",
-      "recurrenceSettings": "Recurrence Settings",
-      "tab": "Details",
-      "reminderInfo": "Reminder Information",
-      "additionalInfo": "Additional Information"
+      "editTitle": "Edit Reminder"
     },
     "modals": {
       "snooze": {
-        "title": "Snooze Reminder",
-        "description": "How long would you like to snooze this reminder?"
+        "title": "Snooze Reminder"
       },
       "delete": {
         "title": "Delete Reminder",
-        "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone and all associated data will be permanently removed.",
-        "confirm": "Delete Reminder",
-        "cancel": "Cancel"
+        "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
       }
     },
     "notifications": {
+      "showingResults": "Showing {{count}} of {{total}} reminders",
+      "filtersCleared": "Filters cleared",
       "created": "Reminder created successfully",
       "updated": "Reminder updated successfully",
       "deleted": "Reminder deleted successfully",
-      "snoozed": "Reminder snoozed for {duration} {unit}",
+      "snoozed": "Reminder snoozed successfully",
       "unsnoozed": "Reminder activated successfully",
-      "completed": "Reminder marked as completed",
-      "cancelled": "Reminder cancelled",
-      "filtersCleared": "Filters cleared",
-      "loadingReminders": "Retrying to load reminders...",
-      "loadingDetails": "Retrying to load reminder details...",
-      "loadError": "Failed to load reminder",
-      "loadFormError": "Failed to load form data",
-      "saveError": "Failed to save reminder",
-      "deleting": "Deleting...",
+      "deleting": "Deleting {{name}}...",
+      "deleteError": "Failed to delete reminder",
       "snoozing": "Snoozing...",
-      "activating": "Activating...",
-      "completing": "Completing...",
-      "cancelling": "Cancelling...",
-      "activateError": "Failed to activate reminder",
-      "completeError": "Failed to complete reminder",
-      "cancelError": "Failed to cancel reminder",
       "snoozeError": "Failed to snooze reminder",
-      "deleteError": "Failed to delete reminder"
-    },
-    "validation": {
-      "titleRequired": "Title is required",
-      "dateRequired": "Date is required",
-      "timeRequired": "Time is required",
-      "taskRequired": "Task is required",
-      "notificationMethodsRequired": "At least one notification method is required",
-      "frequencyRequired": "Frequency is required for recurring reminders",
-      "intervalRequired": "Interval must be at least 1",
-      "daysRequired": "At least one day must be selected for weekly recurrence",
-      "futureDate": "Date must be today or in the future",
-      "invalidId": "Invalid reminder ID",
-      "invalidData": "Invalid reminder data",
-      "fixErrors": "Please fix the errors before proceeding",
-      "fixAllErrors": "Please fix all required fields before updating",
-      "validationErrors": "Please fix the validation errors"
-    },
-    "recurrence": {
-      "label": "Recurring",
-      "endDate": "End Date",
-      "dayOfMonth": "Day of Month",
-      "day": "Day",
-      "oneTime": "This is a one-time reminder (not recurring)",
-      "daily": "Daily",
-      "weekly": "Weekly",
-      "monthly": "Monthly",
-      "yearly": "Yearly",
-      "forever": "Forever"
-    },
-    "history": {
-      "comingSoon": "Activity history will be implemented in the next phase"
-    },
-    "search": "Search",
-    "yes": "Yes",
-    "loadingForm": "Loading Form"
+      "activating": "Activating...",
+      "activateError": "Failed to activate reminder"
+    }
   },
   "payments": {
     "title": "Payments",
@@ -3046,7 +2807,6 @@
       "subtitle": "Global configuration for all contracts",
       "loading": "Loading settings...",
       "save": "Save Changes",
-      
       "tabs": {
         "company": "Company Info",
         "structure": "Structure & ID",
@@ -3057,7 +2817,6 @@
         "cancellation": "Cancellation",
         "labels": "Labels"
       },
-      
       "company": {
         "title": "Company Information",
         "legalName": "Legal Name",
@@ -3071,7 +2830,6 @@
         "bankName": "Bank Name",
         "representative": "Legal Representative"
       },
-      
       "structure": {
         "title": "Sequence Configuration",
         "preview": "Next Number Preview",
@@ -3084,7 +2842,6 @@
         "resetYearly": "Reset Sequence Yearly",
         "resetYearlyHelp": "Numbering restarts at 0001 on January 1st"
       },
-      
       "branding": {
         "title": "Branding & Colors",
         "primary": "Primary Color",
@@ -3097,7 +2854,6 @@
         "logoHelp": "For best PDF results, use a direct link to a PNG or JPG image.",
         "logoPreview": "Preview"
       },
-      
       "financials": {
         "title": "Financial Defaults",
         "currency": "Currency",
@@ -3107,7 +2863,6 @@
         "securityDeposit": "Security Deposit (TND)",
         "lateFee": "Late Payment Fee (%)"
       },
-      
       "layout": {
         "title": "PDF Layout",
         "template": "Template Style",
@@ -3115,7 +2870,6 @@
         "showPageNumbers": "Show Page Numbers",
         "showDate": "Show Date"
       },
-      
       "clauses": {
         "title": "Default Clauses",
         "add": "Add Clause",
@@ -3125,7 +2879,6 @@
         "empty": "No default clauses. Click \"Add\" to create your first clause.",
         "dragHint": "Drag to reorder"
       },
-      
       "cancellation": {
         "title": "Cancellation Policy",
         "enabled": "Cancellation Policy Enabled",
@@ -3135,7 +2888,6 @@
         "description": "Description",
         "empty": "No cancellation tiers defined."
       },
-      
       "labels": {
         "title": "Document Labels",
         "contractTitle": "Contract Title",
@@ -3149,12 +2901,10 @@
         "dateLabel": "Date Label",
         "signatureLabel": "Signature Label"
       },
-      
       "preview": {
         "title": "PDF Preview",
         "clickToEdit": "Click areas to edit"
       },
-      
       "messages": {
         "loadError": "Failed to load contract settings",
         "saveSuccess": "Settings saved successfully",
@@ -3307,23 +3057,6 @@
         "loadError": "Failed to load data"
       }
     },
-    "loading": "Loading contracts...",
-    "noResults": "No results found",
-    "actions": {
-      "view": "View",
-      "edit": "Edit",
-      "delete": "Delete",
-      "download": "Download",
-      "clear": "Clear",
-      "clearFilters": "Clear Filters",
-      "cancel": "Cancel"
-    },
-    "table": {
-      "showing": "Showing",
-      "to": "to",
-      "of": "of",
-      "results": "results"
-    },
     "status": {
       "draft": "Draft",
       "sent": "Sent",
@@ -3339,18 +3072,16 @@
     },
     "list": {
       "title": "Contracts",
-      "subtitle": "Manage your agreements ({{count}})",
+      "subtitle": "Manage your agreements",
+      "showingResults": "Showing {{count}} of {{total}} contracts",
       "newPartner": "Partner",
       "newClient": "Contract",
       "searchPlaceholder": "Search contracts...",
       "untitled": "Untitled Contract",
       "unknown": "Unknown Party",
-      "stats": {
-        "total": "Total Contracts",
-        "pending": "Pending Signature",
-        "signed": "Signed",
-        "value": "Total Value"
-      },
+      "noResultsDesc": "No contracts found. Try adjusting your search or filters.",
+      "emptyTitle": "No contracts created yet",
+      "emptyDesc": "Create your first contract to get started. You can choose between a Client contract (for revenue) or a Partner contract (for expenses).",
       "filter": {
         "allStatus": "All Status",
         "allTypes": "All Types"
@@ -3370,8 +3101,6 @@
         "downloadSuccess": "Download started",
         "downloadError": "Failed to download PDF"
       },
-      "emptyTitle": "No contracts created yet",
-      "emptyDesc": "Create your first contract to get started. You can choose between a Client contract (for revenue) or a Partner contract (for expenses).",
       "dialog": {
         "deleteTitle": "Delete Contract",
         "confirm": "Confirm Deletion",

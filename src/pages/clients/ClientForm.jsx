@@ -226,10 +226,7 @@ const ClientForm = ({ client, onSuccess, onCancel }) => {
       case 1:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t("clientForm.sections.personal")}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Basic contact information.</p>
-            </div>
+
             
             <Input
               label={t("clientForm.fields.name")}
@@ -293,7 +290,6 @@ const ClientForm = ({ client, onSuccess, onCancel }) => {
           <div className="space-y-6 animate-fadeIn">
              <div className="text-center mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t("clientForm.sections.address")}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Physical location details.</p>
             </div>
             
             <Input
@@ -319,7 +315,6 @@ const ClientForm = ({ client, onSuccess, onCancel }) => {
           <div className="space-y-6 animate-fadeIn">
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t("clientForm.sections.additional")}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Any additional context.</p>
             </div>
             <Textarea
               label={t("clientForm.fields.notes")}

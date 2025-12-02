@@ -121,137 +121,47 @@
       }
     }
   },
- "dashboard": {
-    "loading": "Chargement du tableau de bord...",
-
-    "today": {
-      "title": "Centre de Commande d'Aujourd'hui",
-      "view_schedule": "Voir le Planning",
-      "events": "Événements Aujourd'hui",
-      "expected_revenue": "Revenu Attendu",
-      "pending_tasks": "Tâches en Attente",
-      "events_list": "Événements d'Aujourd'hui",
-      "guests": "invités"
+   "dashboard": {
+    "title": "Tableau de bord",
+    "welcome_msg": "Voici ce qui se passe dans votre établissement aujourd'hui.",
+    "all_caught_up": "Tout est à jour !",
+    "view_all": "Voir tout",
+    "recent_inflow": "Entrées récentes",
+    "no_payments": "Aucun paiement récent.",
+    "metrics": {
+      "revenue": "Revenu mensuel",
+      "pending": "En attente",
+      "occupancy": "Taux d'occupation",
+      "events_this_month": "Événements ce mois-ci",
+      "conversion": "Conversion prospects",
+      "pending_enquiries": "Demandes en attente",
+      "tasks": "Opérations",
+      "urgent_items": "Éléments urgents"
     },
-
-    "actions": {
-      "title": "Centre d'Action",
-      "overdue_invoices": "{{count}} Factures en Retard",
-      "new_enquiries": "{{count}} Nouvelles Demandes",
-      "urgent_tasks": "{{count}} Tâches Urgentes"
-    },
-
-    "financial": {
-      "title": "Centre de Commande Financier",
-      "cash_position": "Position de Trésorerie",
-      "net_cash": "Trésorerie Nette",
-      "monthly_revenue": "Revenu Mensuel",
-      "vs_last_month": "vs Mois Dernier",
-      "bookings": "Réservations",
-      "conversion": "Conversion",
-      "avg_value": "Valeur Moy. Événement",
-      "per_event": "Par Événement",
-      "cash_flow_details": "Détails du Flux de Trésorerie",
-      "money_in": "Entrées",
-      "money_out": "Sorties",
-      "upcoming": "À Venir",
-      "receivables": "Créances",
-      "payables": "Dettes",
-      "invoice_aging": "Rapport de Vieillissement des Factures",
-      "outstanding": "En Souffrance",
-      "aging_0_30": "0-30 Jours",
-      "aging_31_60": "31-60 Jours",
-      "aging_60_plus": "60+ Jours",
-      "invoices": "factures",
-      "critical": "CRITIQUE",
-      "goals_this_month": "Objectifs de Ce Mois",
-      "revenue": "Revenu",
-      "net": "Net"
-    },
-
-    "calendar": {
-      "title": "Calendrier et Aperçu des Réservations",
-      "occupancy": "Occupation",
-      "occupancy_rate": "Taux d'Occupation",
-      "days_booked": "Jours Réservés",
-      "upcoming_events": "Événements à Venir",
-      "unknown_client": "Client Inconnu",
-      "guests": "Invités",
-      "no_upcoming": "Aucun événement prévu.",
-      "missing_vendors": "Événements Sans Partenaires",
-      "assign_now": "Assigner Maintenant"
-    },
-
-    "performance": {
-      "title": "Métriques de Performance",
-      "tabs": {
-        "revenue": "Revenu",
-        "events": "Événements",
-        "clients": "Clients"
-      },
-      "current_month": "Mois Actuel",
-      "last_month": "Mois Dernier",
-      "growth": "Croissance",
-      "event_breakdown": "Répartition des Événements",
-      "client_retention": "Fidélisation Client",
-      "new_clients": "Nouveaux Clients",
-      "returning_clients": "Clients Fidèles",
-      "avg_ltv": "Valeur Vie Moy.",
-      "sales_pipeline": "Pipeline de Vente",
-      "enquiries": "Demandes",
-      "quoted": "Devis",
-      "confirmed": "Confirmés",
-      "completed": "Complétés",
-      "conversion_rate": "Taux de Conversion"
-    },
-
     "charts": {
-      "current_year": "Année Actuelle",
-      "last_year": "Année Dernière",
+      "revenue_trend": "Tendance des revenus",
+      "event_status": "Statut des événements",
       "total": "Total"
     },
-
-    "insights": {
-      "title": "Aperçus Commerciaux",
-      "response_time": "Temps de Réponse aux Prospects",
-      "avg": "Moy",
-      "average": "Temps de Réponse Moyen",
-      "target": "Objectif",
-      "slowest": "Réponse la Plus Lente",
-      "on_target": "✓ Objectif de temps de réponse atteint",
-      "needs_improvement": "⚠ Le temps de réponse doit être amélioré",
-      "cancellation": "Analyse des Annulations",
-      "rate": "Taux",
-      "cancellation_rate": "Taux d'Annulation",
-      "revenue_lost": "Revenu Perdu",
-      "main_reason": "Raison Principale"
+    "alerts": {
+      "missing_partners": "Partenaires manquants"
     },
-
+    "actions": {
+      "assign": "Assigner"
+    },
+    "upcoming": {
+      "title": "Calendrier à venir",
+      "no_events": "Aucun événement prévu."
+    },
+    "calendar": {
+      "occupancy_view": "Occupation"
+    },
     "leads": {
-      "title": "Prospects en Attente",
-      "unknown": "Client Inconnu",
-      "no_pending": "Aucun prospect en attente"
-    },
-
-    "activity": {
-      "title": "Activité Récente",
-      "payment_received": "Paiement reçu : {{amount}} de {{client}}",
-      "new_booking": "Nouvelle réservation : {{title}}",
-      "no_recent": "Aucune activité récente"
-    },
-
-    "quick_actions": {
-      "title": "Actions Rapides",
-      "new_event": "Nouvel Événement",
-      "add_client": "Ajouter Client",
-      "new_invoice": "Nouvelle Facture",
-      "settings": "Paramètres"
-    },
-
-    "errors": {
-      "fetch_failed": "Échec du chargement des données"
+      "title": "Prospects en attente",
+      "no_leads": "Aucun prospect en attente"
     }
-  },
+  }
+,
   "home": {
     "eventsDesc": "Gestion de calendrier",
     "clientsDesc": "Base de clients",
@@ -263,28 +173,28 @@
     "remindersDesc": "Alertes et notifications",
     "docSettingsDesc": "Mises en page",
     "statsDesc": "Rapports et analyses",
-    "settingsDesc": "Configuration système"
+    "settingsDesc": "Configuration système",
+     "dashboardDesc": "Rapports et analyses"
   },
-  "clients": {
+    "clients": {
     "title": "Clients",
-    "description": "Gérez vos relations et informations clients",
-    "showingCount": "Affichage de {{count}} sur {{total}} clients",
+    "description": "Gérer les relations et les informations de vos clients",
     "buttons": {
-      "addClient": "Ajouter un Client",
-      "addFirstClient": "Ajouter le Premier Client",
+      "addClient": "Ajouter un client",
+      "addFirstClient": "Ajouter le premier client",
       "retry": "Réessayer",
-      "clear": "Effacer les Filtres",
-      "clearAllFilters": "Effacer Tous les Filtres",
+      "clear": "Effacer",
+      "clearAllFilters": "Effacer tous les filtres",
       "cancel": "Annuler",
-      "deleteClient": "Supprimer le Client"
+      "deleteClient": "Supprimer le client"
     },
     "search": {
       "placeholder": "Rechercher des clients...",
       "noResults": "Aucun client trouvé",
-      "noResultsDescription": "Essayez d'ajuster votre recherche ou vos filtres pour trouver ce que vous cherchez"
+      "noResultsDesc": "Nous n'avons trouvé aucun client correspondant à vos filtres actuels."
     },
     "filters": {
-      "allStatus": "Tous les Statuts",
+      "allStatus": "Tous les statuts",
       "activeFilters": "Filtres actifs :",
       "searchLabel": "Recherche : {{search}}",
       "statusLabel": "Statut : {{status}}"
@@ -296,38 +206,34 @@
     "table": {
       "columns": {
         "name": "Nom",
-        "email": "Email",
+        "email": "E-mail",
         "phone": "Téléphone",
         "status": "Statut",
-        "createdAt": "Créé Le",
+        "createdAt": "Créé le",
         "actions": "Actions"
       },
       "defaultValues": {
-        "unnamed": "Client Sans Nom",
-        "noEmail": "Aucun email",
-        "noPhone": "Aucun téléphone",
-        "noDate": "Aucune date"
-      },
-      "actions": {
-        "view": "Voir les Détails",
-        "edit": "Modifier le Client",
-        "delete": "Supprimer le Client"
+        "unnamed": "Client sans nom",
+        "noEmail": "Pas d'e-mail",
+        "noPhone": "Pas de téléphone",
+        "noDate": "Pas de date"
       }
     },
     "loading": {
       "initial": "Chargement des clients...",
-      "retrying": "Nouvelle tentative de chargement..."
+      "retrying": "Tentative de rechargement..."
     },
     "empty": {
-      "title": "Aucun client pour l'instant",
-      "description": "Commencez par ajouter votre premier client au système"
+      "title": "Aucun client pour le moment",
+      "description": "Commencez par ajouter votre premier client. Gérez leurs détails et interactions au même endroit."
     },
     "errors": {
-      "loadingTitle": "Erreur de chargement des clients",
+      "loadingTitle": "Erreur de chargement",
       "loadingDefault": "Échec du chargement des clients. Veuillez réessayer.",
       "invalidId": "ID client invalide"
     },
     "toast": {
+      "showingResults": "Affichage de {{count}} sur {{total}} clients",
       "deleting": "Suppression de {{name}}...",
       "deleteSuccess": "{{name}} supprimé avec succès",
       "deleteError": "Échec de la suppression de {{name}}",
@@ -336,66 +242,78 @@
       "filtersCleared": "Filtres effacés"
     },
     "modal": {
-      "addTitle": "Ajouter un Nouveau Client",
-      "editTitle": "Modifier le Client",
-      "deleteTitle": "Supprimer le Client",
-      "deleteMessage": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action ne peut pas être annulée."
+      "addTitle": "Ajouter un nouveau client",
+      "editTitle": "Modifier le client",
+      "deleteTitle": "Supprimer le client",
+      "deleteMessage": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible."
     }
   },
   "clientForm": {
     "title": {
-      "add": "Ajouter un Nouveau Client",
-      "edit": "Modifier le Client"
+      "add": "Ajouter un client",
+      "edit": "Modifier le client"
     },
     "description": {
       "add": "Créer un nouveau profil client",
       "edit": "Mettre à jour les informations du client"
     },
+    "steps": {
+      "basicInfo": "Infos de base",
+      "address": "Adresse",
+      "notes": "Notes"
+    },
     "sections": {
-      "personal": "Informations Personnelles",
-      "address": "Informations d'Adresse",
-      "additional": "Informations Supplémentaires"
+      "personal": "Informations personnelles",
+      "address": "Adresse",
+      "additional": "Informations supplémentaires"
     },
     "fields": {
-      "name": "Nom Complet",
-      "email": "Adresse Email",
-      "phone": "Numéro de Téléphone",
+      "name": "Nom complet",
+      "email": "Adresse e-mail",
+      "phone": "Numéro de téléphone",
       "company": "Entreprise",
-      "street": "Adresse Complète",
+      "street": "Adresse complète",
       "city": "Ville",
       "state": "État/Province",
-      "zipCode": "Code Postal",
+      "zipCode": "Code postal",
       "country": "Pays",
-      "notes": "Notes Client",
+      "notes": "Notes sur le client",
       "status": "Statut"
     },
     "placeholders": {
-      "name": "ex. Jean Dupont",
+      "name": "ex : Jean Dupont",
       "email": "nom@entreprise.com",
-      "phone": "ex. 12345678",
+      "phone": "ex : 12345678",
       "company": "Entreprise ou organisation",
       "street": "123 Rue Principale",
       "city": "Paris",
-      "state": "IDF",
+      "state": "Île-de-France",
       "zipCode": "75001",
       "country": "France",
-      "notes": "Notes, commentaires ou informations supplémentaires optionnelles sur ce client..."
+      "notes": "Notes facultatives, commentaires ou informations supplémentaires...",
+      "cityPlaceholder": "Nom de la ville",
+      "statePlaceholder": "Nom de la région",
+      "zipCodePlaceholder": "Code postal",
+      "countryPlaceholder": "Nom du pays"
     },
     "errors": {
       "nameRequired": "Le nom complet est requis",
-      "nameMinLength": "Le nom doit contenir au moins 2 caractères",
-      "emailRequired": "L'email est requis",
-      "emailInvalid": "Veuillez entrer une adresse email valide",
+      "nameMinLength": "Le nom doit comporter au moins 2 caractères",
+      "emailRequired": "L'e-mail est requis",
+      "emailInvalid": "Veuillez entrer une adresse e-mail valide",
       "phoneRequired": "Le numéro de téléphone est requis",
       "phoneInvalid": "Le numéro de téléphone doit contenir exactement 8 chiffres",
-      "loading": "Erreur de Chargement du Client",
-      "creating": "Erreur de Création du Client",
-      "saving": "Échec de l'enregistrement du client. Veuillez réessayer."
+      "checkFields": "Veuillez vérifier les champs obligatoires",
+      "loading": "Erreur lors du chargement du client",
+      "creating": "Erreur lors de la création du client",
+      "saving": "Échec de l'enregistrement. Veuillez réessayer."
     },
     "buttons": {
       "cancel": "Annuler",
-      "create": "Créer le Client",
-      "update": "Mettre à Jour le Client",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "create": "Créer le client",
+      "update": "Mettre à jour",
       "creating": "Création...",
       "updating": "Mise à jour..."
     }
@@ -1646,74 +1564,30 @@
   },
   "reminders": {
     "title": "Rappels",
-    "subtitle": "Gérez les notifications, alertes et rappels de suivi.",
-    "showing": "Affichage de {count} sur {total} rappels",
-    "noReminders": "Aucun rappel pour le moment",
-    "noRemindersDesc": "Commencez par créer votre premier rappel.",
-    "noResults": "Aucun rappel trouvé",
-    "noResultsDesc": "Aucun rappel ne correspond à vos critères de recherche ou de filtrage.",
-    "createFirst": "Créer le premier rappel",
+    "subtitle": "Gérez les notifications, alertes et suivis.",
     "addReminder": "Ajouter un rappel",
-    "searchPlaceholder": "Rechercher des rappels par titre ou description...",
+    "createFirst": "Créer le premier rappel",
+    "searchPlaceholder": "Rechercher par titre ou description...",
     "clearFilters": "Effacer les filtres",
-    "activeFilters": "Filtres actifs",
-    "loading": "Chargement des rappels...",
-    "errorLoading": "Erreur de chargement des rappels",
-    "retry": "Réessayer",
+    "noResults": "Aucun rappel trouvé",
+    "noReminders": "Aucun rappel pour le moment",
     "untitled": "Rappel sans titre",
-    "noDescription": "Aucune description",
-    "noDate": "Aucune date",
-    "unknown": "Inconnu",
-    "noRelatedEntities": "Aucune entité associée",
-    "noNotificationMethods": "Aucune méthode de notification configurée",
-    "close": "Fermer",
-    "every": "chaque",
-    "days": "jour(s)",
-    "weeks": "semaine(s)",
-    "months": "mois",
-    "years": "année(s)",
-    "hour": "heure",
-    "hours": "heures",
-    "day": "jour",
-    "backToReminders": "Retour aux rappels",
-    "tryAgain": "Réessayer",
-    "snooze1Hour": "Reporter 1 heure",
-    "markComplete": "Marquer comme terminé",
-    "cancelReminder": "Annuler le rappel",
-    "snoozing": "Report en cours...",
-    "completing": "Marquage comme terminé...",
-    "cancelling": "Annulation en cours...",
-    "deleting": "Suppression en cours...",
-    "loadingDetails": "Chargement des détails du rappel...",
-    "notFound": "Rappel non trouvé",
-    "notFoundDescription": "Le rappel que vous recherchez n'existe pas.",
+    "errorLoading": "Erreur de chargement des rappels",
     "status": {
       "all": "Tous les statuts",
       "active": "Actif",
       "completed": "Terminé",
-      "snoozed": "Reporté",
-      "cancelled": "Annulé",
-      "label": "Statut"
+      "snoozed": "Mis en attente"
     },
     "type": {
-      "all": "Tous les types",
-      "event": "Événement",
-      "payment": "Paiement",
-      "task": "Tâche",
-      "maintenance": "Maintenance",
-      "followup": "Suivi",
-      "other": "Autre",
-      "client": "Client",
-      "general": "Général",
-      "label": "Type"
+      "all": "Tous les types"
     },
     "priority": {
       "all": "Toutes les priorités",
       "urgent": "Urgent",
-      "high": "Élevée",
+      "high": "Haute",
       "medium": "Moyenne",
-      "low": "Basse",
-      "label": "Priorité"
+      "low": "Basse"
     },
     "columns": {
       "title": "Titre",
@@ -1724,147 +1598,34 @@
       "status": "Statut",
       "actions": "Actions"
     },
-    "actions": {
-      "view": "Voir le rappel",
-      "edit": "Modifier le rappel",
-      "delete": "Supprimer le rappel",
-      "snooze": "Reporter le rappel",
-      "unsnooze": "Activer le rappel",
-      "viewDetails": "Voir les détails",
-      "moreDetails": "Plus de détails"
-    },
     "form": {
       "createTitle": "Créer un nouveau rappel",
-      "editTitle": "Modifier le rappel",
-      "createSubtitle": "Configurez des notifications pour les délais importants",
-      "editSubtitle": "Mettre à jour les détails du rappel",
-      "basicInfo": "Informations de base",
-      "relatedItems": "Éléments associés",
-      "notifications": "Notifications",
-      "recurrence": "Paramètres de récurrence",
-      "enableRecurrence": "Activer la récurrence",
-      "intervalPlaceholder": "ex. 1",
-      "fields": {
-        "title": "Titre",
-        "description": "Description",
-        "type": "Type",
-        "priority": "Priorité",
-        "date": "Date",
-        "time": "Heure",
-        "notificationMethods": "Méthodes de notification",
-        "frequency": "Fréquence",
-        "interval": "Intervalle",
-        "daysOfWeek": "Jours de la semaine",
-        "notes": "Notes",
-        "relatedEvent": "Événement associé",
-        "relatedClient": "Client associé",
-        "relatedTask": "Tâche associée",
-        "relatedPayment": "Paiement associé"
-      },
-      "placeholders": {
-        "title": "Entrez le titre du rappel...",
-        "description": "Ajoutez une description pour ce rappel...",
-        "notes": "Ajoutez des notes supplémentaires sur ce rappel...",
-        "selectEvent": "Sélectionnez un événement...",
-        "selectClient": "Sélectionnez un client...",
-        "selectTask": "Sélectionnez une tâche...",
-        "selectPayment": "Sélectionnez un paiement..."
-      },
-      "buttons": {
-        "cancel": "Annuler",
-        "previous": "Précédent",
-        "next": "Suivant",
-        "create": "Créer le rappel",
-        "update": "Mettre à jour le rappel",
-        "updateNow": "Mettre à jour maintenant"
-      }
-    },
-    "details": {
-      "description": "Description",
-      "reminderDetails": "Détails du rappel",
-      "dateTime": "Date et heure",
-      "snoozedUntil": "Reporté jusqu'au",
-      "createdBy": "Créé par",
-      "relatedTo": "Associé à",
-      "recurrence": "Récurrence",
-      "notificationMethods": "Méthodes de notification",
-      "activityHistory": "Historique d'activité",
-      "recurrenceSettings": "Paramètres de récurrence",
-      "tab": "Détails",
-      "reminderInfo": "Informations du rappel",
-      "additionalInfo": "Informations supplémentaires"
+      "editTitle": "Modifier le rappel"
     },
     "modals": {
       "snooze": {
-        "title": "Reporter le rappel",
-        "description": "Combien de temps souhaitez-vous reporter ce rappel ?"
+        "title": "Mettre en attente"
       },
       "delete": {
         "title": "Supprimer le rappel",
-        "description": "Êtes-vous sûr de vouloir supprimer \"{name}\" ? Cette action ne peut pas être annulée et toutes les données associées seront définitivement supprimées.",
-        "confirm": "Supprimer le rappel",
-        "cancel": "Annuler"
+        "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible."
       }
     },
     "notifications": {
+      "showingResults": "Affichage de {{count}} sur {{total}} rappels",
+      "filtersCleared": "Filtres effacés",
       "created": "Rappel créé avec succès",
       "updated": "Rappel mis à jour avec succès",
       "deleted": "Rappel supprimé avec succès",
-      "snoozed": "Rappel reporté de {duration} {unit}",
-      "unsnoozed": "Rappel activé avec succès",
-      "completed": "Rappel marqué comme terminé",
-      "cancelled": "Rappel annulé",
-      "filtersCleared": "Filtres effacés",
-      "loadingReminders": "Nouvelle tentative de chargement des rappels...",
-      "loadingDetails": "Nouvelle tentative de chargement des détails du rappel...",
-      "loadError": "Échec du chargement du rappel",
-      "loadFormError": "Échec du chargement des données du formulaire",
-      "saveError": "Échec de la sauvegarde du rappel",
-      "deleting": "Suppression...",
-      "snoozing": "Report...",
+      "snoozed": "Rappel mis en attente avec succès",
+      "unsnoozed": "Rappel réactivé avec succès",
+      "deleting": "Suppression de {{name}}...",
+      "deleteError": "Échec de la suppression du rappel",
+      "snoozing": "Mise en attente...",
+      "snoozeError": "Échec de la mise en attente",
       "activating": "Activation...",
-      "completing": "Marquage comme terminé...",
-      "cancelling": "Annulation...",
-      "activateError": "Échec de l'activation du rappel",
-      "completeError": "Échec du marquage comme terminé",
-      "cancelError": "Échec de l'annulation du rappel",
-      "snoozeError": "Échec du report du rappel",
-      "deleteError": "Échec de la suppression du rappel"
-    },
-    "validation": {
-      "titleRequired": "Le titre est requis",
-      "dateRequired": "La date est requise",
-      "timeRequired": "L'heure est requise",
-      "taskRequired": "La tâche est requise",
-      "notificationMethodsRequired": "Au moins une méthode de notification est requise",
-      "frequencyRequired": "La fréquence est requise pour les rappels récurrents",
-      "intervalRequired": "L'intervalle doit être d'au moins 1",
-      "daysRequired": "Au moins un jour doit être sélectionné pour la récurrence hebdomadaire",
-      "futureDate": "La date doit être aujourd'hui ou dans le futur",
-      "invalidId": "ID de rappel invalide",
-      "invalidData": "Données de rappel invalides",
-      "fixErrors": "Veuillez corriger les erreurs avant de continuer",
-      "fixAllErrors": "Veuillez corriger tous les champs obligatoires avant la mise à jour",
-      "validationErrors": "Veuillez corriger les erreurs de validation"
-    },
-    "recurrence": {
-      "label": "Récurrent",
-      "endDate": "Date de fin",
-      "dayOfMonth": "Jour du mois",
-      "day": "Jour",
-      "oneTime": "Ceci est un rappel ponctuel (non récurrent)",
-      "daily": "Quotidien",
-      "weekly": "Hebdomadaire",
-      "monthly": "Mensuel",
-      "yearly": "Annuel",
-      "forever": "Toujours"
-    },
-    "history": {
-      "comingSoon": "L'historique d'activité sera implémenté dans la prochaine phase"
-    },
-    "search": "Recherche",
-    "yes": "Oui",
-    "loadingForm": "Loading Form"
+      "activateError": "Échec de l'activation du rappel"
+    }
   },
   "payments": {
     "title": "Paiements",
@@ -3184,122 +2945,110 @@
     "financial": "Financier",
     "management": "Gestion"
   },
-
   "contracts": {
     "settings": {
-      "title": "Paramètres des Contrats",
+      "title": "Paramètres des contrats",
       "subtitle": "Configuration globale pour tous les contrats",
       "loading": "Chargement des paramètres...",
-      "save": "Enregistrer",
-      
+      "save": "Enregistrer les modifications",
       "tabs": {
-        "company": "Société",
+        "company": "Infos entreprise",
         "structure": "Structure & ID",
-        "branding": "Identité Visuelle",
+        "branding": "Marque",
         "financials": "Finances",
-        "layout": "Mise en Page",
+        "layout": "Mise en page",
         "clauses": "Clauses",
         "cancellation": "Annulation",
-        "labels": "Libellés"
+        "labels": "Étiquettes"
       },
-      
       "company": {
-        "title": "Informations de la Société",
-        "legalName": "Raison Sociale",
-        "displayName": "Nom Commercial",
+        "title": "Informations de l'entreprise",
+        "legalName": "Raison sociale",
+        "displayName": "Nom d'affichage",
         "matriculeFiscale": "Matricule Fiscale",
-        "address": "Adresse du Siège",
+        "address": "Adresse",
         "phone": "Téléphone",
-        "email": "Email",
-        "website": "Site Web",
-        "rib": "RIB / IBAN",
-        "bankName": "Nom de la Banque",
-        "representative": "Représentant Légal (Gérant)"
+        "email": "E-mail",
+        "website": "Site web",
+        "rib": "Compte bancaire (RIB/IBAN)",
+        "bankName": "Nom de la banque",
+        "representative": "Représentant légal"
       },
-      
       "structure": {
-        "title": "Configuration de la Séquence",
-        "preview": "Aperçu du Prochain Numéro",
+        "title": "Configuration de la séquence",
+        "preview": "Aperçu du prochain numéro",
         "prefix": "Préfixe",
         "separator": "Séparateur",
-        "includeYear": "Inclure l'Année",
-        "yearFormat": "Format de l'Année",
-        "sequenceDigits": "Nombre de Zéros (Padding)",
-        "sequenceDigitsHelp": "Exemple : 4 donne « 0001 », 3 donne « 001 ».",
-        "resetYearly": "Réinitialiser la séquence chaque année",
-        "resetYearlyHelp": "La numérotation recommence à 0001 au 1er janvier"
+        "includeYear": "Inclure l'année",
+        "yearFormat": "Format de l'année",
+        "sequenceDigits": "Zéros de remplissage",
+        "sequenceDigitsHelp": "Exemple : 4 donne \"0001\", 3 donne \"001\".",
+        "resetYearly": "Réinitialiser la séquence annuellement",
+        "resetYearlyHelp": "La numérotation redémarre à 0001 le 1er janvier"
       },
-      
       "branding": {
-        "title": "Identité Visuelle & Couleurs",
-        "primary": "Couleur Principale",
-        "secondary": "Couleur Secondaire",
-        "accent": "Couleur d'Accent",
-        "text": "Couleur du Texte",
-        "background": "Couleur de Fond",
+        "title": "Marque et couleurs",
+        "primary": "Couleur principale",
+        "secondary": "Couleur secondaire",
+        "accent": "Couleur d'accentuation",
+        "text": "Couleur du texte",
+        "background": "Couleur d'arrière-plan",
         "logo": "Logo",
-        "logoUrl": "URL du Logo (HTTPS)",
+        "logoUrl": "URL du logo (HTTPS)",
         "logoHelp": "Pour de meilleurs résultats PDF, utilisez un lien direct vers une image PNG ou JPG.",
         "logoPreview": "Aperçu"
       },
-      
       "financials": {
-        "title": "Paramètres Financiers",
+        "title": "Valeurs financières par défaut",
         "currency": "Devise",
-        "vatRate": "Taux TVA par Défaut (%)",
-        "stampDuty": "Timbre Fiscal (TND)",
-        "depositPercentage": "Acompte Requis (%)",
-        "securityDeposit": "Caution de Garantie (TND)",
-        "lateFee": "Pénalité de Retard (%)"
+        "vatRate": "Taux de TVA par défaut (%)",
+        "stampDuty": "Droit de timbre (TND)",
+        "depositPercentage": "Acompte requis (%)",
+        "securityDeposit": "Dépôt de garantie (TND)",
+        "lateFee": "Frais de retard (%)"
       },
-      
       "layout": {
-        "title": "Mise en Page PDF",
-        "template": "Style du Template",
-        "paperSize": "Format du Papier",
-        "showPageNumbers": "Afficher les Numéros de Page",
-        "showDate": "Afficher la Date"
+        "title": "Mise en page PDF",
+        "template": "Style de modèle",
+        "paperSize": "Format de papier",
+        "showPageNumbers": "Afficher les numéros de page",
+        "showDate": "Afficher la date"
       },
-      
       "clauses": {
-        "title": "Clauses par Défaut",
-        "add": "Ajouter une Clause",
-        "articleTitle": "Titre de l'Article",
+        "title": "Clauses par défaut",
+        "add": "Ajouter une clause",
+        "articleTitle": "Titre de l'article",
         "content": "Contenu de la clause...",
         "required": "Obligatoire",
-        "empty": "Aucune clause par défaut. Cliquez sur « Ajouter » pour créer votre première clause.",
-        "dragHint": "Glissez pour réorganiser"
+        "empty": "Aucune clause par défaut. Cliquez sur \"Ajouter\" pour créer votre première clause.",
+        "dragHint": "Glisser pour réorganiser"
       },
-      
       "cancellation": {
-        "title": "Politique d'Annulation",
-        "enabled": "Politique d'Annulation Activée",
-        "add": "Ajouter un Palier",
-        "daysBeforeEvent": "Jours Avant (Min)",
+        "title": "Politique d'annulation",
+        "enabled": "Politique d'annulation activée",
+        "add": "Ajouter un palier",
+        "daysBeforeEvent": "Jours avant (Min)",
         "penaltyPercentage": "Pénalité (%)",
         "description": "Description",
         "empty": "Aucun palier d'annulation défini."
       },
-      
       "labels": {
-        "title": "Libellés du Document",
-        "contractTitle": "Titre du Contrat",
-        "partiesTitle": "Titre de la Section Parties",
-        "serviceProvider": "Libellé du Prestataire",
-        "clientLabel": "Libellé du Client",
-        "partnerLabel": "Libellé du Partenaire",
-        "servicesTitle": "Titre de la Section Services",
-        "paymentTitle": "Titre de la Section Paiement",
-        "signaturesTitle": "Titre de la Section Signatures",
-        "dateLabel": "Libellé de la Date",
-        "signatureLabel": "Libellé de la Signature"
+        "title": "Étiquettes du document",
+        "contractTitle": "Titre du contrat",
+        "partiesTitle": "Titre de la section parties",
+        "serviceProvider": "Étiquette du prestataire",
+        "clientLabel": "Étiquette du client",
+        "partnerLabel": "Étiquette du partenaire",
+        "servicesTitle": "Titre de la section services",
+        "paymentTitle": "Titre de la section paiement",
+        "signaturesTitle": "Titre de la section signatures",
+        "dateLabel": "Étiquette de la date",
+        "signatureLabel": "Étiquette de la signature"
       },
-      
       "preview": {
         "title": "Aperçu PDF",
-        "clickToEdit": "Cliquez pour modifier"
+        "clickToEdit": "Cliquez sur les zones pour modifier"
       },
-      
       "messages": {
         "loadError": "Échec du chargement des paramètres",
         "saveSuccess": "Paramètres enregistrés avec succès",
@@ -3328,103 +3077,103 @@
         "inactiveDesc": "Ce contrat n'est plus actif."
       },
       "sections": {
-        "party": "Détails du Tiers",
+        "party": "Détails de la partie",
         "logistics": "Logistique & Dates",
-        "services": "Prestations & Services",
+        "services": "Services & Tarification",
         "signatures": "Signatures",
-        "financial": "Résumé Financier",
-        "legal": "Juridique"
+        "financial": "Résumé financier",
+        "legal": "Termes juridiques"
       },
       "fields": {
-        "name": "Nom / Raison Sociale",
-        "contact": "Contact / Représentant",
+        "name": "Nom / Entreprise",
+        "contact": "Contact",
         "taxId": "Matricule Fiscale / CIN",
         "phone": "Téléphone",
-        "email": "Email",
+        "email": "E-mail",
         "address": "Adresse",
-        "start": "Date Début",
-        "end": "Date Fin",
-        "from": "À partir de",
-        "until": "Jusqu'à",
+        "start": "Date de début",
+        "end": "Date de fin",
+        "from": "De",
+        "until": "À",
         "description": "Description",
         "qty": "Qté",
-        "rate": "Prix Unitaire",
+        "rate": "Taux",
         "totalHT": "Total HT",
         "vat": "TVA",
-        "stamp": "Timbre Fiscal",
-        "netTTC": "Net à Payer",
-        "deposit": "Avance Requise",
-        "security": "Caution",
+        "stamp": "Droit de timbre",
+        "netTTC": "Total Net",
+        "deposit": "Acompte requis",
+        "security": "Dépôt de garantie",
         "jurisdiction": "Juridiction",
-        "cancellation": "Politique Annulation",
-        "special": "Note Spéciale"
+        "cancellation": "Politique d'annulation",
+        "special": "Conditions particulières"
       },
       "signatures": {
-        "venue": "Le Prestataire",
-        "client": "Le Client / Partenaire",
-        "signedOn": "Le",
-        "pending": "En attente de signature",
+        "venue": "Prestataire",
+        "client": "Client / Partenaire",
+        "signedOn": "Signé le",
+        "pending": "Signature en attente",
         "electronic": "Signé électroniquement"
       },
       "dialog": {
         "deleteTitle": "Supprimer le contrat",
         "sendTitle": "Envoyer le contrat",
-        "deleteMsg": "Êtes-vous sûr de vouloir supprimer ce contrat ? Il sera déplacé dans les archives.",
-        "sendMsg": "Envoyer ce contrat par email pour signature ?",
+        "deleteMsg": "Êtes-vous sûr de vouloir supprimer ce contrat ? Il sera déplacé vers les archives.",
+        "sendMsg": "Envoyer ce contrat par e-mail pour signature ?",
         "confirmDelete": "Supprimer",
         "confirmSend": "Envoyer"
       },
       "messages": {
-        "loadError": "Impossible de charger le contrat",
-        "duplicateSuccess": "Contrat dupliqué",
+        "loadError": "Échec du chargement du contrat",
+        "duplicateSuccess": "Contrat dupliqué avec succès",
         "downloadStart": "Génération du PDF...",
-        "downloadSuccess": "Téléchargement terminé",
+        "downloadSuccess": "Téléchargement démarré",
         "deleteSuccess": "Contrat supprimé",
-        "sendSuccess": "Contrat envoyé"
+        "sendSuccess": "Contrat envoyé avec succès"
       }
     },
     "form": {
       "title": {
-        "create": "Créer Contrat",
-        "edit": "Modifier Contrat"
+        "create": "Créer un contrat",
+        "edit": "Modifier le contrat"
       },
       "steps": {
-        "parties": "Tiers",
-        "dates": "Dates",
-        "finance": "Finance",
-        "legal": "Légal"
+        "parties": "Parties",
+        "dates": "Logistique",
+        "finance": "Finances",
+        "legal": "Juridique"
       },
       "types": {
         "client": "Client",
         "partner": "Partenaire"
       },
       "search": {
-        "label": "Rechercher",
-        "placeholderClient": "Chercher un client...",
-        "placeholderPartner": "Chercher un partenaire..."
+        "label": "Recherche",
+        "placeholderClient": "Rechercher un client...",
+        "placeholderPartner": "Rechercher un partenaire..."
       },
       "party": {
-        "title": "Détails Tiers",
-        "name": "Nom / Raison Sociale",
-        "identifier": "M.F / CIN",
+        "title": "Détails de la partie",
+        "name": "Nom / Raison sociale",
+        "identifier": "Matricule Fiscale / CIN",
         "phone": "Téléphone",
         "address": "Adresse",
-        "contractTitle": "Titre de l'accord",
-        "contractTitlePlaceholder": "Ex: Mariage X...",
-        "rateType": "Tarif"
+        "contractTitle": "Titre du contrat",
+        "contractTitlePlaceholder": "Ex : Mariage M. et Mme X...",
+        "rateType": "Type de tarif"
       },
       "logistics": {
-        "start": "Début",
-        "end": "Fin",
-        "checkIn": "Heure Début",
-        "checkOut": "Heure Fin",
-        "eventLink": "Lier à un événement (Optionnel)",
+        "start": "Date de début",
+        "end": "Date de fin",
+        "checkIn": "Heure d'arrivée",
+        "checkOut": "Heure de départ",
+        "eventLink": "Lien vers l'événement (Facultatif)",
         "select": "Sélectionner..."
       },
       "financials": {
-        "title": "Détails Financiers",
-        "partnerMode": "Mode Partenaire : Saisissez les tarifs convenus. Ce document servira d'accord de compensation.",
-        "add": "AJOUTER",
+        "title": "Détails financiers",
+        "partnerMode": "Mode Partenaire : Entrez les tarifs convenus. Ce document sert d'accord de compensation.",
+        "add": "Ajouter un article",
         "description": "Description",
         "qty": "Qté",
         "price": "Prix",
@@ -3432,42 +3181,25 @@
         "vat": "TVA",
         "stamp": "Timbre",
         "totalTTC": "Total TTC",
-        "deposit": "Avance (TND)"
+        "deposit": "Acompte (TND)"
       },
       "legal": {
         "jurisdiction": "Juridiction",
-        "specialConditions": "Conditions Spéciales",
+        "specialConditions": "Conditions particulières",
         "specialConditionsPlaceholder": "Ajouter des clauses spécifiques...",
         "warning": "Vérifiez toutes les informations sur l'aperçu avant d'enregistrer."
       },
       "nav": {
-        "back": "Précédent",
+        "back": "Retour",
         "next": "Suivant",
         "save": "Enregistrer",
         "update": "Mettre à jour"
       },
       "messages": {
         "saveSuccess": "Contrat enregistré avec succès !",
-        "error": "Erreur lors de l'enregistrement",
-        "loadError": "Erreur de chargement des données"
+        "error": "Une erreur est survenue",
+        "loadError": "Échec du chargement des données"
       }
-    },
-    "loading": "Chargement des contrats...",
-    "noResults": "Aucun résultat trouvé",
-    "actions": {
-      "view": "Voir",
-      "edit": "Modifier",
-      "delete": "Supprimer",
-      "download": "Télécharger",
-      "clear": "Effacer",
-      "clearFilters": "Effacer les filtres",
-      "cancel": "Annuler"
-    },
-    "table": {
-      "showing": "Affichage de",
-      "to": "à",
-      "of": "sur",
-      "results": "résultats"
     },
     "status": {
       "draft": "Brouillon",
@@ -3484,43 +3216,60 @@
     },
     "list": {
       "title": "Contrats",
-      "subtitle": "Gérez vos accords ({{count}})",
+      "subtitle": "Gérez vos accords",
+      "showingResults": "Affichage de {{count}} sur {{total}} contrats",
       "newPartner": "Partenaire",
       "newClient": "Contrat",
       "searchPlaceholder": "Rechercher des contrats...",
       "untitled": "Contrat sans titre",
-      "unknown": "Tiers inconnu",
-      "stats": {
-        "total": "Total Contrats",
-        "pending": "En attente de signature",
-        "signed": "Signés",
-        "value": "Valeur Totale"
-      },
+      "unknown": "Partie inconnue",
+      "noResultsDesc": "Aucun contrat trouvé. Essayez d'ajuster votre recherche ou vos filtres.",
+      "emptyTitle": "Aucun contrat créé pour le moment",
+      "emptyDesc": "Créez votre premier contrat pour commencer. Vous pouvez choisir entre un contrat Client (pour les revenus) ou un contrat Partenaire (pour les dépenses).",
       "filter": {
         "allStatus": "Tous les statuts",
         "allTypes": "Tous les types"
       },
       "columns": {
-        "info": "Infos Contrat",
+        "info": "Info contrat",
         "status": "Statut",
-        "party": "Tiers / Événement",
-        "amount": "Montant",
+        "party": "Partie / Événement",
+        "amount": "Valeur",
         "actions": "Actions"
       },
       "messages": {
         "deleting": "Suppression...",
         "deleteSuccess": "Contrat supprimé",
-        "deleteError": "Échec de la suppression",
+        "deleteError": "Échec de la suppression du contrat",
         "downloadStart": "Préparation du téléchargement...",
-        "downloadSuccess": "Téléchargement lancé",
+        "downloadSuccess": "Téléchargement démarré",
         "downloadError": "Échec du téléchargement du PDF"
       },
-      "emptyTitle": "Aucun contrat créé",
-      "emptyDesc": "Créez votre premier contrat pour commencer. Vous pouvez choisir entre un contrat Client (revenus) ou un contrat Partenaire (dépenses).",
       "dialog": {
         "deleteTitle": "Supprimer le contrat",
         "confirm": "Confirmer la suppression",
         "deleteMsg": "Êtes-vous sûr de vouloir supprimer \"{{title}}\" ? Cette action est irréversible."
+      }
+    },
+    "documents": {
+      "hub": {
+        "title": "Configuration des documents",
+        "subtitle": "Personnalisez le design, la structure et le contenu de vos documents commerciaux.",
+        "configureNow": "Configurer maintenant",
+        "contracts": {
+          "title": "Contrats",
+          "desc": "Définissez les termes juridiques, les clauses et la marque pour les accords clients et partenaires.",
+          "feat1": "Marque et couleurs personnalisées",
+          "feat2": "Clauses juridiques et juridiction",
+          "feat3": "Sérialisation (CTR-001)"
+        },
+        "invoices": {
+          "title": "Factures",
+          "desc": "Configurez les préférences de facturation, les taux de taxe et les instructions de paiement.",
+          "feat1": "Taux de taxe et devise",
+          "feat2": "Détails bancaires et conditions",
+          "feat3": "Sérialisation (INV-001)"
+        }
       }
     }
   },

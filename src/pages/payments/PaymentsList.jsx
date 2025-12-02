@@ -584,11 +584,9 @@ const PaymentsList = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {t("payments.title")}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+      <p className="text-gray-500 dark:text-gray-400">
             {t("payments.subtitle")}
-            {hasInitialLoad &&
-              totalCount > 0 &&
-              ` • ${t("payments.notifications.showingResults", { count: payments.length, total: totalCount })}`}
+            { /*hasInitialLoad && totalCount > 0 &&` • ${t("payments.notifications.showingResults", { count: payments.length, total: totalCount })}`*/}
           </p>
         </div>
 
