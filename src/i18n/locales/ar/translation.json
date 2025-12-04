@@ -589,7 +589,8 @@
     "tabs": {
       "partners": "الشركاء",
       "payments": "المدفوعات",
-      "activity": "النشاط"
+      "activity": "النشاط",
+      "supplies": "المواد"
     },
     "errors": {
       "notFound": "الحدث غير موجود",
@@ -597,7 +598,9 @@
       "notFoundDescription": "الحدث الذي تبحث عنه غير موجود.",
       "edit": "تعذر تعديل الحدث: المعرف غير موجود",
       "delete": "تعذر حذف الحدث: المعرف غير موجود",
-      "payment": "تعذر تسجيل الدفع: المعرف غير موجود"
+      "payment": "تعذر تسجيل الدفع: المعرف غير موجود",
+      "pdfGeneration": "فشل في إنشاء ملف PDF",
+      "loadSupplies": "فشل في تحميل المواد"
     },
     "actions": {
       "backToEvents": "العودة للفعاليات",
@@ -613,6 +616,17 @@
       "message": "هل أنت متأكد من رغبتك في حذف \"{{eventTitle}}\"؟ لا يمكن التراجع عن هذا الإجراء وسيتم حذف جميع البيانات المرتبطة به.",
       "confirmText": "حذف الحدث",
       "cancelText": "إلغاء"
+    },
+      "supplies": {
+      "listTitle": "مواد الحدث",
+      "totalEstimatedCost": "التكلفة الإجمالية المقدرة",
+      "noDataToExport": "لا توجد بيانات للتصدير",
+      "emptyTitle": "لم يتم تخصيص أي مواد",
+      "emptyDesc": "المواد المخصصة لهذا الحدث عبر الخدمات اللوجستية أو المهام ستظهر هنا.",
+      "manageInventory": "إدارة المخزون"
+    },
+    "notifications": {
+      "pdfGenerated": "تم تحميل ملف PDF بنجاح"
     }
   },
   "eventActivityTab": {
@@ -2054,13 +2068,15 @@
     "card": "البطاقة"
   },
   "common": {
-      "viewDetails": "View Details",
-  "confirmDelete": "Confirm Delete",
+    "exportPDF": "تصدير PDF",
+    "updateNow":"تحديث الآن",
+    "update":"تحديث",
+    "viewDetails": "تفاصيل",
+  "confirmDelete": "تأكيد الحذف",
     "restore":"استعادة",
     "archive":"أرشفة",
     "markComplete":"",
     "markIncomplete":"",
-    "update":"تعديل",
     "searchPlaceholder": "ابحث عن أي شيء...",
     "pax": "أشخاص",
     "guests": "ضيوف",

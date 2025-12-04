@@ -457,7 +457,11 @@ const EventList = () => {
   const showNoResults =
     !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
   const showData = !loading && hasInitialLoad && events.length > 0;
-
+  const handleRetry = useCallback(() => {
+    setError(null);
+    refreshAllData();
+    showInfo(t("eventList.notifications.retrying"));
+  }, [refreshAllData, showInfo, t]);
   // --- CRUD Handlers ---
   const handleDeleteEvent = useCallback((event) => {
     setEventToDelete(event);

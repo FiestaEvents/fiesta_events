@@ -1,4 +1,3 @@
-// src/pages/Supplies/SupplyDetail.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -9,11 +8,16 @@ import {
   Package,
   TrendingUp,
   TrendingDown,
-  AlertCircle,
+  AlertTriangle,
   DollarSign,
   Calendar,
   Archive,
   RefreshCw,
+  History,
+  Truck,
+  MapPin,
+  Info,
+  X,
 } from "lucide-react";
 
 // API & Hooks
@@ -23,13 +27,11 @@ import { useToast } from "../../hooks/useToast";
 // Components
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
-import Card from "../../components/common/Card";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Modal from "../../components/common/Modal";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
-import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 const SupplyDetail = () => {
   const { t } = useTranslation();
@@ -43,7 +45,7 @@ const SupplyDetail = () => {
   const [showStockModal, setShowStockModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [stockAction, setStockAction] = useState({
-    type: "purchase", // purchase, usage, adjustment, return, waste
+    type: "purchase",
     quantity: "",
     reference: "",
     notes: "",
@@ -51,39 +53,55 @@ const SupplyDetail = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // Fetch Supply
-  useEffect(() => {
-    fetchSupply();
-  }, [id]);
-
   const fetchSupply = async () => {
     try {
       setLoading(true);
       const response = await supplyService.getById(id);
       setSupply(response.supply || response);
     } catch (error) {
-      console.error(error);
-      apiError(error, "Failed to load supply");
+      apiError(error, t("supplies.errors.loadFailed"));
+      navigate("/supplies");
     } finally {
       setLoading(false);
     }
   };
 
-// Stock Status
+  useEffect(() => {
+    fetchSupply();
+  }, [id]);
+
+  // Stock Status Helper
   const getStockStatus = () => {
     if (!supply) return null;
-    if (supply.currentStock === 0) 
-      return { label: t("supplies.status.outOfStock"), variant: "danger", icon: AlertCircle };
-    if (supply.currentStock <= supply.minimumStock) 
-      return { label: t("supplies.status.lowStock"), variant: "warning", icon: AlertCircle };
-    if (supply.currentStock >= supply.maximumStock) 
-      return { label: t("supplies.status.overstocked"), variant: "info", icon: TrendingUp };
-    return { label: t("supplies.status.inStock"), variant: "success", icon: Package };
+    if (supply.currentStock === 0)
+      return {
+        label: t("supplies.status.outOfStock"),
+        variant: "danger",
+        icon: AlertTriangle,
+      };
+    if (supply.currentStock <= supply.minimumStock)
+      return {
+        label: t("supplies.status.lowStock"),
+        variant: "warning",
+        icon: AlertTriangle,
+      };
+    if (supply.currentStock >= supply.maximumStock)
+      return {
+        label: t("supplies.status.overstocked"),
+        variant: "info",
+        icon: TrendingUp,
+      };
+    return {
+      label: t("supplies.status.inStock"),
+      variant: "success",
+      icon: Package,
+    };
   };
 
   // Update Stock
-   const handleStockUpdate = async () => {
+  const handleStockUpdate = async () => {
     if (!stockAction.quantity || stockAction.quantity <= 0) {
-      apiError(new Error(t("supplies.modal.invalidQty")), "Validation Error"); 
+      apiError(new Error("Invalid Quantity"), t("supplies.modal.invalidQty"));
       return;
     }
 
@@ -96,29 +114,30 @@ const SupplyDetail = () => {
         notes: stockAction.notes,
       });
 
-      showSuccess(t("supplies.modal.success"));
+      showSuccess(t("supplies.notifications.stockUpdated"));
       setShowStockModal(false);
-      setStockAction({ type: "purchase", quantity: "", reference: "", notes: "" });
+      setStockAction({
+        type: "purchase",
+        quantity: "",
+        reference: "",
+        notes: "",
+      });
       fetchSupply();
     } catch (error) {
-      apiError(error, t("supplies.modal.error"));
+      apiError(error, t("supplies.notifications.updateError"));
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Calculate new stock level for preview
   const getNewStockLevel = () => {
     if (!supply || !stockAction.quantity) return supply?.currentStock || 0;
-    
     const qty = parseInt(stockAction.quantity);
-    if (stockAction.type === "purchase" || stockAction.type === "return") {
+    if (stockAction.type === "purchase" || stockAction.type === "return")
       return supply.currentStock + qty;
-    } else if (stockAction.type === "usage" || stockAction.type === "waste") {
+    if (stockAction.type === "usage" || stockAction.type === "waste")
       return supply.currentStock - qty;
-    } else if (stockAction.type === "adjustment") {
-      return qty; // Adjustment sets absolute value
-    }
+    if (stockAction.type === "adjustment") return qty;
     return supply.currentStock;
   };
 
@@ -126,75 +145,66 @@ const SupplyDetail = () => {
   const handleDelete = async () => {
     try {
       await supplyService.delete(id);
-      showSuccess(t("supplies.modal.deleted"));
+      showSuccess(t("supplies.notifications.deleted"));
       navigate("/supplies");
     } catch (error) {
-      apiError(error, t("supplies.modal.error"));
+      apiError(error, t("supplies.notifications.deleteError"));
     }
   };
 
-  const handleArchive = async () => {
+  const handleArchiveToggle = async () => {
     try {
-      await supplyService.archive(id);
-      showSuccess(t("supplies.modal.archived"));
+      if (supply.isArchived) await supplyService.restore(id);
+      else await supplyService.archive(id);
+
+      showSuccess(
+        supply.isArchived
+          ? t("supplies.notifications.restored")
+          : t("supplies.notifications.archived")
+      );
       fetchSupply();
     } catch (error) {
-      apiError(error, t("supplies.modal.error"));
+      apiError(error, t("common.error"));
     }
   };
 
-  const handleRestore = async () => {
-    try {
-      await supplyService.restore(id);
-      showSuccess(t("supplies.modal.restored"));
-      fetchSupply();
-    } catch (error) {
-      apiError(error, t("supplies.modal.error"));
-    }
-  };
-
-  if (loading) {
+  if (loading)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" message="Loading supply..." />
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
       </div>
     );
-  }
+  if (!supply) return null;
 
-  if (!supply) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Supply Not Found</h2>
-          <Button onClick={() => navigate("/supplies")}>
-            Back to Supplies
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const stockStatus = getStockStatus();
+  const stockInfo = getStockStatus();
   const totalValue = supply.currentStock * supply.costPerUnit;
-  const StatusIcon = stockStatus.icon;
 
   return (
-    <div className="min-h-full bg-white rounded-lg p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              icon={ArrowLeft}
               onClick={() => navigate("/supplies")}
+              className="p-2 h-auto"
             >
-              Back
+              <ArrowLeft size={20} />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{supply.name}</h1>
-              <p className="text-gray-500 mt-1">{supply.categoryId?.name || "Uncategorized"}</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                {supply.name}
+                <Badge
+                  variant={stockInfo.variant}
+                  icon={<stockInfo.icon size={12} />}
+                >
+                  {stockInfo.label}
+                </Badge>
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {supply.categoryId?.name || t("supplies.status.uncategorized")}
+              </p>
             </div>
           </div>
 
@@ -204,362 +214,326 @@ const SupplyDetail = () => {
               icon={Edit}
               onClick={() => navigate(`/supplies/${id}/edit`)}
             >
-              Edit
+              {t("common.edit")}
             </Button>
-            
-            {supply.isArchived ? (
-              <Button
-                variant="outline"
-                icon={RefreshCw}
-                onClick={handleRestore}
-              >
-                Restore
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                icon={Archive}
-                onClick={handleArchive}
-              >
-                Archive
-              </Button>
-            )}
-
+            <Button
+              variant="outline"
+              icon={supply.isArchived ? RefreshCw : Archive}
+              onClick={handleArchiveToggle}
+            >
+              {supply.isArchived ? t("common.restore") : t("common.archive")}
+            </Button>
             <Button
               variant="danger"
               icon={Trash2}
               onClick={() => setShowDeleteConfirm(true)}
             >
-              Delete
+              {t("common.delete")}
             </Button>
           </div>
         </div>
 
-        {/* Status Banner */}
-        {supply.isArchived && (
-          <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 flex items-center gap-3">
-            <Archive className="text-gray-600" size={20} />
-            <p className="text-gray-800 font-medium">
-              This supply is archived. Restore it to make it available for events.
-            </p>
-          </div>
-        )}
-
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Package className="text-blue-600" size={24} />
-              <Badge variant={stockStatus.variant} className="flex items-center gap-1">
-                <StatusIcon size={12} />
-                {stockStatus.label}
-              </Badge>
-            </div>
-           <h3 className="text-2xl font-bold text-gray-900">
-              {supply.currentStock} {supply.unit}
-            </h3>
-            <p className="text-sm text-gray-500">{t("supplies.detail.currentStock")}</p> 
-            <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
-              Min: {supply.minimumStock} • Max: {supply.maximumStock}
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className="text-green-600" size={24} />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900">
-              {totalValue.toFixed(3)} TND
-            </h3>
-            <p className="text-sm text-gray-500">{t("supplies.detail.totalValue")}</p>
-            <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
-              {supply.costPerUnit.toFixed(3)} TND per {supply.unit}
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              {supply.pricingType === "chargeable" ? (
-                <TrendingUp className="text-orange-600" size={24} />
-              ) : (
-                <TrendingDown className="text-gray-400" size={24} />
-              )}
-              <Badge variant={supply.pricingType === "chargeable" ? "success" : "secondary"}>
-                {supply.pricingType}
-              </Badge>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900">
-              {supply.pricingType === "chargeable" 
-                ? `${supply.chargePerUnit.toFixed(3)} TND`
-                : "Included"
-              }
-            </h3>
-            <p className="text-sm text-gray-500">{t("supplies.detail.clientCharge")}</p>
-            {supply.pricingType === "chargeable" && (
-              <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-green-600">
-                Margin: {((supply.chargePerUnit - supply.costPerUnit) * 100 / supply.costPerUnit).toFixed(1)}%
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+                <Package size={24} />
               </div>
-            )}
-          </Card>
-
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Badge variant={supply.status === "active" ? "success" : "secondary"}>
-                {supply.status}
-              </Badge>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {supply.currentStock}{" "}
+                  <span className="text-sm font-normal text-gray-500">
+                    {supply.unit}
+                  </span>
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Min: {supply.minimumStock} / Max: {supply.maximumStock}
+                </p>
+              </div>
             </div>
             <Button
-              className="w-full mt-2"
               variant="primary"
+              className="w-full"
               onClick={() => setShowStockModal(true)}
             >
               {t("supplies.detail.updateStock")}
             </Button>
-          </Card>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
-            <Card>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
-              <dl className="grid grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Name</dt>
-                  <dd className="mt-1 text-sm text-gray-900 font-semibold">{supply.name}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Category</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{supply.categoryId?.name || "N/A"}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Unit</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{supply.unit}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Status</dt>
-                  <dd className="mt-1">
-                    <Badge variant={supply.status === "active" ? "success" : "secondary"}>
-                      {supply.status}
-                    </Badge>
-                  </dd>
-                </div>
-              </dl>
-            </Card>
-
-            {/* Supplier Information */}
-            {supply.supplier?.name && (
-              <Card>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Supplier Information</h3>
-                <dl className="grid grid-cols-2 gap-4">
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Supplier Name</dt>
-                    <dd className="mt-1 text-sm text-gray-900 font-semibold">{supply.supplier.name}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Contact Person</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{supply.supplier.contact || "N/A"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Phone</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{supply.supplier.phone || "N/A"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Email</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{supply.supplier.email || "N/A"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Lead Time</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{supply.supplier.leadTimeDays || 0} days</dd>
-                  </div>
-                </dl>
-              </Card>
-            )}
-
-            {/* Storage & Handling */}
-            <Card>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Storage & Handling</h3>
-              <dl className="grid grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Storage Location</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{supply.storage?.location || "Not specified"}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Refrigeration</dt>
-                  <dd className="mt-1">
-                    <Badge variant={supply.storage?.requiresRefrigeration ? "warning" : "secondary"}>
-                      {supply.storage?.requiresRefrigeration ? "Required" : "Not Required"}
-                    </Badge>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Expiry Tracking</dt>
-                  <dd className="mt-1">
-                    <Badge variant={supply.storage?.expiryTracking ? "info" : "secondary"}>
-                      {supply.storage?.expiryTracking ? "Enabled" : "Disabled"}
-                    </Badge>
-                  </dd>
-                </div>
-                {supply.storage?.expiryTracking && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Shelf Life</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{supply.storage?.shelfLife || 0} days</dd>
-                  </div>
-                )}
-              </dl>
-            </Card>
-
-            {/* Notes */}
-            {supply.notes && (
-              <Card>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Notes</h3>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{supply.notes}</p>
-              </Card>
-            )}
           </div>
 
-          {/* Right Column - Stock History */}
-          <div className="space-y-6">
-            <Card>
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Calendar className="text-orange-600" size={20} />
-                Stock History
-              </h3>
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
+                <DollarSign size={20} />
+              </div>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t("supplies.detail.totalValue")}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {totalValue.toFixed(3)} TND
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {supply.costPerUnit.toFixed(3)} TND / {supply.unit}
+            </p>
+          </div>
 
-              {supply.stockHistory && supply.stockHistory.length > 0 ? (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {supply.stockHistory
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .slice(0, 20)
-                    .map((entry, index) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-gray-50 rounded-lg border border-gray-200"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge
-                            variant={
-                              entry.type === "purchase" || entry.type === "return"
-                                ? "success"
-                                : "danger"
-                            }
-                            size="sm"
-                          >
-                            {entry.type}
-                          </Badge>
-                          <span className="text-xs text-gray-500">
-                            {new Date(entry.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {entry.type === "purchase" || entry.type === "return" ? "+" : "-"}
-                          {entry.quantity} {supply.unit}
-                        </p>
-                        {entry.notes && (
-                          <p className="text-xs text-gray-600 mt-1">{entry.notes}</p>
-                        )}
-                        {entry.reference && (
-                          <p className="text-xs text-gray-500 mt-1">Ref: {entry.reference}</p>
-                        )}
-                      </div>
-                    ))}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className={`p-2 rounded-lg ${supply.pricingType === "chargeable" ? "bg-orange-50 text-orange-600" : "bg-gray-100 text-gray-600"} dark:bg-gray-700`}
+              >
+                {supply.pricingType === "chargeable" ? (
+                  <TrendingUp size={20} />
+                ) : (
+                  <TrendingDown size={20} />
+                )}
+              </div>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t("supplies.form.pricingType")}
+              </span>
+            </div>
+            <p className="text-xl font-bold text-gray-900 dark:text-white capitalize">
+              {supply.pricingType}
+            </p>
+            {supply.pricingType === "chargeable" && (
+              <p className="text-xs text-green-600 mt-1">
+                Margin:{" "}
+                {(
+                  ((supply.chargePerUnit - supply.costPerUnit) * 100) /
+                  supply.costPerUnit
+                ).toFixed(1)}
+                %
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Info Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left: Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Supplier Info */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Truck size={18} /> {t("supplies.form.supplier")}
+              </h3>
+              <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Name</p>
+                  <p className="text-sm font-medium dark:text-white">
+                    {supply.supplier?.name || "-"}
+                  </p>
                 </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Contact</p>
+                  <p className="text-sm font-medium dark:text-white">
+                    {supply.supplier?.contact || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Phone</p>
+                  <p className="text-sm font-medium dark:text-white">
+                    {supply.supplier?.phone || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Lead Time</p>
+                  <p className="text-sm font-medium dark:text-white">
+                    {supply.supplier?.leadTimeDays || 0} Days
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Storage Info */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <MapPin size={18} /> {t("supplies.form.storage")}
+              </h3>
+              <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Location</p>
+                  <p className="text-sm font-medium dark:text-white">
+                    {supply.storage?.location || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Shelf Life</p>
+                  <p className="text-sm font-medium dark:text-white">
+                    {supply.storage?.shelfLife || 0} Days
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">
+                    Refrigeration
+                  </p>
+                  <Badge
+                    variant={
+                      supply.storage?.requiresRefrigeration
+                        ? "warning"
+                        : "secondary"
+                    }
+                  >
+                    {supply.storage?.requiresRefrigeration ? "Required" : "No"}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Stock History */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col h-full">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <History size={18} /> History
+            </h3>
+
+            <div className="flex-1 overflow-y-auto max-h-[400px] space-y-3 pr-1 custom-scrollbar">
+              {supply.stockHistory && supply.stockHistory.length > 0 ? (
+                supply.stockHistory
+                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  .map((entry, i) => (
+                    <div
+                      key={i}
+                      className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600"
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <Badge
+                          size="xs"
+                          variant={
+                            ["purchase", "return"].includes(entry.type)
+                              ? "success"
+                              : "danger"
+                          }
+                        >
+                          {entry.type}
+                        </Badge>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                          {new Date(entry.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium dark:text-gray-300">
+                          {entry.notes || "No notes"}
+                        </span>
+                        <span
+                          className={`text-sm font-bold ${["purchase", "return"].includes(entry.type) ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {["purchase", "return"].includes(entry.type)
+                            ? "+"
+                            : "-"}
+                          {entry.quantity}
+                        </span>
+                      </div>
+                    </div>
+                  ))
               ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <Calendar className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p className="text-sm">No stock history yet</p>
+                <div className="text-center py-10 text-gray-400">
+                  No history available
                 </div>
               )}
-            </Card>
+            </div>
           </div>
         </div>
-
-        {/* Stock Update Modal */}
-        <Modal
-          open={showStockModal}
-          onClose={() => setShowStockModal(false)}
-          title={t("supplies.modal.title")}
-          size="md"
-        >
-           <div className="space-y-4">
-            <Select
-              label={t("supplies.modal.actionType")}
-              value={stockAction.type}
-              onChange={(e) => setStockAction({ ...stockAction, type: e.target.value })}
-              options={[
-                { value: "purchase", label: t("supplies.stockActions.purchase") },
-                { value: "usage", label: t("supplies.stockActions.usage") },
-                { value: "adjustment", label: t("supplies.stockActions.adjustment") },
-                { value: "return", label: t("supplies.stockActions.return") },
-                { value: "waste", label: t("supplies.stockActions.waste") },
-              ]}
-            />
-
-            <Input
-              label={t("supplies.modal.quantity")}
-              type="number"
-              min="1"
-              value={stockAction.quantity}
-              onChange={(e) => setStockAction({ ...stockAction, quantity: e.target.value })}
-              required
-              help={`Current stock: ${supply.currentStock} ${supply.unit}`}
-            />
-
-            <Input
-              label={t("supplies.modal.reference")}
-              placeholder="e.g., Invoice #123, Event ID"
-              value={stockAction.reference}
-              onChange={(e) => setStockAction({ ...stockAction, reference: e.target.value })}
-            />
-
-            <Textarea
-              label={t("supplies.modal.notes")}
-              placeholder="Additional details about this stock update..."
-              rows={3}
-              value={stockAction.notes}
-              onChange={(e) => setStockAction({ ...stockAction, notes: e.target.value })}
-            />
-
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <span className="font-bold">New Stock Level:</span>{" "}
-                {getNewStockLevel()}{" "}
-                {supply.unit}
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <Button
-                variant="outline"
-                onClick={() => setShowStockModal(false)}
-              >
-                {t("supplies.modal.cancel")}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleStockUpdate}
-                loading={submitting}
-              >
-                {t("supplies.modal.updateStock")}
-              </Button>
-            </div>
-          </div>
-        </Modal>
-
-        {/* Delete Confirmation */}
-        <ConfirmDialog
-          open={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={handleDelete}
-          title={t("supplies.delete.title")}
-          description={t("supplies.delete.description")}
-          confirmText={t("supplies.delete.confirmText")}
-          cancelText={t("supplies.delete.cancelText")}
-          variant="danger"
-        />
       </div>
+
+      {/* Stock Update Modal */}
+      <Modal
+        open={showStockModal}
+        onClose={() => setShowStockModal(false)}
+        title={t("supplies.modal.title")}
+        size="sm"
+      >
+        <div className="space-y-4 p-4">
+          <Select
+            label={t("supplies.modal.actionType")}
+            value={stockAction.type}
+            onChange={(e) =>
+              setStockAction({ ...stockAction, type: e.target.value })
+            }
+            options={[
+              { value: "purchase", label: "Purchase" },
+              { value: "usage", label: "Usage" },
+              { value: "adjustment", label: "Adjustment" },
+              { value: "return", label: "Return" },
+              { value: "waste", label: "Waste" },
+            ]}
+          />
+          <Input
+            label={t("supplies.modal.quantity")}
+            type="number"
+            min="1"
+            value={stockAction.quantity}
+            onChange={(e) =>
+              setStockAction({ ...stockAction, quantity: e.target.value })
+            }
+          />
+          <Input
+            label={t("supplies.modal.reference")}
+            placeholder="Reference #"
+            value={stockAction.reference}
+            onChange={(e) =>
+              setStockAction({ ...stockAction, reference: e.target.value })
+            }
+          />
+          <Textarea
+            label={t("supplies.modal.notes")}
+            placeholder="Notes..."
+            rows={2}
+            value={stockAction.notes}
+            onChange={(e) =>
+              setStockAction({ ...stockAction, notes: e.target.value })
+            }
+          />
+
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800 text-center">
+            <span className="text-sm text-blue-800 dark:text-blue-300">
+              New Stock: <strong>{getNewStockLevel()}</strong>
+            </span>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowStockModal(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleStockUpdate}
+              loading={submitting}
+            >
+              {t("common.save")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title={t("supplies.delete.title")}
+        size="sm"
+      >
+        <div className="p-6 text-center">
+          <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+            <AlertTriangle />
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            {t("supplies.delete.confirmMessage", { name: supply.name })}
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              {t("common.delete")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

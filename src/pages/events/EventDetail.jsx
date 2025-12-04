@@ -2,14 +2,14 @@ import React, { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { 
-  Loader2, 
   AlertTriangle, 
   ArrowLeft,
   Users,
   CreditCard,
-  Activity
+  Activity,
+  Package,
 } from "lucide-react";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ API & Services
 import { eventService } from "../../api/index";
 import { useEventDetail } from "../../hooks/useEventDetail";
@@ -26,7 +26,7 @@ import EventInfo from "./components/EventInfo";
 import EventPartnersTab from "./components/EventPartnersTab";
 import EventPaymentsTab from "./components/EventPaymentsTab";
 import EventActivityTab from "./components/EventActivityTab";
-
+import EventSuppliesTab from "./components/EventSuppliesTab"; 
 const EventDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -148,7 +148,7 @@ const handleEditEvent = useCallback(() => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
+          <OrbitLoader className="w-12 h-12 text-orange-600 animate-spin" />
           <p className="text-gray-600 dark:text-gray-400">
             {t("eventDetail.loading")}
           </p>
@@ -196,6 +196,7 @@ const handleEditEvent = useCallback(() => {
   const tabs = [
     { id: "partners", label: t("eventDetail.tabs.partners"), icon: Users },
     { id: "payments", label: t("eventDetail.tabs.payments"), icon: CreditCard },
+    { id: "supplies", label: t("eventDetail.tabs.supplies"), icon: Package },
     { id: "activity", label: t("eventDetail.tabs.activity"), icon: Activity },
   ];
 
@@ -259,7 +260,9 @@ const handleEditEvent = useCallback(() => {
                     onNavigateToPartner={handleNavigateToPartner}
                   />
                 )}
-
+              {activeTab === "supplies" && (
+                  <EventSuppliesTab event={eventData} />
+                )}
                 {activeTab === "payments" && (
                   <EventPaymentsTab
                     payments={payments || []}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Loader2, AlertCircle, Globe, ChevronDown, Check } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Globe, ChevronDown, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { useAuth } from "../../context/AuthContext";
@@ -8,6 +8,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import useToast from "../../hooks/useToast";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 
 // --- Internal Language Switcher ---
 const AuthLanguageSwitcher = () => {
@@ -129,7 +130,7 @@ const Login = () => {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-10">
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-12 w-12 text-orange-500 animate-spin" />
+            <OrbitLoader className="h-12 w-12 text-orange-500 animate-spin" />
             <p className="mt-4 text-gray-600">{t("common.loading")}</p>
           </div>
         </div>

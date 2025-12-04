@@ -703,7 +703,8 @@
     "tabs": {
       "partners": "Partenaires",
       "payments": "Paiements",
-      "activity": "Activité"
+      "activity": "Activité",
+      "supplies": "Fournitures"
     },
     "errors": {
       "notFound": "Événement introuvable",
@@ -711,7 +712,9 @@
       "notFoundDescription": "L'événement que vous recherchez n'existe pas.",
       "edit": "Impossible de modifier : ID d'événement introuvable",
       "delete": "Impossible de supprimer : ID d'événement introuvable",
-      "payment": "Impossible d'enregistrer le paiement : ID introuvable"
+      "payment": "Impossible d'enregistrer le paiement : ID introuvable",
+      "pdfGeneration": "Échec de la génération du PDF",
+      "loadSupplies": "Échec du chargement des fournitures"
     },
     "actions": {
       "backToEvents": "Retour aux événements",
@@ -727,6 +730,17 @@
       "message": "Êtes-vous sûr de vouloir supprimer \"{{eventTitle}}\" ? Cette action est irréversible et supprimera toutes les données associées.",
       "confirmText": "Supprimer",
       "cancelText": "Annuler"
+    },
+        "supplies": {
+      "listTitle": "Fournitures de l'événement",
+      "totalEstimatedCost": "Coût Total Estimé",
+      "noDataToExport": "Aucune donnée à exporter",
+      "emptyTitle": "Aucune fourniture allouée",
+      "emptyDesc": "Les fournitures allouées à cet événement via la logistique ou les tâches apparaîtront ici.",
+      "manageInventory": "Gérer l'inventaire"
+    },    
+    "notifications": {
+      "pdfGenerated": "PDF téléchargé avec succès"
     }
   },
   "eventActivityTab": {
@@ -2226,6 +2240,12 @@
     }
   },
   "common": {
+    "exportPDF": "Exporter PDF",
+    "update":"Mettre à jour",
+    "updateNow":"Mettre à jour maintenant",
+    "select":"Selectionner",
+    "active":"Actif",
+    "inactive":"Inactif",
     "viewDetails": "Voir les détails",
     "confirmDelete": "Confirmer la suppression",
     "restore":"Restaurer",
@@ -3518,123 +3538,112 @@
       }
     }
   },
-"supplies": {
-    "title": "Gestion des Stocks",
-    "subtitle": "Gérez votre inventaire, suivez les niveaux de stock et organisez l'équipement",
-    "itemsCount": "articles",
-    "errors": {
-      "loadFailed": "Échec du chargement des données"
-    },
-    "delete": {
-      "title": "Supprimer l'article",
-      "loading": "Suppression en cours...",
-      "success": "Article supprimé avec succès",
-      "error": "Échec de la suppression",
-      "confirmMessage": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible."
-    },
+  "supplies": {
+    "title": "Fournitures",
+    "subtitle": "Gérer l'inventaire, suivre les stocks et surveiller les coûts",
     "buttons": {
-      "addSupply": "Ajouter un article"
+      "addSupply": "Ajouter"
+    },
+    "stats": {
+      "totalValue": "Valeur Totale",
+      "lowStock": "Stock Faible",
+      "outOfStock": "Rupture de Stock",
+      "totalItems": "Total Articles"
     },
     "filters": {
       "search": "Rechercher...",
-      "allCategories": "Toutes catégories",
-      "allStock": "Tous niveaux",
-      "lowStock": "Stock faible",
-      "outOfStock": "Rupture de stock"
+      "allCategories": "Toutes Catégories",
+      "allStock": "Tous Niveaux",
+      "lowStock": "Stock Faible",
+      "outOfStock": "Rupture"
     },
     "table": {
-      "name": "Nom de l'article",
-      "stock": "Niveau de stock",
+      "name": "Nom",
+      "stock": "Stock",
       "value": "Valeur",
       "status": "Statut",
-      "uncategorized": "Non classé"
+      "category": "Catégorie"
     },
     "status": {
-      "outOfStock": "Rupture de stock",
-      "lowStock": "Stock faible",
+      "inStock": "En Stock",
+      "lowStock": "Faible",
+      "outOfStock": "Rupture",
       "overstocked": "Surstocké",
-      "inStock": "En stock"
+      "discontinued": "Arrêté",
+      "uncategorized": "Non catégorisé"
     },
-    "stats": {
-      "totalValue": "Valeur totale",
-      "lowStock": "Stock faible",
-      "outOfStock": "Rupture de stock",
-      "totalItems": "Total articles"
-    },
-    "empty": {
-      "title": "Aucun article trouvé",
-      "description": "Commencez par ajouter votre premier article pour suivre l'inventaire et les coûts."
+    "statuses": {
+      "active": "Actif",
+      "inactive": "Inactif",
+      "discontinued": "Arrêté"
     },
     "pagination": {
-      "info": "Affichage de {{start}} à {{end}} sur {{total}} résultats",
-      "perPage": "Par page :",
-      "showing": "Affichage",
+      "showing": "Affichage de",
       "to": "à",
       "of": "sur",
-      "results": "résultats"
+      "results": "résultats",
+      "perPage": "Par page :"
     },
-    "create": {
-      "title": "Nouvel Article",
-      "subtitle": "Ajouter un nouvel article à votre inventaire"
+    "empty": {
+      "title": "Aucune fourniture trouvée",
+      "description": "Commencez par ajouter votre première fourniture pour suivre votre inventaire.",
+      "searchDescription": "Essayez d'ajuster votre recherche ou vos filtres."
     },
-    "edit": {
-      "title": "Modifier l'Article",
-      "subtitle": "Mettre à jour les informations et détails de stock"
+    "delete": {
+      "title": "Supprimer la fourniture",
+      "confirmMessage": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible.",
+      "loading": "Suppression...",
+      "success": "Fourniture supprimée avec succès",
+      "error": "Échec de la suppression"
     },
     "form": {
-      "basicInfo": "Informations de base",
-      "name": "Nom de l'article",
+      "createTitle": "Ajouter Fourniture",
+      "editTitle": "Modifier Fourniture",
+      "steps": {
+        "basicInfo": "Infos de Base",
+        "inventory": "Inventaire",
+        "supplier": "Fournisseur"
+      },
+      "name": "Nom de la Fourniture",
       "category": "Catégorie",
-      "unit": "Unité de mesure",
+      "newCategory": "Nouv.",
+      "createCategory": "Créer",
+      "cancel": "Annuler",
+      "unit": "Unité",
       "status": "Statut",
-      "inventory": "Gestion des stocks",
-      "currentStock": "Stock actuel",
-      "minimumStock": "Stock minimum",
-      "maximumStock": "Stock maximum",
-      "pricing": "Tarification",
-      "costPerUnit": "Coût par unité (Salle)",
-      "pricingType": "Type de tarification",
-      "chargePerUnit": "Prix facturé (Client)",
-      "supplier": "Informations Fournisseur (Optionnel)",
-      "supplierName": "Nom du fournisseur",
+      "currentStock": "Stock Actuel",
+      "minimumStock": "Stock Minimum",
+      "maximumStock": "Stock Maximum",
+      "lowStockWarning": "Avertissement Stock Faible",
+      "lowStockDesc": "Le stock actuel est inférieur ou égal au seuil minimum.",
+      "costPerUnit": "Coût Unitaire",
+      "pricingType": "Type de Prix",
+      "chargePerUnit": "Prix Client",
+      "profitMargin": "Marge Bénéficiaire",
+      "supplierName": "Nom du Fournisseur",
       "supplierContact": "Contact",
       "supplierPhone": "Téléphone",
       "supplierEmail": "Email",
-      "leadTime": "Délai de livraison (Jours)",
-      "storage": "Stockage et Manutention",
-      "storageLocation": "Lieu de stockage",
-      "shelfLife": "Durée de conservation (Jours)",
-      "requiresRefrigeration": "Nécessite réfrigération",
-      "expiryTracking": "Suivi des dates d'expiration",
-      "notes": "Notes supplémentaires",
-      "selectCategory": "Sélectionner une catégorie",
-      "newCategory": "Nouveau",
-      "categoryNamePlaceholder": "Nom de la catégorie",
-      "profitMargin": "Marge bénéficiaire",
-      "lowStockWarning": "Alerte Stock Faible",
-      "lowStockDesc": "Le stock actuel est au seuil minimum ou en dessous",
-      "createCategory": "Créer une catégorie",
-      "cancel": "Annuler",
-      "new": "Nouveau",
-      "save": "Enregistrer",
-      "edit": "Modifier",
-      "delete": "Supprimer",
-      "active": "Actif",
-      "inactive": "Inactif",
-      "discontinued": "Discontinué",
-      "included": "Inclus (Gratuit pour le client)",
-      "chargeable": "Facturable",
-      "optional": "Optionnel"
+      "leadTime": "Délai (Jours)",
+      "storageLocation": "Lieu de Stockage",
+      "shelfLife": "Durée de Conservation (Jours)",
+      "requiresRefrigeration": "Réfrigération Requise",
+      "expiryTracking": "Suivi de Péremption",
+      "notes": "Notes Supplémentaires",
+      "supplier": "Information Fournisseur",
+      "storage": "Stockage & Manutention",
+      "pricing": "Tarification",
+      "inventory": "Gestion des Stocks"
     },
     "units": {
       "piece": "Pièce",
       "bottle": "Bouteille",
       "pack": "Paquet",
       "box": "Boîte",
-      "kg": "Kilogramme (kg)",
-      "g": "Gramme (g)",
-      "liter": "Litre (L)",
-      "ml": "Millilitre (ml)",
+      "kg": "Kilogramme",
+      "g": "Gramme",
+      "liter": "Litre",
+      "ml": "Millilitre",
       "dozen": "Douzaine",
       "serving": "Portion",
       "can": "Canette",
@@ -3644,84 +3653,28 @@
       "unit": "Unité"
     },
     "pricingTypes": {
-      "included": "Inclus (Gratuit pour le client)",
+      "included": "Inclus",
       "chargeable": "Facturable",
       "optional": "Optionnel"
     },
-    "statuses": {
-      "active": "Actif",
-      "inactive": "Inactif",
-      "discontinued": "Discontinué"
+    "validation": {
+      "nameRequired": "Le nom est requis",
+      "categoryRequired": "La catégorie est requise",
+      "unitRequired": "L'unité est requise",
+      "negativeStock": "Le stock ne peut pas être négatif",
+      "negativeCost": "Le coût ne peut pas être négatif"
     },
-    "messages": {
-      "createSuccess": "Article créé avec succès",
-      "updateSuccess": "Article mis à jour avec succès",
-      "categoryCreated": "Catégorie créée avec succès",
-      "validationError": "Erreur de validation",
-      "nameRequired": "Le nom de l'article est requis",
-      "categoryRequired": "La catégorie est requise"
+    "notifications": {
+      "created": "Fourniture créée avec succès",
+      "updated": "Fourniture mise à jour avec succès",
+      "loadError": "Erreur de chargement des données",
+      "categoryCreateError": "Échec de la création de la catégorie"
     },
-    "detail": {
-      "notFound": "Article non trouvé",
-      "backToSupplies": "Retour aux stocks",
-      "archivedMessage": "Cet article est archivé. Restaurez-le pour le rendre disponible.",
-      "basicInfo": "Informations de base",
-      "supplierInfo": "Informations fournisseur",
-      "storageInfo": "Stockage et Manutention",
-      "notes": "Notes supplémentaires",
-      "currentStock": "Stock actuel",
-      "totalValue": "Valeur totale",
-      "clientCharge": "Prix client",
-      "margin": "Marge",
-      "per": "par",
-      "leadTime": "Délai livraison",
-      "days": "jours",
-      "shelfLife": "Durée conservation",
-      "refrigeration": "Réfrigération",
-      "expiryTracking": "Suivi expiration",
-      "required": "Requis",
-      "notRequired": "Non requis",
-      "enabled": "Activé",
-      "disabled": "Désactivé",
-      "notSpecified": "Non spécifié",
-      "na": "N/A",
-      "updateStock": "Mettre à jour le stock",
-      "cancelBtn": "Annuler",
-      "deleteBtn": "Supprimer",
-      "deleteModal": {
-        "title": "Supprimer le stock",
-        "description": "Êtes-vous sûr de vouloir supprimer ce stock ?",
-        "confirmBtn": "Supprimer",
-        "cancelBtn": "Annuler"
-      }
-
+    "details": {
+      "inventoryInfo": "Informations d'Inventaire"
     },
-    "history": {
-      "title": "Historique des stocks",
-      "empty": "Aucun historique",
-      "ref": "Réf"
-    },
-    "stockActions": {
-      "purchase": "Achat (Ajout stock)",
-      "usage": "Utilisation (Retrait stock)",
-      "adjustment": "Ajustement (Définir montant exact)",
-      "return": "Retour d'événement",
-      "waste": "Perte/Dommage"
-    },
-    "modal": {
-      "title": "Mettre à jour le stock",
-      "actionType": "Type d'action",
-      "quantity": "Quantité",
-      "reference": "Référence (Optionnel)",
-      "notes": "Notes (Optionnel)",
-      "newLevel": "Nouveau niveau de stock",
-      "updateBtn": "Mettre à jour",
-      "success": "Stock mis à jour avec succès",
-      "invalidQty": "Veuillez entrer une quantité valide"
-    },
-    "archive": {
-      "success": "Article archivé avec succès",
-      "restoreSuccess": "Article restauré avec succès"
+    "errors": {
+      "loadFailed": "Échec du chargement de la liste"
     }
   }
 }

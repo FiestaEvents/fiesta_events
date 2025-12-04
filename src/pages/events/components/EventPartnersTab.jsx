@@ -4,13 +4,12 @@ import {
   ExternalLink,
   Briefcase,
   DollarSign,
-  Loader2,
   Clock,
   CheckCircle2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatCurrency } from "../../../utils/formatCurrency";
-
+import OrbitLoader from "../../../components/common/LoadingSpinner";
 // ✅ Generic Components
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
@@ -21,7 +20,7 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-orange-600 animate-spin mb-3" />
+        <OrbitLoader className="w-8 h-8 text-orange-600 animate-spin mb-3" />
         <p className="text-gray-500 dark:text-gray-400">
           {t("eventPartnersTab.loading")}
         </p>

@@ -127,7 +127,7 @@ const AppRoutes = () => {
   // Center the spinner for the initial load
   const LoadingFallback = () => (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
-      <LoadingSpinner size="lg" />
+      <OrbitLoader size="lg" />
     </div>
   );
 

@@ -2816,7 +2816,7 @@ export const contractService = {
   },
 
   /**
-   * ✅ NEW: Download PDF
+   * Download PDF
    * Endpoint: GET /api/contracts/:id/download
    * Note: We use responseType: 'blob' to handle binary file data
    */
@@ -3266,6 +3266,19 @@ export const supplyService = {
       type: "adjustment",
       notes: reason,
     });
+  },
+    /**
+   * Get supplies allocated to a specific event
+   * @param {string} eventId 
+   */
+  getByEvent: async (eventId) => {
+    try {
+      // Assuming backend supports ?event=ID or a specific endpoint
+      const response = await api.get(`/supplies`, { params: { event: eventId } });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
   },
 };
 

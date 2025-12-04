@@ -7,13 +7,12 @@ import {
   User, 
   Calendar,
   CheckSquare,
-  Loader2
 } from 'lucide-react';
 
 // ✅ Services & Hooks
 import { taskService } from '../../../api/index';
 import { useToast } from '../../../context/ToastContext';
-
+import OrbitLoader from '../../../components/common/LoadingSpinner';
 const SubtasksTab = ({ task, progress, completedSubtasks, totalSubtasks, formatShortDate, refreshData }) => {
   const { t } = useTranslation();
   const { showError } = useToast();
@@ -100,7 +99,7 @@ const SubtasksTab = ({ task, progress, completedSubtasks, totalSubtasks, formatS
                   {/* Checkbox Icon / Loader */}
                   <div className="mt-0.5 flex-shrink-0">
                     {isToggling ? (
-                      <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />
+                      <OrbitLoader className="w-5 h-5 text-purple-500 animate-spin" />
                     ) : (
                       <div className={`transition-colors ${
                         subtask.completed ? "text-green-500" : "text-gray-300 dark:text-gray-600 group-hover:text-purple-500"

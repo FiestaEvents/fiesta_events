@@ -1,13 +1,35 @@
-const LoadingSpinner = ({ size = "medium" }) => {
-  const sizeClasses = {
-    sm: "w-6 h-6",
-    md: "w-10 h-10",
-    lg: "w-16 h-16",
+import React from "react";
+import { motion } from "framer-motion";
+
+const OrbitLoader = ({ size = "medium" }) => {
+  const sizes = {
+    sm: "w-12 h-12 text-2xl",
+    medium: "w-20 h-20 text-4xl",
+    large: "w-32 h-32 text-6xl",
   };
+
   return (
-    <div
-      className={`${sizeClasses[size]} border-4 border-orange-500 border-t-transparent rounded-full animate-spin`}
-    ></div>
+    <div className={`relative flex items-center justify-center ${sizes[size]}`}>
+      {/* Outer Ring */}
+      <motion.span
+        className="absolute inset-0 rounded-full border-4 border-t-orange-500 border-r-orange-500 border-b-orange-100 border-l-orange-100"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+      />
+      
+      {/* Inner Ring (Reverse spin) */}
+      <motion.span
+        className="absolute inset-2 rounded-full border-4 border-t-orange-100 border-r-orange-100 border-b-orange-400 border-l-orange-400 opacity-80"
+        animate={{ rotate: -360 }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+      />
+
+      {/* The F Logo */}
+      <div className="relative z-10 font-black text-orange-600 select-none pb-1 pr-1" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
+        F
+      </div>
+    </div>
   );
 };
-export default LoadingSpinner;
+
+export default OrbitLoader;

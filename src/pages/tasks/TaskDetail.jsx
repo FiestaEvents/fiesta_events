@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { 
   ArrowLeft, 
-  Loader2, 
   AlertTriangle,
   FileText,
   ListTodo,
@@ -11,7 +10,7 @@ import {
   Paperclip,
   History
 } from "lucide-react";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ API & Services
 import { taskService } from "../../api/index";
 import { useTaskDetail } from "../../hooks/useTaskDetail";
@@ -199,7 +198,7 @@ const formatShortDate = useCallback((date) => {
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <Loader2 className="w-10 h-10 text-orange-500 animate-spin mb-4" />
+        <OrbitLoader className="w-10 h-10 text-orange-500 animate-spin mb-4" />
         <p className="text-gray-500 dark:text-gray-400 font-medium">{t('tasks.detail.loading')}</p>
       </div>
     );

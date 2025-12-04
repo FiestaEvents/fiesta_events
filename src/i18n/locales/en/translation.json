@@ -214,9 +214,16 @@
     "lowStockAlerts": "Low Stock Alerts"
   },
   "common": { 
-     "home":"Home",
-     "create":"Create",
-      "sidebar": {
+    "exportPDF": "Export PDF",
+    "updateNow":"Update Now",
+    "update":"Update",
+    "viewDetails":"View Details",
+    "confirmDelete":"Confirm Delete",
+    "markComplete":"Mark Complete",
+    "markIncomplete":"Mark Incomplete",
+    "home":"Home",
+    "create":"Create",
+    "sidebar": {
       "overview": "Overview",
       "operations": "Operations",
       "financial": "Financial",
@@ -683,7 +690,8 @@
     "tabs": {
       "partners": "Partners",
       "payments": "Payments",
-      "activity": "Activity"
+      "activity": "Activity",
+      "supplies": "Supplies"
     },
     "errors": {
       "notFound": "Event not found",
@@ -691,7 +699,9 @@
       "notFoundDescription": "The event you are looking for does not exist.",
       "edit": "Unable to edit event: Event ID not found",
       "delete": "Unable to delete event: Event ID not found",
-      "payment": "Unable to record payment: Event ID not found"
+      "payment": "Unable to record payment: Event ID not found",
+      "pdfGeneration": "Failed to generate PDF",
+      "loadSupplies": "Failed to load event supplies"
     },
     "actions": {
       "backToEvents": "Back to Events",
@@ -707,8 +717,20 @@
       "message": "Are you sure you want to delete \"{{eventTitle}}\"? This action cannot be undone and will delete all associated data.",
       "confirmText": "Delete Event",
       "cancelText": "Cancel"
+    },
+    "supplies": {
+      "listTitle": "Event Supplies",
+      "totalEstimatedCost": "Total Estimated Cost",
+      "noDataToExport": "No data to export",
+      "emptyTitle": "No Supplies Allocated",
+      "emptyDesc": "Supplies allocated to this event via logistics or tasks will appear here.",
+      "manageInventory": "Manage Inventory"
+    },
+    "notifications": {
+      "pdfGenerated": "PDF downloaded successfully"
     }
   },
+  
   "eventActivityTab": {
     "title": "Activity Timeline",
     "subtitle": "Track all changes and updates to this event",
@@ -3181,6 +3203,9 @@
     "title": "Supplies Management",
     "subtitle": "Manage your inventory, track stock levels, and organize equipment",
     "itemsCount": "items",
+    "buttons": {
+      "addSupply": "Add Supply"
+    },
     "errors": {
       "loadFailed": "Failed to load supplies data"
     },
@@ -3190,9 +3215,6 @@
       "success": "Supply deleted successfully",
       "error": "Failed to delete supply",
       "confirmMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
-    },
-    "buttons": {
-      "addSupply": "Add Supply"
     },
     "filters": {
       "search": "Search supplies...",
@@ -3206,23 +3228,21 @@
       "stock": "Stock Level",
       "value": "Value",
       "status": "Status",
-      "uncategorized": "Uncategorized"
+      "uncategorized": "Uncategorized",
+      "category": "Category"
     },
     "status": {
       "outOfStock": "Out of Stock",
       "lowStock": "Low Stock",
       "overstocked": "Overstocked",
-      "inStock": "In Stock"
+      "inStock": "In Stock",
+      "uncategorized": "Uncategorized"
     },
     "stats": {
       "totalValue": "Total Value",
       "lowStock": "Low Stock",
       "outOfStock": "Out of Stock",
       "totalItems": "Total Items"
-    },
-    "empty": {
-      "title": "No supplies found",
-      "description": "Get started by adding your first supply item to track inventory and costs."
     },
     "pagination": {
       "info": "Showing {{start}} to {{end}} of {{total}} results",
@@ -3240,10 +3260,22 @@
       "title": "Edit Supply",
       "subtitle": "Update supply information and inventory details"
     },
+     "statuses": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "discontinued": "Discontinued"
+    },
     "form": {
-      "basicInfo": "Basic Information",
+      "createTitle": "Add Supply",
+      "editTitle": "Edit Supply",
+      "steps": {
+        "basicInfo": "Basic Info",
+        "inventory": "Inventory",
+        "supplier": "Supplier"
+      },
       "name": "Supply Name",
       "category": "Category",
+      "basicInfo": "Basic Information",
       "unit": "Unit of Measurement",
       "status": "Status",
       "inventory": "Inventory Management",
@@ -3306,11 +3338,6 @@
       "included": "Included (Free to client)",
       "chargeable": "Chargeable",
       "optional": "Optional"
-    },
-    "statuses": {
-      "active": "Active",
-      "inactive": "Inactive",
-      "discontinued": "Discontinued"
     },
     "messages": {
       "createSuccess": "Supply created successfully",
@@ -3377,14 +3404,31 @@
         "cancelBtn": "Cancel"
       }
     },
+    "validation": {
+      "nameRequired": "Supply name is required",
+      "categoryRequired": "Category is required",
+      "unitRequired": "Unit is required",
+      "negativeStock": "Stock cannot be negative",
+      "negativeCost": "Cost cannot be negative"
+    },
+    "notifications": {
+      "created": "Supply created successfully",
+      "updated": "Supply updated successfully",
+      "loadError": "Failed to load supply data",
+      "categoryCreateError": "Failed to create category"
+    },
+    "details": {
+      "inventoryInfo": "Inventory Information"
+    },
+
     "archive": {
       "success": "Supply archived successfully",
       "restoreSuccess": "Supply restored successfully"
     },
-    "delete": {
-      "success": "Supply deleted successfully",
-      "confirmBtn": "Delete",
-      "cancelBtn": "Cancel"
+    "empty": {
+      "title": "No supplies found",
+      "description": "Start by adding your first supply item to track your inventory.",
+      "searchDescription": "Try adjusting your search or filters."
     }
   }
 }

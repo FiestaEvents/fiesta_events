@@ -1,12 +1,12 @@
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Loader2, AlertTriangle, ArrowLeft, Calendar, CreditCard, Activity } from "lucide-react";
-
+import {AlertTriangle, ArrowLeft, Calendar, CreditCard, Activity } from "lucide-react";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ Generic Components & Config
 import Button from "../../components/common/Button";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
-import { badgeVariants, statusToBadgeVariant } from "../../config/theme.config"; 
+import { statusToBadgeVariant } from "../../config/theme.config"; 
 
 // Hooks and Services
 import { useToast } from "../../hooks/useToast";
@@ -62,6 +62,12 @@ const ClientDetail = () => {
   }, []);
 
   // --- Handlers ---
+
+  // ✅ Defined Missing Handler
+  const handleEventFormClose = useCallback(() => {
+    setIsEventFormOpen(false);
+    setEditingEventId(null);
+  }, []);
 
   const handleViewEvent = useCallback((event) => {
     setSelectedEvent(event);
@@ -135,7 +141,7 @@ const ClientDetail = () => {
   if (loading && !clientData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
+        <OrbitLoader className="w-12 h-12 text-orange-600 animate-spin" />
       </div>
     );
   }
@@ -213,7 +219,6 @@ const ClientDetail = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      // ✅ FIX: Added 'flex-1' for equal width and 'justify-center' to center content
                       className={`
                         flex-1 group flex items-center justify-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap
                         ${activeTab === tab.id
@@ -309,7 +314,7 @@ const ClientDetail = () => {
       {isEventFormOpen && (
         <EventForm
           isOpen={isEventFormOpen}
-          onClose={handleEventFormClose}
+          onClose={handleEventFormClose} 
           onSuccess={handleEventFormSuccess}
           eventId={editingEventId}
           prefillClient={!editingEventId ? {

@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Loader2, AlertTriangle } from "lucide-react";
-
+import { AlertTriangle } from "lucide-react";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ Generic Components
 import Button from "../../components/common/Button";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
@@ -132,7 +132,7 @@ const ReminderDetails = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
+          <OrbitLoader className="w-12 h-12 text-orange-600 animate-spin" />
           <p className="text-gray-600 dark:text-gray-400">{t('reminders.loadingDetails')}</p>
         </div>
       </div>

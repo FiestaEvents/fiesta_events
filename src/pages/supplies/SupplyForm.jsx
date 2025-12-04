@@ -1,44 +1,56 @@
-// src/pages/Supplies/SupplyForm.jsx
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft,
   Save,
   Package,
   DollarSign,
-  Tag,
+  Truck,
+  ChevronRight,
+  ChevronLeft,
+  Check,
   AlertCircle,
   Plus,
+  X,
+  Tag
 } from "lucide-react";
 
-// API & Hooks
+// ✅ API & Services
 import { supplyService, supplyCategoryService } from "../../api/index";
-import { useToast } from "../../hooks/useToast";
 
-// Components
+// ✅ Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Textarea from "../../components/common/Textarea";
-import Card from "../../components/common/Card";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 
-const SupplyForm = () => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { id } = useParams();
-  const { showSuccess, apiError } = useToast();
-  const isEditMode = !!id;
+// ✅ Context
+import { useToast } from "../../hooks/useToast";
 
-  // State
-  const [loading, setLoading] = useState(isEditMode);
-  const [saving, setSaving] = useState(false);
+const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { showError, showWarning, apiError } = useToast();
+
+  const isEditMode = Boolean(id || supplyProp?._id);
+  const supplyId = id || supplyProp?._id;
+  const isModalMode = Boolean(onSuccess && onCancel);
+
+  // Multi-step state
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
+
+  // Data
   const [categories, setCategories] = useState([]);
-  const [showCategoryForm, setShowCategoryForm] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: "", icon: "Package", color: "#F18237" });
+  const [fetchLoading, setFetchLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [showCategoryInput, setShowCategoryInput] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
   const [errors, setErrors] = useState({});
 
+  // Form State
   const [formData, setFormData] = useState({
     name: "",
     categoryId: "",
@@ -49,578 +61,423 @@ const SupplyForm = () => {
     costPerUnit: 0,
     pricingType: "included",
     chargePerUnit: 0,
-    supplier: {
-      name: "",
-      contact: "",
-      phone: "",
-      email: "",
-      leadTimeDays: 7,
-    },
-    storage: {
-      location: "",
-      requiresRefrigeration: false,
-      expiryTracking: false,
-      shelfLife: 0,
-    },
     status: "active",
+    supplier: { name: "", contact: "", phone: "", email: "", leadTimeDays: 7 },
+    storage: { location: "", requiresRefrigeration: false, expiryTracking: false, shelfLife: 0 },
     notes: "",
   });
 
-  // Fetch Categories and Supply Data
-  useEffect(() => {
-    fetchCategories();
-    if (isEditMode) {
-      fetchSupply();
-    }
-  }, [id]);
+  // Constants
+  const steps = [
+    { number: 1, title: t("supplies.form.steps.basicInfo"), icon: Package },
+    { number: 2, title: t("supplies.form.steps.inventory"), icon: Tag },
+    { number: 3, title: t("supplies.form.steps.supplier"), icon: Truck },
+  ];
 
-  const fetchCategories = async () => {
+  const UNIT_OPTIONS = [
+    { value: "piece", label: "Piece" },
+    { value: "bottle", label: "Bottle" },
+    { value: "pack", label: "Pack" },
+    { value: "box", label: "Box" },
+    { value: "kg", label: "Kilogram (kg)" },
+    { value: "g", label: "Gram (g)" },
+    { value: "liter", label: "Liter (L)" },
+    { value: "ml", label: "Milliliter (ml)" },
+  ];
+
+  const PRICING_TYPES = [
+    { value: "included", label: "Included (Free to client)" },
+    { value: "chargeable", label: "Chargeable" },
+    { value: "optional", label: "Optional" },
+  ];
+
+  // --- Helper: Load Data ---
+  const loadSupplyData = useCallback((data) => {
+    if (!data) return;
+    setFormData({
+      name: data.name || "",
+      categoryId: data.categoryId?._id || data.categoryId || "",
+      unit: data.unit || "piece",
+      currentStock: data.currentStock || 0,
+      minimumStock: data.minimumStock || 10,
+      maximumStock: data.maximumStock || 1000,
+      costPerUnit: data.costPerUnit || 0,
+      pricingType: data.pricingType || "included",
+      chargePerUnit: data.chargePerUnit || 0,
+      status: data.status || "active",
+      supplier: {
+        name: data.supplier?.name || "",
+        contact: data.supplier?.contact || "",
+        phone: data.supplier?.phone || "",
+        email: data.supplier?.email || "",
+        leadTimeDays: data.supplier?.leadTimeDays || 7,
+      },
+      storage: {
+        location: data.storage?.location || "",
+        requiresRefrigeration: data.storage?.requiresRefrigeration || false,
+        expiryTracking: data.storage?.expiryTracking || false,
+        shelfLife: data.storage?.shelfLife || 0,
+      },
+      notes: data.notes || "",
+    });
+  }, []);
+
+  // --- Fetch Data ---
+  useEffect(() => {
+    const initData = async () => {
+      setFetchLoading(true);
+      try {
+        const catRes = await supplyCategoryService.getAll();
+        setCategories(catRes.categories || catRes.data?.categories || []);
+
+        if (isEditMode && !supplyProp) {
+          const res = await supplyService.getById(supplyId);
+          loadSupplyData(res.supply || res.data?.supply || res);
+        } else if (supplyProp) {
+          loadSupplyData(supplyProp);
+        }
+      } catch (err) {
+        apiError(err, t("supplies.notifications.loadError"));
+        if (!isModalMode) navigate("/supplies");
+      } finally {
+        setFetchLoading(false);
+      }
+    };
+    initData();
+  }, [isEditMode, supplyId, supplyProp, isModalMode, navigate, loadSupplyData, apiError, t]);
+
+  // --- Handlers ---
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const finalValue = type === "checkbox" ? checked : value;
+
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData(prev => ({
+        ...prev,
+        [parent]: { ...prev[parent], [child]: finalValue }
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: finalValue }));
+    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) return;
     try {
-      const response = await supplyCategoryService.getAll();
-      setCategories(response.categories || []);
-    } catch (error) {
-      console.error(error);
-      apiError(error, "Failed to load categories");
+      const res = await supplyCategoryService.create({ name: newCategoryName, icon: "Package", color: "#F18237" });
+      const newCat = res.category || res.data?.category || res;
+      setCategories(prev => [...prev, newCat]);
+      setFormData(prev => ({ ...prev, categoryId: newCat._id }));
+      setNewCategoryName("");
+      setShowCategoryInput(false);
+    } catch (err) {
+      showError(t("supplies.notifications.categoryCreateError"));
     }
   };
 
-  const fetchSupply = async () => {
+  // Validation
+  const validateStep = (step) => {
+    const newErrors = {};
+    if (step === 1) {
+      if (!formData.name.trim()) newErrors.name = t("supplies.validation.nameRequired");
+      if (!formData.categoryId) newErrors.categoryId = t("supplies.validation.categoryRequired");
+      if (!formData.unit) newErrors.unit = t("supplies.validation.unitRequired");
+    }
+    if (step === 2) {
+        if(formData.currentStock < 0) newErrors.currentStock = t("supplies.validation.negativeStock");
+        if(formData.costPerUnit < 0) newErrors.costPerUnit = t("supplies.validation.negativeCost");
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateAllRequired = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = t("supplies.validation.nameRequired");
+    if (!formData.categoryId) newErrors.categoryId = t("supplies.validation.categoryRequired");
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // --- NAVIGATION LOGIC ---
+
+  // ✅ FIX: Accept event `e` and preventDefault to stop unintentional form submission
+  const handleNext = (e) => {
+    if (e) e.preventDefault(); 
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+    } else {
+      showWarning(t("common.fixErrors"));
+    }
+  };
+
+  const handlePrevious = (e) => {
+    if (e) e.preventDefault();
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleStepClick = (step) => {
+      if (step < currentStep || validateStep(currentStep)) setCurrentStep(step);
+  };
+
+  // --- SUBMISSION LOGIC ---
+
+  const submitData = async () => {
     try {
       setLoading(true);
-      const response = await supplyService.getById(id);
-      const supply = response.supply || response;
+      const payload = { ...formData };
+      
+      payload.currentStock = Number(payload.currentStock);
+      payload.minimumStock = Number(payload.minimumStock);
+      payload.maximumStock = Number(payload.maximumStock);
+      payload.costPerUnit = Number(payload.costPerUnit);
+      payload.chargePerUnit = Number(payload.chargePerUnit);
+      payload.supplier.leadTimeDays = Number(payload.supplier.leadTimeDays);
+      payload.storage.shelfLife = Number(payload.storage.shelfLife);
 
-      setFormData({
-        name: supply.name || "",
-        categoryId: supply.categoryId?._id || supply.categoryId || "",
-        unit: supply.unit || "piece",
-        currentStock: supply.currentStock || 0,
-        minimumStock: supply.minimumStock || 10,
-        maximumStock: supply.maximumStock || 1000,
-        costPerUnit: supply.costPerUnit || 0,
-        pricingType: supply.pricingType || "included",
-        chargePerUnit: supply.chargePerUnit || 0,
-        supplier: {
-          name: supply.supplier?.name || "",
-          contact: supply.supplier?.contact || "",
-          phone: supply.supplier?.phone || "",
-          email: supply.supplier?.email || "",
-          leadTimeDays: supply.supplier?.leadTimeDays || 7,
-        },
-        storage: {
-          location: supply.storage?.location || "",
-          requiresRefrigeration: supply.storage?.requiresRefrigeration || false,
-          expiryTracking: supply.storage?.expiryTracking || false,
-          shelfLife: supply.storage?.shelfLife || 0,
-        },
-        status: supply.status || "active",
-        notes: supply.notes || "",
-      });
+      if (isEditMode) {
+        await supplyService.update(supplyId, payload);
+      } else {
+        await supplyService.create(payload);
+      }
+
+      if (isModalMode && onSuccess) onSuccess();
+      else navigate("/supplies");
+      
     } catch (error) {
-      console.error(error);
-      apiError(error, "Failed to load supply");
+      apiError(error, t("common.error"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Change
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const finalValue = type === "checkbox" ? checked : value;
-
-    setFormData((prev) => {
-      if (name.includes(".")) {
-        const [parent, child] = name.split(".");
-        return {
-          ...prev,
-          [parent]: {
-            ...prev[parent],
-            [child]: finalValue,
-          },
-        };
-      }
-      return { ...prev, [name]: finalValue };
-    });
-
-    // Clear error
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  // Validate
-  const validate = () => {
-    const newErrors = {};
-
-    if (!formData.name.trim()) newErrors.name = "Supply name is required";
-    if (!formData.categoryId) newErrors.categoryId = "Category is required";
-    if (!formData.unit.trim()) newErrors.unit = "Unit is required";
-    if (formData.currentStock < 0) newErrors.currentStock = "Stock cannot be negative";
-    if (formData.costPerUnit < 0) newErrors.costPerUnit = "Cost cannot be negative";
-    if (formData.pricingType === "chargeable" && formData.chargePerUnit < 0) {
-      newErrors.chargePerUnit = "Charge cannot be negative";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Submit
+  // ✅ FIX: Smart handleSubmit to handle "Enter" key correctly
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
-
-    try {
-      setSaving(true);
-      
-      if (isEditMode) {
-        await supplyService.update(id, formData);
-        showSuccess("Supply updated successfully");
-      } else {
-        await supplyService.create(formData);
-        showSuccess("Supply created successfully");
-      }
-
-      navigate("/supplies");
-    } catch (error) {
-      console.error(error);
-      apiError(error, `Failed to ${isEditMode ? "update" : "create"} supply`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Create Category
-  const handleCreateCategory = async () => {
-    if (!newCategory.name.trim()) {
-      apiError(new Error("Category name is required"), "Validation Error");
+    
+    // If user presses Enter on an intermediate step, treat as Next
+    if (currentStep < totalSteps) {
+      handleNext();
       return;
     }
 
-    try {
-      const response = await supplyCategoryService.create(newCategory);
-      const created = response.category || response;
-      
-      setCategories((prev) => [...prev, created]);
-      setFormData((prev) => ({ ...prev, categoryId: created._id }));
-      setNewCategory({ name: "", icon: "Package", color: "#F18237" });
-      setShowCategoryForm(false);
-      showSuccess("Category created successfully");
-    } catch (error) {
-      apiError(error, "Failed to create category");
+    // If on last step, validate all and submit
+    if (!validateAllRequired()) return showWarning(t("common.fixErrors"));
+    await submitData();
+  };
+
+  // ✅ FIX: Dedicated handler for Quick Save button
+  const handleQuickUpdate = async (e) => {
+      e.preventDefault();
+      // Ensure basic required fields (Step 1) are valid before quick saving
+      if (!validateStep(1)) {
+          setCurrentStep(1);
+          showWarning(t("common.fixErrors"));
+          return;
+      }
+      await submitData();
+  };
+
+  // --- Renders ---
+
+  const renderStepIndicator = () => (
+    <div className="mb-8 px-4">
+      <div className="flex items-center justify-between relative max-w-lg mx-auto">
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-100 dark:bg-gray-700 -z-10" />
+        {steps.map((step) => {
+          const isCompleted = step.number < currentStep;
+          const isCurrent = step.number === currentStep;
+          const StepIcon = step.icon;
+          return (
+            <button
+              key={step.number}
+              type="button" // ✅ Explicitly set type button
+              onClick={() => handleStepClick(step.number)}
+              disabled={!isCompleted && !isCurrent}
+              className={`group flex flex-col items-center gap-2 bg-white dark:bg-[#1f2937] px-2 transition-all ${
+                isCompleted || isCurrent ? "cursor-pointer" : "cursor-default"
+              }`}
+            >
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
+                isCompleted ? "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400" : 
+                isCurrent ? "bg-orange-500 text-white shadow-orange-200 dark:shadow-none" : 
+                "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+              }`}>
+                {isCompleted ? <Check className="w-6 h-6" /> : <StepIcon className="w-5 h-5" />}
+              </div>
+              <span className={`text-xs font-semibold whitespace-nowrap ${isCurrent ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>
+                {step.title}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6 animate-fadeIn">
+            <Input label={t("supplies.form.name")} name="name" value={formData.name} onChange={handleChange} error={errors.name} required placeholder="e.g., Bottled Water" className="w-full" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        {t("supplies.form.category")} <span className="text-red-500">*</span>
+                    </label>
+                    {!showCategoryInput ? (
+                        <div className="flex gap-2">
+                            <Select name="categoryId" value={formData.categoryId} onChange={handleChange} options={[{ value: "", label: t("common.select") }, ...categories.map(c => ({ value: c._id, label: c.name }))]} error={errors.categoryId} className="flex-1" />
+                            <Button type="button" variant="outline" icon={Plus} onClick={() => setShowCategoryInput(true)} />
+                        </div>
+                    ) : (
+                        <div className="flex gap-2 items-center">
+                            <Input value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="New category..." className="flex-1" />
+                            <Button type="button" size="sm" onClick={handleCreateCategory} variant="primary">Add</Button>
+                            <Button type="button" size="sm" variant="ghost" onClick={() => setShowCategoryInput(false)}><X size={16}/></Button>
+                        </div>
+                    )}
+                </div>
+                <Select label={t("supplies.form.unit")} name="unit" value={formData.unit} onChange={handleChange} options={UNIT_OPTIONS} error={errors.unit} required />
+            </div>
+
+            <Select label={t("supplies.form.status")} name="status" value={formData.status} onChange={handleChange} options={[{ value: "active", label: t("common.active") }, { value: "inactive", label: t("common.inactive") }, { value: "discontinued", label: t("supplies.status.discontinued") }]} />
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Input label={t("supplies.form.currentStock")} name="currentStock" type="number" min="0" value={formData.currentStock} onChange={handleChange} error={errors.currentStock} />
+                <Input label={t("supplies.form.minimumStock")} name="minimumStock" type="number" min="0" value={formData.minimumStock} onChange={handleChange} />
+                <Input label={t("supplies.form.maximumStock")} name="maximumStock" type="number" min="0" value={formData.maximumStock} onChange={handleChange} />
+            </div>
+
+            {Number(formData.currentStock) <= Number(formData.minimumStock) && (
+                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg flex items-start gap-2">
+                    <AlertCircle className="text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" size={16} />
+                    <p className="text-sm text-orange-800 dark:text-orange-300">{t("supplies.form.lowStockWarning")}</p>
+                </div>
+            )}
+
+            <div className="h-px bg-gray-200 dark:bg-gray-700 my-4" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input label={t("supplies.form.costPerUnit")} name="costPerUnit" type="number" step="0.001" min="0" value={formData.costPerUnit} onChange={handleChange} icon={DollarSign} />
+                <Select label={t("supplies.form.pricingType")} name="pricingType" value={formData.pricingType} onChange={handleChange} options={PRICING_TYPES} />
+                {formData.pricingType === "chargeable" && (
+                    <Input label={t("supplies.form.chargePerUnit")} name="chargePerUnit" type="number" step="0.001" min="0" value={formData.chargePerUnit} onChange={handleChange} />
+                )}
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input label={t("supplies.form.supplierName")} name="supplier.name" value={formData.supplier.name} onChange={handleChange} />
+                <Input label={t("supplies.form.supplierContact")} name="supplier.contact" value={formData.supplier.contact} onChange={handleChange} />
+                <Input label={t("supplies.form.supplierPhone")} name="supplier.phone" value={formData.supplier.phone} onChange={handleChange} />
+                <Input label={t("supplies.form.supplierEmail")} name="supplier.email" value={formData.supplier.email} onChange={handleChange} />
+                <Input label={t("supplies.form.leadTime")} name="supplier.leadTimeDays" type="number" min="0" value={formData.supplier.leadTimeDays} onChange={handleChange} />
+            </div>
+
+            <div className="h-px bg-gray-200 dark:bg-gray-700 my-4" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input label={t("supplies.form.storageLocation")} name="storage.location" value={formData.storage.location} onChange={handleChange} />
+                <div className="space-y-3 pt-6">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="storage.requiresRefrigeration" checked={formData.storage.requiresRefrigeration} onChange={handleChange} className="rounded text-orange-600 focus:ring-orange-500" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{t("supplies.form.requiresRefrigeration")}</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="storage.expiryTracking" checked={formData.storage.expiryTracking} onChange={handleChange} className="rounded text-orange-600 focus:ring-orange-500" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{t("supplies.form.expiryTracking")}</span>
+                    </label>
+                </div>
+            </div>
+
+            <Textarea label={t("supplies.form.notes")} name="notes" value={formData.notes} onChange={handleChange} rows={3} className="w-full" />
+          </div>
+        );
+
+      default: return null;
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" message="Loading supply..." />
-      </div>
-    );
-  }
-
-const unitOptions = [
-    { value: "piece", label: t("supplies.units.piece") },
-    { value: "bottle", label: t("supplies.units.bottle") },
-    { value: "pack", label: t("supplies.units.pack") },
-    { value: "box", label: t("supplies.units.box") },
-    { value: "kg", label: t("supplies.units.kg") },
-    { value: "g", label: t("supplies.units.g") },
-    { value: "liter", label: t("supplies.units.liter") },
-    { value: "ml", label: t("supplies.units.ml") },
-    { value: "dozen", label: t("supplies.units.dozen") },
-    { value: "serving", label: t("supplies.units.serving") },
-    { value: "can", label: t("supplies.units.can") },
-    { value: "jar", label: t("supplies.units.jar") },
-    { value: "bag", label: t("supplies.units.bag") },
-    { value: "carton", label: t("supplies.units.carton") },
-    { value: "unit", label: t("supplies.units.unit") },
-  ];
+  if (fetchLoading && isEditMode) return <div className="p-10 text-center text-gray-500">{t("common.loading")}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
+    <div className="bg-white dark:bg-[#1f2937] h-full flex flex-col p-4 sm:p-6 rounded-lg">
+      {!isModalMode && (
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {isEditMode ? t("supplies.form.editTitle") : t("supplies.form.createTitle")}
+          </h1>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+        {renderStepIndicator()}
+        
+        <div className="flex-1 mt-4 mb-8">{renderStepContent()}</div>
+
+        <div className="flex items-center justify-between pt-6 mt-auto">
+          {/* Previous / Cancel */}
           <Button
+            type="button" // ✅ Explicitly prevent submit
             variant="ghost"
-            icon={ArrowLeft}
-            onClick={() => navigate("/supplies")}
+            onClick={currentStep === 1 ? (isModalMode && onCancel ? onCancel : () => navigate("/supplies")) : handlePrevious}
+            disabled={loading}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
           >
-            {t("common.back") || "Back"}
+            {currentStep === 1 ? t("common.cancel") : <span className="flex items-center"><ChevronLeft className="w-4 h-4 mr-1" /> {t("common.previous")}</span>}
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isEditMode ? t("supplies.edit.title") || "Edit Supply" : t("supplies.create.title") || "Add New Supply"}
-            </h1>
-            <p className="text-gray-500 mt-1">
-              {isEditMode
-                ? t("supplies.edit.subtitle") || "Update supply information and inventory details"
-                : t("supplies.create.subtitle") || "Add a new supply item to your inventory"}
-            </p>
+
+          <div className="flex items-center gap-3">
+            {/* Quick Save (Only in Edit Mode & Not Last Step) */}
+            {isEditMode && currentStep < totalSteps && (
+              <Button 
+                type="button" // ✅ Explicitly prevent submit, handled by onClick
+                variant="ghost" 
+                onClick={handleQuickUpdate} 
+                disabled={loading} 
+                className="text-orange-600 hover:bg-orange-50"
+              >
+                <Save className="w-4 h-4 mr-2" /> {t("common.updateNow")}
+              </Button>
+            )}
+
+            {/* Next / Submit */}
+            {currentStep < totalSteps ? (
+              <Button 
+                type="button" // ✅ Explicitly prevent submit
+                variant="primary" 
+                onClick={handleNext} 
+                disabled={loading} 
+                className="px-6"
+              >
+                <span className="flex items-center">{t("common.next")} <ChevronRight className="w-4 h-4 ml-1" /></span>
+              </Button>
+            ) : (
+              <Button 
+                type="submit" // ✅ Only this button submits
+                variant="primary" 
+                loading={loading} 
+                className="px-6"
+              >
+                <span className="flex items-center"><Save className="w-4 h-4 mr-2" /> {isEditMode ? t("common.update") : t("common.create")}</span>
+              </Button>
+            )}
           </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Package className="text-orange-600" size={20} />
-              {t("supplies.form.basicInfo") || "Basic Information"}
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label={t("supplies.form.name") || "Supply Name"}
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                error={errors.name}
-                required
-                placeholder="e.g., Bottled Water"
-              />
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  {t("supplies.form.category") || "Category"} <span className="text-red-500">*</span>
-                </label>
-                
-                {!showCategoryForm ? (
-                  <div className="flex gap-2">
-                    <Select
-                      name="categoryId"
-                      value={formData.categoryId}
-                      onChange={handleChange}
-                      error={errors.categoryId}
-                      options={[
-                        { value: "", label: "Select Category" },
-                        ...categories.map((cat) => ({
-                          value: cat._id,
-                          label: cat.name,
-                        })),
-                      ]}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      icon={Plus}
-                      onClick={() => setShowCategoryForm(true)}
-                    >
-                      {t("supplies.form.newCategory")}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <Input
-                      placeholder="Category name"
-                      value={newCategory.name}
-                      onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        onClick={handleCreateCategory}
-                      >
-                        {t("supplies.form.createCategory")}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowCategoryForm(false)}
-                      >
-                        {t("supplies.form.cancel")}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <Select
-                label={t("supplies.form.unit") || "Unit of Measurement"}
-                name="unit"
-                value={formData.unit}
-                onChange={handleChange}
-                error={errors.unit}
-                options={unitOptions}
-                required
-              />
-
-              <Select
-                label={t("supplies.form.status")}
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                options={[
-                  { value: "active", label: t("supplies.statuses.active") },
-                  { value: "inactive", label: t("supplies.statuses.inactive") },
-                  { value: "discontinued", label: t("supplies.statuses.discontinued") },
-                ]}
-              />
-            </div>
-          </Card>
-
-          {/* Inventory Management */}
-          <Card>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Tag className="text-blue-600" size={20} />
-              {t("supplies.form.inventory") || "Inventory Management"}
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                label={t("supplies.form.currentStock") || "Current Stock"}
-                name="currentStock"
-                type="number"
-                value={formData.currentStock}
-                onChange={handleChange}
-                error={errors.currentStock}
-                min="0"
-                required
-              />
-
-              <Input
-                label={t("supplies.form.minimumStock") || "Minimum Stock"}
-                name="minimumStock"
-                type="number"
-                value={formData.minimumStock}
-                onChange={handleChange}
-                min="0"
-                help="Alert when stock reaches this level"
-              />
-
-              <Input
-                label={t("supplies.form.maximumStock") || "Maximum Stock"}
-                name="maximumStock"
-                type="number"
-                value={formData.maximumStock}
-                onChange={handleChange}
-                min="0"
-                help="Maximum storage capacity"
-              />
-            </div>
-
-            {/* Stock Status Indicator */}
-            {formData.currentStock <= formData.minimumStock && formData.currentStock > 0 && (
-              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2">
-                <AlertCircle className="text-orange-600 mt-0.5 flex-shrink-0" size={16} />
-                <p className="text-sm text-orange-800">
-                  <span className="font-bold">{t("supplies.form.lowStockWarning")}:</span> {t("supplies.form.lowStockDesc")}
-                </p>
-              </div>
-            )}
-          </Card>
-
-          {/* Pricing */}
-          <Card>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <DollarSign className="text-green-600" size={20} />
-              {t("supplies.form.pricing") || "Pricing"}
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label={t("supplies.form.costPerUnit") || "Cost Per Unit (Venue)"}
-                name="costPerUnit"
-                type="number"
-                step="0.001"
-                value={formData.costPerUnit}
-                onChange={handleChange}
-                error={errors.costPerUnit}
-                min="0"
-                required
-                help="How much you pay per unit"
-              />
-
-              <Select
-                label={t("supplies.form.pricingType")}
-                name="pricingType"
-                value={formData.pricingType}
-                onChange={handleChange}
-                options={[
-                  { value: "included", label: t("supplies.pricingTypes.included") },
-                  { value: "chargeable", label: t("supplies.pricingTypes.chargeable") },
-                  { value: "optional", label: t("supplies.pricingTypes.optional") },
-                ]}
-              />
-
-              {formData.pricingType === "chargeable" && (
-                <Input
-                  label={t("supplies.form.chargePerUnit") || "Charge Per Unit (Client)"}
-                  name="chargePerUnit"
-                  type="number"
-                  step="0.001"
-                  value={formData.chargePerUnit}
-                  onChange={handleChange}
-                  error={errors.chargePerUnit}
-                  min="0"
-                  help="How much you charge clients per unit"
-                />
-              )}
-            </div>
-
-            {/* Profit Margin Indicator */}
-            {formData.pricingType === "chargeable" && formData.chargePerUnit > 0 && formData.costPerUnit > 0 && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800">
-                  <span className="font-bold">{t("supplies.form.profitMargin")}:</span>{" "}
-                  {((formData.chargePerUnit - formData.costPerUnit) * 100 / formData.costPerUnit).toFixed(1)}%
-                  ({(formData.chargePerUnit - formData.costPerUnit).toFixed(3)} TND per {formData.unit})
-                </p>
-              </div>
-            )}
-          </Card>
-
-          {/* Supplier Information */}
-          <Card>
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              {t("supplies.form.supplier") || "Supplier Information (Optional)"}
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label={t("supplies.form.supplierName") || "Supplier Name"}
-                name="supplier.name"
-                value={formData.supplier.name}
-                onChange={handleChange}
-                placeholder="e.g., ABC Distributors"
-              />
-
-              <Input
-                label={t("supplies.form.supplierContact") || "Contact Person"}
-                name="supplier.contact"
-                value={formData.supplier.contact}
-                onChange={handleChange}
-                placeholder="e.g., John Doe"
-              />
-
-              <Input
-                label={t("supplies.form.supplierPhone") || "Phone"}
-                name="supplier.phone"
-                type="tel"
-                value={formData.supplier.phone}
-                onChange={handleChange}
-                placeholder="e.g., +216 12 345 678"
-              />
-
-              <Input
-                label={t("supplies.form.supplierEmail") || "Email"}
-                name="supplier.email"
-                type="email"
-                value={formData.supplier.email}
-                onChange={handleChange}
-                placeholder="e.g., supplier@example.com"
-              />
-
-              <Input
-                label={t("supplies.form.leadTime") || "Lead Time (Days)"}
-                name="supplier.leadTimeDays"
-                type="number"
-                value={formData.supplier.leadTimeDays}
-                onChange={handleChange}
-                min="0"
-                help="Days needed for reorder delivery"
-              />
-            </div>
-          </Card>
-
-          {/* Storage & Handling */}
-          <Card>
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              {t("supplies.form.storage") || "Storage & Handling"}
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label={t("supplies.form.storageLocation") || "Storage Location"}
-                name="storage.location"
-                value={formData.storage.location}
-                onChange={handleChange}
-                placeholder="e.g., Main Storage, Refrigerator"
-              />
-
-              <Input
-                label={t("supplies.form.shelfLife") || "Shelf Life (Days)"}
-                name="storage.shelfLife"
-                type="number"
-                value={formData.storage.shelfLife}
-                onChange={handleChange}
-                min="0"
-                disabled={!formData.storage.expiryTracking}
-                help="Only if expiry tracking is enabled"
-              />
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="storage.requiresRefrigeration"
-                  checked={formData.storage.requiresRefrigeration}
-                  onChange={handleChange}
-                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  {t("supplies.form.requiresRefrigeration") || "Requires Refrigeration"}
-                </span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="storage.expiryTracking"
-                  checked={formData.storage.expiryTracking}
-                  onChange={handleChange}
-                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  {t("supplies.form.expiryTracking") || "Enable Expiry Tracking"}
-                </span>
-              </label>
-            </div>
-          </Card>
-
-          {/* Notes */}
-          <Card>
-            <Textarea
-              label={t("supplies.form.notes") || "Additional Notes"}
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              rows={4}
-              placeholder="Any additional information about this supply..."
-            />
-          </Card>
-
-          {/* Form Actions */}
-          <div className="flex justify-end gap-3 sticky bottom-0 bg-white p-4 border-t border-gray-200 rounded-lg shadow-lg">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/supplies")}
-              disabled={saving}
-            >
-              {t("common.cancel") || "Cancel"}
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              icon={Save}
-              loading={saving}
-            >
-              {isEditMode ? t("common.update") || "Update Supply" : t("common.create") || "Create Supply"}
-            </Button>
-          </div>
-        </form>
-      </div>
+      </form>
     </div>
   );
 };

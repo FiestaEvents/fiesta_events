@@ -17,6 +17,7 @@ import {
   FolderOpen,
   Filter,
   X,
+  Eye,
 } from "lucide-react";
 
 // ✅ API & Services
@@ -34,6 +35,10 @@ import Modal from "../../components/common/Modal";
 // ✅ Context
 import { useToast } from "../../hooks/useToast";
 
+// ✅ Sub-components
+import SupplyForm from "./SupplyForm";
+import SupplyDetailModal from "./SupplyDetailModal";
+
 const SuppliesPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -44,6 +49,15 @@ const SuppliesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // Modals
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedSupply, setSelectedSupply] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    open: false,
+    supply: null,
+  });
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,18 +72,11 @@ const SuppliesPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Delete confirmation
-  const [deleteConfirm, setDeleteConfirm] = useState({
-    open: false,
-    supply: null,
-  });
-
   // Fetch Data
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Build query params
       const params = {
         page,
         limit,
@@ -85,7 +92,6 @@ const SuppliesPage = () => {
         supplyCategoryService.getAll(),
       ]);
 
-      // Normalize data
       const suppliesData =
         suppliesRes.supplies || suppliesRes.data?.supplies || [];
       const paginationData =
@@ -121,6 +127,11 @@ const SuppliesPage = () => {
   }, [fetchData]);
 
   // Handlers
+  const handleRowClick = (supply) => {
+    setSelectedSupply(supply);
+    setIsDetailModalOpen(true);
+  };
+
   const handleDelete = async () => {
     if (!deleteConfirm.supply) return;
     try {
@@ -131,9 +142,26 @@ const SuppliesPage = () => {
       });
       fetchData();
       setDeleteConfirm({ open: false, supply: null });
+      if (selectedSupply?._id === deleteConfirm.supply._id)
+        setIsDetailModalOpen(false);
     } catch (error) {
       // Handled by promise
     }
+  };
+
+  const handleFormSuccess = () => {
+    fetchData();
+    setIsFormOpen(false);
+    showSuccess(
+      selectedSupply
+        ? t("supplies.notifications.updated")
+        : t("supplies.notifications.created")
+    );
+  };
+
+  const handleOpenForm = (supply = null) => {
+    setSelectedSupply(supply);
+    setIsFormOpen(true);
   };
 
   const handleClearFilters = () => {
@@ -174,22 +202,24 @@ const SuppliesPage = () => {
   const getStockBadge = (supply) => {
     if (supply.currentStock === 0)
       return (
-        <Badge variant="danger">{t("supplies.status.outOfStock")}</Badge>
+        <Badge variant="danger" icon={<XCircle className="w-3 h-3" />}>
+          {t("supplies.status.outOfStock")}
+        </Badge>
       );
     if (supply.currentStock <= supply.minimumStock)
       return (
-        <Badge variant="warning" >
+        <Badge variant="warning" icon={<AlertTriangle className="w-3 h-3" />}>
           {t("supplies.status.lowStock")}
         </Badge>
       );
     if (supply.currentStock >= supply.maximumStock)
       return (
-        <Badge variant="info" >
+        <Badge variant="info" icon={<TrendingUp className="w-3 h-3" />}>
           {t("supplies.status.overstocked")}
         </Badge>
       );
     return (
-      <Badge variant="success">
+      <Badge variant="success" icon={<CheckCircle className="w-3 h-3" />}>
         {t("supplies.status.inStock")}
       </Badge>
     );
@@ -262,7 +292,21 @@ const SuppliesPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/supplies/${supply._id}/edit`)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowClick(supply);
+            }}
+            className="text-orange-500 hover:text-orange-600"
+          >
+            <Eye size={16} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenForm(supply);
+            }}
             className="text-blue-500 hover:text-blue-600"
           >
             <Edit size={16} />
@@ -270,7 +314,10 @@ const SuppliesPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setDeleteConfirm({ open: true, supply })}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteConfirm({ open: true, supply });
+            }}
             className="text-red-500 hover:text-red-600"
           >
             <Trash2 size={16} />
@@ -358,8 +405,8 @@ const SuppliesPage = () => {
             </Button>
             <Button
               variant="primary"
-              icon={<Plus className="size-4" />}
-              onClick={() => navigate("/supplies/new")}
+              icon={Plus}
+              onClick={() => handleOpenForm()}
               className="flex-1 sm:flex-none justify-center"
             >
               {t("supplies.buttons.addSupply")}
@@ -368,23 +415,23 @@ const SuppliesPage = () => {
         )}
       </div>
 
-  {/* Stats Cards */}
+      {/* Stats Cards */}
       {!showEmptyState && hasInitialLoad && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
           <StatCard
-            label={t("supplies.stats.totalValue")} 
+            label={t("supplies.stats.totalValue")}
             value={`${stats.totalValue.toFixed(0)} TND`}
             icon={TrendingUp}
             color="green"
           />
           <StatCard
-            label={t("supplies.stats.lowStock")} 
+            label={t("supplies.stats.lowStock")}
             value={stats.lowStock}
             icon={AlertTriangle}
             color="orange"
           />
           <StatCard
-            label={t("supplies.stats.outOfStock")}  
+            label={t("supplies.stats.outOfStock")}
             value={stats.outOfStock}
             icon={XCircle}
             color="red"
@@ -470,6 +517,7 @@ const SuppliesPage = () => {
                 loading={loading}
                 striped
                 hoverable
+                onRowClick={handleRowClick}
               />
             </div>
             {renderPagination()}
@@ -509,7 +557,7 @@ const SuppliesPage = () => {
               {t("supplies.empty.description")}
             </p>
             <Button
-              onClick={() => navigate("/supplies/new")}
+              onClick={() => handleOpenForm()}
               variant="primary"
               size="lg"
               icon={Plus}
@@ -520,6 +568,36 @@ const SuppliesPage = () => {
           </div>
         )}
       </div>
+
+      {/* Create/Edit Modal */}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        title={
+          selectedSupply
+            ? t("supplies.form.editTitle")
+            : t("supplies.form.createTitle")
+        }
+        size="lg"
+      >
+        <SupplyForm
+          supply={selectedSupply}
+          onSuccess={handleFormSuccess}
+          onCancel={() => setIsFormOpen(false)}
+        />
+      </Modal>
+
+      {/* Details Modal */}
+      <SupplyDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        supply={selectedSupply}
+        onEdit={(s) => {
+          setIsDetailModalOpen(false);
+          handleOpenForm(s);
+        }}
+        refreshData={fetchData}
+      />
 
       {/* Delete Modal */}
       <Modal

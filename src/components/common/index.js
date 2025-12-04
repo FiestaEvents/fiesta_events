@@ -9,7 +9,7 @@ export { default as Badge } from './Badge';
 export { default as Card } from './Card.jsx';
 export { default as Pagination } from './Pagination.jsx';
 export { default as EmptyState } from './EmptyState.jsx';
-export { default as LoadingSpinner } from './LoadingSpinner.jsx';
+export { default as OrbitLoader } from './LoadingSpinner.jsx';
 export { default as Toast } from './Toast.jsx';
 export { default as ToastContainer, useToast } from './ToastContainer.jsx';
 

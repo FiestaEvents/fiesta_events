@@ -12,11 +12,10 @@ import {
   Trash2,
   Download,
   DollarSign,
-  Loader2,
   AlertTriangle,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ API & Services
 import { financeService } from "../../api/index";
 
