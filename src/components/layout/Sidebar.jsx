@@ -290,6 +290,12 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 isCollapsed={isCollapsed}
               />
               <NavLink
+                to="/supplies"
+                icon={Handshake}
+                labelKey="common.supplies"
+                isCollapsed={isCollapsed}
+              />
+              <NavLink
                 to="/tasks"
                 icon={ClipboardList}
                 labelKey="common.tasks"

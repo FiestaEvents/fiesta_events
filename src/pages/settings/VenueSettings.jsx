@@ -1118,7 +1118,7 @@ const AmenitiesTab = ({
                   type="button"
                   onClick={handleAddCustom}
                   variant="outline"
-                  icon={<Plus className="size-4" />}
+                  icon={Plus}
                   disabled={!newAmenity.trim()}
                 >
                   {t("venueSettings.common.add")}
@@ -1445,7 +1445,7 @@ const SpacesTab = ({
           title={t("venueSettings.spaces.emptyTitle")}
           description={t("venueSettings.spaces.emptyDescription")}
           action={
-            <Button onClick={handleAddNew} icon={<Plus className="size-4" />}>
+            <Button onClick={handleAddNew} icon={Plus}>
               {t("venueSettings.spaces.addFirst")}
             </Button>
           }

@@ -1,12 +1,12 @@
 // src/routes/AppRoutes.jsx
 import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AnimatePresence } from "framer-motion"; // Optional: Used if you want exit animations on route switches
+import { AnimatePresence } from "framer-motion";
 import ProtectedRoute from "./ProtectedRoutes.jsx";
 
 // ✅ Keep LoadingSpinner static so it's available immediately
 import LoadingSpinner from "../components/common/LoadingSpinner.jsx";
-import PageTransition from "../components/common/PageTransition.jsx"; // ✅ Import the transition
+import PageTransition from "../components/common/PageTransition.jsx";
 import FiestaVenue from "../pages/website/fiesta-venue.jsx";
 
 // ============================================
@@ -114,6 +114,11 @@ const DocumentsSettings = lazy(
   () => import("../pages/settings/DocumentsSettings.jsx")
 );
 
+// Supplies - ✅ FIXED: Correct path with capital S and plural
+const SuppliesPage = lazy(() => import("../pages/Supplies/SuppliesPage.jsx"));
+const SupplyDetail = lazy(() => import("../pages/Supplies/SupplyDetail.jsx"));
+const SupplyForm = lazy(() => import("../pages/Supplies/SupplyForm.jsx"));
+
 // ============================================
 // ROUTING CONFIGURATION
 // ============================================
@@ -121,7 +126,7 @@ const DocumentsSettings = lazy(
 const AppRoutes = () => {
   // Center the spinner for the initial load
   const LoadingFallback = () => (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
       <LoadingSpinner size="lg" />
     </div>
   );
@@ -129,7 +134,9 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        {/* Public Routes */}
+        {/* ============================================ */}
+        {/* PUBLIC ROUTES */}
+        {/* ============================================ */}
         <Route
           path="/login"
           element={
@@ -149,6 +156,9 @@ const AppRoutes = () => {
         <Route path="/fiesta-venue" element={<FiestaVenue />} />
         <Route path="/" element={<Navigate to="/landing" replace />} />
 
+        {/* ============================================ */}
+        {/* AUTH LAYOUT ROUTES */}
+        {/* ============================================ */}
         <Route element={<AuthLayout />}>
           <Route
             path="/register"
@@ -176,9 +186,12 @@ const AppRoutes = () => {
           />
         </Route>
 
-        {/* Protected Routes */}
+        {/* ============================================ */}
+        {/* PROTECTED ROUTES */}
+        {/* ============================================ */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
+            {/* Dashboard & Home */}
             <Route
               path="/dashboard"
               element={
@@ -196,7 +209,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Events */}
+            {/* ============================================ */}
+            {/* EVENTS */}
+            {/* ============================================ */}
             <Route
               path="/events"
               element={
@@ -238,7 +253,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Clients */}
+            {/* ============================================ */}
+            {/* CLIENTS */}
+            {/* ============================================ */}
             <Route
               path="/clients"
               element={
@@ -272,7 +289,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Partners */}
+            {/* ============================================ */}
+            {/* PARTNERS */}
+            {/* ============================================ */}
             <Route
               path="/partners"
               element={
@@ -306,7 +325,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Payments */}
+            {/* ============================================ */}
+            {/* PAYMENTS */}
+            {/* ============================================ */}
             <Route
               path="/payments"
               element={
@@ -340,7 +361,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Invoices */}
+            {/* ============================================ */}
+            {/* INVOICES */}
+            {/* ============================================ */}
             <Route
               path="/invoices"
               element={
@@ -374,7 +397,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Contracts */}
+            {/* ============================================ */}
+            {/* CONTRACTS */}
+            {/* ============================================ */}
             <Route
               path="/contracts"
               element={
@@ -416,7 +441,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Finance */}
+            {/* ============================================ */}
+            {/* FINANCE */}
+            {/* ============================================ */}
             <Route
               path="/finance"
               element={
@@ -450,7 +477,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Tasks */}
+            {/* ============================================ */}
+            {/* TASKS */}
+            {/* ============================================ */}
             <Route
               path="/tasks"
               element={
@@ -484,7 +513,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Reminders */}
+            {/* ============================================ */}
+            {/* REMINDERS */}
+            {/* ============================================ */}
             <Route
               path="/reminders"
               element={
@@ -518,7 +549,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Team */}
+            {/* ============================================ */}
+            {/* TEAM */}
+            {/* ============================================ */}
             <Route
               path="/team"
               element={
@@ -552,7 +585,9 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Roles */}
+            {/* ============================================ */}
+            {/* ROLES */}
+            {/* ============================================ */}
             <Route
               path="/roles"
               element={
@@ -578,7 +613,45 @@ const AppRoutes = () => {
               }
             />
 
-            {/* Settings  */}
+            {/* ============================================ */}
+            {/* SUPPLIES - ✅ FIXED: Moved inside MainLayout with correct paths */}
+            {/* ============================================ */}
+            <Route
+              path="/supplies"
+              element={
+                <PageTransition>
+                  <SuppliesPage />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/supplies/new"
+              element={
+                <PageTransition>
+                  <SupplyForm />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/supplies/:id"
+              element={
+                <PageTransition>
+                  <SupplyDetail />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/supplies/:id/edit"
+              element={
+                <PageTransition>
+                  <SupplyForm />
+                </PageTransition>
+              }
+            />
+
+            {/* ============================================ */}
+            {/* SETTINGS */}
+            {/* ============================================ */}
             <Route
               path="/settings"
               element={
@@ -598,7 +671,9 @@ const AppRoutes = () => {
           </Route>
         </Route>
 
-        {/* Catch-All */}
+        {/* ============================================ */}
+        {/* CATCH-ALL */}
+        {/* ============================================ */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Suspense>

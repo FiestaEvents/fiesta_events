@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useToast } from "./useToast"; // ✅ CUSTOM TOAST
+import { useToast } from "./useToast";
 import {
   eventService,
   clientService,
@@ -8,7 +8,7 @@ import {
 } from "../api/index";
 
 export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) => {
-  const { showError, showSuccess } = useToast(); // ✅ Hook usage
+  const { showError, showSuccess } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -23,8 +23,21 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
     endTime: "",
     guestCount: "",
     status: "pending",
-    pricing: { basePrice: "", discount: "", discountType: "fixed", taxRate: 19 },
+    pricing: { 
+      basePrice: "", 
+      discount: "", 
+      discountType: "fixed", 
+      taxRate: 19 
+    },
     partners: [],
+    // ⭐ SUPPLY MANAGEMENT
+    supplies: [],
+    supplySummary: {
+      totalCost: 0,
+      totalCharge: 0,
+      totalMargin: 0,
+      includeInBasePrice: true
+    },
     notes: "",
     payment: {
       amount: "",
@@ -67,13 +80,13 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
 
       } catch (error) {
         console.error("Init Error:", error);
-        showError("Failed to load form data. Please refresh."); // ✅ Toast
+        showError("Failed to load form data. Please refresh.");
       } finally {
         setFetchLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [showError]);
 
   // Date Prefill
   useEffect(() => {
@@ -94,9 +107,9 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
           pricing: { ...prev.pricing, basePrice: selectedSpace.basePrice || 0 }
         }));
         setErrors(prev => {
-            const newErrors = { ...prev };
-            delete newErrors["pricing.basePrice"];
-            return newErrors;
+          const newErrors = { ...prev };
+          delete newErrors["pricing.basePrice"];
+          return newErrors;
         });
       }
     }
@@ -112,15 +125,37 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
           const event = response.event || response.data;
 
           if (event) {
+            // Map Partners with full details
             const mappedPartners = (event.partners || []).map(p => ({
               partner: p.partner?._id || p.partner,
               partnerName: p.partner?.name || p.partnerName || "Partner",
               service: p.service,
-              priceType: p.priceType || "fixed",
-              rate: p.rate || 0,
+              priceType: p.priceType || p.partner?.priceType || "fixed",
+              rate: p.rate || (p.partner?.priceType === "hourly" ? p.partner?.hourlyRate : p.partner?.fixedRate) || 0,
               hours: p.hours || 0,
-              cost: p.cost, // Ensure database cost is respected on load
+              cost: p.cost, // Preserve database cost
               status: p.status
+            }));
+
+            // ⭐ MAP SUPPLIES with all required fields
+            const mappedSupplies = (event.supplies || []).map(s => ({
+              supply: s.supply?._id || s.supply,
+              supplyName: s.supplyName || s.supply?.name || "",
+              supplyCategoryId: s.supplyCategoryId?._id || s.supplyCategoryId,
+              supplyCategoryName: s.supplyCategoryName || s.supplyCategoryId?.name || "",
+              supplyUnit: s.supplyUnit || s.supply?.unit || "",
+              quantityRequested: s.quantityRequested || s.quantityAllocated || 0,
+              quantityAllocated: s.quantityAllocated || 0,
+              costPerUnit: s.costPerUnit || s.supply?.costPerUnit || 0,
+              chargePerUnit: s.chargePerUnit || s.supply?.chargePerUnit || 0,
+              pricingType: s.pricingType || s.supply?.pricingType || "included",
+              status: s.status || "pending",
+              currentStock: s.supply?.currentStock || 0,
+              // Preserve additional fields if they exist
+              totalCost: s.totalCost,
+              totalCharge: s.totalCharge,
+              deliveryDate: s.deliveryDate,
+              notes: s.notes
             }));
 
             const mappedData = {
@@ -144,6 +179,14 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
                 taxRate: event.pricing?.taxRate !== undefined ? event.pricing.taxRate : 19
               },
               partners: mappedPartners,
+              // ⭐ SUPPLIES
+              supplies: mappedSupplies,
+              supplySummary: event.supplySummary || {
+                totalCost: 0,
+                totalCharge: 0,
+                totalMargin: 0,
+                includeInBasePrice: true
+              },
               notes: event.notes || "",
               createInvoice: false
             };
@@ -153,15 +196,16 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
           }
         } catch (error) {
           console.error(error);
-          showError("Failed to load event details"); // ✅ Toast
+          showError("Failed to load event details");
         } finally {
           setFetchLoading(false);
         }
       };
       loadEvent();
     }
-  }, [eventId, isEditMode]);
+  }, [eventId, isEditMode, showError]);
 
+  // Handle Change (supports nested paths like "pricing.discount" and "supplySummary.includeInBasePrice")
   const handleChange = useCallback((eOrName, valueVal) => {
     let name, value;
     if (typeof eOrName === 'string') {
@@ -174,12 +218,24 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
 
     setFormData(prev => {
       if (name.includes('.')) {
-        const [parent, child] = name.split('.');
-        return { ...prev, [parent]: { ...prev[parent], [child]: value } };
+        const keys = name.split('.');
+        const newData = { ...prev };
+        let current = newData;
+        
+        // Navigate to the nested property
+        for (let i = 0; i < keys.length - 1; i++) {
+          current[keys[i]] = { ...current[keys[i]] };
+          current = current[keys[i]];
+        }
+        
+        // Set the final value
+        current[keys[keys.length - 1]] = value;
+        return newData;
       }
       return { ...prev, [name]: value };
     });
 
+    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -189,7 +245,7 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
     }
   }, [errors]);
 
-const handleSelectClient = useCallback((clientId) => {
+  const handleSelectClient = useCallback((clientId) => {
     if (selectedClient === clientId) {
       // Deselect (toggle off)
       setSelectedClient(null);
@@ -199,7 +255,7 @@ const handleSelectClient = useCallback((clientId) => {
       setSelectedClient(clientId);
       setFormData(prev => ({ ...prev, clientId }));
       
-      // ✅ FIXED: Remove the error property completely
+      // Remove error completely
       setErrors(prev => {
         const { clientId: removedError, ...rest } = prev;
         return rest;
@@ -208,16 +264,25 @@ const handleSelectClient = useCallback((clientId) => {
   }, [selectedClient]);
 
   return {
-    formData, setFormData,
-    selectedClient, setSelectedClient,
-    clients, setClients,
-    partners, setPartners,
-    venueSpaces, setVenueSpaces,
+    formData, 
+    setFormData,
+    selectedClient, 
+    setSelectedClient,
+    clients, 
+    setClients,
+    partners, 
+    setPartners,
+    venueSpaces, 
+    setVenueSpaces,
     existingEvents,
-    loading, setLoading,
-    fetchLoading, setFetchLoading,
-    errors, setErrors,
-    warnings, setWarnings,
+    loading, 
+    setLoading,
+    fetchLoading, 
+    setFetchLoading,
+    errors, 
+    setErrors,
+    warnings, 
+    setWarnings,
     handleChange,
     handleSelectClient
   };

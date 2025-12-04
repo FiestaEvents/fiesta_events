@@ -41,12 +41,9 @@ export const EventFormProvider = ({
   }, []);
 
   const goToStep = useCallback((step) => {
-    // Only allow jumping forward if strictly strictly validating, 
-    // but for UX, we usually allow jumping back.
     if (step < currentStep) {
       setCurrentStep(step);
     } else {
-      // If jumping forward, validate current first
       if (validateCurrentStep()) {
         setCurrentStep(step);
       }
@@ -91,10 +88,37 @@ export const EventFormProvider = ({
 
     const partnersTotal = partnersDetails.reduce((sum, p) => sum + p.calculatedCost, 0);
 
+    // ⭐ SUPPLY COSTS
+    const supplies = formData.supplies || [];
+    
+    // Calculate total cost to venue
+    const suppliesTotalCost = supplies.reduce((sum, item) => {
+      const qty = parseFloat(item.quantityRequested) || 0;
+      const cost = parseFloat(item.costPerUnit) || 0;
+      return sum + (qty * cost);
+    }, 0);
+
+    // Calculate total charge to client (only chargeable items)
+    const suppliesTotalCharge = supplies.reduce((sum, item) => {
+      if (item.pricingType === "chargeable") {
+        const qty = parseFloat(item.quantityRequested) || 0;
+        const charge = parseFloat(item.chargePerUnit) || 0;
+        return sum + (qty * charge);
+      }
+      return sum;
+    }, 0);
+
+    // Calculate margin
+    const suppliesMargin = suppliesTotalCharge - suppliesTotalCost;
+
+    // Subtotal (before discount)
+    // If supplies are included in base price, don't add them separately
+    const includeSuppliesInTotal = formData.supplySummary?.includeInBasePrice !== false;
+    const subtotalBeforeDiscount = basePrice + partnersTotal + (includeSuppliesInTotal ? 0 : suppliesTotalCharge);
+
     // Discount
     let discountAmount = 0;
     const discountVal = parseFloat(formData.pricing?.discount) || 0;
-    const subtotalBeforeDiscount = basePrice + partnersTotal;
 
     if (formData.pricing?.discountType === "percentage") {
       discountAmount = (subtotalBeforeDiscount) * (discountVal / 100);
@@ -116,6 +140,9 @@ export const EventFormProvider = ({
       basePrice,
       partnersDetails,
       partnersTotal,
+      suppliesTotalCost,
+      suppliesTotalCharge,
+      suppliesMargin,
       subtotalBeforeDiscount,
       discountAmount,
       subtotalAfterDiscount,

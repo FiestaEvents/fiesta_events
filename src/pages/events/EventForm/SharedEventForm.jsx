@@ -26,7 +26,7 @@ import DraftRestoreModal from "./components/DraftRestoreModal";
 import Button from "../../../components/common/Button";
 
 // Services
-import { eventService, paymentService, invoiceService } from "../../../api";
+import { eventService, paymentService, invoiceService, clientService, supplyService } from "../../../api";
 
 // --- MAIN FORM LAYOUT ---
 const SharedEventForm = ({ onSuccess }) => {

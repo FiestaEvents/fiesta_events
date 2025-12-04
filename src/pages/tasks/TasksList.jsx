@@ -646,19 +646,8 @@ const TasksList = () => {
     return (
       <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
         <div>
-          Showing{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {start}
-          </span>{" "}
-          to{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {end}
-          </span>{" "}
-          of{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {totalCount}
-          </span>{" "}
-          results
+          {/* ✅ CHANGED: Use translation key */}
+          {t("common.pagination.info", { start, end, total: totalCount })}
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4">
           {totalPages > 1 && (
@@ -670,7 +659,8 @@ const TasksList = () => {
             />
           )}
           <div className="flex items-center gap-2">
-            <span>Per page:</span>
+            {/* ✅ CHANGED: Use translation key */}
+            <span>{t("common.pagination.perPage")}</span>
             <select
               value={filters.limit}
               onChange={(e) => {

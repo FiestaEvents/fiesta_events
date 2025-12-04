@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import formatCurrency from "../utils/formatCurrency";
 
 // Hooks & API
 import useToast from "../hooks/useToast";
@@ -11,7 +12,7 @@ import {
   venueService,
   invoiceService,
   financeService,
-  partnerService,
+  supplyService,
 } from "../api/index";
 
 // Components
@@ -27,18 +28,18 @@ import {
   Clock,
   Wallet,
   LayoutDashboard,
-  Users,
-  Plus,
+  Download,
   FileText,
   DollarSign,
   Target,
-  PieChart,
   Loader2,
   ChevronRight,
   Bell,
-  ShoppingCart,
-  Zap,
   ArrowUpRight,
+  Package,
+  AlertTriangle,
+  ExternalLink,
+  Box,
 } from "lucide-react";
 
 // Chart.js
@@ -55,7 +56,7 @@ import {
   Filler,
   ArcElement,
 } from "chart.js";
-import { Line, Doughnut } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -71,23 +72,15 @@ ChartJS.register(
 );
 
 // ============================================
-// UTILS
+// UTILITY FUNCTIONS
 // ============================================
 
-const formatCurrency = (amount, currency = "TND") => {
-  return new Intl.NumberFormat("fr-TN", {
-    style: "currency",
-    currency: currency,
-    minimumFractionDigits: 2,
-  }).format(amount || 0);
-};
-
-const formatDateDDMMYYYY = (isoDate, locale = "en-GB") => {
+const formatDateDDMMYYYY = (isoDate, locale = "fr-FR") => {
   if (!isoDate) return "";
   try {
     return new Date(isoDate).toLocaleDateString(locale, {
       day: "2-digit",
-      month: "short",
+      month: "2-digit",
       year: "numeric",
     });
   } catch {
@@ -110,6 +103,10 @@ const extractArray = (response, ...keys) => {
   return [];
 };
 
+// ============================================
+// REUSABLE COMPONENTS
+// ============================================
+
 const Card = ({ children, className = "", onClick }) => (
   <div
     onClick={onClick}
@@ -121,30 +118,17 @@ const Card = ({ children, className = "", onClick }) => (
   </div>
 );
 
-const SectionHeader = ({ title, subtitle, action }) => (
-  <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-    <div>
-      <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-        {title}
-      </h2>
-      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
-    </div>
-    {action && <div>{action}</div>}
-  </div>
-);
-
 const MetricCard = ({
   title,
   value,
   trend,
   subValue,
   icon: Icon,
-  variant = "default", // default, solid
+  variant = "default",
   color = "orange",
 }) => {
   const isSolid = variant === "solid";
 
-  // Color Maps
   const colors = {
     orange: {
       bg: "bg-orange-50",
@@ -169,22 +153,18 @@ const MetricCard = ({
     red: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-100" },
   };
 
-  const currentTheme = colors[color];
+  const currentTheme = colors[color] || colors.orange;
 
   if (isSolid) {
     return (
-      <div
-        className={`rounded-2xl p-6 bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-xl relative overflow-hidden group cursor-default`}
-      >
+      <div className="rounded-2xl p-6 bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-xl relative overflow-hidden group cursor-default">
         <div className="absolute top-0 right-0 p-16 bg-white/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
         <div className="flex justify-between items-start relative z-10">
           <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
             <Icon size={20} className="text-white" />
           </div>
           {trend !== undefined && (
-            <div
-              className={`flex items-center text-xs font-bold px-2 py-1 rounded-full bg-white/10 text-white`}
-            >
+            <div className="flex items-center text-xs font-bold px-2 py-1 rounded-full bg-white/10 text-white">
               {trend > 0 ? "+" : ""}
               {trend}%
             </div>
@@ -199,9 +179,7 @@ const MetricCard = ({
   }
 
   return (
-    <div
-      className={`rounded-2xl p-6 bg-white border border-gray-200 hover:border-gray-300 transition-all duration-300 group`}
-    >
+    <div className="rounded-2xl p-6 bg-white border border-gray-200 hover:border-gray-300 transition-all duration-300 group">
       <div className="flex justify-between items-start mb-4">
         <div
           className={`p-2.5 rounded-xl ${currentTheme.bg} ${currentTheme.text} group-hover:scale-110 transition-transform`}
@@ -261,14 +239,11 @@ const MiniCalendar = ({ events = [], displayDate }) => {
     baseDate.getMonth() === today.getMonth() &&
     baseDate.getFullYear() === today.getFullYear();
 
-  // Generate localized weekday initials (Sunday based)
   const weekDays = useMemo(() => {
     const days = [];
     for (let i = 0; i < 7; i++) {
-      const d = new Date(2023, 0, i + 1); // 2023-01-01 was a Sunday
-      days.push(
-        d.toLocaleDateString(i18n.language, { weekday: "narrow" }) // S, M, T or د, ل, م
-      );
+      const d = new Date(2023, 0, i + 1);
+      days.push(d.toLocaleDateString(i18n.language, { weekday: "narrow" }));
     }
     return days;
   }, [i18n.language]);
@@ -360,16 +335,18 @@ const MiniCalendar = ({ events = [], displayDate }) => {
 };
 
 // ============================================
-// MAIN PAGE
+// MAIN DASHBOARD COMPONENT
 // ============================================
 
 const DashboardPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { apiError } = useToast();
+  const { showSuccess, showError } = useToast();
 
+  // State Management
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("events");
+  const [generatingReceipt, setGeneratingReceipt] = useState(false);
 
   // Data States
   const [eventsData, setEventsData] = useState({
@@ -381,17 +358,14 @@ const DashboardPage = () => {
     pendingEvents: 0,
     occupancyRate: 0,
     eventDistribution: {},
-    riskyEvents: [],
   });
+
   const [expensesData, setExpensesData] = useState({
     totalExpenses: 0,
-    partnerCosts: 0,
-    venueCosts: 0,
-    otherCosts: 0,
     expensesByCategory: {},
     expenseTrend: { labels: [], datasets: [] },
-    topExpenses: [],
   });
+
   const [financeData, setFinanceData] = useState({
     totalRevenue: 0,
     revenueGrowth: 0,
@@ -399,32 +373,159 @@ const DashboardPage = () => {
     cashFlow: { inflow: 0, outflow: 0, net: 0 },
     recentPayments: [],
     revenueTrend: { labels: [], datasets: [] },
-    invoiceStats: {},
   });
-  const [currentDateContext, setCurrentDateContext] = useState(new Date());
+
+  const [supplyData, setSupplyData] = useState({
+    totalSupplies: 0,
+    totalValue: 0,
+    lowStockCount: 0,
+    outOfStockCount: 0,
+  });
+
+  const [lowStockItems, setLowStockItems] = useState([]);
+  const [currentDateContext] = useState(new Date());
+
+  // ============================================
+  // CSV GENERATION FUNCTION
+  // ============================================
+
+  const generateMonthlyReceiptCSV = () => {
+    try {
+      setGeneratingReceipt(true);
+
+      const currentMonth = new Date();
+      const monthName = currentMonth.toLocaleDateString('fr-FR', { month: "long" }).toUpperCase();
+      const yearShort = currentMonth.getFullYear().toString().slice(-2);
+      const title = `${monthName}-${yearShort}`;
+
+      // Filter payments for current month (Income only)
+      const receipts = financeData.recentPayments.filter((payment) => {
+        const paymentDate = new Date(payment.paidDate || payment.createdAt);
+        return (
+          paymentDate.getMonth() === currentMonth.getMonth() &&
+          paymentDate.getFullYear() === currentMonth.getFullYear() &&
+          payment.type === "income"
+        );
+      });
+
+      // Headers corresponding to the Excel file
+      const headers = [
+        "Date",
+        "Mois",
+        "Nom et Prenom",
+        "Evenement",
+        "Prix",
+        "A Compte",
+        "N° Reçu",
+        "Reste a payer",
+        "Status",
+        "Date de Ver"
+      ];
+
+      // Calculate totals
+      let totalPrix = 0;
+      let totalAcompte = 0;
+      let totalReste = 0;
+
+      // Prepare Data Rows
+      const rows = receipts.map((payment) => {
+        const pDate = new Date(payment.paidDate || payment.createdAt);
+        const dateStr = formatDateDDMMYYYY(pDate);
+        // Format Month like "oct-25"
+        const monthStr = pDate.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }).replace('.', '');
+        
+        const name = (payment.client?.name || "Client").substring(0, 30);
+        const eventName = (payment.event?.title || payment.description || "Event").substring(0, 30);
+        
+        const price = payment.amount || 0;
+        const advance = payment.fees?.processingFee || 0; // Assuming this logic based on previous context
+        const remaining = price - advance;
+        const receiptNo = payment.reference || "";
+        const status = "payer"; // Or dynamic status logic
+        const dateVer = payment.verificationDate ? formatDateDDMMYYYY(payment.verificationDate) : "";
+
+        // Accumulate totals
+        totalPrix += price;
+        totalAcompte += advance;
+        totalReste += remaining;
+
+        // Escape helper for CSV (handles quotes inside content)
+        const safe = (str) => `"${String(str || "").replace(/"/g, '""')}"`;
+
+        return [
+          safe(dateStr),
+          safe(monthStr),
+          safe(name),
+          safe(eventName),
+          price, // Numbers don't need quotes usually, allows Excel math
+          advance,
+          safe(receiptNo),
+          remaining,
+          safe(status),
+          safe(dateVer)
+        ].join(",");
+      });
+
+      // Totals Row
+      const totalsRow = [
+        "", "", "", "TOTAUX", 
+        totalPrix, 
+        totalAcompte, 
+        "", 
+        totalReste, 
+        "", ""
+      ].join(",");
+
+      // Combine CSV Content
+      // \uFEFF is the BOM (Byte Order Mark) so Excel opens UTF-8 correctly with French chars
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows, totalsRow].join("\n");
+
+      // Download Trigger
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Recette_${title}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showSuccess("Receipt CSV downloaded successfully!");
+    } catch (error) {
+      console.error("Error generating CSV:", error);
+      showError("Failed to generate CSV");
+    } finally {
+      setGeneratingReceipt(false);
+    }
+  };
+
+  // ============================================
+  // DATA FETCHING
+  // ============================================
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+
         const [
           eventsRes,
           paymentsRes,
           financeRes,
-          partnersRes,
           invoicesRes,
           venueRes,
+          suppliesRes,
         ] = await Promise.allSettled([
           eventService.getAll({ limit: 100 }),
           paymentService.getAll({ limit: 100 }),
           financeService?.getAll?.({ limit: 100 }) ||
             Promise.resolve({ data: [] }),
-          partnerService?.getAll?.() || Promise.resolve({ data: [] }),
           invoiceService.getStats(),
           venueService.getMe(),
+          supplyService.getAll({ limit: 200, status: "active" }),
         ]);
 
-        // Extraction Helpers
+        // Extract data
         const allEvents = extractArray(
           eventsRes.status === "fulfilled" ? eventsRes.value : {},
           "events",
@@ -448,12 +549,17 @@ const DashboardPage = () => {
           invoicesRes.status === "fulfilled"
             ? invoicesRes.value?.data?.stats || invoicesRes.value?.stats || {}
             : {};
+        const allSupplies = extractArray(
+          suppliesRes.status === "fulfilled" ? suppliesRes.value : {},
+          "supplies",
+          "data"
+        );
 
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
 
-        // 1. Process Events
+        // Process Events
         const todayEvents = allEvents.filter(
           (e) =>
             e.startDate &&
@@ -482,7 +588,7 @@ const DashboardPage = () => {
               )
             : 0;
 
-        // 2. Process Finance
+        // Process Finance
         const currentMonthFinances = allFinances.filter((f) => {
           const d = new Date(f.date || f.createdAt);
           return (
@@ -507,7 +613,20 @@ const DashboardPage = () => {
           0
         );
 
-        // Chart Mocks for UI Demo
+        // Process Supplies
+        const totalSupplies = allSupplies.length;
+        const totalValue = allSupplies.reduce((sum, supply) => {
+          const value = (supply.currentStock || 0) * (supply.costPerUnit || 0);
+          return sum + value;
+        }, 0);
+        const lowStockSupplies = allSupplies.filter(
+          (s) => s.currentStock <= s.minimumStock && s.currentStock > 0
+        );
+        const outOfStockSupplies = allSupplies.filter(
+          (s) => s.currentStock === 0
+        );
+
+        // Chart Data
         const labels = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
         setEventsData({
@@ -522,14 +641,10 @@ const DashboardPage = () => {
             Confirmed: confirmedEvents.length,
             Pending: allEvents.length - confirmedEvents.length,
           },
-          riskyEvents: [],
         });
 
         setExpensesData({
           totalExpenses,
-          partnerCosts: totalExpenses * 0.45,
-          venueCosts: totalExpenses * 0.25,
-          otherCosts: totalExpenses * 0.3,
           expensesByCategory: {
             catering: totalExpenses * 0.4,
             decoration: totalExpenses * 0.3,
@@ -539,6 +654,7 @@ const DashboardPage = () => {
             labels,
             datasets: [
               {
+                label: "Expenses",
                 data: [
                   totalExpenses * 0.8,
                   totalExpenses * 0.9,
@@ -554,7 +670,6 @@ const DashboardPage = () => {
               },
             ],
           },
-          topExpenses: currentMonthFinances.slice(0, 5),
         });
 
         setFinanceData({
@@ -566,7 +681,7 @@ const DashboardPage = () => {
             outflow: totalExpenses,
             net: totalRevenue - totalExpenses,
           },
-          recentPayments: allPayments.slice(0, 5), // Already sorted by backend usually, or sort here
+          recentPayments: allPayments.slice(0, 5),
           revenueTrend: {
             labels,
             datasets: [
@@ -596,15 +711,33 @@ const DashboardPage = () => {
           },
           invoiceStats,
         });
+
+        setSupplyData({
+          totalSupplies,
+          totalValue,
+          lowStockCount: lowStockSupplies.length,
+          outOfStockCount: outOfStockSupplies.length,
+        });
+
+        setLowStockItems(
+          lowStockSupplies
+            .sort((a, b) => a.currentStock - b.currentStock)
+            .slice(0, 5)
+        );
       } catch (error) {
-        console.error(error);
-        apiError(error, "Failed to load dashboard");
+        console.error("Dashboard data fetch error:", error);
+        showError(error, "Failed to load dashboard");
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
-  }, [apiError]);
+  }, [showError]);
+
+  // ============================================
+  // LOADING STATE
+  // ============================================
 
   if (loading) {
     return (
@@ -618,11 +751,27 @@ const DashboardPage = () => {
     );
   }
 
+  // ============================================
+  // TAB CONFIGURATION
+  // ============================================
+
   const tabs = [
-    { id: "events", label: t("dashboard.tabs.overview"), icon: LayoutDashboard },
-    { id: "expenses", label: t("dashboard.tabs.expenses"), icon: PieChart },
+    {
+      id: "events",
+      label: t("dashboard.tabs.overview"),
+      icon: LayoutDashboard,
+    },
+    {
+      id: "expenses",
+      label: t("dashboard.tabs.inventory") || "Inventory & Expenses",
+      icon: Package,
+    },
     { id: "finance", label: t("dashboard.tabs.finance"), icon: Wallet },
   ];
+
+  // ============================================
+  // RENDER
+  // ============================================
 
   return (
     <div className="min-h-screen bg-white text-gray-900 p-4 md:p-8 font-sans">
@@ -651,16 +800,29 @@ const DashboardPage = () => {
               </p>
             </div>
             <Button
-              onClick={() => navigate("/events/new")}
-              className="bg-gray-900 hover:bg-black text-white rounded-xl px-6 py-3 shadow-lg shadow-gray-200 transition-all hover:-translate-y-0.5"
+              onClick={generateMonthlyReceiptCSV}
+              disabled={generatingReceipt}
+              className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 py-3 shadow-lg shadow-green-200 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Plus size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
-              {t("dashboard.buttons.newEvent")}
+              {generatingReceipt ? (
+                <>
+                  <Loader2
+                    size={18}
+                    className="mr-2 rtl:ml-2 rtl:mr-0 animate-spin"
+                  />
+                  {t("dashboard.buttons.generating") || "Processing..."}
+                </>
+              ) : (
+                <>
+                  <FileText size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
+                  {t("dashboard.buttons.downloadCSV") || "Download Recette"}
+                </>
+              )}
             </Button>
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Tabs */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex p-1 bg-gray-50 border border-gray-200 rounded-xl w-full sm:w-auto">
             {tabs.map((tab) => (
@@ -685,7 +847,6 @@ const DashboardPage = () => {
             ))}
           </div>
 
-          {/* Quick Stats Row */}
           <div className="flex items-center gap-6 text-sm">
             <div className="flex items-center gap-2 text-gray-500">
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -694,12 +855,9 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* ============================================ */}
-        {/* CONTENT AREA */}
-        {/* ============================================ */}
-
+        {/* Content Area */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-          {/* TAB 1: EVENTS */}
+          {/* TAB 1: EVENTS OVERVIEW */}
           {activeTab === "events" && (
             <div className="space-y-8">
               {/* Top Metrics */}
@@ -738,7 +896,7 @@ const DashboardPage = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left: Calendar */}
+                {/* Calendar */}
                 <div className="lg:col-span-1 h-full">
                   <MiniCalendar
                     events={eventsData.allEvents}
@@ -746,9 +904,9 @@ const DashboardPage = () => {
                   />
                 </div>
 
-                {/* Right: Today + Upcoming */}
+                {/* Today & Upcoming Events */}
                 <div className="lg:col-span-2 space-y-6">
-                  {/* Today Section */}
+                  {/* Today's Agenda */}
                   <Card className="border-orange-100 bg-orange-50/30">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
@@ -804,7 +962,7 @@ const DashboardPage = () => {
                     )}
                   </Card>
 
-                  {/* Upcoming Table */}
+                  {/* Upcoming Events Table */}
                   <Card className="p-0 overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                       <h3 className="font-bold text-gray-900">
@@ -862,46 +1020,77 @@ const DashboardPage = () => {
             </div>
           )}
 
-          {/* TAB 2: EXPENSES */}
+          {/* TAB 2: INVENTORY & EXPENSES */}
           {activeTab === "expenses" && (
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="space-y-6">
+              {/* Header with Action Button */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {t("sections.inventoryOverview") ||
+                      "Inventory & Supply Overview"}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {t("sections.inventorySubtitle") ||
+                      "Real-time stock levels and expense tracking"}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => navigate("/supplies")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-3 shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
+                >
+                  <Box size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
+                  {t("dashboard.buttons.manageSupplies") || "Manage Supplies"}
+                  <ExternalLink size={16} className="ml-2 rtl:mr-2 rtl:ml-0" />
+                </Button>
+              </div>
+
+              {/* Supply Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <MetricCard
-                  title={t("metrics.totalSpent")}
-                  value={formatCurrency(expensesData.totalExpenses)}
-                  icon={ShoppingCart}
-                  color="red"
-                  variant="primary"
-                />
-                <MetricCard
-                  title={t("metrics.partnerCosts")}
-                  value={formatCurrency(expensesData.partnerCosts)}
-                  icon={Users}
+                  title={t("metrics.totalSupplies") || "Total Supplies"}
+                  value={supplyData.totalSupplies}
+                  icon={Package}
                   color="blue"
-                  subValue={t("metrics.vendors")}
+                  subValue={t("metrics.activeItems") || "Active items"}
                 />
                 <MetricCard
-                  title={t("metrics.operations")}
-                  value={formatCurrency(expensesData.venueCosts)}
-                  icon={Zap}
+                  title={t("metrics.inventoryValue") || "Inventory Value"}
+                  value={formatCurrency(supplyData.totalValue)}
+                  icon={DollarSign}
+                  color="green"
+                  subValue={t("metrics.totalWorth") || "Total worth"}
+                />
+                <MetricCard
+                  title={t("metrics.lowStockAlerts") || "Low Stock Alerts"}
+                  value={supplyData.lowStockCount}
+                  icon={AlertTriangle}
                   color="orange"
-                  subValue={t("metrics.utilities")}
+                  subValue={t("metrics.needsReorder") || "Needs reorder"}
                 />
                 <MetricCard
-                  title={t("metrics.misc")}
-                  value={formatCurrency(expensesData.otherCosts)}
-                  icon={PieChart}
-                  color="purple"
-                  subValue={t("metrics.other")}
+                  title={t("metrics.outOfStock") || "Out of Stock"}
+                  value={supplyData.outOfStockCount}
+                  icon={TrendingDown}
+                  color="red"
+                  subValue={t("metrics.urgentAction") || "Urgent action"}
                 />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Expense Chart */}
                 <Card className="lg:col-span-2">
-                  <SectionHeader
-                    title={t("sections.expenseTrends")}
-                    subtitle={t("sections.spendingSubtitle")}
-                  />
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="font-bold text-gray-900">
+                        {t("sections.expenseAnalysis")}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {t("sections.expenseSubtitle") || "Total Expenses"}:{" "}
+                        {formatCurrency(expensesData.totalExpenses)}
+                      </p>
+                    </div>
+                  </div>
                   <div className="h-72">
                     <Line
                       data={expensesData.expenseTrend}
@@ -917,63 +1106,75 @@ const DashboardPage = () => {
                     />
                   </div>
                 </Card>
+
+                {/* Low Stock List */}
                 <Card>
-                  <SectionHeader
-                    title={t("sections.breakdown")}
-                    subtitle={t("sections.byCategory")}
-                  />
-                  <div className="h-56 relative mb-6">
-                    <Doughnut
-                      data={{
-                        labels: Object.keys(expensesData.expensesByCategory),
-                        datasets: [
-                          {
-                            data: Object.values(
-                              expensesData.expensesByCategory
-                            ),
-                            backgroundColor: [
-                              "#18181b",
-                              "#fb923c",
-                              "#94a3b8",
-                              "#e2e8f0",
-                            ],
-                            borderWidth: 0,
-                          },
-                        ],
-                      }}
-                      options={{
-                        cutout: "70%",
-                        plugins: { legend: { display: false } },
-                      }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-2xl font-bold text-gray-900">
-                        %
-                      </span>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2 text-red-700">
+                      <AlertTriangle size={20} />
+                      <h3 className="font-bold">
+                        {t("sections.lowStockAlerts") || "Low Stock Alerts"}
+                      </h3>
                     </div>
+                    <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold">
+                      {lowStockItems.length}
+                    </span>
                   </div>
-                  <div className="space-y-3">
-                    {Object.entries(expensesData.expensesByCategory).map(
-                      ([k, v], i) => (
-                        <div key={k} className="flex justify-between text-sm">
-                          <span className="capitalize text-gray-500 flex items-center gap-2">
-                            <div
-                              className={`w-2 h-2 rounded-full`}
-                              style={{
-                                backgroundColor: [
-                                  "#18181b",
-                                  "#fb923c",
-                                  "#94a3b8",
-                                  "#e2e8f0",
-                                ][i],
-                              }}
-                            ></div>
-                            {k}
-                          </span>
-                          <span className="font-bold">{formatCurrency(v)}</span>
+
+                  {lowStockItems.length > 0 ? (
+                    <div className="space-y-3">
+                      {lowStockItems.map((item) => (
+                        <div
+                          key={item._id}
+                          className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-100 hover:border-red-200 transition-colors"
+                        >
+                          <div className="flex-1">
+                            <p className="font-bold text-sm text-gray-800">
+                              {item.name}
+                            </p>
+                            <p className="text-xs text-red-600 font-medium">
+                              {item.currentStock} {item.unit}{" "}
+                              {t("common.remaining") || "remaining"}
+                            </p>
+                            {item.minimumStock && (
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                Min: {item.minimumStock} {item.unit}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => navigate(`/supplies/${item._id}`)}
+                            className="bg-white text-red-600 border border-red-200 hover:bg-red-50 text-xs px-3 py-1.5 h-8"
+                          >
+                            {t("common.reorder") || "Reorder"}
+                          </Button>
                         </div>
-                      )
-                    )}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Package className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-400 text-sm">
+                        {t("dashboard.status.noLowStock") ||
+                          "All supplies are adequately stocked"}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-center"
+                      onClick={() => navigate("/supplies")}
+                    >
+                      {t("dashboard.buttons.viewAllSupplies") ||
+                        "View All Supplies"}
+                      <ChevronRight
+                        size={16}
+                        className="ml-2 rtl:mr-2 rtl:ml-0"
+                      />
+                    </Button>
                   </div>
                 </Card>
               </div>
@@ -1056,7 +1257,6 @@ const DashboardPage = () => {
                         >
                           <div>
                             <p className="font-bold text-gray-900 text-sm">
-                              {/* FIX: Use p.client?.name instead of p.clientId.name, fallback to description for expenses */}
                               {p.client?.name ||
                                 p.description ||
                                 t("common.unknown")}

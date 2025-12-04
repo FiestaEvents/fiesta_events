@@ -51,7 +51,17 @@
         "nameRequired": "الاسم مطلوب",
         "emailRequired": "البريد الإلكتروني مطلوب",
         "passwordRequired": "كلمة المرور مطلوبة",
-        "confirmMatch": "كلمات المرور غير متطابقة"
+        "confirmMatch": "كلمات المرور غير متطابقة",
+        "nameLength": "[TO_TRANSLATE] Name must be between 2 and 50 characters",
+        "nameInvalid": "[TO_TRANSLATE] Name can only contain letters and spaces",
+        "emailInvalid": "يرجى تقديم بريد إلكتروني صالح",
+        "passwordLength": "[TO_TRANSLATE] Password must be at least 8 characters",
+        "passwordLowercase": "[TO_TRANSLATE] Password must contain at least one lowercase letter",
+        "passwordUppercase": "[TO_TRANSLATE] Password must contain at least one uppercase letter",
+        "passwordNumber": "[TO_TRANSLATE] Password must contain at least one number",
+        "passwordSpecial": "[TO_TRANSLATE] Password must contain at least one special character",
+        "confirmRequired": "[TO_TRANSLATE] Please confirm your password",
+        "invalidChars": "[TO_TRANSLATE] Password contains invalid characters"
       },
       "steps": {
         "business": "نوع العمل",
@@ -131,18 +141,24 @@
       "viewAll": "عرض الكل",
       "export": "تصدير",
       "viewTransactions": "عرض جميع المعاملات",
-      "scheduleOne": "جدولة واحد؟"
+      "scheduleOne": "جدولة واحد؟",
+      "generating": "معالجة...",
+      "manageSupplies": "إدارة المخزون",
+      "viewAllSupplies": "عرض جميع المخزون",
+      "downloadCSV": "تحميل CSV"
     },
     "tabs": {
       "overview": "نظرة عامة",
       "expenses": "النفقات",
-      "finance": "المالية"
+      "finance": "المالية",
+      "inventory": "المخزون"
     },
     "status": {
       "systemOperational": "النظام يعمل",
       "noEvents": "لا توجد أحداث مقررة اليوم.",
       "noUpcoming": "لم يتم العثور على أحداث قادمة",
-      "noTransactions": "لا توجد معاملات حديثة"
+      "noTransactions": "لا توجد معاملات حديثة",
+      "noLowStock": "جميع الإمدادات متوفرة بشكل كافٍ"
     }
   },
   "metrics": {
@@ -165,7 +181,15 @@
     "netCashFlow": "صافي التدفق النقدي",
     "inflowOutflow": "التدفق الداخل مقابل الخارج",
     "unpaidInvoices": "فواتير غير مدفوعة",
-    "actionNeeded": "إجراء مطلوب"
+    "actionNeeded": "إجراء مطلوب",
+    "totalSupplies": "إجمالي الإمدادات",
+    "activeItems": "العناصر النشطة",
+    "inventoryValue": "قيمة المخزون",
+    "totalWorth": "القيمة الإجمالية",
+    "lowStockAlerts": "تنبيهات انخفاض المخزون",
+    "needsReorder": "يحتاج إعادة طلب",
+    "outOfStock": "نفاد المخزون",
+    "urgentAction": "إجراء عاجل"
   },
   "sections": {
     "todaysAgenda": "جدول أعمال اليوم",
@@ -176,27 +200,34 @@
     "byCategory": "حسب الفئة",
     "revenuePerformance": "أداء الإيرادات",
     "revenueSubtitle": "تحليلات الدخل الإجمالي",
-    "recentTransactions": "المعاملات الأخيرة"
+    "recentTransactions": "المعاملات الأخيرة",
+    "supplies": "إدارة الإمدادات",
+    "inventory": "إدارة المخزون",
+    "lowStock": "إشعارات انخفاض المخزون",
+    "reorder": "إعادة طلب",
+    "outOfStock": "نفاد المخزون",
+    "urgent": "إجراءات عاجلة"  ,
+    "inventoryOverview": "نظرة عامة على المخزون",
+    "inventorySubtitle": "مستويات المخزون وتتبع النفقات",
+    "expenseAnalysis": "تحليل النفقات",
+    "expenseSubtitle": "إجمالي النفقات",
+    "lowStockAlerts": "تنبيهات انخفاض المخزون"
   },
-  "common": {
-    "guests": "ضيوف",
-    "pax": "شخص",
-    "client": "عميل"
-  },
-
   "home": {
     "eventsDesc": "إدارة التقويم",
     "clientsDesc": "قاعدة بيانات العملاء",
     "contractsDesc": "الاتفاقيات القانونية",
     "invoicesDesc": "الفواتير والرسوم",
-    "paymentsDesc": "تتبع الإيرادات",
+    "paymentsDesc": "تتبع الدخل",
     "partnersDesc": "علاقات الموردين",
     "tasksDesc": "قوائم المهام",
     "remindersDesc": "التنبيهات والإشعارات",
     "docSettingsDesc": "تخطيطات النماذج",
     "statsDesc": "التقارير والتحليلات",
-    "settingsDesc": "إعدادات النظام",
-    "dashboardDesc": "التقارير والتحليلات"
+    "settingsDesc": "تكوين النظام",
+    "dashboardDesc": "التقارير والتحليلات",
+    "financeDesc": "نظرة عامة مالية",
+    "documentsDesc": "تخطيطات النماذج"
   },
   "clients": {
     "title": "العملاء",
@@ -737,7 +768,9 @@
       "quickSaveEditOnly": "الحفظ السريع متاح فقط عند تعديل حدث",
       "fixStepErrors": "يرجى إصلاح الأخطاء في هذه الخطوة قبل الحفظ",
       "updateFailed": "فشل تحديث الحدث",
-      "createFailed": "فشل إنشاء الحدث"
+      "createFailed": "فشل إنشاء الحدث",
+      "fixErrors": "[TO_TRANSLATE] Please fix the errors in the form before proceeding.",
+      "saveFailed": "[TO_TRANSLATE] Failed to save event."
     },
     "step1": {
       "eventDetails": "تفاصيل الحدث",
@@ -768,7 +801,14 @@
       "clientNamePlaceholder": "اسم العميل *",
       "emailPlaceholder": "البريد الإلكتروني",
       "phonePlaceholder": "رقم الهاتف (8 أرقام)",
-      "createAndSelect": "إنشاء واختيار العميل"
+      "createAndSelect": "إنشاء واختيار العميل",
+      "createClient": "[TO_TRANSLATE] Create New Client",
+      "clientSelectionDescription": "[TO_TRANSLATE] Select an existing client or create a new one for this event.",
+      "newClientDetails": "[TO_TRANSLATE] New Client Details",
+      "clientEmail": "[TO_TRANSLATE] Client Email",
+      "clientName": "[TO_TRANSLATE] Create Name",
+      "clientPhone": "[TO_TRANSLATE] Client Phone",
+      "searchClients": "[TO_TRANSLATE] Search Clients..."
     },
     "step3": {
       "venueSpaceSelection": "اختيار مساحة المكان",
@@ -777,7 +817,50 @@
       "pricing": "التسعير",
       "basePriceLabel": "السعر الأساسي (من مساحة المكان)",
       "discount": "الخصم (اختياري)",
-      "servicePartners": "شركاء الخدمة"
+      "servicePartners": "شركاء الخدمة",
+      "eventSupplies": "الإمدادات",
+      "suppliesDescription": "اختر الإمدادات اللازمة لهذا الحدث (عصائر، طعام، إكسسوارات، إلخ)",
+      "selectedSupplies": "الإمدادات المختارة",
+      "addSupplies": "إضافة إمدادات",
+      "closeSupplyBrowser": "إغلاق متصفح الإمدادات",
+      "noSuppliesAvailable": "لا إمدادات متاحة في هذه الفئة",
+      "stock": "المخزون",
+      "available": "متاح",
+      "lowStockWarning": "المخزون المنخفض - طلب بسرعة",
+      "included": "شامل",
+      "complimentary": "مجانًا",
+      "optional": "اختياري",
+      "supplyCost": "تكلفة الإمدادات (المكان)",
+      "clientCharge": "الإيصال للعميل",
+      "suppliesTotal": "إجمالي الإمدادات",
+      "supplyCostToVenue": "تكلفة الإمدادات للمنزل",
+      "margin": "الربح",
+      "priceSummary": "ملخص التسعير",
+      "venueBase": "أساس المكان",
+      "partnersTotal": "إجمالي الشركاء",
+      "subtotal": "إجمالي الفاتورة",
+      "afterDiscount": "بعد الخصم",
+      "tax": "الضريبة",
+      "total": "إجمالي",
+      "noPartnersSelected": "[TO_TRANSLATE] No partners selected",
+      "fixedCost": "[TO_TRANSLATE] Fixed Cost (TND)",
+      "hourlyRate": "[TO_TRANSLATE] Hourly Rate (TND)",
+      "hourly": "[TO_TRANSLATE] Hourly",
+      "priceModel": "[TO_TRANSLATE] Price Model",
+      "partnerPhone": "[TO_TRANSLATE] Partner Phone",
+      "selectCategory": "[TO_TRANSLATE] Select Category",
+      "category": "الفئة",
+      "partnerName": "[TO_TRANSLATE] Partner Name",
+      "taxRate": "[TO_TRANSLATE] Tax Rate (%)",
+      "discountAmount": "[TO_TRANSLATE] Discount Amount",
+      "fixed": "[TO_TRANSLATE] Fixed",
+      "percentage": "[TO_TRANSLATE] Percentage",
+      "venueSpace": "[TO_TRANSLATE] Venue Space",
+      "createAndAdd": "[TO_TRANSLATE] Create & Add",
+      "additionalServices": "[TO_TRANSLATE] Additional Services",
+      "adjustments": "[TO_TRANSLATE] Adjustments",
+      "selectPartners": "[TO_TRANSLATE] Select Partners to Add",
+      "createNewPartner": "[TO_TRANSLATE] Create New Partner"
     },
     "step4": {
       "recordPayment": "تسجيل الدفعة الأولية (اختياري)",
@@ -932,6 +1015,14 @@
       "invalidPhone": "يجب أن يتكون رقم الهاتف من 8 أرقام بالضبط",
       "invalidRating": "يجب أن يكون التقييم بين 0 و 5",
       "positiveNumber": "يجب أن يكون {{field}} رقمًا موجبًا"
+    },
+    "buttons": {
+      "previous": "السابق",
+      "next": "التالي",
+      "cancel": "إلغاء",
+      "create": "[TO_TRANSLATE] Create Partner",
+      "update": "[TO_TRANSLATE] Update Partner",
+      "updateNow": "[TO_TRANSLATE] Update Now"
     }
   },
   "partnerDetail": {
@@ -1098,364 +1189,181 @@
       "goodProgress": "تقدم جيد! استمر في الحفاظ على معدلات إكمال فعاليات متسقة."
     }
   },
-  "tasks": {
+  "tasks": {  
+
     "title": "المهام",
+    "subtitle": "إدارة وتتبع مهام فريقك",
     "archivedTasks": "المهام المؤرشفة",
-    "subtitle": "إدارة مهام وتعيينات الفريق",
-    "archivedSubtitle": "عرض وإدارة المهام المؤرشفة",
-    "showingTasks": "عرض {{current}} من إجمالي {{total}} مهمة",
+    "archivedSubtitle": "عرض وإدارة المهام المؤرشفة سابقًا",
     "createTask": "إنشاء مهمة",
-    "createFirstTask": "إنشاء أول مهمة",
-    "editTask": "تعديل المهمة",
-    "archiveTask": "أرشفة المهمة",
-    "restoreTask": "استعادة المهمة",
-    "deleteTask": "حذف المهمة",
-    "activeTasks": "المهام النشطة",
-    "archived": "مؤرشف",
-    "searchPlaceholder": "البحث في المهام بالعنوان أو الوصف...",
-    "searchArchivedPlaceholder": "البحث في المهام المؤرشفة بالعنوان أو الوصف...",
-    "filters": {
-      "allStatus": "جميع الحالات",
-      "allPriorities": "جميع الأولويات",
-      "allCategories": "جميع الفئات",
-      "clearFilters": "مسح الفلاتر",
-      "activeFilters": "الفلاتر النشطة"
-    },
-    "returnToActive": "العودة إلى النشطة",
-    "unassigned": "غير معين",
-    "untitled": "مهمة بدون عنوان",
-    "toasts": {
-      "status": {
-        "error": "فشل في تحديث الحالة"
-      }
-    },
-    "status": {
-      "pending": "قيد الانتظار",
-      "todo": "مطلوب عمله",
-      "in_progress": "قيد التنفيذ",
-      "blocked": "محظور",
-      "completed": "مكتمل",
-      "cancelled": "ملغى",
-      "unknown": "Unknown"
-    },
-    "priority": {
-      "low": "منخفض",
-      "medium": "متوسط",
-      "high": "مرتفع",
-      "urgent": "عاجل"
-    },
-    "category": {
-      "event_preparation": "تحضير الفعالية",
-      "marketing": "التسويق",
-      "maintenance": "الصيانة",
-      "client_followup": "متابعة العميل",
-      "partner_coordination": "تنسيق الشريك",
-      "administrative": "إداري",
-      "finance": "مالي",
-      "setup": "إعداد",
-      "cleanup": "تنظيف",
-      "other": "أخرى"
-    },
-    "stats": {
-      "total": "الإجمالي",
-      "pending": "قيد الانتظار",
-      "todo": "مطلوب عمله",
-      "inProgress": "قيد التنفيذ",
-      "blocked": "محظور",
-      "completed": "مكتمل",
-      "overdue": "متأخر"
-    },
-    "table": {
-      "title": "العنوان",
-      "status": "الحالة",
-      "priority": "الأولوية",
-      "dueDate": "تاريخ الاستحقاق",
-      "assignedTo": "مُعيّن إلى",
-      "progress": "التقدم",
-      "actions": "الإجراءات"
-    },
+    "createFirstTask": "أنشئ مهمتك الأولى",
+    "returnToActive": "العودة للمهام النشطة",
+    "archived": "المؤرشفة",
+    "searchPlaceholder": "البحث في المهام...",
     "view": {
       "list": "قائمة",
       "kanban": "كانبان"
     },
+    "stats": {
+      "total": "إجمالي المهام"
+    },
     "messages": {
-      "loading": "جاري تحميل المهام...",
-      "loadingArchived": "جاري تحميل المهام المؤرشفة...",
-      "noTasks": "لا توجد مهام بعد",
-      "noArchivedTasks": "لا توجد مهام مؤرشفة",
-      "noTasksDescription": "ابدأ بإنشاء مهمتك الأولى.",
-      "noArchivedDescription": "ستظهر المهام المؤرشفة هنا",
-      "noResults": "لم يتم العثور على مهام",
-      "noResultsDescription": "لا توجد مهام تطابق معايير البحث الحالية.",
-      "noArchivedResults": "لم يتم العثور على مهام مؤرشفة",
-      "noArchivedResultsDescription": "لا توجد مهام مؤرشفة تطابق معايير البحث الحالية.",
-      "errorLoading": "خطأ في تحميل المهام",
-      "thisTask": "This Task",
-      "loadEvents": "فشل في تحميل فعاليات العميل",
-      "loadFormData": "فشل في تحميل بيانات النموذج",
+      "noResults": "لا توجد مهام",
+      "noResultsDescription": "حاول تعديل البحث أو المرشحات للعثور على ما تبحث عنه.",
+      "noTasks": "لا توجد مهام حتى الآن",
+      "noTasksDescription": "ابدأ بإنشاء مهمة جديدة لتتبع عملك.",
+      "thisTask": "هذه المهمة",
+      "error": {
+        "load": "فشل تحميل المهام"
+      },
+      "success": {
+        "created": "تم إنشاء المهمة بنجاح",
+        "updated": "تم تحديث المهمة بنجاح",
+        "archived": "تم أرشفة المهمة بنجاح",
+        "restored": "تم استعادة المهمة بنجاح",
+        "deleted": "تم حذف المهمة بنجاح"
+      },
       "archiveConfirm": {
         "title": "أرشفة المهمة",
-        "message": "هل أنت متأكد من أنك تريد أرشفة \"{{title}}\"؟",
-        "confirm": "أرشفة المهمة"
+        "message": "هل أنت متأكد أنك تريد أرشفة \"{{title}}\"؟"
       },
-      "retry": "إعادة المحاولة",
-      "search": "بحث",
-      "estimated": "مقدر",
-      "unknown": "غير معروف",
-      "close": "إغلاق",
-      "archiving": "جاري الأرشفة...",
-      "restoring": "جاري الاستعادة...",
-      "deleting": "جاري الحذف...",
-      "event": "فعالية",
-      "client": "عميل",
-      "partner": "شريك",
       "restoreConfirm": {
         "title": "استعادة المهمة",
-        "message": "هل أنت متأكد من أنك تريد استعادة \"{{title}}\"؟",
-        "confirm": "استعادة المهمة"
+        "message": "هل أنت متأكد أنك تريد استعادة \"{{title}}\"؟"
       },
       "deleteConfirm": {
         "title": "حذف المهمة",
-        "message": "هل أنت متأكد من أنك تريد حذف \"{{title}}\" نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-        "confirm": "حذف نهائي"
-      },
-      "success": {
-        "archived": "تم أرشفة المهمة بنجاح",
-        "restored": "تم استعادة المهمة بنجاح",
-        "deleted": "تم حذف المهمة نهائيًا",
-        "created": "تم إنشاء المهمة بنجاح",
-        "updated": "تم تحديث المهمة بنجاح",
-        "statusUpdated": "Status Updated"
-      },
-      "error": {
-        "archive": "فشل في أرشفة المهمة",
-        "restore": "فشل في استعادة المهمة",
-        "delete": "فشل في حذف المهمة",
-        "load": "فشل في تحميل المهام",
-        "loadEvents": "Load Events",
-        "loadFormData": "Load Form Data",
-        "statusUpdate": "Status Update"
+        "message": "هل أنت متأكد أنك تريد حذف \"{{title}}\" نهائياً؟ لا يمكن التراجع عن هذا الإجراء."
       }
+    },
+    "toasts": {
+      "status": {
+        "error": "فشل تحديث الحالة",
+        "success": "تم تحديث الحالة بنجاح",
+        "loading": "جارٍ تحديث الحالة..."
+      },
+      "archive": {
+        "error": "فشل الأرشفة",
+        "success": "تم الأرشفة بنجاح",
+        "loading": "جارٍ الأرشفة..."
+      },
+      "restore": {
+        "error": "فشل الاستعادة",
+        "success": "تم الاستعادة بنجاح",
+        "loading": "جارٍ الاستعادة..."
+      },
+      "delete": {
+        "error": "فشل الحذف",
+        "success": "تم الحذف بنجاح",
+        "loading": "جارٍ الحذف..."
+      },
+      "markComplete": {
+        "error": "فشل التسجيل كمكتمل",
+        "success": "تم التسجيل كمكتمل بنجاح",
+        "loading": "جارٍ التسجيل كمكتمل..."
+      },
+      "markIncomplete": {
+        "error": "فشل التسجيل كغير مكتمل",
+        "success": "تم التسجيل كغير مكتمل بنجاح",
+        "loading": "جارٍ التسجيل كغير مكتمل..."
+      }
+    },
+    "notifications": {
+      "archiving": "جارٍ الأرشفة...",
+      "restoring": "جارٍ الاستعادة...",
+      "deleting": "جارٍ الحذف..."
+    },
+    "filters": {
+      "allStatus": "جميع الحالات",
+      "allPriorities": "جميع الأولويات",
+      "clearFilters": "مسح التصفية"
+    },
+    "table": {
+      "title": "المهمة / الوصف",
+      "status": "الحالة",
+      "priority": "الأولوية",
+      "dueDate": "تاريخ الاستحقاق",
+      "assignedTo": "مكلف إلى",
+      "actions": "إجراءات"
     },
     "form": {
       "createTitle": "إنشاء مهمة جديدة",
-      "editTitle": "تعديل المهمة",
-      "createDescription": "املأ التفاصيل لإنشاء مهمة جديدة",
-      "editDescription": "تحديث تفاصيل المهمة",
-      "step": "خطوة",
-      "of": "من",
-      "loading": "Loading",
-      "steps": {
-        "basicInfo": "المعلومات الأساسية",
-        "scheduling": "الجدولة وتتبع الوقت",
-        "assignment": "التعيين والتعاون",
-        "details": "تفاصيل إضافية",
-        "checklist": "قائمة التحقق",
-        "planning": "التخطيط"
-      },
-      "fields": {
-        "title": "عنوان المهمة",
-        "titlePlaceholder": "أدخل عنوان مهمة واضح ووصفي",
-        "description": "الوصف",
-        "descriptionPlaceholder": "قدم معلومات مفصلة عن المهمة والمتطلبات أو التعليمات...",
-        "priority": "الأولوية",
-        "status": "الحالة",
-        "category": "الفئة",
-        "dueDate": "تاريخ الاستحقاق",
-        "startDate": "تاريخ البدء",
-        "reminderDate": "تاريخ التذكير",
-        "estimatedHours": "الساعات المقدرة",
-        "estimatedHoursPlaceholder": "0.0",
-        "progress": "التقدم",
-        "assignedTo": "تعيين إلى",
-        "unassigned": "غير معين",
-        "watchers": "المشاهدون",
-        "relatedClient": "العميل المرتبط",
-        "relatedEvent": "الفعالية المرتبطة",
-        "relatedPartner": "الشريك المرتبط",
-        "noClient": "لا يوجد عميل",
-        "noEvent": "لا يوجد فعالية",
-        "noPartner": "لا يوجد شريك",
-        "tags": "العلامات",
-        "tagPlaceholder": "أضف علامة واضغط Enter",
-        "subtasks": "المهام الفرعية",
-        "subtaskTitle": "عنوان المهمة الفرعية",
-        "subtaskDescription": "وصف المهمة الفرعية (اختياري)",
-        "subtaskTitlePlaceholder": "أدخل عنوان المهمة الفرعية",
-        "subtaskDescPlaceholder": "وصف مختصر"
-      },
-      "validation": {
-        "titleRequired": "عنوان المهمة مطلوب",
-        "categoryRequired": "الفئة مطلوبة",
-        "dueDateRequired": "تاريخ الاستحقاق مطلوب",
-        "startDateBeforeDue": "يجب أن يكون تاريخ البدء قبل تاريخ الاستحقاق",
-        "reminderBeforeDue": "يجب أن يكون تاريخ التذكير قبل تاريخ الاستحقاق",
-        "estimatedHoursRange": "يجب أن تكون الساعات المقدرة بين 0 و 1000",
-        "fixErrors": "يرجى إصلاح الأخطاء قبل المتابعة",
-        "fixAllErrors": "يرجى إصلاح جميع الحقول المطلوبة قبل التحديث",
-        "fixValidationErrors": "يرجى إصلاح أخطاء التحقق"
-      },
-      "buttons": {
-        "cancel": "إلغاء",
-        "previous": "السابق",
-        "next": "التالي",
-        "create": "إنشاء المهمة",
-        "update": "تحديث المهمة",
-        "updateNow": "تحديث الآن",
-        "add": "إضافة",
-        "addSubtask": "إضافة مهمة فرعية"
-      }
+      "editTitle": "تعديل المهمة"
+    },
+
+    "status": {
+      "pending": "قيد الانتظار",
+      "in_progress": "قيد التنفيذ",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "on_hold": "معلق",
+      "blocked": "مسدود"
+    },
+    "priority": {
+      "low": "منخفض",
+      "medium": "متوسط",
+      "high": "عالي",
+      "urgent": "عاجل"
     },
     "detail": {
-      "description": "الوصف",
-      "taskDetails": "تفاصيل المهمة",
-      "assignedTo": "مُعيّن إلى",
-      "dueDate": "تاريخ الاستحقاق",
-      "startDate": "تاريخ البدء",
-      "progress": "التقدم",
-      "time": "الوقت",
-      "createdBy": "تم الإنشاء بواسطة",
-      "relatedTo": "مرتبط بـ",
-      "tags": "العلامات",
-      "blockedReason": "سبب الحظر",
-      "moreDetails": "المزيد من التفاصيل",
-      "overdue": "متأخر",
-      "notSet": "غير محدد",
-      "noRelated": "لا توجد كيانات مرتبطة",
-      "loading": "جاري تحميل تفاصيل المهمة...",
-      "notFound": "المهمة غير موجودة",
-      "errorLoading": "خطأ في تحميل المهمة",
-      "errorMessage": "المهمة التي تبحث عنها غير موجودة.",
-      "backToTasks": "العودة إلى المهام",
-      "tryAgain": "إعادة المحاولة",
-      "tabs": {
-        "overview": "نظرة عامة",
-        "subtasks": "المهام الفرعية",
-        "comments": "التعليقات",
-        "attachments": "المرفقات",
-        "timeline": "الجدول الزمني"
-      },
-      "overview": {
-        "progress": "التقدم",
-        "subtasks": "المهام الفرعية",
-        "estimated": "مقدر",
-        "actual": "فعلي",
-        "description": "الوصف",
-        "noDescription": "لا يوجد وصف مقدم لهذه المهمة.",
-        "metrics": "المؤشرات الرئيسية"
-      },
-      "subtasks": {
-        "title": "المهام الفرعية",
-        "completed": "{{completed}} من {{total}} مكتملة",
-        "noSubtasks": "لا توجد مهام فرعية",
-        "noSubtasksDescription": "أضف مهام فرعية لتقسيم هذه المهمة إلى خطوات أصغر.",
-        "completedBy": "تم الإكمال في {{date}} بواسطة {{user}}",
-        "completedDate": "تم الإكمال في {{date}}",
-        "errorToggle": "فشل في تبديل المهمة الفرعية"
-      },
-      "comments": {
-        "title": "التعليقات",
-        "noComments": "لا توجد تعليقات بعد",
-        "noCommentsDescription": "كن أول من يعلق على هذه المهمة.",
-        "unknownUser": "مستخدم غير معروف",
-        "edited": "تم التعديل"
-      },
-      "attachments": {
-        "title": "المرفقات",
-        "noAttachments": "لا توجد مرفقات",
-        "noAttachmentsDescription": "قم بتحميل الملفات لتنظيمها مع هذه المهمة.",
-        "download": "تحميل"
-      },
-      "timeline": {
-        "title": "الجدول الزمني",
-        "noEvents": "لا توجد أحداث في الجدول الزمني",
-        "noEventsDescription": "ستظهر الأحداث في الجدول الزمني هنا مع تقدم المهمة.",
-        "events": {
-          "created": "تم إنشاء المهمة",
-          "assigned": "تم تعيين المهمة",
-          "completed": "تم إكمال المهمة",
-          "cancelled": "تم إلغاء المهمة",
-          "statusChanged": "تم تغيير الحالة إلى {{status}}"
+        "toasts": {
+          "archive": {
+            "success": "تم أرشفة المهمة بنجاح",
+            "error": "فشل أرشفة المهمة",
+            "loading": "جارٍ الأرشفة..."
+          },
+          "taskCreated": "تم إنشاء المهمة بنجاح",
+          "taskUpdated": "تم تحديث المهمة بنجاح",
+          "taskDeleted": "تم حذف المهمة بنجاح",
+          "taskArchived": "تم أرشفة المهمة بنجاح"
         },
-        "by": "بواسطة",
-        "to": "إلى",
-        "noReason": "لا يوجد سبب مقدم",
-        "unknownDate": "Unknown Date"
-      },
-      "header": {
-        "backToTasks": "العودة إلى المهام",
-        "editTask": "تعديل المهمة",
+    "loading": "جاري تحميل التفاصيل...",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "subtasks": "المهام الفرعية",
+      "comments": "التعليقات",
+      "attachments": "المرفقات",
+      "timeline": "الجدول الزمني"
+    },
+    "header": {
+      "backToTasks": "عودة للمهام",
+      "editTask": "تعديل",
+      "deleteTask": "حذف",
+      "actions": {
+        "archiveTask": "أرشفة المهمة",
+        "restoreTask": "استعادة المهمة",
         "deleteTask": "حذف المهمة",
-        "priority": "أولوية {{priority}}",
-        "actions": {
-          "starting": "جاري البدء...",
-          "startWorking": "بدء العمل",
-          "pausing": "جاري الإيقاف المؤقت...",
-          "pauseTask": "إيقاف المهمة مؤقتاً",
-          "completing": "جاري الإكمال...",
-          "markComplete": "تعيين كمكتمل",
-          "archiving": "جاري الأرشفة...",
-          "archiveTask": "أرشفة المهمة"
-        }
+        "deleteTaskPermanently": "حذف المهمة نهائيًا",
+        "markComplete": "تثبيت المهمة"
+      }
+    },
+    "info": {
+      "title": "معلومات المهمة",
+      "dueDate": "تاريخ الاستحقاق",
+      "assignedTo": "مكلف إلى",
+      "category": "الفئة"
+    },
+    "overview": {
+      "metrics": "المقاييس",
+      "progress": "التقدم",
+      "subtasks": "المهام الفرعية المكتملة",
+      "estimated": "ساعات تقديرية",
+      "actual": "ساعات فعلية",
+      "description": "الوصف"
+    },
+    "subtasks": {
+      "label": "المهام الفرعية المكتملة"
+    },
+    "modals": {
+      "edit": {
+        "title": "تعديل المهمة"
       },
-      "info": {
-        "title": "معلومات المهمة",
-        "dueDate": "تاريخ الاستحقاق",
-        "startDate": "تاريخ البدء",
-        "assignedTo": "مُعيّن إلى",
-        "category": "الفئة",
-        "estimatedHours": "الساعات المقدرة",
-        "actualHours": "الساعات الفعلية",
-        "taskBlocked": "المهمة محظورة"
-      },
-      "modals": {
-        "edit": {
-          "title": "تعديل المهمة"
-        },
-        "delete": {
-          "title": "حذف المهمة",
-          "message": "هل أنت متأكد من أنك تريد حذف \"{{title}}\"؟ لا يمكن التراجع عن هذا الإجراء وسيتم إزالة جميع البيانات المرتبطة.",
-          "confirm": "حذف المهمة",
-          "cancel": "إلغاء"
-        }
-      },
-      "status": {
-        "unknown": "غير معروف"
-      },
-      "toasts": {
-        "edit": {
-          "success": "تم تحديث المهمة بنجاح"
-        },
-        "delete": {
-          "loading": "جاري حذف المهمة...",
-          "success": "تم حذف المهمة بنجاح",
-          "error": "فشل في حذف المهمة"
-        },
-        "status": {
-          "loading": "جاري تحديث حالة المهمة...",
-          "success": "تم تحديث الحالة إلى {{status}}",
-          "error": "فشل في تحديث حالة المهمة"
-        },
-        "complete": {
-          "loading": "جاري إكمال المهمة...",
-          "success": "تم تعيين المهمة كمكتملة",
-          "error": "فشل في إكمال المهمة"
-        },
-        "archive": {
-          "loading": "جاري أرشفة المهمة...",
-          "success": "تم أرشفة المهمة بنجاح",
-          "error": "فشل في أرشفة المهمة"
-        },
-        "retry": "جاري إعادة تحميل تفاصيل المهمة..."
-      },
-      "errors": {
-        "edit": "لا يمكن تعديل المهمة: لم يتم العثور على معرف المهمة",
-        "delete": "لا يمكن حذف المهمة: لم يتم العثور على معرف المهمة",
-        "status": "لا يمكن تحديث حالة المهمة: لم يتم العثور على معرف المهمة",
-        "complete": "لا يمكن إكمال المهمة: لم يتم العثور على معرف المهمة",
-        "archive": "لا يمكن أرشفة المهمة: لم يتم العثور على معرف المهمة"
+      "delete": {
+        "title": "حذف المهمة",
+        "message": "هل أنت متأكد أنك تريد حذف هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء."
       }
     }
+  }
   },
   "taskDetailModal": {
     "title": "تفاصيل المهمة",
@@ -1488,144 +1396,116 @@
     }
   },
   "reminders": {
+  "backToReminders": "عودة للتذكيرات",
+  "loadingDetails": "جاري التحميل...",
+  "markComplete": "تثبيت التذكير",
     "title": "التذكيرات",
-    "subtitle": "إدارة الإشعارات والتنبيهات والمتابعات.",
+    "description": "إدارة تذكيرات الفعاليات والإشعارات",
     "addReminder": "إضافة تذكير",
-    "createFirst": "إنشاء التذكير الأول",
-    "searchPlaceholder": "البحث عن طريق العنوان أو الوصف...",
-    "clearFilters": "مسح المرشحات",
-    "noResults": "لم يتم العثور على تذكيرات",
-    "noReminders": "لا توجد تذكيرات بعد",
-    "untitled": "تذكير بدون عنوان",
-    "errorLoading": "خطأ في تحميل التذكيرات",
-    "backToReminders": "العودة إلى التذكيرات",
-    "every": "كل",
-    "loadingDetails": "جاري تحميل تفاصيل التذكير...",
-    "notFound": "التذكير غير موجود",
-    "notFoundDescription": "التذكير الذي تبحث عنه غير موجود.",
-    "tryAgain": "حاول مرة أخرى",
-    "yes": "نعم",
-    "status": {
-      "all": "كل الحالات",
-      "active": "نشط",
-      "completed": "مكتمل",
-      "snoozed": "مؤجل"
-    },
-    "type": {
-      "all": "كل الأنواع",
-      "client": "عميل",
-      "event": "فعالية",
-      "task": "مهمة"
-    },
-    "priority": {
-      "all": "كل الأولويات",
-      "urgent": "عاجل",
-      "high": "مرتفع",
-      "medium": "متوسط",
-      "low": "منخفض"
-    },
-    "columns": {
-      "title": "العنوان",
-      "description": "الوصف",
-      "dateTime": "التاريخ والوقت",
-      "type": "النوع",
-      "priority": "الأولوية",
-      "status": "الحالة",
-      "actions": "إجراءات"
-    },
-    "form": {
-      "createTitle": "إنشاء تذكير جديد",
-      "editTitle": "تعديل التذكير",
-      "basicInfo": "المعلومات الأساسية",
-      "enableRecurrence": "تفعيل التكرار",
-      "notifications": "الإشعارات",
-      "recurrence": "التكرار",
-      "relatedItems": "العناصر ذات الصلة",
-      "buttons": {
-        "cancel": "إلغاء",
-        "create": "إنشاء تذكير",
-        "next": "التالي",
-        "previous": "السابق",
-        "update": "تحديث التذكير",
-        "updateNow": "تحديث الآن"
-      },
-      "fields": {
-        "date": "التاريخ",
-        "daysOfWeek": "أيام الأسبوع",
-        "description": "الوصف",
-        "frequency": "التكرار",
-        "interval": "الفاصل الزمني",
-        "notes": "ملاحظات",
-        "notificationMethods": "طرق الإشعار",
-        "priority": "الأولوية",
-        "relatedClient": "العميل ذو الصلة",
-        "relatedEvent": "الفعالية ذات الصلة",
-        "relatedTask": "المهمة ذات الصلة",
-        "time": "الوقت",
-        "title": "العنوان",
-        "type": "النوع"
-      }
-    },
+    "addFirstReminder": "إضافة أول تذكير",
+    "editReminder": "تعديل التذكير",
+    "deleteReminder": "حذف التذكير",
+    "snoozing": "جاري التأجيل...",
+    "snooze1Hour": "تأجيل لساعة واحدة",
+    "cancelling": "جاري الإلغاء...",
+    "cancelReminder": "إلغاء التذكير",
     "details": {
-      "activityHistory": "سجل النشاط",
-      "additionalInfo": "معلومات إضافية",
-      "notificationMethods": "طرق الإشعار",
-      "recurrenceSettings": "إعدادات التكرار",
-      "reminderInfo": "معلومات التذكير",
-      "tab": "التفاصيل"
+      "createdBy": "تم الإنشاء بواسطة",
+      "tab": "التفاصيل",
+    "reminderInfo": "معلومات التذكير",
+    "additionalInfo": "معلومات إضافية",
+    "notificationMethods": "طرق الإشعار",
+    "recurrenceSettings": "إعدادات التكرار",
+    "activityHistory": "سجل النشاط"
     },
-    "modals": {
-      "snooze": {
-        "title": "تأجيل التذكير"
-      },
-      "delete": {
-        "title": "حذف التذكير",
-        "description": "هل أنت متأكد أنك تريد حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
-        "cancel": "إلغاء",
-        "confirm": "حذف"
-      }
+    "actions": {
+      "unsnooze": "إلغاء التأجيل",
+      "snooze": "تأجيل",
+      "edit": "تعديل",
+      "delete": "حذف"
     },
     "notifications": {
-      "showingResults": "عرض {{count}} من أصل {{total}} تذكير",
-      "filtersCleared": "تم مسح المرشحات",
-      "created": "تم إنشاء التذكير بنجاح",
-      "updated": "تم تحديث التذكير بنجاح",
-      "deleted": "تم حذف التذكير بنجاح",
-      "snoozed": "تم تأجيل التذكير بنجاح",
-      "unsnoozed": "تم تفعيل التذكير بنجاح",
-      "deleting": "جاري حذف {{name}}...",
-      "deleteError": "فشل حذف التذكير",
-      "snoozing": "جاري التأجيل...",
-      "snoozeError": "فشل تأجيل التذكير",
-      "activating": "جاري التفعيل...",
-      "activateError": "فشل تفعيل التذكير",
-      "cancelError": "فشل الإلغاء",
-      "cancelled": "تم الإلغاء",
-      "cancelling": "جاري الإلغاء...",
-      "completeError": "فشل الإكمال",
-      "completed": "مكتمل",
-      "completing": "جاري الإكمال...",
-      "loadError": "فشل التحميل",
-      "loadingDetails": "جاري تحميل التفاصيل...",
-      "saveError": "فشل الحفظ"
-    },
-    "recurrence": {
-      "day": "يوم",
-      "dayOfMonth": "يوم من الشهر",
-      "endDate": "تاريخ الانتهاء",
-      "forever": "إلى الأبد",
-      "label": "التكرار",
-      "oneTime": "مرة واحدة"
+      "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذا التذكير؟"
     },
     "validation": {
-      "dateRequired": "التاريخ مطلوب",
-      "fixAllErrors": "يرجى إصلاح جميع الأخطاء",
-      "fixErrors": "يرجى إصلاح الأخطاء",
-      "invalidId": "معرف غير صالح",
-      "timeRequired": "الوقت مطلوب",
-      "titleRequired": "العنوان مطلوب"
+      "notificationMethodsRequired": "مطلوب طريقة إشعار واحدة على الأقل"
+    },
+    "type": {
+      "event": "فعالية",
+      "payment": "دفع",
+      "task": "مهمة",
+      "general": "عام",
+      "follow_up": "متابعة",
+      "deadline": "موعد نهائي",
+       "client": "عميل",
+    "maintenance": "صيانة",
+    "followup": "متابعة",
+    "other": "أخرى"
+    },
+    "priority": {
+      "low": "منخفض",
+      "medium": "متوسط",
+      "high": "عالي",
+      "urgent": "عاجل"
+    },
+    "recurrence": {
+      "none": "لا شيء",
+      "daily": "يومي",
+      "weekly": "أسبوعي",
+      "monthly": "شهري",
+      "yearly": "سنوي",
+       "oneTime": "مرة واحدة",
+    "noRecurrenceText": "هذا التذكير لا يتكرر."
+    },
+    "weekdays": {
+      "monday": "الاثنين",
+      "tuesday": "الثلاثاء",
+      "wednesday": "الأربعاء",
+      "thursday": "الخميس",
+      "friday": "الجمعة",
+      "saturday": "السبت",
+      "sunday": "الأحد"
+    },
+    "form": {
+    "editTitle": "تعديل التذكير",
+    "basicInfo": "المعلومات الأساسية",
+    "relatedItems": "عناصر ذات صلة",
+    "notifications": "الإشعارات",
+    "recurrence": "التكرار",
+    "enableRecurrence": "تفعيل التكرار",
+    "fields": {
+      "date": "التاريخ",
+      "time": "الوقت",
+      "type": "النوع",
+      "priority": "الاولوية",
+      "description": "الوصف",
+      "title": "العنوان",
+      "relatedEvent": "حدث ذو صلة",
+      "relatedClient": "عميل ذو صلة",
+      "relatedTask": "مهمة ذات صلة",
+      "notificationMethods": "طرق الإشعار",
+      "notes": "ملاحظات"
+    },
+    "buttons": {
+      "cancel": "إلغاء",
+      "next": "التالي",
+      "previous": "السابق",
+      "update": "تحديث",
+      "updateNow": "تحديث الآن",
+      "create": "إنشاء"
     }
   },
+ "history": {
+    "comingSoon": "سجل النشاط قريباً",
+    "description": "نحن نعمل على جدول زمني مفصل لتتبع التغييرات والتأجيلات وسجل الإكمال لهذا التذكير."
+  },
+  "modals": {
+    "delete": {
+      "confirm": "حذف",
+      "cancel": "إلغاء"
+    }
+  }
+},
   "payments": {
     "title": "المدفوعات",
     "subtitle": "تتبع جميع مدفوعات الدخل والمصروفات",
@@ -2167,65 +2047,67 @@
       "neutral": "↕"
     }
   },
+  "paymentMethods": {
+    "cash": "النقود",
+    "check": "الشيك",
+    "bank_transfer": "التحويل",
+    "card": "البطاقة"
+  },
   "common": {
-    "nav": {
-      "products": "المنتجات",
-      "features": "المميزات",
-      "marketplace": "السوق",
-      "contact": "اتصل بنا",
-      "bookDemo": "احجز عرض توضيحي"
-    },
-    "footer": {
-      "description": "منصة إدارة الفعاليات الرائدة في تونس التي تربط القاعات، المنظمين، وشركاء الخدمات.",
-      "product": "المنتج",
-      "company": "الشركة",
-      "legal": "القانونية",
-      "aboutUs": "عن فييستا",
-      "careers": "الوظائف",
-      "blog": "المدونة",
-      "privacy": "سياسة الخصوصية",
-      "terms": "شروط الخدمة",
-      "cookies": "سياسة ملفات تعريف الارتباط",
-      "copyright": "© 2024 فييستا للفعاليات. صُنع بـ",
-      "inTunisia": "في تونس",
-      "contact": "اتصل بنا",
-      "marketplace": "السوق",
-      "features": "المميزات"
-    },
-    "team": "الفريق",
-    "home": "الرئيسية",
-    "documents": "الوثائق",
-    "contracts": "العقود",
-    "roles": "الأدوار",
-    "settings": "الإعدادات",
-    "profile": "الملف الشخصي",
-    "logout": "تسجيل الخروج",
-    "user": "مستخدم",
-    "toggleTheme": "تبديل المظهر",
-    "notifications": "الإشعارات",
-    "company": "شركة",
+      "viewDetails": "View Details",
+  "confirmDelete": "Confirm Delete",
+    "restore":"استعادة",
+    "archive":"أرشفة",
+    "markComplete":"",
+    "markIncomplete":"",
+    "update":"تعديل",
+    "searchPlaceholder": "ابحث عن أي شيء...",
+    "pax": "أشخاص",
     "guests": "ضيوف",
-    "individual": "فرد",
-    "optional": "اختياري",
-    "searchPlaceholder": "البحث في الفعاليات والعملاء والمهام...",
-    "today": "اليوم",
-    "other": "أخرى",
-    "hour": "ساعة",
-    "total": "الإجمالي",
-    "rating": "{{value}} / 5.0",
-    "unknown": "غير معروف",
-    "currency": "{{amount}} د.ت",
-    "percentage": "{{value}}٪",
-    "eventsCount": "{{completed}} من {{total}} فعالية مكتملة",
-    "notAvailable": "غير متوفر",
-    "close": "إغلاق",
+    "remaining": "متبقي",
+    "reorder": "إعادة طلب",
+    "unknown": "مجهول",
+    "supplies":"المتطلبات",
+    "home": "الرئيسية",
+    "logout":"تسجيل الخروج",
+    "login":"تسجيل الدخول",
+    "signup":"إنشاء حساب",
+    "all_rights_reserved":"جميع الحقوق محفوظة",
+    "filtersCleared": "تم مسح الفلاتر",
+    "actions": "إجراءات",
+    "clear": "مسح",
+    "warning": "تحذير",
+    "noResultsDesc": "لم يتم العثور على نتائج",
+    "loading": "جاري التحميل...",
+    "save": "حفظ",
     "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
     "back": "رجوع",
     "next": "التالي",
     "previous": "السابق",
-    "reset": "Reset",
-    "saveChanges": "حفظ التغييرات",
-    "dashboard": "لوحة القيادة",
+    "submit": "إرسال",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "export": "تصدير",
+    "import": "استيراد",
+    "refresh": "تحديث",
+    "yes": "نعم",
+    "no": "لا",
+    "ok": "موافق",
+    "apply": "تطبيق",
+    "reset": "إعادة تعيين",
+    "selectAll": "تحديد الكل",
+    "deselectAll": "إلغاء تحديد الكل",
+    "noData": "لا توجد بيانات",
+    "error": "خطأ",
+    "success": "نجاح",
+    "info": "معلومات",
+    "dashboard": "لوحة التحكم",
     "events": "الفعاليات",
     "clients": "العملاء",
     "partners": "الشركاء",
@@ -2234,39 +2116,32 @@
     "finance": "المالية",
     "payments": "المدفوعات",
     "invoices": "الفواتير",
-    "edit": "تعديل",
-    "delete": "حذف",
-    "archive": "أرشفة",
-    "restore": "استعادة",
-    "save": "حفظ",
+    "contracts": "العقود",
+    "documents": "المستندات",
+    "settings": "الإعدادات",
     "create": "إنشاء",
-    "update": "تحديث",
-    "viewDetails": "عرض التفاصيل",
-    "confirmDelete": "تأكيد الحذف",
-    "deleting": "جاري الحذف...",
-    "loading": "جاري التحميل...",
-    "completed": "مكتمل",
-    "earnings": "الأرباح",
-    "error": "حدث خطأ ما",
-    "date": "التاريخ",
-    "time": "الوقت",
-    "updateNow": "تحديث الآن",
-    "noResults": "لا توجد نتائج",
-    "actions": {
-      "view": "عرض",
-      "edit": "تعديل",
-      "delete": "حذف",
-      "download": "تنزيل",
-      "clear": "مسح",
-      "clearFilters": "مسح المرشحات",
-      "cancel": "إلغاء"
+    "nav": {
+      "features": "المميزات",
+      "marketplace": "السوق",
+      "contact": "اتصل بنا"
     },
-    "table": {
-      "showing": "عرض",
-      "to": "إلى",
-      "of": "من",
-      "results": "نتائج",
-      "per_page": "لكل صفحة:"
+    "footer": {
+      "description": "المنصة الشاملة لإدارة الأماكن.",
+      "product": "المنتج",
+      "features": "المميزات",
+      "marketplace": "السوق",
+      "company": "الشركة",
+      "aboutUs": "من نحن",
+      "contact": "اتصل بنا",
+      "legal": "قانوني",
+      "privacy": "سياسة الخصوصية",
+      "terms": "شروط الخدمة",
+      "copyright": "© 2025 Fiesta Events.",
+      "inTunisia": "صنع في تونس"
+    },
+    "pagination": {
+      "info": "عرض {{start}} إلى {{end}} من أصل {{total}} نتيجة",
+      "perPage": "في الصفحة:"
     }
   },
   "notifications": {
@@ -2698,7 +2573,12 @@
       "layout": "التخطيط",
       "table": "الجدول",
       "style": "النمط",
-      "content": "المحتوى"
+      "content": "المحتوى",
+      "personal": "[TO_TRANSLATE] Personal Info",
+      "security": "[TO_TRANSLATE] Security",
+      "venue": "[TO_TRANSLATE] Venue Details",
+      "amenities": "[TO_TRANSLATE] Amenities & Hours",
+      "spaces": "مساحات المكان"
     },
     "branding": {
       "companyLogo": "شعار الشركة",
@@ -2748,52 +2628,241 @@
       "imageUpdated": "تم تحديث الصورة محليًا (احفظ للتثبيت)",
       "saveSuccess": "تم حفظ التصميم بنجاح!",
       "saveError": "فشل حفظ الإعدادات."
-    }
-  },
-  "venueSettings": {
-    "title": "إعدادات المكان",
-    "subtitle": "إدارة ملف تعريف المكان والتفضيلات",
-    "tabs": {
-      "personal": "شخصي",
-      "security": "الأمان",
-      "venue": "المكان",
-      "amenities": "المرافق والمواعيد",
-      "spaces": "المساحات"
+    },
+    "personal": {
+      "title": "[TO_TRANSLATE] Personal Information",
+      "description": "[TO_TRANSLATE] Update your personal details and profile picture",
+      "fields": {
+        "fullName": "[TO_TRANSLATE] Full Name",
+        "email": "[TO_TRANSLATE] Email Address (Read-only)",
+        "phone": "[TO_TRANSLATE] Phone Number",
+        "avatar": "[TO_TRANSLATE] Avatar URL"
+      },
+      "avatarPreview": {
+        "title": "[TO_TRANSLATE] Profile Picture",
+        "description": "[TO_TRANSLATE] Preview of your avatar"
+      },
+      "save": "[TO_TRANSLATE] Save Changes"
+    },
+    "security": {
+      "title": "[TO_TRANSLATE] Change Password",
+      "description": "[TO_TRANSLATE] Ensure your account is using a strong password",
+      "fields": {
+        "currentPassword": "[TO_TRANSLATE] Current Password",
+        "newPassword": "[TO_TRANSLATE] New Password",
+        "confirmPassword": "[TO_TRANSLATE] Confirm New Password"
+      },
+      "requirements": {
+        "title": "[TO_TRANSLATE] Password Requirements:",
+        "items": "[TO_TRANSLATE] Items"
+      },
+      "changePassword": "[TO_TRANSLATE] Change Password"
+    },
+    "venue": {
+      "basicInfo": {
+        "title": "[TO_TRANSLATE] Basic Information",
+        "fields": {
+          "venueName": "اسم المكان",
+          "description": "الوصف"
+        }
+      },
+      "address": {
+        "title": "العنوان",
+        "fields": {
+          "street": "عنوان الشارع",
+          "city": "المدينة",
+          "state": "الولاية/المحافظة",
+          "zipCode": "الرمز البريدي",
+          "country": "البلد"
+        }
+      },
+      "contact": {
+        "title": "معلومات الاتصال",
+        "fields": {
+          "phone": "الهاتف",
+          "email": "البريد الإلكتروني"
+        }
+      },
+      "save": "حفظ تفاصيل المكان"
+    },
+    "amenities": {
+      "title": "مرافق المكان",
+      "description": "أضف المرافق التي يوفرها مكانك. اختر من الخيارات الشائعة أو أضف خيارات مخصصة.",
+      "quickAdd": {
+        "title": "إضافة سريعة للمرافق الشائعة",
+        "description": "انقر لإضافة المرافق المستخدمة بشكل متكرر للأعراس والفعاليات"
+      },
+      "customAmenity": {
+        "title": "إضافة مرفق مخصص",
+        "placeholder": "أدخل مرفق مخصص (مثل: أثاث عتيق، موقد نار، إلخ)",
+        "add": "إضافة مخصص"
+      },
+      "selectedAmenities": {
+        "title": "المرافق المحددة ({{count}})",
+        "clearAll": "مسح الكل",
+        "empty": {
+          "description": "اختر من الخيارات الشائعة أعلاه أو أضف خيارات مخصصة."
+        }
+      },
+      "operatingHours": {
+        "title": "ساعات العمل",
+        "description": "حدد جدول مكانك الأسبوعي",
+        "labels": {
+          "to": "إلى",
+          "closed": "مغلق"
+        }
+      },
+      "save": "حفظ المرافق والساعات"
+    },
+    "spaces": {
+      "title": "مساحات المكان",
+      "description": "إدارة المساحات المختلفة داخل مكانك",
+      "existingSpaces": {
+        "title": "المساحات الموجودة ({{count}})",
+        "capacity": "السعة",
+        "price": "السعر",
+        "status": {
+          "active": "نشط",
+          "inactive": "غير نشط"
+        },
+        "actions": {
+          "edit": "تعديل المساحة",
+          "delete": "حذف المساحة"
+        }
+      },
+      "emptyState": {
+        "title": "لا توجد مساحات بعد",
+        "description": "أضف مساحات مختلفة داخل مكانك لتقديم المزيد من خيارات الحجز لعملائك."
+      },
+      "form": {
+        "addTitle": "إضافة مساحة جديدة",
+        "editTitle": "تعديل المساحة",
+        "fields": {
+          "spaceName": "اسم المساحة",
+          "basePrice": "السعر الأساسي ($)",
+          "description": "الوصف",
+          "minCapacity": "الحد الأدنى للسعة",
+          "maxCapacity": "الحد الأقصى للسعة"
+        },
+        "activeLabel": "نشط (متاح للحجوزات)",
+        "actions": {
+          "add": "إضافة المساحة",
+          "update": "تحديث المساحة",
+          "cancel": "إلغاء"
+        }
+      },
+      "save": "حفظ جميع التغييرات"
     },
     "common": {
+      "loading": "جاري تحميل الإعدادات...",
+      "tryAgain": "إعادة المحاولة",
+      "table": {
+        "showing": "عرض",
+        "to": "إلى",
+        "of": "من",
+        "results": "نتيجة"
+      }
+    },
+    "validation": {
+      "required": "هذا الحقل مطلوب",
+      "email": "يرجى تقديم بريد إلكتروني صالح",
+      "minLength": "يجب أن يحتوي على {min} أحرف على الأقل",
+      "passwordsMatch": "يجب أن تتطابق كلمات المرور",
+      "capacityRange": "يجب أن تكون السعة القصوى أكبر من أو تساوي السعة الدنيا"
+    },
+    "notifications": {
+      "success": {
+        "profileUpdated": "تم تحديث الملف الشخصي بنجاح!",
+        "passwordChanged": "تم تغيير كلمة المرور بنجاح!",
+        "venueUpdated": "تم تحديث إعدادات المكان بنجاح!",
+        "spaceCreated": "تم إنشاء المساحة بنجاح",
+        "spaceUpdated": "تم تحديث المساحة بنجاح",
+        "spaceDeleted": "تم حذف المساحة بنجاح",
+        "amenityAdded": "تمت إضافة المرفق",
+        "customAmenityAdded": "تمت إضافة مرفق مخصص",
+        "imageUploaded": "تم رفع الصورة بنجاح",
+        "imageRemoved": "تم إزالة الصورة بنجاح"
+      },
+      "error": {
+        "generic": "حدث خطأ",
+        "loadFailed": "فشل تحميل الإعدادات",
+        "saveFailed": "فشل الحفظ",
+        "deleteFailed": "فشل الحذف",
+        "uploadFailed": "فشل الرفع",
+        "spaceNameRequired": "اسم المساحة مطلوب",
+        "capacityRequired": "نطاق السعة مطلوب",
+        "priceRequired": "السعر مطلوب",
+        "amenityExists": "هذا المرفق موجود بالفعل",
+        "saveSpaceFirst": "يرجى حفظ المساحة أولاً قبل رفع الصور"
+      },
+      "confirm": {
+        "deleteSpace": "هل أنت متأكد من حذف هذه المساحة؟",
+        "clearAllAmenities": "إزالة جميع المرافق؟"
+      }
+    }
+  },
+  
+  "venueSettings": {
+    "title": "الإعدادات",
+    "subtitle": "إدارة ملفك الشخصي وتفاصيل القاعة وإعدادات الأمان",
+    "common": {
+      "loading": "جار التحميل...",
       "saveChanges": "حفظ التغييرات",
+      "saving": "جار الحفظ...",
+      "saved": "تم الحفظ",
       "cancel": "إلغاء",
       "add": "إضافة",
       "clearAll": "مسح الكل",
-      "loading": "جاري التحميل...",
-      "saving": "جاري الحفظ...",
-      "saved": "تم الحفظ",
       "tryAgain": "حاول مرة أخرى",
       "active": "نشط",
       "inactive": "غير نشط",
       "open": "مفتوح",
       "closed": "مغلق"
     },
+    "tabs": {
+      "personal": "شخصي",
+      "security": "الأمان",
+      "venue": "معلومات القاعة",
+      "amenities": "المرافق",
+      "spaces": "المساحات"
+    },
+    "errors": {
+      "loadFailed": "فشل تحميل البيانات",
+      "saveFailed": "فشل حفظ التغييرات",
+      "deleteFailed": "فشل الحذف"
+    },
+    "validation": {
+      "required": "هذا الحقل مطلوب",
+      "minLength": "كلمة المرور قصيرة جداً",
+      "passwordMismatch": "كلمات المرور غير متطابقة",
+      "emailInvalid": "البريد الإلكتروني غير صحيح",
+      "fixErrors": "يرجى تصحيح الأخطاء قبل الحفظ"
+    },
+    "notifications": {
+      "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+      "passwordChanged": "تم تغيير كلمة المرور بنجاح",
+      "venueUpdated": "تم تحديث تفاصيل القاعة بنجاح"
+    },
     "personal": {
-      "title": "معلومات الملف الشخصي",
-      "description": "تحديث بياناتك الشخصية",
-      "venueOwner": "مالك المكان",
+      "title": "المعلومات الشخصية",
+      "description": "تحديث بياناتك الشخصية ومعلومات الاتصال.",
       "profilePicture": "صورة الملف الشخصي",
+      "venueOwner": "صاحب القاعة",
       "fields": {
         "fullName": "الاسم الكامل",
         "phone": "رقم الهاتف",
         "email": "البريد الإلكتروني",
-        "avatar": "رابط الصورة الرمزية"
+        "avatar": "رابط الصورة"
       },
       "placeholders": {
-        "fullName": "اسمك الكامل",
-        "phone": "+216 XX XXX XXX",
-        "avatar": "https://example.com/avatar.jpg"
+        "fullName": "مثال: أحمد سليم",
+        "phone": "مثال: 98123456 216+",
+        "avatar": "https://..."
       }
     },
     "security": {
       "title": "إعدادات الأمان",
-      "description": "تحديث كلمة المرور وتفضيلات الأمان",
+      "description": "إدارة كلمة المرور وأمان الحساب.",
       "updatePassword": "تحديث كلمة المرور",
       "fields": {
         "currentPassword": "كلمة المرور الحالية",
@@ -2802,78 +2871,78 @@
       },
       "placeholders": {
         "currentPassword": "أدخل كلمة المرور الحالية",
-        "newPassword": "6 أحرف على الأقل",
+        "newPassword": "أدخل كلمة المرور الجديدة",
         "confirmPassword": "أعد إدخال كلمة المرور الجديدة"
       },
       "strength": {
         "tooShort": "قصيرة جداً",
         "weak": "ضعيفة",
-        "fair": "متوسطة",
+        "fair": "مقبولة",
         "good": "جيدة",
         "strong": "قوية"
       },
       "requirements": {
-        "title": "متطلبات كلمة المرور",
+        "title": "متطلبات كلمة المرور:",
         "minLength": "6 أحرف على الأقل",
-        "uppercase": "حرف كبير واحد",
-        "number": "رقم واحد"
+        "uppercase": "حرف كبير واحد على الأقل",
+        "number": "رقم واحد على الأقل"
       }
     },
     "venue": {
       "basicInfo": {
-        "title": "المعلومات الأساسية",
-        "description": "الملف العام لمكانك"
+        "title": "تفاصيل القاعة",
+        "description": "معلومات عامة عن القاعة مرئية للعملاء."
       },
       "location": {
         "title": "الموقع",
-        "description": "حيث يمكن للعملاء العثور عليك"
+        "description": "أين تقع قاعتك؟"
       },
       "contact": {
         "title": "معلومات الاتصال",
-        "description": "كيف يمكن للعملاء التواصل معك"
+        "description": "كيف يمكن للعملاء الوصول للقاعة مباشرة؟"
       },
       "fields": {
-        "name": "اسم المكان",
+        "name": "اسم القاعة",
         "description": "الوصف",
-        "street": "عنوان الشارع",
+        "street": "العنوان",
         "city": "المدينة",
-        "state": "الولاية/المنطقة",
+        "state": "الولاية",
         "zipCode": "الرمز البريدي",
         "country": "البلد",
-        "phone": "هاتف الاتصال",
-        "email": "البريد الإلكتروني للاتصال"
+        "phone": "هاتف القاعة",
+        "email": "بريد القاعة"
       },
       "placeholders": {
-        "name": "مثال: قاعة الاحتفالات الكبرى",
-        "description": "صف مكانك وميزاته الفريدة وما يجعله مميزاً...",
-        "street": "123 شارع الرئيسي",
+        "name": "مثال: قاعة الأفراح الكبرى",
+        "description": "اوصف قاعتك...",
+        "street": "الشارع الرئيسي",
         "city": "تونس",
         "state": "تونس",
         "zipCode": "1000",
         "country": "تونس",
-        "phone": "+216 XX XXX XXX",
+        "phone": "71123456 216+",
         "email": "contact@venue.com"
       }
     },
     "amenities": {
       "title": "المرافق",
-      "subtitle": "المرافق والمميزات",
-      "description": "سلط الضوء على ما يقدمه مكانك لجذب العملاء",
-      "selected": "المحدد",
+      "subtitle": "المرافق والخدمات",
+      "description": "اختر المرافق التي تقدمها قاعتك للعملاء.",
+      "selected": "المرافق المختارة",
+      "clickToAdd": "اضغط على العناصر أدناه لإضافتها",
       "quickAdd": "إضافة سريعة",
-      "addCustom": "إضافة مرفق مخصص",
-      "clickToAdd": "انقر على المرافق أدناه لإضافتها",
+      "addCustom": "إضافة مخصص",
       "placeholders": {
-        "custom": "مثال: مهبط طائرات هليكوبتر"
+        "custom": "مثال: خدمة ركن السيارات"
       },
       "operatingHours": {
         "title": "ساعات العمل",
-        "description": "حدد متى يكون مكانك متاحاً للحجوزات",
-        "allDays": "مفتوح جميع الأيام",
-        "weekdays": "أيام الأسبوع فقط",
-        "weekends": "عطلات نهاية الأسبوع فقط",
+        "description": "حدد أوقات العمل والإغلاق القياسية.",
+        "allDays": "كل الأيام",
+        "weekdays": "أيام الأسبوع",
+        "weekends": "عطلة نهاية الأسبوع",
         "days": {
-          "monday": "الإثنين",
+          "monday": "الاثنين",
           "tuesday": "الثلاثاء",
           "wednesday": "الأربعاء",
           "thursday": "الخميس",
@@ -2884,56 +2953,38 @@
       }
     },
     "spaces": {
-      "title": "مساحات المكان",
-      "addNew": "إضافة مساحة جديدة",
-      "addFirst": "أضف مساحتك الأولى",
-      "addDescription": "إنشاء منطقة قابلة للحجز",
-      "edit": "تعديل",
-      "editDescription": "قم بتحديث تفاصيل المساحة أدناه",
-      "create": "إنشاء المساحة",
-      "emptyTitle": "لا توجد مساحات بعد",
-      "emptyDescription": "أنشئ مساحتك الأولى للبدء في قبول الحجوزات.",
       "capacity": "السعة",
       "basePrice": "السعر الأساسي",
+      "addNew": "إضافة مساحة جديدة",
+      "addDescription": "إنشاء مساحة جديدة قابلة للحجز",
+      "emptyTitle": "لا توجد مساحات مضافة",
+      "emptyDescription": "ابدأ بإضافة مساحتك الأولى (مثل القاعة الرئيسية، الحديقة).",
+      "addFirst": "إضافة مساحتك الأولى",
+      "edit": "تعديل المساحة",
+      "editDescription": "تحديث تفاصيل المساحة",
+      "create": "إنشاء المساحة",
       "availableForBooking": "متاح للحجز",
-      "availableDescription": "قم بإلغاء التحديد لإخفاء هذه المساحة مؤقتاً",
-      "fields": {
-        "name": "اسم المساحة",
-        "description": "الوصف",
-        "minCapacity": "الحد الأدنى للسعة",
-        "maxCapacity": "الحد الأقصى للسعة",
-        "basePrice": "السعر الأساسي (دينار)"
-      },
-      "placeholders": {
-        "name": "مثال: القاعة الكبرى، تراس الحديقة",
-        "description": "صف هذه المساحة وميزاتها وما يجعلها مميزة...",
-        "basePrice": "5000"
-      },
-      "validation": {
-        "capacity": "الحد الأدنى والأقصى للسعة مطلوبان",
-        "price": "السعر الأساسي مطلوب"
-      },
-      "confirmDelete": "هل أنت متأكد من حذف هذه المساحة؟",
+      "availableDescription": "يمكن للعملاء رؤية وطلب هذه المساحة",
+      "confirmDelete": "هل أنت متأكد أنك تريد حذف هذه المساحة؟",
+      "deleted": "تم حذف المساحة بنجاح",
       "created": "تم إنشاء المساحة بنجاح",
       "updated": "تم تحديث المساحة بنجاح",
-      "deleted": "تم حذف المساحة بنجاح"
-    },
-    "validation": {
-      "required": "هذا الحقل مطلوب",
-      "minLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
-      "passwordMismatch": "كلمات المرور غير متطابقة",
-      "emailInvalid": "يرجى تقديم عنوان بريد إلكتروني صالح",
-      "fixErrors": "يرجى إصلاح الأخطاء قبل الحفظ"
-    },
-    "notifications": {
-      "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
-      "passwordChanged": "تم تغيير كلمة المرور بنجاح",
-      "venueUpdated": "تم تحديث معلومات المكان بنجاح"
-    },
-    "errors": {
-      "loadFailed": "فشل تحميل الإعدادات",
-      "saveFailed": "فشل حفظ التغييرات",
-      "deleteFailed": "فشل الحذف"
+      "fields": {
+        "name": "اسم المساحة",
+        "basePrice": "السعر الأساسي",
+        "minCapacity": "السعة الدنيا",
+        "maxCapacity": "السعة القصوى",
+        "description": "الوصف"
+      },
+      "placeholders": {
+        "name": "مثال: القاعة الرئيسية",
+        "basePrice": "0.00",
+        "description": "وصف المساحة..."
+      },
+      "validation": {
+        "capacity": "يرجى تحديد السعة الدنيا والقصوى",
+        "price": "يرجى تحديد السعر الأساسي"
+      }
     }
   },
   "notFound": {
@@ -2948,7 +2999,6 @@
     "management": "الإدارة"
   },
   "allRightsReserved": "جميع الحقوق محفوظة.",
-
   "contracts": {
     "settings": {
       "title": "إعدادات العقود",
@@ -3164,7 +3214,8 @@
         "address": "العنوان",
         "contractTitle": "عنوان العقد",
         "contractTitlePlaceholder": "مثال: حفل زفاف السيد والسيدة س...",
-        "rateType": "نوع السعر"
+        "rateType": "نوع السعر",
+        "category": "الفئة"
       },
       "logistics": {
         "start": "تاريخ البدء",
@@ -3297,5 +3348,312 @@
         "feat3": "هيكلة الترقيم (INV-001)"
       }
     }
+  },
+  "supplies": {
+    "title": "إدارة المستلزمات",
+    "subtitle": "إدارة المخزون وتتبع مستويات المخزون ومراقبة تكاليف المستلزمات",
+    "errors": {
+      "nameRequired": "اسم المستلزم مطلوب",
+      "categoryRequired": "الفئة مطلوبة",
+      "unitRequired": "الوحدة مطلوبة",
+      "stockRequired": "المخزون مطلوب",
+      "priceRequired": "السعر مطلوب",
+      "quantityRequired": "الكمية مطلوبة",
+      "referenceRequired": "المرجع مطلوب",
+      "notesRequired": "الملاحظات مطلوبة",
+      "nameInvalid": "يرجى إدخال اسم صحيح",
+      "categoryInvalid": "يرجى إدخال فئة صحيحة",
+      "unitInvalid": "يرجى إدخال وحدة صحيحة",
+      "stockInvalid": "يرجى إدخال مخزون صحيح",
+      "priceInvalid": "يرجى إدخال سعر صحيح",
+      "quantityInvalid": "يرجى إدخال كمية صحيحة",
+      "referenceInvalid": "يرجى إدخال المرجع صحيح",
+      "notesInvalid": "يرجى إدخال ملاحظات صحيحة",
+      "loadFailed": "فشل في تحميل المستلزمات",
+      "loadCategoriesFailed": "فشل في تحميل الفئات",
+      "invalidQuantity": "يرجى إدخال كمية صحيحة"
+    },
+    "buttons": {
+      "addSupply": "إضافة مستلزم",
+      "updateStock": "تحديث المخزون",
+      "viewDetails": "عرض التفاصيل",
+      "editSupply": "تعديل المستلزم",
+      "deleteSupply": "حذف المستلزم",
+      "archiveSupply": "أرشفة المستلزم",
+      "restoreSupply": "استعادة المستلزم"
+    },
+    "table": {
+      "name": "اسم المستلزم",
+      "category": "الفئة",
+      "stock": "المخزون",
+      "unit": "الوحدة",
+      "pricing": "التسعير",
+      "totalValue": "القيمة الإجمالية",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "currentStock": "المخزون الحالي",
+      "minimumStock": "الحد الأدنى للمخزون"
+    },
+    "filters": {
+      "search": "البحث عن المستلزمات...",
+      "allCategories": "جميع الفئات",
+      "allStatuses": "جميع الحالات",
+      "allStockLevels": "جميع مستويات المخزون",
+      "lowStock": "مخزون منخفض",
+      "outOfStock": "نفاد المخزون",
+      "adequateStock": "مخزون كافٍ",
+      "showArchived": "إظهار المؤرشفة",
+      "clearFilters": "مسح المرشحات"
+    },
+    "status": {
+      "outOfStock": "نفاد المخزون",
+      "lowStock": "مخزون منخفض",
+      "inStock": "متوفر في المخزون",
+      "overstocked": "مخزون زائد",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "discontinued": "متوقف"
+    },
+    "stats": {
+      "totalSupplies": "إجمالي المستلزمات",
+      "totalInventoryValue": "القيمة الإجمالية للمخزون",
+      "lowStockAlerts": "تنبيهات المخزون المنخفض",
+      "outOfStock": "نفاد المخزون"
+    },
+    "empty": {
+      "title": "لم يتم العثور على مستلزمات",
+      "description": "ابدأ بإضافة أول مستلزم لك",
+      "searchDescription": "حاول تعديل البحث أو المرشحات"
+    },
+    "delete": {
+      "title": "حذف المستلزم",
+      "description": "هل أنت متأكد من حذف هذا المستلزم؟ لا يمكن التراجع عن هذا الإجراء.",
+      "confirmButton": "حذف المستلزم",
+      "cancelButton": "إلغاء"
+    },
+    "archive": {
+      "title": "أرشفة المستلزم",
+      "description": "هل أنت متأكد من أرشفة هذا المستلزم؟",
+      "banner": "هذا المستلزم مؤرشف. قم باستعادته لإتاحته للفعاليات."
+    },
+    "create": {
+      "title": "إضافة مستلزم جديد",
+      "subtitle": "إضافة عنصر جديد إلى المخزون الخاص بك"
+    },
+    "edit": {
+      "title": "تعديل المستلزم",
+      "subtitle": "تحديث معلومات المستلزم وتفاصيل المخزون"
+    },
+    "form": {
+      "basicInfo": "المعلومات الأساسية",
+      "name": "اسم المستلزم",
+      "namePlaceholder": "مثال: مياه معبأة",
+      "category": "الفئة",
+      "categoryPlaceholder": "اختر الفئة",
+      "unit": "وحدة القياس",
+      "status": "الحالة",
+      "inventory": "إدارة المخزون",
+      "currentStock": "المخزون الحالي",
+      "minimumStock": "الحد الأدنى للمخزون",
+      "minimumStockHelp": "تنبيه عند وصول المخزون لهذا المستوى",
+      "maximumStock": "الحد الأقصى للمخزون",
+      "maximumStockHelp": "السعة التخزينية القصوى",
+      "lowStockWarning": "تحذير مخزون منخفض: المخزون الحالي عند أو أقل من الحد الأدنى.",
+      "pricing": "التسعير",
+      "costPerUnit": "التكلفة لكل وحدة (القاعة)",
+      "costPerUnitHelp": "ما تدفعه لكل وحدة",
+      "pricingType": "نوع التسعير",
+      "chargePerUnit": "السعر لكل وحدة (العميل)",
+      "chargePerUnitHelp": "ما تفرضه على العملاء لكل وحدة",
+      "profitMargin": "هامش الربح",
+      "pricingTypes": {
+        "included": "مشمول (مجاني للعميل)",
+        "chargeable": "قابل للشحن",
+        "optional": "اختياري"
+      },
+      "createCategory": "إنشاء فئة جديدة",
+      "cancel": "إلغاء",
+      "newCategory": "جديد",
+      "save": "حفظ",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "discontinued": "متوقف",
+      "supplier": "معلومات المورد (اختياري)",
+      "supplierName": "اسم المورد",
+      "supplierNamePlaceholder": "مثال: موزعو ABC",
+      "supplierContact": "جهة الاتصال",
+      "supplierContactPlaceholder": "مثال: أحمد محمد",
+      "supplierPhone": "الهاتف",
+      "supplierPhonePlaceholder": "مثال: 12 345 678 216+",
+      "supplierEmail": "البريد الإلكتروني",
+      "supplierEmailPlaceholder": "مثال: supplier@example.com",
+      "leadTime": "وقت التسليم (أيام)",
+      "leadTimeHelp": "الأيام المطلوبة لتسليم إعادة الطلب",
+      "storage": "التخزين والمناولة",
+      "storageLocation": "موقع التخزين",
+      "storageLocationPlaceholder": "مثال: المخزن الرئيسي، الثلاجة",
+      "shelfLife": "مدة الصلاحية (أيام)",
+      "shelfLifeHelp": "فقط إذا كان تتبع انتهاء الصلاحية مفعلاً",
+      "requiresRefrigeration": "يتطلب تبريداً",
+      "expiryTracking": "تفعيل تتبع انتهاء الصلاحية",
+      "notes": "ملاحظات إضافية",
+      "notesPlaceholder": "أي معلومات إضافية عن هذا المستلزم..."
+    },
+    "stockUpdate": {
+      "title": "تحديث المخزون",
+      "actionType": "نوع الإجراء",
+      "quantity": "الكمية",
+      "reference": "المرجع (اختياري)",
+      "referencePlaceholder": "مثال: فاتورة #123، معرف الفعالية",
+      "notes": "ملاحظات (اختياري)",
+      "notesPlaceholder": "تفاصيل إضافية حول تحديث المخزون...",
+      "currentStock": "المخزون الحالي",
+      "newStockLevel": "مستوى المخزون الجديد",
+      "actions": {
+        "purchase": "شراء (إضافة للمخزون)",
+        "usage": "استخدام (إزالة من المخزون)",
+        "adjustment": "تعديل (تعيين المبلغ الدقيق)",
+        "return": "إرجاع من فعالية",
+        "waste": "هدر/تلف"
+      }
+    },
+    "detail": {
+      "basicInformation": "المعلومات الأساسية",
+      "supplierInformation": "معلومات المورد",
+      "storageHandling": "التخزين والمناولة",
+      "additionalNotes": "ملاحظات إضافية",
+      "stockHistory": "سجل المخزون",
+      "noHistory": "لا يوجد سجل مخزون حتى الآن",
+      "name": "الاسم",
+      "category": "الفئة",
+      "unit": "الوحدة",
+      "status": "الحالة",
+      "supplierName": "اسم المورد",
+      "contactPerson": "جهة الاتصال",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "leadTime": "وقت التسليم",
+      "storageLocation": "موقع التخزين",
+      "refrigeration": "التبريد",
+      "expiryTracking": "تتبع انتهاء الصلاحية",
+      "shelfLife": "مدة الصلاحية",
+      "required": "مطلوب",
+      "notRequired": "غير مطلوب",
+      "enabled": "مفعل",
+      "disabled": "معطل",
+      "notSpecified": "غير محدد",
+      "currentStock": "المخزون الحالي",
+      "totalValue": "القيمة الإجمالية",
+      "clientCharge": "سعر العميل",
+      "included": "مشمول",
+      "margin": "الهامش",
+      "perUnit": "لكل وحدة",
+      "min": "الحد الأدنى",
+      "max": "الحد الأقصى",
+      "stockHistoryRef": "المرجع",
+      "updateStock": "تحديث المخزون",
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "deleteModal": {
+        "title": "حذف المستلزم",
+        "description": "هل أنت متأكد أنك تريد حذف هذا المستلزم؟ لا يمكن التراجع عن هذا الإجراء.",
+        "confirm": "حذف",
+        "cancel": "إلغاء"
+      },
+      "deleteSuccess": "تم حذف المستلزم بنجاح",
+      "deleteError": "فشل في حذف المستلزم",
+      "deleteConfirm": "حذف المستلزم",
+      "deleteCancel": "إلغاء"
+    },
+    "messages": {
+      "createSuccess": "تم إنشاء المستلزم بنجاح",
+      "updateSuccess": "تم تحديث المستلزم بنجاح",
+      "deleteSuccess": "تم حذف المستلزم بنجاح",
+      "archiveSuccess": "تم أرشفة المستلزم بنجاح",
+      "restoreSuccess": "تم استعادة المستلزم بنجاح",
+      "stockUpdateSuccess": "تم تحديث المخزون بنجاح",
+      "createError": "فشل في إنشاء المستلزم",
+      "updateError": "فشل في تحديث المستلزم",
+      "deleteError": "فشل في حذف المستلزم",
+      "archiveError": "فشل في أرشفة المستلزم",
+      "restoreError": "فشل في استعادة المستلزم",
+      "stockUpdateError": "فشل في تحديث المخزون",
+      "loadError": "فشل في تحميل المستلزمات",
+      "loadCategoriesError": "فشل في تحميل الفئات",
+      "invalidQuantity": "يرجى إدخال كمية صحيحة"
+    },
+    "categories": {
+      "title": "فئات المستلزمات",
+      "createNew": "إنشاء فئة جديدة",
+      "categoryName": "اسم الفئة",
+      "create": "إنشاء",
+      "cancel": "إلغاء",
+      "createSuccess": "تم إنشاء الفئة بنجاح",
+      "createError": "فشل في إنشاء الفئة",
+      "nameRequired": "اسم الفئة مطلوب"
+    },
+    "pagination": {
+      "info": "عرض {{start}} إلى {{end}} من {{total}} النتائج",
+      "perPage": "في الصفحة:",
+      "to": "إلى",
+      "of": "من",
+      "results": "نتائج",
+      "showing": "عرض"
+    },
+    "units": {
+      "piece": "قطعة",
+      "bottle": "زجاجة",
+      "pack": "حزمة",
+      "box": "صندوق",
+      "kg": "كيلوغرام",
+      "g": "غرام",
+      "liter": "لتر",
+      "ml": "ملليلتر",
+      "dozen": "دزينة",
+      "serving": "وجبة",
+      "can": "علبة",
+      "jar": "جرات",
+      "bag": "كيس",
+      "carton": "كرتونة",
+      "unit": "وحدة"
+    },
+    "pricingTypes": {
+      "included": "مشمول (مجاني للعميل)",
+      "chargeable": "مدفوع",
+      "optional": "اختياري"
+    },
+    "statuses": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "discontinued": "متوقف"
+    },
+    "modal": {
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "deleteModal": {
+        "title": "حذف المستلزم",
+        "description": "هل أنت متأكد أنك تريد حذف هذا المستلزم؟ لا يمكن التراجع عن هذا الإجراء.",
+        "confirm": "حذف",
+        "cancel": "إلغاء"
+      },
+      "deleteSuccess": "تم حذف المستلزم بنجاح",
+      "deleteError": "فشل في حذف المستلزم",
+      "deleteConfirm": "حذف المستلزم",
+      "deleteCancel": "إلغاء"
+    },
+    "deleteModal": {
+      "title": "حذف المستلزم",
+      "description": "هل أنت متأكد أنك تريد حذف هذا المستلزم؟ لا يمكن التراجع عن هذا الإجراء.",
+      "confirm": "حذف",
+      "cancel": "إلغاء"
+    },
+    "delete": "حذف",
+    "deleteSuccess": "تم حذف المستلزم بنجاح",
+    "deleteError": "فشل في حذف المستلزم",
+    "deleteConfirm": "حذف المستلزم",
+    "deleteCancel": "إلغاء"
+
   }
 }

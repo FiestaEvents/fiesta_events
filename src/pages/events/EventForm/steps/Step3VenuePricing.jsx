@@ -5,6 +5,7 @@ import { useEventContext } from "../EventFormContext";
 import Select from "../../../../components/common/Select";
 import Input from "../../../../components/common/Input";
 import PartnerSelector from "../components/PartnerSelector";
+import SupplySelector from "../components/SupplySelector";
 import PriceSummary from "../components/PriceSummary";
 
 const Step3VenuePricing = () => {
@@ -33,9 +34,33 @@ const Step3VenuePricing = () => {
     }));
   };
 
+  // ⭐ SUPPLY HANDLERS
+  const handleAddSupply = (newSupply) => {
+    setFormData((prev) => ({
+      ...prev,
+      supplies: [...(prev.supplies || []), newSupply],
+    }));
+  };
+
+  const handleRemoveSupply = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      supplies: (prev.supplies || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUpdateSupplyQuantity = (index, newQuantity) => {
+    setFormData((prev) => ({
+      ...prev,
+      supplies: (prev.supplies || []).map((supply, i) => 
+        i === index ? { ...supply, quantityRequested: newQuantity } : supply
+      ),
+    }));
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* LEFT: Venue & Partners */}
+      {/* LEFT: Venue, Partners & Supplies */}
       <div className="lg:col-span-2 space-y-8">
         {/* Venue Section */}
         <div>
@@ -72,6 +97,25 @@ const Step3VenuePricing = () => {
             onAddPartner={handleAddPartner}
             onRemovePartner={handleRemovePartner}
             calculateEventHours={() => calculations?.eventHours || 1}
+          />
+        </div>
+
+        {/* ⭐ SUPPLIES SECTION */}
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-6">
+          <div className="mb-4">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              {t("eventForm.step3.eventSupplies")}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {t("eventForm.step3.eventSuppliesDescription")}
+            </p>
+          </div>
+          
+          <SupplySelector
+            selectedSupplies={formData.supplies || []}
+            onAddSupply={handleAddSupply}
+            onRemoveSupply={handleRemoveSupply}
+            onUpdateQuantity={handleUpdateSupplyQuantity}
           />
         </div>
       </div>

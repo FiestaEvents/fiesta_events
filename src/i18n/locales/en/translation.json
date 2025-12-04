@@ -131,7 +131,7 @@
       }
     }
   },
-   "dashboard": {
+  "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back. Here's what's happening today.",
     "currentDate": "Current Date",
@@ -141,18 +141,24 @@
       "viewAll": "View All",
       "export": "Export",
       "viewTransactions": "View All Transactions",
-      "scheduleOne": "Schedule one?"
+      "scheduleOne": "Schedule one?",
+      "downloadCSV": "Download CSV",
+      "generating": "Processing...",
+      "manageSupplies": "Manage Supplies",
+      "viewAllSupplies": "View All Supplies"
     },
     "tabs": {
       "overview": "Overview",
       "expenses": "Expenses",
-      "finance": "Finance"
+      "finance": "Finance",
+      "inventory": "Inventory"
     },
     "status": {
       "systemOperational": "System Operational",
       "noEvents": "No events scheduled for today.",
       "noUpcoming": "No upcoming events found",
-      "noTransactions": "No recent transactions"
+      "noTransactions": "No recent transactions",
+      "noLowStock": "All supplies are adequately stocked"
     }
   },
   "metrics": {
@@ -175,7 +181,21 @@
     "netCashFlow": "Net Cash Flow",
     "inflowOutflow": "Inflow vs Outflow",
     "unpaidInvoices": "Unpaid Invoices",
-    "actionNeeded": "Action Needed"
+    "actionNeeded": "Action Needed",
+    "totalSupplies": "Total Supplies",
+    "activeItems": "Active items",
+    "inventoryValue": "Inventory Value",
+    "totalWorth": "Total worth",
+    "lowStockAlerts": "Low Stock Alerts",
+    "needsReorder": "Needs reorder",
+    "outOfStock": "Out of Stock",
+    "urgentAction": "Urgent action"
+  },
+  "paymentMethods": {
+    "cash": "Cash",
+    "check": "Check",
+    "bank_transfer": "Bank Transfer",
+    "card": "Credit Card"
   },
   "sections": {
     "todaysAgenda": "Today's Agenda",
@@ -186,12 +206,106 @@
     "byCategory": "By Category",
     "revenuePerformance": "Revenue Performance",
     "revenueSubtitle": "Gross income analytics",
-    "recentTransactions": "Recent Transactions"
+    "recentTransactions": "Recent Transactions",
+    "inventoryOverview": "Inventory & Supply Overview",
+    "inventorySubtitle": "Real-time stock levels and expense tracking",
+    "expenseAnalysis": "Expense Analysis",
+    "expenseSubtitle": "Total Expenses",
+    "lowStockAlerts": "Low Stock Alerts"
   },
-  "common": {
+  "common": { 
+     "home":"Home",
+     "create":"Create",
+      "sidebar": {
+      "overview": "Overview",
+      "operations": "Operations",
+      "financial": "Financial",
+      "management": "Management",
+      "pax": "Pax",
+      "guests": "Guests",
+      "remaining": "remaining", 
+      "reorder": "Reorder",
+      "unknown": "Unknown"
+    },
+    "allRightsReserved": "All Rights Reserved",
+    "logoAlt": "Fiesta Logo",
+    "logoTitle": "Fiesta Events",
+    "filtersCleared": "Filters cleared",
+    "actions": "Actions",
+    "clear": "Clear",
+    "warning": "Warning",
+    "noResultsDesc": "No results found matching your criteria",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "refresh": "Refresh",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "apply": "Apply",
+    "reset": "Reset",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "noData": "No data available",
+    "error": "Error",
+    "success": "Success",
+    "info": "Info",
+    "dashboard": "Dashboard",
+    "events": "Events",
+    "clients": "Clients",
+    "partners": "Partners",
+    "supplies": "Supplies",
+    "tasks": "Tasks",
+    "reminders": "Reminders",
+    "finance": "Finance",
+    "payments": "Payments",
+    "invoices": "Invoices",
+    "contracts": "Contracts",
+    "documents": "Documents",
+    "settings": "Settings",
+    "searchPlaceholder": "Search anything...",
     "guests": "Guests",
-    "pax": "Pax",
-    "client": "Client"
+    "completed": "Completed",
+    "archive": "Archive",
+    "restore": "Restore",
+    "optional": "Optional",
+    "nav": {
+      "features": "Features",
+      "marketplace": "Marketplace",
+      "contact": "Contact"
+    },
+    "footer": {
+      "description": "The all-in-one platform for venue management.",
+      "product": "Product",
+      "features": "Features",
+      "marketplace": "Marketplace",
+      "company": "Company",
+      "aboutUs": "About Us",
+      "contact": "Contact",
+      "legal": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "copyright": "© 2025 Fiesta Events.",
+      "inTunisia": "Made in Tunisia"
+    },
+    "pagination": {
+      "info": "Showing {{start}} to {{end}} of {{total}} results",
+      "perPage": "Per page:"
+    }
   },
   "home": {
     "eventsDesc": "Calendar Management",
@@ -205,7 +319,10 @@
     "docSettingsDesc": "Template Layouts",
     "statsDesc": "Reports & Analytics",
     "settingsDesc": "System Configuration",
-    "dashboardDesc": "Reports & Analytics"
+    "dashboardDesc": "Reports & Analytics",
+    "financeDesc": "Financial Overview",
+    "documentsDesc": "Template Layouts",
+    "suppliesDesc": "Inventory Management"
   },
   "documents": {
     "hub": {
@@ -300,8 +417,7 @@
       "deleteMessage": "Are you sure you want to delete {{name}}? This action cannot be undone."
     }
   },
-
-"clientForm": {
+  "clientForm": {
     "steps": {
       "basicInfo": "Basic Info",
       "address": "Address",
@@ -349,7 +465,6 @@
       "update": "Update Client"
     }
   },
-
   "clientDetail": {
     "loading": "Loading client details...",
     "notFound": "Client Not Found",
@@ -1130,54 +1245,29 @@
   },
   "tasks": {
     "title": "Tasks",
+    "subtitle": "Manage and track your team's tasks",
     "archivedTasks": "Archived Tasks",
-    "subtitle": "Manage team tasks and assignments",
-    "archivedSubtitle": "View and manage archived tasks",
-    "showingTasks": "Showing {{current}} of {{total}} tasks",
+    "archivedSubtitle": "View and manage previously archived tasks",
     "createTask": "Create Task",
-    "createFirstTask": "Create First Task",
-    "editTask": "Edit Task",
-    "archiveTask": "Archive Task",
-    "restoreTask": "Restore Task",
-    "deleteTask": "Delete Task",
-    "activeTasks": "Active Tasks",
+    "createFirstTask": "Create your first task",
+    "returnToActive": "Return to Active Tasks",
     "archived": "Archived",
-    "searchPlaceholder": "Search tasks by title or description...",
-    "searchArchivedPlaceholder": "Search archived tasks by title or description...",
-    "filters": {
-      "allStatus": "All Status",
-      "allPriorities": "All Priorities",
-      "allCategories": "All Categories",
-      "clearFilters": "Clear Filters",
-      "activeFilters": "Active filters"
+    "searchPlaceholder": "Search tasks...",
+    "view": {
+      "list": "List",
+      "kanban": "Kanban"
     },
-    "returnToActive": "Return to Active",
-    "unassigned": "Unassigned",
-    "untitled": "Untitled Task",
-    "toasts": {
-      "status": {
-        "error": "Failed to update status"
-      }
+    "stats": {
+      "total": "Total Tasks"
     },
-    "retry": "Retry",
-    "search": "Search",
-    "estimated": "estimated",
-    "unknown": "Unknown",
-    "close": "Close",
-    "archiving": "Archiving...",
-    "restoring": "Restoring...",
-    "deleting": "Deleting...",
-    "event": "Event",
-    "client": "Client",
-    "partner": "Partner",
     "status": {
-      "pending": "Pending",
       "todo": "To Do",
-      "in_progress": "In Progress",
       "blocked": "Blocked",
+      "in_progress": "In Progress",
       "completed": "Completed",
       "cancelled": "Cancelled",
-      "unknown": "Unknown"
+      "on_hold": "On Hold",
+      "pending": "Pending"
     },
     "priority": {
       "low": "Low",
@@ -1185,304 +1275,111 @@
       "high": "High",
       "urgent": "Urgent"
     },
-    "category": {
-      "event_preparation": "Event Preparation",
-      "marketing": "Marketing",
-      "maintenance": "Maintenance",
-      "client_followup": "Client Follow-up",
-      "partner_coordination": "Partner Coordination",
-      "administrative": "Administrative",
-      "finance": "Finance",
-      "setup": "Setup",
-      "cleanup": "Cleanup",
-      "other": "Other"
-    },
-    "stats": {
-      "total": "Total",
-      "pending": "Pending",
-      "todo": "To Do",
-      "inProgress": "In Progress",
-      "blocked": "Blocked",
-      "completed": "Completed",
-      "overdue": "Overdue"
+    "filters": {
+      "allStatus": "All Statuses",
+      "allPriorities": "All Priorities",
+      "clearFilters": "Clear Filters"
     },
     "table": {
-      "title": "Title",
+      "title": "Task / Description",
       "status": "Status",
       "priority": "Priority",
       "dueDate": "Due Date",
       "assignedTo": "Assigned To",
-      "progress": "Progress",
       "actions": "Actions"
-    },
-    "view": {
-      "list": "List",
-      "kanban": "Kanban"
-    },
-    "messages": {
-      "loading": "Loading tasks...",
-      "loadingArchived": "Loading archived tasks...",
-      "noTasks": "No tasks yet",
-      "noArchivedTasks": "No archived tasks",
-      "noTasksDescription": "Get started by creating your first task.",
-      "noArchivedDescription": "Archived tasks will appear here",
-      "noResults": "No tasks found",
-      "noResultsDescription": "No tasks match your current search or filter criteria.",
-      "noArchivedResults": "No archived tasks found",
-      "noArchivedResultsDescription": "No archived tasks match your current search or filter criteria.",
-      "errorLoading": "Error Loading Tasks",
-      "archiveConfirm": {
-        "title": "Archive Task",
-        "message": "Are you sure you want to archive \"{{title}}\"?",
-        "confirm": "Archive Task"
-      },
-      "restoreConfirm": {
-        "title": "Restore Task",
-        "message": "Are you sure you want to restore \"{{title}}\"?",
-        "confirm": "Restore Task"
-      },
-      "deleteConfirm": {
-        "title": "Delete Task",
-        "message": "Are you sure you want to permanently delete \"{{title}}\"? This action cannot be undone.",
-        "confirm": "Delete Permanently"
-      },
-      "success": {
-        "archived": "Task archived successfully",
-        "restored": "Task restored successfully",
-        "deleted": "Task deleted permanently",
-        "created": "Task created successfully",
-        "updated": "Task updated successfully",
-        "statusUpdated": "Status Updated"
-      },
-      "error": {
-        "archive": "Failed to archive task",
-        "restore": "Failed to restore task",
-        "delete": "Failed to delete task",
-        "load": "Failed to load tasks",
-        "loadEvents": "Load Events",
-        "loadFormData": "Load Form Data",
-        "statusUpdate": "Status Update"
-      },
-      "thisTask": "This Task"
     },
     "form": {
       "createTitle": "Create New Task",
-      "editTitle": "Edit Task",
-      "createDescription": "Fill in the details to create a new task",
-      "editDescription": "Update task details",
-      "step": "Step",
-      "of": "of",
-      "steps": {
-        "basicInfo": "Basic Information",
-        "scheduling": "Scheduling & Time Tracking",
-        "assignment": "Assignment & Collaboration",
-        "details": "Additional Details",
-        "checklist": "Checklist",
-        "planning": "Planning"
-      },
-      "fields": {
-        "title": "Task Title",
-        "titlePlaceholder": "Enter a clear, descriptive task title",
-        "description": "Description",
-        "descriptionPlaceholder": "Provide detailed information about the task, requirements, or instructions...",
-        "priority": "Priority",
-        "status": "Status",
-        "category": "Category",
-        "dueDate": "Due Date",
-        "startDate": "Start Date",
-        "reminderDate": "Reminder Date",
-        "estimatedHours": "Estimated Hours",
-        "estimatedHoursPlaceholder": "0.0",
-        "progress": "Progress",
-        "assignedTo": "Assign To",
-        "unassigned": "Unassigned",
-        "watchers": "Watchers",
-        "relatedClient": "Related Client",
-        "relatedEvent": "Related Event",
-        "relatedPartner": "Related Partner",
-        "noClient": "No client",
-        "noEvent": "No event",
-        "noPartner": "No partner",
-        "tags": "Tags",
-        "tagPlaceholder": "Add tag and press Enter",
-        "subtasks": "Subtasks",
-        "subtaskTitle": "Subtask Title",
-        "subtaskDescription": "Subtask Description (optional)",
-        "subtaskTitlePlaceholder": "Enter subtask title",
-        "subtaskDescPlaceholder": "Brief description"
-      },
-      "validation": {
-        "titleRequired": "Task title is required",
-        "categoryRequired": "Category is required",
-        "dueDateRequired": "Due date is required",
-        "startDateBeforeDue": "Start date must be before due date",
-        "reminderBeforeDue": "Reminder date must be before due date",
-        "estimatedHoursRange": "Estimated hours must be between 0 and 1000",
-        "fixErrors": "Please fix the errors before proceeding",
-        "fixAllErrors": "Please fix all required fields before updating",
-        "fixValidationErrors": "Please fix the validation errors"
-      },
-      "buttons": {
-        "cancel": "Cancel",
-        "previous": "Previous",
-        "next": "Next",
-        "create": "Create Task",
-        "update": "Update Task",
-        "updateNow": "Update Now",
-        "add": "Add",
-        "addSubtask": "Add Subtask"
-      },
-      "loading": "Loading"
+      "editTitle": "Edit Task"
     },
-    "detail": {
-      "description": "Description",
-      "taskDetails": "Task Details",
-      "assignedTo": "Assigned To",
-      "dueDate": "Due Date",
-      "startDate": "Start Date",
-      "progress": "Progress",
-      "time": "Time",
-      "createdBy": "Created By",
-      "relatedTo": "Related To",
-      "tags": "Tags",
-      "blockedReason": "Blocked Reason",
-      "moreDetails": "More Details",
-      "overdue": "Overdue",
-      "notSet": "Not set",
-      "noRelated": "No related entities",
-      "loading": "Loading task details...",
-      "notFound": "Task Not Found",
-      "errorLoading": "Error Loading Task",
-      "errorMessage": "The task you're looking for doesn't exist.",
-      "backToTasks": "Back to Tasks",
-      "tryAgain": "Try Again",
-      "tabs": {
-        "overview": "Overview",
-        "subtasks": "Subtasks",
-        "comments": "Comments",
-        "attachments": "Attachments",
-        "timeline": "Timeline",
-        "metrics": "Key Metrics"
+    "messages": {
+      "noResults": "No tasks found",
+      "noResultsDescription": "Try adjusting your search or filters to find what you're looking for.",
+      "noTasks": "No tasks yet",
+      "noTasksDescription": "Get started by creating a new task to track your work.",
+      "thisTask": "this task",
+      "resultsCount": "Showing {{count}} of {{total}} tasks",
+      "error": {
+        "load": "Failed to load tasks"
       },
-      "overview": {
-        "progress": "Progress",
-        "subtasks": "Subtasks",
-        "estimated": "Estimated",
-        "actual": "Actual",
-        "description": "Description",
-        "noDescription": "No description provided for this task.",
-        "metrics": "Key Metrics"
+      "success": {
+        "created": "Task created successfully",
+        "updated": "Task updated successfully",
+        "archived": "Task archived successfully",
+        "restored": "Task restored successfully",
+        "deleted": "Task deleted successfully"
       },
-      "subtasks": {
-        "title": "Subtasks",
-        "completed": "{{completed}} of {{total}} completed",
-        "noSubtasks": "No subtasks",
-        "noSubtasksDescription": "Add subtasks to break down this task into smaller steps.",
-        "completedBy": "Completed {{date}} by {{user}}",
-        "completedDate": "Completed {{date}}",
-        "errorToggle": "Failed to toggle subtask"
+      "archiveConfirm": {
+        "title": "Archive Task",
+        "message": "Are you sure you want to archive \"{{title}}\"?"
       },
-      "comments": {
-        "title": "Comments",
-        "noComments": "No comments yet",
-        "noCommentsDescription": "Be the first to comment on this task.",
-        "unknownUser": "Unknown User",
-        "edited": "edited"
+      "restoreConfirm": {
+        "title": "Restore Task",
+        "message": "Are you sure you want to restore \"{{title}}\"?"
       },
-      "attachments": {
-        "title": "Attachments",
-        "noAttachments": "No attachments",
-        "noAttachmentsDescription": "Upload files to keep them organized with this task.",
-        "download": "Download"
-      },
-      "timeline": {
-        "title": "Timeline",
-        "noEvents": "No timeline events",
-        "noEventsDescription": "Timeline events will appear here as the task progresses.",
-        "events": {
-          "created": "Task Created",
-          "assigned": "Task Assigned",
-          "completed": "Task Completed",
-          "cancelled": "Task Cancelled",
-          "statusChanged": "Status Changed to {{status}}"
-        },
-        "by": "by",
-        "to": "to",
-        "noReason": "No reason provided",
-        "unknownDate": "Unknown Date"
-      },
-      "header": {
-        "backToTasks": "Back to Tasks",
-        "editTask": "Edit Task",
-        "deleteTask": "Delete Task",
-        "priority": "{{priority}} Priority",
-        "actions": {
-          "starting": "Starting...",
-          "startWorking": "Start Working",
-          "pausing": "Pausing...",
-          "pauseTask": "Pause Task",
-          "completing": "Completing...",
-          "markComplete": "Mark Complete",
-          "archiving": "Archiving...",
-          "archiveTask": "Archive Task"
-        }
-      },
-      "info": {
-        "title": "Task Information",
-        "dueDate": "Due Date",
-        "startDate": "Start Date",
-        "assignedTo": "Assigned To",
-        "category": "Category",
-        "estimatedHours": "Estimated Hours",
-        "actualHours": "Actual Hours",
-        "taskBlocked": "Task Blocked"
-      },
-      "modals": {
-        "edit": {
-          "title": "Edit Task"
-        },
-        "delete": {
-          "title": "Delete Task",
-          "message": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone and will remove all associated data.",
-          "confirm": "Delete Task",
-          "cancel": "Cancel"
-        }
-      },
+      "deleteConfirm": {
+        "title": "Delete Task",
+        "message": "Are you sure you want to permanently delete \"{{title}}\"? This action cannot be undone."
+      }
+    },
+    "toasts": {
       "status": {
-        "unknown": "Unknown"
+        "error": "Failed to update status"
+      }
+    },
+    "notifications": {
+      "archiving": "Archiving task...",
+      "restoring": "Restoring task...",
+      "deleting": "Deleting task..."
+    },
+      "detail": {
+        "toasts": { 
+          "taskCreated": "Task created successfully",
+          "taskUpdated": "Task updated successfully",
+          "taskDeleted": "Task deleted successfully",
+          "taskArchived": "Task archived successfully"
+        }          
       },
-      "toasts": {
-        "edit": {
-          "success": "Task updated successfully"
-        },
-        "delete": {
-          "loading": "Deleting task...",
-          "success": "Task deleted successfully",
-          "error": "Failed to delete task"
-        },
-        "status": {
-          "loading": "Updating task status...",
-          "success": "Status updated to {{status}}",
-          "error": "Failed to update task status"
-        },
-        "complete": {
-          "loading": "Completing task...",
-          "success": "Task marked as completed",
-          "error": "Failed to complete task"
-        },
-        "archive": {
-          "loading": "Archiving task...",
-          "success": "Task archived successfully",
-          "error": "Failed to archive task"
-        },
-        "retry": "Retrying to load task details..."
+    "loading": "Loading task details...",
+    "tabs": {
+      "overview": "Overview",
+      "subtasks": "Subtasks",
+      "comments": "Comments",
+      "attachments": "Attachments",
+      "timeline": "Timeline"
+    },
+    "header": {
+      "backToTasks": "Back to Tasks",
+      "editTask": "Edit",
+      "deleteTask": "Delete",
+      "actions": {
+        "archiveTask": "Archive Task"
+      }
+    },
+    "info": {
+      "title": "Task Info",
+      "dueDate": "Due Date",
+      "assignedTo": "Assigned To",
+      "category": "Category"
+    },
+    "overview": {
+      "metrics": "Metrics",
+      "progress": "Progress",
+      "subtasks": "Subtasks Completed",
+      "estimated": "Est. Hours",
+      "actual": "Actual Hours",
+      "description": "Description"
+    },
+    "subtasks": {
+      "label": "Subtasks Completed"
+    },
+    "modals": {
+      "edit": {
+        "title": "Edit Task"
       },
-      "errors": {
-        "edit": "Cannot edit task: Task ID not found",
-        "delete": "Cannot delete task: Task ID not found",
-        "status": "Cannot update task status: Task ID not found",
-        "complete": "Cannot complete task: Task ID not found",
-        "archive": "Cannot archive task: Task ID not found"
+      "delete": {
+        "title": "Delete Task",
+        "message": "Are you sure you want to delete this task? This action cannot be undone."
       }
     }
   },
@@ -1517,142 +1414,122 @@
     }
   },
   "reminders": {
-    "title": "Reminders",
-    "subtitle": "Manage notifications, alerts, and follow-up reminders.",
-    "addReminder": "Add Reminder",
-    "createFirst": "Create First Reminder",
-    "searchPlaceholder": "Search reminders by title or description...",
-    "clearFilters": "Clear Filters",
-    "noResults": "No reminders found",
-    "noReminders": "No reminders yet",
-    "untitled": "Untitled Reminder",
-    "errorLoading": "Error Loading Reminders",
-    "backToReminders": "Back to Reminders",
-    "every": "Every",
-    "loadingDetails": "Loading reminder details...",
-    "notFound": "Reminder Not Found",
-    "notFoundDescription": "The reminder you are looking for does not exist.",
-    "tryAgain": "Try Again",
-    "yes": "Yes",
-    "status": {
-      "all": "All Status",
-      "active": "Active",
-      "completed": "Completed",
-      "snoozed": "Snoozed"
-    },
-    "type": {
-      "all": "All Types",
-      "client": "Client",
-      "event": "Event",
-      "task": "Task"
-    },
-    "priority": {
-      "all": "All Priorities",
-      "urgent": "Urgent",
-      "high": "High",
-      "medium": "Medium",
-      "low": "Low"
-    },
-    "columns": {
+    "subtitle": "Manage and track your important notifications",
+  "searchPlaceholder": "Search reminders...",
+  "columns": {
+    "title": "Title",
+    "description": "Description",
+    "dateTime": "Date & Time",
+    "type": "Type",
+    "priority": "Priority",
+    "status": "Status",
+    "actions": "Actions"
+  },
+   "status": {
+    "all": "All Statuses",
+    "active": "Active",
+    "completed": "Completed",
+    "snoozed": "Snoozed"
+  },
+  "priority": {
+    "all": "All Priorities",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "form": {
+    "createTitle": "Create New Reminder",
+     "basicInfo": "Basic Information",
+    "relatedItems": "Related Items",
+    "notifications": "Notifications",
+    "recurrence": "Recurrence",
+    "enableRecurrence": "Enable Recurrence",
+    "fields": {
       "title": "Title",
-      "description": "Description",
-      "dateTime": "Date & Time",
+      "relatedEvent": "Related Event",
+      "relatedClient": "Related Client",
+      "relatedTask": "Related Task",
+      "notificationMethods": "Notification Methods",
+      "notes": "Notes",
+      "date": "Date",
+      "time": "Time",
       "type": "Type",
       "priority": "Priority",
-      "status": "Status",
-      "actions": "Actions"
+      "description": "Description"
     },
-    "form": {
-      "createTitle": "Create New Reminder",
-      "editTitle": "Edit Reminder",
-      "basicInfo": "Basic Information",
-      "enableRecurrence": "Enable Recurrence",
-      "notifications": "Notifications",
-      "recurrence": "Recurrence",
-      "relatedItems": "Related Items",
-      "buttons": {
-        "cancel": "Cancel",
-        "create": "Create Reminder",
-        "next": "Next",
-        "previous": "Previous",
-        "update": "Update Reminder",
-        "updateNow": "Update Now"
-      },
-      "fields": {
-        "date": "Date",
-        "daysOfWeek": "Days of Week",
-        "description": "Description",
-        "frequency": "Frequency",
-        "interval": "Interval",
-        "notes": "Notes",
-        "notificationMethods": "Notification Methods",
-        "priority": "Priority",
-        "relatedClient": "Related Client",
-        "relatedEvent": "Related Event",
-        "relatedTask": "Related Task",
-        "time": "Time",
-        "title": "Title",
-        "type": "Type"
-      }
+    "history": {
+    "comingSoon": "Activity history coming soon",
+    "description": "We're working on a detailed timeline to track changes, snoozes, and completion history for this reminder."
+  },
+     "buttons": {
+      "cancel": "Cancel",
+      "next": "Next",
+      "previous": "Previous",
+      "update": "Update",
+      "updateNow": "Update Now",
+      "create": "Create"
+    }
+  },
+   "modals": {
+    "snooze": {
+      "title": "Snooze Reminder"
     },
+    "delete": {
+      "title": "Delete Reminder",
+      "description": "Are you sure you want to delete this reminder? This action cannot be undone."
+    }
+  },
+    "title": "Reminders",
+    "description": "Manage your event reminders and notifications",
+    "addReminder": "Add Reminder",
+    "addFirstReminder": "Add First Reminder",
+    "editReminder": "Edit Reminder",
+    "deleteReminder": "Delete Reminder",
+    "snoozing": "Snoozing...",
+    "snooze1Hour": "Snooze 1 Hour",
+    "cancelling": "Cancelling...",
+    "cancelReminder": "Cancel Reminder",
     "details": {
-      "activityHistory": "Activity History",
-      "additionalInfo": "Additional Information",
-      "notificationMethods": "Notification Methods",
-      "recurrenceSettings": "Recurrence Settings",
-      "reminderInfo": "Reminder Info",
-      "tab": "Details"
+      "createdBy": "Created By"
     },
-    "modals": {
-      "snooze": {
-        "title": "Snooze Reminder"
-      },
-      "delete": {
-        "title": "Delete Reminder",
-        "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
-        "cancel": "Cancel",
-        "confirm": "Delete"
-      }
+    "actions": {
+      "unsnooze": "Unsnooze"
     },
     "notifications": {
-      "showingResults": "Showing {{count}} of {{total}} reminders",
-      "filtersCleared": "Filters cleared",
-      "created": "Reminder created successfully",
-      "updated": "Reminder updated successfully",
-      "deleted": "Reminder deleted successfully",
-      "snoozed": "Reminder snoozed successfully",
-      "unsnoozed": "Reminder activated successfully",
-      "deleting": "Deleting {{name}}...",
-      "deleteError": "Failed to delete reminder",
-      "snoozing": "Snoozing...",
-      "snoozeError": "Failed to snooze reminder",
-      "activating": "Activating...",
-      "activateError": "Failed to activate reminder",
-      "cancelError": "Failed to cancel",
-      "cancelled": "Cancelled",
-      "cancelling": "Cancelling...",
-      "completeError": "Failed to complete",
-      "completed": "Completed",
-      "completing": "Completing...",
-      "loadError": "Failed to load",
-      "loadingDetails": "Loading details...",
-      "saveError": "Failed to save"
-    },
-    "recurrence": {
-      "day": "Day",
-      "dayOfMonth": "Day of Month",
-      "endDate": "End Date",
-      "forever": "Forever",
-      "label": "Recurrence",
-      "oneTime": "One Time"
+      "deleteConfirm": "Are you sure you want to delete this reminder?",
+      "showingResults": "Showing {{count}} results"
     },
     "validation": {
-      "dateRequired": "Date is required",
-      "fixAllErrors": "Please fix all errors",
-      "fixErrors": "Please fix errors",
-      "invalidId": "Invalid ID",
-      "timeRequired": "Time is required",
-      "titleRequired": "Title is required"
+      "notificationMethodsRequired": "At least one notification method is required"
+    },
+    "type": {
+      "event": "Event",
+      "payment": "Payment",
+      "task": "Task",
+      "general": "General",
+      "follow_up": "Follow Up",
+      "deadline": "Deadline",
+      "client": "Client",
+      "maintenance": "Maintenance",
+      "followup": "Follow-up",
+      "other": "Other"
+    },
+    "recurrence": {
+      "none": "None",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "weekdays": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
     }
   },
   "payments": {
@@ -2151,97 +2028,6 @@
       "exported": "Transactions exported successfully"
     }
   },
-  "common": {
-    "nav": {
-      "products": "Products",
-      "features": "Features",
-      "marketplace": "Marketplace",
-      "contact": "Contact",
-      "bookDemo": "Book Demo"
-    },
-    "footer": {
-      "description": "Tunisia's leading event management platform connecting venues, planners, and service partners.",
-      "product": "Product",
-      "company": "Company",
-      "legal": "Legal",
-      "aboutUs": "About Us",
-      "careers": "Careers",
-      "blog": "Blog",
-      "privacy": "Privacy Policy",
-      "terms": "Terms of Service",
-      "cookies": "Cookie Policy",
-      "copyright": "© 2024 Fiesta Events. Made with",
-      "inTunisia": "in Tunisia"
-    },
-    "contracts": "Contracts",
-    "documents": "Documents",
-    "home": "Quick Access",
-    "settings": "Settings",
-    "profile": "Profile",
-    "logout": "Logout",
-    "hour": "hour",
-    "total": "total",
-    "rating": "{{value}} / 5.0",
-    "unknown": "Unknown",
-    "currency": "${{amount}}",
-    "percentage": "{{value}}%",
-    "eventsCount": "{{completed}} of {{total}} events completed",
-    "notAvailable": "N/A",
-    "close": "Close",
-    "cancel": "Cancel",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "searchPlaceholder": "Search events, clients, tasks...",
-    "toggleTheme": "Toggle theme",
-    "notifications": "Notifications",
-    "actions": {
-      "cancel": "Cancel",
-      "clear": "Clear",
-      "clearFilters": "Clear Filters",
-      "delete": "Delete"
-    },
-    "company": "Company",
-    "guests": "Guests",
-    "individual": "Individual",
-    "noResults": "No results found",
-    "optional": "Optional",
-    "user": "User",
-    "reset": "Reset",
-    "saveChanges": "Save Changes",
-    "dashboard": "Dashboard",
-    "events": "Events",
-    "clients": "Clients",
-    "partners": "Partners",
-    "tasks": "Tasks",
-    "reminders": "Reminders",
-    "finance": "Finance",
-    "payments": "Payments",
-    "invoices": "Invoices",
-    "edit": "Edit",
-    "delete": "Delete",
-    "archive": "Archive",
-    "restore": "Restore",
-    "save": "Save",
-    "create": "Create",
-    "update": "Update",
-    "viewDetails": "View Details",
-    "confirmDelete": "Confirm Delete",
-    "deleting": "Deleting...",
-    "loading": "Loading...",
-    "completed": "Completed",
-    "earnings": "Earnings",
-    "error": "Something went wrong",
-    "date": "Date",
-    "time": "Time",
-    "updateNow": "Update Now",
-    "table": {
-      "showing": "Showing",
-      "to": "to",
-      "of": "of",
-      "results": "results"
-    }
-  },
   "notifications": {
     "upcomingReminders": "Upcoming Reminders",
     "today": "Today",
@@ -2709,125 +2495,142 @@
     }
   },
   "venueSettings": {
-    "title": "Venue Settings",
-    "subtitle": "Manage your venue profile and preferences",
-    "tabs": {
-      "personal": "Personal",
-      "security": "Security",
-      "venue": "Venue",
-      "amenities": "Amenities & Hours",
-      "spaces": "Spaces"
-    },
+    "title": "Settings",
+    "subtitle": "Manage your profile, venue details, and security preferences",
     "common": {
+      "loading": "Loading...",
       "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "saved": "Saved",
       "cancel": "Cancel",
       "add": "Add",
       "clearAll": "Clear All",
-      "loading": "Loading...",
-      "saving": "Saving...",
-      "saved": "Saved",
       "tryAgain": "Try Again",
       "active": "Active",
       "inactive": "Inactive",
       "open": "Open",
       "closed": "Closed"
     },
+    "tabs": {
+      "personal": "Personal",
+      "security": "Security",
+      "venue": "Venue Info",
+      "amenities": "Amenities",
+      "spaces": "Spaces"
+    },
+    "errors": {
+      "loadFailed": "Failed to load data",
+      "saveFailed": "Failed to save changes",
+      "deleteFailed": "Failed to delete item"
+    },
+    "validation": {
+      "required": "This field is required",
+      "minLength": "Password is too short",
+      "passwordMismatch": "Passwords do not match",
+      "emailInvalid": "Invalid email address",
+      "fixErrors": "Please fix the errors before saving"
+    },
+    "notifications": {
+      "profileUpdated": "Profile updated successfully",
+      "passwordChanged": "Password changed successfully",
+      "venueUpdated": "Venue details updated successfully"
+    },
     "personal": {
-      "title": "Profile Information",
-      "description": "Update your personal details",
-      "venueOwner": "Venue Owner",
+      "title": "Personal Information",
+      "description": "Update your personal details and contact information.",
       "profilePicture": "Profile Picture",
+      "venueOwner": "Venue Owner",
       "fields": {
         "fullName": "Full Name",
         "phone": "Phone Number",
         "email": "Email Address",
-        "avatar": "Avatar URL"
+        "avatar": "Profile Picture URL"
       },
       "placeholders": {
-        "fullName": "Your full name",
-        "phone": "+216 XX XXX XXX",
-        "avatar": "https://example.com/avatar.jpg"
+        "fullName": "e.g. John Doe",
+        "phone": "e.g. +1 234 567 890",
+        "avatar": "https://..."
       }
     },
     "security": {
       "title": "Security Settings",
-      "description": "Update your password and security preferences",
+      "description": "Manage your password and account security.",
       "updatePassword": "Update Password",
       "fields": {
         "currentPassword": "Current Password",
         "newPassword": "New Password",
-        "confirmPassword": "Confirm Password"
+        "confirmPassword": "Confirm New Password"
       },
       "placeholders": {
         "currentPassword": "Enter current password",
-        "newPassword": "Minimum 6 characters",
+        "newPassword": "Enter new password",
         "confirmPassword": "Re-enter new password"
       },
       "strength": {
-        "tooShort": "Too short",
+        "tooShort": "Too Short",
         "weak": "Weak",
         "fair": "Fair",
         "good": "Good",
         "strong": "Strong"
       },
       "requirements": {
-        "title": "Password Requirements",
-        "minLength": "At least 6 characters",
-        "uppercase": "One uppercase letter",
-        "number": "One number"
+        "title": "Password Requirements:",
+        "minLength": "At least 6 characters long",
+        "uppercase": "Contains at least one uppercase letter",
+        "number": "Contains at least one number"
       }
     },
     "venue": {
       "basicInfo": {
-        "title": "Basic Information",
-        "description": "Your venue's public profile"
+        "title": "Venue Details",
+        "description": "General information about your venue visible to clients."
       },
       "location": {
         "title": "Location",
-        "description": "Where clients can find you"
+        "description": "Where is your venue located?"
       },
       "contact": {
-        "title": "Contact Information",
-        "description": "How clients can reach you"
+        "title": "Contact Info",
+        "description": "How can clients reach the venue directly?"
       },
       "fields": {
         "name": "Venue Name",
         "description": "Description",
         "street": "Street Address",
         "city": "City",
-        "state": "State/Region",
-        "zipCode": "Zip Code",
+        "state": "State / Province",
+        "zipCode": "Zip / Postal Code",
         "country": "Country",
-        "phone": "Contact Phone",
-        "email": "Contact Email"
+        "phone": "Venue Phone",
+        "email": "Venue Email"
       },
       "placeholders": {
-        "name": "e.g. The Grand Ballroom",
-        "description": "Describe your venue, its unique features, and what makes it special...",
-        "street": "123 Main Street",
-        "city": "Tunis",
-        "state": "Tunis",
+        "name": "e.g. Grand Plaza Hall",
+        "description": "Tell us about your venue...",
+        "street": "123 Main St",
+        "city": "City Name",
+        "state": "State Name",
         "zipCode": "1000",
-        "country": "Tunisia",
-        "phone": "+216 XX XXX XXX",
+        "country": "Country Name",
+        "phone": "+1 234 567 890",
         "email": "contact@venue.com"
       }
     },
     "amenities": {
       "title": "Amenities",
-      "subtitle": "Amenities & Features",
-      "description": "Highlight what your venue offers to attract clients",
-      "selected": "Selected",
+      "subtitle": "Amenities & Services",
+      "description": "Select the amenities your venue offers to clients.",
+      "selected": "Selected Amenities",
+      "clickToAdd": "Click items below to add them",
       "quickAdd": "Quick Add",
-      "addCustom": "Add Custom Amenity",
-      "clickToAdd": "Click amenities below to add them",
+      "addCustom": "Add Custom",
       "placeholders": {
-        "custom": "e.g. Helicopter Pad"
+        "custom": "e.g. Valet Parking"
       },
       "operatingHours": {
         "title": "Operating Hours",
-        "description": "Set when your venue is available for bookings",
-        "allDays": "Open All Days",
+        "description": "Set your venue's standard opening and closing times.",
+        "allDays": "All Days",
         "weekdays": "Weekdays Only",
         "weekends": "Weekends Only",
         "days": {
@@ -2842,56 +2645,38 @@
       }
     },
     "spaces": {
-      "title": "Venue Spaces",
-      "addNew": "Add New Space",
-      "addFirst": "Add Your First Space",
-      "addDescription": "Create a bookable area",
-      "edit": "Edit",
-      "editDescription": "Update the space details below",
-      "create": "Create Space",
-      "emptyTitle": "No Spaces Yet",
-      "emptyDescription": "Create your first venue space to start accepting bookings.",
       "capacity": "Capacity",
       "basePrice": "Base Price",
-      "availableForBooking": "Available for Booking",
-      "availableDescription": "Uncheck to temporarily hide this space",
-      "fields": {
-        "name": "Space Name",
-        "description": "Description",
-        "minCapacity": "Min Capacity",
-        "maxCapacity": "Max Capacity",
-        "basePrice": "Base Price (TND)"
-      },
-      "placeholders": {
-        "name": "e.g. Grand Hall, Garden Terrace",
-        "description": "Describe this space, its features, and what makes it special...",
-        "basePrice": "5000"
-      },
-      "validation": {
-        "capacity": "Both minimum and maximum capacity are required",
-        "price": "Base price is required"
-      },
+      "addNew": "Add New Space",
+      "addDescription": "Create a new bookable space within your venue",
+      "emptyTitle": "No Spaces Added",
+      "emptyDescription": "Start by adding your first event space (e.g., Main Hall, Garden, Meeting Room).",
+      "addFirst": "Add Your First Space",
+      "edit": "Edit Space",
+      "editDescription": "Update space details",
+      "create": "Create Space",
+      "availableForBooking": "Available for booking",
+      "availableDescription": "Clients can view and request this space",
       "confirmDelete": "Are you sure you want to delete this space?",
+      "deleted": "Space deleted successfully",
       "created": "Space created successfully",
       "updated": "Space updated successfully",
-      "deleted": "Space deleted successfully"
-    },
-    "validation": {
-      "required": "This field is required",
-      "minLength": "Password must be at least 6 characters",
-      "passwordMismatch": "Passwords don't match",
-      "emailInvalid": "Please provide a valid email address",
-      "fixErrors": "Please fix the errors before saving"
-    },
-    "notifications": {
-      "profileUpdated": "Profile updated successfully",
-      "passwordChanged": "Password changed successfully",
-      "venueUpdated": "Venue information updated successfully"
-    },
-    "errors": {
-      "loadFailed": "Failed to load settings",
-      "saveFailed": "Failed to save changes",
-      "deleteFailed": "Failed to delete"
+      "fields": {
+        "name": "Space Name",
+        "basePrice": "Base Price",
+        "minCapacity": "Min Capacity",
+        "maxCapacity": "Max Capacity",
+        "description": "Description"
+      },
+      "placeholders": {
+        "name": "e.g. Main Ballroom",
+        "basePrice": "0.00",
+        "description": "Describe the space..."
+      },
+      "validation": {
+        "capacity": "Please set both minimum and maximum capacity",
+        "price": "Please set a base price"
+      }
     }
   },
   "notFound": {
@@ -3390,6 +3175,216 @@
         "startFree": "Get Started for Free",
         "contactSales": "Contact Sales"
       }
+    }
+  },
+  "supplies": {
+    "title": "Supplies Management",
+    "subtitle": "Manage your inventory, track stock levels, and organize equipment",
+    "itemsCount": "items",
+    "errors": {
+      "loadFailed": "Failed to load supplies data"
+    },
+    "delete": {
+      "title": "Delete Supply",
+      "loading": "Deleting supply...",
+      "success": "Supply deleted successfully",
+      "error": "Failed to delete supply",
+      "confirmMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+    },
+    "buttons": {
+      "addSupply": "Add Supply"
+    },
+    "filters": {
+      "search": "Search supplies...",
+      "allCategories": "All Categories",
+      "allStock": "All Stock Levels",
+      "lowStock": "Low Stock",
+      "outOfStock": "Out of Stock"
+    },
+    "table": {
+      "name": "Item Name",
+      "stock": "Stock Level",
+      "value": "Value",
+      "status": "Status",
+      "uncategorized": "Uncategorized"
+    },
+    "status": {
+      "outOfStock": "Out of Stock",
+      "lowStock": "Low Stock",
+      "overstocked": "Overstocked",
+      "inStock": "In Stock"
+    },
+    "stats": {
+      "totalValue": "Total Value",
+      "lowStock": "Low Stock",
+      "outOfStock": "Out of Stock",
+      "totalItems": "Total Items"
+    },
+    "empty": {
+      "title": "No supplies found",
+      "description": "Get started by adding your first supply item to track inventory and costs."
+    },
+    "pagination": {
+      "info": "Showing {{start}} to {{end}} of {{total}} results",
+      "perPage": "Per page:", 
+      "to": "to",
+      "of": "of",
+      "results": "results",
+      "showing": "Showing"  
+    },
+  "create": {
+      "title": "Add New Supply",
+      "subtitle": "Add a new supply item to your inventory"
+    },
+    "edit": {
+      "title": "Edit Supply",
+      "subtitle": "Update supply information and inventory details"
+    },
+    "form": {
+      "basicInfo": "Basic Information",
+      "name": "Supply Name",
+      "category": "Category",
+      "unit": "Unit of Measurement",
+      "status": "Status",
+      "inventory": "Inventory Management",
+      "currentStock": "Current Stock",
+      "minimumStock": "Minimum Stock",
+      "maximumStock": "Maximum Stock",
+      "pricing": "Pricing",
+      "costPerUnit": "Cost Per Unit (Venue)",
+      "pricingType": "Pricing Type",
+      "chargePerUnit": "Charge Per Unit (Client)",
+      "supplier": "Supplier Information (Optional)",
+      "supplierName": "Supplier Name",
+      "supplierContact": "Contact Person",
+      "supplierPhone": "Phone",
+      "supplierEmail": "Email",
+      "leadTime": "Lead Time (Days)",
+      "storage": "Storage & Handling",
+      "storageLocation": "Storage Location",
+      "shelfLife": "Shelf Life (Days)",
+      "requiresRefrigeration": "Requires Refrigeration",
+      "expiryTracking": "Enable Expiry Tracking",
+      "notes": "Additional Notes",
+      "selectCategory": "Select Category",
+      "newCategory": "New",
+      "categoryNamePlaceholder": "Category name",
+      "profitMargin": "Profit Margin",
+      "lowStockWarning": "Low Stock Warning",
+      "lowStockDesc": "Current stock is at or below minimum threshold",
+      "createCategory": "Create Category",
+      "cancel": "Cancel",
+      "new": "New",
+      "save": "Save",
+      "edit": "Edit",
+      "delete": "Delete",
+      "active": "Active",
+      "inactive": "Inactive",
+      "discontinued": "Discontinued",
+      "included": "Included (Free for client)",
+      "chargeable": "Chargeable",
+      "optional": "Optional"
+    },
+    "units": {
+      "piece": "Piece",
+      "bottle": "Bottle",
+      "pack": "Pack",
+      "box": "Box",
+      "kg": "Kilogram (kg)",
+      "g": "Gram (g)",
+      "liter": "Liter (L)",
+      "ml": "Milliliter (ml)",
+      "dozen": "Dozen",
+      "serving": "Serving",
+      "can": "Can",
+      "jar": "Jar",
+      "bag": "Bag",
+      "carton": "Carton",
+      "unit": "Unit"
+    },
+    "pricingTypes": {
+      "included": "Included (Free to client)",
+      "chargeable": "Chargeable",
+      "optional": "Optional"
+    },
+    "statuses": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "discontinued": "Discontinued"
+    },
+    "messages": {
+      "createSuccess": "Supply created successfully",
+      "updateSuccess": "Supply updated successfully",
+      "categoryCreated": "Category created successfully",
+      "validationError": "Validation Error",
+      "nameRequired": "Supply name is required",
+      "categoryRequired": "Category is required"
+    },
+      "detail": {
+      "notFound": "Supply Not Found",
+      "backToSupplies": "Back to Supplies",
+      "archivedMessage": "This supply is archived. Restore it to make it available for events.",
+      "basicInfo": "Basic Information",
+      "supplierInfo": "Supplier Information",
+      "storageInfo": "Storage & Handling",
+      "notes": "Additional Notes",
+      "currentStock": "Current Stock",
+      "totalValue": "Total Value",
+      "clientCharge": "Client Charge",
+      "margin": "Margin",
+      "per": "per",
+      "leadTime": "Lead Time",
+      "days": "days",
+      "shelfLife": "Shelf Life",
+      "refrigeration": "Refrigeration",
+      "expiryTracking": "Expiry Tracking",
+      "required": "Required",
+      "notRequired": "Not Required",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "notSpecified": "Not specified",
+      "na": "N/A",
+      "updateStock": "Update Stock"
+    },
+    "history": {
+      "title": "Stock History",
+      "empty": "No stock history yet",
+      "ref": "Ref"
+    },
+    "stockActions": {
+      "purchase": "Purchase (Add Stock)",
+      "usage": "Usage (Remove Stock)",
+      "adjustment": "Adjustment (Set Exact Amount)",
+      "return": "Return from Event",
+      "waste": "Waste/Damage"
+    },
+    "modal": {
+      "title": "Update Stock",
+      "actionType": "Action Type",
+      "quantity": "Quantity",
+      "reference": "Reference (Optional)",
+      "notes": "Notes (Optional)",
+      "newLevel": "New Stock Level",
+      "updateBtn": "Update Stock",
+      "success": "Stock updated successfully",
+      "invalidQty": "Please enter a valid quantity",
+      "cancelBtn": "Cancel",
+      "deleteBtn": "Delete",
+      "deleteModal": {
+        "title": "Delete Stock",
+        "description": "Are you sure you want to delete this stock?",
+        "confirmBtn": "Delete",
+        "cancelBtn": "Cancel"
+      }
+    },
+    "archive": {
+      "success": "Supply archived successfully",
+      "restoreSuccess": "Supply restored successfully"
+    },
+    "delete": {
+      "success": "Supply deleted successfully",
+      "confirmBtn": "Delete",
+      "cancelBtn": "Cancel"
     }
   }
 }

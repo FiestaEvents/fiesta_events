@@ -1,84 +1,139 @@
-import React, { useState } from "react";
-import { DollarSign, ChevronDown, ChevronUp, Receipt, CreditCard } from "lucide-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
+import { Package, Users, Home, TrendingUp } from "lucide-react";
 import { useEventContext } from "../EventFormContext";
 
 const PriceSummary = () => {
   const { t } = useTranslation();
   const { calculations } = useEventContext();
-  const [showDetails, setShowDetails] = useState(true); // Default to open for better visibility
 
-  // Safety helper
-  const formatPrice = (amount) => (amount || 0).toFixed(2);
+  if (!calculations) return null;
+
+  const {
+    basePrice,
+    partnersTotal,
+    suppliesTotalCharge,
+    suppliesTotalCost,
+    suppliesMargin,
+    subtotalBeforeDiscount,
+    discountAmount,
+    subtotalAfterDiscount,
+    taxAmount,
+    totalPrice,
+  } = calculations;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300">
-      
-      {/* --- Header (Clickable) --- */}
-      <div 
-        className="flex items-center justify-between p-4 cursor-pointer bg-gray-50/50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" 
-        onClick={() => setShowDetails(!showDetails)}
-      >
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
-            <Receipt className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-gray-900 dark:text-white text-sm">
-            {t('eventForm.priceSummary.title', 'Price Summary')}
-          </h3>
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+      <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <TrendingUp className="w-5 h-5 text-orange-600" />
+        {t("eventForm.step3.priceSummary")}
+      </h4>
+
+      <div className="space-y-2 text-sm">
+        {/* Base Price */}
+        <div className="flex items-center justify-between">
+          <span className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
+            <Home className="w-4 h-4" />
+            {t("eventForm.step3.venueBase")}
+          </span>
+          <span className="font-medium text-gray-900 dark:text-white">
+            {basePrice.toFixed(3)} TND
+          </span>
         </div>
-        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          {showDetails ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-        </button>
-      </div>
 
-      {/* --- Details Section (Collapsible) --- */}
-      {showDetails && (
-        <div className="p-4 space-y-3 border-t border-gray-100 dark:border-gray-700 text-sm animate-in slide-in-from-top-1">
-          
-          {/* Venue */}
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-gray-400">{t('eventForm.step3.basePriceLabel', 'Venue Base')}</span>
-            <span className="font-medium text-gray-900 dark:text-white">{formatPrice(calculations.basePrice)}</span>
-          </div>
-
-          {/* Partners */}
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-gray-400">{t('eventForm.step3.servicePartners', 'Services')}</span>
-            <span className="font-medium text-gray-900 dark:text-white">{formatPrice(calculations.partnersTotal)}</span>
-          </div>
-
-          {/* Discount (Conditional) */}
-          {calculations.discountAmount > 0 && (
-            <div className="flex justify-between items-center text-green-600 dark:text-green-400">
-              <span>{t('eventForm.step3.discount', 'Discount')}</span>
-              <span className="font-medium">- {formatPrice(calculations.discountAmount)}</span>
-            </div>
-          )}
-
-          {/* Tax (Conditional) */}
-          {calculations.taxAmount > 0 && (
-            <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
-              <span>{t('eventForm.step3.tax', 'Tax')} ({calculations.taxRate}%)</span>
-              <span>+ {formatPrice(calculations.taxAmount)}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* --- Total Footer --- */}
-      <div className="p-4 bg-orange-50 dark:bg-orange-900/10 border-t border-orange-100 dark:border-orange-800/30">
-        <div className="flex justify-between items-end">
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-orange-800 dark:text-orange-300 uppercase tracking-wider">
-              {t('eventForm.priceSummary.total', 'Total Due')}
+        {/* Partners */}
+        {partnersTotal > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              {t("eventForm.step3.partnersTotal")}
             </span>
-            <span className="text-xs text-orange-600/70 dark:text-orange-400/70">
-              (TTC)
+            <span className="font-medium text-gray-900 dark:text-white">
+              {partnersTotal.toFixed(3)} TND
             </span>
           </div>
-          <div className="text-2xl font-bold text-orange-600 dark:text-orange-500 leading-none">
-            {formatPrice(calculations.totalPrice)} <span className="text-sm">TND</span>
+        )}
+
+        {/* Supplies */}
+        {suppliesTotalCharge > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              {t("eventForm.step3.suppliesTotal")}
+            </span>
+            <span className="font-medium text-gray-900 dark:text-white">
+              {suppliesTotalCharge.toFixed(3)} TND
+            </span>
+          </div>
+        )}
+
+        {/* Supply Cost Details (Collapsed) */}
+        {suppliesTotalCost > 0 && (
+          <div className="pl-6 pt-1 pb-2 border-l-2 border-blue-200 dark:border-blue-800 space-y-1 text-xs">
+            <div className="flex justify-between text-gray-500 dark:text-gray-400">
+              <span>{t("eventForm.step3.supplyCostToVenue")}:</span>
+              <span>{suppliesTotalCost.toFixed(3)} TND</span>
+            </div>
+            <div className="flex justify-between text-gray-500 dark:text-gray-400">
+              <span>{t("eventForm.step3.clientCharge")}:</span>
+              <span>{suppliesTotalCharge.toFixed(3)} TND</span>
+            </div>
+            <div className="flex justify-between font-medium text-green-600 dark:text-green-400">
+              <span>{t("eventForm.step3.margin")}:</span>
+              <span>+{suppliesMargin.toFixed(3)} TND</span>
+            </div>
+          </div>
+        )}
+
+        {/* Subtotal */}
+        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-700 dark:text-gray-300">
+              {t("eventForm.step3.subtotal")}
+            </span>
+            <span className="font-medium text-gray-900 dark:text-white">
+              {subtotalBeforeDiscount.toFixed(3)} TND
+            </span>
+          </div>
+        </div>
+
+        {/* Discount */}
+        {discountAmount > 0 && (
+          <div className="flex justify-between text-red-600 dark:text-red-400">
+            <span>{t("eventForm.step3.discount")}</span>
+            <span>-{discountAmount.toFixed(3)} TND</span>
+          </div>
+        )}
+
+        {/* After Discount */}
+        {discountAmount > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-700 dark:text-gray-300">
+              {t("eventForm.step3.afterDiscount")}
+            </span>
+            <span className="font-medium text-gray-900 dark:text-white">
+              {subtotalAfterDiscount.toFixed(3)} TND
+            </span>
+          </div>
+        )}
+
+        {/* Tax */}
+        {taxAmount > 0 && (
+          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+            <span>{t("eventForm.step3.tax")}</span>
+            <span>+{taxAmount.toFixed(3)} TND</span>
+          </div>
+        )}
+
+        {/* Total */}
+        <div className="pt-3 border-t-2 border-orange-200 dark:border-orange-800">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-bold text-gray-900 dark:text-white">
+              {t("eventForm.step3.total")}
+            </span>
+            <span className="text-xl font-bold text-orange-600 dark:text-orange-500">
+              {totalPrice.toFixed(3)} TND
+            </span>
           </div>
         </div>
       </div>
