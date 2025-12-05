@@ -114,7 +114,7 @@ const DocumentsSettings = lazy(
   () => import("../pages/settings/DocumentsSettings.jsx")
 );
 
-// Supplies - ✅ FIXED: Correct path with capital S and plural
+// Supplies 
 const SuppliesPage = lazy(() => import("../pages/Supplies/SuppliesPage.jsx"));
 const SupplyDetail = lazy(() => import("../pages/Supplies/SupplyDetail.jsx"));
 const SupplyForm = lazy(() => import("../pages/Supplies/SupplyForm.jsx"));

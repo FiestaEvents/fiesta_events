@@ -440,11 +440,11 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const userAvatar = user?.avatar || null;
   const topBarOffset = isCollapsed
     ? isRTL
-      ? "lg:right-16"
-      : "lg:left-16"
+      ? "lg:right-12"
+      : "lg:left-12"
     : isRTL
       ? "lg:right-48"
-      : "lg:left-48";
+      : "lg:left-56";
 
   const categoryConfig = {
     events: { icon: Calendar, color: "blue", label: t("common.events") },
@@ -469,7 +469,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
 
   return (
     <header
-      className={`fixed top-0 ${isRTL ? "left-0 right-0" : "left-0 right-0"} h-16 bg-white/90 backdrop-blur-md z-50 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800`}
+      className={`fixed top-0 ${isRTL ? "left-0 right-0" : "left-0 right-0"} h-16 bg-white/90 backdrop-blur-md z-40 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800`}
     >
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
         {/* --- LEFT: TOGGLE & LOGO --- */}
