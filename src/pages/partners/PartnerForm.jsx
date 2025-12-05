@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast"; // Only used for showError now
 import { useTranslation } from "react-i18next";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ API & Services
 import { partnerService } from "../../api/index";
 
@@ -245,7 +245,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
       }
 
       // ✅ Only trigger parent callback.
-      // The parent (PartnersList) is responsible for the Success Toast.
+        // The parent (PartnersList) is responsible for the Success Toast.
       onSuccess?.();
     } catch (err) {
       // ❌ Keep error toast here, as the modal stays open if it fails

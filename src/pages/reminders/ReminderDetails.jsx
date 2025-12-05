@@ -132,7 +132,7 @@ const ReminderDetails = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">
-          <OrbitLoader className="w-12 h-12 text-orange-600 animate-spin" />
+          <OrbitLoader />
           <p className="text-gray-600 dark:text-gray-400">{t('reminders.loadingDetails')}</p>
         </div>
       </div>

@@ -206,7 +206,7 @@
     "lowStock": "إشعارات انخفاض المخزون",
     "reorder": "إعادة طلب",
     "outOfStock": "نفاد المخزون",
-    "urgent": "إجراءات عاجلة"  ,
+    "urgent": "إجراءات عاجلة",
     "inventoryOverview": "نظرة عامة على المخزون",
     "inventorySubtitle": "مستويات المخزون وتتبع النفقات",
     "expenseAnalysis": "تحليل النفقات",
@@ -239,7 +239,9 @@
       "clear": "مسح",
       "clearAllFilters": "مسح كل المرشحات",
       "cancel": "إلغاء",
-      "deleteClient": "حذف العميل"
+      "deleteClient": "حذف العميل",
+      "reset": "إعادة تعيين",
+      "apply": "تطبيق"
     },
     "search": {
       "placeholder": "البحث عن عملاء...",
@@ -250,7 +252,9 @@
       "allStatus": "كل الحالات",
       "activeFilters": "المرشحات النشطة:",
       "searchLabel": "بحث: {{search}}",
-      "statusLabel": "الحالة: {{status}}"
+      "statusLabel": "الحالة: {{status}}",
+      "advanced": "تصفية متقدمة",
+      "filterOptions": "خيارات التصفية"
     },
     "status": {
       "active": "نشط",
@@ -292,7 +296,8 @@
       "deleteError": "فشل حذف {{name}}",
       "updateSuccess": "تم تحديث بيانات العميل بنجاح",
       "createSuccess": "تم إنشاء العميل بنجاح",
-      "filtersCleared": "تم مسح المرشحات"
+      "filtersCleared": "تم مسح المرشحات",
+      "filtersApplied": "تم تطبيق المرشحات بنجاح"
     },
     "modal": {
       "addTitle": "إضافة عميل جديد",
@@ -407,7 +412,10 @@
       "outstanding": "المستحقات",
       "eventHistory": "سجل الفعاليات",
       "activityTimeline": "الجدول الزمني للنشاط",
-      "guests": "{{count}} ضيوف"
+      "guests": "{{count}} ضيوف",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "company": "الشركة"
     },
     "status": {
       "pending": "قيد الانتظار",
@@ -572,6 +580,7 @@
     "close": "إغلاق",
     "client": "العميل",
     "guests": "ضيف",
+    "totalAmount": "المبلغ الإجمالي",
     "actions": {
       "delete": {
         "button": "حذف",
@@ -617,7 +626,7 @@
       "confirmText": "حذف الحدث",
       "cancelText": "إلغاء"
     },
-      "supplies": {
+    "supplies": {
       "listTitle": "مواد الحدث",
       "totalEstimatedCost": "التكلفة الإجمالية المقدرة",
       "noDataToExport": "لا توجد بيانات للتصدير",
@@ -713,7 +722,14 @@
     },
     "partner": {
       "unknown": "شريك غير معروف",
-      "viewDetails": "عرض تفاصيل الشريك"
+      "viewDetails": "عرض تفاصيل الشريك",
+      "service": "الخدمة",
+      "cost": "التكلفة",
+      "hours": "الساعات"
+    },
+    "summary": {
+      "title": "الملخص المالي",
+      "totalCost": "التكلفة الإجمالية"
     },
     "status": {
       "confirmed": "مؤكد",
@@ -784,7 +800,8 @@
       "updateFailed": "فشل تحديث الحدث",
       "createFailed": "فشل إنشاء الحدث",
       "fixErrors": "[TO_TRANSLATE] Please fix the errors in the form before proceeding.",
-      "saveFailed": "[TO_TRANSLATE] Failed to save event."
+      "saveFailed": "[TO_TRANSLATE] Failed to save event.",
+      "eventUpdated": "تم تحديث الحدث بنجاح"
     },
     "step1": {
       "eventDetails": "تفاصيل الحدث",
@@ -874,7 +891,8 @@
       "additionalServices": "[TO_TRANSLATE] Additional Services",
       "adjustments": "[TO_TRANSLATE] Adjustments",
       "selectPartners": "[TO_TRANSLATE] Select Partners to Add",
-      "createNewPartner": "[TO_TRANSLATE] Create New Partner"
+      "createNewPartner": "[TO_TRANSLATE] Create New Partner",
+      "eventSuppliesDescription": "إدارة مستلزمات هذا الحدث"
     },
     "step4": {
       "recordPayment": "تسجيل الدفعة الأولية (اختياري)",
@@ -906,6 +924,9 @@
     }
   },
   "partners": {
+    "loading": {
+      "initial": "جاري تحميل الشركاء..."
+    },
     "title": "الشركاء",
     "subtitle": "إدارة شركاء الخدمة والموردين.",
     "showingResults": "عرض {{count}} من أصل {{total}} شريك",
@@ -921,7 +942,11 @@
         "allCategories": "جميع الفئات",
         "allStatus": "جميع الحالات",
         "active": "نشط",
-        "inactive": "غير نشط"
+        "inactive": "غير نشط",
+        "advanced": "تصفية متقدمة",
+        "options": "خيارات",
+        "reset": "إعادة تعيين",
+        "apply": "تطبيق"
       }
     },
     "table": {
@@ -961,7 +986,8 @@
       "added": "تمت إضافة الشريك بنجاح",
       "updated": "تم تحديث الشريك بنجاح",
       "deleted": "تم حذف الشريك بنجاح",
-      "filtersCleared": "تم مسح الفلاتر"
+      "filtersCleared": "تم مسح الفلاتر",
+      "filtersApplied": "تم تطبيق المرشحات"
     }
   },
   "partnerForm": {
@@ -1203,8 +1229,7 @@
       "goodProgress": "تقدم جيد! استمر في الحفاظ على معدلات إكمال فعاليات متسقة."
     }
   },
-  "tasks": {  
-
+  "tasks": {
     "title": "المهام",
     "subtitle": "إدارة وتتبع مهام فريقك",
     "archivedTasks": "المهام المؤرشفة",
@@ -1220,6 +1245,18 @@
     },
     "stats": {
       "total": "إجمالي المهام"
+    },
+    "category": {
+      "event_preparation": "التحضير للحدث",
+      "marketing": "التسويق",
+      "maintenance": "الصيانة",
+      "client_followup": "متابعة العملاء",
+      "partner_coordination": "تنسيق الشركاء",
+      "administrative": "إداري",
+      "finance": "المالية",
+      "setup": "الإعداد / التجهيز",
+      "cleanup": "التنظيف",
+      "other": "أخرى"
     },
     "messages": {
       "noResults": "لا توجد مهام",
@@ -1285,12 +1322,17 @@
     "notifications": {
       "archiving": "جارٍ الأرشفة...",
       "restoring": "جارٍ الاستعادة...",
-      "deleting": "جارٍ الحذف..."
+      "deleting": "جارٍ الحذف...",
+      "filtersApplied": "تم تطبيق المرشحات"
     },
     "filters": {
       "allStatus": "جميع الحالات",
       "allPriorities": "جميع الأولويات",
-      "clearFilters": "مسح التصفية"
+      "clearFilters": "مسح التصفية",
+      "advanced": "تصفية متقدمة",
+      "filterOptions": "خيارات التصفية",
+      "reset": "إعادة تعيين",
+      "apply": "تطبيق"
     },
     "table": {
       "title": "المهمة / الوصف",
@@ -1302,9 +1344,30 @@
     },
     "form": {
       "createTitle": "إنشاء مهمة جديدة",
-      "editTitle": "تعديل المهمة"
+      "editTitle": "تعديل المهمة",
+      "steps": {
+        "basicInfo": "المعلومات الأساسية",
+        "planning": "التخطيط",
+        "checklist": "قائمة المراجعة"
+      },
+      "fields": {
+        "title": "العنوان",
+        "titlePlaceholder": "أدخل عنوان المهمة",
+        "description": "الوصف",
+        "descriptionPlaceholder": "أدخل تفاصيل المهمة",
+        "priority": "الأولوية",
+        "status": "الحالة",
+        "category": "الفئة"
+      },
+      "buttons": {
+        "next": "التالي",
+        "updateNow": "التحديث الآن"
+      },
+      "validation": {
+        "titleRequired": "العنوان مطلوب",
+        "fixErrors": "يرجى تصحيح الأخطاء"
+      }
     },
-
     "status": {
       "pending": "قيد الانتظار",
       "in_progress": "قيد التنفيذ",
@@ -1320,64 +1383,64 @@
       "urgent": "عاجل"
     },
     "detail": {
-        "toasts": {
-          "archive": {
-            "success": "تم أرشفة المهمة بنجاح",
-            "error": "فشل أرشفة المهمة",
-            "loading": "جارٍ الأرشفة..."
-          },
-          "taskCreated": "تم إنشاء المهمة بنجاح",
-          "taskUpdated": "تم تحديث المهمة بنجاح",
-          "taskDeleted": "تم حذف المهمة بنجاح",
-          "taskArchived": "تم أرشفة المهمة بنجاح"
+      "toasts": {
+        "archive": {
+          "success": "تم أرشفة المهمة بنجاح",
+          "error": "فشل أرشفة المهمة",
+          "loading": "جارٍ الأرشفة..."
         },
-    "loading": "جاري تحميل التفاصيل...",
-    "tabs": {
-      "overview": "نظرة عامة",
-      "subtasks": "المهام الفرعية",
-      "comments": "التعليقات",
-      "attachments": "المرفقات",
-      "timeline": "الجدول الزمني"
-    },
-    "header": {
-      "backToTasks": "عودة للمهام",
-      "editTask": "تعديل",
-      "deleteTask": "حذف",
-      "actions": {
-        "archiveTask": "أرشفة المهمة",
-        "restoreTask": "استعادة المهمة",
-        "deleteTask": "حذف المهمة",
-        "deleteTaskPermanently": "حذف المهمة نهائيًا",
-        "markComplete": "تثبيت المهمة"
-      }
-    },
-    "info": {
-      "title": "معلومات المهمة",
-      "dueDate": "تاريخ الاستحقاق",
-      "assignedTo": "مكلف إلى",
-      "category": "الفئة"
-    },
-    "overview": {
-      "metrics": "المقاييس",
-      "progress": "التقدم",
-      "subtasks": "المهام الفرعية المكتملة",
-      "estimated": "ساعات تقديرية",
-      "actual": "ساعات فعلية",
-      "description": "الوصف"
-    },
-    "subtasks": {
-      "label": "المهام الفرعية المكتملة"
-    },
-    "modals": {
-      "edit": {
-        "title": "تعديل المهمة"
+        "taskCreated": "تم إنشاء المهمة بنجاح",
+        "taskUpdated": "تم تحديث المهمة بنجاح",
+        "taskDeleted": "تم حذف المهمة بنجاح",
+        "taskArchived": "تم أرشفة المهمة بنجاح"
       },
-      "delete": {
-        "title": "حذف المهمة",
-        "message": "هل أنت متأكد أنك تريد حذف هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء."
+      "loading": "جاري تحميل التفاصيل...",
+      "tabs": {
+        "overview": "نظرة عامة",
+        "subtasks": "المهام الفرعية",
+        "comments": "التعليقات",
+        "attachments": "المرفقات",
+        "timeline": "الجدول الزمني"
+      },
+      "header": {
+        "backToTasks": "عودة للمهام",
+        "editTask": "تعديل",
+        "deleteTask": "حذف",
+        "actions": {
+          "archiveTask": "أرشفة المهمة",
+          "restoreTask": "استعادة المهمة",
+          "deleteTask": "حذف المهمة",
+          "deleteTaskPermanently": "حذف المهمة نهائيًا",
+          "markComplete": "تثبيت المهمة"
+        }
+      },
+      "info": {
+        "title": "معلومات المهمة",
+        "dueDate": "تاريخ الاستحقاق",
+        "assignedTo": "مكلف إلى",
+        "category": "الفئة"
+      },
+      "overview": {
+        "metrics": "المقاييس",
+        "progress": "التقدم",
+        "subtasks": "المهام الفرعية المكتملة",
+        "estimated": "ساعات تقديرية",
+        "actual": "ساعات فعلية",
+        "description": "الوصف"
+      },
+      "subtasks": {
+        "label": "المهام الفرعية المكتملة"
+      },
+      "modals": {
+        "edit": {
+          "title": "تعديل المهمة"
+        },
+        "delete": {
+          "title": "حذف المهمة",
+          "message": "هل أنت متأكد أنك تريد حذف هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء."
+        }
       }
     }
-  }
   },
   "taskDetailModal": {
     "title": "تفاصيل المهمة",
@@ -1410,9 +1473,9 @@
     }
   },
   "reminders": {
-  "backToReminders": "عودة للتذكيرات",
-  "loadingDetails": "جاري التحميل...",
-  "markComplete": "تثبيت التذكير",
+    "backToReminders": "عودة للتذكيرات",
+    "loadingDetails": "جاري التحميل...",
+    "markComplete": "تثبيت التذكير",
     "title": "التذكيرات",
     "description": "إدارة تذكيرات الفعاليات والإشعارات",
     "addReminder": "إضافة تذكير",
@@ -1426,11 +1489,11 @@
     "details": {
       "createdBy": "تم الإنشاء بواسطة",
       "tab": "التفاصيل",
-    "reminderInfo": "معلومات التذكير",
-    "additionalInfo": "معلومات إضافية",
-    "notificationMethods": "طرق الإشعار",
-    "recurrenceSettings": "إعدادات التكرار",
-    "activityHistory": "سجل النشاط"
+      "reminderInfo": "معلومات التذكير",
+      "additionalInfo": "معلومات إضافية",
+      "notificationMethods": "طرق الإشعار",
+      "recurrenceSettings": "إعدادات التكرار",
+      "activityHistory": "سجل النشاط"
     },
     "actions": {
       "unsnooze": "إلغاء التأجيل",
@@ -1439,24 +1502,50 @@
       "delete": "حذف"
     },
     "notifications": {
-      "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذا التذكير؟"
+      "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذا التذكير؟",
+      "updated": "تم تحديث التذكير",
+      "deleting": "جاري حذف التذكير...",
+      "deleted": "تم حذف التذكير بنجاح",
+      "deleteError": "فشل حذف التذكير",
+      "snoozing": "جاري تأجيل التذكير...",
+      "snoozed": "تم تأجيل التذكير",
+      "snoozeError": "فشل تأجيل التذكير",
+      "activating": "جاري تفعيل التذكير...",
+      "unsnoozed": "تم تفعيل التذكير",
+      "activateError": "فشل تفعيل التذكير"
     },
     "validation": {
       "notificationMethodsRequired": "مطلوب طريقة إشعار واحدة على الأقل"
     },
+    "clearFilters": "مسح المرشحات",
     "type": {
+      "label": "النوع",
       "event": "فعالية",
       "payment": "دفع",
       "task": "مهمة",
       "general": "عام",
       "follow_up": "متابعة",
       "deadline": "موعد نهائي",
-       "client": "عميل",
-    "maintenance": "صيانة",
-    "followup": "متابعة",
-    "other": "أخرى"
+      "client": "عميل",
+      "maintenance": "صيانة",
+      "followup": "متابعة",
+      "other": "أخرى"
+    },
+    "status": {
+      "label": "الحالة",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "completed": "مكتمل",
+      "overdue": "متأخر",
+      "pending": "قيد الانتظار",
+      "cancelled": "ملغي",
+      "draft": "مسودة",
+      "on hold": "قيد الانتظار",
+      "in progress": "قيد التنفيذ",
+      "not started": "لم يبدأ"
     },
     "priority": {
+      "label": "الأولوية",
       "low": "منخفض",
       "medium": "متوسط",
       "high": "عالي",
@@ -1468,8 +1557,8 @@
       "weekly": "أسبوعي",
       "monthly": "شهري",
       "yearly": "سنوي",
-       "oneTime": "مرة واحدة",
-    "noRecurrenceText": "هذا التذكير لا يتكرر."
+      "oneTime": "مرة واحدة",
+      "noRecurrenceText": "هذا التذكير لا يتكرر."
     },
     "weekdays": {
       "monday": "الاثنين",
@@ -1481,45 +1570,61 @@
       "sunday": "الأحد"
     },
     "form": {
-    "editTitle": "تعديل التذكير",
-    "basicInfo": "المعلومات الأساسية",
-    "relatedItems": "عناصر ذات صلة",
-    "notifications": "الإشعارات",
-    "recurrence": "التكرار",
-    "enableRecurrence": "تفعيل التكرار",
-    "fields": {
-      "date": "التاريخ",
-      "time": "الوقت",
-      "type": "النوع",
-      "priority": "الاولوية",
-      "description": "الوصف",
-      "title": "العنوان",
-      "relatedEvent": "حدث ذو صلة",
-      "relatedClient": "عميل ذو صلة",
-      "relatedTask": "مهمة ذات صلة",
-      "notificationMethods": "طرق الإشعار",
-      "notes": "ملاحظات"
+      "editTitle": "تعديل التذكير",
+      "basicInfo": "المعلومات الأساسية",
+      "relatedItems": "عناصر ذات صلة",
+      "notifications": "الإشعارات",
+      "recurrence": "التكرار",
+      "enableRecurrence": "تفعيل التكرار",
+      "fields": {
+        "date": "التاريخ",
+        "time": "الوقت",
+        "type": "النوع",
+        "priority": "الاولوية",
+        "description": "الوصف",
+        "title": "العنوان",
+        "relatedEvent": "حدث ذو صلة",
+        "relatedClient": "عميل ذو صلة",
+        "relatedTask": "مهمة ذات صلة",
+        "notificationMethods": "طرق الإشعار",
+        "notes": "ملاحظات"
+      },
+      "buttons": {
+        "cancel": "إلغاء",
+        "next": "التالي",
+        "previous": "السابق",
+        "update": "تحديث",
+        "updateNow": "تحديث الآن",
+        "create": "إنشاء"
+      }
     },
-    "buttons": {
-      "cancel": "إلغاء",
-      "next": "التالي",
-      "previous": "السابق",
-      "update": "تحديث",
-      "updateNow": "تحديث الآن",
-      "create": "إنشاء"
+    "history": {
+      "comingSoon": "سجل النشاط قريباً",
+      "description": "نحن نعمل على جدول زمني مفصل لتتبع التغييرات والتأجيلات وسجل الإكمال لهذا التذكير."
+    },
+    "modals": {
+      "delete": {
+        "confirm": "حذف",
+        "cancel": "إلغاء"
+      }
+    },
+    "filters": {
+      "allTypes": "جميع الأنواع",
+      "allStatus": "جميع الحالات",
+      "allMethods": "جميع الطرق",
+      "type": "النوع",
+      "status": "الحالة",
+      "method": "الطريقة",
+      "clearFilters": "مسح الفلاتر",
+      "activeFilters": "الفلاتر النشطة",
+      "advanced": "تصفية متقدمة",
+      "options": "خيارات التصفية",
+      "reset": "إعادة تعيين",
+      "apply": "تطبيق",
+      "noResultsDesc": "لا توجد تذكيرات تطابق معاييرك",
+      "noResults": "لا توجد تذكيرات تطابق معاييرك"
     }
   },
- "history": {
-    "comingSoon": "سجل النشاط قريباً",
-    "description": "نحن نعمل على جدول زمني مفصل لتتبع التغييرات والتأجيلات وسجل الإكمال لهذا التذكير."
-  },
-  "modals": {
-    "delete": {
-      "confirm": "حذف",
-      "cancel": "إلغاء"
-    }
-  }
-},
   "payments": {
     "title": "المدفوعات",
     "subtitle": "تتبع جميع مدفوعات الدخل والمصروفات",
@@ -1548,7 +1653,12 @@
       "status": "الحالة",
       "method": "الطريقة",
       "clearFilters": "مسح الفلاتر",
-      "activeFilters": "الفلاتر النشطة"
+      "activeFilters": "الفلاتر النشطة",
+      "advanced": "تصفية متقدمة",
+      "options": "خيارات التصفية",
+      "reset": "إعادة تعيين",
+      "apply": "تطبيق",
+      "noResultsDesc": "لا توجد مدفوعات تطابق معاييرك"
     },
     "types": {
       "income": "دخل",
@@ -1580,7 +1690,8 @@
       "noPayments": "لا توجد مدفوعات حتى الآن",
       "noResults": "لم يتم العثور على مدفوعات",
       "status": "الحالة",
-      "noResultsDescription": "لا توجد مدفوعات تطابق معايير البحث أو الفلترة الحالية"
+      "noResultsDescription": "لا توجد مدفوعات تطابق معايير البحث أو الفلترة الحالية",
+      "empty": "لا توجد مدفوعات"
     },
     "stats": {
       "income": "الدخل",
@@ -1630,6 +1741,8 @@
       "paidDate": "تاريخ الدفع",
       "client": "العميل",
       "event": "الفعالية المرتبطة",
+      "createTitle": "إنشاء دفعة",
+      "editTitle": "تعديل دفعة",
       "fees": {
         "processingFee": "رسوم المعالجة",
         "platformFee": "رسوم المنصة",
@@ -1682,7 +1795,9 @@
       "refunding": "جاري معالجة الاسترداد...",
       "invalidData": "لا يمكن عرض الدفعة: بيانات غير صالحة",
       "loadEventsError": "فشل في تحميل فعاليات العميل",
-      "loadOptionsError": "فشل في تحميل خيارات النموذج"
+      "loadOptionsError": "فشل في تحميل خيارات النموذج",
+      "filtersApplied": "تم تطبيق المرشحات",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف سجل الدفع هذا؟"
     },
     "detail": {
       "title": "تفاصيل الدفعة",
@@ -1904,6 +2019,9 @@
         "name": "بيان الأرباح والخسائر",
         "description": "نظرة عامة على الإيرادات والمصروفات وصافي الربح"
       },
+      "revenueAnalysis": {
+        "name": "تحليل الإيرادات"
+      },
       "cashFlow": {
         "name": "بيان التدفق النقدي",
         "description": "تحليل التدفقات النقدية الداخلة والخارجة"
@@ -1967,6 +2085,7 @@
       "cancel": "إلغاء"
     },
     "filters": {
+      "advanced": "تصفية متقدمة",
       "type": "النوع",
       "category": "الفئة",
       "startDate": "تاريخ البدء",
@@ -1991,7 +2110,8 @@
     },
     "deleteModal": {
       "title": "حذف المعاملة",
-      "message": "هل أنت متأكد أنك تريد حذف هذه المعاملة؟ لا يمكن التراجع عن هذا الإجراء."
+      "message": "هل أنت متأكد أنك تريد حذف هذه المعاملة؟ لا يمكن التراجع عن هذا الإجراء.",
+      "warning": "هل أنت متأكد أنك تريد حذف هذه المعاملة؟ لا يمكن التراجع عن هذا الإجراء."
     },
     "categories": {
       "event_revenue": "إيرادات الفعالية",
@@ -2068,29 +2188,39 @@
     "card": "البطاقة"
   },
   "common": {
+    "noResults": "لم يتم العثور على نتائج",
+    "clearFilters": "مسح المرشحات",
+    "all": "الكل",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "earnings": "الأرباح",
+    "rating": "التقييم",
+    "pending": "قيد الانتظار",
+    "fixErrors": "يرجى تصحيح الأخطاء أدناه",
+    "saveChanges": "حفظ التغييرات",
+    "eventsCount": "عدد الأحداث",
     "exportPDF": "تصدير PDF",
-    "updateNow":"تحديث الآن",
-    "update":"تحديث",
+    "updateNow": "تحديث الآن",
+    "update": "تحديث",
     "viewDetails": "تفاصيل",
-  "confirmDelete": "تأكيد الحذف",
-    "restore":"استعادة",
-    "archive":"أرشفة",
-    "markComplete":"",
-    "markIncomplete":"",
+    "confirmDelete": "تأكيد الحذف",
+    "restore": "استعادة",
+    "archive": "أرشفة",
+    "markComplete": "",
+    "markIncomplete": "",
     "searchPlaceholder": "ابحث عن أي شيء...",
     "pax": "أشخاص",
     "guests": "ضيوف",
     "remaining": "متبقي",
     "reorder": "إعادة طلب",
     "unknown": "مجهول",
-    "supplies":"المتطلبات",
+    "supplies": "المتطلبات",
     "home": "الرئيسية",
-    "logout":"تسجيل الخروج",
-    "login":"تسجيل الدخول",
-    "signup":"إنشاء حساب",
-    "all_rights_reserved":"جميع الحقوق محفوظة",
+    "logout": "تسجيل الخروج",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "all_rights_reserved": "جميع الحقوق محفوظة",
     "filtersCleared": "تم مسح الفلاتر",
-    "actions": "إجراءات",
     "clear": "مسح",
     "warning": "تحذير",
     "noResultsDesc": "لم يتم العثور على نتائج",
@@ -2136,6 +2266,14 @@
     "documents": "المستندات",
     "settings": "الإعدادات",
     "create": "إنشاء",
+    "actions": {
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "reset": "إعادة تعيين",
+      "apply": "تطبيق",
+      "clear": "مسح",
+      "clearFilters": "مسح المرشحات"
+    },
     "nav": {
       "features": "المميزات",
       "marketplace": "السوق",
@@ -2504,10 +2642,15 @@
       "noRecipients": "لم يتم العثور على {{recipient}}"
     },
     "filters": {
+      "advanced": "تصفية متقدمة",
       "status": "الحالة",
       "startDate": "تاريخ البدء",
       "endDate": "تاريخ الانتهاء",
-      "clear": "مسح التصفية"
+      "clear": "مسح التصفية",
+      "options": "خيارات التصفية",
+      "reset": "إعادة تعيين",
+      "apply": "تطبيق",
+      "applied": "تم تطبيق المرشحات"
     },
     "status": {
       "all": "جميع الحالات",
@@ -2817,7 +2960,6 @@
       }
     }
   },
-  
   "venueSettings": {
     "title": "الإعدادات",
     "subtitle": "إدارة ملفك الشخصي وتفاصيل القاعة وإعدادات الأمان",
@@ -3299,7 +3441,11 @@
       "emptyDesc": "أنشئ عقدك الأول للبدء. يمكنك الاختيار بين عقد عميل (للإيرادات) أو عقد شريك (للمصروفات).",
       "filter": {
         "allStatus": "كل الحالات",
-        "allTypes": "كل الأنواع"
+        "allTypes": "كل الأنواع",
+        "advanced": "تصفية متقدمة",
+        "options": "خيارات التصفية",
+        "status": "الحالة",
+        "type": "النوع"
       },
       "columns": {
         "info": "معلومات العقد",
@@ -3314,7 +3460,8 @@
         "deleteError": "فشل حذف العقد",
         "downloadStart": "جاري تحضير التنزيل...",
         "downloadSuccess": "بدأ التنزيل",
-        "downloadError": "فشل تنزيل PDF"
+        "downloadError": "فشل تنزيل PDF",
+        "filtersApplied": "تم تصفية العقود"
       },
       "dialog": {
         "deleteTitle": "حذف العقد",
@@ -3366,6 +3513,9 @@
     }
   },
   "supplies": {
+    "notifications": {
+      "filtersApplied": "تم تصفية قائمة المستلزمات"
+    },
     "title": "إدارة المستلزمات",
     "subtitle": "إدارة المخزون وتتبع مستويات المخزون ومراقبة تكاليف المستلزمات",
     "errors": {
@@ -3419,7 +3569,14 @@
       "outOfStock": "نفاد المخزون",
       "adequateStock": "مخزون كافٍ",
       "showArchived": "إظهار المؤرشفة",
-      "clearFilters": "مسح المرشحات"
+      "clearFilters": "مسح المرشحات",
+      "advanced": "تصفية متقدمة",
+      "options": "خيارات التصفية",
+      "category": "الفئة",
+      "stockStatus": "حالة المخزون",
+      "status": "الحالة",
+      "reset": "إعادة تعيين",
+      "apply": "تطبيق"
     },
     "status": {
       "outOfStock": "نفاد المخزون",
@@ -3665,11 +3822,9 @@
       "confirm": "حذف",
       "cancel": "إلغاء"
     },
-    "delete": "حذف",
     "deleteSuccess": "تم حذف المستلزم بنجاح",
     "deleteError": "فشل في حذف المستلزم",
     "deleteConfirm": "حذف المستلزم",
     "deleteCancel": "إلغاء"
-
   }
 }

@@ -239,7 +239,9 @@
       "clear": "Effacer",
       "clearAllFilters": "Effacer tous les filtres",
       "cancel": "Annuler",
-      "deleteClient": "Supprimer le client"
+      "deleteClient": "Supprimer le client",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer"
     },
     "search": {
       "placeholder": "Rechercher des clients...",
@@ -250,7 +252,9 @@
       "allStatus": "Tous les statuts",
       "activeFilters": "Filtres actifs :",
       "searchLabel": "Recherche : {{search}}",
-      "statusLabel": "Statut : {{status}}"
+      "statusLabel": "Statut : {{status}}",
+      "advanced": "Filtres avancés",
+      "filterOptions": "Options de filtrage"
     },
     "status": {
       "active": "Actif",
@@ -292,7 +296,8 @@
       "deleteError": "Échec de la suppression de {{name}}",
       "updateSuccess": "Client mis à jour avec succès",
       "createSuccess": "Client créé avec succès",
-      "filtersCleared": "Filtres effacés"
+      "filtersCleared": "Filtres effacés",
+      "filtersApplied": "Filtres appliqués avec succès"
     },
     "modal": {
       "addTitle": "Ajouter un nouveau client",
@@ -407,7 +412,10 @@
       "outstanding": "En Attente",
       "eventHistory": "Historique des Événements",
       "activityTimeline": "Chronologie des Activités",
-      "guests": "{{count}} invités"
+      "guests": "{{count}} invités",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "company": "Société"
     },
     "status": {
       "pending": "En Attente",
@@ -686,6 +694,7 @@
     "close": "Fermer",
     "client": "Client",
     "guests": "invités",
+    "totalAmount": "Montant total",
     "actions": {
       "delete": {
         "button": "Supprimer",
@@ -827,12 +836,19 @@
     },
     "partner": {
       "unknown": "Partenaire inconnu",
-      "viewDetails": "Voir les détails du partenaire"
+      "viewDetails": "Voir les détails du partenaire",
+      "service": "Service",
+      "cost": "Coût",
+      "hours": "Heures"
     },
     "status": {
       "confirmed": "Confirmé",
       "pending": "En attente",
       "cancelled": "Annulé"
+    },
+    "summary": {
+      "title": "Résumé financier",
+      "totalCost": "Coût total"
     }
   },
   "eventPaymentsTab": {
@@ -892,7 +908,8 @@
       "draftRestored": "Brouillon restauré avec succès.",
       "clientCreated": "Client {{name}} créé et sélectionné.",
       "clientCreationFailed": "Échec de la création du client.",
-      "fixErrors": "[TO_TRANSLATE] Please fix the errors in the form before proceeding."
+      "fixErrors": "[TO_TRANSLATE] Please fix the errors in the form before proceeding.",
+      "eventUpdated": "Événement mis à jour avec succès"
     },
     "step1": {
       "eventDetails": "Détails de l'Événement",
@@ -982,7 +999,8 @@
       "subtotal": "Total de la facture",
       "afterDiscount": "Après la remise",
       "tax": "Taxe",
-      "total": "Total"
+      "total": "Total",
+      "eventSuppliesDescription": "Gérer les fournitures pour cet événement"
     },
     "step4": {
       "recordPayment": "Enregistrer un Paiement Initial",
@@ -1012,6 +1030,9 @@
     }
   },
   "partners": {
+    "loading": {
+      "initial": "Chargement des partenaires..."
+    },
     "title": "Partenaires",
     "subtitle": "Gérez vos partenaires et fournisseurs de services.",
     "showingResults": "Affichage de {{count}} sur {{total}} partenaires",
@@ -1027,7 +1048,11 @@
         "allCategories": "Toutes les Catégories",
         "allStatus": "Tous les Statuts",
         "active": "Actif",
-        "inactive": "Inactif"
+        "inactive": "Inactif",
+        "advanced": "Filtres avancés",
+        "options": "Options",
+        "reset": "Réinitialiser",
+        "apply": "Appliquer"
       }
     },
     "table": {
@@ -1067,7 +1092,8 @@
       "added": "Partenaire ajouté avec succès",
       "updated": "Partenaire modifié avec succès",
       "deleted": "Partenaire supprimé avec succès",
-      "filtersCleared": "Filtres effacés"
+      "filtersCleared": "Filtres effacés",
+      "filtersApplied": "Filtres appliqués"
     }
   },
   "partnerForm": {
@@ -1373,6 +1399,18 @@
       "high": "Haute",
       "urgent": "Urgent"
     },
+    "category": {
+      "event_preparation": "Préparation de l'événement",
+      "marketing": "Marketing",
+      "maintenance": "Maintenance",
+      "client_followup": "Suivi client",
+      "partner_coordination": "Coordination des partenaires",
+      "administrative": "Administratif",
+      "finance": "Finance",
+      "setup": "Installation",
+      "cleanup": "Nettoyage",
+      "other": "Autre"
+    },
    "detail": {
     "toasts": {
       "taskCreated": "Tâche créée avec succès",
@@ -1470,7 +1508,11 @@
     "filters": {
       "allStatus": "Tous les statuts",
       "allPriorities": "Toutes les priorités",
-      "clearFilters": "Effacer les filtres"
+      "clearFilters": "Effacer les filtres",
+      "advanced": "Filtres avancés",
+      "filterOptions": "Options de filtrage",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer"
     },
     "table": {
       "title": "Tâche / Description",
@@ -1482,7 +1524,29 @@
     },
     "form": {
       "createTitle": "Créer une nouvelle tâche",
-      "editTitle": "Modifier la tâche"
+      "editTitle": "Modifier la tâche",
+      "steps": {
+        "basicInfo": "Informations de base",
+        "planning": "Planification",
+        "checklist": "Liste de contrôle"
+      },
+      "fields": {
+        "title": "Titre",
+        "titlePlaceholder": "Entrez le titre de la tâche",
+        "description": "Description",
+        "descriptionPlaceholder": "Entrez les détails de la tâche",
+        "priority": "Priorité",
+        "status": "Statut",
+        "category": "Catégorie"
+      },
+      "buttons": {
+        "next": "Suivant",
+        "updateNow": "Mettre à jour maintenant"
+      },
+      "validation": {
+        "titleRequired": "Le titre est requis",
+        "fixErrors": "Veuillez corriger les erreurs"
+      }
     },
     "messages": {
       "noResults": "Aucune tâche trouvée",
@@ -1516,13 +1580,15 @@
     },
     "toasts": {
       "status": {
-        "error": "Échec de la mise à jour du statut"
+        "error": "Échec de la mise à jour du statut",
+        "success": "Statut de la tâche mis à jour"
       }
     },
     "notifications": {
       "archiving": "Archivage en cours...",
       "restoring": "Restauration en cours...",
-      "deleting": "Suppression en cours..."
+      "deleting": "Suppression en cours...",
+      "filtersApplied": "Filtres appliqués"
     }
   },
   "taskDetailModal": {
@@ -1593,7 +1659,8 @@
       "all": "Tous les statuts",
       "active": "Actif",
       "completed": "Terminé",
-      "snoozed": "Reporté"
+      "snoozed": "Reporté",
+      "label": "Statut"
     },
     "actions": {
       "unsnooze": "Annuler le report",
@@ -1602,12 +1669,35 @@
     },
     "notifications": {
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce rappel ?",
-      "showingResults": "Affichage de {{count}} résultats"
+      "showingResults": "Affichage de {{count}} résultats",
+       "updated": "Rappel mis à jour",
+       "filtersApplied":"Filtres appliqués",
+       "deleting": "Suppression du rappel...",
+      "deleted": "Rappel supprimé avec succès",
+      "deleteError": "Échec de la suppression du rappel",
+      "snoozing": "Mise en veille du rappel...",
+      "snoozed": "Rappel mis en veille",
+      "snoozeError": "Échec de la mise en veille",
+      "activating": "Activation du rappel...",
+      "unsnoozed": "Rappel activé",
+      "activateError": "Échec de l'activation du rappel"
     },
     "validation": {
       "notificationMethodsRequired": "Au moins une méthode de notification est requise"
     },
+    "filters": {
+      "allStatus": "Tous les statuts",
+      "allPriorities": "Toutes les priorités",
+      "clearFilters": "Effacer les filtres",
+      "advanced": "Filtres avancés",
+      "filterOptions": "Options de filtrage",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer",
+      "options": "Options de filtrage"
+    },
+    
     "priority": {
+      "label": "Priorité",
       "low": "Faible",
       "medium": "Moyen",
       "high": "Élevé",
@@ -1653,7 +1743,8 @@
       }
     },
     "type": {
-    "client": "Client",
+      "label": "Type",
+      "client": "Client",
       "event": "Événement",
       "payment": "Paiement",
       "task": "Tâche",
@@ -1664,7 +1755,8 @@
       "followup": "Suivi",
       "other": "Autre"
     },
-  "history": {
+    "clearFilters": "Effacer les filtres",
+   "history": {
     "comingSoon": "Journal d'activité bientôt disponible",
     "description": "Nous travaillons sur une chronologie détaillée pour suivre les modifications, les reports et l'historique d'achèvement de ce rappel."
   },
@@ -1699,6 +1791,9 @@
     }
   },
   "payments": {
+    "loading": {
+      "initial": "Chargement des partenaires..."
+    },
     "title": "Paiements",
     "subtitle": "Suivez tous les paiements de revenus et de dépenses",
     "addPayment": "Ajouter un Paiement",
@@ -1726,7 +1821,12 @@
       "status": "Statut",
       "method": "Méthode",
       "clearFilters": "Effacer les Filtres",
-      "activeFilters": "Filtres actifs"
+      "activeFilters": "Filtres actifs",
+      "advanced": "Filtres avancés",
+      "options": "Options de filtrage",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer",
+      "noResultsDesc": "Aucun paiement ne correspond à vos filtres"
     },
     "types": {
       "income": "Revenu",
@@ -1758,7 +1858,8 @@
       "noPayments": "Aucun paiement pour le moment",
       "noResults": "Aucun paiement trouvé",
       "status": "Statut",
-      "noResultsDescription": "Aucun paiement ne correspond à vos critères de recherche ou de filtre"
+      "noResultsDescription": "Aucun paiement ne correspond à vos critères de recherche ou de filtre",
+      "empty": "Aucun paiement trouvé"
     },
     "stats": {
       "income": "Revenus",
@@ -1808,6 +1909,8 @@
       "paidDate": "Date de Paiement",
       "client": "Client",
       "event": "Événement Associé",
+      "createTitle": "Créer un paiement",
+      "editTitle": "Modifier le paiement",
       "fees": {
         "processingFee": "Frais de Traitement",
         "platformFee": "Frais de Plateforme",
@@ -1860,7 +1963,9 @@
       "refunding": "Traitement du remboursement...",
       "invalidData": "Impossible d'afficher le paiement : Données invalides",
       "loadEventsError": "Échec du chargement des événements du client",
-      "loadOptionsError": "Échec du chargement des options du formulaire"
+      "loadOptionsError": "Échec du chargement des options du formulaire",
+      "filtersApplied": "Filtres appliqués",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement de paiement ?"
     },
     "detail": {
       "title": "Détails du Paiement",
@@ -1915,7 +2020,7 @@
       "paymentBreakdown": "Payment Breakdown",
       "recentPaymentHistory": "Recent Payment History"
     },
-    "search": "Search"
+    "search": "Rechercher"
   },
   "finance": {
     "dashboard": "Tableau de Bord Financier",
@@ -2078,6 +2183,9 @@
     },
     "types": {
       "available": "Rapports Disponibles",
+      "revenueAnalysis": {
+        "name": "Analyse des revenus"
+      },
       "profitLoss": {
         "name": "État des Résultats",
         "description": "Aperçu des revenus, dépenses et bénéfice net"
@@ -2169,7 +2277,8 @@
     },
     "deleteModal": {
       "title": "Supprimer la Transaction",
-      "message": "Êtes-vous sûr de vouloir supprimer cette transaction ? Cette action ne peut pas être annulée."
+      "message": "Êtes-vous sûr de vouloir supprimer cette transaction ? Cette action ne peut pas être annulée.",
+      "warning": "Êtes-vous sûr de vouloir supprimer cette transaction ? Cette action est irréversible."
     },
     "categories": {
       "event_revenue": "Revenus d'Événement",
@@ -2240,6 +2349,17 @@
     }
   },
   "common": {
+    "noResults": "Aucun résultat trouvé",
+    "clearFilters": "Effacer les filtres",
+    "all": "Tous",
+    "date": "Date",
+    "time": "Heure",
+    "earnings": "Gains",
+    "rating": "Évaluation",
+    "pending": "En attente",
+    "fixErrors": "Veuillez corriger les erreurs ci-dessous",
+    "saveChanges": "Enregistrer les modifications",
+    "eventsCount": "Nombre d'événements",
     "exportPDF": "Exporter PDF",
     "update":"Mettre à jour",
     "updateNow":"Mettre à jour maintenant",
@@ -2264,7 +2384,6 @@
     "supplies":"Supplies",
     "home":"Accueil",
     "filtersCleared": "Filtres effacés",
-    "actions": "Actions",
     "clear": "Effacer",
     "warning": "Avertissement",
     "noResultsDesc": "Aucun résultat trouvé",
@@ -2331,6 +2450,14 @@
     "pagination": {
       "info": "Showing {{start}} to {{end}} of {{total}} results",
       "perPage": "Per page:"
+    },
+    "actions": {
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer",
+      "clear": "Effacer",
+      "clearFilters": "Effacer les filtres"
     }
   },
   "notifications": {
@@ -2680,7 +2807,11 @@
       "status": "Statut",
       "startDate": "Date début",
       "endDate": "Date fin",
-      "clear": "Effacer les filtres"
+      "clear": "Effacer les filtres",
+      "options": "Options de filtrage",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer",
+      "applied": "Filtres appliqués"
     },
     "status": {
       "all": "Tous les statuts",
@@ -2990,7 +3121,6 @@
       }
     }
   },
- 
   "venueSettings": {
     "title": "Paramètres",
     "subtitle": "Gérez votre profil, les détails du lieu et la sécurité",
@@ -3472,7 +3602,11 @@
       "emptyDesc": "Créez votre premier contrat pour commencer. Vous pouvez choisir entre un contrat Client (pour les revenus) ou un contrat Partenaire (pour les dépenses).",
       "filter": {
         "allStatus": "Tous les statuts",
-        "allTypes": "Tous les types"
+        "allTypes": "Tous les types",
+        "advanced": "Filtres avancés",
+        "options": "Options de filtrage",
+        "status": "Statut",
+        "type": "Type"
       },
       "columns": {
         "info": "Info contrat",
@@ -3487,7 +3621,8 @@
         "deleteError": "Échec de la suppression du contrat",
         "downloadStart": "Préparation du téléchargement...",
         "downloadSuccess": "Téléchargement démarré",
-        "downloadError": "Échec du téléchargement du PDF"
+        "downloadError": "Échec du téléchargement du PDF",
+        "filtersApplied": "Contrats filtrés"
       },
       "dialog": {
         "deleteTitle": "Supprimer le contrat",
@@ -3555,7 +3690,14 @@
       "allCategories": "Toutes Catégories",
       "allStock": "Tous Niveaux",
       "lowStock": "Stock Faible",
-      "outOfStock": "Rupture"
+      "outOfStock": "Rupture",
+      "advanced": "Filtres avancés",
+      "options": "Options de filtrage",
+      "category": "Catégorie",
+      "stockStatus": "État du stock",
+      "status": "Statut",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer"
     },
     "table": {
       "name": "Nom",
@@ -3668,7 +3810,8 @@
       "created": "Fourniture créée avec succès",
       "updated": "Fourniture mise à jour avec succès",
       "loadError": "Erreur de chargement des données",
-      "categoryCreateError": "Échec de la création de la catégorie"
+      "categoryCreateError": "Échec de la création de la catégorie",
+      "filtersApplied": "Liste des fournitures filtrée"
     },
     "details": {
       "inventoryInfo": "Informations d'Inventaire"

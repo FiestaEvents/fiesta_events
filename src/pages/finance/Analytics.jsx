@@ -15,7 +15,7 @@ import { financeService } from "../../api/index";
 
 // ✅ Generic Components & Utils
 import Select from "../../components/common/Select";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
 import formatCurrency from "../../utils/formatCurrency";
 
@@ -131,7 +131,7 @@ const Analytics = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <LoadingSpinner size="lg" />
+        <OrbitLoader />
       </div>
     );
   }

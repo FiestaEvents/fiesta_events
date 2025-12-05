@@ -141,7 +141,7 @@ const ClientDetail = () => {
   if (loading && !clientData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
-        <OrbitLoader className="w-12 h-12 text-orange-600 animate-spin" />
+        <OrbitLoader />
       </div>
     );
   }

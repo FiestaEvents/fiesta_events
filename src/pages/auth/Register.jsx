@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // Contexts
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../context/ToastContext";
@@ -164,13 +164,7 @@ const Button = ({
       disabled={loading}
       {...props}
     >
-      {loading ? (
-        <span className="flex items-center gap-2 justify-center">
-          Loading...
-        </span>
-      ) : (
-        children
-      )}
+      {loading ? <OrbitLoader /> : children}
     </button>
   );
 };

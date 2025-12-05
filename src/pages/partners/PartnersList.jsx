@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,18 +14,17 @@ import {
   AlertTriangle,
   FolderOpen,
 } from "lucide-react";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ API & Services
 import { partnerService } from "../../api/index";
 
 // ✅ Generic Components & Utils
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable";
+import Table from "../../components/common/NewTable"; // Using NewTable
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
-import Pagination from "../../components/common/Pagination";
 
 // ✅ Context
 import { useToast } from "../../context/ToastContext";
@@ -40,11 +39,8 @@ const PartnersList = () => {
   const { t } = useTranslation();
 
   // ✅ State Management
-  // Initialize as empty list to satisfy "empty state at first"
   const [partners, setPartners] = useState([]);
-  // Start loading immediately
   const [loading, setLoading] = useState(true);
-  // Track if we've completed the first load to prevent premature empty states
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [error, setError] = useState(null);
 
@@ -60,10 +56,17 @@ const PartnersList = () => {
     onConfirm: null,
   });
 
-  // Filters & Pagination
+  // Filters (Active State)
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [category, setCategory] = useState("all");
+
+  // Filter Panel (Buffered State)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [localStatus, setLocalStatus] = useState("all");
+  const [localCategory, setLocalCategory] = useState("all");
+
+  // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -86,6 +89,36 @@ const PartnersList = () => {
     { value: "other", label: "Other" },
   ];
 
+  useEffect(() => {
+    if (isFilterOpen) {
+      setLocalStatus(status);
+      setLocalCategory(category);
+    }
+  }, [isFilterOpen, status, category]);
+
+  const handleApplyFilters = () => {
+    setStatus(localStatus);
+    setCategory(localCategory);
+    setPage(1);
+    setIsFilterOpen(false);
+    showSuccess(
+      t("partners.notifications.filtersApplied") || "Filters applied"
+    );
+  };
+
+  const handleResetLocalFilters = () => {
+    setLocalStatus("all");
+    setLocalCategory("all");
+  };
+
+  const handleClearAllFilters = () => {
+    setSearch("");
+    setStatus("all");
+    setCategory("all");
+    setPage(1);
+    showInfo(t("partners.notifications.filtersCleared"));
+  };
+
   // ✅ Fetch Logic
   const fetchPartners = useCallback(async () => {
     try {
@@ -102,29 +135,25 @@ const PartnersList = () => {
 
       const response = await partnerService.getAll(params);
 
-      // Robust data extraction
       let data = response?.partners || response?.data || response || [];
       if (!Array.isArray(data)) data = [];
 
-      // Pagination extraction
-      const pagination = response?.pagination || {
-        pages: 1,
-        total: data.length,
-      };
+      // ✅ FIX: Robust Calculation
+      const totalItems = response?.pagination?.total || data.length || 0;
+      const calculatedTotalPages = Math.ceil(totalItems / limit);
 
       setPartners(data.filter((p) => p && p._id));
-      setTotalPages(pagination.pages || 1);
-      setTotalCount(pagination.total || data.length);
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+      setTotalCount(totalItems);
     } catch (err) {
       const msg = err.response?.data?.message || t("partners.errors.loading");
       setError(msg);
       showError(msg);
-      // Ensure state is clean on error
       setPartners([]);
       setTotalCount(0);
     } finally {
       setLoading(false);
-      setHasInitialLoad(true); // ✅ Ensures Empty State logic only triggers after load
+      setHasInitialLoad(true);
     }
   }, [search, status, category, page, limit, t, showError]);
 
@@ -132,8 +161,16 @@ const PartnersList = () => {
     fetchPartners();
   }, [fetchPartners]);
 
-  // --- Handlers ---
+  // ✅ FIX: Client-Side Slicing Fallback
+  const paginatedPartners = useMemo(() => {
+    if (partners.length > limit) {
+      const startIndex = (page - 1) * limit;
+      return partners.slice(startIndex, startIndex + limit);
+    }
+    return partners;
+  }, [partners, page, limit]);
 
+  // --- Handlers ---
   const handleDeleteConfirm = useCallback(
     async (partnerId, partnerName) => {
       try {
@@ -142,13 +179,10 @@ const PartnersList = () => {
           success: t("partners.notifications.deleted"),
           error: t("partners.deleteModal.errorDeleting", { name: partnerName }),
         });
-
         fetchPartners();
         setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
         if (selectedPartner?._id === partnerId) setIsDetailModalOpen(false);
-      } catch (err) {
-        // Promise toast handles UI feedback
-      }
+      } catch (err) {}
     },
     [fetchPartners, selectedPartner, promise, t]
   );
@@ -172,41 +206,26 @@ const PartnersList = () => {
     );
   };
 
-  const handleClearFilters = () => {
-    setSearch("");
-    setStatus("all");
-    setCategory("all");
-    setPage(1);
-    showInfo(t("partners.notifications.filtersCleared"));
-  };
-
   const formatCategory = (cat) =>
     categoryOptions.find((opt) => opt.value === cat)?.label || cat;
 
-  // ✅ Logic States
   const hasActiveFilters =
     search.trim() !== "" || status !== "all" || category !== "all";
-
-  // Logic: Show Empty State only if done loading, no errors, empty list, and no filters active
   const showEmptyState =
     !loading &&
     !error &&
     partners.length === 0 &&
     !hasActiveFilters &&
     hasInitialLoad;
-
-  // Logic: Show "No Results" (Found 0) if filters are active
   const showNoResults =
     !loading &&
     !error &&
     partners.length === 0 &&
     hasActiveFilters &&
     hasInitialLoad;
+  const showData =
+    hasInitialLoad && (partners.length > 0 || (loading && totalCount > 0));
 
-  // Logic: Show Data Table
-  const showData = !loading && hasInitialLoad && partners.length > 0;
-
-  // Table Columns
   const columns = [
     {
       header: t("partners.table.columns.name"),
@@ -283,16 +302,13 @@ const PartnersList = () => {
       header: t("partners.table.columns.price"),
       accessor: "price",
       width: "10%",
-      render: (row) => {
-        console.log("row ===============>", row);
-        return (
-          <div className="text-sm text-gray-900 dark:text-white">
-            {row.priceType === "hourly"
-              ? `${row.hourlyRate} TND/hr`
-              : `${row.fixedRate} TND`}
-          </div>
-        );
-      },
+      render: (row) => (
+        <div className="text-sm text-gray-900 dark:text-white">
+          {row.priceType === "hourly"
+            ? `${row.hourlyRate} TND/hr`
+            : `${row.fixedRate} TND`}
+        </div>
+      ),
     },
     {
       header: t("partners.table.columns.actions"),
@@ -340,62 +356,8 @@ const PartnersList = () => {
     },
   ];
 
-  // ✅ Pagination
-  const renderPagination = () => {
-    const start = Math.min((page - 1) * limit + 1, totalCount);
-    const end = Math.min(page * limit, totalCount);
-
-    return (
-      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-        <div>
-          Showing{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {start}
-          </span>{" "}
-          to{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {end}
-          </span>{" "}
-          of{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {totalCount}
-          </span>{" "}
-          results
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              pageSize={null}
-            />
-          )}
-          <div className="flex items-center gap-2">
-            <span>Per page:</span>
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
-            >
-              {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -408,7 +370,6 @@ const PartnersList = () => {
               ` • ${t("partners.showingResults", { count: partners.length, total: totalCount })}`}
           </p>
         </div>
-        {/* Only show header Add button if NOT in empty state */}
         {!showEmptyState && (
           <Button
             variant="primary"
@@ -423,96 +384,146 @@ const PartnersList = () => {
         )}
       </div>
 
-      {/* Filters (Hide in pure empty state) */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 shrink-0">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Input
-              className="flex-1"
-              icon={Search}
-              placeholder={t("partners.actions.search")}
-              value={search}
-              onChange={(e) => {
-                setPage(1);
-                setSearch(e.target.value);
-              }}
-            />
-            <div className="sm:w-48">
-              <Select
-                icon={Filter}
-                value={category}
+        <div className="relative mb-6 z-20">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <div className="w-full sm:max-w-md relative">
+              <Input
+                icon={Search}
+                placeholder={t("partners.actions.search")}
+                value={search}
                 onChange={(e) => {
                   setPage(1);
-                  setCategory(e.target.value);
+                  setSearch(e.target.value);
                 }}
-                options={categoryOptions}
+                className="w-full"
               />
             </div>
-            <div className="sm:w-40">
-              <Select
-                value={status}
-                onChange={(e) => {
-                  setPage(1);
-                  setStatus(e.target.value);
-                }}
-                options={[
-                  {
-                    value: "all",
-                    label: t("partners.actions.filters.allStatus"),
-                  },
-                  {
-                    value: "active",
-                    label: t("partners.actions.filters.active"),
-                  },
-                  {
-                    value: "inactive",
-                    label: t("partners.actions.filters.inactive"),
-                  },
-                ]}
-              />
-            </div>
-            {hasActiveFilters && (
-              <Button variant="outline" icon={X} onClick={handleClearFilters}>
-                {t("partners.actions.clearFilters")}
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Button
+                variant={hasActiveFilters ? "primary" : "outline"}
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+              >
+                <Filter className="w-4 h-4" />
+                {t("partners.actions.filters.advanced") || "Filters"}
+                {hasActiveFilters && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                    !
+                  </span>
+                )}
               </Button>
-            )}
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  icon={X}
+                  onClick={handleClearAllFilters}
+                  className="text-gray-500"
+                >
+                  {t("partners.actions.clearFilters")}
+                </Button>
+              )}
+            </div>
           </div>
+          {isFilterOpen && (
+            <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+                  {t("partners.actions.filters.options") || "Filter Options"}
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+                <Select
+                  label={t("partners.table.columns.category")}
+                  value={localCategory}
+                  onChange={(e) => setLocalCategory(e.target.value)}
+                  options={categoryOptions}
+                  className="w-full"
+                />
+                <Select
+                  label={t("partners.table.columns.status")}
+                  value={localStatus}
+                  onChange={(e) => setLocalStatus(e.target.value)}
+                  options={[
+                    {
+                      value: "all",
+                      label: t("partners.actions.filters.allStatus"),
+                    },
+                    {
+                      value: "active",
+                      label: t("partners.actions.filters.active"),
+                    },
+                    {
+                      value: "inactive",
+                      label: t("partners.actions.filters.inactive"),
+                    },
+                  ]}
+                  className="w-full"
+                />
+              </div>
+              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleResetLocalFilters}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                >
+                  {t("partners.actions.filters.reset") || "Reset"}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleApplyFilters}
+                  className="px-6"
+                >
+                  {t("partners.actions.filters.apply") || "Apply Filters"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
-        {/* Loading Overlay */}
-        {loading && (
+        {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg min-h-[300px]">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+            <OrbitLoader />
             <p className="text-gray-500 dark:text-gray-400">
               {t("partners.loading.initial", "Loading...")}
             </p>
           </div>
         )}
-
-        {/* Data Table */}
         {showData && (
-          <>
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <Table
-                columns={columns}
-                data={partners}
-                loading={loading} // Internal table loading state
-                onRowClick={(row) => {
-                  setSelectedPartner(row);
-                  setIsDetailModalOpen(true);
-                }}
-                striped
-                hoverable
-              />
-            </div>
-            {renderPagination()}
-          </>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <Table
+              columns={columns}
+              // ✅ Pass sliced data
+              data={paginatedPartners}
+              loading={loading}
+              onRowClick={(row) => {
+                setSelectedPartner(row);
+                setIsDetailModalOpen(true);
+              }}
+              striped
+              hoverable
+              pagination={true}
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalCount}
+              pageSize={limit}
+              onPageChange={setPage}
+              onPageSizeChange={(newSize) => {
+                setLimit(newSize);
+                setPage(1);
+              }}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
+          </div>
         )}
-
-        {/* No Results (Active Filter) */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -527,13 +538,11 @@ const PartnersList = () => {
                 "Adjust your filters to find who you're looking for."
               )}
             </p>
-            <Button onClick={handleClearFilters} variant="outline" icon={X}>
+            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("partners.actions.clearFilters")}
             </Button>
           </div>
         )}
-
-        {/* ✅ EMPTY STATE (Initial) */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -569,7 +578,6 @@ const PartnersList = () => {
         )}
       </div>
 
-      {/* Modals */}
       <PartnerDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
@@ -581,7 +589,6 @@ const PartnersList = () => {
         }}
         refreshData={fetchPartners}
       />
-
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -598,7 +605,6 @@ const PartnersList = () => {
           onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
-
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() =>

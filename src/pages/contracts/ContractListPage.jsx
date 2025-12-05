@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -35,7 +35,6 @@ import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Pagination from "../../components/common/Pagination";
 
 // ✅ Context & Hooks
 import { useToast } from "../../hooks/useToast";
@@ -115,12 +114,17 @@ const ContractListPage = () => {
   const [loading, setLoading] = useState(true);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // Filters & Pagination
+  // Filters (Active)
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState(
     searchParams.get("status") || ""
   );
   const [typeFilter, setTypeFilter] = useState(searchParams.get("type") || "");
+
+  // Filters (Buffered)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [localStatus, setLocalStatus] = useState("");
+  const [localType, setLocalType] = useState("");
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -135,6 +139,37 @@ const ContractListPage = () => {
     actionType: "",
     onConfirm: null,
   });
+
+  // Sync local filters
+  useEffect(() => {
+    if (isFilterOpen) {
+      setLocalStatus(statusFilter);
+      setLocalType(typeFilter);
+    }
+  }, [isFilterOpen, statusFilter, typeFilter]);
+
+  const handleApplyFilters = () => {
+    setStatusFilter(localStatus);
+    setTypeFilter(localType);
+    setPage(1);
+    setIsFilterOpen(false);
+    showSuccess(
+      t("contracts.list.messages.filtersApplied") || "Filters applied"
+    );
+  };
+
+  const handleResetLocalFilters = () => {
+    setLocalStatus("");
+    setLocalType("");
+  };
+
+  const handleClearAllFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setTypeFilter("");
+    setPage(1);
+    showInfo(t("common.actions.clearFilters"));
+  };
 
   // Status Config
   const getStatusConfig = (status) => {
@@ -205,14 +240,10 @@ const ContractListPage = () => {
       let dataList = [];
       let paginationData = {};
 
-      // ✅ FIX: Handle the specific JSON structure provided
-      // Structure: { success: true, message: { contracts: [], pagination: {} } }
       if (contractsRes?.message?.contracts) {
         dataList = contractsRes.message.contracts;
         paginationData = contractsRes.message.pagination || {};
-      }
-      // Fallback for other potential structures
-      else if (contractsRes?.contracts) {
+      } else if (contractsRes?.contracts) {
         dataList = contractsRes.contracts;
         paginationData = contractsRes.pagination || {};
       } else if (contractsRes?.data?.contracts) {
@@ -220,13 +251,15 @@ const ContractListPage = () => {
         paginationData = contractsRes.data.pagination || {};
       }
 
-      setContracts(Array.isArray(dataList) ? dataList : []);
-      setTotalPages(paginationData.pages || 1);
-      setTotalCount(
-        paginationData.total || (Array.isArray(dataList) ? dataList.length : 0)
-      );
+      // ✅ FIX: Robust Calculation
+      const totalItems =
+        paginationData.total || (Array.isArray(dataList) ? dataList.length : 0);
+      const calculatedTotalPages = Math.ceil(totalItems / limit);
 
-      // Handle Stats structure if similar
+      setContracts(Array.isArray(dataList) ? dataList : []);
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+      setTotalCount(totalItems);
+
       setStats(statsRes?.message || statsRes?.data || statsRes || {});
 
       // Update URL params
@@ -252,16 +285,18 @@ const ContractListPage = () => {
     return () => clearTimeout(timer);
   }, [fetchContracts]);
 
+  // ✅ FIX: Client-Side Slicing Fallback
+  const paginatedContracts = useMemo(() => {
+    if (contracts.length > limit) {
+      const startIndex = (page - 1) * limit;
+      return contracts.slice(startIndex, startIndex + limit);
+    }
+    return contracts;
+  }, [contracts, page, limit]);
+
   // ============================================
   // HANDLERS
   // ============================================
-
-  const handleClearFilters = () => {
-    setSearch("");
-    setStatusFilter("");
-    setTypeFilter("");
-    setPage(1);
-  };
 
   const handleDeleteClick = (row) => {
     setConfirmationModal({
@@ -311,75 +346,16 @@ const ContractListPage = () => {
   const hasActiveFilters =
     search.trim() !== "" || statusFilter !== "" || typeFilter !== "";
 
-  // Empty State: No loading, no data, no filters, but HAS loaded once
   const showEmptyState =
     !loading && contracts.length === 0 && !hasActiveFilters && hasInitialLoad;
 
-  // No Results: No loading, no data, BUT filters active
   const showNoResults =
     !loading && contracts.length === 0 && hasActiveFilters && hasInitialLoad;
 
-  // Data: Not loading, has loaded once, has data
-  const showData = !loading && hasInitialLoad && contracts.length > 0;
+  const showData =
+    hasInitialLoad && (contracts.length > 0 || (loading && totalCount > 0));
 
   const isRTL = i18n.dir() === "rtl";
-
-  // ============================================
-  // RENDER HELPERS
-  // ============================================
-
-  // ✅ Unified Pagination Footer
-  const renderPagination = () => {
-    const start = Math.min((page - 1) * limit + 1, totalCount);
-    const end = Math.min(page * limit, totalCount);
-
-    return (
-      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-        <div>
-          Showing{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {start}
-          </span>{" "}
-          to{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {end}
-          </span>{" "}
-          of{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {totalCount}
-          </span>{" "}
-          results
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              pageSize={null}
-            />
-          )}
-          <div className="flex items-center gap-2">
-            <span>Per page:</span>
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
-            >
-              {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // ============================================
   // TABLE COLUMNS
@@ -389,6 +365,7 @@ const ContractListPage = () => {
       header: t("contracts.list.columns.info"),
       accessor: "title",
       width: "30%",
+      sortable: true,
       render: (row) => {
         const isClient = row.contractType === "client";
         return (
@@ -417,6 +394,7 @@ const ContractListPage = () => {
       header: t("contracts.list.columns.status"),
       accessor: "status",
       width: "15%",
+      sortable: true,
       render: (row) => {
         const status = getStatusConfig(row.status);
         const Icon = status.icon;
@@ -435,7 +413,6 @@ const ContractListPage = () => {
       width: "25%",
       render: (row) => {
         const isClient = row.contractType === "client";
-        // ✅ FIX: Access party.name based on your JSON structure
         const partyName =
           row.party?.name || row.partyName || t("contracts.list.unknown");
         return (
@@ -466,7 +443,7 @@ const ContractListPage = () => {
       header: t("contracts.list.columns.amount"),
       accessor: "totalAmount",
       width: "10%",
-      // ✅ FIX: Access financials.totalTTC based on your JSON
+      sortable: true,
       render: (row) => (
         <div className="font-bold text-green-600 dark:text-green-300">
           {formatCurrency(row.financials?.totalTTC || row.totalAmount || 0)}
@@ -575,15 +552,16 @@ const ContractListPage = () => {
         )}
       </div>
 
-      {/* 2. Stats & Filters (Hidden if empty) */}
-      {!showEmptyState && hasInitialLoad && (
-        <>
-          <StatsCards stats={stats} />
+      {/* 2. Stats (Hidden if empty) */}
+      {!showEmptyState && hasInitialLoad && <StatsCards stats={stats} />}
 
-          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shrink-0">
-            <div className="flex flex-col sm:flex-row gap-4">
+      {/* 3. ✅ ENHANCED FILTERS (List View) */}
+      {!showEmptyState && hasInitialLoad && (
+        <div className="relative mb-6 z-20">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            {/* Search Bar */}
+            <div className="w-full sm:max-w-md relative">
               <Input
-                className="flex-1"
                 icon={Search}
                 placeholder={t("contracts.list.searchPlaceholder")}
                 value={search}
@@ -591,75 +569,128 @@ const ContractListPage = () => {
                   setPage(1);
                   setSearch(e.target.value);
                 }}
+                className="w-full"
               />
-              <div className="sm:w-48">
+            </div>
+
+            {/* Advanced Filters Button */}
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Button
+                variant={hasActiveFilters ? "primary" : "outline"}
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+              >
+                <Filter className="w-4 h-4" />
+                {t("contracts.list.filter.advanced") || "Filters"}
+                {hasActiveFilters && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                    !
+                  </span>
+                )}
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  icon={X}
+                  onClick={handleClearAllFilters}
+                  className="text-gray-500"
+                >
+                  {t("common.actions.clear")}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Expandable Filter Panel */}
+          {isFilterOpen && (
+            <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+                  {t("contracts.list.filter.options") || "Filter Options"}
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
                 <Select
-                  icon={Filter}
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setPage(1);
-                    setStatusFilter(e.target.value);
-                  }}
+                  label={t("contracts.list.filter.status")}
+                  value={localStatus}
+                  onChange={(e) => setLocalStatus(e.target.value)}
                   options={[
                     { value: "", label: t("contracts.list.filter.allStatus") },
                     { value: "draft", label: t("contracts.status.draft") },
                     { value: "sent", label: t("contracts.status.sent") },
                     { value: "signed", label: t("contracts.status.signed") },
                   ]}
+                  className="w-full"
                 />
-              </div>
-              <div className="sm:w-48">
                 <Select
-                  icon={Briefcase}
-                  value={typeFilter}
-                  onChange={(e) => {
-                    setPage(1);
-                    setTypeFilter(e.target.value);
-                  }}
+                  label={t("contracts.list.filter.type")}
+                  value={localType}
+                  onChange={(e) => setLocalType(e.target.value)}
                   options={[
                     { value: "", label: t("contracts.list.filter.allTypes") },
                     { value: "client", label: t("contracts.types.client") },
                     { value: "partner", label: t("contracts.types.partner") },
                   ]}
+                  className="w-full"
                 />
               </div>
-              {hasActiveFilters && (
-                <Button variant="outline" icon={X} onClick={handleClearFilters}>
-                  {t("common.actions.clear")}
+
+              {/* Footer Actions */}
+              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleResetLocalFilters}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                >
+                  {t("common.actions.reset") || "Reset"}
                 </Button>
-              )}
+                <Button
+                  variant="primary"
+                  onClick={handleApplyFilters}
+                  className="px-6"
+                >
+                  {t("common.actions.apply") || "Apply Filters"}
+                </Button>
+              </div>
             </div>
-          </div>
-        </>
+          )}
+        </div>
       )}
 
-      {/* 3. Content Area */}
+      {/* 4. Content Area */}
       <div className="flex-1 flex flex-col relative">
-        {/* Loading Overlay */}
-        {loading && !hasInitialLoad && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
-            <p className="text-gray-500 dark:text-gray-400">
-              {t("common.loading")}
-            </p>
-          </div>
-        )}
-
         {/* Data Table */}
         {showData && (
-          <>
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <Table
-                columns={columns}
-                data={contracts}
-                loading={loading}
-                onRowClick={(row) => navigate(`/contracts/${row._id}`)}
-                striped
-                hoverable
-              />
-            </div>
-            {renderPagination()}
-          </>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <Table
+              columns={columns}
+              // ✅ Pass sliced data
+              data={paginatedContracts}
+              loading={loading}
+              onRowClick={(row) => navigate(`/contracts/${row._id}`)}
+              striped
+              hoverable
+              // Pagination
+              pagination={true}
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalCount}
+              pageSize={limit}
+              onPageChange={setPage}
+              onPageSizeChange={(newSize) => {
+                setLimit(newSize);
+                setPage(1);
+              }}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
+          </div>
         )}
 
         {/* ✅ NO RESULTS (Active Filter) */}
@@ -672,18 +703,15 @@ const ContractListPage = () => {
               {t("common.noResults")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t(
-                "contracts.list.noResultsDesc",
-                "No contracts found. Try adjusting your search or filters."
-              )}
+              {t("contracts.list.noResultsDesc")}
             </p>
-            <Button onClick={handleClearFilters} variant="outline" icon={X}>
+            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("common.actions.clearFilters")}
             </Button>
           </div>
         )}
 
-        {/* ✅ EMPTY STATE (No Data) - Enhanced Design */}
+        {/* ✅ EMPTY STATE (No Data) */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">

@@ -5,7 +5,7 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Crd from '../../components/common/Card';
 import { authService } from '../../api/index';
-
+import OrbitLoader from '../../components/common/LoadingSpinner';
 const ResetPassword = () => {
   const { token } = useParams(); 
   const [password, setPassword] = useState('');

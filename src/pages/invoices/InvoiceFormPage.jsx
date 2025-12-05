@@ -47,7 +47,7 @@ import Button from "../../components/common/Button";
 import Select from "../../components/common/Select";
 import Textarea from "../../components/common/Textarea";
 import DateInput from "../../components/common/DateInput";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import Badge, { StatusBadge } from "../../components/common/Badge";
 
 // Hooks & Utils
@@ -841,7 +841,7 @@ const InvoiceFormPage = () => {
   if (fetchLoading)
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <LoadingSpinner />
+        <OrbitLoader />
       </div>
     );
 

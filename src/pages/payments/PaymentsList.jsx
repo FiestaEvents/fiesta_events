@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,19 +16,20 @@ import {
   DollarSign,
   Activity,
   FolderOpen,
+  Filter,
 } from "lucide-react";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ API & Services
 import { paymentService } from "../../api/index";
 
 // ✅ Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable";
+import Table from "../../components/common/NewTable"; // Using NewTable
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
-import Pagination from "../../components/common/Pagination";
+
 import formatCurrency from "../../utils/formatCurrency";
 
 // ✅ Context
@@ -38,10 +39,7 @@ import { useToast } from "../../context/ToastContext";
 import PaymentDetailModal from "./PaymentDetailModal";
 import PaymentForm from "./PaymentForm";
 
-// ================================================================
-// CONSTANTS
-// ================================================================
-
+// ... (Constants and Helpers remain the same)
 const INITIAL_FILTERS = {
   search: "",
   type: "all",
@@ -50,12 +48,7 @@ const INITIAL_FILTERS = {
   page: 1,
   limit: 10,
 };
-
-const PAYMENT_TYPES = {
-  INCOME: "income",
-  EXPENSE: "expense",
-};
-
+const PAYMENT_TYPES = { INCOME: "income", EXPENSE: "expense" };
 const PAYMENT_STATUSES = {
   COMPLETED: "completed",
   PAID: "paid",
@@ -63,7 +56,6 @@ const PAYMENT_STATUSES = {
   FAILED: "failed",
   REFUNDED: "refunded",
 };
-
 const BADGE_VARIANTS = {
   STATUS: {
     completed: "success",
@@ -72,12 +64,8 @@ const BADGE_VARIANTS = {
     failed: "danger",
     refunded: "info",
   },
-  TYPE: {
-    income: "success",
-    expense: "danger",
-  },
+  TYPE: { income: "success", expense: "danger" },
 };
-
 const STAT_CONFIGS = [
   {
     key: "income",
@@ -135,11 +123,6 @@ const STAT_CONFIGS = [
     isStatusCard: true,
   },
 ];
-
-// ================================================================
-// HELPER FUNCTIONS
-// ================================================================
-
 const formatDate = (date) => {
   if (!date) return "-";
   try {
@@ -148,19 +131,16 @@ const formatDate = (date) => {
     return date;
   }
 };
-
 const getClientName = (payment) => {
   if (payment.client?.name) return payment.client.name;
   if (payment.event?.clientId?.name) return payment.event.clientId.name;
   return "N/A";
 };
-
 const getBadgeVariant = (value, type) => {
   const variants =
     type === "status" ? BADGE_VARIANTS.STATUS : BADGE_VARIANTS.TYPE;
   return variants[value?.toLowerCase()] || "secondary";
 };
-
 const calculateStats = (payments) => {
   const stats = {
     completedIncome: 0,
@@ -171,7 +151,6 @@ const calculateStats = (payments) => {
     pendingPayments: 0,
     failedPayments: 0,
   };
-
   payments.forEach((payment) => {
     const status = payment.status?.toLowerCase();
     const isCompleted = [
@@ -180,7 +159,6 @@ const calculateStats = (payments) => {
     ].includes(status);
     const isPending = status === PAYMENT_STATUSES.PENDING;
     const amount = payment.netAmount || payment.amount || 0;
-
     if (payment.type === PAYMENT_TYPES.INCOME) {
       if (isCompleted) stats.completedIncome += amount;
       if (isPending) stats.pendingIncome += amount;
@@ -188,46 +166,40 @@ const calculateStats = (payments) => {
       if (isCompleted) stats.completedExpenses += amount;
       if (isPending) stats.pendingExpenses += amount;
     }
-
     if (isCompleted) stats.completedPayments++;
     if (isPending) stats.pendingPayments++;
     if (status === PAYMENT_STATUSES.FAILED) stats.failedPayments++;
   });
-
   stats.netCompleted = stats.completedIncome - stats.completedExpenses;
   stats.netPending = stats.pendingIncome - stats.pendingExpenses;
   stats.netProjected = stats.netCompleted + stats.netPending;
-
   return stats;
 };
-
-// ================================================================
-// MAIN COMPONENT
-// ================================================================
 
 const PaymentsList = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { showSuccess, showError, showInfo, promise } = useToast();
 
-  // State
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // UI States
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
-  // Filter States
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Modal States
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [localType, setLocalType] = useState("all");
+  const [localStatus, setLocalStatus] = useState("all");
+  const [localMethod, setLocalMethod] = useState("all");
+
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     paymentId: null,
@@ -235,16 +207,46 @@ const PaymentsList = () => {
     onConfirm: null,
   });
 
-  // Computed Values
   const stats = calculateStats(payments);
-
   const hasActiveFilters =
     filters.search.trim() !== "" ||
     filters.type !== "all" ||
     filters.status !== "all" ||
     filters.method !== "all";
 
-  // Logic States
+  useEffect(() => {
+    if (isFilterOpen) {
+      setLocalType(filters.type);
+      setLocalStatus(filters.status);
+      setLocalMethod(filters.method);
+    }
+  }, [isFilterOpen, filters]);
+
+  const handleApplyFilters = () => {
+    setFilters((prev) => ({
+      ...prev,
+      type: localType,
+      status: localStatus,
+      method: localMethod,
+      page: 1,
+    }));
+    setIsFilterOpen(false);
+    showSuccess(
+      t("payments.notifications.filtersApplied") || "Filters applied"
+    );
+  };
+
+  const handleResetLocalFilters = () => {
+    setLocalType("all");
+    setLocalStatus("all");
+    setLocalMethod("all");
+  };
+
+  const handleClearAllFilters = () => {
+    setFilters(INITIAL_FILTERS);
+    showInfo(t("payments.notifications.filtersCleared"));
+  };
+
   const showEmptyState =
     !loading &&
     !error &&
@@ -257,14 +259,13 @@ const PaymentsList = () => {
     payments.length === 0 &&
     hasActiveFilters &&
     hasInitialLoad;
-  const showData = !loading && hasInitialLoad && payments.length > 0;
+  const showData =
+    hasInitialLoad && (payments.length > 0 || (loading && totalCount > 0));
 
-  // Data Fetching
   const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
       const params = {
         page: filters.page,
         limit: filters.limit,
@@ -273,10 +274,7 @@ const PaymentsList = () => {
         ...(filters.status !== "all" && { status: filters.status }),
         ...(filters.method !== "all" && { method: filters.method }),
       };
-
       const response = await paymentService.getAll(params);
-
-      // Robust data extraction
       let data =
         response?.data?.data?.payments ||
         response?.data?.payments ||
@@ -284,16 +282,16 @@ const PaymentsList = () => {
         [];
       if (!Array.isArray(data)) data = [];
 
-      let pTotalPages =
-        response?.data?.data?.totalPages || response?.pagination?.pages || 1;
-      let pTotalCount =
+      // ✅ FIX: Robust Calculation
+      const totalItems =
         response?.data?.data?.totalCount ||
         response?.pagination?.total ||
         data.length;
+      const calculatedTotalPages = Math.ceil(totalItems / filters.limit);
 
       setPayments(data);
-      setTotalPages(pTotalPages);
-      setTotalCount(pTotalCount);
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+      setTotalCount(totalItems);
     } catch (err) {
       const msg =
         err.response?.data?.message ||
@@ -313,7 +311,15 @@ const PaymentsList = () => {
     fetchPayments();
   }, [fetchPayments]);
 
-  // Handlers
+  // ✅ FIX: Client-Side Slicing Fallback
+  const paginatedPayments = useMemo(() => {
+    if (payments.length > filters.limit) {
+      const startIndex = (filters.page - 1) * filters.limit;
+      return payments.slice(startIndex, startIndex + filters.limit);
+    }
+    return payments;
+  }, [payments, filters.page, filters.limit]);
+
   const updateFilter = useCallback((key, value) => {
     setFilters((prev) => ({
       ...prev,
@@ -321,11 +327,6 @@ const PaymentsList = () => {
       ...(key !== "page" && { page: 1 }),
     }));
   }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setFilters(INITIAL_FILTERS);
-    showInfo(t("payments.notifications.filtersCleared"));
-  }, [showInfo, t]);
 
   const handleDeleteConfirm = useCallback(
     async (paymentId, paymentName) => {
@@ -343,9 +344,7 @@ const PaymentsList = () => {
           onConfirm: null,
         });
         if (selectedPayment?._id === paymentId) setIsDetailModalOpen(false);
-      } catch (err) {
-        /* handled by promise */
-      }
+      } catch (err) {}
     },
     [fetchPayments, selectedPayment, promise, t]
   );
@@ -361,13 +360,11 @@ const PaymentsList = () => {
     },
     [handleDeleteConfirm]
   );
-
   const handleExportCSV = useCallback(() => {
     if (!payments.length)
       return showError(t("payments.notifications.noPaymentsExport"));
     showSuccess(t("payments.notifications.exportSuccess"));
   }, [payments.length, showError, showSuccess, t]);
-
   const handleFormSuccess = useCallback(() => {
     fetchPayments();
     setIsFormOpen(false);
@@ -379,12 +376,12 @@ const PaymentsList = () => {
     );
   }, [fetchPayments, selectedPayment, showSuccess, t]);
 
-  // Table Columns
   const tableColumns = [
     {
       header: t("payments.table.type"),
       accessor: "type",
       width: "10%",
+      sortable: true,
       render: (row) => (
         <Badge variant={getBadgeVariant(row.type, "type")}>
           <div className="flex items-center gap-1">
@@ -404,6 +401,7 @@ const PaymentsList = () => {
       header: t("payments.table.description"),
       accessor: "description",
       width: "25%",
+      sortable: true,
       render: (row) => (
         <div>
           <div className="font-medium text-gray-900 dark:text-white">
@@ -431,6 +429,7 @@ const PaymentsList = () => {
       header: t("payments.table.date"),
       accessor: "date",
       width: "12%",
+      sortable: true,
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
           {formatDate(row.paidDate || row.createdAt)}
@@ -441,6 +440,7 @@ const PaymentsList = () => {
       header: t("payments.table.amount"),
       accessor: "amount",
       width: "13%",
+      sortable: true,
       render: (row) => (
         <div
           className={`font-bold ${row.type === PAYMENT_TYPES.INCOME ? "text-green-600" : "text-red-600"}`}
@@ -454,6 +454,7 @@ const PaymentsList = () => {
       header: t("payments.table.status"),
       accessor: "status",
       width: "10%",
+      sortable: true,
       render: (row) => (
         <Badge variant={getBadgeVariant(row.status, "status")}>
           {t(`payments.statuses.${row.status}`) || "Unknown"}
@@ -524,72 +525,18 @@ const PaymentsList = () => {
     },
   ];
 
-  // ✅ Unified Pagination Footer
-  const renderPagination = () => {
-    const start = Math.min((filters.page - 1) * filters.limit + 1, totalCount);
-    const end = Math.min(filters.page * filters.limit, totalCount);
-
-    return (
-      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-        <div>
-          Showing{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {start}
-          </span>{" "}
-          to{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {end}
-          </span>{" "}
-          of{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {totalCount}
-          </span>{" "}
-          results
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={filters.page}
-              totalPages={totalPages}
-              onPageChange={(page) => updateFilter("page", page)}
-              pageSize={null}
-            />
-          )}
-          <div className="flex items-center gap-2">
-            <span>Per page:</span>
-            <select
-              value={filters.limit}
-              onChange={(e) => {
-                updateFilter("limit", Number(e.target.value));
-              }}
-              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
-            >
-              {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
-      {/* 1. Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {t("payments.title")}
           </h1>
-      <p className="text-gray-500 dark:text-gray-400">
-            {t("payments.subtitle")}
-            { /*hasInitialLoad && totalCount > 0 &&` • ${t("payments.notifications.showingResults", { count: payments.length, total: totalCount })}`*/}
+          <p className="mt-1 text-gray-500 dark:text-gray-400">
+            {t("payments.subtitle")}{" "}
+            {/*hasInitialLoad && totalCount > 0 &&` • ${t("payments.notifications.showingResults", { count: payments.length, total: totalCount })}`*/}
           </p>
         </div>
-
         {!showEmptyState && (
           <div className="flex gap-2 w-full sm:w-auto">
             {totalCount > 0 && (
@@ -617,7 +564,6 @@ const PaymentsList = () => {
         )}
       </div>
 
-      {/* 2. Stats (Hidden if empty or no data) */}
       {!showEmptyState && hasInitialLoad && payments.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
           {STAT_CONFIGS.map((config) => {
@@ -691,80 +637,152 @@ const PaymentsList = () => {
         </div>
       )}
 
-      {/* 3. Filters (Hidden if empty) */}
       {!showEmptyState && hasInitialLoad && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4 shrink-0">
-          <Input
-            className="flex-1"
-            icon={Search}
-            placeholder={t("payments.searchPlaceholder")}
-            value={filters.search}
-            onChange={(e) => updateFilter("search", e.target.value)}
-          />
-          <div className="sm:w-40">
-            <Select
-              value={filters.type}
-              onChange={(e) => updateFilter("type", e.target.value)}
-              options={[
-                { value: "all", label: "All Types" },
-                { value: "income", label: "Income" },
-                { value: "expense", label: "Expense" },
-              ]}
-            />
+        <div className="relative mb-6 z-20">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <div className="w-full sm:max-w-md relative">
+              <Input
+                icon={Search}
+                placeholder={t("payments.searchPlaceholder")}
+                value={filters.search}
+                onChange={(e) => updateFilter("search", e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Button
+                variant={hasActiveFilters ? "primary" : "outline"}
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+              >
+                <Filter className="w-4 h-4" />
+                {t("payments.filters.advanced") || "Filters"}
+                {hasActiveFilters && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                    !
+                  </span>
+                )}
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  icon={X}
+                  onClick={handleClearAllFilters}
+                  className="text-gray-500"
+                >
+                  {t("payments.filters.clearFilters")}
+                </Button>
+              )}
+            </div>
           </div>
-          <div className="sm:w-40">
-            <Select
-              value={filters.status}
-              onChange={(e) => updateFilter("status", e.target.value)}
-              options={[
-                { value: "all", label: "All Status" },
-                { value: "pending", label: "Pending" },
-                { value: "completed", label: "Completed" },
-              ]}
-            />
-          </div>
-          {hasActiveFilters && (
-            <Button variant="outline" icon={X} onClick={handleClearFilters}>
-              {t("payments.filters.clearFilters")}
-            </Button>
+          {isFilterOpen && (
+            <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+                  {t("payments.filters.options") || "Filter Options"}
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
+                <Select
+                  label={t("payments.table.type")}
+                  value={localType}
+                  onChange={(e) => setLocalType(e.target.value)}
+                  options={[
+                    { value: "all", label: "All Types" },
+                    { value: "income", label: "Income" },
+                    { value: "expense", label: "Expense" },
+                  ]}
+                  className="w-full"
+                />
+                <Select
+                  label={t("payments.table.status")}
+                  value={localStatus}
+                  onChange={(e) => setLocalStatus(e.target.value)}
+                  options={[
+                    { value: "all", label: "All Status" },
+                    { value: "pending", label: "Pending" },
+                    { value: "completed", label: "Completed" },
+                  ]}
+                  className="w-full"
+                />
+                <Select
+                  label={t("payments.table.method") || "Method"}
+                  value={localMethod}
+                  onChange={(e) => setLocalMethod(e.target.value)}
+                  options={[
+                    { value: "all", label: "All Methods" },
+                    { value: "cash", label: "Cash" },
+                    { value: "card", label: "Card" },
+                    { value: "transfer", label: "Transfer" },
+                    { value: "check", label: "Check" },
+                  ]}
+                  className="w-full"
+                />
+              </div>
+              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleResetLocalFilters}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                >
+                  {t("payments.filters.reset") || "Reset"}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleApplyFilters}
+                  className="px-6"
+                >
+                  {t("payments.filters.apply") || "Apply Filters"}
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       )}
 
-      {/* 4. Content Area */}
       <div className="flex-1 flex flex-col relative">
-        {/* Loading Overlay */}
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+            <OrbitLoader />
             <p className="text-gray-500 dark:text-gray-400">
               {t("common.loading", "Loading...")}
             </p>
           </div>
         )}
-
-        {/* Data Table */}
         {showData && (
-          <>
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <Table
-                columns={tableColumns}
-                data={payments}
-                loading={loading}
-                emptyMessage={t("payments.table.empty")}
-                onRowClick={(row) => {
-                  setSelectedPayment(row);
-                  setIsDetailModalOpen(true);
-                }}
-                striped
-                hoverable
-              />
-            </div>
-            {renderPagination()}
-          </>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <Table
+              columns={tableColumns}
+              // ✅ Pass sliced data
+              data={paginatedPayments}
+              loading={loading}
+              emptyMessage={t("payments.table.empty")}
+              onRowClick={(row) => {
+                setSelectedPayment(row);
+                setIsDetailModalOpen(true);
+              }}
+              striped
+              hoverable
+              pagination={true}
+              currentPage={filters.page}
+              totalPages={totalPages}
+              totalItems={totalCount}
+              pageSize={filters.limit}
+              onPageChange={(page) => updateFilter("page", page)}
+              onPageSizeChange={(newSize) => {
+                updateFilter("limit", newSize);
+                updateFilter("page", 1);
+              }}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
+          </div>
         )}
-
-        {/* ✅ NO RESULTS (Active Filter) */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -774,18 +792,13 @@ const PaymentsList = () => {
               {t("payments.table.noResults")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t(
-                "payments.filters.noResultsDesc",
-                "Try adjusting your filters to find what you're looking for."
-              )}
+              {t("payments.filters.noResultsDesc")}
             </p>
-            <Button onClick={handleClearFilters} variant="outline" icon={X}>
+            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("payments.filters.clearFilters")}
             </Button>
           </div>
         )}
-
-        {/* ✅ EMPTY STATE (No Data) - Enhanced Design */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -819,7 +832,6 @@ const PaymentsList = () => {
         )}
       </div>
 
-      {/* Modals */}
       <PaymentDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
@@ -831,7 +843,6 @@ const PaymentsList = () => {
         }}
         refreshData={fetchPayments}
       />
-
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}

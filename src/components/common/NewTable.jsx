@@ -6,30 +6,8 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import OrbitLoader from "./LoadingSpinner";
 
-/**
- * Professional Reusable Table Component with Pagination
- *
- * @param {Object} props
- * @param {Array} props.columns - Array of column definitions
- * @param {Array} props.data - Array of data objects to display
- * @param {boolean} props.loading - Loading state
- * @param {string} props.emptyMessage - Message when no data
- * @param {Function} props.onRowClick - Callback when row is clicked
- * @param {boolean} props.selectable - Enable row selection
- * @param {Function} props.onSelectionChange - Callback for selection changes
- * @param {string} props.className - Additional CSS classes
- * @param {boolean} props.striped - Alternate row colors
- * @param {boolean} props.hoverable - Highlight on hover
- * @param {boolean} props.pagination - Enable pagination
- * @param {number} props.currentPage - Current page number (1-indexed)
- * @param {number} props.totalPages - Total number of pages
- * @param {number} props.pageSize - Number of items per page
- * @param {number} props.totalItems - Total number of items
- * @param {Function} props.onPageChange - Callback when page changes
- * @param {Function} props.onPageSizeChange - Callback when page size changes
- * @param {Array} props.pageSizeOptions - Available page size options
- */
 const Table = ({
   columns = [],
   data = [],
@@ -121,6 +99,9 @@ const Table = ({
     const pages = [];
     const maxPagesToShow = 5;
 
+    // Handle case where totalPages might be 0
+    if (totalPages <= 0) return [];
+
     if (totalPages <= maxPagesToShow) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -161,7 +142,7 @@ const Table = ({
   if (loading) {
     return (
       <div className="w-full p-8 text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+        <OrbitLoader />
         <p className="mt-2 text-gray-600 dark:text-gray-400">
           {t("table.loading")}
         </p>
@@ -268,8 +249,8 @@ const Table = ({
         </table>
       </div>
 
-      {/* Pagination */}
-      {pagination && totalPages > 0 && (
+      {/* Pagination - UPDATED to show even if totalPages is 0 or 1 */}
+      {pagination && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-lg">
           {/* Items info */}
           <div className="flex items-center gap-4">
@@ -328,24 +309,29 @@ const Table = ({
 
             {/* Page numbers */}
             <div className="flex items-center gap-1">
-              {getPageNumbers().map((page, idx) =>
-                page === "..." ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 text-gray-500">
-                    ...
-                  </span>
-                ) : (
-                  <button
-                    key={page}
-                    onClick={() => onPageChange?.(page)}
-                    className={`px-3 py-1 text-sm rounded ${
-                      currentPage === page
-                        ? "bg-orange-600 text-white font-medium"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {page}
-                  </button>
+              {getPageNumbers().length > 0 ? (
+                getPageNumbers().map((page, idx) =>
+                  page === "..." ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-500">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => onPageChange?.(page)}
+                      className={`px-3 py-1 text-sm rounded ${
+                        currentPage === page
+                          ? "bg-orange-600 text-white font-medium"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
                 )
+              ) : (
+                /* Fallback for empty data or 1 page if getPageNumbers returns empty */
+                 totalPages > 0 && <button className="px-3 py-1 text-sm rounded bg-orange-600 text-white font-medium">1</button>
               )}
             </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,7 +23,6 @@ import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Pagination from "../../components/common/Pagination";
 import Badge, { StatusBadge } from "../../components/common/Badge";
 
 // ✅ Context & Sub-components
@@ -54,9 +53,15 @@ const ClientsList = () => {
     onConfirm: null,
   });
 
-  // Filters & Pagination
+  // Filters (Active)
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+
+  // Filters (Buffered/UI)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [localStatus, setLocalStatus] = useState("all");
+
+  // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -66,6 +71,31 @@ const ClientsList = () => {
   const formatDate = (dateString) => {
     if (!dateString) return t("clients.table.defaultValues.noDate");
     return new Date(dateString).toLocaleDateString("en-GB");
+  };
+
+  // Sync local filters with active filters when panel opens
+  useEffect(() => {
+    if (isFilterOpen) {
+      setLocalStatus(status);
+    }
+  }, [isFilterOpen, status]);
+
+  const handleApplyFilters = () => {
+    setStatus(localStatus);
+    setPage(1);
+    setIsFilterOpen(false);
+    showSuccess(t("clients.toast.filtersApplied") || "Filters applied");
+  };
+
+  const handleResetLocalFilters = () => {
+    setLocalStatus("all");
+  };
+
+  const handleClearAllFilters = () => {
+    setSearch("");
+    setStatus("all");
+    setPage(1);
+    showInfo(t("clients.toast.filtersCleared"));
   };
 
   // Fetch clients
@@ -91,16 +121,16 @@ const ClientsList = () => {
         [];
       if (!Array.isArray(data)) data = [];
 
-      let pTotalPages =
-        response?.data?.data?.totalPages || response?.pagination?.pages || 1;
-      let pTotalCount =
+      // ✅ Robust Pagination Calculation
+      const totalItems =
         response?.data?.data?.totalCount ||
         response?.pagination?.total ||
         data.length;
+      const calculatedTotalPages = Math.ceil(totalItems / limit);
 
       setClients(data);
-      setTotalPages(pTotalPages);
-      setTotalCount(pTotalCount);
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+      setTotalCount(totalItems);
     } catch (err) {
       const errorMessage =
         err.response?.data?.message ||
@@ -112,13 +142,22 @@ const ClientsList = () => {
       setTotalCount(0);
     } finally {
       setLoading(false);
-      setHasInitialLoad(true); // ✅ Ensures Empty State logic only triggers after load
+      setHasInitialLoad(true);
     }
   }, [search, status, page, limit, showError, t]);
 
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
+
+  // ✅ Client-Side Slicing Fallback
+  const paginatedClients = useMemo(() => {
+    if (clients.length > limit) {
+      const startIndex = (page - 1) * limit;
+      return clients.slice(startIndex, startIndex + limit);
+    }
+    return clients;
+  }, [clients, page, limit]);
 
   // --- Handlers ---
 
@@ -157,7 +196,6 @@ const ClientsList = () => {
   const handleFormSuccess = () => {
     fetchClients();
     setIsFormOpen(false);
-    // ✅ Single Source of Truth for Success Toast
     showSuccess(
       selectedClient
         ? t("clients.toast.updateSuccess")
@@ -165,17 +203,9 @@ const ClientsList = () => {
     );
   };
 
-  const handleClearFilters = () => {
-    setSearch("");
-    setStatus("all");
-    setPage(1);
-    showInfo(t("clients.toast.filtersCleared"));
-  };
-
   // ✅ Logic States
   const hasActiveFilters = search.trim() !== "" || status !== "all";
 
-  // Show Empty State: No loading, no error, empty list, no filters
   const showEmptyState =
     !loading &&
     !error &&
@@ -183,7 +213,6 @@ const ClientsList = () => {
     !hasActiveFilters &&
     hasInitialLoad;
 
-  // Show No Results: No loading, no error, empty list, BUT filters are active
   const showNoResults =
     !loading &&
     !error &&
@@ -191,8 +220,8 @@ const ClientsList = () => {
     hasActiveFilters &&
     hasInitialLoad;
 
-  // Show Data
-  const showData = !loading && hasInitialLoad && clients.length > 0;
+  const showData =
+    hasInitialLoad && (clients.length > 0 || (loading && totalCount > 0));
 
   // Columns
   const columns = [
@@ -200,6 +229,7 @@ const ClientsList = () => {
       header: t("clients.table.columns.name"),
       accessor: "name",
       width: "25%",
+      sortable: true,
       render: (row) => (
         <div className="font-medium text-gray-900 dark:text-white">
           {row.name || t("clients.table.defaultValues.unnamed")}
@@ -210,6 +240,7 @@ const ClientsList = () => {
       header: t("clients.table.columns.email"),
       accessor: "email",
       width: "25%",
+      sortable: true,
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
           {row.email || t("clients.table.defaultValues.noEmail")}
@@ -230,12 +261,14 @@ const ClientsList = () => {
       header: t("clients.table.columns.status"),
       accessor: "status",
       width: "15%",
+      sortable: true,
       render: (row) => <StatusBadge status={row.status} />,
     },
     {
       header: t("clients.table.columns.createdAt"),
       accessor: "createdAt",
       width: "15%",
+      sortable: true,
       render: (row) => (
         <div className="text-gray-600 dark:text-gray-400">
           {formatDate(row.createdAt)}
@@ -288,61 +321,6 @@ const ClientsList = () => {
     },
   ];
 
-  // ✅ Unified Pagination Footer
-  const renderPagination = () => {
-    const start = Math.min((page - 1) * limit + 1, totalCount);
-    const end = Math.min(page * limit, totalCount);
-
-    return (
-      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-        <div>
-          Showing{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {start}
-          </span>{" "}
-          to{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {end}
-          </span>{" "}
-          of{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {totalCount}
-          </span>{" "}
-          results
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              pageSize={null}
-            />
-          )}
-
-          <div className="flex items-center gap-2">
-            <span>Per page:</span>
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
-            >
-              {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
       {/* Header */}
@@ -359,7 +337,6 @@ const ClientsList = () => {
           </p>
         </div>
 
-        {/* Only show header Add button if NOT in empty state */}
         {!showEmptyState && (
           <Button
             variant="primary"
@@ -374,77 +351,134 @@ const ClientsList = () => {
         )}
       </div>
 
-      {/* Filters (Hide in pure empty state) */}
+      {/* ✅ ENHANCED FILTERS (List View) */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 shrink-0">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Input
-              className="flex-1"
-              icon={Search}
-              placeholder={t("clients.search.placeholder")}
-              value={search}
-              onChange={(e) => {
-                setPage(1);
-                setSearch(e.target.value);
-              }}
-            />
-            <div className="sm:w-48">
-              <Select
-                icon={Filter}
-                value={status}
+        <div className="relative mb-6 z-20">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            {/* Search Bar */}
+            <div className="w-full sm:max-w-md relative">
+              <Input
+                icon={Search}
+                placeholder={t("clients.search.placeholder")}
+                value={search}
                 onChange={(e) => {
                   setPage(1);
-                  setStatus(e.target.value);
+                  setSearch(e.target.value);
                 }}
-                options={[
-                  { value: "all", label: t("clients.filters.allStatus") },
-                  { value: "active", label: t("clients.status.active") },
-                  { value: "inactive", label: t("clients.status.inactive") },
-                ]}
+                className="w-full"
               />
             </div>
-            {hasActiveFilters && (
-              <Button variant="outline" icon={X} onClick={handleClearFilters}>
-                {t("clients.buttons.clear")}
+
+            {/* Advanced Filters Button */}
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Button
+                variant={hasActiveFilters ? "primary" : "outline"}
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+              >
+                <Filter className="w-4 h-4" />
+                {t("clients.filters.advanced") || "Filters"}
+                {hasActiveFilters && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                    !
+                  </span>
+                )}
               </Button>
-            )}
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  icon={X}
+                  onClick={handleClearAllFilters}
+                  className="text-gray-500"
+                >
+                  {t("clients.buttons.clear")}
+                </Button>
+              )}
+            </div>
           </div>
+
+          {/* Expandable Filter Panel */}
+          {isFilterOpen && (
+            <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+                  {t("clients.filters.filterOptions") || "Filter Options"}
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+                <Select
+                  label={t("clients.table.columns.status")}
+                  value={localStatus}
+                  onChange={(e) => setLocalStatus(e.target.value)}
+                  options={[
+                    { value: "all", label: t("clients.filters.allStatus") },
+                    { value: "active", label: t("clients.status.active") },
+                    { value: "inactive", label: t("clients.status.inactive") },
+                  ]}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Footer Actions */}
+              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleResetLocalFilters}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                >
+                  {t("clients.buttons.reset") || "Reset"}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleApplyFilters}
+                  className="px-6"
+                >
+                  {t("clients.buttons.apply") || "Apply Filters"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
-        {/* Loading Overlay */}
-        {loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg min-h-[300px]">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
-            <p className="text-gray-500 dark:text-gray-400">
-              {t("clients.loading.initial")}
-            </p>
+        {/* Table Data */}
+        {showData && (
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <Table
+              columns={columns}
+              data={paginatedClients}
+              loading={loading}
+              onRowClick={(row) => {
+                setSelectedClient(row);
+                setIsDetailModalOpen(true);
+              }}
+              striped
+              hoverable
+              pagination={true}
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalCount}
+              pageSize={limit}
+              onPageChange={setPage}
+              onPageSizeChange={(newSize) => {
+                setLimit(newSize);
+                setPage(1);
+              }}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
           </div>
         )}
 
-        {/* Table Data */}
-        {showData && (
-          <>
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <Table
-                columns={columns}
-                data={clients}
-                loading={loading}
-                onRowClick={(row) => {
-                  setSelectedClient(row);
-                  setIsDetailModalOpen(true);
-                }}
-                striped
-                hoverable
-              />
-            </div>
-            {renderPagination()}
-          </>
-        )}
-
-        {/* ✅ NO RESULTS (Active Filter) */}
+        {/* No Results */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -454,18 +488,15 @@ const ClientsList = () => {
               {t("clients.search.noResults")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t(
-                "clients.search.noResultsDesc",
-                "We couldn't find any clients matching your current filters."
-              )}
+              {t("clients.search.noResultsDesc")}
             </p>
-            <Button onClick={handleClearFilters} variant="outline" icon={X}>
+            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("clients.buttons.clearAllFilters")}
             </Button>
           </div>
         )}
 
-        {/* ✅ EMPTY STATE (Initial) - Enhanced Design */}
+        {/* Empty State */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -481,10 +512,7 @@ const ClientsList = () => {
               {t("clients.empty.title")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-              {t(
-                "clients.empty.description",
-                "Get started by adding your first client. Manage their details and interactions all in one place."
-              )}
+              {t("clients.empty.description")}
             </p>
 
             <Button

@@ -28,8 +28,8 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
-import LoadingSpinner from "../../components/common/LoadingSpinner"; // Optional, or use simple div
-import DateInput from "../../components/common/DateInput"; // Assuming this exists based on TaskForm
+import OrbitLoader from "../../components/common/LoadingSpinner"; 
+import DateInput from "../../components/common/DateInput";
 
 // ✅ Hooks
 import { useToast } from "../../hooks/useToast";
@@ -382,6 +382,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
   if (isLoading)
     return (
       <div className="flex justify-center py-12 text-gray-500">
+        <OrbitLoader /> 
         {t("common.loading")}
       </div>
     );

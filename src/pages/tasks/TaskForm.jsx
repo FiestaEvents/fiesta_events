@@ -26,7 +26,7 @@ import DateInput from "../../components/common/DateInput";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ Context
 import { useToast } from "../../hooks/useToast";
 
@@ -65,7 +65,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const [errors, setErrors] = useState({});
   const [tagInput, setTagInput] = useState("");
   const [newSubtask, setNewSubtask] = useState({ title: "" });
-
+  
   // Constants
   const TASK_PRIORITIES = [
     { value: "low", label: t("tasks.priority.low") },
@@ -568,7 +568,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   if (fetchLoading && isEditMode) {
     return (
       <div className="p-10 text-center text-gray-500">
-        {t("common.loading")}
+        <OrbitLoader /> {t("common.loading")}
       </div>
     );
   }

@@ -26,7 +26,7 @@ import { useToast } from "../../hooks/useToast";
 
 // Components
 import Button from "../../components/common/Button";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import Input from "../../components/common/Input";
 import LiveInvoicePreview from "./LiveInvoicePreview";
 
@@ -364,7 +364,7 @@ const InvoiceSettingsPage = () => {
   if (loading)
     return (
       <div className="flex h-screen justify-center items-center">
-        <LoadingSpinner size="lg" />
+        <OrbitLoader/>
       </div>
     );
 

@@ -24,7 +24,7 @@ import {
 // ✅ Generic Components
 import Button from "../../components/common/Button";
 import Badge, { StatusBadge } from "../../components/common/Badge";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import Modal from "../../components/common/Modal";
 import Input from "../../components/common/Input";
 
@@ -132,7 +132,7 @@ const PaymentDetail = () => {
     }
   };
 
-  if (loading) return <div className="flex h-screen justify-center items-center"><LoadingSpinner size="lg" /></div>;
+  if (loading) return <div className="flex h-screen justify-center items-center"><OrbitLoader /></div>;
   if (!payment) return <div className="text-center py-12">{t('payments.notFound')}</div>;
 
   const TypeIcon = payment.type === "income" ? TrendingUp : TrendingDown;

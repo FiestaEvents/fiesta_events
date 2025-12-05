@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { format, addHours, addDays } from "date-fns";
@@ -24,16 +24,16 @@ import { reminderService } from "../../api/index";
 // ✅ Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable";
+import Table from "../../components/common/NewTable"; 
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Pagination from "../../components/common/Pagination";
 import Badge from "../../components/common/Badge";
 
 // ✅ Context & Sub-components
 import { useToast } from "../../context/ToastContext";
 import ReminderDetailModal from "./ReminderDetailModal";
 import ReminderForm from "./ReminderForm";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 
 const RemindersList = () => {
   const navigate = useNavigate();
@@ -57,27 +57,68 @@ const RemindersList = () => {
     reminderName: "",
     onConfirm: null,
   });
-
   const [snoozeOptionsModal, setSnoozeOptionsModal] = useState({
     isOpen: false,
     reminder: null,
   });
 
-  // Filters
+  // Filters (Active State)
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [type, setType] = useState("all");
   const [priority, setPriority] = useState("all");
+
+  // Filter Panel (Buffered State)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [localStatus, setLocalStatus] = useState("all");
+  const [localType, setLocalType] = useState("all");
+  const [localPriority, setLocalPriority] = useState("all");
+
+  // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+  // Sync local filters
+  useEffect(() => {
+    if (isFilterOpen) {
+      setLocalStatus(status);
+      setLocalType(type);
+      setLocalPriority(priority);
+    }
+  }, [isFilterOpen, status, type, priority]);
+
+  const handleApplyFilters = () => {
+    setStatus(localStatus);
+    setType(localType);
+    setPriority(localPriority);
+    setPage(1);
+    setIsFilterOpen(false);
+    showSuccess(
+      t("reminders.notifications.filtersApplied") || "Filters applied"
+    );
+  };
+
+  const handleResetLocalFilters = () => {
+    setLocalStatus("all");
+    setLocalType("all");
+    setLocalPriority("all");
+  };
+
+  const handleClearAllFilters = () => {
+    setSearch("");
+    setStatus("all");
+    setType("all");
+    setPriority("all");
+    setPage(1);
+    showInfo(t("reminders.notifications.filtersCleared"));
+  };
+
   // Fetch Reminders
   const fetchReminders = useCallback(async () => {
     try {
       setLoading(true);
-
       const params = {
         page,
         limit,
@@ -86,10 +127,7 @@ const RemindersList = () => {
         ...(type !== "all" && { type }),
         ...(priority !== "all" && { priority }),
       };
-
       const response = await reminderService.getAll(params);
-
-      // Data extraction logic
       let data =
         response?.data?.data?.reminders ||
         response?.data?.reminders ||
@@ -97,16 +135,16 @@ const RemindersList = () => {
         [];
       if (!Array.isArray(data)) data = [];
 
-      let pTotalPages =
-        response?.data?.data?.totalPages || response?.pagination?.pages || 1;
-      let pTotalCount =
+      // ✅ FIX: Robust Calculation
+      const totalItems =
         response?.data?.data?.totalCount ||
         response?.pagination?.total ||
         data.length;
+      const calculatedTotalPages = Math.ceil(totalItems / limit);
 
       setReminders(data);
-      setTotalPages(pTotalPages);
-      setTotalCount(pTotalCount);
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+      setTotalCount(totalItems);
     } catch (err) {
       apiError(err, t("reminders.errorLoading"));
       setReminders([]);
@@ -121,8 +159,16 @@ const RemindersList = () => {
     fetchReminders();
   }, [fetchReminders]);
 
-  // --- Handlers ---
+  // ✅ FIX: Client-Side Slicing Fallback
+  const paginatedReminders = useMemo(() => {
+    if (reminders.length > limit) {
+      const startIndex = (page - 1) * limit;
+      return reminders.slice(startIndex, startIndex + limit);
+    }
+    return reminders;
+  }, [reminders, page, limit]);
 
+  // Handlers (Delete, Snooze, etc.) - same as before
   const handleDeleteConfirm = useCallback(
     async (reminderId, reminderName) => {
       try {
@@ -141,9 +187,7 @@ const RemindersList = () => {
           onConfirm: null,
         });
         if (selectedReminder?._id === reminderId) setIsDetailModalOpen(false);
-      } catch (err) {
-        // Promise handles UI feedback
-      }
+      } catch (err) {}
     },
     [fetchReminders, selectedReminder, promise, t]
   );
@@ -156,18 +200,15 @@ const RemindersList = () => {
       onConfirm: () => handleDeleteConfirm(reminderId, reminderName),
     });
   };
-
   const handleSnoozeAction = useCallback(
     async (duration, unit = "hours") => {
       const { reminder } = snoozeOptionsModal;
       if (!reminder?._id) return;
-
       try {
         setSnoozingReminders((prev) => new Set(prev).add(reminder._id));
         const now = new Date();
         const snoozeUntil =
           unit === "days" ? addDays(now, duration) : addHours(now, duration);
-
         await promise(
           reminderService.snooze(reminder._id, {
             snoozeUntil: snoozeUntil.toISOString(),
@@ -180,11 +221,9 @@ const RemindersList = () => {
             error: t("reminders.notifications.snoozeError"),
           }
         );
-
         await fetchReminders();
         setSnoozeOptionsModal({ isOpen: false, reminder: null });
       } catch (err) {
-        // Error handled by promise toast
       } finally {
         setSnoozingReminders((prev) => {
           const newSet = new Set(prev);
@@ -213,7 +252,6 @@ const RemindersList = () => {
         );
         await fetchReminders();
       } catch (err) {
-        // Error handled
       } finally {
         setSnoozingReminders((prev) => {
           const newSet = new Set(prev);
@@ -234,17 +272,6 @@ const RemindersList = () => {
         : t("reminders.notifications.created")
     );
   };
-
-  const handleClearFilters = () => {
-    setSearch("");
-    setStatus("all");
-    setType("all");
-    setPriority("all");
-    setPage(1);
-    showInfo(t("reminders.notifications.filtersCleared"));
-  };
-
-  // Helpers
   const getPriorityColor = (p) =>
     ({ urgent: "danger", high: "warning", medium: "info", low: "secondary" })[
       p
@@ -265,7 +292,6 @@ const RemindersList = () => {
       cancelled: "danger",
     })[st] || "secondary";
 
-  // Logic States
   const hasActiveFilters =
     search.trim() !== "" ||
     status !== "all" ||
@@ -275,9 +301,9 @@ const RemindersList = () => {
     !loading && reminders.length === 0 && !hasActiveFilters && hasInitialLoad;
   const showNoResults =
     !loading && reminders.length === 0 && hasActiveFilters && hasInitialLoad;
-  const showData = !loading && hasInitialLoad && reminders.length > 0;
+  const showData =
+    hasInitialLoad && (reminders.length > 0 || (loading && totalCount > 0));
 
-  // Columns
   const columns = [
     {
       header: t("reminders.columns.title"),
@@ -358,7 +384,6 @@ const RemindersList = () => {
       render: (row) => {
         const isSnoozing = snoozingReminders.has(row._id);
         const isSnoozed = row.status === "snoozed";
-
         return (
           <div className="flex justify-center gap-1">
             <Button
@@ -419,62 +444,8 @@ const RemindersList = () => {
     },
   ];
 
-  // ✅ Unified Pagination Footer
-  const renderPagination = () => {
-    const start = Math.min((page - 1) * limit + 1, totalCount);
-    const end = Math.min(page * limit, totalCount);
-
-    return (
-      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-        <div>
-          Showing{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {start}
-          </span>{" "}
-          to{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {end}
-          </span>{" "}
-          of{" "}
-          <span className="font-medium text-gray-900 dark:text-white">
-            {totalCount}
-          </span>{" "}
-          results
-        </div>
-        <div className="flex items-center gap-2">
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              pageSize={null}
-            />
-          )}
-          <div className="flex items-center gap-2">
-            <span>Per page:</span>
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
-            >
-              {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -487,7 +458,6 @@ const RemindersList = () => {
               ` • ${t("reminders.notifications.showingResults", { count: reminders.length, total: totalCount })}`}
           </p>
         </div>
-
         {!showEmptyState && (
           <Button
             variant="primary"
@@ -502,91 +472,161 @@ const RemindersList = () => {
         )}
       </div>
 
-      {/* Filters */}
       {hasInitialLoad && !showEmptyState && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4 shrink-0">
-          <Input
-            className="flex-1"
-            icon={Search}
-            placeholder={t("reminders.searchPlaceholder")}
-            value={search}
-            onChange={(e) => {
-              setPage(1);
-              setSearch(e.target.value);
-            }}
-          />
-          <div className="sm:w-40">
-            <Select
-              value={status}
-              onChange={(e) => {
-                setPage(1);
-                setStatus(e.target.value);
-              }}
-              options={[
-                { value: "all", label: t("reminders.status.all") },
-                { value: "active", label: t("reminders.status.active") },
-                { value: "completed", label: t("reminders.status.completed") },
-                { value: "snoozed", label: t("reminders.status.snoozed") },
-              ]}
-            />
+        <div className="relative mb-6 z-20">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <div className="w-full sm:max-w-md relative">
+              <Input
+                icon={Search}
+                placeholder={t("reminders.searchPlaceholder")}
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
+                className="w-full"
+              />
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Button
+                variant={hasActiveFilters ? "primary" : "outline"}
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+              >
+                <Filter className="w-4 h-4" />
+                {t("reminders.filters.advanced") || "Filters"}
+                {hasActiveFilters && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                    !
+                  </span>
+                )}
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  icon={X}
+                  onClick={handleClearAllFilters}
+                  className="text-gray-500"
+                >
+                  {t("reminders.clearFilters")}
+                </Button>
+              )}
+            </div>
           </div>
-          <div className="sm:w-40">
-            <Select
-              value={priority}
-              onChange={(e) => {
-                setPage(1);
-                setPriority(e.target.value);
-              }}
-              options={[
-                { value: "all", label: t("reminders.priority.all") },
-                { value: "urgent", label: t("reminders.priority.urgent") },
-                { value: "high", label: t("reminders.priority.high") },
-                { value: "medium", label: t("reminders.priority.medium") },
-                { value: "low", label: t("reminders.priority.low") },
-              ]}
-            />
-          </div>
-          {hasActiveFilters && (
-            <Button variant="outline" icon={X} onClick={handleClearFilters}>
-              {t("reminders.clearFilters")}
-            </Button>
+          {isFilterOpen && (
+            <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+                  {t("reminders.filters.options") || "Filter Options"}
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
+                <Select
+                  label={t("reminders.status.label")}
+                  value={localStatus}
+                  onChange={(e) => setLocalStatus(e.target.value)}
+                  options={[
+                    { value: "all", label: t("reminders.status.all") },
+                    { value: "active", label: t("reminders.status.active") },
+                    {
+                      value: "completed",
+                      label: t("reminders.status.completed"),
+                    },
+                    { value: "snoozed", label: t("reminders.status.snoozed") },
+                  ]}
+                  className="w-full"
+                />
+                <Select
+                  label={t("reminders.priority.label")}
+                  value={localPriority}
+                  onChange={(e) => setLocalPriority(e.target.value)}
+                  options={[
+                    { value: "all", label: t("reminders.priority.all") },
+                    { value: "urgent", label: t("reminders.priority.urgent") },
+                    { value: "high", label: t("reminders.priority.high") },
+                    { value: "medium", label: t("reminders.priority.medium") },
+                    { value: "low", label: t("reminders.priority.low") },
+                  ]}
+                  className="w-full"
+                />
+                <Select
+                  label={t("reminders.type.label") || "Type"}
+                  value={localType}
+                  onChange={(e) => setLocalType(e.target.value)}
+                  options={[
+                    { value: "all", label: "All Types" },
+                    { value: "event", label: "Event" },
+                    { value: "payment", label: "Payment" },
+                    { value: "task", label: "Task" },
+                    { value: "maintenance", label: "Maintenance" },
+                    { value: "followup", label: "Follow Up" },
+                  ]}
+                  className="w-full"
+                />
+              </div>
+              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleResetLocalFilters}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                >
+                  {t("reminders.filters.reset") || "Reset"}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleApplyFilters}
+                  className="px-6"
+                >
+                  {t("reminders.filters.apply") || "Apply Filters"}
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       )}
 
-      {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
-        {/* Loading */}
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+            <OrbitLoader />
             <p className="text-gray-500 dark:text-gray-400">
               {t("common.loading")}
             </p>
           </div>
         )}
-
-        {/* Data Table */}
         {showData && (
-          <>
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <Table
-                columns={columns}
-                data={reminders}
-                loading={loading}
-                onRowClick={(row) => {
-                  setSelectedReminder(row);
-                  setIsDetailModalOpen(true);
-                }}
-                striped
-                hoverable
-              />
-            </div>
-            {renderPagination()}
-          </>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <Table
+              columns={columns}
+              // ✅ Pass sliced data
+              data={paginatedReminders}
+              loading={loading}
+              onRowClick={(row) => {
+                setSelectedReminder(row);
+                setIsDetailModalOpen(true);
+              }}
+              striped
+              hoverable
+              pagination={true}
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalCount}
+              pageSize={limit}
+              onPageChange={setPage}
+              onPageSizeChange={(newSize) => {
+                setLimit(newSize);
+                setPage(1);
+              }}
+              pageSizeOptions={[10, 25, 50, 100]}
+            />
+          </div>
         )}
-
-        {/* ✅ NO RESULTS */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -598,13 +638,11 @@ const RemindersList = () => {
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
               {t("reminders.notifications.filtersCleared")}
             </p>
-            <Button onClick={handleClearFilters} variant="outline" icon={X}>
+            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("reminders.clearFilters")}
             </Button>
           </div>
         )}
-
-        {/* ✅ EMPTY STATE */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -635,7 +673,6 @@ const RemindersList = () => {
         )}
       </div>
 
-      {/* Modals */}
       <ReminderDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
@@ -647,7 +684,6 @@ const RemindersList = () => {
         }}
         refreshData={fetchReminders}
       />
-
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -664,7 +700,6 @@ const RemindersList = () => {
           onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
-
       <Modal
         isOpen={snoozeOptionsModal.isOpen}
         onClose={() => setSnoozeOptionsModal({ isOpen: false, reminder: null })}
@@ -698,7 +733,6 @@ const RemindersList = () => {
           </Button>
         </div>
       </Modal>
-
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() => setConfirmationModal((p) => ({ ...p, isOpen: false }))}

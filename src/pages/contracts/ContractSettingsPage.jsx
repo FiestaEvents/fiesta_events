@@ -25,7 +25,7 @@ import {
   X,
   FolderOpen,
 } from "lucide-react";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 // ✅ Generic Components
 import Badge, { StatusBadge } from "../../components/common/Badge";
 import Button from "../../components/common/Button";
@@ -662,7 +662,7 @@ const InvoicesPage = () => {
       <div className="flex-1 flex flex-col relative">
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+            <OrbitLoader />
             <p className="text-gray-500 dark:text-gray-400">
               {t("invoices.create.loading")}
             </p>

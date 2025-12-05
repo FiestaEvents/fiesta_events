@@ -214,6 +214,17 @@
     "lowStockAlerts": "Low Stock Alerts"
   },
   "common": { 
+    "noResults": "No results found",
+    "clearFilters": "Clear Filters",
+    "all": "All",
+    "date": "Date",
+    "time": "Time",
+    "earnings": "Earnings",
+    "rating": "Rating",
+    "pending": "Pending",
+    "fixErrors": "Please fix the errors below",
+    "saveChanges": "Save Changes",
+    "eventsCount": "Events Count",
     "exportPDF": "Export PDF",
     "updateNow":"Update Now",
     "update":"Update",
@@ -238,7 +249,6 @@
     "logoAlt": "Fiesta Logo",
     "logoTitle": "Fiesta Events",
     "filtersCleared": "Filters cleared",
-    "actions": "Actions",
     "clear": "Clear",
     "warning": "Warning",
     "noResultsDesc": "No results found matching your criteria",
@@ -312,6 +322,14 @@
     "pagination": {
       "info": "Showing {{start}} to {{end}} of {{total}} results",
       "perPage": "Per page:"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "reset": "Reset",
+      "apply": "Apply",
+      "clear": "Clear",
+      "clearFilters": "Clear Filters"
     }
   },
   "home": {
@@ -362,7 +380,9 @@
       "clear": "Clear",
       "clearAllFilters": "Clear All Filters",
       "cancel": "Cancel",
-      "deleteClient": "Delete Client"
+      "deleteClient": "Delete Client",
+      "reset": "Reset",
+      "apply": "Apply"
     },
     "search": {
       "placeholder": "Search clients...",
@@ -373,7 +393,9 @@
       "allStatus": "All Status",
       "activeFilters": "Active filters:",
       "searchLabel": "Search: {{search}}",
-      "statusLabel": "Status: {{status}}"
+      "statusLabel": "Status: {{status}}",
+      "advanced": "Advanced Filters",
+      "filterOptions": "Filter Options"
     },
     "status": {
       "active": "Active",
@@ -415,7 +437,8 @@
       "deleteError": "Failed to delete {{name}}",
       "updateSuccess": "Client updated successfully",
       "createSuccess": "Client created successfully",
-      "filtersCleared": "Filters cleared"
+      "filtersCleared": "Filters cleared",
+      "filtersApplied": "Filters applied successfully"
     },
     "modal": {
       "addTitle": "Add New Client",
@@ -508,7 +531,10 @@
       "outstanding": "Outstanding",
       "eventHistory": "Event History",
       "activityTimeline": "Activity Timeline",
-      "guests": "{{count}} guests"
+      "guests": "{{count}} guests",
+      "email": "Email",
+      "phone": "Phone",
+      "company": "Company"
     },
     "status": {
       "pending": "Pending",
@@ -673,6 +699,7 @@
     "close": "Close",
     "client": "Client",
     "guests": "guests",
+    "totalAmount": "Total Amount",
     "actions": {
       "delete": {
         "button": "Delete",
@@ -730,7 +757,6 @@
       "pdfGenerated": "PDF downloaded successfully"
     }
   },
-  
   "eventActivityTab": {
     "title": "Activity Timeline",
     "subtitle": "Track all changes and updates to this event",
@@ -795,12 +821,19 @@
     },
     "partner": {
       "unknown": "Unknown Partner",
-      "viewDetails": "View Partner Details"
+      "viewDetails": "View Partner Details",
+      "service": "Service",
+      "cost": "Cost",
+      "hours": "Hours"
     },
     "status": {
       "confirmed": "Confirmed",
       "pending": "Pending",
       "cancelled": "Cancelled"
+    },
+    "summary": {
+      "title": "Financial Summary",
+      "totalCost": "Total Cost"
     }
   },
   "eventInfo": {
@@ -880,7 +913,13 @@
       "saveFailed": "Failed to save event.",
       "draftRestored": "Draft restored successfully.",
       "clientCreated": "Client {{name}} created and selected.",
-      "clientCreationFailed": "Failed to create client."
+      "clientCreationFailed": "Failed to create client.",
+      "eventUpdated": "Event updated successfully",
+      "eventCreated": "Event created successfully",
+      "eventDeleted": "Event deleted successfully",
+      "deleteEvent": "Delete Event",
+      "confirmMessage": "Are you sure you want to delete",
+      "warningMessage": "This action is irreversible and all associated data will be permanently deleted."
     },
     "step1": {
       "eventDetails": "Event Details",
@@ -946,7 +985,8 @@
       "additionalServices": "Additional Services",
       "adjustments": "Adjustments",
       "selectPartners": "Select Partners to Add",
-      "createNewPartner": "Create New Partner"
+      "createNewPartner": "Create New Partner",
+      "eventSuppliesDescription": "Manage supplies for this event"
     },
     "step4": {
       "recordPayment": "Record Initial Payment",
@@ -991,7 +1031,11 @@
         "allCategories": "All Categories",
         "allStatus": "All Status",
         "active": "Active",
-        "inactive": "Inactive"
+        "inactive": "Inactive",
+        "advanced": "Advanced Filters",
+        "options": "Options",
+        "reset": "Reset",
+        "apply": "Apply"
       }
     },
     "table": {
@@ -1031,7 +1075,11 @@
       "added": "Partner added successfully",
       "updated": "Partner updated successfully",
       "deleted": "Partner deleted successfully",
-      "filtersCleared": "Filters cleared"
+      "filtersCleared": "Filters cleared",
+      "filtersApplied": "Filters applied"
+    },
+    "loading": {
+      "initial": "Loading partners..."
     }
   },
   "partnerForm": {
@@ -1297,10 +1345,27 @@
       "high": "High",
       "urgent": "Urgent"
     },
+    "category": {
+      "event_preparation": "Event Preparation",
+      "marketing": "Marketing",
+      "maintenance": "Maintenance",
+      "client_followup": "Client Follow-up",
+      "partner_coordination": "Partner Coordination",
+      "administrative": "Administrative",
+      "finance": "Finance",
+      "setup": "Setup",
+      "cleanup": "Cleanup",
+      "other": "Other"
+    },
     "filters": {
       "allStatus": "All Statuses",
       "allPriorities": "All Priorities",
-      "clearFilters": "Clear Filters"
+      "clearFilters": "Clear Filters",
+      "advanced": "Advanced Filters",
+      "filterOptions": "Filter Options",
+      "reset": "Reset",
+      "apply": "Apply",
+      "noResultsDesc": "No tasks match your filters"
     },
     "table": {
       "title": "Task / Description",
@@ -1311,8 +1376,31 @@
       "actions": "Actions"
     },
     "form": {
+      "title": "Task / Description",
       "createTitle": "Create New Task",
-      "editTitle": "Edit Task"
+      "editTitle": "Edit Task",
+      "steps": {
+        "basicInfo": "Basic Info",
+        "planning": "Planning",
+        "checklist": "Checklist"
+      },
+      "fields": {
+       "title": "Title",
+        "titlePlaceholder": "Enter task title",
+        "description": "Description",
+        "descriptionPlaceholder": "Enter task details",
+        "priority": "Priority",
+        "status": "Status",
+        "category": "Category"
+      } ,
+      "buttons": {
+        "next": "Next",
+        "updateNow": "Update Now"
+      },
+      "validation": {
+        "titleRequired": "Title is required",
+        "fixErrors": "Please fix the errors"
+      }
     },
     "messages": {
       "noResults": "No tasks found",
@@ -1346,18 +1434,20 @@
     },
     "toasts": {
       "status": {
-        "error": "Failed to update status"
+        "error": "Failed to update status",
+        "success": "Task status updated"
       }
     },
     "notifications": {
       "archiving": "Archiving task...",
       "restoring": "Restoring task...",
-      "deleting": "Deleting task..."
+      "deleting": "Deleting task...",
+      "filtersApplied": "Filters applied"
     },
-      "detail": {
-        "toasts": { 
-          "taskCreated": "Task created successfully",
-          "taskUpdated": "Task updated successfully",
+    "detail": {
+      "toasts": { 
+        "taskCreated": "Task created successfully",
+        "taskUpdated": "Task updated successfully",
           "taskDeleted": "Task deleted successfully",
           "taskArchived": "Task archived successfully"
         }          
@@ -1436,24 +1526,33 @@
     }
   },
   "reminders": {
+    "clearFilters":"Clear Filters",
     "subtitle": "Manage and track your important notifications",
-  "searchPlaceholder": "Search reminders...",
-  "columns": {
-    "title": "Title",
-    "description": "Description",
-    "dateTime": "Date & Time",
+    "searchPlaceholder": "Search reminders...",
+    "columns": {
+      "title": "Title",
+      "description": "Description",
+      "dateTime": "Date & Time",
     "type": "Type",
     "priority": "Priority",
     "status": "Status",
     "actions": "Actions"
   },
    "status": {
+    "label": "Status",
     "all": "All Statuses",
     "active": "Active",
     "completed": "Completed",
     "snoozed": "Snoozed"
   },
+   "filters": {
+      "advanced": "Advanced Filters",
+      "apply": "Apply",
+      "reset": "Reset",
+      "options": "Filter Options"
+    },
   "priority": {
+    "label": "Priority",
     "all": "All Priorities",
     "low": "Low",
     "medium": "Medium",
@@ -1462,7 +1561,7 @@
   },
   "form": {
     "createTitle": "Create New Reminder",
-     "basicInfo": "Basic Information",
+    "basicInfo": "Basic Information",
     "relatedItems": "Related Items",
     "notifications": "Notifications",
     "recurrence": "Recurrence",
@@ -1520,12 +1619,25 @@
     },
     "notifications": {
       "deleteConfirm": "Are you sure you want to delete this reminder?",
-      "showingResults": "Showing {{count}} results"
+      "showingResults": "Showing {{count}} results",
+      "filtersApplied": "Filters applied",
+      "filtersCleared":"Filters cleared",
+      "updated": "Reminder updated",
+      "deleting": "Deleting reminder...",
+      "deleted": "Reminder deleted successfully",
+      "deleteError": "Failed to delete reminder",
+      "snoozing": "Snoozing reminder...",
+      "snoozed": "Reminder snoozed",
+      "snoozeError": "Failed to snooze reminder",
+      "activating": "Activating reminder...",
+      "unsnoozed": "Reminder activated",
+      "activateError": "Failed to activate reminder"
     },
     "validation": {
       "notificationMethodsRequired": "At least one notification method is required"
     },
     "type": {
+      "label": "Type",
       "event": "Event",
       "payment": "Payment",
       "task": "Task",
@@ -1538,6 +1650,7 @@
       "other": "Other"
     },
     "recurrence": {
+      "label": "Recurrence",
       "none": "None",
       "daily": "Daily",
       "weekly": "Weekly",
@@ -1582,7 +1695,12 @@
       "status": "Status",
       "method": "Method",
       "clearFilters": "Clear Filters",
-      "activeFilters": "Active filters"
+      "activeFilters": "Active filters",
+       "advanced": "Advanced Filters",
+      "options": "Filter Options",
+      "reset": "Reset",
+      "apply": "Apply",
+      "noResultsDesc": "No payments match your filters"
     },
     "types": {
       "income": "Income",
@@ -1614,7 +1732,8 @@
       "noPayments": "No payments yet",
       "noResults": "No payments found",
       "noResultsDescription": "No payments match your current search or filter criteria",
-      "status": "Status"
+      "status": "Status",
+      "empty": "No payments found"
     },
     "stats": {
       "income": "Income",
@@ -1654,6 +1773,8 @@
       }
     },
     "form": {
+      "createTitle": "Create Payment",
+      "editTitle": "Edit Payment",
       "type": "Payment Type",
       "amount": "Amount",
       "method": "Payment Method",
@@ -1716,7 +1837,9 @@
       "refunding": "Processing refund...",
       "invalidData": "Cannot view payment: Invalid data",
       "loadEventsError": "Failed to load client events",
-      "loadOptionsError": "Failed to load form options"
+      "loadOptionsError": "Failed to load form options",
+      "filtersApplied": "Filters applied",
+      "deleteConfirm": "Are you sure you want to delete this payment record?"
     },
     "detail": {
       "title": "Payment Details",
@@ -1934,6 +2057,10 @@
     },
     "types": {
       "available": "Available Reports",
+      "revenueAnalysis": {
+        "name": "Revenue Analysis",
+        "description": "Revenue analysis by category and time period"
+      },
       "profitLoss": {
         "name": "Profit & Loss Statement",
         "description": "Revenue, expenses, and net profit overview"
@@ -2025,7 +2152,8 @@
     },
     "deleteModal": {
       "title": "Delete Transaction",
-      "message": "Are you sure you want to delete this transaction? This action cannot be undone."
+      "message": "Are you sure you want to delete this transaction? This action cannot be undone.",
+      "warning": "Are you sure you want to delete this transaction? This action cannot be undone."
     },
     "categories": {
       "event_revenue": "Event Revenue",
@@ -2260,7 +2388,11 @@
       "status": "Status",
       "startDate": "Start Date",
       "endDate": "End Date",
-      "clear": "Clear Filters"
+      "clear": "Clear Filters",
+      "options": "Filter Options",
+      "reset": "Reset",
+      "apply": "Apply",
+      "applied": "Filters Applied"
     },
     "status": {
       "all": "All Status",
@@ -2997,7 +3129,11 @@
       "emptyDesc": "Create your first contract to get started. You can choose between a Client contract (for revenue) or a Partner contract (for expenses).",
       "filter": {
         "allStatus": "All Status",
-        "allTypes": "All Types"
+        "allTypes": "All Types",
+        "advanced": "Advanced Filters",
+        "options": "Filter Options",
+        "status": "Status",
+        "type": "Type"
       },
       "columns": {
         "info": "Contract Info",
@@ -3012,7 +3148,8 @@
         "deleteError": "Failed to delete contract",
         "downloadStart": "Preparing download...",
         "downloadSuccess": "Download started",
-        "downloadError": "Failed to download PDF"
+        "downloadError": "Failed to download PDF",
+        "filtersApplied": "Contracts filtered"
       },
       "dialog": {
         "deleteTitle": "Delete Contract",
@@ -3221,7 +3358,15 @@
       "allCategories": "All Categories",
       "allStock": "All Stock Levels",
       "lowStock": "Low Stock",
-      "outOfStock": "Out of Stock"
+      "outOfStock": "Out of Stock",
+      "advanced": "Advanced Filters",
+      "options": "Filter Options",
+      "category": "Category",
+      "stockStatus": "Stock Status",
+      "status": "Status",
+      "reset": "Reset",
+      "apply": "Apply",
+      "applied": "Filters Applied"
     },
     "table": {
       "name": "Item Name",
@@ -3415,7 +3560,8 @@
       "created": "Supply created successfully",
       "updated": "Supply updated successfully",
       "loadError": "Failed to load supply data",
-      "categoryCreateError": "Failed to create category"
+      "categoryCreateError": "Failed to create category",
+      "filtersApplied": "Supplies list filtered"
     },
     "details": {
       "inventoryInfo": "Inventory Information"

@@ -21,7 +21,7 @@ import { financeService, paymentService } from "../../api/index";
 // ✅ Generic Components & Utils
 import Button from "../../components/common/Button";
 import Select from "../../components/common/Select";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
 import formatCurrency from "../../utils/formatCurrency";
 
@@ -165,7 +165,7 @@ const Finance = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
+        <OrbitLoader />
       </div>
     );
   }

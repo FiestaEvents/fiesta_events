@@ -9,7 +9,7 @@ import { venueService, authService, venueSpacesService } from "../../api/index";
 import { useToast } from "../../context/ToastContext.jsx";
 import { useTranslation } from "react-i18next";
 import Badge from "../../components/common/Badge";
-
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import {
   Upload,
   Move,
@@ -1741,7 +1741,7 @@ const VenueSettings = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <OrbitLoader />
           <p className="text-gray-600">{t("venueSettings.common.loading")}</p>
         </div>
       </div>

@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 // ✅ Imports
 import { clientService, partnerService, eventService, contractService } from "../../api/index";
 import { useToast } from "../../hooks/useToast";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import LiveContractPreview from "./LiveContractPreview";
 
 // --- CONSTANTS ---
@@ -274,7 +274,7 @@ const ContractFormPage = () => {
   const isPartnerMode = formData.contractType === 'partner';
   const themeColor = isPartnerMode ? "orange" : "orange";
 
-  if (fetchLoading) return <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><LoadingSpinner /></div>;
+  if (fetchLoading) return <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><OrbitLoader /></div>;
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden text-slate-800 dark:text-slate-100 font-sans" dir={isRTL ? "rtl" : "ltr"}>

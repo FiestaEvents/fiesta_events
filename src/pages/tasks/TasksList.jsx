@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import {
@@ -19,6 +19,7 @@ import {
   Calendar,
   Eye,
   FolderOpen,
+  Filter,
 } from "lucide-react";
 
 // ✅ API & Services
@@ -27,16 +28,17 @@ import { taskService } from "../../api/index";
 // ✅ Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable";
+import Table from "../../components/common/NewTable"; // Using NewTable
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Pagination from "../../components/common/Pagination";
 import Badge from "../../components/common/Badge";
+// Pagination import removed as it is now internal to Table
 
 // ✅ Context & Sub-components
 import { useToast } from "../../context/ToastContext";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskForm from "./TaskForm";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 
 // ================================================================
 // CONSTANTS
@@ -168,13 +170,9 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString("en-GB");
 };
 
-const getStoredViewMode = () => {
-  return localStorage.getItem("tasksViewMode") || VIEW_MODES.KANBAN;
-};
-
-const setStoredViewMode = (mode) => {
-  localStorage.setItem("tasksViewMode", mode);
-};
+const getStoredViewMode = () =>
+  localStorage.getItem("tasksViewMode") || VIEW_MODES.KANBAN;
+const setStoredViewMode = (mode) => localStorage.setItem("tasksViewMode", mode);
 
 // ================================================================
 // MAIN COMPONENT
@@ -197,10 +195,16 @@ const TasksList = () => {
   const [viewMode, setViewMode] = useState(getStoredViewMode);
   const [showArchived, setShowArchived] = useState(false);
 
-  // Filter States
+  // Filter States (Active)
   const [filters, setFilters] = useState(INITIAL_STATE);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Filter Panel (Buffered State)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [localStatus, setLocalStatus] = useState("all");
+  const [localPriority, setLocalPriority] = useState("all");
+  const [localCategory, setLocalCategory] = useState("all");
 
   // Confirmation Modal
   const [confirmationModal, setConfirmationModal] = useState({
@@ -212,10 +216,46 @@ const TasksList = () => {
     type: "info",
   });
 
-  // ============================================================
-  // COMPUTED VALUES (Stats)
-  // ============================================================
+  // Sync local filters with active filters when panel opens
+  useEffect(() => {
+    if (isFilterOpen) {
+      setLocalStatus(filters.status);
+      setLocalPriority(filters.priority);
+      setLocalCategory(filters.category);
+    }
+  }, [isFilterOpen, filters]);
 
+  const handleApplyFilters = () => {
+    setFilters((prev) => ({
+      ...prev,
+      status: localStatus,
+      priority: localPriority,
+      category: localCategory,
+      page: 1,
+    }));
+    setIsFilterOpen(false);
+    showSuccess(t("tasks.notifications.filtersApplied") || "Filters applied");
+  };
+
+  const handleResetLocalFilters = () => {
+    setLocalStatus("all");
+    setLocalPriority("all");
+    setLocalCategory("all");
+  };
+
+  const handleClearAllFilters = () => {
+    setFilters(INITIAL_STATE);
+  };
+
+  const updateFilter = useCallback((key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(key !== "page" && { page: 1 }),
+    }));
+  }, []);
+
+  // Stats
   const stats = {
     total: tasks.length,
     pending: tasks.filter((t) => t.status === "pending").length,
@@ -280,7 +320,6 @@ const TasksList = () => {
         ? await taskService.getArchived(params)
         : await taskService.getAll(params);
 
-      // Normalize Response
       let data =
         response?.data?.data?.tasks ||
         response?.data?.tasks ||
@@ -288,16 +327,24 @@ const TasksList = () => {
         [];
       if (!Array.isArray(data)) data = [];
 
-      let pTotalPages =
-        response?.data?.data?.totalPages || response?.pagination?.pages || 1;
-      let pTotalCount =
+      // ✅ FIX: Robust Calculation
+      let totalItems =
         response?.data?.data?.totalCount ||
         response?.pagination?.total ||
         data.length;
 
+      // For Kanban we fetch 100, so we use data length if pagination info is missing
+      if (viewMode === VIEW_MODES.KANBAN && totalItems < data.length) {
+        totalItems = data.length;
+      }
+
+      const calculatedTotalPages = Math.ceil(
+        totalItems / (viewMode === VIEW_MODES.KANBAN ? 100 : filters.limit)
+      );
+
       setTasks(data);
-      setTotalPages(pTotalPages);
-      setTotalCount(pTotalCount);
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+      setTotalCount(totalItems);
     } catch (err) {
       console.error("Fetch tasks error:", err);
       setError(t("tasks.messages.error.load"));
@@ -317,21 +364,18 @@ const TasksList = () => {
     setStoredViewMode(viewMode);
   }, [viewMode]);
 
+  // ✅ FIX: Client-Side Slicing Fallback (Only for List View)
+  const paginatedTasks = useMemo(() => {
+    if (viewMode === VIEW_MODES.LIST && tasks.length > filters.limit) {
+      const startIndex = (filters.page - 1) * filters.limit;
+      return tasks.slice(startIndex, startIndex + filters.limit);
+    }
+    return tasks;
+  }, [tasks, filters.page, filters.limit, viewMode]);
+
   // ============================================================
   // HANDLERS
   // ============================================================
-
-  const updateFilter = useCallback((key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-      ...(key !== "page" && { page: 1 }),
-    }));
-  }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setFilters(INITIAL_STATE);
-  }, []);
 
   const handleFormSuccess = useCallback(() => {
     fetchTasks();
@@ -356,7 +400,6 @@ const TasksList = () => {
     const newStatus = destination.droppableId;
     const oldStatus = source.droppableId;
 
-    // Optimistic UI Update
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
         task._id === draggableId ? { ...task, status: newStatus } : task
@@ -371,7 +414,6 @@ const TasksList = () => {
         })
       );
     } catch (error) {
-      // Revert UI on failure
       setTasks((prevTasks) =>
         prevTasks.map((task) =>
           task._id === draggableId ? { ...task, status: oldStatus } : task
@@ -381,14 +423,11 @@ const TasksList = () => {
     }
   };
 
-  // Logic for UI States
   const hasActiveFilters =
     filters.search.trim() !== "" ||
     filters.status !== "all" ||
     filters.priority !== "all" ||
     filters.category !== "all";
-
-  // Empty State: No loading, no error, 0 tasks, no filters, NOT viewing archive
   const showEmptyState =
     !loading &&
     !error &&
@@ -396,8 +435,6 @@ const TasksList = () => {
     !hasActiveFilters &&
     !showArchived &&
     hasInitialLoad;
-
-  // No Results: No loading, no error, 0 tasks, BUT filters active or in archive
   const showNoResults =
     !loading &&
     !error &&
@@ -405,7 +442,6 @@ const TasksList = () => {
     (hasActiveFilters || showArchived) &&
     hasInitialLoad;
 
-  // Confirmation Modal Handler
   const showConfirmation = useCallback(
     (title, message, confirmText, type, onConfirm) => {
       setConfirmationModal({
@@ -638,49 +674,6 @@ const TasksList = () => {
     },
   ];
 
-  // ✅ Unified Pagination Footer
-  const renderPagination = () => {
-    const start = Math.min((filters.page - 1) * filters.limit + 1, totalCount);
-    const end = Math.min(filters.page * filters.limit, totalCount);
-
-    return (
-      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-        <div>
-          {/* ✅ CHANGED: Use translation key */}
-          {t("common.pagination.info", { start, end, total: totalCount })}
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={filters.page}
-              totalPages={totalPages}
-              onPageChange={(page) => updateFilter("page", page)}
-              pageSize={null}
-            />
-          )}
-          <div className="flex items-center gap-2">
-            {/* ✅ CHANGED: Use translation key */}
-            <span>{t("common.pagination.perPage")}</span>
-            <select
-              value={filters.limit}
-              onChange={(e) => {
-                updateFilter("limit", Number(e.target.value));
-                updateFilter("page", 1);
-              }}
-              className="bg-white border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 py-1"
-            >
-              {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
       {/* Header */}
@@ -753,7 +746,7 @@ const TasksList = () => {
         )}
       </div>
 
-      {/* Stats (Hide in empty/archive state) */}
+      {/* Stats */}
       {!showEmptyState &&
         !showArchived &&
         hasInitialLoad &&
@@ -778,58 +771,139 @@ const TasksList = () => {
           </div>
         )}
 
-      {/* Filters */}
+      {/* ✅ ENHANCED FILTERS (List View) */}
       {!showEmptyState && hasInitialLoad && (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4 shrink-0">
-          <Input
-            className="flex-1"
-            icon={Search}
-            placeholder={t("tasks.searchPlaceholder")}
-            value={filters.search}
-            onChange={(e) => updateFilter("search", e.target.value)}
-          />
-          <div className="sm:w-40">
-            <Select
-              value={filters.status}
-              onChange={(e) => updateFilter("status", e.target.value)}
-              options={[
-                { value: "all", label: t("tasks.filters.allStatus") },
-                { value: "pending", label: t("tasks.status.pending") },
-                { value: "todo", label: t("tasks.status.todo") },
-                { value: "in_progress", label: t("tasks.status.in_progress") },
-                { value: "blocked", label: t("tasks.status.blocked") },
-                { value: "completed", label: t("tasks.status.completed") },
-              ]}
-            />
+        <div className="relative mb-6 z-20">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            {/* Search Bar */}
+            <div className="w-full sm:max-w-md relative">
+              <Input
+                icon={Search}
+                placeholder={t("tasks.searchPlaceholder")}
+                value={filters.search}
+                onChange={(e) => updateFilter("search", e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Advanced Filters Button */}
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Button
+                variant={hasActiveFilters ? "primary" : "outline"}
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+              >
+                <Filter className="w-4 h-4" />
+                {t("tasks.filters.advanced") || "Filters"}
+                {hasActiveFilters && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                    !
+                  </span>
+                )}
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  icon={X}
+                  onClick={handleClearAllFilters}
+                  className="text-gray-500"
+                >
+                  {t("tasks.filters.clearFilters")}
+                </Button>
+              )}
+            </div>
           </div>
-          <div className="sm:w-40">
-            <Select
-              value={filters.priority}
-              onChange={(e) => updateFilter("priority", e.target.value)}
-              options={[
-                { value: "all", label: t("tasks.filters.allPriorities") },
-                { value: "low", label: t("tasks.priority.low") },
-                { value: "medium", label: t("tasks.priority.medium") },
-                { value: "high", label: t("tasks.priority.high") },
-                { value: "urgent", label: t("tasks.priority.urgent") },
-              ]}
-            />
-          </div>
-          {hasActiveFilters && (
-            <Button variant="outline" icon={X} onClick={handleClearFilters}>
-              {t("tasks.filters.clearFilters")}
-            </Button>
+
+          {/* Expandable Filter Panel */}
+          {isFilterOpen && (
+            <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+                  {t("tasks.filters.filterOptions") || "Filter Options"}
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
+                <Select
+                  label={t("tasks.filters.allStatus")}
+                  value={localStatus}
+                  onChange={(e) => setLocalStatus(e.target.value)}
+                  options={[
+                    { value: "all", label: t("tasks.filters.allStatus") },
+                    { value: "pending", label: t("tasks.status.pending") },
+                    { value: "todo", label: t("tasks.status.todo") },
+                    {
+                      value: "in_progress",
+                      label: t("tasks.status.in_progress"),
+                    },
+                    { value: "blocked", label: t("tasks.status.blocked") },
+                    { value: "completed", label: t("tasks.status.completed") },
+                  ]}
+                  className="w-full"
+                />
+                <Select
+                  label={t("tasks.filters.allPriorities")}
+                  value={localPriority}
+                  onChange={(e) => setLocalPriority(e.target.value)}
+                  options={[
+                    { value: "all", label: t("tasks.filters.allPriorities") },
+                    { value: "low", label: t("tasks.priority.low") },
+                    { value: "medium", label: t("tasks.priority.medium") },
+                    { value: "high", label: t("tasks.priority.high") },
+                    { value: "urgent", label: t("tasks.priority.urgent") },
+                  ]}
+                  className="w-full"
+                />
+                <Select
+                  label={t("tasks.category") || "Category"}
+                  value={localCategory}
+                  onChange={(e) => setLocalCategory(e.target.value)}
+                  options={[
+                    { value: "all", label: "All Categories" },
+                    { value: "design", label: "Design" },
+                    { value: "development", label: "Development" },
+                    { value: "marketing", label: "Marketing" },
+                    { value: "finance", label: "Finance" },
+                    { value: "other", label: "Other" },
+                  ]}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Footer Actions */}
+              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleResetLocalFilters}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                >
+                  {t("tasks.filters.reset") || "Reset"}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleApplyFilters}
+                  className="px-6"
+                >
+                  {t("tasks.filters.apply") || "Apply Filters"}
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       )}
 
       {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
-        {/* Loading */}
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
-            <p className="text-gray-500 dark:text-gray-400">
+            <OrbitLoader />
+            <p className="text-gray-500 dark:text-gray-400 mt-4 font-medium animate-pulse">
               {t("common.loading")}
             </p>
           </div>
@@ -840,22 +914,32 @@ const TasksList = () => {
           !showEmptyState &&
           !showNoResults &&
           hasInitialLoad && (
-            <>
-              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <Table
-                  columns={tableColumns}
-                  data={tasks}
-                  loading={loading}
-                  onRowClick={(row) => {
-                    setSelectedTask(row);
-                    setIsDetailModalOpen(true);
-                  }}
-                  striped
-                  hoverable
-                />
-              </div>
-              {renderPagination()}
-            </>
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+              <Table
+                columns={tableColumns}
+                // ✅ Pass sliced data
+                data={paginatedTasks}
+                loading={loading}
+                onRowClick={(row) => {
+                  setSelectedTask(row);
+                  setIsDetailModalOpen(true);
+                }}
+                striped
+                hoverable
+                // Pagination Props
+                pagination={true}
+                currentPage={filters.page}
+                totalPages={totalPages}
+                totalItems={totalCount}
+                pageSize={filters.limit}
+                onPageChange={(page) => updateFilter("page", page)}
+                onPageSizeChange={(newSize) => {
+                  updateFilter("limit", newSize);
+                  updateFilter("page", 1);
+                }}
+                pageSizeOptions={[10, 25, 50, 100]}
+              />
+            </div>
           )}
 
         {/* Kanban View */}
@@ -990,7 +1074,6 @@ const TasksList = () => {
             </div>
           )}
 
-        {/* ✅ NO RESULTS */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -1002,13 +1085,12 @@ const TasksList = () => {
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
               {t("tasks.messages.noResultsDescription")}
             </p>
-            <Button onClick={handleClearFilters} variant="outline" icon={X}>
+            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("tasks.filters.clearFilters")}
             </Button>
           </div>
         )}
 
-        {/* ✅ EMPTY STATE */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -1041,7 +1123,6 @@ const TasksList = () => {
         )}
       </div>
 
-      {/* Modals */}
       <TaskDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
@@ -1054,7 +1135,6 @@ const TasksList = () => {
         refreshData={fetchTasks}
         showArchived={showArchived}
       />
-
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -1069,7 +1149,6 @@ const TasksList = () => {
           onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
-
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() =>
@@ -1079,7 +1158,6 @@ const TasksList = () => {
         size="sm"
       >
         <div className="p-6 text-center">
-          {/* ... Modal content matching reference ... */}
           <div
             className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmationModal.type === "danger" ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}
           >

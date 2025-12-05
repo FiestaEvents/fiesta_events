@@ -27,7 +27,7 @@ import { useToast } from "../../hooks/useToast";
 // Components
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import Modal from "../../components/common/Modal";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
@@ -171,7 +171,7 @@ const SupplyDetail = () => {
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+        <OrbitLoader />
       </div>
     );
   if (!supply) return null;

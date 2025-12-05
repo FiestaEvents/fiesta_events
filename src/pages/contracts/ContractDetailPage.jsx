@@ -35,7 +35,7 @@ import formatCurrency from "../../utils/formatCurrency";
 
 // Components
 import Button from "../../components/common/Button";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 // --- SUB-COMPONENTS ---
@@ -266,7 +266,7 @@ const ContractDetailPage = () => {
   if (loading)
     return (
       <div className="flex h-screen items-center justify-center">
-        <LoadingSpinner size="lg" />
+        <OrbitLoader />
       </div>
     );
   if (!contract) return null;

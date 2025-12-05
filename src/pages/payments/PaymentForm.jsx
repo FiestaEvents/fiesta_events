@@ -20,7 +20,7 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 
 // ✅ Utils & Hooks
 import { useToast } from "../../hooks/useToast";
@@ -298,7 +298,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
   if (loadingData)
     return (
       <div className="flex h-96 justify-center items-center">
-        <LoadingSpinner size="lg" />
+        <OrbitLoader />
       </div>
     );
 

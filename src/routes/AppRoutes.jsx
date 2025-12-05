@@ -5,7 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import ProtectedRoute from "./ProtectedRoutes.jsx";
 
 // ✅ Keep LoadingSpinner static so it's available immediately
-import LoadingSpinner from "../components/common/LoadingSpinner.jsx";
+import OrbitLoader from "../components/common/LoadingSpinner.jsx";
 import PageTransition from "../components/common/PageTransition.jsx";
 import FiestaVenue from "../pages/website/fiesta-venue.jsx";
 
@@ -127,7 +127,7 @@ const AppRoutes = () => {
   // Center the spinner for the initial load
   const LoadingFallback = () => (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
-      <OrbitLoader size="lg" />
+      <OrbitLoader/>
     </div>
   );
 
