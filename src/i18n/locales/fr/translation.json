@@ -1622,6 +1622,10 @@
     }
   },
   "reminders": {
+    "dateTimeFormat": "{{date}} à {{time}}",
+    "errorLoading": "Échec du chargement des rappels",
+    "noReminders": "Aucun rappel trouvé",
+    "createFirst": "Créer votre premier rappel",
     "backToReminders": "Retour",
     "loadingDetails": "Chargement des détails...",
     "markComplete": "Marquer comme terminé",
@@ -1665,7 +1669,16 @@
     "actions": {
       "unsnooze": "Annuler le report",
       "edit": "Modifier",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "markDone": "Marquer comme fait",
+      "reschedule": "Reporter",
+      "viewFull": "Voir les détails complets",
+      "back": "Retour aux rappels",
+      "backToList": "Retour à la liste",
+      "reactivate": "Réactiver"
+    },
+    "errors": {
+      "notFound": "Rappel introuvable"
     },
     "notifications": {
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce rappel ?",
@@ -1680,10 +1693,21 @@
       "snoozeError": "Échec de la mise en veille",
       "activating": "Activation du rappel...",
       "unsnoozed": "Rappel activé",
-      "activateError": "Échec de l'activation du rappel"
+      "activateError": "Échec de l'activation du rappel",
+      "loadError": "Échec du chargement des données",
+      "saveError": "Échec de l'enregistrement du rappel",
+      "markDoneError": "Échec de la mise en veille",
+      "reactivateError": "Échec de la reactivation",
+      "rescheduleError": "Échec de la reactivation",
+      "cancelError": "Échec de la reactivation",
+      "markCompleted": "Marquer comme terminé"
     },
     "validation": {
-      "notificationMethodsRequired": "Au moins une méthode de notification est requise"
+      "notificationMethodsRequired": "Au moins une méthode de notification est requise",
+      "titleRequired": "Le titre est requis",
+      "dateRequired": "La date est requise",
+      "timeRequired": "L'heure est requise",
+      "fixErrors": "Veuillez corriger les erreurs avant d'enregistrer"
     },
     "filters": {
       "allStatus": "Tous les statuts",
@@ -1705,41 +1729,30 @@
       "all": "Toutes les priorités"
     },
     "form": {
-      "createTitle": "Créer un nouveau rappel",
-      "editTitle": "Modifier le rappel",
-      "basicInfo": "Informations de base",
-      "relatedItems": "Éléments associés",
-      "notifications": "Notifications",
-      "recurrence": "Récurrence",
-      "enableRecurrence": "Activer la récurrence",
+      "createTitle": "Créer un Rappel",
+      "editTitle": "Modifier le Rappel",
       "fields": {
+        "title": "Titre",
         "date": "Date",
         "time": "Heure",
         "type": "Type",
         "priority": "Priorité",
         "description": "Description",
-        "title": "Titre",
-        "relatedEvent": "Événement associé",
-        "relatedClient": "Client associé",
-        "relatedTask": "Tâche associée",
-        "notificationMethods": "Méthodes de notification",
-        "notes": "Notes"
+        "relatedEvent": "Événement",
+        "relatedClient": "Client",
+        "relatedTask": "Tâche"
+      },
+      "placeholders": {
+        "title": "ex: Appeler le traiteur",
+        "description": "Notes optionnelles..."
+      },
+      "sections": {
+        "links": "Lier à (Optionnel)"
       },
       "buttons": {
-        "cancel": "Annuler",
-        "next": "Suivant",
-        "previous": "Précédent",
+        "create": "Créer Rappel",
         "update": "Mettre à jour",
-        "updateNow": "Mettre à jour maintenant",
-        "create": "Créer"
-      },
-      "success": {
-        "created": "Rappel créé avec succès",
-        "updated": "Rappel mis à jour avec succès",
-        "deleted": "Rappel supprimé avec succès"
-      },
-      "error": {
-        "load": "Échec du chargement des rappels"
+        "cancel": "Annuler"
       }
     },
     "type": {
@@ -1761,14 +1774,21 @@
     "description": "Nous travaillons sur une chronologie détaillée pour suivre les modifications, les reports et l'historique d'achèvement de ce rappel."
   },
     "modals": {
+      "detail": {
+        "title": "Détails du rappel",
+        "dueDate": "Date d'échéance",
+        "noNotes": "Aucune note supplémentaire."
+      },
       "snooze": {
         "title": "Reporte le rappel"
       },
       "delete": {
         "title": "Supprimer le rappel",
         "description": "Êtes-vous sûr de vouloir supprimer ce rappel ?",
-         "confirm": "Supprimer",
-        "cancel": "Annuler"
+        "confirm": "Supprimer",
+        "cancel": "Annuler",
+        "question": "Supprimer ce rappel ?",
+        "warning": "Cette action est irréversible."
       }
     },
     "recurrence": {
@@ -2039,7 +2059,12 @@
       "allIncomeSources": "Toutes les sources de revenus",
       "eventVenueCosts": "Coûts événement + lieu",
       "afterAllExpenses": "Après toutes les dépenses",
-      "overallProfitability": "Rentabilité globale"
+      "overallProfitability": "Rentabilité globale",
+      "grossRevenue": "Revenu Brut",
+      "otherExpenses": "Autres Dépenses",
+      "ebit": "Résultat d'Exploitation (EBIT)",
+      "tax": "Impôt Estimé",
+      "netIncome": "Revenu Net"
     },
     "eventFinancials": {
       "title": "Finances des Événements",
@@ -2097,6 +2122,19 @@
     },
     "errors": {
       "loadFailed": "Échec du chargement des données financières"
+    },
+    "profitability": {
+      "title": "Analyse de Rentabilité",
+      "subtitle": "Suivez vos marges et votre revenu net",
+      "netIncomeDesc": "Gains nets",
+      "marginDesc": "Ratio d'efficacité",
+      "revenueDesc": "Revenu brut",
+      "expensesDesc": "Coûts totaux",
+      "plStatement": "Compte de Résultat (P&L)",
+      "trendsTitle": "Tendances de Rentabilité",
+      "trendsDesc": "Revenus vs Dépenses au fil du temps",
+      "revenueSources": "Sources de Revenus",
+      "expenseDistribution": "Répartition des Dépenses"
     }
   },
   "analytics": {
@@ -2349,6 +2387,7 @@
     }
   },
   "common": {
+    "none": "Aucun",
     "noResults": "Aucun résultat trouvé",
     "clearFilters": "Effacer les filtres",
     "all": "Tous",
@@ -2886,239 +2925,88 @@
     }
   },
   "invoiceCustomization": {
-    "title": "Design de la Facture",
-    "subtitle": "Personnalisez votre modèle de facture",
+    "title": "Design Facture",
+    "livePreview": "Aperçu Live",
+    "interactiveMode": "Mode Interactif",
     "tabs": {
-      "brand": "Marque",
-      "layout": "Mise en page",
+      "branding": "Marque",
+      "layout": "Structure",
       "table": "Tableau",
       "style": "Style",
-      "content": "Contenu",
-      "personal": "[TO_TRANSLATE] Personal Info",
-      "security": "[TO_TRANSLATE] Security",
-      "venue": "[TO_TRANSLATE] Venue Details",
-      "amenities": "[TO_TRANSLATE] Amenities & Hours",
-      "spaces": "Espaces du lieu"
+      "text": "Contenu"
     },
     "branding": {
-      "companyLogo": "Logo de l'entreprise",
-      "uploadLogo": "Cliquez pour télécharger",
-      "brandColors": "Couleurs",
-      "primaryColor": "Primaire",
-      "secondaryColor": "Secondaire"
+      "logo": "Logo",
+      "uploadLogo": "Télécharger Logo",
+      "primaryColor": "Couleur Primaire",
+      "secondaryColor": "Couleur Secondaire"
     },
     "layout": {
-      "sections": "Sections"
+      "dragDropHint": "Glissez-déposez les éléments dans l'aperçu pour réorganiser.",
+      "visibleElements": "Éléments Visibles"
+    },
+    "sections": {
+      "header": "En-tête",
+      "details": "Détails (De/À)",
+      "items": "Tableau Articles",
+      "totals": "Totaux",
+      "footer": "Pied de page"
     },
     "table": {
-      "style": "Apparence",
-      "visibleColumns": "Colonnes",
-      "headerBg": "Fond En-tête",
-      "striped": "Rayé",
-      "rounded": "Arrondi"
-    },
-    "style": {
-      "density": "Densité",
-      "fontSize": "Taille Police",
-      "radius": "Rayon"
+      "headerColor": "Fond En-tête",
+      "striped": "Lignes Alternées",
+      "rounded": "Bords Arrondis",
+      "columns": "Colonnes"
     },
     "columns": {
       "description": "Description",
       "quantity": "Quantité",
       "rate": "Prix",
-      "tax": "TVA",
       "discount": "Remise",
+      "tax": "Taxe",
       "total": "Total"
     },
-    "density": {
-      "compact": "Compact",
-      "standard": "Standard",
-      "spacious": "Spacieux"
+    "style": {
+      "fontSize": "Taille Police",
+      "borderRadius": "Arrondi Bordures"
+    },
+    "text": {
+      "paymentInstructions": "Instructions de Paiement",
+      "paymentPlaceholder": "RIB, IBAN, SWIFT..."
     },
     "labels": {
       "invoiceTitle": "Titre Facture",
-      "from": "De",
-      "to": "À",
-      "item": "Article",
-      "total": "Total",
-      "paymentInstructions": "Instructions de Paiement"
+      "from": "Libellé 'De'",
+      "to": "Libellé 'À'",
+      "item": "Colonne Article",
+      "total": "Colonne Total"
     },
     "toasts": {
-      "loadError": "Échec du chargement des paramètres.",
-      "imageUpdated": "Image mise à jour localement",
-      "saveSuccess": "Design enregistré avec succès !",
-      "saveError": "Échec de l'enregistrement des paramètres."
+      "loadError": "Échec du chargement des paramètres",
+      "saveSuccess": "Design enregistré avec succès",
+      "saveError": "Échec de l'enregistrement"
+    }
+  },
+  "invoicePreview": {
+    "date": "Date",
+    "dueDate": "Échéance",
+    "subtotal": "Sous-total",
+    "tax": "TVA",
+    "discount": "Remise",
+    "pageInfo": "Page {{current}} / {{total}}",
+    "tooltips": {
+      "drag": "Glisser pour réorganiser",
+      "edit": "Modifier les paramètres"
     },
-    "personal": {
-      "title": "[TO_TRANSLATE] Personal Information",
-      "description": "[TO_TRANSLATE] Update your personal details and profile picture",
-      "fields": {
-        "fullName": "[TO_TRANSLATE] Full Name",
-        "email": "[TO_TRANSLATE] Email Address (Read-only)",
-        "phone": "[TO_TRANSLATE] Phone Number",
-        "avatar": "[TO_TRANSLATE] Avatar URL"
-      },
-      "avatarPreview": {
-        "title": "[TO_TRANSLATE] Profile Picture",
-        "description": "[TO_TRANSLATE] Preview of your avatar"
-      },
-      "save": "[TO_TRANSLATE] Save Changes"
-    },
-    "security": {
-      "title": "[TO_TRANSLATE] Change Password",
-      "description": "[TO_TRANSLATE] Ensure your account is using a strong password",
-      "fields": {
-        "currentPassword": "[TO_TRANSLATE] Current Password",
-        "newPassword": "[TO_TRANSLATE] New Password",
-        "confirmPassword": "[TO_TRANSLATE] Confirm New Password"
-      },
-      "requirements": {
-        "title": "[TO_TRANSLATE] Password Requirements:",
-        "items": "[TO_TRANSLATE] Items"
-      },
-      "changePassword": "[TO_TRANSLATE] Change Password"
-    },
-    "venue": {
-      "basicInfo": {
-        "title": "[TO_TRANSLATE] Basic Information",
-        "fields": {
-          "venueName": "Nom du lieu",
-          "description": "Description"
-        }
-      },
-      "address": {
-        "title": "Adresse",
-        "fields": {
-          "street": "Adresse",
-          "city": "Ville",
-          "state": "État/Province",
-          "zipCode": "Code postal",
-          "country": "Pays"
-        }
-      },
-      "contact": {
-        "title": "Coordonnées",
-        "fields": {
-          "phone": "Téléphone",
-          "email": "E-mail"
-        }
-      },
-      "save": "Enregistrer les détails du lieu"
-    },
-    "amenities": {
-      "title": "Équipements du lieu",
-      "description": "Ajoutez les équipements que votre lieu propose. Sélectionnez parmi les options courantes ou ajoutez-en de personnalisés.",
-      "quickAdd": {
-        "title": "Ajout rapide d'équipements courants",
-        "description": "Cliquez pour ajouter les équipements fréquemment utilisés pour les mariages et événements"
-      },
-      "customAmenity": {
-        "title": "Ajouter un équipement personnalisé",
-        "placeholder": "Entrez un équipement personnalisé (ex: Mobilier vintage, Foyer extérieur, etc.)",
-        "add": "Ajouter personnalisé"
-      },
-      "selectedAmenities": {
-        "title": "Équipements sélectionnés ({{count}})",
-        "clearAll": "Tout effacer",
-        "empty": {
-          "description": "Sélectionnez parmi les options courantes ci-dessus ou ajoutez-en de personnalisés."
-        }
-      },
-      "operatingHours": {
-        "title": "Heures d'ouverture",
-        "description": "Définissez l'horaire hebdomadaire de votre lieu",
-        "labels": {
-          "to": "à",
-          "closed": "Fermé"
-        }
-      },
-      "save": "Enregistrer les équipements et horaires"
-    },
-    "spaces": {
-      "title": "Espaces du lieu",
-      "description": "Gérez les différents espaces de votre lieu",
-      "existingSpaces": {
-        "title": "Espaces existants ({{count}})",
-        "capacity": "Capacité",
-        "price": "Prix",
-        "status": {
-          "active": "Actif",
-          "inactive": "Inactif"
-        },
-        "actions": {
-          "edit": "Modifier l'espace",
-          "delete": "Supprimer l'espace"
-        }
-      },
-      "emptyState": {
-        "title": "Aucun espace pour le moment",
-        "description": "Ajoutez différents espaces dans votre lieu pour offrir plus d'options de réservation à vos clients."
-      },
-      "form": {
-        "addTitle": "Ajouter un nouvel espace",
-        "editTitle": "Modifier l'espace",
-        "fields": {
-          "spaceName": "Nom de l'espace",
-          "basePrice": "Prix de base ($)",
-          "description": "Description",
-          "minCapacity": "Capacité minimale",
-          "maxCapacity": "Capacité maximale"
-        },
-        "activeLabel": "Actif (disponible pour les réservations)",
-        "actions": {
-          "add": "Ajouter l'espace",
-          "update": "Mettre à jour l'espace",
-          "cancel": "Annuler"
-        }
-      },
-      "save": "Enregistrer toutes les modifications"
-    },
-    "common": {
-      "loading": "Chargement des paramètres...",
-      "tryAgain": "Réessayer",
-      "table": {
-        "showing": "Affichage de",
-        "to": "à",
-        "of": "sur",
-        "results": "résultats"
-      }
-    },
-    "validation": {
-      "required": "Ce champ est requis",
-      "email": "Veuillez fournir un email valide",
-      "minLength": "Doit contenir au moins {min} caractères",
-      "passwordsMatch": "Les mots de passe doivent correspondre",
-      "capacityRange": "La capacité maximale doit être supérieure ou égale à la capacité minimale"
-    },
-    "notifications": {
-      "success": {
-        "profileUpdated": "Profil mis à jour avec succès !",
-        "passwordChanged": "Mot de passe modifié avec succès !",
-        "venueUpdated": "Paramètres du lieu mis à jour avec succès !",
-        "spaceCreated": "Espace créé avec succès",
-        "spaceUpdated": "Espace mis à jour avec succès",
-        "spaceDeleted": "Espace supprimé avec succès",
-        "amenityAdded": "Équipement ajouté",
-        "customAmenityAdded": "Équipement personnalisé ajouté",
-        "imageUploaded": "Image téléchargée avec succès",
-        "imageRemoved": "Image supprimée avec succès"
-      },
-      "error": {
-        "generic": "Une erreur s'est produite",
-        "loadFailed": "Échec du chargement des paramètres",
-        "saveFailed": "Échec de l'enregistrement",
-        "deleteFailed": "Échec de la suppression",
-        "uploadFailed": "Échec du téléchargement",
-        "spaceNameRequired": "Le nom de l'espace est requis",
-        "capacityRequired": "La plage de capacité est requise",
-        "priceRequired": "Le prix est requis",
-        "amenityExists": "Cet équipement existe déjà",
-        "saveSpaceFirst": "Veuillez d'abord enregistrer l'espace avant de télécharger des images"
-      },
-      "confirm": {
-        "deleteSpace": "Êtes-vous sûr de vouloir supprimer cet espace ?",
-        "clearAllAmenities": "Supprimer tous les équipements ?"
-      }
+    "defaultLabels": {
+      "invoice": "FACTURE",
+      "from": "DE",
+      "to": "À",
+      "description": "Description",
+      "quantity": "Qté",
+      "price": "Prix",
+      "total": "Total",
+      "paymentInstructions": "Instructions de paiement"
     }
   },
   "venueSettings": {
@@ -3320,113 +3208,140 @@
   },
   "contracts": {
     "settings": {
-      "title": "Paramètres des contrats",
-      "subtitle": "Configuration globale pour tous les contrats",
-      "loading": "Chargement des paramètres...",
-      "save": "Enregistrer les modifications",
+      "title": "Configuration Contrats",
+      "subtitle": "Personnalisez les modèles, la marque et les valeurs par défaut",
+      "save": "Enregistrer",
+      "loading": "Chargement de la configuration...",
       "tabs": {
-        "company": "Infos entreprise",
+        "company": "Info Société",
         "structure": "Structure & ID",
         "branding": "Marque",
         "financials": "Finances",
         "layout": "Mise en page",
         "clauses": "Clauses",
         "cancellation": "Annulation",
-        "labels": "Étiquettes"
+        "labels": "Libellés"
       },
       "company": {
-        "title": "Informations de l'entreprise",
-        "legalName": "Raison sociale",
-        "displayName": "Nom d'affichage",
+        "title": "Informations Légales",
+        "legalName": "Raison Sociale",
+        "displayName": "Nom Commercial",
         "matriculeFiscale": "Matricule Fiscale",
-        "address": "Adresse",
+        "representative": "Représentant Légal",
         "phone": "Téléphone",
-        "email": "E-mail",
-        "website": "Site web",
-        "rib": "Compte bancaire (RIB/IBAN)",
-        "bankName": "Nom de la banque",
-        "representative": "Représentant légal"
+        "email": "Email",
+        "address": "Adresse",
+        "bankName": "Nom de la Banque"
       },
       "structure": {
-        "title": "Configuration de la séquence",
-        "preview": "Aperçu du prochain numéro",
+        "title": "Configuration de la Séquence",
+        "preview": "Aperçu du Prochain Numéro",
         "prefix": "Préfixe",
         "separator": "Séparateur",
         "includeYear": "Inclure l'année",
-        "yearFormat": "Format de l'année",
-        "sequenceDigits": "Zéros de remplissage",
-        "sequenceDigitsHelp": "Exemple : 4 donne \"0001\", 3 donne \"001\".",
-        "resetYearly": "Réinitialiser la séquence annuellement",
-        "resetYearlyHelp": "La numérotation redémarre à 0001 le 1er janvier"
+        "yearFormat": "Format Année",
+        "sequenceDigits": "Nombre de Zéros (Padding)",
+        "resetYearly": "Réinitialiser chaque année",
+        "resetYearlyHelp": "La numérotation recommence à 0001 au 1er janvier"
       },
       "branding": {
-        "title": "Marque et couleurs",
-        "primary": "Couleur principale",
-        "secondary": "Couleur secondaire",
-        "accent": "Couleur d'accentuation",
-        "text": "Couleur du texte",
-        "background": "Couleur d'arrière-plan",
+        "title": "Identité Visuelle",
+        "primary": "Couleur Primaire",
+        "secondary": "Couleur Secondaire",
+        "text": "Couleur Texte",
+        "accent": "Couleur Accent",
         "logo": "Logo",
-        "logoUrl": "URL du logo (HTTPS)",
-        "logoHelp": "Pour de meilleurs résultats PDF, utilisez un lien direct vers une image PNG ou JPG.",
-        "logoPreview": "Aperçu"
+        "logoUrl": "Lien Public du Logo (HTTPS)"
       },
       "financials": {
-        "title": "Valeurs financières par défaut",
-        "currency": "Devise",
-        "vatRate": "Taux de TVA par défaut (%)",
-        "stampDuty": "Droit de timbre (TND)",
-        "depositPercentage": "Acompte requis (%)",
-        "securityDeposit": "Dépôt de garantie (TND)",
-        "lateFee": "Frais de retard (%)"
+        "title": "Valeurs Financières par Défaut",
+        "vatRate": "Taux TVA par défaut (%)",
+        "stampDuty": "Timbre Fiscal",
+        "depositPercentage": "Acompte Requis (%)",
+        "securityDeposit": "Caution de Garantie",
+        "lateFee": "Pénalité de Retard (%)",
+        "currency": "Devise"
       },
       "layout": {
-        "title": "Mise en page PDF",
-        "template": "Style de modèle",
-        "paperSize": "Format de papier",
+        "title": "Mise en page du Document",
         "showPageNumbers": "Afficher les numéros de page",
-        "showDate": "Afficher la date"
+        "showDate": "Afficher la date de génération"
       },
       "clauses": {
-        "title": "Clauses par défaut",
-        "add": "Ajouter une clause",
+        "title": "Clauses Contractuelles par Défaut",
+        "add": "Ajouter Clause",
         "articleTitle": "Titre de l'article",
-        "content": "Contenu de la clause...",
         "required": "Obligatoire",
-        "empty": "Aucune clause par défaut. Cliquez sur \"Ajouter\" pour créer votre première clause.",
-        "dragHint": "Glisser pour réorganiser"
+        "content": "Contenu de la clause...",
+        "empty": "Aucune clause par défaut. Cliquez sur 'Ajouter' pour créer votre première clause."
       },
       "cancellation": {
-        "title": "Politique d'annulation",
-        "enabled": "Politique d'annulation activée",
-        "add": "Ajouter un palier",
-        "daysBeforeEvent": "Jours avant (Min)",
+        "title": "Politique d'Annulation",
+        "enabled": "Activer la politique d'annulation",
+        "add": "Ajouter Palier",
+        "daysBeforeEvent": "Jours Avant",
         "penaltyPercentage": "Pénalité (%)",
         "description": "Description",
         "empty": "Aucun palier d'annulation défini."
       },
       "labels": {
-        "title": "Étiquettes du document",
-        "contractTitle": "Titre du contrat",
-        "partiesTitle": "Titre de la section parties",
-        "serviceProvider": "Étiquette du prestataire",
-        "clientLabel": "Étiquette du client",
-        "partnerLabel": "Étiquette du partenaire",
-        "servicesTitle": "Titre de la section services",
-        "paymentTitle": "Titre de la section paiement",
-        "signaturesTitle": "Titre de la section signatures",
-        "dateLabel": "Étiquette de la date",
-        "signatureLabel": "Étiquette de la signature"
+        "title": "Libellés du Document",
+        "contractTitle": "Titre du Contrat",
+        "partiesTitle": "Titre Section Parties",
+        "serviceProvider": "Libellé Prestataire",
+        "clientLabel": "Libellé Client",
+        "partnerLabel": "Libellé Partenaire",
+        "servicesTitle": "Titre Section Services",
+        "paymentTitle": "Titre Section Paiement",
+        "signaturesTitle": "Titre Section Signatures",
+        "dateLabel": "Libellé Date",
+        "signatureLabel": "Libellé Signature"
       },
       "preview": {
-        "title": "Aperçu PDF",
-        "clickToEdit": "Cliquez sur les zones pour modifier"
+        "title": "Aperçu Live",
+        "clickToEdit": "Cliquez pour modifier"
       },
       "messages": {
         "loadError": "Échec du chargement des paramètres",
         "saveSuccess": "Paramètres enregistrés avec succès",
-        "saveError": "Échec de l'enregistrement des paramètres"
+        "saveError": "Échec de l'enregistrement",
+        "timeoutError": "Délai d'attente dépassé. Veuillez réessayer.",
+        "connectionError": "Erreur de connexion. Vérifiez votre réseau."
       }
+    },
+    "preview": {
+      "tooltips": {
+        "drag": "Glisser pour réorganiser",
+        "edit": "Modifier les paramètres"
+      },
+      "defaultCompany": "VOTRE SOCIÉTÉ",
+      "defaultTitle": "CONTRAT",
+      "ref": "Réf",
+      "date": "Date",
+      "partiesTitle": "ENTRE LES SOUSSIGNÉS",
+      "providerDefault": "Le Prestataire",
+      "providerLabel": "Le Prestataire",
+      "aka": "Ci-après dénommé",
+      "clientDefault": "Le Client",
+      "clientLabel": "Le Client",
+      "partnerLabel": "Le Partenaire",
+      "objectTitle": "OBJET DU CONTRAT",
+      "objectIntro": "Le présent contrat a pour objet :",
+      "start": "Début",
+      "end": "Fin",
+      "financialsTitle": "CONDITIONS FINANCIÈRES",
+      "table": {
+        "description": "Désignation",
+        "qty": "Qté",
+        "totalHT": "Total HT"
+      },
+      "netToPay": "NET À PAYER",
+      "generalConditions": "CONDITIONS GÉNÉRALES",
+      "noClauses": "Aucune clause définie",
+      "jurisdiction": "JURIDICTION",
+      "jurisdictionText": "Compétence exclusive attribuée au",
+      "signaturesTitle": "SIGNATURES",
+      "for": "Pour"
     },
     "detail": {
       "status": {

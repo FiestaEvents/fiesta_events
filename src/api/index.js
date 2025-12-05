@@ -1323,9 +1323,8 @@ export const taskService = {
 // ============================================
 export const reminderService = {
   /**
-   * Get all reminders with optional filters
-   * @param {Object} params - { type, priority, status, startDate, endDate, isArchived, page, limit }
-   * @returns {Promise<{ reminders: Array, pagination }>}
+   * Get reminders list (List View)
+   * @param {Object} params - { status: 'active' | 'completed', page, limit, search }
    */
   getAll: async (params = {}) => {
     try {
@@ -1337,9 +1336,8 @@ export const reminderService = {
   },
 
   /**
-   * Get single reminder by ID
-   * @param {string} id - Reminder ID
-   * @returns {Promise<{ reminder }>}
+   * Get single reminder
+   * @param {string} id 
    */
   getById: async (id) => {
     try {
@@ -1352,8 +1350,7 @@ export const reminderService = {
 
   /**
    * Create new reminder
-   * @param {Object} data - Reminder data
-   * @returns {Promise<{ reminder }>}
+   * @param {Object} data 
    */
   create: async (data) => {
     try {
@@ -1366,9 +1363,8 @@ export const reminderService = {
 
   /**
    * Update reminder
-   * @param {string} id - Reminder ID
-   * @param {Object} data - Fields to update
-   * @returns {Promise<{ reminder }>}
+   * @param {string} id 
+   * @param {Object} data 
    */
   update: async (id, data) => {
     try {
@@ -1380,9 +1376,8 @@ export const reminderService = {
   },
 
   /**
-   * Archive reminder (soft delete)
-   * @param {string} id - Reminder ID
-   * @returns {Promise<{ success: boolean }>}
+   * Delete reminder (Archive)
+   * @param {string} id 
    */
   delete: async (id) => {
     try {
@@ -1394,14 +1389,12 @@ export const reminderService = {
   },
 
   /**
-   * Snooze reminder
-   * @param {string} id - Reminder ID
-   * @param {Object} data - { snoozeUntil }
-   * @returns {Promise<{ reminder }>}
+   * Toggle Complete Status (Done / Not Done)
+   * @param {string} id 
    */
-  snooze: async (id, data) => {
+  toggleComplete: async (id) => {
     try {
-      const response = await api.post(`/reminders/${id}/snooze`, data);
+      const response = await api.patch(`/reminders/${id}/toggle-complete`);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1409,141 +1402,12 @@ export const reminderService = {
   },
 
   /**
-   * Get upcoming reminders
-   * @param {Object} params - { days }
-   * @returns {Promise<{ reminders: Array }>}
+   * Get upcoming reminders (For Notification Badge)
+   * Fetches ALL future active reminders.
    */
-  getUpcoming: async (params = {}) => {
+  getUpcoming: async () => {
     try {
-      const response = await api.get("/reminders/upcoming", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Restore archived reminder
-   * @param {string} id - Reminder ID
-   * @returns {Promise<{ reminder }>}
-   */
-  restore: async (id) => {
-    try {
-      const response = await api.patch(`/reminders/${id}/restore`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get archived reminders
-   * @param {Object} params - { type, page, limit, sortBy, sortOrder }
-   * @returns {Promise<{ reminders: Array, pagination: Object }>}
-   */
-  getArchived: async (params = {}) => {
-    try {
-      const response = await api.get("/reminders/archived", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Bulk archive reminders
-   * @param {Array} ids - Array of reminder IDs
-   * @returns {Promise<{ archived: number }>}
-   */
-  bulkArchive: async (ids) => {
-    try {
-      const response = await api.post("/reminders/bulk-archive", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Bulk restore reminders
-   * @param {Array} ids - Array of reminder IDs
-   * @returns {Promise<{ restored: number }>}
-   */
-  bulkRestore: async (ids) => {
-    try {
-      const response = await api.post("/reminders/bulk-restore", { ids });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Complete reminder
-   * @param {string} id - Reminder ID
-   * @returns {Promise<{ reminder }>}
-   */
-  complete: async (id) => {
-    try {
-      const response = await api.post(`/reminders/${id}/complete`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Cancel reminder
-   * @param {string} id - Reminder ID
-   * @returns {Promise<{ reminder }>}
-   */
-  cancel: async (id) => {
-    try {
-      const response = await api.post(`/reminders/${id}/cancel`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get reminder statistics
-   * @returns {Promise<{ total, active, completed, snoozed, cancelled, archived }>}
-   */
-  getStats: async () => {
-    try {
-      const response = await api.get("/reminders/stats");
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get reminders by type
-   * @param {string} type - Reminder type
-   * @param {Object} params - Additional parameters
-   * @returns {Promise<{ reminders: Array }>}
-   */
-  getByType: async (type, params = {}) => {
-    try {
-      const response = await api.get("/reminders", {
-        params: { ...params, type },
-      });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  /**
-   * Get reminders assigned to current user
-   * @param {Object} params - Query parameters
-   * @returns {Promise<{ reminders: Array }>}
-   */
-  getMyReminders: async (params = {}) => {
-    try {
-      const response = await api.get("/reminders/assigned-to-me", { params });
+      const response = await api.get("/reminders/upcoming");
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -2415,24 +2279,32 @@ export const invoiceService = {
     }
   },
 
-  /**
+/**
    * Download invoice PDF
    * @param {string} id
-   * @param {string} language - 'en', 'fr', 'ar'
+   * @param {string} language
    * @returns {Promise<Blob>}
    */
   download: async (id, language = "fr") => {
     try {
       const response = await api.get(`/invoices/${id}/download`, {
         params: { language },
-        responseType: "blob", // Important for PDF
+        responseType: "blob", // Critical
+        headers: { Accept: "application/pdf" },
       });
-      return response.data;
+
+      // ✅ FIX: Check if the Blob is nested in .data (based on your logs)
+      if (response.data && response.data instanceof Blob) {
+        return response.data;
+      }
+      
+      // Fallback: If your interceptor already unwrapped it, return response
+      return response;
     } catch (error) {
-      return handleError(error);
+      console.error("Download service error:", error);
+      throw error;
     }
   },
-
   /**
    * Get invoice statistics
    * @param {Object} params - { startDate, endDate, invoiceType }

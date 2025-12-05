@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { format, addHours, addDays } from "date-fns";
+import { format } from "date-fns";
 import {
   Plus,
   Search,
@@ -10,12 +10,11 @@ import {
   X,
   Edit,
   Trash2,
-  Clock,
-  BellOff,
-  AlertTriangle,
-  Bell,
   Calendar,
   FolderOpen,
+  AlertTriangle,
+  Bell,
+  CheckCircle,
 } from "lucide-react";
 
 // ✅ API & Services
@@ -24,16 +23,16 @@ import { reminderService } from "../../api/index";
 // ✅ Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable"; 
+import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 
 // ✅ Context & Sub-components
 import { useToast } from "../../context/ToastContext";
 import ReminderDetailModal from "./ReminderDetailModal";
 import ReminderForm from "./ReminderForm";
-import OrbitLoader from "../../components/common/LoadingSpinner";
 
 const RemindersList = () => {
   const navigate = useNavigate();
@@ -48,7 +47,6 @@ const RemindersList = () => {
   const [selectedReminder, setSelectedReminder] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [snoozingReminders, setSnoozingReminders] = useState(new Set());
 
   // Modals
   const [confirmationModal, setConfirmationModal] = useState({
@@ -56,10 +54,6 @@ const RemindersList = () => {
     reminderId: null,
     reminderName: "",
     onConfirm: null,
-  });
-  const [snoozeOptionsModal, setSnoozeOptionsModal] = useState({
-    isOpen: false,
-    reminder: null,
   });
 
   // Filters (Active State)
@@ -80,7 +74,7 @@ const RemindersList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Sync local filters
+  // Sync local filters when panel opens
   useEffect(() => {
     if (isFilterOpen) {
       setLocalStatus(status);
@@ -95,9 +89,7 @@ const RemindersList = () => {
     setPriority(localPriority);
     setPage(1);
     setIsFilterOpen(false);
-    showSuccess(
-      t("reminders.notifications.filtersApplied") || "Filters applied"
-    );
+    showSuccess(t("reminders.notifications.filtersApplied"));
   };
 
   const handleResetLocalFilters = () => {
@@ -119,34 +111,37 @@ const RemindersList = () => {
   const fetchReminders = useCallback(async () => {
     try {
       setLoading(true);
+
       const params = {
         page,
         limit,
-        ...(search.trim() && { search: search.trim() }),
-        ...(status !== "all" && { status }),
-        ...(type !== "all" && { type }),
-        ...(priority !== "all" && { priority }),
+        status: status !== "all" ? status : undefined,
+        type: type !== "all" ? type : undefined,
+        priority: priority !== "all" ? priority : undefined,
       };
+
       const response = await reminderService.getAll(params);
-      let data =
-        response?.data?.data?.reminders ||
-        response?.data?.reminders ||
-        response?.reminders ||
-        [];
+
+      let data = response?.data?.reminders || response?.reminders || [];
       if (!Array.isArray(data)) data = [];
 
-      // ✅ FIX: Robust Calculation
-      const totalItems =
-        response?.data?.data?.totalCount ||
-        response?.pagination?.total ||
-        data.length;
+      // Client-side search (Title only)
+      if (search.trim()) {
+        const lowerQ = search.toLowerCase();
+        data = data.filter((r) => r.title.toLowerCase().includes(lowerQ));
+      }
+
+      // Calculate total
+      const totalItems = search.trim()
+        ? data.length
+        : response?.pagination?.total || data.length;
       const calculatedTotalPages = Math.ceil(totalItems / limit);
 
       setReminders(data);
       setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
       setTotalCount(totalItems);
     } catch (err) {
-      apiError(err, t("reminders.errorLoading"));
+      apiError(err, t("reminders.notifications.loadError"));
       setReminders([]);
       setTotalCount(0);
     } finally {
@@ -159,7 +154,7 @@ const RemindersList = () => {
     fetchReminders();
   }, [fetchReminders]);
 
-  // ✅ FIX: Client-Side Slicing Fallback
+  // Client-Side Slicing Fallback
   const paginatedReminders = useMemo(() => {
     if (reminders.length > limit) {
       const startIndex = (page - 1) * limit;
@@ -168,7 +163,7 @@ const RemindersList = () => {
     return reminders;
   }, [reminders, page, limit]);
 
-  // Handlers (Delete, Snooze, etc.) - same as before
+  // Handlers
   const handleDeleteConfirm = useCallback(
     async (reminderId, reminderName) => {
       try {
@@ -176,7 +171,7 @@ const RemindersList = () => {
           loading: t("reminders.notifications.deleting", {
             name: reminderName,
           }),
-          success: t("reminders.notifications.deleted"),
+          success: t("reminders.notifications.deleteSuccess"),
           error: t("reminders.notifications.deleteError"),
         });
         fetchReminders();
@@ -200,82 +195,34 @@ const RemindersList = () => {
       onConfirm: () => handleDeleteConfirm(reminderId, reminderName),
     });
   };
-  const handleSnoozeAction = useCallback(
-    async (duration, unit = "hours") => {
-      const { reminder } = snoozeOptionsModal;
-      if (!reminder?._id) return;
-      try {
-        setSnoozingReminders((prev) => new Set(prev).add(reminder._id));
-        const now = new Date();
-        const snoozeUntil =
-          unit === "days" ? addDays(now, duration) : addHours(now, duration);
-        await promise(
-          reminderService.snooze(reminder._id, {
-            snoozeUntil: snoozeUntil.toISOString(),
-            duration,
-            unit,
-          }),
-          {
-            loading: t("reminders.notifications.snoozing"),
-            success: t("reminders.notifications.snoozed"),
-            error: t("reminders.notifications.snoozeError"),
-          }
-        );
-        await fetchReminders();
-        setSnoozeOptionsModal({ isOpen: false, reminder: null });
-      } catch (err) {
-      } finally {
-        setSnoozingReminders((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(reminder._id);
-          return newSet;
-        });
-      }
-    },
-    [snoozeOptionsModal, fetchReminders, promise, t]
-  );
 
-  const handleUnsnooze = useCallback(
-    async (reminder) => {
-      try {
-        setSnoozingReminders((prev) => new Set(prev).add(reminder._id));
-        await promise(
-          reminderService.update(reminder._id, {
-            status: "active",
-            snoozeUntil: null,
-          }),
-          {
-            loading: t("reminders.notifications.activating"),
-            success: t("reminders.notifications.unsnoozed"),
-            error: t("reminders.notifications.activateError"),
-          }
-        );
-        await fetchReminders();
-      } catch (err) {
-      } finally {
-        setSnoozingReminders((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(reminder._id);
-          return newSet;
-        });
-      }
-    },
-    [fetchReminders, promise, t]
-  );
+  const handleToggleComplete = async (reminder) => {
+    try {
+      await promise(reminderService.toggleComplete(reminder._id), {
+        loading: t("reminders.notifications.updating"),
+        success:
+          reminder.status === "active"
+            ? t("reminders.notifications.markedCompleted")
+            : t("reminders.notifications.reactivated"),
+        error: t("reminders.notifications.updateError"),
+      });
+      fetchReminders();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleFormSuccess = () => {
     fetchReminders();
     setIsFormOpen(false);
     showSuccess(
       selectedReminder
-        ? t("reminders.notifications.updated")
-        : t("reminders.notifications.created")
+        ? t("reminders.notifications.updateSuccess")
+        : t("reminders.notifications.createSuccess")
     );
   };
-  const getPriorityColor = (p) =>
-    ({ urgent: "danger", high: "warning", medium: "info", low: "secondary" })[
-      p
-    ] || "secondary";
+
+  // Badge Colors
   const getTypeColor = (tp) =>
     ({
       event: "primary",
@@ -284,12 +231,19 @@ const RemindersList = () => {
       maintenance: "orange",
       followup: "success",
     })[tp] || "secondary";
+
+  const getPriorityColor = (p) =>
+    ({
+      urgent: "danger",
+      high: "warning",
+      medium: "info",
+      low: "secondary",
+    })[p] || "secondary";
+
   const getStatusColor = (st) =>
     ({
       completed: "success",
       active: "info",
-      snoozed: "warning",
-      cancelled: "danger",
     })[st] || "secondary";
 
   const hasActiveFilters =
@@ -316,19 +270,6 @@ const RemindersList = () => {
       ),
     },
     {
-      header: t("reminders.columns.description"),
-      accessor: "description",
-      width: "25%",
-      render: (row) => (
-        <div
-          className="text-gray-500 truncate max-w-xs"
-          title={row.description}
-        >
-          {row.description || "-"}
-        </div>
-      ),
-    },
-    {
       header: t("reminders.columns.dateTime"),
       accessor: "reminderDate",
       width: "15%",
@@ -349,103 +290,103 @@ const RemindersList = () => {
     {
       header: t("reminders.columns.type"),
       accessor: "type",
-      width: "10%",
+      width: "15%",
       render: (row) => (
         <Badge variant={getTypeColor(row.type)} className="capitalize">
-          {row.type}
+          {t(`reminders.type.${row.type}`) || row.type}
         </Badge>
       ),
     },
     {
       header: t("reminders.columns.priority"),
       accessor: "priority",
-      width: "10%",
+      width: "15%",
       render: (row) => (
         <Badge variant={getPriorityColor(row.priority)} className="capitalize">
-          {row.priority}
+          {t(`reminders.priority.${row.priority}`) || row.priority}
         </Badge>
       ),
     },
     {
       header: t("reminders.columns.status"),
       accessor: "status",
-      width: "10%",
+      width: "15%",
       render: (row) => (
         <Badge variant={getStatusColor(row.status)} className="capitalize">
-          {row.status}
+          {t(`reminders.status.${row.status}`) || row.status}
         </Badge>
       ),
     },
     {
       header: t("reminders.columns.actions"),
       accessor: "actions",
-      width: "10%",
+      width: "20%",
       className: "text-center",
-      render: (row) => {
-        const isSnoozing = snoozingReminders.has(row._id);
-        const isSnoozed = row.status === "snoozed";
-        return (
-          <div className="flex justify-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isSnoozing}
-              onClick={(e) => {
-                e.stopPropagation();
-                isSnoozed
-                  ? handleUnsnooze(row)
-                  : setSnoozeOptionsModal({ isOpen: true, reminder: row });
-              }}
-              className={isSnoozed ? "text-orange-500" : "text-gray-500"}
-            >
-              {isSnoozing ? (
-                <Clock className="w-4 h-4 animate-spin" />
-              ) : isSnoozed ? (
-                <BellOff className="w-4 h-4" />
-              ) : (
-                <Clock className="w-4 h-4" />
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedReminder(row);
-                setIsDetailModalOpen(true);
-              }}
-            >
-              <Eye className="w-4 h-4 text-blue-500" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedReminder(row);
-                setIsFormOpen(true);
-              }}
-            >
-              <Edit className="w-4 h-4 text-green-500" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteReminder(row._id, row.title);
-              }}
-            >
-              <Trash2 className="w-4 h-4 text-red-500" />
-            </Button>
-          </div>
-        );
-      },
+      render: (row) => (
+        <div className="flex justify-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleComplete(row);
+            }}
+            title={
+              row.status === "active"
+                ? t("reminders.actions.markDone")
+                : t("reminders.actions.reactivate")
+            }
+            className={
+              row.status === "completed"
+                ? "text-green-600 border-green-200 bg-green-50"
+                : "text-gray-400"
+            }
+          >
+            <CheckCircle className="w-4 h-4" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedReminder(row);
+              setIsDetailModalOpen(true);
+            }}
+          >
+            <Eye className="w-4 h-4 text-blue-500" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedReminder(row);
+              setIsFormOpen(true);
+            }}
+          >
+            <Edit className="w-4 h-4 text-green-500" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteReminder(row._id, row.title);
+            }}
+          >
+            <Trash2 className="w-4 h-4 text-red-500" />
+          </Button>
+        </div>
+      ),
     },
   ];
 
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -472,6 +413,7 @@ const RemindersList = () => {
         )}
       </div>
 
+      {/* Filters Bar */}
       {hasInitialLoad && !showEmptyState && (
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -494,7 +436,7 @@ const RemindersList = () => {
                 className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
               >
                 <Filter className="w-4 h-4" />
-                {t("reminders.filters.advanced") || "Filters"}
+                {t("reminders.filters.advanced")}
                 {hasActiveFilters && (
                   <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
                     !
@@ -513,11 +455,13 @@ const RemindersList = () => {
               )}
             </div>
           </div>
+
+          {/* Expanded Filters */}
           {isFilterOpen && (
             <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                  {t("reminders.filters.options") || "Filter Options"}
+                  {t("reminders.filters.options")}
                 </h3>
                 <button
                   onClick={() => setIsFilterOpen(false)}
@@ -526,6 +470,7 @@ const RemindersList = () => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
                 <Select
                   label={t("reminders.status.label")}
@@ -538,10 +483,10 @@ const RemindersList = () => {
                       value: "completed",
                       label: t("reminders.status.completed"),
                     },
-                    { value: "snoozed", label: t("reminders.status.snoozed") },
                   ]}
                   className="w-full"
                 />
+
                 <Select
                   label={t("reminders.priority.label")}
                   value={localPriority}
@@ -555,35 +500,40 @@ const RemindersList = () => {
                   ]}
                   className="w-full"
                 />
+
                 <Select
-                  label={t("reminders.type.label") || "Type"}
+                  label={t("reminders.type.label")}
                   value={localType}
                   onChange={(e) => setLocalType(e.target.value)}
                   options={[
-                    { value: "all", label: "All Types" },
-                    { value: "event", label: "Event" },
-                    { value: "payment", label: "Payment" },
-                    { value: "task", label: "Task" },
-                    { value: "maintenance", label: "Maintenance" },
-                    { value: "followup", label: "Follow Up" },
+                    { value: "all", label: t("reminders.type.all") },
+                    { value: "event", label: t("reminders.type.event") },
+                    { value: "payment", label: t("reminders.type.payment") },
+                    { value: "task", label: t("reminders.type.task") },
+                    {
+                      value: "maintenance",
+                      label: t("reminders.type.maintenance"),
+                    },
+                    { value: "followup", label: t("reminders.type.followup") },
                   ]}
                   className="w-full"
                 />
               </div>
+
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
                 <Button
                   variant="outline"
                   onClick={handleResetLocalFilters}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 >
-                  {t("reminders.filters.reset") || "Reset"}
+                  {t("reminders.filters.reset")}
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleApplyFilters}
                   className="px-6"
                 >
-                  {t("reminders.filters.apply") || "Apply Filters"}
+                  {t("reminders.filters.apply")}
                 </Button>
               </div>
             </div>
@@ -591,6 +541,7 @@ const RemindersList = () => {
         </div>
       )}
 
+      {/* Main Table */}
       <div className="flex-1 flex flex-col relative">
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
@@ -600,11 +551,11 @@ const RemindersList = () => {
             </p>
           </div>
         )}
+
         {showData && (
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <Table
               columns={columns}
-              // ✅ Pass sliced data
               data={paginatedReminders}
               loading={loading}
               onRowClick={(row) => {
@@ -627,6 +578,7 @@ const RemindersList = () => {
             />
           </div>
         )}
+
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -636,13 +588,14 @@ const RemindersList = () => {
               {t("reminders.noResults")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t("reminders.notifications.filtersCleared")}
+              {t("reminders.notifications.noResultsDesc")}
             </p>
             <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("reminders.clearFilters")}
             </Button>
           </div>
         )}
+
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -654,8 +607,7 @@ const RemindersList = () => {
               {t("reminders.noReminders")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-              Set up reminders for important tasks, payments, and events so you
-              never miss a deadline.
+              {t("reminders.emptyDesc")}
             </p>
             <Button
               onClick={() => {
@@ -684,6 +636,7 @@ const RemindersList = () => {
         }}
         refreshData={fetchReminders}
       />
+
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -700,39 +653,7 @@ const RemindersList = () => {
           onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
-      <Modal
-        isOpen={snoozeOptionsModal.isOpen}
-        onClose={() => setSnoozeOptionsModal({ isOpen: false, reminder: null })}
-        title={t("reminders.modals.snooze.title")}
-        size="sm"
-      >
-        <div className="p-4 grid grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            onClick={() => handleSnoozeAction(1, "hours")}
-          >
-            1 Hour
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => handleSnoozeAction(4, "hours")}
-          >
-            4 Hours
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => handleSnoozeAction(1, "days")}
-          >
-            1 Day
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => handleSnoozeAction(1, "weeks")}
-          >
-            1 Week
-          </Button>
-        </div>
-      </Modal>
+
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() => setConfirmationModal((p) => ({ ...p, isOpen: false }))}

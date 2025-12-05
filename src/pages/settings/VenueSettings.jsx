@@ -399,12 +399,10 @@ const PersonalTab = ({ user, userForm, setUserForm, onSave, saving, t }) => {
                 }}
               />
             </div>
-            <button
-              type="button"
-              className="absolute bottom-0 right-0 p-2 bg-orange-500 text-white rounded-xl shadow-lg hover:bg-orange-600 transition-colors"
-            >
+            {/* Visual button only, actual change happens via input below */}
+            <div className="absolute bottom-0 right-0 p-2 bg-orange-500 text-white rounded-xl shadow-lg">
               <Camera size={16} />
-            </button>
+            </div>
           </div>
           <h3 className="font-bold text-gray-900 text-xl">{user?.name}</h3>
           <p className="text-gray-500 text-sm mb-4">{user?.email}</p>
@@ -455,13 +453,29 @@ const PersonalTab = ({ user, userForm, setUserForm, onSave, saving, t }) => {
               disabled
               className="opacity-60"
             />
-            <Input
-              label={t("venueSettings.personal.fields.avatar")}
-              name="avatar"
-              value={userForm.avatar}
-              onChange={handleChange}
-              placeholder={t("venueSettings.personal.placeholders.avatar")}
-            />
+            
+            {/* Avatar Input Section */}
+            <div>
+              <Input
+                label={t("venueSettings.personal.fields.avatar")}
+                name="avatar"
+                value={userForm.avatar}
+                onChange={handleChange}
+                placeholder={t("venueSettings.personal.placeholders.avatar")}
+              />
+              {/* Recommendation Link */}
+              <p className="mt-2 text-xs text-gray-500">
+                Need an avatar? Try{" "}
+                <a
+                  href="https://avatar-placeholder.iran.liara.run/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-500 hover:text-orange-600 underline"
+                >
+                  avatar-placeholder.iran.liara.run
+                </a>
+              </p>
+            </div>
           </div>
 
           <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
@@ -1608,24 +1622,19 @@ const VenueSettings = () => {
         avatar: user.avatar || "",
       });
     }
+    // ... venue form effect logic
     if (venue) {
-      setVenueForm({
-        name: venue.name || "",
-        description: venue.description || "",
-        address: venue.address || {
-          street: "",
-          city: "",
-          state: "",
-          zipCode: "",
-          country: "",
-        },
-        contact: venue.contact || { phone: "", email: "" },
-        capacity: venue.capacity || { min: "", max: "" },
-        pricing: venue.pricing || { basePrice: "" },
-      });
-      setAmenities(venue.amenities || []);
-      setOperatingHours(venue.operatingHours || DEFAULT_HOURS);
-    }
+        setVenueForm({
+          name: venue.name || "",
+          description: venue.description || "",
+          address: venue.address || { street: "", city: "", state: "", zipCode: "", country: "" },
+          contact: venue.contact || { phone: "", email: "" },
+          capacity: venue.capacity || { min: "", max: "" },
+          pricing: venue.pricing || { basePrice: "" },
+        });
+        setAmenities(venue.amenities || []);
+        setOperatingHours(venue.operatingHours || DEFAULT_HOURS);
+      }
   }, [user, venue]);
 
   const handleSavePersonal = async () => {
@@ -1637,10 +1646,18 @@ const VenueSettings = () => {
     try {
       await authService.updateProfile(userForm);
       toast.success(t("venueSettings.notifications.profileUpdated"));
+      
+      // 1. Notify TopBar immediately via custom event (soft update)
+      window.dispatchEvent(new Event("profileUpdated"));
+
+      // 2. Trigger hard refresh after a delay to ensure data consistency everywhere
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
     } catch (err) {
       toast.error(err.message || t("venueSettings.errors.saveFailed"));
-    } finally {
-      setSaving(false);
+      setSaving(false); // Only stop loading if error, otherwise wait for reload
     }
   };
 

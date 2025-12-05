@@ -194,7 +194,7 @@ const PaymentsList = () => {
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
+  const [searchTerm, setSearchTerm] = useState(""); 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [localType, setLocalType] = useState("all");
   const [localStatus, setLocalStatus] = useState("all");
@@ -221,7 +221,15 @@ const PaymentsList = () => {
       setLocalMethod(filters.method);
     }
   }, [isFilterOpen, filters]);
-
+useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.search === searchTerm) return prev;
+        return { ...prev, search: searchTerm, page: 1 };
+      });
+    }, 500);
+return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
   const handleApplyFilters = () => {
     setFilters((prev) => ({
       ...prev,
@@ -644,8 +652,8 @@ const PaymentsList = () => {
               <Input
                 icon={Search}
                 placeholder={t("payments.searchPlaceholder")}
-                value={filters.search}
-                onChange={(e) => updateFilter("search", e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
               />
             </div>

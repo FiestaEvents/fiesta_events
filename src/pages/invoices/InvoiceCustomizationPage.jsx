@@ -7,16 +7,13 @@ import {
   Palette,
   Type,
   Image as ImageIcon,
-  RotateCcw,
   Table as TableIcon,
   Grid,
-  Move,
-  ZoomIn,
-  ZoomOut,
+  Eye,
   Layers,
   DollarSign,
   ArrowLeft,
-  Eye,
+  Move,
 } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
 
@@ -31,8 +28,91 @@ import Input from "../../components/common/Input";
 import LiveInvoicePreview from "./LiveInvoicePreview";
 
 // ============================================
-// HELPER: TAB BUTTON
+// 0. DEFAULTS & UTILITIES
 // ============================================
+
+const DEFAULT_SETTINGS = {
+  branding: {
+    logo: { url: "", width: 150, height: 60 },
+    colors: {
+      primary: "#F18237",
+      secondary: "#374151",
+      text: "#1F2937",
+      background: "#FFFFFF",
+    },
+    fonts: { body: "Helvetica", size: 10 },
+    watermark: { enabled: false, url: "" },
+  },
+  layout: {
+    template: "modern",
+    density: "standard",
+    borderRadius: 4,
+    sections: [
+      { id: "header", label: "En-tête", visible: true, order: 1 },
+      { id: "details", label: "Détails (De/À)", visible: true, order: 2 },
+      { id: "items", label: "Tableau Articles", visible: true, order: 3 },
+      { id: "totals", label: "Totaux", visible: true, order: 4 },
+      { id: "footer", label: "Pied de page", visible: true, order: 5 },
+    ],
+  },
+  table: {
+    headerColor: "#F18237",
+    striped: false,
+    rounded: true,
+    columns: {
+      description: true,
+      quantity: true,
+      rate: true,
+      discount: false,
+      tax: false,
+      total: true,
+    },
+  },
+  labels: {
+    invoiceTitle: "FACTURE",
+    from: "De",
+    to: "À",
+    item: "Description",
+    quantity: "Qté",
+    rate: "Prix",
+    total: "Total",
+    paymentInstructions: "Instructions de paiement",
+  },
+  paymentTerms: {
+    bankDetails: "",
+    terms: "",
+  },
+};
+
+// Robust Deep Merge
+const deepMerge = (target, source) => {
+  if (!source) return target;
+  const output = { ...target };
+
+  Object.keys(target).forEach((key) => {
+    if (source[key] === undefined) return;
+    if (
+      typeof target[key] === "object" &&
+      target[key] !== null &&
+      !Array.isArray(target[key])
+    ) {
+      output[key] = deepMerge(target[key], source[key]);
+    } else {
+      output[key] = source[key];
+    }
+  });
+
+  Object.keys(source).forEach((key) => {
+    if (output[key] === undefined) output[key] = source[key];
+  });
+
+  return output;
+};
+
+// ============================================
+// 1. SUB-COMPONENTS
+// ============================================
+
 const TabButton = ({ active, icon: Icon, label, onClick }) => (
   <button
     onClick={onClick}
@@ -47,21 +127,18 @@ const TabButton = ({ active, icon: Icon, label, onClick }) => (
   </button>
 );
 
-// ============================================
-// HELPER: COLOR PICKER (React-Colorful)
-// ============================================
 const ColorPicker = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const popover = useRef();
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popover.current && !popover.current.contains(event.target))
+    const handleClickOutside = (e) => {
+      if (popover.current && !popover.current.contains(e.target))
         setIsOpen(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isOpen]);
 
   return (
     <div className="relative">
@@ -70,38 +147,29 @@ const ColorPicker = ({ label, value, onChange }) => {
       </label>
       <div className="flex items-center gap-3">
         <div
-          className="relative w-10 h-10 rounded-lg border border-gray-200 shadow-sm cursor-pointer transition-transform hover:scale-105"
-          style={{ backgroundColor: value }}
+          className="w-10 h-10 rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:scale-105 transition-transform"
+          style={{ backgroundColor: value || "#fff" }}
           onClick={() => setIsOpen(!isOpen)}
         />
-        <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono">
-            #
-          </span>
-          <input
-            type="text"
-            value={value.replace("#", "")}
-            onChange={(e) => onChange(`#${e.target.value}`)}
-            className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-sm font-mono uppercase dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-            maxLength={6}
-          />
-        </div>
+        <input
+          type="text"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono uppercase dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+        />
       </div>
       {isOpen && (
         <div
           ref={popover}
-          className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-800 p-3 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700"
+          className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-800 p-3 rounded-xl shadow-xl border border-gray-200"
         >
-          <HexColorPicker color={value} onChange={onChange} />
+          <HexColorPicker color={value || "#fff"} onChange={onChange} />
         </div>
       )}
     </div>
   );
 };
 
-// ============================================
-// HELPER: RANGE SLIDER
-// ============================================
 const RangeSlider = ({
   label,
   icon: Icon,
@@ -113,12 +181,11 @@ const RangeSlider = ({
   onChange,
 }) => (
   <div className="space-y-3">
-    <div className="flex justify-between items-center">
-      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium text-sm">
-        <Icon size={16} />
-        <span>{label}</span>
+    <div className="flex justify-between items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="flex items-center gap-2">
+        <Icon size={16} /> <span>{label}</span>
       </div>
-      <span className="text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded font-mono">
+      <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs">
         {value}
         {suffix}
       </span>
@@ -128,30 +195,31 @@ const RangeSlider = ({
       min={min}
       max={max}
       step={step}
-      value={value}
+      value={value || min}
       onChange={onChange}
-      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500 dark:bg-gray-700"
+      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
     />
   </div>
 );
 
-// ============================================
-// HELPER: MODERN SWITCH
-// ============================================
 const ModernSwitch = ({ label, checked, onChange }) => (
   <label className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
       {label}
     </span>
     <div
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? "bg-orange-500" : "bg-gray-300 dark:bg-gray-600"}`}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        checked ? "bg-orange-500" : "bg-gray-300 dark:bg-gray-600"
+      }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`}
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? "translate-x-6" : "translate-x-1"
+        }`}
       />
       <input
         type="checkbox"
-        checked={checked}
+        checked={checked || false}
         onChange={onChange}
         className="hidden"
       />
@@ -160,255 +228,159 @@ const ModernSwitch = ({ label, checked, onChange }) => (
 );
 
 // ============================================
-// DEFAULT CONFIGURATION
+// 2. CUSTOM HOOK (LOGIC)
 // ============================================
-const DEFAULT_SETTINGS = {
-  branding: {
-    logo: { url: "", width: 150, height: 60 },
-    colors: {
-      primary: "#F18237",
-      secondary: "#374151",
-      text: "#1F2937",
-      background: "#FFFFFF",
-    },
-    fonts: { body: "Helvetica", heading: "Helvetica", size: 10 },
-    watermark: { enabled: false, url: "" },
-  },
-  layout: {
-    borderRadius: 4,
-    density: "standard",
-    sections: [
-      { id: "header", label: "En-tête (Logo)", visible: true, order: 1 },
-      { id: "details", label: "Détails (De/À)", visible: true, order: 2 },
-      { id: "items", label: "Tableau des articles", visible: true, order: 3 },
-      { id: "totals", label: "Totaux & Taxes", visible: true, order: 4 },
-      { id: "footer", label: "Pied de page (Termes)", visible: true, order: 5 },
-    ],
-  },
-  table: {
-    headerColor: "#F18237",
-    striped: false,
-    rounded: true,
-    columns: {
-      description: true,
-      quantity: true,
-      rate: true,
-      tax: false,
-      discount: false,
-      total: true,
-    },
-  },
-  labels: {
-    invoiceTitle: "FACTURE",
-    from: "De",
-    to: "À",
-    item: "Description",
-    quantity: "Qté",
-    rate: "Prix",
-    total: "Total",
-  },
-  companyInfo: { displayName: "My Venue" },
-  currency: { symbol: "DT", position: "after", code: "TND" },
-  paymentTerms: { bankDetails: "" },
-};
-
-// ============================================
-// MAIN COMPONENT
-// ============================================
-const InvoiceSettingsPage = () => {
-  const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
-  const { showSuccess, showError } = useToast();
-
+const useInvoiceSettings = (t, showSuccess, showError) => {
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("branding");
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
-  // Mock Data for Live Preview
-  const previewData = {
-    invoiceNumber: "INV-2025-001",
-    issueDate: new Date().toISOString(),
-    dueDate: new Date(Date.now() + 86400000 * 15).toISOString(),
-    recipient: {
-      name: "Client Exemple",
-      email: "client@example.com",
-      phone: "+216 20 000 000",
-    },
-    items: [
-      {
-        description: "Location Salle de Conférence",
-        quantity: 1,
-        rate: 1500,
-        amount: 1500,
-      },
-      {
-        description: "Pause Café (Matin)",
-        quantity: 50,
-        rate: 12,
-        amount: 600,
-      },
-      { description: "Déjeuner Buffet", quantity: 50, rate: 45, amount: 2250 },
-    ],
-    taxRate: 19,
-    discount: 0,
-  };
-
-  // Fetch Settings
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await invoiceService.getSettings();
-      const data = response.data || response || {};
+      const res = await invoiceService.getSettings();
+      const rawData = res.data || res || {};
+      const mergedSettings = deepMerge(DEFAULT_SETTINGS, rawData);
 
-      // Deep merge with defaults to handle missing fields in DB
-      setSettings((prev) => ({
-        ...prev,
-        ...data,
-        branding: { ...prev.branding, ...(data.branding || {}) },
-        layout: { ...prev.layout, ...(data.layout || {}) },
-        table: {
-          ...prev.table,
-          ...(data.table || {}),
-          columns: { ...prev.table.columns, ...(data.table?.columns || {}) },
-        },
-        labels: { ...prev.labels, ...(data.labels || {}) },
-        paymentTerms: { ...prev.paymentTerms, ...(data.paymentTerms || {}) },
-      }));
-    } catch (error) {
-      console.error("Fetch error:", error);
-      showError(
-        t("invoiceCustomization.toasts.loadError", "Failed to load settings.")
-      );
+      if (
+        !mergedSettings.layout.sections ||
+        mergedSettings.layout.sections.length === 0
+      ) {
+        mergedSettings.layout.sections = DEFAULT_SETTINGS.layout.sections;
+      }
+
+      setSettings(mergedSettings);
+    } catch (err) {
+      console.error(err);
+      showError(t("invoiceCustomization.toasts.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [showError, t]);
+  }, [t, showError]);
 
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
 
-  // Update Helper
-  const updateSetting = (path, value) => {
+  const updateSetting = useCallback((path, value) => {
     setSettings((prev) => {
-      const newSettings = JSON.parse(JSON.stringify(prev));
+      const next = JSON.parse(JSON.stringify(prev));
       const keys = path.split(".");
-      let current = newSettings;
-
+      let current = next;
       for (let i = 0; i < keys.length - 1; i++) {
         if (!current[keys[i]]) current[keys[i]] = {};
         current = current[keys[i]];
       }
-
       current[keys[keys.length - 1]] = value;
-      return newSettings;
+      return next;
     });
-  };
+  }, []);
 
-  // File Upload (Base64)
-  const handleFileUpload = (e, fieldPath) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      updateSetting(fieldPath, e.target.result);
-    };
-    reader.readAsDataURL(file);
-  };
+  const reorderSections = useCallback((newVisibleOrder) => {
+    setSettings((prev) => {
+      const orderMap = {};
+      newVisibleOrder.forEach((item, index) => {
+        orderMap[item.id] = index + 1;
+      });
+      const updatedSections = (
+        prev.layout.sections || DEFAULT_SETTINGS.layout.sections
+      ).map((section) => {
+        if (orderMap[section.id] !== undefined) {
+          return { ...section, order: orderMap[section.id] };
+        }
+        return section;
+      });
+      return { ...prev, layout: { ...prev.layout, sections: updatedSections } };
+    });
+  }, []);
 
-  // Save
-  const handleSave = async () => {
+  const saveSettings = async () => {
     setSaving(true);
     try {
       await invoiceService.updateSettings(settings);
-      showSuccess(
-        t("invoiceCustomization.toasts.saveSuccess", "Design enregistré !")
-      );
-    } catch (error) {
-      showError(
-        t(
-          "invoiceCustomization.toasts.saveError",
-          "Erreur lors de l'enregistrement."
-        )
-      );
+      showSuccess(t("invoiceCustomization.toasts.saveSuccess"));
+    } catch (err) {
+      showError(t("invoiceCustomization.toasts.saveError"));
     } finally {
       setSaving(false);
     }
   };
 
-  // Reorder Sections
-  const moveSection = (index, direction) => {
-    const sections = [...settings.layout.sections];
-    if (direction === "up" && index > 0) {
-      [sections[index], sections[index - 1]] = [
-        sections[index - 1],
-        sections[index],
-      ];
-    } else if (direction === "down" && index < sections.length - 1) {
-      [sections[index], sections[index + 1]] = [
-        sections[index + 1],
-        sections[index],
-      ];
-    }
-    sections.forEach((s, i) => (s.order = i + 1));
-    updateSetting("layout.sections", sections);
+  return {
+    settings,
+    loading,
+    saving,
+    updateSetting,
+    saveSettings,
+    reorderSections,
+  };
+};
+
+// ============================================
+// 3. MAIN COMPONENT
+// ============================================
+const InvoiceCustomizationPage = () => {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
+  const [activeTab, setActiveTab] = useState("branding");
+  const isRTL = i18n.dir() === "rtl";
+
+  const {
+    settings,
+    loading,
+    saving,
+    updateSetting,
+    saveSettings,
+    reorderSections,
+  } = useInvoiceSettings(t, showSuccess, showError);
+
+  const previewData = {
+    invoiceNumber: "INV-001",
+    issueDate: new Date().toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 15).toISOString(),
+    recipient: {
+      name: "Client Test",
+      email: "client@test.com",
+      phone: "+216 20 000 000",
+    },
+    items: [
+      { description: "Location Salle", quantity: 1, rate: 1500, amount: 1500 },
+      { description: "Traiteur", quantity: 50, rate: 25, amount: 1250 },
+    ],
+    taxRate: 19,
+    discount: 0,
   };
 
-  // ✅ INTERACTIVE PREVIEW HANDLER
-  // Allows clicking the PDF preview to switch sidebar tabs
-  const handlePreviewEdit = (sectionId) => {
-    if (sectionId) setActiveTab(sectionId);
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) =>
+        updateSetting("branding.logo.url", ev.target.result);
+      reader.readAsDataURL(file);
+    }
   };
 
   if (loading)
     return (
-      <div className="flex h-screen justify-center items-center">
-        <OrbitLoader/>
+      <div className="h-screen flex items-center justify-center">
+        <OrbitLoader />
       </div>
     );
-
-  const TABS = [
-    {
-      id: "branding",
-      label: t("invoiceCustomization.tabs.brand", "Branding"),
-      icon: Palette,
-    },
-    {
-      id: "layout",
-      label: t("invoiceCustomization.tabs.layout", "Mise en page"),
-      icon: Layers,
-    },
-    {
-      id: "table",
-      label: t("invoiceCustomization.tabs.table", "Tableau"),
-      icon: TableIcon,
-    },
-    {
-      id: "style",
-      label: t("invoiceCustomization.tabs.style", "Style"),
-      icon: Layout,
-    },
-    {
-      id: "text",
-      label: t("invoiceCustomization.tabs.content", "Textes"),
-      icon: Type,
-    },
-  ];
-
-  const isRTL = i18n.dir() === "rtl";
+  if (!settings) return null;
 
   return (
     <div
-      className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans"
+      className="flex h-full bg-white dark:bg-gray-900 overflow-hidden font-sans"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      {/* LEFT SIDEBAR (CONTROLS) */}
+      {/* --- LEFT SIDEBAR: CONTROLS --- */}
       <div
-        className={`flex-1 flex flex-col h-full overflow-hidden border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10 shadow-xl max-w-3xl ${isRTL ? "border-l border-r-0" : ""}`}
+        className={`flex-1 flex flex-col h-full border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10 shadow-xl max-w-2xl lg:max-w-xl ${isRTL ? "border-l border-r-0" : ""}`}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0 bg-white dark:bg-gray-800">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
@@ -420,180 +392,169 @@ const InvoiceSettingsPage = () => {
             </Button>
             <div>
               <h1 className="font-bold text-gray-900 dark:text-white text-lg">
-                {t("invoiceCustomization.title", "Design Facture")}
+                {t("invoiceCustomization.title")}
               </h1>
-              <p className="text-xs text-gray-500">
-                {t("invoiceCustomization.subtitle", "Configuration")}
-              </p>
             </div>
           </div>
           <Button
             variant="primary"
             icon={Save}
-            onClick={handleSave}
+            onClick={saveSettings}
             loading={saving}
           >
-            {t("common.save", "Save")}
+            {t("common.save")}
           </Button>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Tabs Sidebar */}
+          {/* Tabs */}
           <div
-            className={`w-64 overflow-y-auto p-4 bg-gray-50/50 dark:bg-gray-800/50 shrink-0 ${isRTL ? "border-l" : "border-r"} border-gray-100 dark:border-gray-700`}
+            className={`w-20 md:w-64 overflow-y-auto p-4 bg-white dark:bg-gray-800/50 shrink-0 ${isRTL ? "border-l" : "border-r"} border-gray-100 dark:border-gray-700`}
           >
             <div className="space-y-1">
-              {TABS.map((tab) => (
+              {[
+                {
+                  id: "branding",
+                  label: t("invoiceCustomization.tabs.branding"),
+                  icon: Palette,
+                },
+                {
+                  id: "layout",
+                  label: t("invoiceCustomization.tabs.layout"),
+                  icon: Layers,
+                },
+                {
+                  id: "table",
+                  label: t("invoiceCustomization.tabs.table"),
+                  icon: TableIcon,
+                },
+                {
+                  id: "style",
+                  label: t("invoiceCustomization.tabs.style"),
+                  icon: Layout,
+                },
+                {
+                  id: "text",
+                  label: t("invoiceCustomization.tabs.text"),
+                  icon: Type,
+                },
+              ].map((tab) => (
                 <TabButton
                   key={tab.id}
                   active={activeTab === tab.id}
                   icon={tab.icon}
-                  label={tab.label}
+                  label={<span className="hidden md:inline">{tab.label}</span>}
                   onClick={() => setActiveTab(tab.id)}
                 />
               ))}
             </div>
           </div>
 
-          {/* Form Area */}
-          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-            {/* BRANDING */}
+          {/* Form Content */}
+          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
             {activeTab === "branding" && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Palette className="text-orange-500" /> Branding
-                </h2>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                 <div className="space-y-4">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Logo
+                  <label className="text-xs font-bold text-gray-500 uppercase">
+                    {t("invoiceCustomization.branding.logo")}
                   </label>
-                  <div className="relative h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-all flex flex-col items-center justify-center overflow-hidden group">
+                  <div className="relative h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-orange-50 transition-colors flex flex-col items-center justify-center group overflow-hidden">
                     <input
                       type="file"
                       className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                      onChange={(e) => handleFileUpload(e, "branding.logo.url")}
+                      onChange={handleLogoUpload}
                       accept="image/*"
                     />
-                    {settings.branding.logo.url ? (
+                    {settings?.branding?.logo?.url ? (
                       <img
                         src={settings.branding.logo.url}
                         className="h-full object-contain p-2"
                         alt="Logo"
                       />
                     ) : (
-                      <div className="flex flex-col items-center text-gray-400 group-hover:text-orange-500">
+                      <div className="text-gray-400 flex flex-col items-center">
                         <ImageIcon size={24} />
-                        <span className="text-xs font-medium mt-2">
-                          Uploader un logo
+                        <span className="text-xs mt-2">
+                          {t("invoiceCustomization.branding.uploadLogo")}
                         </span>
                       </div>
                     )}
                   </div>
                 </div>
-
-                <div className="p-5 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ColorPicker
-                      label="Couleur Primaire"
-                      value={settings.branding.colors.primary}
-                      onChange={(v) =>
-                        updateSetting("branding.colors.primary", v)
-                      }
-                    />
-                    <ColorPicker
-                      label="Couleur Secondaire"
-                      value={settings.branding.colors.secondary}
-                      onChange={(v) =>
-                        updateSetting("branding.colors.secondary", v)
-                      }
-                    />
-                    <ColorPicker
-                      label="Couleur Texte"
-                      value={settings.branding.colors.text}
-                      onChange={(v) => updateSetting("branding.colors.text", v)}
-                    />
-                  </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <ColorPicker
+                    label={t("invoiceCustomization.branding.primaryColor")}
+                    value={settings?.branding?.colors?.primary}
+                    onChange={(v) =>
+                      updateSetting("branding.colors.primary", v)
+                    }
+                  />
+                  <ColorPicker
+                    label={t("invoiceCustomization.branding.secondaryColor")}
+                    value={settings?.branding?.colors?.secondary}
+                    onChange={(v) =>
+                      updateSetting("branding.colors.secondary", v)
+                    }
+                  />
                 </div>
               </div>
             )}
 
-            {/* LAYOUT */}
             {activeTab === "layout" && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Layers className="text-orange-500" /> Sections
-                </h2>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs rounded-lg flex gap-2">
+                  <Move size={16} />{" "}
+                  <span>{t("invoiceCustomization.layout.dragDropHint")}</span>
+                </div>
                 <div className="space-y-3">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                    {t("invoiceCustomization.layout.visibleElements")}
+                  </h3>
                   {settings.layout.sections
                     .sort((a, b) => a.order - b.order)
-                    .map((section, index) => (
-                      <div
-                        key={section.id}
-                        className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={section.visible}
-                          onChange={() => {
-                            const newSections = [...settings.layout.sections];
-                            newSections[index].visible =
-                              !newSections[index].visible;
+                    .map((section, idx) => (
+                      <ModernSwitch
+                        key={section.id || idx}
+                        label={t(
+                          `invoiceCustomization.sections.${section.id}`,
+                          section.label
+                        )}
+                        checked={section.visible}
+                        onChange={() => {
+                          const newSections = [...settings.layout.sections];
+                          const originalIdx = newSections.findIndex(
+                            (s) => s.id === section.id
+                          );
+                          if (originalIdx >= 0) {
+                            newSections[originalIdx].visible =
+                              !newSections[originalIdx].visible;
                             updateSetting("layout.sections", newSections);
-                          }}
-                          className="w-5 h-5 text-orange-600 rounded accent-orange-500"
-                        />
-                        <span className="flex-1 text-sm font-medium text-gray-700 dark:text-white">
-                          {section.label}
-                        </span>
-                        <div className="flex flex-col gap-1">
-                          <button
-                            disabled={index === 0}
-                            onClick={() => moveSection(index, "up")}
-                            className="text-gray-400 hover:text-orange-500 disabled:opacity-30"
-                          >
-                            <Move size={12} className="rotate-180" />
-                          </button>
-                          <button
-                            disabled={
-                              index === settings.layout.sections.length - 1
-                            }
-                            onClick={() => moveSection(index, "down")}
-                            className="text-gray-400 hover:text-orange-500 disabled:opacity-30"
-                          >
-                            <Move size={12} />
-                          </button>
-                        </div>
-                      </div>
+                          }
+                        }}
+                      />
                     ))}
                 </div>
               </div>
             )}
 
-            {/* TABLE */}
             {activeTab === "table" && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <TableIcon className="text-orange-500" /> Tableau
-                </h2>
-                <div className="p-5 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 space-y-4">
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                <div className="space-y-4">
                   <ColorPicker
-                    label="Fond En-tête"
-                    value={
-                      settings.table.headerColor ||
-                      settings.branding.colors.primary
-                    }
+                    label={t("invoiceCustomization.table.headerColor")}
+                    value={settings.table.headerColor}
                     onChange={(v) => updateSetting("table.headerColor", v)}
                   />
-                  <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="grid grid-cols-2 gap-4">
                     <ModernSwitch
-                      label="Lignes alternées"
+                      label={t("invoiceCustomization.table.striped")}
                       checked={settings.table.striped}
                       onChange={(e) =>
                         updateSetting("table.striped", e.target.checked)
                       }
                     />
                     <ModernSwitch
-                      label="Bords arrondis"
+                      label={t("invoiceCustomization.table.rounded")}
                       checked={settings.table.rounded}
                       onChange={(e) =>
                         updateSetting("table.rounded", e.target.checked)
@@ -601,15 +562,15 @@ const InvoiceSettingsPage = () => {
                     />
                   </div>
                 </div>
-
+                <hr className="border-gray-100 dark:border-gray-700" />
                 <div className="space-y-3">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Colonnes Visibles
-                  </label>
+                  <h3 className="text-xs font-bold text-gray-500 uppercase">
+                    {t("invoiceCustomization.table.columns")}
+                  </h3>
                   {Object.entries(settings.table.columns).map(([key, val]) => (
                     <ModernSwitch
                       key={key}
-                      label={key.charAt(0).toUpperCase() + key.slice(1)}
+                      label={t(`invoiceCustomization.columns.${key}`, key)}
                       checked={val}
                       onChange={(e) =>
                         updateSetting(`table.columns.${key}`, e.target.checked)
@@ -620,80 +581,75 @@ const InvoiceSettingsPage = () => {
               </div>
             )}
 
-            {/* STYLE */}
             {activeTab === "style" && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Layout className="text-orange-500" /> Apparence
-                </h2>
-                <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-6">
-                  <RangeSlider
-                    label="Taille Police"
-                    icon={Type}
-                    value={settings.branding.fonts.size}
-                    min={8}
-                    max={14}
-                    step={1}
-                    suffix="px"
-                    onChange={(e) =>
-                      updateSetting(
-                        "branding.fonts.size",
-                        parseInt(e.target.value)
-                      )
-                    }
-                  />
-                  <div className="h-px bg-gray-100 dark:bg-gray-700"></div>
-                  <RangeSlider
-                    label="Arrondi"
-                    icon={Grid}
-                    value={settings.layout.borderRadius}
-                    min={0}
-                    max={24}
-                    step={2}
-                    suffix="px"
-                    onChange={(e) =>
-                      updateSetting(
-                        "layout.borderRadius",
-                        parseInt(e.target.value)
-                      )
-                    }
-                  />
-                </div>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                <RangeSlider
+                  label={t("invoiceCustomization.style.fontSize")}
+                  icon={Type}
+                  value={settings.branding.fonts.size}
+                  min={8}
+                  max={14}
+                  step={1}
+                  suffix="px"
+                  onChange={(e) =>
+                    updateSetting(
+                      "branding.fonts.size",
+                      parseInt(e.target.value)
+                    )
+                  }
+                />
+                <RangeSlider
+                  label={t("invoiceCustomization.style.borderRadius")}
+                  icon={Grid}
+                  value={settings.layout.borderRadius}
+                  min={0}
+                  max={20}
+                  step={2}
+                  suffix="px"
+                  onChange={(e) =>
+                    updateSetting(
+                      "layout.borderRadius",
+                      parseInt(e.target.value)
+                    )
+                  }
+                />
               </div>
             )}
 
-            {/* TEXT & LABELS */}
             {activeTab === "text" && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Type className="text-orange-500" /> Textes & Labels
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                <div className="grid grid-cols-1 gap-4">
                   {["invoiceTitle", "from", "to", "item", "total"].map(
-                    (label) => (
+                    (field) => (
                       <Input
-                        key={label}
-                        label={label.toUpperCase()}
-                        value={settings.labels[label]}
+                        key={field}
+                        label={t(
+                          `invoiceCustomization.labels.${field}`,
+                          field.toUpperCase()
+                        )}
+                        value={settings.labels[field]}
                         onChange={(e) =>
-                          updateSetting(`labels.${label}`, e.target.value)
+                          updateSetting(`labels.${field}`, e.target.value)
                         }
                       />
                     )
                   )}
                 </div>
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-2">
-                    <DollarSign size={14} /> Instructions de Paiement
+                    <DollarSign size={14} />{" "}
+                    {t("invoiceCustomization.text.paymentInstructions")}
                   </label>
                   <textarea
                     rows={4}
-                    value={settings.paymentTerms.bankDetails}
+                    className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-orange-500"
+                    value={settings.paymentTerms?.bankDetails || ""}
                     onChange={(e) =>
                       updateSetting("paymentTerms.bankDetails", e.target.value)
                     }
-                    className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500"
-                    placeholder="RIB, IBAN, etc."
+                    placeholder={t(
+                      "invoiceCustomization.text.paymentPlaceholder"
+                    )}
                   />
                 </div>
               </div>
@@ -702,28 +658,26 @@ const InvoiceSettingsPage = () => {
         </div>
       </div>
 
-      {/* RIGHT SIDEBAR: PDF PREVIEW */}
+      {/* --- RIGHT SIDEBAR: LIVE PREVIEW --- */}
       <div
         className={`hidden lg:flex flex-1 bg-gray-900 flex-col overflow-hidden ${isRTL ? "border-r" : "border-l"} border-gray-700`}
       >
         <div className="h-14 flex items-center justify-between px-6 border-b border-gray-700 bg-gray-900 shrink-0">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-            Aperçu en direct
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />{" "}
+            {t("invoiceCustomization.livePreview")}
           </span>
           <div className="text-gray-500 text-xs flex items-center gap-2">
-            <Eye size={14} /> Live Preview
+            <Eye size={14} /> {t("invoiceCustomization.interactiveMode")}
           </div>
         </div>
 
-        {/* 
-           Using PDF-based Live Preview instead of HTML for 100% consistency.
-           The onEditSection prop enables "Click-to-edit" feature.
-        */}
-        <div className="flex-1 w-full h-full bg-gray-800 p-8">
+        <div className="flex-1 w-full h-full bg-gray-800 p-8 overflow-auto">
           <LiveInvoicePreview
             settings={settings}
             data={previewData}
-            onEditSection={handlePreviewEdit} // ✅ Pass interactive handler
+            onEditSection={(section) => setActiveTab(section)}
+            onReorder={reorderSections}
           />
         </div>
       </div>
@@ -731,4 +685,4 @@ const InvoiceSettingsPage = () => {
   );
 };
 
-export default InvoiceSettingsPage;
+export default InvoiceCustomizationPage;

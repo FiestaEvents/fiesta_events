@@ -213,7 +213,8 @@
     "expenseSubtitle": "Total Expenses",
     "lowStockAlerts": "Low Stock Alerts"
   },
-  "common": { 
+  "common": {
+    "none": "None",
     "noResults": "No results found",
     "clearFilters": "Clear Filters",
     "all": "All",
@@ -1526,6 +1527,41 @@
     }
   },
   "reminders": {
+    "dateTimeFormat": "{{date}} at {{time}}",
+    "errors": {
+      "notFound": "Reminder Not Found"
+    },
+    "actions": {
+      "markDone": "Mark as Done",
+      "reschedule": "Reschedule",
+      "viewFull": "View Full Details",
+      "unsnooze": "Unsnooze",
+      "back": "Back to Reminders",
+      "backToList": "Back to List",
+      "reactivate": "Reactivate"
+    },
+    "modals": {
+      "detail": {
+        "title": "Reminder Details",
+        "dueDate": "Due Date",
+        "noNotes": "No additional notes.",
+         "snooze": {
+         "title": "Snooze Reminder"
+          },
+         "delete": {
+          "title": "Delete Reminder",
+          "description": "Are you sure you want to delete this reminder? This action cannot be undone."
+          }
+      },
+      "delete": {
+        "title": "Delete Reminder",
+        "question": "Delete this reminder?",
+        "warning": "This action cannot be undone."
+      }
+    },
+    "errorLoading": "Failed to load reminders",
+    "noReminders": "No reminders found",
+    "createFirst": "Create your first reminder",
     "clearFilters":"Clear Filters",
     "subtitle": "Manage and track your important notifications",
     "searchPlaceholder": "Search reminders...",
@@ -1560,47 +1596,32 @@
     "urgent": "Urgent"
   },
   "form": {
-    "createTitle": "Create New Reminder",
-    "basicInfo": "Basic Information",
-    "relatedItems": "Related Items",
-    "notifications": "Notifications",
-    "recurrence": "Recurrence",
-    "enableRecurrence": "Enable Recurrence",
-    "fields": {
-      "title": "Title",
-      "relatedEvent": "Related Event",
-      "relatedClient": "Related Client",
-      "relatedTask": "Related Task",
-      "notificationMethods": "Notification Methods",
-      "notes": "Notes",
-      "date": "Date",
-      "time": "Time",
-      "type": "Type",
-      "priority": "Priority",
-      "description": "Description"
+      "createTitle": "Create Reminder",
+      "editTitle": "Edit Reminder",
+      "fields": {
+        "title": "Title",
+        "date": "Date",
+        "time": "Time",
+        "type": "Type",
+        "priority": "Priority",
+        "description": "Description",
+        "relatedEvent": "Event",
+        "relatedClient": "Client",
+        "relatedTask": "Task"
+      },
+      "placeholders": {
+        "title": "e.g., Call the Caterer",
+        "description": "Optional notes..."
+      },
+      "sections": {
+        "links": "Link to (Optional)"
+      },
+      "buttons": {
+        "create": "Create Reminder",
+        "update": "Update Reminder",
+        "cancel": "Cancel"
+      }
     },
-    "history": {
-    "comingSoon": "Activity history coming soon",
-    "description": "We're working on a detailed timeline to track changes, snoozes, and completion history for this reminder."
-  },
-     "buttons": {
-      "cancel": "Cancel",
-      "next": "Next",
-      "previous": "Previous",
-      "update": "Update",
-      "updateNow": "Update Now",
-      "create": "Create"
-    }
-  },
-   "modals": {
-    "snooze": {
-      "title": "Snooze Reminder"
-    },
-    "delete": {
-      "title": "Delete Reminder",
-      "description": "Are you sure you want to delete this reminder? This action cannot be undone."
-    }
-  },
     "title": "Reminders",
     "description": "Manage your event reminders and notifications",
     "addReminder": "Add Reminder",
@@ -1613,9 +1634,6 @@
     "cancelReminder": "Cancel Reminder",
     "details": {
       "createdBy": "Created By"
-    },
-    "actions": {
-      "unsnooze": "Unsnooze"
     },
     "notifications": {
       "deleteConfirm": "Are you sure you want to delete this reminder?",
@@ -1631,10 +1649,21 @@
       "snoozeError": "Failed to snooze reminder",
       "activating": "Activating reminder...",
       "unsnoozed": "Reminder activated",
-      "activateError": "Failed to activate reminder"
+      "activateError": "Failed to activate reminder",
+      "loadError": "Failed to load reminder data",
+      "saveError": "Failed to save reminder",
+      "markDoneError": "Failed to mark reminder as done",
+      "reactivateError": "Failed to reactivate reminder",
+      "rescheduleError": "Failed to reschedule reminder",
+      "cancelError": "Failed to cancel reminder",
+      "markCompleted": "Marked as completed"
     },
     "validation": {
-      "notificationMethodsRequired": "At least one notification method is required"
+      "notificationMethodsRequired": "At least one notification method is required",
+      "titleRequired": "Title is required",
+      "dateRequired": "Date is required",
+      "timeRequired": "Time is required",
+      "fixErrors": "Please fix the errors before saving"
     },
     "type": {
       "label": "Type",
@@ -1644,10 +1673,7 @@
       "general": "General",
       "follow_up": "Follow Up",
       "deadline": "Deadline",
-      "client": "Client",
-      "maintenance": "Maintenance",
-      "followup": "Follow-up",
-      "other": "Other"
+      "client": "Client"
     },
     "recurrence": {
       "label": "Recurrence",
@@ -1913,7 +1939,12 @@
       "allIncomeSources": "All income sources",
       "eventVenueCosts": "Event + Venue costs",
       "afterAllExpenses": "After all expenses",
-      "overallProfitability": "Overall profitability"
+      "overallProfitability": "Overall profitability",
+      "grossRevenue": "Gross Revenue",
+      "otherExpenses": "Other Expenses",
+      "ebit": "Operating Profit (EBIT)",
+      "tax": "Estimated Tax",
+      "netIncome": "Net Income"
     },
     "eventFinancials": {
       "title": "Event Financials",
@@ -1970,7 +2001,28 @@
       "reports": "Reports"
     },
     "errors": {
-      "loadFailed": "Failed to load financial data"
+      "selectDates": "Please select both start and end dates for custom range",
+      "loadFailed": "Failed to load financial data",
+      "generateFailed": "Failed to generate report",
+      "exportFailed": "Failed to export CSV",
+      "generateFirst": "Please generate a report first"
+    },
+    "success": {
+      "generated": "Report generated successfully",
+      "exported": "CSV exported successfully"
+    },
+    "profitability": {
+      "title": "Profitability Analysis",
+      "subtitle": "Track your margins and net income",
+      "netIncomeDesc": "Net earnings",
+      "marginDesc": "Efficiency ratio",
+      "revenueDesc": "Gross income",
+      "expensesDesc": "Total costs",
+      "plStatement": "P&L Statement",
+      "trendsTitle": "Profitability Trends",
+      "trendsDesc": "Income vs Expenses over time",
+      "revenueSources": "Revenue Sources",
+      "expenseDistribution": "Expense Distribution"
     }
   },
   "analytics": {
@@ -2466,186 +2518,89 @@
       "emptyFile": "File is empty or corrupted"
     }
   },
-  "invoiceCustomization": {
-    "title": "Invoice Customization",
-    "subtitle": "Customize your invoice template",
+ "invoiceCustomization": {
+    "title": "Invoice Design",
+    "livePreview": "Live Preview",
+    "interactiveMode": "Interactive Mode",
     "tabs": {
-      "personal": "Personal Info",
-      "security": "Security",
-      "venue": "Venue Details",
-      "amenities": "Amenities & Hours",
-      "spaces": "Venue Spaces"
+      "branding": "Branding",
+      "layout": "Structure",
+      "table": "Table",
+      "style": "Style",
+      "text": "Content"
     },
-    "personal": {
-      "title": "Personal Information",
-      "description": "Update your personal details and profile picture",
-      "fields": {
-        "fullName": "Full Name",
-        "email": "Email Address (Read-only)",
-        "phone": "Phone Number",
-        "avatar": "Avatar URL"
-      },
-      "avatarPreview": {
-        "title": "Profile Picture",
-        "description": "Preview of your avatar"
-      },
-      "save": "Save Changes"
+    "branding": {
+      "logo": "Logo",
+      "uploadLogo": "Upload Logo",
+      "primaryColor": "Primary Color",
+      "secondaryColor": "Secondary Color"
     },
-    "security": {
-      "title": "Change Password",
-      "description": "Ensure your account is using a strong password",
-      "fields": {
-        "currentPassword": "Current Password",
-        "newPassword": "New Password",
-        "confirmPassword": "Confirm New Password"
-      },
-      "requirements": {
-        "title": "Password Requirements:",
-        "items": "Items"
-      },
-      "changePassword": "Change Password"
+    "layout": {
+      "dragDropHint": "Drag and drop elements in the preview to reorder.",
+      "visibleElements": "Visible Elements"
     },
-    "venue": {
-      "basicInfo": {
-        "title": "Basic Information",
-        "fields": {
-          "venueName": "Venue Name",
-          "description": "Description"
-        }
-      },
-      "address": {
-        "title": "Address",
-        "fields": {
-          "street": "Street Address",
-          "city": "City",
-          "state": "State/Province",
-          "zipCode": "ZIP/Postal Code",
-          "country": "Country"
-        }
-      },
-      "contact": {
-        "title": "Contact Information",
-        "fields": {
-          "phone": "Phone",
-          "email": "Email"
-        }
-      },
-      "save": "Save Venue Details"
+    "sections": {
+      "header": "Header",
+      "details": "Details (From/To)",
+      "items": "Items Table",
+      "totals": "Totals",
+      "footer": "Footer"
     },
-    "amenities": {
-      "title": "Venue Amenities",
-      "description": "Add amenities that your venue offers. Select from common options or add custom ones.",
-      "quickAdd": {
-        "title": "Quick Add Common Amenities",
-        "description": "Click to add frequently used amenities for weddings and events"
-      },
-      "customAmenity": {
-        "title": "Add Custom Amenity",
-        "placeholder": "Enter custom amenity (e.g., Vintage Furniture, Fire Pit, etc.)",
-        "add": "Add Custom"
-      },
-      "selectedAmenities": {
-        "title": "Selected Amenities ({{count}})",
-        "clearAll": "Clear All",
-        "empty": {
-          "description": "Select from common options above or add custom ones."
-        }
-      },
-      "operatingHours": {
-        "title": "Operating Hours",
-        "description": "Set your venue's weekly schedule",
-        "labels": {
-          "to": "to",
-          "closed": "Closed"
-        }
-      },
-      "save": "Save Amenities & Hours"
+    "table": {
+      "headerColor": "Header Background",
+      "striped": "Striped Rows",
+      "rounded": "Rounded Corners",
+      "columns": "Columns"
     },
-    "spaces": {
-      "title": "Venue Spaces",
-      "description": "Manage different spaces within your venue",
-      "existingSpaces": {
-        "title": "Existing Spaces ({{count}})",
-        "capacity": "Capacity",
-        "price": "Price",
-        "status": {
-          "active": "Active",
-          "inactive": "Inactive"
-        },
-        "actions": {
-          "edit": "Edit space",
-          "delete": "Delete space"
-        }
-      },
-      "emptyState": {
-        "title": "No Spaces Yet",
-        "description": "Add different spaces within your venue to offer more booking options to your clients."
-      },
-      "form": {
-        "addTitle": "Add New Space",
-        "editTitle": "Edit Space",
-        "fields": {
-          "spaceName": "Space Name",
-          "basePrice": "Base Price ($)",
-          "description": "Description",
-          "minCapacity": "Min Capacity",
-          "maxCapacity": "Max Capacity"
-        },
-        "activeLabel": "Active (available for bookings)",
-        "actions": {
-          "add": "Add Space",
-          "update": "Update Space",
-          "cancel": "Cancel"
-        }
-      },
-      "save": "Save All Changes"
+    "columns": {
+      "description": "Description",
+      "quantity": "Quantity",
+      "rate": "Price",
+      "discount": "Discount",
+      "tax": "Tax",
+      "total": "Total"
     },
-    "common": {
-      "loading": "Loading settings...",
-      "tryAgain": "Try Again",
-      "table": {
-        "showing": "Showing",
-        "to": "to",
-        "of": "of",
-        "results": "results"
-      }
+    "style": {
+      "fontSize": "Font Size",
+      "borderRadius": "Border Radius"
     },
-    "validation": {
-      "required": "This field is required",
-      "email": "Please provide a valid email",
-      "minLength": "Must contain at least {min} characters",
-      "passwordsMatch": "Passwords must match",
-      "capacityRange": "Maximum capacity must be greater than or equal to minimum capacity"
+    "text": {
+      "paymentInstructions": "Payment Instructions",
+      "paymentPlaceholder": "Bank details, IBAN, SWIFT..."
     },
-    "notifications": {
-      "success": {
-        "profileUpdated": "Profile updated successfully!",
-        "passwordChanged": "Password changed successfully!",
-        "venueUpdated": "Venue settings updated successfully!",
-        "spaceCreated": "Space created successfully",
-        "spaceUpdated": "Space updated successfully",
-        "spaceDeleted": "Space deleted successfully",
-        "amenityAdded": "Amenity added",
-        "customAmenityAdded": "Custom amenity added",
-        "imageUploaded": "Image uploaded successfully",
-        "imageRemoved": "Image removed successfully"
-      },
-      "error": {
-        "generic": "An error occurred",
-        "loadFailed": "Failed to load settings",
-        "saveFailed": "Failed to save",
-        "deleteFailed": "Failed to delete",
-        "uploadFailed": "Failed to upload",
-        "spaceNameRequired": "Space name is required",
-        "capacityRequired": "Capacity range is required",
-        "priceRequired": "Price is required",
-        "amenityExists": "This amenity already exists",
-        "saveSpaceFirst": "Please save the space first before uploading images"
-      },
-      "confirm": {
-        "deleteSpace": "Are you sure you want to delete this space?",
-        "clearAllAmenities": "Remove all amenities?"
-      }
+    "labels": {
+      "invoiceTitle": "Invoice Title",
+      "from": "From Label",
+      "to": "To Label",
+      "item": "Item Column",
+      "total": "Total Column"
+    },
+    "toasts": {
+      "loadError": "Failed to load settings",
+      "saveSuccess": "Design saved successfully",
+      "saveError": "Failed to save design"
+    }
+  },
+  "invoicePreview": {
+    "date": "Date",
+    "dueDate": "Due Date",
+    "subtotal": "Subtotal",
+    "tax": "VAT",
+    "discount": "Discount",
+    "pageInfo": "Page {{current}} / {{total}}",
+    "tooltips": {
+      "drag": "Drag to reorder",
+      "edit": "Edit settings"
+    },
+    "defaultLabels": {
+      "invoice": "INVOICE",
+      "from": "FROM",
+      "to": "TO",
+      "description": "Description",
+      "quantity": "Qty",
+      "price": "Price",
+      "total": "Total",
+      "paymentInstructions": "Payment Instructions"
     }
   },
   "venueSettings": {
@@ -2847,32 +2802,30 @@
   },
   "contracts": {
     "settings": {
-      "title": "Contract Settings",
-      "subtitle": "Global configuration for all contracts",
-      "loading": "Loading settings...",
+      "title": "Contract Configuration",
+      "subtitle": "Customize templates, branding, and defaults",
       "save": "Save Changes",
+      "loading": "Loading configuration...",
       "tabs": {
         "company": "Company Info",
         "structure": "Structure & ID",
         "branding": "Branding",
-        "financials": "Financials",
+        "financials": "Financial Defaults",
         "layout": "Layout",
         "clauses": "Clauses",
-        "cancellation": "Cancellation",
-        "labels": "Labels"
+        "cancellation": "Cancellation Policy",
+        "labels": "Text Labels"
       },
       "company": {
-        "title": "Company Information",
+        "title": "Legal Entity Information",
         "legalName": "Legal Name",
         "displayName": "Display Name",
         "matriculeFiscale": "Tax ID (Matricule Fiscale)",
-        "address": "Address",
+        "representative": "Legal Representative",
         "phone": "Phone",
         "email": "Email",
-        "website": "Website",
-        "rib": "Bank Account (RIB/IBAN)",
-        "bankName": "Bank Name",
-        "representative": "Legal Representative"
+        "address": "Address",
+        "bankName": "Bank Name"
       },
       "structure": {
         "title": "Sequence Configuration",
@@ -2881,53 +2834,46 @@
         "separator": "Separator",
         "includeYear": "Include Year",
         "yearFormat": "Year Format",
-        "sequenceDigits": "Padding Zeros",
-        "sequenceDigitsHelp": "Example: 4 gives \"0001\", 3 gives \"001\".",
-        "resetYearly": "Reset Sequence Yearly",
-        "resetYearlyHelp": "Numbering restarts at 0001 on January 1st"
+        "sequenceDigits": "Sequence Digits (Padding)",
+        "resetYearly": "Reset sequence yearly",
+        "resetYearlyHelp": "Numbering restarts at 0001 on Jan 1st"
       },
       "branding": {
-        "title": "Branding & Colors",
+        "title": "Visual Identity",
         "primary": "Primary Color",
         "secondary": "Secondary Color",
-        "accent": "Accent Color",
         "text": "Text Color",
-        "background": "Background Color",
+        "accent": "Accent Color",
         "logo": "Logo",
-        "logoUrl": "Logo URL (HTTPS)",
-        "logoHelp": "For best PDF results, use a direct link to a PNG or JPG image.",
-        "logoPreview": "Preview"
+        "logoUrl": "Logo Public URL (HTTPS)"
       },
       "financials": {
         "title": "Financial Defaults",
-        "currency": "Currency",
         "vatRate": "Default VAT Rate (%)",
-        "stampDuty": "Stamp Duty (TND)",
-        "depositPercentage": "Required Deposit (%)",
-        "securityDeposit": "Security Deposit (TND)",
-        "lateFee": "Late Payment Fee (%)"
+        "stampDuty": "Stamp Duty",
+        "depositPercentage": "Deposit Required (%)",
+        "securityDeposit": "Security Deposit Amount",
+        "lateFee": "Late Payment Fee (%)",
+        "currency": "Currency"
       },
       "layout": {
-        "title": "PDF Layout",
-        "template": "Template Style",
-        "paperSize": "Paper Size",
+        "title": "Document Layout",
         "showPageNumbers": "Show Page Numbers",
-        "showDate": "Show Date"
+        "showDate": "Show Generation Date"
       },
       "clauses": {
-        "title": "Default Clauses",
+        "title": "Default Contract Clauses",
         "add": "Add Clause",
         "articleTitle": "Article Title",
-        "content": "Clause content...",
         "required": "Required",
-        "empty": "No default clauses. Click \"Add\" to create your first clause.",
-        "dragHint": "Drag to reorder"
+        "content": "Clause content...",
+        "empty": "No default clauses. Click 'Add' to create your first clause."
       },
       "cancellation": {
         "title": "Cancellation Policy",
-        "enabled": "Cancellation Policy Enabled",
+        "enabled": "Enable Cancellation Policy",
         "add": "Add Tier",
-        "daysBeforeEvent": "Days Before (Min)",
+        "daysBeforeEvent": "Days Before",
         "penaltyPercentage": "Penalty (%)",
         "description": "Description",
         "empty": "No cancellation tiers defined."
@@ -2946,14 +2892,50 @@
         "signatureLabel": "Signature Label"
       },
       "preview": {
-        "title": "PDF Preview",
+        "title": "Live Preview",
         "clickToEdit": "Click areas to edit"
       },
       "messages": {
-        "loadError": "Failed to load contract settings",
+        "loadError": "Failed to load settings",
         "saveSuccess": "Settings saved successfully",
-        "saveError": "Failed to save settings"
+        "saveError": "Failed to save settings",
+        "timeoutError": "Request timed out. Please try again.",
+        "connectionError": "Connection error. Please check your network."
       }
+    },
+    "preview": {
+      "tooltips": {
+        "drag": "Drag to reorder",
+        "edit": "Edit settings"
+      },
+      "defaultCompany": "YOUR COMPANY",
+      "defaultTitle": "CONTRACT",
+      "ref": "Ref",
+      "date": "Date",
+      "partiesTitle": "BETWEEN THE UNDERSIGNED",
+      "providerDefault": "The Service Provider",
+      "providerLabel": "The Service Provider",
+      "aka": "Hereinafter referred to as",
+      "clientDefault": "The Client",
+      "clientLabel": "The Client",
+      "partnerLabel": "The Partner",
+      "objectTitle": "OBJECT OF THE CONTRACT",
+      "objectIntro": "The object of this contract is:",
+      "start": "Start",
+      "end": "End",
+      "financialsTitle": "FINANCIAL CONDITIONS",
+      "table": {
+        "description": "Description",
+        "qty": "Qty",
+        "totalHT": "Total (Excl. Tax)"
+      },
+      "netToPay": "NET TO PAY",
+      "generalConditions": "GENERAL CONDITIONS",
+      "noClauses": "No clauses defined",
+      "jurisdiction": "JURISDICTION",
+      "jurisdictionText": "Exclusive jurisdiction assigned to",
+      "signaturesTitle": "SIGNATURES",
+      "for": "For"
     },
     "detail": {
       "status": {

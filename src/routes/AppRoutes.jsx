@@ -81,7 +81,7 @@ const Finance = lazy(() => import("../pages/finance/Finance.jsx"));
 const FinanceReports = lazy(() => import("../pages/finance/Reports.jsx"));
 const Transactions = lazy(() => import("../pages/finance/Transactions.jsx"));
 const Analytics = lazy(() => import("../pages/finance/Analytics.jsx"));
-
+const Profitability = lazy(() => import("../pages/finance/Profitability.jsx"));
 // Tasks
 const TasksList = lazy(() => import("../pages/tasks/TasksList.jsx"));
 const TaskDetail = lazy(() => import("../pages/tasks/TaskDetail.jsx"));
@@ -409,6 +409,14 @@ const AppRoutes = () => {
               }
             />
             <Route
+              path="/contracts/settings"
+              element={
+                <PageTransition>
+                  <ContractSettingsPage />
+                </PageTransition>
+              }
+            />
+            <Route
               path="/contracts/new"
               element={
                 <PageTransition>
@@ -429,14 +437,6 @@ const AppRoutes = () => {
               element={
                 <PageTransition>
                   <ContractFormPage />
-                </PageTransition>
-              }
-            />
-            <Route
-              path="/contracts/settings"
-              element={
-                <PageTransition>
-                  <ContractSettingsPage />
                 </PageTransition>
               }
             />
@@ -473,6 +473,14 @@ const AppRoutes = () => {
               element={
                 <PageTransition>
                   <FinanceReports />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/finance/profitability"
+              element={
+                <PageTransition>
+                  <Profitability />
                 </PageTransition>
               }
             />

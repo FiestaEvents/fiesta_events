@@ -1473,6 +1473,10 @@
     }
   },
   "reminders": {
+    "dateTimeFormat": "{{date}} في {{time}}",
+    "errorLoading": "فشل تحميل التذكيرات",
+    "noReminders": "لا توجد تذكيرات",
+    "createFirst": "أنشئ تذكيرك الأول",
     "backToReminders": "عودة للتذكيرات",
     "loadingDetails": "جاري التحميل...",
     "markComplete": "تثبيت التذكير",
@@ -1499,7 +1503,16 @@
       "unsnooze": "إلغاء التأجيل",
       "snooze": "تأجيل",
       "edit": "تعديل",
-      "delete": "حذف"
+      "delete": "حذف",
+      "markDone": "تحديد كمكتمل",
+      "reschedule": "إعادة جدولة",
+      "viewFull": "عرض التفاصيل الكاملة",
+      "back": "العودة إلى التذكيرات",
+      "backToList": "العودة للقائمة",
+      "reactivate": "إعادة التنشيط"
+    },
+    "errors": {
+      "notFound": "التذكير غير موجود"
     },
     "notifications": {
       "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذا التذكير؟",
@@ -1512,10 +1525,21 @@
       "snoozeError": "فشل تأجيل التذكير",
       "activating": "جاري تفعيل التذكير...",
       "unsnoozed": "تم تفعيل التذكير",
-      "activateError": "فشل تفعيل التذكير"
+      "activateError": "فشل تفعيل التذكير",
+      "loadError": "فشل تحميل بيانات التذكير",
+      "saveError": "فشل حفظ التذكير",
+      "markDoneError": "فشل تحديد كمكتمل",
+      "reactivateError": "فشل إعادة التنشيط",
+      "rescheduleError": "فشل إعادة الجدولة",
+      "cancelError": "فشل إلغاء التذكير",
+      "markCompleted": "تم تحديد كمكتمل"
     },
     "validation": {
-      "notificationMethodsRequired": "مطلوب طريقة إشعار واحدة على الأقل"
+      "notificationMethodsRequired": "مطلوب طريقة إشعار واحدة على الأقل",
+      "titleRequired": "العنوان مطلوب",
+      "dateRequired": "التاريخ مطلوب",
+      "timeRequired": "الوقت مطلوب",
+      "fixErrors": "يرجى تصحيح الأخطاء قبل الحفظ"
     },
     "clearFilters": "مسح المرشحات",
     "type": {
@@ -1570,32 +1594,30 @@
       "sunday": "الأحد"
     },
     "form": {
+      "createTitle": "إنشاء تذكير",
       "editTitle": "تعديل التذكير",
-      "basicInfo": "المعلومات الأساسية",
-      "relatedItems": "عناصر ذات صلة",
-      "notifications": "الإشعارات",
-      "recurrence": "التكرار",
-      "enableRecurrence": "تفعيل التكرار",
       "fields": {
+        "title": "العنوان",
         "date": "التاريخ",
         "time": "الوقت",
         "type": "النوع",
-        "priority": "الاولوية",
+        "priority": "الأولوية",
         "description": "الوصف",
-        "title": "العنوان",
-        "relatedEvent": "حدث ذو صلة",
-        "relatedClient": "عميل ذو صلة",
-        "relatedTask": "مهمة ذات صلة",
-        "notificationMethods": "طرق الإشعار",
-        "notes": "ملاحظات"
+        "relatedEvent": "الحدث",
+        "relatedClient": "العميل",
+        "relatedTask": "المهمة"
+      },
+      "placeholders": {
+        "title": "مثال: الاتصال بالمطعم",
+        "description": "ملاحظات اختيارية..."
+      },
+      "sections": {
+        "links": "ربط بـ (اختياري)"
       },
       "buttons": {
-        "cancel": "إلغاء",
-        "next": "التالي",
-        "previous": "السابق",
+        "create": "إنشاء تذكير",
         "update": "تحديث",
-        "updateNow": "تحديث الآن",
-        "create": "إنشاء"
+        "cancel": "إلغاء"
       }
     },
     "history": {
@@ -1603,9 +1625,18 @@
       "description": "نحن نعمل على جدول زمني مفصل لتتبع التغييرات والتأجيلات وسجل الإكمال لهذا التذكير."
     },
     "modals": {
+      "detail": {
+        "title": "تفاصيل التذكير",
+        "dueDate": "تاريخ الاستحقاق",
+        "noNotes": "لا توجد ملاحظات إضافية."
+      },
       "delete": {
         "confirm": "حذف",
-        "cancel": "إلغاء"
+        "cancel": "إلغاء",
+        "title": "حذف التذكير",
+        "description": "هل أنت متأكد أنك تريد حذف \"{{name}}\"؟ هذا الإجراء لا يمكن التراجع عنه.",
+        "question": "حذف هذا التذكير؟",
+        "warning": "لا يمكن التراجع عن هذا الإجراء."
       }
     },
     "filters": {
@@ -1871,7 +1902,12 @@
       "allIncomeSources": "جميع مصادر الدخل",
       "eventVenueCosts": "تكاليف الفعاليات + المكان",
       "afterAllExpenses": "بعد جميع المصروفات",
-      "overallProfitability": "الربحية الإجمالية"
+      "overallProfitability": "الربحية الإجمالية",
+      "grossRevenue": "الإيرادات الإجمالية",
+      "otherExpenses": "مصاريف أخرى",
+      "ebit": "الربح التشغيلي (EBIT)",
+      "tax": "الضريبة المقدرة",
+      "netIncome": "صافي الدخل"
     },
     "eventFinancials": {
       "title": "الأمور المالية للفعاليات",
@@ -1929,6 +1965,19 @@
     },
     "errors": {
       "loadFailed": "فشل تحميل البيانات المالية"
+    },
+    "profitability": {
+      "title": "تحليل الربحية",
+      "subtitle": "تتبع الهوامش وصافي الدخل الخاص بك",
+      "netIncomeDesc": "صافي الأرباح",
+      "marginDesc": "نسبة الكفاءة",
+      "revenueDesc": "الدخل الإجمالي",
+      "expensesDesc": "التكاليف الإجمالية",
+      "plStatement": "بيان الأرباح والخسائر",
+      "trendsTitle": "اتجاهات الربحية",
+      "trendsDesc": "الإيرادات مقابل المصاريف بمرور الوقت",
+      "revenueSources": "مصادر الإيرادات",
+      "expenseDistribution": "توزيع المصاريف"
     }
   },
   "analytics": {
@@ -2188,6 +2237,7 @@
     "card": "البطاقة"
   },
   "common": {
+    "none": "لا شيء",
     "noResults": "لم يتم العثور على نتائج",
     "clearFilters": "مسح المرشحات",
     "all": "الكل",
@@ -2726,238 +2776,87 @@
   },
   "invoiceCustomization": {
     "title": "تصميم الفاتورة",
-    "subtitle": "تخصيص قالب الفاتورة الخاص بك",
+    "livePreview": "معاينة مباشرة",
+    "interactiveMode": "وضع تفاعلي",
     "tabs": {
-      "brand": "العلامة التجارية",
-      "layout": "التخطيط",
+      "branding": "العلامة التجارية",
+      "layout": "الهيكل",
       "table": "الجدول",
       "style": "النمط",
-      "content": "المحتوى",
-      "personal": "[TO_TRANSLATE] Personal Info",
-      "security": "[TO_TRANSLATE] Security",
-      "venue": "[TO_TRANSLATE] Venue Details",
-      "amenities": "[TO_TRANSLATE] Amenities & Hours",
-      "spaces": "مساحات المكان"
+      "text": "المحتوى"
     },
     "branding": {
-      "companyLogo": "شعار الشركة",
-      "uploadLogo": "انقر للتحميل",
-      "brandColors": "الألوان",
-      "primaryColor": "أساسي",
-      "secondaryColor": "ثانوي"
+      "logo": "الشعار",
+      "uploadLogo": "رفع الشعار",
+      "primaryColor": "اللون الأساسي",
+      "secondaryColor": "اللون الثانوي"
     },
     "layout": {
-      "sections": "الأقسام"
+      "dragDropHint": "قم بسحب وإفلات العناصر في المعاينة لإعادة الترتيب.",
+      "visibleElements": "العناصر المرئية"
+    },
+    "sections": {
+      "header": "الرأس",
+      "details": "التفاصيل (من/إلى)",
+      "items": "جدول العناصر",
+      "totals": "الإجماليات",
+      "footer": "تذييل الصفحة"
     },
     "table": {
-      "style": "المظهر",
-      "visibleColumns": "الأعمدة",
-      "headerBg": "خلفية الرأس",
-      "striped": "مخطط",
-      "rounded": "دائري"
-    },
-    "style": {
-      "density": "الكثافة",
-      "fontSize": "حجم الخط",
-      "radius": "نصف القطر"
+      "headerColor": "خلفية الرأس",
+      "striped": "صفوف مخططة",
+      "rounded": "زوايا دائرية",
+      "columns": "الأعمدة"
     },
     "columns": {
       "description": "الوصف",
       "quantity": "الكمية",
       "rate": "السعر",
-      "tax": "الضريبة",
       "discount": "الخصم",
+      "tax": "الضريبة",
       "total": "الإجمالي"
     },
-    "density": {
-      "compact": "مضغوط",
-      "standard": "قياسي",
-      "spacious": "واسع"
+    "style": {
+      "fontSize": "حجم الخط",
+      "borderRadius": "نصف قطر الحدود"
+    },
+    "text": {
+      "paymentInstructions": "تعليمات الدفع",
+      "paymentPlaceholder": "تفاصيل البنك، IBAN..."
     },
     "labels": {
       "invoiceTitle": "عنوان الفاتورة",
-      "from": "من",
-      "to": "إلى",
-      "item": "العنصر",
-      "total": "الإجمالي",
-      "paymentInstructions": "تعليمات الدفع"
+      "from": "عنوان 'من'",
+      "to": "عنوان 'إلى'",
+      "item": "عمود العنصر",
+      "total": "عمود الإجمالي"
     },
     "toasts": {
-      "loadError": "فشل تحميل الإعدادات. استخدام الافتراضيات.",
-      "imageUpdated": "تم تحديث الصورة محليًا (احفظ للتثبيت)",
-      "saveSuccess": "تم حفظ التصميم بنجاح!",
-      "saveError": "فشل حفظ الإعدادات."
+      "loadError": "فشل تحميل الإعدادات",
+      "saveSuccess": "تم حفظ التصميم بنجاح",
+      "saveError": "فشل حفظ التصميم"
+    }
+  },
+  "invoicePreview": {
+    "date": "التاريخ",
+    "dueDate": "تاريخ الاستحقاق",
+    "subtotal": "المجموع الفرعي",
+    "tax": "الضريبة",
+    "discount": "خصم",
+    "pageInfo": "صفحة {{current}} / {{total}}",
+    "tooltips": {
+      "drag": "اسحب لإعادة الترتيب",
+      "edit": "تعديل الإعدادات"
     },
-    "personal": {
-      "title": "[TO_TRANSLATE] Personal Information",
-      "description": "[TO_TRANSLATE] Update your personal details and profile picture",
-      "fields": {
-        "fullName": "[TO_TRANSLATE] Full Name",
-        "email": "[TO_TRANSLATE] Email Address (Read-only)",
-        "phone": "[TO_TRANSLATE] Phone Number",
-        "avatar": "[TO_TRANSLATE] Avatar URL"
-      },
-      "avatarPreview": {
-        "title": "[TO_TRANSLATE] Profile Picture",
-        "description": "[TO_TRANSLATE] Preview of your avatar"
-      },
-      "save": "[TO_TRANSLATE] Save Changes"
-    },
-    "security": {
-      "title": "[TO_TRANSLATE] Change Password",
-      "description": "[TO_TRANSLATE] Ensure your account is using a strong password",
-      "fields": {
-        "currentPassword": "[TO_TRANSLATE] Current Password",
-        "newPassword": "[TO_TRANSLATE] New Password",
-        "confirmPassword": "[TO_TRANSLATE] Confirm New Password"
-      },
-      "requirements": {
-        "title": "[TO_TRANSLATE] Password Requirements:",
-        "items": "[TO_TRANSLATE] Items"
-      },
-      "changePassword": "[TO_TRANSLATE] Change Password"
-    },
-    "venue": {
-      "basicInfo": {
-        "title": "[TO_TRANSLATE] Basic Information",
-        "fields": {
-          "venueName": "اسم المكان",
-          "description": "الوصف"
-        }
-      },
-      "address": {
-        "title": "العنوان",
-        "fields": {
-          "street": "عنوان الشارع",
-          "city": "المدينة",
-          "state": "الولاية/المحافظة",
-          "zipCode": "الرمز البريدي",
-          "country": "البلد"
-        }
-      },
-      "contact": {
-        "title": "معلومات الاتصال",
-        "fields": {
-          "phone": "الهاتف",
-          "email": "البريد الإلكتروني"
-        }
-      },
-      "save": "حفظ تفاصيل المكان"
-    },
-    "amenities": {
-      "title": "مرافق المكان",
-      "description": "أضف المرافق التي يوفرها مكانك. اختر من الخيارات الشائعة أو أضف خيارات مخصصة.",
-      "quickAdd": {
-        "title": "إضافة سريعة للمرافق الشائعة",
-        "description": "انقر لإضافة المرافق المستخدمة بشكل متكرر للأعراس والفعاليات"
-      },
-      "customAmenity": {
-        "title": "إضافة مرفق مخصص",
-        "placeholder": "أدخل مرفق مخصص (مثل: أثاث عتيق، موقد نار، إلخ)",
-        "add": "إضافة مخصص"
-      },
-      "selectedAmenities": {
-        "title": "المرافق المحددة ({{count}})",
-        "clearAll": "مسح الكل",
-        "empty": {
-          "description": "اختر من الخيارات الشائعة أعلاه أو أضف خيارات مخصصة."
-        }
-      },
-      "operatingHours": {
-        "title": "ساعات العمل",
-        "description": "حدد جدول مكانك الأسبوعي",
-        "labels": {
-          "to": "إلى",
-          "closed": "مغلق"
-        }
-      },
-      "save": "حفظ المرافق والساعات"
-    },
-    "spaces": {
-      "title": "مساحات المكان",
-      "description": "إدارة المساحات المختلفة داخل مكانك",
-      "existingSpaces": {
-        "title": "المساحات الموجودة ({{count}})",
-        "capacity": "السعة",
-        "price": "السعر",
-        "status": {
-          "active": "نشط",
-          "inactive": "غير نشط"
-        },
-        "actions": {
-          "edit": "تعديل المساحة",
-          "delete": "حذف المساحة"
-        }
-      },
-      "emptyState": {
-        "title": "لا توجد مساحات بعد",
-        "description": "أضف مساحات مختلفة داخل مكانك لتقديم المزيد من خيارات الحجز لعملائك."
-      },
-      "form": {
-        "addTitle": "إضافة مساحة جديدة",
-        "editTitle": "تعديل المساحة",
-        "fields": {
-          "spaceName": "اسم المساحة",
-          "basePrice": "السعر الأساسي ($)",
-          "description": "الوصف",
-          "minCapacity": "الحد الأدنى للسعة",
-          "maxCapacity": "الحد الأقصى للسعة"
-        },
-        "activeLabel": "نشط (متاح للحجوزات)",
-        "actions": {
-          "add": "إضافة المساحة",
-          "update": "تحديث المساحة",
-          "cancel": "إلغاء"
-        }
-      },
-      "save": "حفظ جميع التغييرات"
-    },
-    "common": {
-      "loading": "جاري تحميل الإعدادات...",
-      "tryAgain": "إعادة المحاولة",
-      "table": {
-        "showing": "عرض",
-        "to": "إلى",
-        "of": "من",
-        "results": "نتيجة"
-      }
-    },
-    "validation": {
-      "required": "هذا الحقل مطلوب",
-      "email": "يرجى تقديم بريد إلكتروني صالح",
-      "minLength": "يجب أن يحتوي على {min} أحرف على الأقل",
-      "passwordsMatch": "يجب أن تتطابق كلمات المرور",
-      "capacityRange": "يجب أن تكون السعة القصوى أكبر من أو تساوي السعة الدنيا"
-    },
-    "notifications": {
-      "success": {
-        "profileUpdated": "تم تحديث الملف الشخصي بنجاح!",
-        "passwordChanged": "تم تغيير كلمة المرور بنجاح!",
-        "venueUpdated": "تم تحديث إعدادات المكان بنجاح!",
-        "spaceCreated": "تم إنشاء المساحة بنجاح",
-        "spaceUpdated": "تم تحديث المساحة بنجاح",
-        "spaceDeleted": "تم حذف المساحة بنجاح",
-        "amenityAdded": "تمت إضافة المرفق",
-        "customAmenityAdded": "تمت إضافة مرفق مخصص",
-        "imageUploaded": "تم رفع الصورة بنجاح",
-        "imageRemoved": "تم إزالة الصورة بنجاح"
-      },
-      "error": {
-        "generic": "حدث خطأ",
-        "loadFailed": "فشل تحميل الإعدادات",
-        "saveFailed": "فشل الحفظ",
-        "deleteFailed": "فشل الحذف",
-        "uploadFailed": "فشل الرفع",
-        "spaceNameRequired": "اسم المساحة مطلوب",
-        "capacityRequired": "نطاق السعة مطلوب",
-        "priceRequired": "السعر مطلوب",
-        "amenityExists": "هذا المرفق موجود بالفعل",
-        "saveSpaceFirst": "يرجى حفظ المساحة أولاً قبل رفع الصور"
-      },
-      "confirm": {
-        "deleteSpace": "هل أنت متأكد من حذف هذه المساحة؟",
-        "clearAllAmenities": "إزالة جميع المرافق؟"
-      }
+    "defaultLabels": {
+      "invoice": "فاتورة",
+      "from": "من",
+      "to": "إلى",
+      "description": "الوصف",
+      "quantity": "الكمية",
+      "price": "السعر",
+      "total": "الإجمالي",
+      "paymentInstructions": "تعليمات الدفع"
     }
   },
   "venueSettings": {
@@ -3159,32 +3058,30 @@
   "allRightsReserved": "جميع الحقوق محفوظة.",
   "contracts": {
     "settings": {
-      "title": "إعدادات العقود",
-      "subtitle": "التكوين العام لجميع العقود",
-      "loading": "جاري تحميل الإعدادات...",
+      "title": "إعداد العقود",
+      "subtitle": "تخصيص القوالب والعلامة التجارية والاعدادات الافتراضية",
       "save": "حفظ التغييرات",
+      "loading": "جاري تحميل الإعدادات...",
       "tabs": {
         "company": "معلومات الشركة",
         "structure": "الهيكل والمعرف",
         "branding": "العلامة التجارية",
-        "financials": "البيانات المالية",
+        "financials": "المالية",
         "layout": "التخطيط",
         "clauses": "البنود",
-        "cancellation": "الإلغاء",
-        "labels": "التسميات"
+        "cancellation": "سياسة الإلغاء",
+        "labels": "تسميات النص"
       },
       "company": {
-        "title": "معلومات الشركة",
+        "title": "المعلومات القانونية للشركة",
         "legalName": "الاسم القانوني",
-        "displayName": "اسم العرض",
-        "matriculeFiscale": "المعرف الضريبي (Matricule Fiscale)",
-        "address": "العنوان",
+        "displayName": "الاسم التجاري",
+        "matriculeFiscale": "المعرف الضريبي",
+        "representative": "الممثل القانوني",
         "phone": "الهاتف",
         "email": "البريد الإلكتروني",
-        "website": "الموقع الإلكتروني",
-        "rib": "الحساب البنكي (RIB/IBAN)",
-        "bankName": "اسم البنك",
-        "representative": "الممثل القانوني"
+        "address": "العنوان",
+        "bankName": "اسم البنك"
       },
       "structure": {
         "title": "تكوين التسلسل",
@@ -3193,56 +3090,49 @@
         "separator": "فاصل",
         "includeYear": "تضمين السنة",
         "yearFormat": "تنسيق السنة",
-        "sequenceDigits": "أصفار الحشو",
-        "sequenceDigitsHelp": "مثال: 4 تعطي \"0001\"، 3 تعطي \"001\".",
+        "sequenceDigits": "عدد الأصفار (Padding)",
         "resetYearly": "إعادة تعيين التسلسل سنوياً",
         "resetYearlyHelp": "يبدأ الترقيم من 0001 في 1 يناير"
       },
       "branding": {
-        "title": "العلامة التجارية والألوان",
+        "title": "الهوية البصرية",
         "primary": "اللون الأساسي",
         "secondary": "اللون الثانوي",
-        "accent": "لون التمييز",
         "text": "لون النص",
-        "background": "لون الخلفية",
+        "accent": "لون التمييز",
         "logo": "الشعار",
-        "logoUrl": "رابط الشعار (HTTPS)",
-        "logoHelp": "لأفضل نتائج في PDF، استخدم رابطاً مباشراً لصورة PNG أو JPG.",
-        "logoPreview": "معاينة"
+        "logoUrl": "رابط الشعار العام (HTTPS)"
       },
       "financials": {
-        "title": "الافتراضات المالية",
-        "currency": "العملة",
-        "vatRate": "معدل ضريبة القيمة المضافة الافتراضي (%)",
-        "stampDuty": "رسوم الطابع (د.ت)",
-        "depositPercentage": "الدفعة المقدمة المطلوبة (%)",
-        "securityDeposit": "تأمين الضمان (د.ت)",
-        "lateFee": "رسوم التأخير (%)"
+        "title": "الإعدادات المالية الافتراضية",
+        "vatRate": "معدل ضريبة القيمة المضافة (%)",
+        "stampDuty": "الطابع الجبائي",
+        "depositPercentage": "العربون المطلوب (%)",
+        "securityDeposit": "مبلغ التأمين",
+        "lateFee": "غرامة التأخير (%)",
+        "currency": "العملة"
       },
       "layout": {
-        "title": "تخطيط PDF",
-        "template": "نمط القالب",
-        "paperSize": "حجم الورق",
+        "title": "تخطيط المستند",
         "showPageNumbers": "إظهار أرقام الصفحات",
-        "showDate": "إظهار التاريخ"
+        "showDate": "إظهار تاريخ الإنشاء"
       },
       "clauses": {
-        "title": "البنود الافتراضية",
+        "title": "بنود العقد الافتراضية",
         "add": "إضافة بند",
         "articleTitle": "عنوان المادة",
-        "content": "محتوى البند...",
         "required": "مطلوب",
-        "empty": "لا توجد بنود افتراضية. انقر فوق \"إضافة\" لإنشاء البند الأول.",
-        "dragHint": "اسحب لإعادة الترتيب"
+        "content": "محتوى البند...",
+        "empty": "لا توجد بنود افتراضية. انقر فوق 'إضافة' لإنشاء أول بند."
       },
       "cancellation": {
         "title": "سياسة الإلغاء",
         "enabled": "تفعيل سياسة الإلغاء",
         "add": "إضافة مستوى",
-        "daysBeforeEvent": "أيام قبل (الحد الأدنى)",
-        "penaltyPercentage": "غرامة (%)",
+        "daysBeforeEvent": "أيام قبل الحدث",
+        "penaltyPercentage": "الغرامة (%)",
         "description": "الوصف",
-        "empty": "لم يتم تعريف مستويات الإلغاء."
+        "empty": "لم يتم تحديد مستويات للإلغاء."
       },
       "labels": {
         "title": "تسميات المستند",
@@ -3253,19 +3143,55 @@
         "partnerLabel": "تسمية الشريك",
         "servicesTitle": "عنوان قسم الخدمات",
         "paymentTitle": "عنوان قسم الدفع",
-        "signaturesTitle": "عنوان قسم التوقيعات",
+        "signaturesTitle": "عنوان قسم التواقيع",
         "dateLabel": "تسمية التاريخ",
         "signatureLabel": "تسمية التوقيع"
       },
       "preview": {
-        "title": "معاينة PDF",
-        "clickToEdit": "انقر على المناطق للتحرير"
+        "title": "معاينة مباشرة",
+        "clickToEdit": "انقر للتعديل"
       },
       "messages": {
-        "loadError": "فشل تحميل إعدادات العقد",
+        "loadError": "فشل تحميل الإعدادات",
         "saveSuccess": "تم حفظ الإعدادات بنجاح",
-        "saveError": "فشل حفظ الإعدادات"
+        "saveError": "فشل حفظ الإعدادات",
+        "timeoutError": "انتهت مهلة الطلب. حاول مرة أخرى.",
+        "connectionError": "خطأ في الاتصال. تحقق من الشبكة."
       }
+    },
+     "preview": {
+      "tooltips": {
+        "drag": "اسحب لإعادة الترتيب",
+        "edit": "تعديل الإعدادات"
+      },
+      "defaultCompany": "شركتك",
+      "defaultTitle": "عقد",
+      "ref": "مرجع",
+      "date": "التاريخ",
+      "partiesTitle": "بين الموقعين أدناه",
+      "providerDefault": "مقدم الخدمة",
+      "providerLabel": "مقدم الخدمة",
+      "aka": "يشار إليه فيما يلي بـ",
+      "clientDefault": "العميل",
+      "clientLabel": "العميل",
+      "partnerLabel": "الشريك",
+      "objectTitle": "موضوع العقد",
+      "objectIntro": "موضوع هذا العقد هو:",
+      "start": "البداية",
+      "end": "النهاية",
+      "financialsTitle": "الشروط المالية",
+      "table": {
+        "description": "الوصف",
+        "qty": "الكمية",
+        "totalHT": "المجموع (دون ضرائب)"
+      },
+      "netToPay": "الصافي للدفع",
+      "generalConditions": "الشروط العامة",
+      "noClauses": "لم يتم تحديد بنود",
+      "jurisdiction": "الاختصاص القضائي",
+      "jurisdictionText": "الاختصاص الحصري لـ",
+      "signaturesTitle": "التوقيعات",
+      "for": "عن"
     },
     "detail": {
       "status": {

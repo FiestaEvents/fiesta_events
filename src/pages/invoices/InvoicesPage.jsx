@@ -40,7 +40,7 @@ const InvoicesPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showSuccess, showError, showInfo, promise } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // State
   const [invoices, setInvoices] = useState([]);
@@ -62,7 +62,7 @@ const InvoicesPage = () => {
   const [localStatus, setLocalStatus] = useState("all");
   const [localStartDate, setLocalStartDate] = useState("");
   const [localEndDate, setLocalEndDate] = useState("");
-
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -92,6 +92,12 @@ const InvoicesPage = () => {
       setLocalEndDate(filters.endDate);
     }
   }, [isFilterOpen, filters]);
+ useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const handleApplyFilters = () => {
     setFilters({
@@ -191,6 +197,7 @@ const InvoicesPage = () => {
         page,
         limit,
         sort: "-createdAt",
+        search: debouncedSearch.trim() || undefined,
       };
       const response = await invoiceService.getAll(params);
       let rawData = response?.invoices || response?.data?.invoices || [];
@@ -217,7 +224,7 @@ const InvoicesPage = () => {
       setLoading(false);
       setHasInitialLoad(true);
     }
-  }, [searchTerm, filters, page, limit, invoiceType, t, showError]);
+  }, [debouncedSearch,searchTerm, filters, page, limit, invoiceType, t, showError]);
 
   useEffect(() => {
     fetchInvoices();
@@ -249,10 +256,72 @@ const InvoicesPage = () => {
     setIsDetailModalOpen(true);
   }, []);
   const handleDownloadInvoice = async (invoice) => {
-    /* ... existing logic ... */
+    // 1. Define the full operation (Fetch + Save to Disk)
+    const downloadAndSave = async () => {
+      // Step A: Fetch the Blob from API
+      const blob = await invoiceService.download(invoice._id, i18n.language);
+      
+      // Step B: validate Blob
+      if (!blob || !(blob instanceof Blob)) {
+         throw new Error("Invalid file received from server");
+      }
+
+      // Step C: Trigger Browser Download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const filename = `${invoice.invoiceNumber || "invoice"}.pdf`;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+      // Return true to resolve the promise successfully
+      return true;
+    };
+
+    // 2. Pass the operation to the Toast
+    try {
+      await promise(
+        downloadAndSave(), // Call our wrapper function
+        {
+          loading: t("invoices.download.loading", "Downloading PDF..."),
+          // ✅ FIX: Pass a static string, NOT a function
+          success: t("invoices.download.success", "Downloaded successfully"), 
+          error: t("invoices.download.error", "Download failed"),
+        }
+      );
+    } catch (error) {
+      console.error("Download flow error:", error);
+    }
   };
   const handleDeleteConfirm = async (id, name) => {
-    /* ... existing logic ... */
+    setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+
+    try {
+      await promise(invoiceService.delete(id), {
+        loading: t("invoices.delete.loading", "Deleting invoice..."),
+        success: () => {
+          setInvoices((prev) => prev.filter((inv) => inv._id !== id));
+          fetchStats();
+          if (invoices.length === 1 && page > 1) {
+            setPage((prev) => prev - 1);
+          } else {
+            fetchInvoices();
+          }
+
+          return t("invoices.delete.success", "Invoice deleted successfully");
+        },
+        error: t("invoices.delete.error", "Failed to delete invoice"),
+      });
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
   };
   const handleDeleteClick = (id, name) => {
     setConfirmationModal({
@@ -384,7 +453,6 @@ const InvoicesPage = () => {
             >
               <Download size={16} />
             </Button>
-            {row.status === "draft" && (
               <Button
                 variant="outline"
                 size="sm"
@@ -397,7 +465,6 @@ const InvoicesPage = () => {
               >
                 <Trash2 size={16} />
               </Button>
-            )}
           </div>
         );
       },
