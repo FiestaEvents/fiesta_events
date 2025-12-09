@@ -75,7 +75,7 @@ export const generateEventSupplyPDF = (event, supplies) => {
   doc.text(`Total Estimated Cost: ${totalCost.toFixed(3)} TND`, 14, finalY);
 
   // --- Signature Zone ---
-  const signatureY = finalY + 40; // Spacing below total
+  let signatureY = finalY + 40; // Spacing below total
   
   // Check if we need to add a new page for signatures
   if (signatureY > 270) {

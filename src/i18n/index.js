@@ -22,11 +22,16 @@ i18n
         translation: frTranslations,
       },
     },
+    
+    lng: localStorage.getItem('language') || 'fr',
+    
     fallbackLng: 'fr',
-    debug: true, // ← Set this to true temporarily
+    debug: true, 
+    
     interpolation: {
       escapeValue: false,
     },
+    
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],

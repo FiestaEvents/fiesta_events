@@ -1319,98 +1319,79 @@ export const taskService = {
 };
 
 // ============================================
-// REMINDER SERVICE
+// REMINDER SERVICE 
 // ============================================
-export const reminderService = {
-  /**
-   * Get reminders list (List View)
-   * @param {Object} params - { status: 'active' | 'completed', page, limit, search }
-   */
+  export const reminderService = {
+  // ==========================================
+  // CRUD Operations
+  // ==========================================
+  
   getAll: async (params = {}) => {
-    try {
-      const response = await api.get("/reminders", { params });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const response = await api.get('/reminders', { params });
+    return response.data;
   },
 
-  /**
-   * Get single reminder
-   * @param {string} id 
-   */
   getById: async (id) => {
-    try {
-      const response = await api.get(`/reminders/${id}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const response = await api.get(`/reminders/${id}`);
+    return response.data;
   },
 
-  /**
-   * Create new reminder
-   * @param {Object} data 
-   */
   create: async (data) => {
-    try {
-      const response = await api.post("/reminders", data);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const response = await api.post('/reminders', data);
+    return response.data;
   },
 
-  /**
-   * Update reminder
-   * @param {string} id 
-   * @param {Object} data 
-   */
   update: async (id, data) => {
-    try {
-      const response = await api.put(`/reminders/${id}`, data);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const response = await api.put(`/reminders/${id}`, data);
+    return response.data;
   },
 
-  /**
-   * Delete reminder (Archive)
-   * @param {string} id 
-   */
   delete: async (id) => {
-    try {
-      const response = await api.delete(`/reminders/${id}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const response = await api.delete(`/reminders/${id}`);
+    return response.data;
   },
 
-  /**
-   * Toggle Complete Status (Done / Not Done)
-   * @param {string} id 
-   */
+  // ==========================================
+  // Special Actions
+  // ==========================================
+  
   toggleComplete: async (id) => {
-    try {
-      const response = await api.patch(`/reminders/${id}/toggle-complete`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const response = await api.patch(`/reminders/${id}/toggle-complete`);
+    return response.data;
   },
 
-  /**
-   * Get upcoming reminders (For Notification Badge)
-   * Fetches ALL future active reminders.
-   */
-  getUpcoming: async () => {
+  snooze: async (id, minutes = 15) => {
+    const response = await api.post(`/reminders/${id}/snooze`, { minutes });
+    return response.data;
+  },
+
+  dismiss: async (id) => {
+    const response = await api.post(`/reminders/${id}/dismiss`);
+    return response.data;
+  },
+
+  // ==========================================
+  // Stats & Upcoming (with AbortController support)
+  // ==========================================
+  
+  getStats: async (signal) => {
+    const response = await api.get('/reminders/stats', { signal });
+    return response.data;
+  },
+
+  getUpcoming: async ({ hours = 168, signal } = {}) => {
     try {
-      const response = await api.get("/reminders/upcoming");
-      return handleResponse(response);
+      const response = await api.get('/reminders/upcoming', {
+        params: { hours },
+        signal, // ✅ Pass AbortController signal
+      });
+      return response.data;
     } catch (error) {
-      return handleError(error);
+      // ✅ Handle abort gracefully
+      if (error.name === 'AbortError' || error.name === 'CanceledError') {
+        return { aborted: true };
+      }
+      throw error;
     }
   },
 };

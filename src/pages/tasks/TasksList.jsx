@@ -22,23 +22,22 @@ import {
   Filter,
 } from "lucide-react";
 
-// ✅ API & Services
+// API & Services
 import { taskService } from "../../api/index";
 
-// ✅ Components
+// Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable"; // Using NewTable
+import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
-// Pagination import removed as it is now internal to Table
+import OrbitLoader from "../../components/common/LoadingSpinner";
 
-// ✅ Context & Sub-components
+// Context & Sub-components
 import { useToast } from "../../context/ToastContext";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskForm from "./TaskForm";
-import OrbitLoader from "../../components/common/LoadingSpinner";
 
 // ================================================================
 // CONSTANTS
@@ -195,12 +194,12 @@ const TasksList = () => {
   const [viewMode, setViewMode] = useState(getStoredViewMode);
   const [showArchived, setShowArchived] = useState(false);
 
-  // Filter States (Active)
+  // Filter States
   const [filters, setFilters] = useState(INITIAL_STATE);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Filter Panel (Buffered State)
+  // Filter Panel
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [localStatus, setLocalStatus] = useState("all");
   const [localPriority, setLocalPriority] = useState("all");
@@ -216,7 +215,6 @@ const TasksList = () => {
     type: "info",
   });
 
-  // Sync local filters with active filters when panel opens
   useEffect(() => {
     if (isFilterOpen) {
       setLocalStatus(filters.status);
@@ -234,7 +232,7 @@ const TasksList = () => {
       page: 1,
     }));
     setIsFilterOpen(false);
-    showSuccess(t("tasks.notifications.filtersApplied") || "Filters applied");
+    showSuccess(t("tasks.notifications.filtersApplied"));
   };
 
   const handleResetLocalFilters = () => {
@@ -255,7 +253,6 @@ const TasksList = () => {
     }));
   }, []);
 
-  // Stats
   const stats = {
     total: tasks.length,
     pending: tasks.filter((t) => t.status === "pending").length,
@@ -297,10 +294,6 @@ const TasksList = () => {
     },
   ];
 
-  // ============================================================
-  // DATA FETCHING
-  // ============================================================
-
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
@@ -327,13 +320,10 @@ const TasksList = () => {
         [];
       if (!Array.isArray(data)) data = [];
 
-      // ✅ FIX: Robust Calculation
       let totalItems =
         response?.data?.data?.totalCount ||
         response?.pagination?.total ||
         data.length;
-
-      // For Kanban we fetch 100, so we use data length if pagination info is missing
       if (viewMode === VIEW_MODES.KANBAN && totalItems < data.length) {
         totalItems = data.length;
       }
@@ -364,7 +354,6 @@ const TasksList = () => {
     setStoredViewMode(viewMode);
   }, [viewMode]);
 
-  // ✅ FIX: Client-Side Slicing Fallback (Only for List View)
   const paginatedTasks = useMemo(() => {
     if (viewMode === VIEW_MODES.LIST && tasks.length > filters.limit) {
       const startIndex = (filters.page - 1) * filters.limit;
@@ -372,10 +361,6 @@ const TasksList = () => {
     }
     return tasks;
   }, [tasks, filters.page, filters.limit, viewMode]);
-
-  // ============================================================
-  // HANDLERS
-  // ============================================================
 
   const handleFormSuccess = useCallback(() => {
     fetchTasks();
@@ -474,67 +459,49 @@ const TasksList = () => {
         } catch (err) {}
       };
 
-      const actionConfigs = {
-        archive: {
-          title: t("tasks.messages.archiveConfirm.title"),
-          message: t("tasks.messages.archiveConfirm.message", {
-            title: taskTitle,
-          }),
-          confirmText: t("common.archive"),
-          type: "danger",
-          action: () =>
+      if (action === "archive") {
+        showConfirmation(
+          t("tasks.messages.archiveConfirm.title"),
+          t("tasks.messages.archiveConfirm.message", { title: taskTitle }),
+          t("common.archive"),
+          "danger",
+          () =>
             executeAction(
               taskService.archive,
               "tasks.notifications.archiving",
               "tasks.messages.success.archived"
-            ),
-        },
-        restore: {
-          title: t("tasks.messages.restoreConfirm.title"),
-          message: t("tasks.messages.restoreConfirm.message", {
-            title: taskTitle,
-          }),
-          confirmText: t("common.restore"),
-          type: "info",
-          action: () =>
+            )
+        );
+      } else if (action === "restore") {
+        showConfirmation(
+          t("tasks.messages.restoreConfirm.title"),
+          t("tasks.messages.restoreConfirm.message", { title: taskTitle }),
+          t("common.restore"),
+          "info",
+          () =>
             executeAction(
               taskService.unarchive,
               "tasks.notifications.restoring",
               "tasks.messages.success.restored"
-            ),
-        },
-        delete: {
-          title: t("tasks.messages.deleteConfirm.title"),
-          message: t("tasks.messages.deleteConfirm.message", {
-            title: taskTitle,
-          }),
-          confirmText: t("common.delete"),
-          type: "danger",
-          action: () =>
+            )
+        );
+      } else if (action === "delete") {
+        showConfirmation(
+          t("tasks.messages.deleteConfirm.title"),
+          t("tasks.messages.deleteConfirm.message", { title: taskTitle }),
+          t("common.delete"),
+          "danger",
+          () =>
             executeAction(
               taskService.delete,
               "tasks.notifications.deleting",
               "tasks.messages.success.deleted"
-            ),
-        },
-      };
-
-      const config = actionConfigs[action];
-      if (config)
-        showConfirmation(
-          config.title,
-          config.message,
-          config.confirmText,
-          config.type,
-          config.action
+            )
         );
+      }
     },
     [showConfirmation, t, fetchTasks, selectedTask, promise]
   );
-
-  // ============================================================
-  // RENDERERS
-  // ============================================================
 
   const tableColumns = [
     {
@@ -544,7 +511,7 @@ const TasksList = () => {
       render: (row) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900 dark:text-white">
-            {row.title || "Untitled"}
+            {row.title || t("tasks.untitled")}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
             {row.description}
@@ -683,7 +650,7 @@ const TasksList = () => {
             {showArchived ? t("tasks.archivedTasks") : t("tasks.title")}
             {showArchived && (
               <Badge variant="warning" size="lg">
-                Archived
+                {t("common.archived")}
               </Badge>
             )}
           </h1>
@@ -712,15 +679,13 @@ const TasksList = () => {
                     onClick={() => setViewMode(VIEW_MODES.LIST)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === VIEW_MODES.LIST ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400 hover:text-gray-700"}`}
                   >
-                    <ListIcon className="w-4 h-4" />
-                    {t("tasks.view.list")}
+                    <ListIcon className="w-4 h-4" /> {t("tasks.view.list")}
                   </button>
                   <button
                     onClick={() => setViewMode(VIEW_MODES.KANBAN)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === VIEW_MODES.KANBAN ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400 hover:text-gray-700"}`}
                   >
-                    <KanbanIcon className=" w-4 h-4" />
-                    {t("tasks.view.kanban")}
+                    <KanbanIcon className=" w-4 h-4" /> {t("tasks.view.kanban")}
                   </button>
                 </div>
                 <Button
@@ -771,11 +736,10 @@ const TasksList = () => {
           </div>
         )}
 
-      {/* ✅ ENHANCED FILTERS (List View) */}
+      {/* Filters */}
       {!showEmptyState && hasInitialLoad && (
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            {/* Search Bar */}
             <div className="w-full sm:max-w-md relative">
               <Input
                 icon={Search}
@@ -785,16 +749,13 @@ const TasksList = () => {
                 className="w-full"
               />
             </div>
-
-            {/* Advanced Filters Button */}
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <Button
                 variant={hasActiveFilters ? "primary" : "outline"}
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
               >
-                <Filter className="w-4 h-4" />
-                {t("tasks.filters.advanced") || "Filters"}
+                <Filter className="w-4 h-4" /> {t("tasks.filters.advanced")}
                 {hasActiveFilters && (
                   <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
                     !
@@ -814,12 +775,11 @@ const TasksList = () => {
             </div>
           </div>
 
-          {/* Expandable Filter Panel */}
           {isFilterOpen && (
             <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                  {t("tasks.filters.filterOptions") || "Filter Options"}
+                  {t("tasks.filters.filterOptions")}
                 </h3>
                 <button
                   onClick={() => setIsFilterOpen(false)}
@@ -828,7 +788,6 @@ const TasksList = () => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
                 <Select
                   label={t("tasks.filters.allStatus")}
@@ -861,36 +820,40 @@ const TasksList = () => {
                   className="w-full"
                 />
                 <Select
-                  label={t("tasks.category") || "Category"}
+                   label={t("tasks.categoryLabel")}
                   value={localCategory}
                   onChange={(e) => setLocalCategory(e.target.value)}
                   options={[
-                    { value: "all", label: "All Categories" },
-                    { value: "design", label: "Design" },
-                    { value: "development", label: "Development" },
-                    { value: "marketing", label: "Marketing" },
-                    { value: "finance", label: "Finance" },
-                    { value: "other", label: "Other" },
+                    { value: "all", label: t("tasks.filters.allCategories") },
+                    { value: "event_preparation", label: t("tasks.category.event_preparation") },
+                    {
+                      value: "administrative",
+                      label: t("tasks.category.administrative"),
+                    },
+                    {
+                      value: "marketing",
+                      label: t("tasks.category.marketing"),
+                    },
+                    { value: "finance", label: t("tasks.category.finance") },
+                    { value: "other", label: t("tasks.category.other") },
                   ]}
                   className="w-full"
                 />
               </div>
-
-              {/* Footer Actions */}
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
                 <Button
                   variant="outline"
                   onClick={handleResetLocalFilters}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 >
-                  {t("tasks.filters.reset") || "Reset"}
+                  {t("tasks.filters.reset")}
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleApplyFilters}
                   className="px-6"
                 >
-                  {t("tasks.filters.apply") || "Apply Filters"}
+                  {t("tasks.filters.apply")}
                 </Button>
               </div>
             </div>
@@ -898,17 +861,16 @@ const TasksList = () => {
         </div>
       )}
 
-          {/* Content Area */}
-      <div className="flex-1 flex flex-col">
+      {/* ✅ FIX: Content Area + Loader Centering */}
+      <div className="flex-1 flex flex-col relative min-h-[400px]">
+        {/* Absolute Centered Loader */}
         {loading && !hasInitialLoad && (
-          <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-center">
-          <OrbitLoader />
-          <p className="mt-4 text-gray-500 dark:text-gray-400">
-            {t("common.loading")}
-          </p>
-        </div>
-      </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/80 dark:bg-gray-900/80 rounded-lg">
+            <OrbitLoader />
+            <p className="mt-4 text-gray-500 dark:text-gray-400">
+              {t("common.loading")}
+            </p>
+          </div>
         )}
 
         {/* List View */}
@@ -919,7 +881,6 @@ const TasksList = () => {
             <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <Table
                 columns={tableColumns}
-                // ✅ Pass sliced data
                 data={paginatedTasks}
                 loading={loading}
                 onRowClick={(row) => {
@@ -928,7 +889,6 @@ const TasksList = () => {
                 }}
                 striped
                 hoverable
-                // Pagination Props
                 pagination={true}
                 currentPage={filters.page}
                 totalPages={totalPages}
@@ -1125,6 +1085,7 @@ const TasksList = () => {
         )}
       </div>
 
+      {/* Modals */}
       <TaskDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}

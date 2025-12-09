@@ -34,11 +34,11 @@ const MainLayout = () => {
 
   const sidebarPadding = isCollapsed
     ? isRTL
-      ? "lg:pr-20"
-      : "lg:pl-20"
+      ? "lg:pr-8"
+      : "lg:pl-8"
     : isRTL
-      ? "lg:pr-48"
-      : "lg:pl-48";
+      ? "lg:pr-44"
+      : "lg:pl-44";
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-900 text-sm font-medium text-gray-600 dark:text-gray-300">

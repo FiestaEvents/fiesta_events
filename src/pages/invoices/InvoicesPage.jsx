@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState, useMemo } from "react";
-// ... (imports remain the same)
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,8 +21,9 @@ import {
   X,
   FolderOpen,
 } from "lucide-react";
+
+// Components
 import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ Generic Components
 import { StatusBadge } from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
@@ -31,18 +31,21 @@ import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Select from "../../components/common/Select";
 
-// ✅ Services & Utils
+// Services & Utils
 import { invoiceService } from "../../api/index";
 import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
+  // eslint-disable-next-line no-unused-vars
   const location = useLocation();
   const { showSuccess, showError, showInfo, promise } = useToast();
   const { t, i18n } = useTranslation();
 
-  // State
+  // --- State ---
+
+  // Data & Status
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -51,25 +54,30 @@ const InvoicesPage = () => {
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [invoiceType, setInvoiceType] = useState("client");
 
-  // Filters
+  // Filters & Search
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  // Active Filters
   const [filters, setFilters] = useState({
     status: "all",
     startDate: "",
     endDate: "",
   });
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  // Local Filters (inside the filter dropdown)
   const [localStatus, setLocalStatus] = useState("all");
   const [localStartDate, setLocalStartDate] = useState("");
   const [localEndDate, setLocalEndDate] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Modals
+  // Modals & Selection
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -80,11 +88,55 @@ const InvoicesPage = () => {
     onConfirm: null,
   });
 
+  // --- Helpers ---
+
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("en-GB");
   };
 
+  const normalizeInvoiceData = useCallback((invoice) => {
+    if (!invoice || typeof invoice !== "object") return null;
+    
+    let recipientName = "",
+      recipientEmail = "",
+      recipientCompany = "";
+
+    if (invoice.invoiceType === "client") {
+      recipientName =
+        invoice.client?.name ||
+        invoice.recipientName ||
+        t("invoices.recipient.client");
+      recipientEmail = invoice.client?.email || invoice.recipientEmail;
+      recipientCompany = invoice.client?.company || invoice.recipientCompany;
+    } else {
+      recipientName =
+        invoice.partner?.name ||
+        invoice.recipientName ||
+        t("invoices.recipient.partner");
+      recipientEmail = invoice.partner?.email || invoice.recipientEmail;
+      recipientCompany = invoice.partner?.company || invoice.recipientCompany;
+    }
+
+    return {
+      ...invoice,
+      _id: invoice._id || invoice.id,
+      invoiceNumber:
+        invoice.invoiceNumber || `INV-${(invoice._id || "").substring(0, 8)}`,
+      recipientName,
+      recipientEmail,
+      recipientCompany,
+      totalAmount: invoice.totalAmount || 0,
+      status: invoice.status || "draft",
+      issueDate: invoice.issueDate || new Date().toISOString(),
+      dueDate: invoice.dueDate || new Date().toISOString(),
+      items: invoice.items || [],
+    };
+  }, [t]);
+
+  // --- Effects ---
+
+  // Sync local filters when dropdown opens
   useEffect(() => {
     if (isFilterOpen) {
       setLocalStatus(filters.status);
@@ -92,12 +144,138 @@ const InvoicesPage = () => {
       setLocalEndDate(filters.endDate);
     }
   }, [isFilterOpen, filters]);
- useEffect(() => {
+
+  // Debounce Search
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Reset pagination on type change
+  useEffect(() => {
+    setPage(1);
+    setSelectedRows([]);
+  }, [invoiceType]);
+
+  // --- API Calls ---
+
+  const fetchStats = useCallback(async () => {
+    try {
+      setStatsLoading(true);
+      const response = await invoiceService.getStats({
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+        invoiceType: invoiceType,
+      });
+      const data = response?.stats || response?.data?.stats || {};
+      const statsData = Array.isArray(data)
+        ? data.find((s) => s._id === invoiceType) || {}
+        : data;
+      
+      setStats({
+        totalRevenue: statsData.totalRevenue || 0,
+        paid: statsData.paid || 0,
+        totalDue: statsData.totalDue || 0,
+        overdue: statsData.overdue || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [filters, invoiceType]);
+
+  const fetchInvoices = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // FIX: Removed duplicate 'search' key
+      const params = {
+        invoiceType: invoiceType,
+        status: filters.status !== "all" ? filters.status : undefined,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+        page,
+        limit,
+        sort: "-createdAt",
+        search: debouncedSearch.trim() || undefined,
+      };
+
+      const response = await invoiceService.getAll(params);
+      let rawData = response?.invoices || response?.data?.invoices || [];
+      const data = rawData.map(normalizeInvoiceData).filter(Boolean);
+
+      const totalItems =
+        response?.pagination?.total ||
+        response?.data?.pagination?.total ||
+        data.length;
+      
+      // Ensure totalPages is at least 1
+      const calculatedTotalPages = Math.ceil(totalItems / limit);
+
+      setInvoices(data);
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+      setTotalCount(totalItems);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || t("invoices.errors.loadInvoicesFailed");
+      setError(msg);
+      showError(msg);
+      setInvoices([]);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
+      setHasInitialLoad(true);
+    }
+  }, [debouncedSearch, filters, page, limit, invoiceType, t, showError, normalizeInvoiceData]);
+
+  // Trigger Data Fetch
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  // --- Derived State ---
+
+  // Client-Side Slicing Fallback (Only active if API returns all items instead of paginated items)
+  const paginatedInvoices = useMemo(() => {
+    if (invoices.length > limit) {
+      const startIndex = (page - 1) * limit;
+      return invoices.slice(startIndex, startIndex + limit);
+    }
+    return invoices;
+  }, [invoices, page, limit]);
+
+  const hasActiveFilters =
+    searchTerm.trim() !== "" ||
+    filters.status !== "all" ||
+    filters.startDate !== "" ||
+    filters.endDate !== "";
+
+  const showEmptyState =
+    !loading &&
+    !error &&
+    invoices.length === 0 &&
+    !hasActiveFilters &&
+    hasInitialLoad;
+
+  const showNoResults =
+    !loading &&
+    !error &&
+    invoices.length === 0 &&
+    hasActiveFilters &&
+    hasInitialLoad;
+
+  const showData =
+    hasInitialLoad && (invoices.length > 0 || (loading && totalCount > 0));
+
+  // --- Handlers ---
 
   const handleApplyFilters = () => {
     setFilters({
@@ -123,150 +301,25 @@ const InvoicesPage = () => {
     showInfo(t("invoices.filters.clear"));
   };
 
-  const normalizeInvoiceData = (invoice) => {
-    if (!invoice || typeof invoice !== "object") return null;
-    let recipientName = "",
-      recipientEmail = "",
-      recipientCompany = "";
-    if (invoice.invoiceType === "client") {
-      recipientName =
-        invoice.client?.name ||
-        invoice.recipientName ||
-        t("invoices.recipient.client");
-      recipientEmail = invoice.client?.email || invoice.recipientEmail;
-      recipientCompany = invoice.client?.company || invoice.recipientCompany;
-    } else {
-      recipientName =
-        invoice.partner?.name ||
-        invoice.recipientName ||
-        t("invoices.recipient.partner");
-      recipientEmail = invoice.partner?.email || invoice.recipientEmail;
-      recipientCompany = invoice.partner?.company || invoice.recipientCompany;
-    }
-    return {
-      ...invoice,
-      _id: invoice._id || invoice.id,
-      invoiceNumber:
-        invoice.invoiceNumber || `INV-${(invoice._id || "").substring(0, 8)}`,
-      recipientName,
-      recipientEmail,
-      recipientCompany,
-      totalAmount: invoice.totalAmount || 0,
-      status: invoice.status || "draft",
-      issueDate: invoice.issueDate || new Date().toISOString(),
-      dueDate: invoice.dueDate || new Date().toISOString(),
-      items: invoice.items || [],
-    };
-  };
-
-  const fetchStats = useCallback(async () => {
-    try {
-      setStatsLoading(true);
-      const response = await invoiceService.getStats({
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
-        invoiceType: invoiceType,
-      });
-      const data = response?.stats || response?.data?.stats || {};
-      const statsData = Array.isArray(data)
-        ? data.find((s) => s._id === invoiceType) || {}
-        : data;
-      setStats({
-        totalRevenue: statsData.totalRevenue || 0,
-        paid: statsData.paid || 0,
-        totalDue: statsData.totalDue || 0,
-        overdue: statsData.overdue || 0,
-      });
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [filters, invoiceType]);
-
-  const fetchInvoices = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const params = {
-        search: searchTerm.trim() || undefined,
-        invoiceType: invoiceType,
-        status: filters.status !== "all" ? filters.status : undefined,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
-        page,
-        limit,
-        sort: "-createdAt",
-        search: debouncedSearch.trim() || undefined,
-      };
-      const response = await invoiceService.getAll(params);
-      let rawData = response?.invoices || response?.data?.invoices || [];
-      const data = rawData.map(normalizeInvoiceData).filter(Boolean);
-
-      // ✅ FIX: Robust Calculation
-      const totalItems =
-        response?.pagination?.total ||
-        response?.data?.pagination?.total ||
-        data.length;
-      const calculatedTotalPages = Math.ceil(totalItems / limit);
-
-      setInvoices(data);
-      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
-      setTotalCount(totalItems);
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || t("invoices.errors.loadInvoicesFailed");
-      setError(msg);
-      showError(msg);
-      setInvoices([]);
-      setTotalCount(0);
-    } finally {
-      setLoading(false);
-      setHasInitialLoad(true);
-    }
-  }, [debouncedSearch,searchTerm, filters, page, limit, invoiceType, t, showError]);
-
-  useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-  useEffect(() => {
-    setPage(1);
-    setSelectedRows([]);
-  }, [invoiceType]);
-
-  // ✅ FIX: Client-Side Slicing Fallback
-  const paginatedInvoices = useMemo(() => {
-    if (invoices.length > limit) {
-      const startIndex = (page - 1) * limit;
-      return invoices.slice(startIndex, startIndex + limit);
-    }
-    return invoices;
-  }, [invoices, page, limit]);
-
-  // Handlers (Download, Delete, etc. - mostly same as before)
   const handleCreateInvoice = () =>
     navigate(`/invoices/new?type=${invoiceType}`);
+  
   const handleEditInvoice = (invoice) =>
     navigate(`/invoices/${invoice._id}/edit`);
+
   const handleRowClick = useCallback((invoice) => {
     setSelectedInvoice(invoice);
     setIsDetailModalOpen(true);
   }, []);
+
   const handleDownloadInvoice = async (invoice) => {
-    // 1. Define the full operation (Fetch + Save to Disk)
     const downloadAndSave = async () => {
-      // Step A: Fetch the Blob from API
       const blob = await invoiceService.download(invoice._id, i18n.language);
       
-      // Step B: validate Blob
       if (!blob || !(blob instanceof Blob)) {
          throw new Error("Invalid file received from server");
       }
 
-      // Step C: Trigger Browser Download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -275,23 +328,19 @@ const InvoicesPage = () => {
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
       
-      // Return true to resolve the promise successfully
       return true;
     };
 
-    // 2. Pass the operation to the Toast
     try {
       await promise(
-        downloadAndSave(), // Call our wrapper function
+        downloadAndSave(),
         {
           loading: t("invoices.download.loading", "Downloading PDF..."),
-          // ✅ FIX: Pass a static string, NOT a function
           success: t("invoices.download.success", "Downloaded successfully"), 
           error: t("invoices.download.error", "Download failed"),
         }
@@ -300,7 +349,8 @@ const InvoicesPage = () => {
       console.error("Download flow error:", error);
     }
   };
-  const handleDeleteConfirm = async (id, name) => {
+
+  const handleDeleteConfirm = async (id) => {
     setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
 
     try {
@@ -309,12 +359,12 @@ const InvoicesPage = () => {
         success: () => {
           setInvoices((prev) => prev.filter((inv) => inv._id !== id));
           fetchStats();
+          // Adjust page if we deleted the last item on the current page
           if (invoices.length === 1 && page > 1) {
             setPage((prev) => prev - 1);
           } else {
             fetchInvoices();
           }
-
           return t("invoices.delete.success", "Invoice deleted successfully");
         },
         error: t("invoices.delete.error", "Failed to delete invoice"),
@@ -323,34 +373,17 @@ const InvoicesPage = () => {
       console.error("Delete failed:", error);
     }
   };
+
   const handleDeleteClick = (id, name) => {
     setConfirmationModal({
       isOpen: true,
       invoiceId: id,
       invoiceName: name,
-      onConfirm: () => handleDeleteConfirm(id, name),
+      onConfirm: () => handleDeleteConfirm(id),
     });
   };
 
-  const hasActiveFilters =
-    searchTerm.trim() !== "" ||
-    filters.status !== "all" ||
-    filters.startDate !== "" ||
-    filters.endDate !== "";
-  const showEmptyState =
-    !loading &&
-    !error &&
-    invoices.length === 0 &&
-    !hasActiveFilters &&
-    hasInitialLoad;
-  const showNoResults =
-    !loading &&
-    !error &&
-    invoices.length === 0 &&
-    hasActiveFilters &&
-    hasInitialLoad;
-  const showData =
-    hasInitialLoad && (invoices.length > 0 || (loading && totalCount > 0));
+  // --- Table Columns ---
 
   const columns = [
     {
@@ -453,18 +486,18 @@ const InvoicesPage = () => {
             >
               <Download size={16} />
             </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(row._id, row.invoiceNumber);
-                }}
-                className="text-red-500 hover:text-red-600"
-                title={t("invoices.actions.delete")}
-              >
-                <Trash2 size={16} />
-              </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(row._id, row.invoiceNumber);
+              }}
+              className="text-red-500 hover:text-red-600"
+              title={t("invoices.actions.delete")}
+            >
+              <Trash2 size={16} />
+            </Button>
           </div>
         );
       },
@@ -473,6 +506,7 @@ const InvoicesPage = () => {
 
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -487,7 +521,11 @@ const InvoicesPage = () => {
             })}{" "}
             {hasInitialLoad &&
               totalCount > 0 &&
-              ` • ${t("invoices.pagination.showing", { start: (page - 1) * limit + 1, end: Math.min(page * limit, totalCount), total: totalCount })}`}
+              ` • ${t("invoices.pagination.showing", {
+                start: (page - 1) * limit + 1,
+                end: Math.min(page * limit, totalCount),
+                total: totalCount,
+              })}`}
           </p>
         </div>
         {!showEmptyState && (
@@ -516,6 +554,7 @@ const InvoicesPage = () => {
 
       {!showEmptyState && hasInitialLoad && (
         <>
+          {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
             <StatBox
               label={t("invoices.stats.totalRevenue")}
@@ -546,22 +585,35 @@ const InvoicesPage = () => {
               color="red"
             />
           </div>
+
+          {/* Filters & Search Bar */}
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shrink-0 flex flex-col gap-4">
             <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
+              {/* Type Toggle */}
               <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 self-start md:self-auto">
                 <button
                   onClick={() => setInvoiceType("client")}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${invoiceType === "client" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"}`}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    invoiceType === "client"
+                      ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white"
+                      : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
+                  }`}
                 >
                   <Users size={16} /> {t("invoices.tabs.clients")}
                 </button>
                 <button
                   onClick={() => setInvoiceType("partner")}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${invoiceType === "partner" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"}`}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    invoiceType === "partner"
+                      ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white"
+                      : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
+                  }`}
                 >
                   <Briefcase size={16} /> {t("invoices.tabs.partners")}
                 </button>
               </div>
+
+              {/* Search & Filter Buttons */}
               <div className="flex gap-3 flex-1 justify-end w-full md:w-auto items-center">
                 <Input
                   className="w-full md:w-64"
@@ -577,7 +629,11 @@ const InvoicesPage = () => {
                   variant={isFilterOpen ? "primary" : "outline"}
                   icon={Filter}
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+                  className={`whitespace-nowrap ${
+                    isFilterOpen
+                      ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900"
+                      : ""
+                  }`}
                 >
                   {t("invoices.filters.status")}
                 </Button>
@@ -593,6 +649,8 @@ const InvoicesPage = () => {
                 )}
               </div>
             </div>
+
+            {/* Expanded Filters */}
             {isFilterOpen && (
               <div className="mt-2 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex justify-between items-center mb-4">
@@ -654,6 +712,7 @@ const InvoicesPage = () => {
         </>
       )}
 
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative">
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
@@ -663,11 +722,11 @@ const InvoicesPage = () => {
             </p>
           </div>
         )}
+        
         {showData && (
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <Table
               columns={columns}
-              // ✅ Pass sliced data
               data={paginatedInvoices}
               loading={loading}
               onRowClick={handleRowClick}
@@ -690,6 +749,7 @@ const InvoicesPage = () => {
             />
           </div>
         )}
+
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -706,6 +766,7 @@ const InvoicesPage = () => {
             </Button>
           </div>
         )}
+
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -735,6 +796,7 @@ const InvoicesPage = () => {
         )}
       </div>
 
+      {/* Detail Modal */}
       {selectedInvoice && isDetailModalOpen && (
         <Modal
           isOpen={isDetailModalOpen}
@@ -744,7 +806,6 @@ const InvoicesPage = () => {
             number: selectedInvoice.invoiceNumber,
           })}
         >
-          {/* Modal Content - same as before */}
           <div className="p-6 space-y-6">
             <div className="flex justify-between border-b pb-4 border-gray-100 dark:border-gray-700">
               <div>
@@ -766,6 +827,7 @@ const InvoicesPage = () => {
                 </p>
               </div>
             </div>
+            
             <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
@@ -804,6 +866,7 @@ const InvoicesPage = () => {
                 </tbody>
               </table>
             </div>
+
             <div className="flex justify-end pt-2">
               <div className="w-64 space-y-2 text-right">
                 <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white">
@@ -812,6 +875,7 @@ const InvoicesPage = () => {
                 </div>
               </div>
             </div>
+
             <div className="flex justify-end gap-2 pt-6 border-t border-gray-100 dark:border-gray-700">
               <Button
                 variant="outline"
@@ -837,6 +901,7 @@ const InvoicesPage = () => {
         </Modal>
       )}
 
+      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() => setConfirmationModal((p) => ({ ...p, isOpen: false }))}
@@ -882,7 +947,7 @@ const InvoicesPage = () => {
   );
 };
 
-// ... StatBox remains same
+// Subcomponent: StatBox
 const StatBox = ({ label, value, loading, icon: Icon, color }) => {
   const colors = {
     blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",

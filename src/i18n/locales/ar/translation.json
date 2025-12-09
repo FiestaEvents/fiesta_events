@@ -214,6 +214,9 @@
     "lowStockAlerts": "تنبيهات انخفاض المخزون"
   },
   "home": {
+    "welcome": "مرحباً بعودتك",
+    "subtitle": "اختر وحدة للبدء في مهام الإدارة الخاصة بك.",
+    "suppliesDesc": "المخزون والجرد",
     "eventsDesc": "إدارة التقويم",
     "clientsDesc": "قاعدة بيانات العملاء",
     "contractsDesc": "الاتفاقيات القانونية",
@@ -445,6 +448,12 @@
     }
   },
   "events": {
+     "guests": "ضيوف",
+    "types": {
+      "wedding": "زفاف",
+      "corporate": "شركات",
+      "other": "أخرى"
+    },
     "toast": {
       "updateSuccess": "تم تحديث الفعالية بنجاح!",
       "createSuccess": "تم إنشاء الفعالية بنجاح!"
@@ -1235,6 +1244,8 @@
     }
   },
   "tasks": {
+    "categoryLabel": "الفئة", 
+    "untitled": "Tâche sans titre",
     "title": "المهام",
     "subtitle": "إدارة وتتبع مهام فريقك",
     "archivedTasks": "المهام المؤرشفة",
@@ -1253,6 +1264,8 @@
     },
     "category": {
       "event_preparation": "التحضير للحدث",
+      "design": "التصميم",
+      "development": "تطوير",
       "marketing": "التسويق",
       "maintenance": "الصيانة",
       "client_followup": "متابعة العملاء",
@@ -1332,6 +1345,7 @@
       "filtersApplied": "تم تطبيق المرشحات"
     },
     "filters": {
+      "allCategories": "جميع الفئات",
       "allStatus": "جميع الحالات",
       "allPriorities": "جميع الأولويات",
       "clearFilters": "مسح التصفية",
@@ -1493,17 +1507,50 @@
     }
   },
   "reminders": {
-    "subtitle": "إدارة تذكيرات الفعاليات والإشعارات",
+    "title": "التذكيرات",
+    "subtitle": "إدارة مهامك وإشعاراتك",
+    "addReminder": "إضافة تذكير",
+    "searchPlaceholder": "البحث بالعنوان أو الوصف...",
+    "noResults": "لا توجد نتائج",
+    "noReminders": "لا توجد تذكيرات حتى الآن",
+    "emptyDesc": "لم تقم بإنشاء أي تذكيرات بعد. أنشئ واحداً لتبقى منظماً.",
+    "createFirst": "إنشاء التذكير الأول",
+    "untitled": "تذكير بدون عنوان",
+    "filters": {
+      "advanced": "تصفية متقدمة",
+      "clear": "مسح التصفية",
+      "options": "خيارات التصفية",
+      "reset": "إعادة تعيين",
+      "apply": "تطبيق التصفية",
+      "dateRange": "نطاق التاريخ",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "sorting": "الترتيب",
+      "sortBy": "فرز حسب",
+      "order": "الترتيب",
+      "presets": {
+        "overdue": "متأخر",
+        "today": "اليوم",
+        "tomorrow": "غداً",
+        "week": "هذا الأسبوع",
+        "urgent": "عاجل",
+        "completed": "مكتمل"
+      }
+    },
+    "sort": {
+      "date": "التاريخ",
+      "priority": "الأولوية",
+      "status": "الحالة",
+      "title": "العنوان",
+      "asc": "تصاعدي",
+      "desc": "تنازلي"
+    },
     "dateTimeFormat": "{{date}} في {{time}}",
     "errorLoading": "فشل تحميل التذكيرات",
-    "noReminders": "لا توجد تذكيرات",
-    "createFirst": "أنشئ تذكيرك الأول",
     "backToReminders": "عودة للتذكيرات",
     "loadingDetails": "جاري التحميل...",
     "markComplete": "تثبيت التذكير",
-    "title": "التذكيرات",
     "description": "إدارة تذكيرات الفعاليات والإشعارات",
-    "addReminder": "إضافة تذكير",
     "addFirstReminder": "إضافة أول تذكير",
     "editReminder": "تعديل التذكير",
     "deleteReminder": "حذف التذكير",
@@ -1530,13 +1577,32 @@
       "viewFull": "عرض التفاصيل الكاملة",
       "back": "العودة إلى التذكيرات",
       "backToList": "العودة للقائمة",
-      "reactivate": "إعادة التنشيط"
+      "reactivate": "إعادة التنشيط",
+      "view": "عرض التفاصيل"
     },
     "errors": {
       "notFound": "التذكير غير موجود"
     },
+    "columns": {
+      "title": "العنوان",
+      "dateTime": "التاريخ والوقت",
+      "type": "النوع",
+      "priority": "الأولوية",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
     "notifications": {
-       "showingResults": "عرض {{count}} من أصل {{total}} تذكير",
+      "showingResults": "عرض {{count}} من أصل {{total}} نتيجة",
+      "noResultsDesc": "حاول تعديل التصفية أو مصطلحات البحث للعثور على ما تبحث عنه.",
+      "filtersApplied": "تم تطبيق التصفية بنجاح",
+      "filtersCleared": "تم مسح جميع خيارات التصفية",
+      "deleteSuccess": "تم حذف التذكير بنجاح",
+      "updating": "جاري التحديث...",
+      "markedCompleted": "تم التحديد كمكتمل",
+      "reactivated": "تم إعادة تنشيط التذكير",
+      "updateError": "فشل تحديث التذكير",
+      "createSuccess": "تم إنشاء التذكير بنجاح",
+      "updateSuccess": "تم تحديث التذكير بنجاح",
       "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذا التذكير؟",
       "updated": "تم تحديث التذكير",
       "deleting": "جاري حذف التذكير...",
@@ -1565,6 +1631,12 @@
     },
     "clearFilters": "مسح المرشحات",
     "type": {
+      "title": "العنوان",
+      "dateTime": "التاريخ والوقت",
+      "type": "النوع",
+      "priority": "الأولوية",
+      "status": "الحالة",
+      "actions": "الإجراءات",
       "label": "النوع",
       "event": "فعالية",
       "payment": "دفع",
@@ -1592,10 +1664,11 @@
     },
     "priority": {
       "label": "الأولوية",
-      "low": "منخفض",
-      "medium": "متوسط",
-      "high": "عالي",
-      "urgent": "عاجل"
+      "all": "جميع الأولويات",
+      "urgent": "عاجلة",
+      "high": "عالية",
+      "medium": "متوسطة",
+      "low": "منخفضة"
     },
     "recurrence": {
       "none": "لا شيء",
@@ -1653,29 +1726,14 @@
         "noNotes": "لا توجد ملاحظات إضافية."
       },
       "delete": {
+        "title": "حذف التذكير",
+        "confirmTitle": "هل أنت متأكد؟",
+        "description": "هل أنت متأكد أنك تريد حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
         "confirm": "حذف",
         "cancel": "إلغاء",
-        "title": "حذف التذكير",
-        "description": "هل أنت متأكد أنك تريد حذف \"{{name}}\"؟ هذا الإجراء لا يمكن التراجع عنه.",
         "question": "حذف هذا التذكير؟",
         "warning": "لا يمكن التراجع عن هذا الإجراء."
       }
-    },
-    "filters": {
-      "allTypes": "جميع الأنواع",
-      "allStatus": "جميع الحالات",
-      "allMethods": "جميع الطرق",
-      "type": "النوع",
-      "status": "الحالة",
-      "method": "الطريقة",
-      "clearFilters": "مسح الفلاتر",
-      "activeFilters": "الفلاتر النشطة",
-      "advanced": "تصفية متقدمة",
-      "options": "خيارات التصفية",
-      "reset": "إعادة تعيين",
-      "apply": "تطبيق",
-      "noResultsDesc": "لا توجد تذكيرات تطابق معاييرك",
-      "noResults": "لا توجد تذكيرات تطابق معاييرك"
     }
   },
   "payments": {
@@ -2271,24 +2329,29 @@
     "card": "البطاقة"
   },
   "common": {
+    "partner": "شريك",
+    "searchPlaceholder": "بحث (⌘K)",
+    "markAsDone": "تحديد كمكتمل",
+    "dismiss": "تجاهل",
+    "viewAll": "عرض الكل",
     "optional": "اختياري",
     "required": "مطلوب",
     "back": "رجوع",
-      "edit": "تعديل",
-      "delete": "حذف",
-      "cancel": "إلغاء",
-      "save": "حفظ",
-      "create": "إنشاء",
-      "update": "تحديث",
-      "none": "لا شيء",
-      "by": "بواسطة",
-      "createdBy": "تم الإنشاء بواسطة",
-      "createdAt": "تم الإنشاء في",
-      "unknown": "غير معروف",
-      "event": "حدث",
-      "client": "عميل",
-      "task": "مهمة",
-      "viewDetails": "عرض التفاصيل",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "create": "إنشاء",
+    "update": "تحديث",
+    "none": "لا شيء",
+    "by": "بواسطة",
+    "createdBy": "تم الإنشاء بواسطة",
+    "createdAt": "تم الإنشاء في",
+    "unknown": "غير معروف",
+    "event": "حدث",
+    "client": "عميل",
+    "task": "مهمة",
+    "viewDetails": "عرض التفاصيل",
     "noResults": "لم يتم العثور على نتائج",
     "clearFilters": "مسح المرشحات",
     "all": "الكل",
@@ -2307,7 +2370,6 @@
     "archive": "أرشفة",
     "markComplete": "",
     "markIncomplete": "",
-    "searchPlaceholder": "ابحث عن أي شيء...",
     "pax": "أشخاص",
     "guests": "ضيوف",
     "remaining": "متبقي",
@@ -2390,12 +2452,27 @@
       "perPage": "في الصفحة:"
     }
   },
-  "notifications": {
-    "upcomingReminders": "التذكيرات القادمة",
-    "today": "اليوم",
-    "tomorrow": "غداً",
-    "untitledReminder": "تذكير بدون عنوان",
-    "noReminders": "لا توجد تذكيرات قادمة"
+    "notifications": {
+    "title": "الإشعارات",
+    "viewAll": "عرض الكل",
+    "noDescription": "لا يوجد وصف متاح",
+    "tabs": {
+      "all": "الكل",
+      "overdue": "متأخر",
+      "critical": "حرج",
+      "today": "اليوم"
+    },
+    "empty": {
+      "all": "لا توجد إشعارات جديدة!",
+      "overdue": "لا توجد عناصر متأخرة. عمل رائع!",
+      "critical": "لا توجد تنبيهات حرجة في الوقت الحالي.",
+      "today": "لا توجد مهام مجدولة لليوم."
+    },
+    "settings": {
+      "title": "تفضيلات",
+      "sound": "صوت",
+      "desktop": "سطح المكتب"
+    }
   },
   "landing": {
     "hero": {
@@ -2814,6 +2891,102 @@
     "errors": {
       "loadInvoicesFailed": "فشل تحميل الفواتير. يرجى المحاولة مرة أخرى.",
       "emptyFile": "الملف فارغ أو تالف"
+    },
+     "form": {
+      "title": {
+        "edit": "تعديل الفاتورة",
+        "new": "فاتورة جديدة"
+      },
+      "type": {
+        "client": "فاتورة عميل",
+        "partner": "فاتورة شريك"
+      },
+      "draft": {
+        "title": "مسودة غير محفوظة",
+        "from": "من",
+        "restore": "استعادة"
+      },
+      "buttons": {
+        "design": "تصميم",
+        "back": "رجوع",
+        "next": "التالي",
+        "addItem": "إضافة عنصر",
+        "create": "إنشاء الفاتورة",
+        "update": "تحديث الفاتورة"
+      },
+      "steps": {
+        "recipient": "المستلم",
+        "items": "العناصر",
+        "details": "التفاصيل",
+        "review": "مراجعة"
+      },
+      "recipient": {
+        "searchClient": "بحث عن عملاء...",
+        "searchPartner": "بحث عن شركاء...",
+        "noResults": "لم يتم العثور على نتائج"
+      },
+      "event": {
+        "linkTitle": "ربط بحدث (اختياري)",
+        "selectPlaceholder": "اختر حدثاً لاستيراد العناصر...",
+        "importedItems": "العناصر المستوردة"
+      },
+      "items": {
+        "title": "قائمة العناصر",
+        "descriptionPlaceholder": "وصف العنصر...",
+        "qty": "الكمية",
+        "rate": "السعر"
+      },
+      "details": {
+        "issueDate": "تاريخ الإصدار",
+        "dueDate": "تاريخ الاستحقاق",
+        "taxAndDiscount": "الضريبة والخصم",
+        "taxRate": "معدل الضريبة (%)",
+        "discount": "الخصم",
+        "type": "النوع",
+        "fixed": "مبلغ ثابت",
+        "percentage": "نسبة مئوية (%)",
+        "currency": "العملة",
+        "status": "الحالة",
+        "notesLabel": "ملاحظات / شروط",
+        "notesPlaceholder": "تعليمات الدفع، رسالة شكر..."
+      },
+      "summary": {
+        "title": "الملخص",
+        "subtotal": "المجموع الفرعي",
+        "tax": "الضريبة",
+        "discount": "الخصم",
+        "total": "الإجمالي"
+      },
+      "preview": {
+        "title": "معاينة حية",
+        "realtime": "تحديث فوري"
+      }
+    },
+    "items": {
+      "categories": {
+        "venue_rental": "تأجير المكان",
+        "catering": "تقديم الطعام",
+        "decoration": "الديكور",
+        "photography": "التصوير",
+        "music": "موسيقى/دي جي",
+        "equipment": "المعدات",
+        "service_fee": "رسوم الخدمة",
+        "other": "أخرى"
+      }
+    },
+    "validation": {
+      "selectClient": "اختر عميلاً",
+      "selectPartner": "اختر شريكاً",
+      "addItems": "أضف عناصر",
+      "required": "مطلوب"
+    },
+    "messages": {
+      "draftRestored": "تم استعادة المسودة",
+      "loadFailed": "فشل تحميل البيانات",
+      "eventLoadFailed": "فشل تحميل الحدث",
+      "operationFailed": "فشلت العملية",
+      "updated": "تم تحديث الفاتورة",
+      "created": "تم إنشاء الفاتورة"
     }
   },
   "invoiceCustomization": {
@@ -3596,61 +3769,39 @@
       "subtitle": "تحديث معلومات المستلزم وتفاصيل المخزون"
     },
     "form": {
-      "basicInfo": "المعلومات الأساسية",
-      "name": "اسم المستلزم",
-      "namePlaceholder": "مثال: مياه معبأة",
+      "createTitle": "إضافة مستلزمات جديدة",
+      "editTitle": "تعديل المستلزمات",
+      "newCategoryPlaceholder": "اسم الفئة الجديدة...",
+      "steps": {
+        "basicInfo": "المعلومات الأساسية",
+        "inventory": "المخزون",
+        "supplier": "المورد والتخزين"
+      },
+      "name": "اسم المستلزمات",
       "category": "الفئة",
-      "categoryPlaceholder": "اختر الفئة",
-      "unit": "وحدة القياس",
+      "unit": "الوحدة",
       "status": "الحالة",
-      "inventory": "إدارة المخزون",
       "currentStock": "المخزون الحالي",
       "minimumStock": "الحد الأدنى للمخزون",
-      "minimumStockHelp": "تنبيه عند وصول المخزون لهذا المستوى",
       "maximumStock": "الحد الأقصى للمخزون",
-      "maximumStockHelp": "السعة التخزينية القصوى",
-      "lowStockWarning": "تحذير مخزون منخفض: المخزون الحالي عند أو أقل من الحد الأدنى.",
-      "pricing": "التسعير",
-      "costPerUnit": "التكلفة لكل وحدة (القاعة)",
-      "costPerUnitHelp": "ما تدفعه لكل وحدة",
+      "lowStockWarning": "تحذير: المخزون الحالي أقل من أو يساوي الحد الأدنى.",
+      "costPerUnit": "التكلفة لكل وحدة",
       "pricingType": "نوع التسعير",
-      "chargePerUnit": "السعر لكل وحدة (العميل)",
-      "chargePerUnitHelp": "ما تفرضه على العملاء لكل وحدة",
-      "profitMargin": "هامش الربح",
-      "pricingTypes": {
-        "included": "مشمول (مجاني للعميل)",
-        "chargeable": "قابل للشحن",
-        "optional": "اختياري"
-      },
-      "createCategory": "إنشاء فئة جديدة",
-      "cancel": "إلغاء",
-      "newCategory": "جديد",
-      "save": "حفظ",
-      "edit": "تعديل",
-      "delete": "حذف",
-      "active": "نشط",
-      "inactive": "غير نشط",
-      "discontinued": "متوقف",
-      "supplier": "معلومات المورد (اختياري)",
+      "chargePerUnit": "السعر لكل وحدة",
       "supplierName": "اسم المورد",
-      "supplierNamePlaceholder": "مثال: موزعو ABC",
-      "supplierContact": "جهة الاتصال",
-      "supplierContactPlaceholder": "مثال: أحمد محمد",
+      "supplierContact": "الشخص المسؤول",
       "supplierPhone": "الهاتف",
-      "supplierPhonePlaceholder": "مثال: 12 345 678 216+",
       "supplierEmail": "البريد الإلكتروني",
-      "supplierEmailPlaceholder": "مثال: supplier@example.com",
       "leadTime": "وقت التسليم (أيام)",
-      "leadTimeHelp": "الأيام المطلوبة لتسليم إعادة الطلب",
-      "storage": "التخزين والمناولة",
       "storageLocation": "موقع التخزين",
-      "storageLocationPlaceholder": "مثال: المخزن الرئيسي، الثلاجة",
-      "shelfLife": "مدة الصلاحية (أيام)",
-      "shelfLifeHelp": "فقط إذا كان تتبع انتهاء الصلاحية مفعلاً",
-      "requiresRefrigeration": "يتطلب تبريداً",
-      "expiryTracking": "تفعيل تتبع انتهاء الصلاحية",
-      "notes": "ملاحظات إضافية",
-      "notesPlaceholder": "أي معلومات إضافية عن هذا المستلزم..."
+      "requiresRefrigeration": "يتطلب تبريد",
+      "expiryTracking": "تتبع تاريخ الانتهاء",
+      "notes": "ملاحظات"
+    },
+    "pricing": {
+      "included": "مشمول",
+      "chargeable": "مدفوع",
+      "optional": "اختياري"
     },
     "stockUpdate": {
       "title": "تحديث المخزون",

@@ -1,4 +1,3 @@
-// src/pages/invoices/InvoiceFormPage.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
@@ -26,11 +25,7 @@ import {
   DollarSign,
   Briefcase,
   CalendarDays,
-  Tag,
   Percent,
-  CreditCard,
-  AlertCircle,
-  Sparkles,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -62,6 +57,7 @@ import LiveInvoicePreview from "./LiveInvoicePreview";
 // DRAFT NOTIFICATION
 // ============================================
 const DraftNotification = ({ draftData, onRestore, onDiscard }) => {
+  const { t } = useTranslation();
   if (!draftData) return null;
   const formattedDate = formatDate(draftData.timestamp);
 
@@ -73,10 +69,10 @@ const DraftNotification = ({ draftData, onRestore, onDiscard }) => {
         </div>
         <div className="flex-1 text-sm">
           <span className="font-bold text-gray-900 dark:text-white">
-            Unsaved Draft
+            {t("invoices.form.draft.title")}
           </span>
           <span className="text-gray-500 dark:text-gray-400 ml-1">
-            from {formattedDate}
+            {t("invoices.form.draft.from")} {formattedDate}
           </span>
         </div>
         <div className="flex gap-2">
@@ -84,7 +80,7 @@ const DraftNotification = ({ draftData, onRestore, onDiscard }) => {
             onClick={onRestore}
             className="px-3 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors shadow-sm"
           >
-            Restore
+            {t("invoices.form.draft.restore")}
           </button>
           <button
             onClick={onDiscard}
@@ -102,6 +98,7 @@ const DraftNotification = ({ draftData, onRestore, onDiscard }) => {
 // RECIPIENT DETAILS CARD
 // ============================================
 const RecipientDetailsCard = ({ recipient, type, onClear }) => {
+  const { t } = useTranslation();
   if (!recipient) return null;
 
   const getAddress = () => {
@@ -117,7 +114,6 @@ const RecipientDetailsCard = ({ recipient, type, onClear }) => {
 
   return (
     <div className="group p-5 rounded-xl border border-orange-200 dark:border-orange-800/50 bg-gradient-to-br from-orange-50 to-white dark:from-gray-800 dark:to-gray-800/50 relative overflow-hidden shadow-sm">
-      {/* Decorative Background Element */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-orange-100 dark:bg-orange-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
 
       <div className="flex items-start gap-4 relative z-10">
@@ -131,7 +127,7 @@ const RecipientDetailsCard = ({ recipient, type, onClear }) => {
               {recipient.name}
             </h4>
             <Badge variant={type === "client" ? "primary" : "purple"} size="xs">
-              {type === "client" ? "Client" : "Partner"}
+              {type === "client" ? t("common.client") : t("common.partner")}
             </Badge>
           </div>
 
@@ -184,6 +180,7 @@ const EventDetailsCard = ({
   showPricingBreakdown = false,
   invoiceType = "client",
 }) => {
+  const { t } = useTranslation();
   if (!event) return null;
 
   const eventTypeColors = {
@@ -212,7 +209,7 @@ const EventDetailsCard = ({
             <span
               className={`text-xs font-bold px-2.5 py-0.5 rounded-md border capitalize ${eventTypeColors[event.type] || eventTypeColors.other}`}
             >
-              {event.type}
+              {t(`events.types.${event.type}`) || event.type}
             </span>
             <StatusBadge status={event.status} size="xs" />
           </div>
@@ -231,7 +228,9 @@ const EventDetailsCard = ({
             {event.guestCount && (
               <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <Users size={14} className="text-gray-400" />
-                <span>{event.guestCount} guests</span>
+                <span>
+                  {event.guestCount} {t("events.guests")}
+                </span>
               </div>
             )}
           </div>
@@ -241,13 +240,13 @@ const EventDetailsCard = ({
               <div className="flex items-center gap-2 mb-3">
                 <Package size={14} className="text-green-500" />
                 <span className="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wider">
-                  Imported Items
+                  {t("invoices.form.event.importedItems")}
                 </span>
               </div>
               <div className="space-y-2 text-xs">
                 {event.pricing?.basePrice > 0 && (
                   <div className="flex justify-between text-gray-600 dark:text-gray-300">
-                    <span>Venue Rental</span>
+                    <span>{t("invoices.items.categories.venue_rental")}</span>
                     <span className="font-mono">
                       {formatCurrency(event.pricing.basePrice)}
                     </span>
@@ -286,13 +285,17 @@ const EventDetailsCard = ({
 // STEP INDICATOR
 // ============================================
 const StepIndicator = ({ currentStep, onStepClick, invoiceType }) => {
+  const { t, i18n } = useTranslation();
   const RecipientIcon = invoiceType === "client" ? Users : Briefcase;
   const steps = [
-    { id: 1, label: "Recipient", icon: RecipientIcon },
-    { id: 2, label: "Items", icon: Package },
-    { id: 3, label: "Details", icon: FileText },
-    { id: 4, label: "Review", icon: Eye },
+    { id: 1, label: t("invoices.form.steps.recipient"), icon: RecipientIcon },
+    { id: 2, label: t("invoices.form.steps.items"), icon: Package },
+    { id: 3, label: t("invoices.form.steps.details"), icon: FileText },
+    { id: 4, label: t("invoices.form.steps.review"), icon: Eye },
   ];
+
+  const isRTL = i18n.dir() === "rtl";
+  const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
 
   return (
     <div className="flex items-center gap-2 mb-8 bg-white dark:bg-gray-800 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -322,7 +325,7 @@ const StepIndicator = ({ currentStep, onStepClick, invoiceType }) => {
               <span className="hidden sm:inline">{step.label}</span>
             </button>
             {idx < steps.length - 1 && (
-              <ChevronRight
+              <ChevronIcon
                 size={14}
                 className={`shrink-0 ${isCompleted ? "text-orange-400" : "text-gray-300 dark:text-gray-600"}`}
               />
@@ -337,60 +340,66 @@ const StepIndicator = ({ currentStep, onStepClick, invoiceType }) => {
 // ============================================
 // PRICE SUMMARY SIDEBAR
 // ============================================
-const PriceSummary = ({ calculations, currency }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-gray-600 dark:text-gray-300 shadow-lg">
-    <div className="flex items-center gap-3 mb-5">
-      <div className="p-2 bg-white rounded-lg">
-        <DollarSign size={18} className="text-orange-400" />
+const PriceSummary = ({ calculations, currency }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-gray-600 dark:text-gray-300 shadow-lg">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="p-2 bg-white rounded-lg">
+          <DollarSign size={18} className="text-orange-400" />
+        </div>
+        <span className="font-bold text-base">
+          {t("invoices.form.summary.title")}
+        </span>
       </div>
-      <span className="font-bold text-base">Summary</span>
-    </div>
 
-    <div className="space-y-3 text-sm">
-      <div className="flex justify-between text-gray-600 dark:text-gray-300">
-        <span>Subtotal</span>
-        <span className="font-mono text-gray-600 dark:text-gray-300">
-          {formatCurrency(calculations.subtotal, currency)}
-        </span>
-      </div>
-      <div className="flex justify-between text-gray-600 dark:text-gray-300">
-        <span>Tax</span>
-        <span className="font-mono text-gray-600 dark:text-gray-300">
-          {formatCurrency(calculations.tax, currency)}
-        </span>
-      </div>
-      {calculations.discountAmount > 0 && (
-        <div className="flex justify-between text-red-300">
-          <span>Discount</span>
-          <span className="font-mono">
-            -{formatCurrency(calculations.discountAmount, currency)}
+      <div className="space-y-3 text-sm">
+        <div className="flex justify-between text-gray-600 dark:text-gray-300">
+          <span>{t("invoices.form.summary.subtotal")}</span>
+          <span className="font-mono text-gray-600 dark:text-gray-300">
+            {formatCurrency(calculations.subtotal, currency)}
           </span>
         </div>
-      )}
+        <div className="flex justify-between text-gray-600 dark:text-gray-300">
+          <span>{t("invoices.form.summary.tax")}</span>
+          <span className="font-mono text-gray-600 dark:text-gray-300">
+            {formatCurrency(calculations.tax, currency)}
+          </span>
+        </div>
+        {calculations.discountAmount > 0 && (
+          <div className="flex justify-between text-red-300">
+            <span>{t("invoices.form.summary.discount")}</span>
+            <span className="font-mono">
+              -{formatCurrency(calculations.discountAmount, currency)}
+            </span>
+          </div>
+        )}
 
-      <div className="pt-4 mt-2 border-t border-gray-700 flex justify-between items-end">
-        <span className="font-bold text-base text-gray-600 dark:text-gray-300">
-          Total
-        </span>
-        <span className="text-2xl font-black text-orange-400 font-mono tracking-tight">
-          {formatCurrency(calculations.totalAmount, currency)}
-        </span>
+        <div className="pt-4 mt-2 border-t border-gray-700 flex justify-between items-end">
+          <span className="font-bold text-base text-gray-600 dark:text-gray-300">
+            {t("invoices.form.summary.total")}
+          </span>
+          <span className="text-2xl font-black text-orange-400 font-mono tracking-tight">
+            {formatCurrency(calculations.totalAmount, currency)}
+          </span>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ============================================
 // LINE ITEM ROW
 // ============================================
 const LineItemRow = ({ item, index, onChange, onRemove, canRemove }) => {
+  const { t } = useTranslation();
   return (
     <div className="group p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-orange-300 dark:hover:border-orange-700 transition-all shadow-sm hover:shadow-md">
       <div className="flex flex-col sm:flex-row gap-4 items-start">
         <div className="flex-1 w-full space-y-3">
           <input
             type="text"
-            placeholder="Item description..."
+            placeholder={t("invoices.form.items.descriptionPlaceholder")}
             value={item.description}
             onChange={(e) => onChange(index, "description", e.target.value)}
             className="w-full bg-transparent text-base font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none border-b border-transparent focus:border-orange-500 pb-1 transition-colors"
@@ -402,20 +411,38 @@ const LineItemRow = ({ item, index, onChange, onRemove, canRemove }) => {
               onChange={(e) => onChange(index, "category", e.target.value)}
               className="text-xs bg-gray-100 dark:bg-gray-900 border-0 rounded-lg px-2 py-1.5 text-gray-600 dark:text-gray-300 focus:ring-1 focus:ring-orange-500"
             >
-              <option value="venue_rental">Venue Rental</option>
-              <option value="catering">Catering</option>
-              <option value="decoration">Decoration</option>
-              <option value="photography">Photography</option>
-              <option value="music">Music/DJ</option>
-              <option value="equipment">Equipment</option>
-              <option value="service_fee">Service Fee</option>
-              <option value="other">Other</option>
+              <option value="venue_rental">
+                {t("invoices.items.categories.venue_rental")}
+              </option>
+              <option value="catering">
+                {t("invoices.items.categories.catering")}
+              </option>
+              <option value="decoration">
+                {t("invoices.items.categories.decoration")}
+              </option>
+              <option value="photography">
+                {t("invoices.items.categories.photography")}
+              </option>
+              <option value="music">
+                {t("invoices.items.categories.music")}
+              </option>
+              <option value="equipment">
+                {t("invoices.items.categories.equipment")}
+              </option>
+              <option value="service_fee">
+                {t("invoices.items.categories.service_fee")}
+              </option>
+              <option value="other">
+                {t("invoices.items.categories.other")}
+              </option>
             </select>
 
             <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
 
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-400">Qty</label>
+              <label className="text-xs text-gray-400">
+                {t("invoices.form.items.qty")}
+              </label>
               <input
                 type="number"
                 min="1"
@@ -426,7 +453,9 @@ const LineItemRow = ({ item, index, onChange, onRemove, canRemove }) => {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-400">Rate</label>
+              <label className="text-xs text-gray-400">
+                {t("invoices.form.items.rate")}
+              </label>
               <input
                 type="number"
                 min="0"
@@ -465,7 +494,7 @@ const InvoiceFormPage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
-  const { showSuccess, apiError, showInfo } = useToast();
+  const { showSuccess, apiError } = useToast();
 
   const isEditMode = Boolean(id);
   const initialType = searchParams.get("type") || "client";
@@ -570,13 +599,13 @@ const InvoiceFormPage = () => {
           }
         }
       } catch (err) {
-        apiError(err, "Failed to load data");
+        apiError(err, t("invoices.messages.loadFailed"));
       } finally {
         setFetchLoading(false);
       }
     };
     fetchData();
-  }, [isEditMode, id]);
+  }, [isEditMode, id, t]);
 
   // Auto-save draft
   useEffect(() => {
@@ -647,7 +676,7 @@ const InvoiceFormPage = () => {
     if (draftData) {
       setFormData(draftData);
       setInvoiceType(draftData.invoiceType || "client");
-      showSuccess("Draft restored");
+      showSuccess(t("invoices.messages.draftRestored"));
     }
     setDraftData(null);
   };
@@ -687,13 +716,13 @@ const InvoiceFormPage = () => {
     setRecipientSearch("");
   };
 
-  // Auto-gen items logic (kept same as provided)
+  // Auto-gen items logic
   const generateItemsFromEvent = (event, type) => {
     const items = [];
     if (type === "client") {
       if (event.pricing?.basePrice > 0) {
         items.push({
-          description: `Venue Rental - ${event.title}`,
+          description: `${t("invoices.items.categories.venue_rental")} - ${event.title}`,
           quantity: 1,
           rate: event.pricing.basePrice,
           amount: event.pricing.basePrice,
@@ -703,7 +732,8 @@ const InvoiceFormPage = () => {
       if (event.pricing?.additionalServices?.length > 0) {
         event.pricing.additionalServices.forEach((service) => {
           items.push({
-            description: service.name || "Service",
+            description:
+              service.name || t("invoices.items.categories.service_fee"),
             quantity: 1,
             rate: service.price || 0,
             amount: service.price || 0,
@@ -766,7 +796,7 @@ const InvoiceFormPage = () => {
       }
       setFormData((p) => ({ ...p, ...updates }));
     } catch (err) {
-      apiError(err, "Failed to load event");
+      apiError(err, t("invoices.messages.eventLoadFailed"));
     }
   };
 
@@ -802,14 +832,16 @@ const InvoiceFormPage = () => {
     const errs = {};
     if (step === 1) {
       if (invoiceType === "client" && !formData.client)
-        errs.recipient = "Select a client";
+        errs.recipient = t("invoices.validation.selectClient");
       if (invoiceType === "partner" && !formData.partner)
-        errs.recipient = "Select a partner";
+        errs.recipient = t("invoices.validation.selectPartner");
     }
-    if (step === 2 && formData.items.length === 0) errs.items = "Add items";
+    if (step === 2 && formData.items.length === 0)
+      errs.items = t("invoices.validation.addItems");
     if (step === 3) {
-      if (!formData.issueDate) errs.issueDate = "Required";
-      if (!formData.dueDate) errs.dueDate = "Required";
+      if (!formData.issueDate)
+        errs.issueDate = t("invoices.validation.required");
+      if (!formData.dueDate) errs.dueDate = t("invoices.validation.required");
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -817,6 +849,10 @@ const InvoiceFormPage = () => {
 
   const handleNext = () => {
     if (validateStep(currentStep)) setCurrentStep((p) => Math.min(p + 1, 4));
+  };
+
+  const handleBack = () => {
+    setCurrentStep((p) => Math.max(p - 1, 1));
   };
 
   const handleSubmit = async () => {
@@ -829,10 +865,14 @@ const InvoiceFormPage = () => {
       if (isEditMode) await invoiceService.update(id, payload);
       else await invoiceService.create(payload);
       localStorage.removeItem("invoiceDraft");
-      showSuccess(isEditMode ? "Invoice updated" : "Invoice created");
+      showSuccess(
+        isEditMode
+          ? t("invoices.messages.updated")
+          : t("invoices.messages.created")
+      );
       navigate("/invoices");
     } catch (e) {
-      apiError(e, "Operation failed");
+      apiError(e, t("invoices.messages.operationFailed"));
     } finally {
       setLoading(false);
     }
@@ -840,7 +880,7 @@ const InvoiceFormPage = () => {
 
   if (fetchLoading)
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <OrbitLoader />
       </div>
     );
@@ -849,47 +889,92 @@ const InvoiceFormPage = () => {
     <div className="flex flex-col lg:flex-row h-full bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans text-slate-800 dark:text-slate-100">
       {/* LEFT PANEL */}
       <div className="flex-1 flex flex-col h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl z-10 max-w-2xl">
-        {/* HEADER */}
+        {/* HEADER & TOP NAV */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0 bg-white dark:bg-gray-800">
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate("/invoices")}
+              className="text-gray-500"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                {isEditMode ? "Edit Invoice" : "New Invoice"}
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                {isEditMode
+                  ? t("invoices.form.title.edit")
+                  : t("invoices.form.title.new")}
               </h1>
-              <div className="flex gap-2 mt-1.5">
+              <div className="flex gap-1 mt-1">
                 <button
                   onClick={() => handleTypeSwitch("client")}
-                  className={`text-xs font-semibold px-2 py-0.5 rounded transition-colors ${invoiceType === "client" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"}`}
+                  className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded transition-colors ${invoiceType === "client" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : "text-gray-400 hover:bg-gray-100 dark:text-gray-500 dark:hover:bg-gray-700"}`}
                 >
-                  Client Invoice
+                  {t("invoices.form.type.client")}
                 </button>
+                <div className="w-px bg-gray-200 dark:bg-gray-700 h-4 my-auto" />
                 <button
                   onClick={() => handleTypeSwitch("partner")}
-                  className={`text-xs font-semibold px-2 py-0.5 rounded transition-colors ${invoiceType === "partner" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"}`}
+                  className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded transition-colors ${invoiceType === "partner" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : "text-gray-400 hover:bg-gray-100 dark:text-gray-500 dark:hover:bg-gray-700"}`}
                 >
-                  Partner Bill
+                  {t("invoices.form.type.partner")}
                 </button>
               </div>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Settings}
-            onClick={() => navigate("/invoices/settings")}
-          >
-            Design
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              onClick={() => navigate("/invoices/settings")}
+              title={t("invoices.form.buttons.design")}
+            >
+              <Settings size={20} />
+            </Button>
+
+            <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-1" />
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              className="text-gray-500"
+            >
+              <ChevronLeft size={18} />
+            </Button>
+
+            {currentStep < 4 ? (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleNext}
+                className="gap-1 px-4"
+              >
+                {t("invoices.form.buttons.next")}{" "}
+                <ChevronRight size={16} className="opacity-60" />
+              </Button>
+            ) : (
+              <Button
+                variant="success"
+                size="sm"
+                onClick={handleSubmit}
+                loading={loading}
+                className="gap-1 px-4"
+              >
+                <Save size={16} className="opacity-60" />{" "}
+                {isEditMode
+                  ? t("invoices.form.buttons.update")
+                  : t("invoices.form.buttons.create")}
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* SCROLLABLE FORM */}
+        {/* SCROLLABLE FORM CONTENT */}
         <div className="flex-1 overflow-y-auto p-6">
           <DraftNotification
             draftData={draftData}
@@ -915,12 +1000,16 @@ const InvoiceFormPage = () => {
                 <div className="space-y-4">
                   <div className="relative">
                     <Search
-                      className="absolute left-3 top-3 text-gray-400"
+                      className={`absolute top-3 text-gray-400 ${document.dir === "rtl" ? "right-3" : "left-3"}`}
                       size={18}
                     />
                     <input
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                      placeholder={`Search ${invoiceType === "client" ? "clients" : "partners"}...`}
+                      className={`w-full py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none ${document.dir === "rtl" ? "pr-10 pl-4" : "pl-10 pr-4"}`}
+                      placeholder={
+                        invoiceType === "client"
+                          ? t("invoices.form.recipient.searchClient")
+                          : t("invoices.form.recipient.searchPartner")
+                      }
                       value={recipientSearch}
                       onChange={(e) => setRecipientSearch(e.target.value)}
                     />
@@ -943,15 +1032,22 @@ const InvoiceFormPage = () => {
                             {r.email}
                           </div>
                         </div>
-                        <ChevronRight
-                          size={16}
-                          className="text-gray-400 group-hover:text-orange-500"
-                        />
+                        {document.dir === "rtl" ? (
+                          <ChevronLeft
+                            size={16}
+                            className="text-gray-400 group-hover:text-orange-500"
+                          />
+                        ) : (
+                          <ChevronRight
+                            size={16}
+                            className="text-gray-400 group-hover:text-orange-500"
+                          />
+                        )}
                       </button>
                     ))}
                     {filteredRecipients.length === 0 && (
                       <div className="text-center py-8 text-gray-400 dark:text-gray-500">
-                        No results found
+                        {t("invoices.form.recipient.noResults")}
                       </div>
                     )}
                   </div>
@@ -961,8 +1057,8 @@ const InvoiceFormPage = () => {
               {activeRecipient && (
                 <div className="pt-6 border-t border-gray-100 dark:border-gray-700 space-y-4">
                   <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <CalendarDays size={16} className="text-orange-500" /> Link
-                    Event (Optional)
+                    <CalendarDays size={16} className="text-orange-500" />{" "}
+                    {t("invoices.form.event.linkTitle")}
                   </h4>
                   {selectedEvent ? (
                     <EventDetailsCard
@@ -978,7 +1074,7 @@ const InvoiceFormPage = () => {
                       options={[
                         {
                           value: "",
-                          label: "Select an event to import items...",
+                          label: t("invoices.form.event.selectPlaceholder"),
                         },
                         ...filteredEvents.map((e) => ({
                           value: e._id,
@@ -997,7 +1093,7 @@ const InvoiceFormPage = () => {
             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Line Items
+                  {t("invoices.form.items.title")}
                 </h3>
                 <Button
                   size="sm"
@@ -1005,7 +1101,7 @@ const InvoiceFormPage = () => {
                   icon={<Plus className="size-4" />}
                   onClick={handleAddItem}
                 >
-                  Add Item
+                  {t("invoices.form.buttons.addItem")}
                 </Button>
               </div>
               <div className="space-y-3">
@@ -1032,7 +1128,7 @@ const InvoiceFormPage = () => {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
               <div className="grid grid-cols-2 gap-5">
                 <DateInput
-                  label="Issue Date"
+                  label={t("invoices.form.details.issueDate")}
                   value={formData.issueDate}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, issueDate: e.target.value }))
@@ -1040,7 +1136,7 @@ const InvoiceFormPage = () => {
                   required
                 />
                 <DateInput
-                  label="Due Date"
+                  label={t("invoices.form.details.dueDate")}
                   value={formData.dueDate}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, dueDate: e.target.value }))
@@ -1052,12 +1148,13 @@ const InvoiceFormPage = () => {
 
               <div className="p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
                 <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4 flex items-center gap-2">
-                  <Percent size={14} /> Tax & Discount
+                  <Percent size={14} />{" "}
+                  {t("invoices.form.details.taxAndDiscount")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Tax Rate (%)
+                      {t("invoices.form.details.taxRate")}
                     </label>
                     <input
                       type="number"
@@ -1070,7 +1167,7 @@ const InvoiceFormPage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Discount
+                      {t("invoices.form.details.discount")}
                     </label>
                     <input
                       type="number"
@@ -1083,7 +1180,7 @@ const InvoiceFormPage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Type
+                      {t("invoices.form.details.type")}
                     </label>
                     <select
                       value={formData.discountType}
@@ -1095,8 +1192,12 @@ const InvoiceFormPage = () => {
                       }
                       className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
                     >
-                      <option value="fixed">Fixed Amount</option>
-                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">
+                        {t("invoices.form.details.fixed")}
+                      </option>
+                      <option value="percentage">
+                        {t("invoices.form.details.percentage")}
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -1104,7 +1205,7 @@ const InvoiceFormPage = () => {
 
               <div className="grid grid-cols-2 gap-5">
                 <Select
-                  label="Currency"
+                  label={t("invoices.form.details.currency")}
                   value={formData.currency}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, currency: e.target.value }))
@@ -1116,28 +1217,28 @@ const InvoiceFormPage = () => {
                   ]}
                 />
                 <Select
-                  label="Status"
+                  label={t("invoices.form.details.status")}
                   value={formData.status}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, status: e.target.value }))
                   }
                   options={[
-                    { value: "draft", label: "Draft" },
-                    { value: "sent", label: "Sent" },
-                    { value: "paid", label: "Paid" },
-                    { value: "overdue", label: "Overdue" },
+                    { value: "draft", label: t("invoices.status.draft") },
+                    { value: "sent", label: t("invoices.status.sent") },
+                    { value: "paid", label: t("invoices.status.paid") },
+                    { value: "overdue", label: t("invoices.status.overdue") },
                   ]}
                 />
               </div>
 
               <Textarea
-                label="Notes / Terms"
+                label={t("invoices.form.details.notesLabel")}
                 value={formData.terms}
                 onChange={(e) =>
                   setFormData((p) => ({ ...p, terms: e.target.value }))
                 }
                 rows={4}
-                placeholder="Payment instructions, thank you note..."
+                placeholder={t("invoices.form.details.notesPlaceholder")}
               />
             </div>
           )}
@@ -1158,61 +1259,27 @@ const InvoiceFormPage = () => {
             </div>
           )}
         </div>
-
-        {/* FOOTER NAV */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-between shrink-0">
-          {currentStep > 1 ? (
-            <Button
-              variant="outline"
-              onClick={() => setCurrentStep((p) => p - 1)}
-            >
-              Back
-            </Button>
-          ) : (
-            <div></div>
-          )}
-
-          {currentStep < 4 ? (
-            <Button
-              variant="primary"
-              onClick={handleNext}
-              icon={ChevronRight}
-              iconPosition="right"
-            >
-              Next Step
-            </Button>
-          ) : (
-            <Button
-              variant="success"
-              onClick={handleSubmit}
-              loading={loading}
-              icon={Save}
-            >
-              {isEditMode ? "Update Invoice" : "Create Invoice"}
-            </Button>
-          )}
-        </div>
       </div>
 
       {/* RIGHT PANEL: PREVIEW */}
       <div className="hidden lg:flex flex-1 flex-col bg-gray-900 border-l border-gray-700 overflow-hidden">
         <div className="h-16 border-b border-gray-800 bg-gray-900 flex items-center justify-between px-6 shrink-0">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-            Live Preview
+            {t("invoices.form.preview.title")}
           </span>
           <div className="flex items-center gap-2 text-gray-500 text-xs">
-            <Eye size={14} /> Real-time Update
+            <Eye size={14} /> {t("invoices.form.preview.realtime")}
           </div>
         </div>
         <div className="flex-1 overflow-auto p-8 flex justify-center items-start bg-gray-800/50">
-            <LiveInvoicePreview
-              settings={settings}
-              data={formData}
-              calculations={calculations}
-              recipient={activeRecipient}
-              companyName="My Venue"
-            />
-          </div>
+          <LiveInvoicePreview
+            settings={settings}
+            data={formData}
+            calculations={calculations}
+            recipient={activeRecipient}
+            companyName="My Venue"
+          />
+        </div>
       </div>
     </div>
   );

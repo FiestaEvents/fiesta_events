@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../context/LanguageContext";
@@ -19,33 +19,34 @@ import {
   FileText,
   DollarSign,
   CheckSquare,
-  AlertCircle,
   ChevronRight,
   Loader2,
-  Command,
-  TrendingUp,
-  Clock,
-  Sparkles,
-  X,
-  ArrowRight,
-  Zap,
   Box,
+  Clock as ClockIcon,
+  AlertCircle,
+  CheckCircle2,
+  X,
 } from "lucide-react";
+
+// Contexts & Hooks
+import { useEnhancedNotifications } from "./enhancedNotifications.jsx";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
+
+// API Services
 import {
-  reminderService,
   eventService,
   clientService,
   partnerService,
   invoiceService,
   paymentService,
   taskService,
+  reminderService,
 } from "../../api/index";
 
 // ==========================================
-// 1. SUB-COMPONENTS
+// 1. HELPER COMPONENTS
 // ==========================================
 
 const NotificationBadge = ({ count }) => {
@@ -57,7 +58,7 @@ const NotificationBadge = ({ count }) => {
       className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center"
     >
       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-      <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 items-center justify-center text-[10px] font-bold text-white">
+      <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 items-center justify-center text-[10px] font-bold text-white shadow-sm">
         {count > 9 ? "9+" : count}
       </span>
     </motion.span>
@@ -70,7 +71,7 @@ const SearchResultItem = ({ item, onClick, config }) => {
     <motion.button
       whileHover={{ x: 4 }}
       onClick={onClick}
-      className="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-start gap-3 group transition-colors"
+      className="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-start gap-3 group transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0"
     >
       <div
         className={`p-2 rounded-lg bg-${config.color}-50 dark:bg-${config.color}-900/20 group-hover:scale-110 transition-transform`}
@@ -95,7 +96,7 @@ const SearchResultItem = ({ item, onClick, config }) => {
 };
 
 // ==========================================
-// 2. HOOKS & LOGIC
+// 2. SEARCH LOGIC HOOK
 // ==========================================
 
 const useSearch = () => {
@@ -114,6 +115,7 @@ const useSearch = () => {
       setLoading(true);
       setShow(true);
       try {
+        // Parallel fetching
         const [
           events,
           clients,
@@ -135,10 +137,9 @@ const useSearch = () => {
         const extract = (res) => {
           if (res.status !== "fulfilled") return [];
           const val = res.value;
-          // Robust extraction logic
           if (val?.data?.data) return val.data.data;
           if (val?.data) return Array.isArray(val.data) ? val.data : [];
-          // Specific keys fallback
+          // Heuristic fallback for different API structures
           const keys = [
             "events",
             "clients",
@@ -160,7 +161,6 @@ const useSearch = () => {
           const q = query.toLowerCase();
           return items
             .filter((i) => {
-              // Basic fuzzy search logic per type
               if (type === "invoices")
                 return (
                   i.invoiceNumber?.toLowerCase().includes(q) ||
@@ -195,149 +195,6 @@ const useSearch = () => {
   return { query, setQuery, results, loading, show, setShow };
 };
 
-const useNotifications = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [alertCount, setAlertCount] = useState(0); // Count for the Red Badge
-  const audioRef = useRef(new Audio("/sounds/notification.mp3"));
-  const prevAlertCount = useRef(0);
-
-  const fetch = useCallback(async () => {
-    try {
-      const res = await reminderService.getUpcoming();
-      let list = [];
-      if (res?.data?.data?.reminders) list = res.data.data.reminders;
-      else if (res?.data?.reminders) list = res.data.reminders;
-      else if (Array.isArray(res)) list = res;
-
-      const now = new Date();
-
-      // Process list
-      const processed = list
-        .map((r) => {
-          // 1. Parse Date Safely (Local Time)
-          try {
-            const dateOnly = r.reminderDate.split("T")[0]; // YYYY-MM-DD
-            const [y, m, d] = dateOnly.split("-").map(Number);
-            const [h, min] = (r.reminderTime || "00:00").split(":").map(Number);
-            const due = new Date(y, m - 1, d, h, min);
-
-            // Calculate difference in hours
-            const diffMs = due - now;
-            const diffHours = diffMs / (1000 * 60 * 60);
-
-            // 2. Logic: "If it past, it pass"
-            // We hide items that are more than 30 mins past due (to clean up the list)
-            if (diffHours < -24) return null; 
-
-            // 3. Determine Urgency
-            let urgency = "future"; // Grey
-            let shouldAlert = false;
-
-            if (diffHours <= 0) {
-              urgency = "due"; // Red (It's time!)
-              shouldAlert = true;
-            } else if (diffHours <= 1) {
-              urgency = "1h"; // Orange
-              shouldAlert = true;
-            } else if (diffHours <= 4) {
-              urgency = "4h"; // Yellow
-              shouldAlert = true;
-            } else if (diffHours <= 24) {
-              urgency = "1d"; // Blue
-              shouldAlert = true;
-            }
-
-            return { ...r, due, diffHours, urgency, shouldAlert };
-          } catch (e) {
-            return null;
-          }
-        })
-        .filter(Boolean); // Remove nulls (past items)
-
-      setNotifications(processed);
-
-      // 4. Calculate Badge Count (Only alert for 24h or less)
-      const count = processed.filter(r => r.shouldAlert).length;
-      setAlertCount(count);
-
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetch();
-    const interval = setInterval(fetch, 5000); // Check every 5sec
-    return () => clearInterval(interval);
-  }, [fetch]);
-
-  // 5. Sound Effect Logic
-  useEffect(() => {
-    if (alertCount > prevAlertCount.current) {
-      audioRef.current?.play().catch((e) => console.log("Audio blocked", e));
-    }
-    prevAlertCount.current = alertCount;
-  }, [alertCount]);
-
-  return { notifications, alertCount };
-};
-
-// ==========================================
-// NOTIFICATION ITEM UI
-// ==========================================
-const NotificationItem = ({ reminder, onClick }) => {
-  
-  // Helper to show readable "Time Left"
-  const getTimeLeft = () => {
-    const h = Math.floor(reminder.diffHours);
-    const m = Math.floor((reminder.diffHours - h) * 60);
-
-    if (reminder.diffHours < 0) return "Due Now!";
-    if (reminder.diffHours < 1) return `In ${Math.max(0, Math.floor(reminder.diffHours * 60))} mins`;
-    if (reminder.diffHours < 24) return `In ${h}h ${m}m`;
-    
-    // For > 24h, show date
-    return new Date(reminder.due).toLocaleDateString("en-GB", { 
-      day: 'numeric', month: 'short' 
-    }) + ` at ${reminder.reminderTime}`;
-  };
-
-  // Color Coding based on Urgency
-  const getColors = () => {
-    switch (reminder.urgency) {
-      case "due": return "bg-red-100 text-red-700 border-l-4 border-red-500";
-      case "1h": return "bg-orange-50 text-orange-700 border-l-4 border-orange-500";
-      case "4h": return "bg-yellow-50 text-yellow-700 border-l-4 border-yellow-500";
-      case "1d": return "bg-blue-50 text-blue-700 border-l-4 border-blue-500";
-      default: return "bg-white text-gray-700 hover:bg-gray-50"; // Future > 24h
-    }
-  };
-    return (
-    <motion.div
-      whileHover={{ scale: 1.01 }}
-      onClick={onClick}
-      className={`px-4 py-4 border-b border-gray-100 cursor-pointer flex items-center gap-4 transition-all ${getColors()}`}
-    >
-      <div className="flex-1">
-        <div className="flex justify-between items-start">
-          <p className="text-base font-bold leading-tight">
-            {reminder.title}
-          </p>
-          {reminder.shouldAlert && (
-            <span className="text-[10px] uppercase font-black tracking-widest opacity-80 bg-white/50 px-2 py-0.5 rounded">
-              {reminder.urgency === 'due' ? 'NOW' : reminder.urgency}
-            </span>
-          )}
-        </div>
-        <p className="text-sm opacity-80 mt-1 font-medium">
-          {getTimeLeft()}
-        </p>
-      </div>
-      <ChevronRight size={20} className="opacity-50" />
-    </motion.div>
-  );
-};
-
 // ==========================================
 // 3. MAIN COMPONENT
 // ==========================================
@@ -348,8 +205,19 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
-  const { notifications, alertCount } = useNotifications(); 
-  // Custom Hooks
+
+  // Enhanced Notifications Logic
+  const {
+    notifications,
+    categorized,
+    alertCount,
+    preferences,
+    updatePreferences,
+    markAsComplete,
+    dismissNotification,
+  } = useEnhancedNotifications();
+
+  // Search Logic
   const {
     query,
     setQuery,
@@ -359,17 +227,18 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     setShow: setShowSearch,
   } = useSearch();
 
-  // Local UI State
+  // UI State
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Refs for click outside
+  // Refs
   const searchContainerRef = useRef(null);
   const userMenuRef = useRef(null);
   const notifRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Global Events
+  // Global Listeners
   useEffect(() => {
     const handleProfileUpdate = () => refreshUser && refreshUser();
     window.addEventListener("profileUpdated", handleProfileUpdate);
@@ -377,7 +246,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
       window.removeEventListener("profileUpdated", handleProfileUpdate);
   }, [refreshUser]);
 
-  // Click Outside
+  // Click Outside Handler
   useEffect(() => {
     const handleClick = (e) => {
       if (
@@ -394,7 +263,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [setShowSearch]);
 
-  // Keyboard
+  // Keyboard Shortcuts
   useEffect(() => {
     const handleKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -410,7 +279,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     return () => document.removeEventListener("keydown", handleKey);
   }, [setShowSearch]);
 
-  // Helpers
+  // Navigation Helper
   const handleResultClick = (type, id) => {
     setShowSearch(false);
     setQuery("");
@@ -422,7 +291,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
       payments: `/payments/${id}`,
       tasks: `/tasks/${id}`,
       reminders: `/reminders/${id}`,
-      supplies: `/supplies/${id}`,      
+      supplies: `/supplies/${id}`,
     };
     navigate(routes[type] || "/");
   };
@@ -440,10 +309,10 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const userAvatar = user?.avatar || null;
   const topBarOffset = isCollapsed
     ? isRTL
-      ? "lg:right-12"
-      : "lg:left-12"
+      ? "lg:right-16"
+      : "lg:left-16"
     : isRTL
-      ? "lg:right-48"
+      ? "lg:right-56"
       : "lg:left-56";
 
   const categoryConfig = {
@@ -461,18 +330,224 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
     supplies: { icon: Box, color: "red", label: t("common.supplies") },
   };
 
-  const totalResults = Object.values(searchResults).reduce(
-    (acc, arr) => acc + (arr ? arr.length : 0),
-    0
-  );
-  const hasResults = totalResults > 0;
+  // ==========================================
+  // RENDER NOTIFICATIONS
+  // ==========================================
+
+  const getSeverityColor = (reminder) => {
+    const isOverdue = new Date(reminder.reminderDate) < new Date();
+    if (isOverdue) return "bg-red-500";
+    if (reminder.priority === "urgent") return "bg-orange-500";
+    if (reminder.priority === "high") return "bg-yellow-500";
+    if (reminder.type === "event") return "bg-blue-500";
+    if (reminder.type === "payment") return "bg-green-500";
+    return "bg-gray-400"; // Default
+  };
+
+  const renderNotificationDropdown = () => {
+    const categoriesToShow = {
+      all: notifications,
+      overdue: categorized.overdue,
+      critical: categorized.critical,
+      today: categorized.today,
+    };
+    const currentList = categoriesToShow[selectedCategory] || [];
+
+    return (
+      <AnimatePresence>
+        {notifOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className={`absolute mt-4 w-[400px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-50 ${isRTL ? "left-0" : "right-0"}`}
+          >
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {t("notifications.title")}
+                </h3>
+                {alertCount > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50 text-xs font-bold text-red-600 dark:text-red-400">
+                    {alertCount}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setNotifOpen(false);
+                  navigate("/reminders");
+                }}
+                className="text-sm font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 transition-colors"
+              >
+                {t("notifications.viewAll")}
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex px-2 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+              {[
+                { key: "all", label: t("notifications.tabs.all") },
+                {
+                  key: "overdue",
+                  label: t("notifications.tabs.overdue"),
+                  count: categorized.overdue.length,
+                },
+                {
+                  key: "critical",
+                  label: t("notifications.tabs.critical"),
+                  count: categorized.critical.length,
+                },
+                {
+                  key: "today",
+                  label: t("notifications.tabs.today"),
+                  count: categorized.today.length,
+                },
+              ].map(({ key, label, count }) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedCategory(key)}
+                  className={`flex-1 py-3 text-sm font-medium border-b-2 transition-all relative ${
+                    selectedCategory === key
+                      ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  }`}
+                >
+                  {label}
+                  {count > 0 && selectedCategory !== key && (
+                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* List */}
+            <div className="max-h-[380px] overflow-y-auto bg-white dark:bg-gray-800">
+              {currentList.length > 0 ? (
+                <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
+                  {currentList.map((rem) => (
+                    <div
+                      key={rem._id}
+                      className="group relative p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer flex gap-4"
+                      onClick={() => {
+                        setNotifOpen(false);
+                        navigate(`/reminders/${rem._id}`);
+                      }}
+                    >
+                      {/* The "Small Rectangle" Indicator */}
+                      <div
+                        className={`absolute left-0 top-0 bottom-0 w-1 ${getSeverityColor(rem)}`}
+                      />
+
+                      {/* Icon */}
+                      <div className="flex-shrink-0 mt-1">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${getSeverityColor(rem)} bg-opacity-10`}
+                        >
+                          <ClockIcon
+                            className={`w-4 h-4 ${getSeverityColor(rem).replace("bg-", "text-")}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex justify-between items-start gap-2">
+                          <p
+                            className={`text-sm font-semibold truncate ${rem.status === "completed" ? "text-gray-500 line-through" : "text-gray-900 dark:text-white"}`}
+                          >
+                            {rem.title}
+                          </p>
+                          <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                            {new Date(rem.reminderDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                          {rem.description || t("notifications.noDescription")}
+                        </p>
+                      </div>
+
+                      {/* Hover Actions */}
+                      <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsComplete(rem._id);
+                          }}
+                          title={t("common.markAsDone")}
+                          className="p-1 hover:bg-green-50 rounded text-green-600 dark:text-green-400"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dismissNotification(rem._id);
+                          }}
+                          title={t("common.dismiss")}
+                          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-16 h-16 bg-gray-50 dark:bg-gray-700/50 rounded-full flex items-center justify-center mb-3">
+                    <Bell className="w-8 h-8 text-gray-300 dark:text-gray-500" />
+                  </div>
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    {t(`notifications.empty.${selectedCategory}`)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer / Settings */}
+            <div className="p-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-2">
+                {t("notifications.settings.title")}
+              </span>
+              <div className="flex gap-4 mr-2">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={preferences.sound}
+                    onChange={(e) =>
+                      updatePreferences({ sound: e.target.checked })
+                    }
+                    className="rounded text-orange-500 focus:ring-orange-500/20 w-3.5 h-3.5"
+                  />
+                  {t("notifications.settings.sound")}
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={preferences.desktop}
+                    onChange={(e) =>
+                      updatePreferences({ desktop: e.target.checked })
+                    }
+                    className="rounded text-orange-500 focus:ring-orange-500/20 w-3.5 h-3.5"
+                  />
+                  {t("notifications.settings.desktop")}
+                </label>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  };
 
   return (
     <header
       className={`fixed top-0 ${isRTL ? "left-0 right-0" : "left-0 right-0"} h-16 bg-white/90 backdrop-blur-md z-40 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800`}
     >
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
-        {/* --- LEFT: TOGGLE & LOGO --- */}
+        {/* --- LEFT: MENU & LOGO --- */}
         <div className="flex items-center gap-3">
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -522,7 +597,7 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
             <input
               ref={searchInputRef}
               type="text"
-              placeholder={t("common.searchPlaceholder", "Search...")}
+              placeholder={t("common.searchPlaceholder")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => query.length >= 2 && setShowSearch(true)}
@@ -541,16 +616,20 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className={`absolute top-full w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden z-50 max-h-[60vh] overflow-y-auto`}
+                className="absolute top-full w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden z-50 max-h-[60vh] overflow-y-auto"
               >
                 {searchLoading ? (
                   <div className="p-8 text-center text-gray-500 text-sm">
-                    Searching...
+                    {t("common.loading")}
                   </div>
-                ) : !hasResults ? (
+                ) : Object.keys(searchResults).every(
+                    (k) => !searchResults[k]?.length
+                  ) ? (
                   <div className="p-8 text-center">
                     <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">No results found.</p>
+                    <p className="text-sm text-gray-500">
+                      {t("common.noResults")}
+                    </p>
                   </div>
                 ) : (
                   <div className="py-2">
@@ -586,7 +665,6 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
             <LanguageSwitcher />
           </div>
 
-          {/* Theme */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={toggleTheme}
@@ -599,72 +677,17 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
             )}
           </motion.button>
 
-          {/* Notifications */}
+          {/* Notifications Dropdown */}
           <div className="relative" ref={notifRef}>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setNotifOpen(!notifOpen)}
-              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 relative"
+              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
             >
               <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              <NotificationBadge count={alertCount} /> 
+              <NotificationBadge count={alertCount} />
             </motion.button>
-
-            <AnimatePresence>
-              {notifOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className={`absolute mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 ${isRTL ? "left-0" : "right-0"}`}
-                >
-                  <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-orange-500" />
-                      {t(
-                        "notifications.upcomingReminders",
-                        "Upcoming Reminders"
-                      )}
-                    </h3>
-                    <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      {notifications.length}
-                    </span>
-                  </div>
-                  <div className="max-h-[60vh] overflow-y-auto">
-                    {notifications.length > 0 ? (
-                      notifications.map((rem) => (
-                        <NotificationItem
-                          key={rem._id}
-                          reminder={rem}
-                          onClick={() => {
-                            setNotifOpen(false);
-                            navigate("/reminders");
-                          }}
-                        />
-                      ))
-                    ) : (
-                      <div className="p-8 text-center text-gray-500">
-                        <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                        <p className="text-xs">No active Reminders right now.</p>
-                      </div>
-                    )}
-                  </div>
-                  {alertCount > 0 && (
-                    <div className="p-2 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={() => {
-                          setNotifOpen(false);
-                          navigate("/reminders");
-                        }}
-                        className="w-full py-2 text-sm text-center text-orange-600 hover:text-orange-700 font-medium"
-                      >
-                        View All
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {renderNotificationDropdown()}
           </div>
 
           {/* User Menu */}
@@ -695,7 +718,6 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                     {getUserInitials()}
                   </div>
                 )}
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full" />
               </div>
               <ChevronDown className="w-4 h-4 text-gray-400" />
             </motion.button>
@@ -709,20 +731,18 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
                   className={`absolute mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 ${isRTL ? "left-0" : "right-0"}`}
                 >
                   <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-lg">
                     {userAvatar ? (
-                  <img
-                    src={userAvatar}
-                    alt="Avatar"
-                    className="w-9 h-9 rounded-lg object-cover bg-gray-200"
-                    onError={(e) => (e.target.style.display = "none")}
-                  />
-                ) : (
-                  <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    {getUserInitials()}
-                  </div>
-                )}
-                    </div>
+                      <img
+                        src={userAvatar}
+                        alt="Avatar"
+                        className="w-10 h-10 rounded-full object-cover bg-gray-200"
+                        onError={(e) => (e.target.style.display = "none")}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {getUserInitials()}
+                      </div>
+                    )}
                     <div className="overflow-hidden">
                       <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
                         {user?.name}

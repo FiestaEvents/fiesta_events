@@ -1,25 +1,23 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Save,
   ClipboardList,
   Calendar,
-  User,
   CheckSquare,
   ChevronRight,
   ChevronLeft,
   Check,
   Plus,
   Trash2,
-  Clock,
   X,
 } from "lucide-react";
 
-// ✅ API & Services
+// API & Services
 import { taskService, teamService } from "../../api/index";
 
-// ✅ Generic Components
+// Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import DateInput from "../../components/common/DateInput";
@@ -27,7 +25,8 @@ import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ Context
+
+// Context
 import { useToast } from "../../hooks/useToast";
 
 const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
@@ -40,7 +39,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const taskId = id || taskProp?._id || taskProp?.id;
   const isModalMode = Boolean(onSuccess && onCancel);
 
-  // Multi-step state
+  // --- State ---
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
 
@@ -66,41 +65,50 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const [tagInput, setTagInput] = useState("");
   const [newSubtask, setNewSubtask] = useState({ title: "" });
 
-  // Constants
-  const TASK_PRIORITIES = [
-    { value: "low", label: t("tasks.priority.low") },
-    { value: "medium", label: t("tasks.priority.medium") },
-    { value: "high", label: t("tasks.priority.high") },
-    { value: "urgent", label: t("tasks.priority.urgent") },
-  ];
+  // --- Constants (Memoized for performance) ---
+  const TASK_PRIORITIES = useMemo(
+    () => [
+      { value: "low", label: t("tasks.priority.low") },
+      { value: "medium", label: t("tasks.priority.medium") },
+      { value: "high", label: t("tasks.priority.high") },
+      { value: "urgent", label: t("tasks.priority.urgent") },
+    ],
+    [t]
+  );
 
-  const TASK_STATUSES = [
-    { value: "pending", label: t("tasks.status.pending") },
-    { value: "todo", label: t("tasks.status.todo") },
-    { value: "in_progress", label: t("tasks.status.in_progress") },
-    { value: "blocked", label: t("tasks.status.blocked") },
-    { value: "completed", label: t("tasks.status.completed") },
-    { value: "cancelled", label: t("tasks.status.cancelled") },
-  ];
+  const TASK_STATUSES = useMemo(
+    () => [
+      { value: "pending", label: t("tasks.status.pending") },
+      { value: "todo", label: t("tasks.status.todo") },
+      { value: "in_progress", label: t("tasks.status.in_progress") },
+      { value: "blocked", label: t("tasks.status.blocked") },
+      { value: "completed", label: t("tasks.status.completed") },
+      { value: "cancelled", label: t("tasks.status.cancelled") },
+    ],
+    [t]
+  );
 
-  const TASK_CATEGORIES = [
-    {
-      value: "event_preparation",
-      label: t("tasks.category.event_preparation"),
-    },
-    { value: "marketing", label: t("tasks.category.marketing") },
-    { value: "maintenance", label: t("tasks.category.maintenance") },
-    { value: "client_followup", label: t("tasks.category.client_followup") },
-    {
-      value: "partner_coordination",
-      label: t("tasks.category.partner_coordination"),
-    },
-    { value: "administrative", label: t("tasks.category.administrative") },
-    { value: "finance", label: t("tasks.category.finance") },
-    { value: "setup", label: t("tasks.category.setup") },
-    { value: "cleanup", label: t("tasks.category.cleanup") },
-    { value: "other", label: t("tasks.category.other") },
-  ];
+  const TASK_CATEGORIES = useMemo(
+    () => [
+      {
+        value: "event_preparation",
+        label: t("tasks.category.event_preparation"),
+      },
+      { value: "marketing", label: t("tasks.category.marketing") },
+      { value: "maintenance", label: t("tasks.category.maintenance") },
+      { value: "client_followup", label: t("tasks.category.client_followup") },
+      {
+        value: "partner_coordination",
+        label: t("tasks.category.partner_coordination"),
+      },
+      { value: "administrative", label: t("tasks.category.administrative") },
+      { value: "finance", label: t("tasks.category.finance") },
+      { value: "setup", label: t("tasks.category.setup") },
+      { value: "cleanup", label: t("tasks.category.cleanup") },
+      { value: "other", label: t("tasks.category.other") },
+    ],
+    [t]
+  );
 
   const steps = [
     { number: 1, title: t("tasks.form.steps.basicInfo"), icon: ClipboardList },
@@ -108,6 +116,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     { number: 3, title: t("tasks.form.steps.checklist"), icon: CheckSquare },
   ];
 
+  // --- Data Loading ---
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
     return new Date(dateString).toISOString().split("T")[0];
@@ -131,7 +140,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     });
   }, []);
 
-  // Fetch Data
   useEffect(() => {
     const initData = async () => {
       setFetchLoading(true);
@@ -167,24 +175,25 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     showError,
   ]);
 
-  // Handlers
+  // --- Handlers ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // --- FIXED: Added (e) argument to capture the event ---
+  // ✅ FIX: Prevent Default behavior clearly
   const handleAddTag = (e) => {
-    if (e) e.preventDefault(); // This now works because 'e' is defined
-    
-    if (
-      tagInput.trim() &&
-      !formData.tags.includes(tagInput.trim().toLowerCase())
-    ) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    const trimmedTag = tagInput.trim().toLowerCase();
+    if (trimmedTag && !formData.tags.includes(trimmedTag)) {
       setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, tagInput.trim().toLowerCase()],
+        tags: [...prev.tags, trimmedTag],
       }));
       setTagInput("");
     }
@@ -197,19 +206,19 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     }));
   };
 
-  // --- FIXED: Added (e) argument to capture the event ---
+  // ✅ FIX: Prevent Default behavior clearly
   const handleAddSubtask = (e) => {
-    if (e) e.preventDefault(); // This now works because 'e' is defined
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     if (newSubtask.title.trim()) {
       setFormData((prev) => ({
         ...prev,
         subtasks: [
           ...prev.subtasks,
-          {
-            title: newSubtask.title.trim(),
-            completed: false,
-          },
+          { title: newSubtask.title.trim(), completed: false },
         ],
       }));
       setNewSubtask({ title: "" });
@@ -223,7 +232,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     }));
   };
 
-  // Validation
+  // --- Validation ---
   const validateStep = (step) => {
     const newErrors = {};
     if (step === 1) {
@@ -250,8 +259,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // --- NAVIGATION LOGIC ---
-
+  // --- Navigation & Submission ---
   const handleNext = (e) => {
     if (e) e.preventDefault();
     if (validateStep(currentStep)) {
@@ -270,25 +278,15 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     if (step < currentStep || validateStep(currentStep)) setCurrentStep(step);
   };
 
-  // --- SUBMISSION LOGIC ---
-
-  // Core submission function used by both Submit and Quick Update
   const submitData = async () => {
     try {
       setLoading(true);
-
       const submitPayload = {
+        ...formData,
         title: formData.title.trim(),
         description: formData.description.trim(),
-        priority: formData.priority,
-        status: formData.status,
-        category: formData.category,
         dueDate: new Date(formData.dueDate).toISOString(),
-        tags: formData.tags,
-        subtasks: formData.subtasks,
-        // ✅ Send null if empty string to handle optional relation correctly
-        assignedTo: formData.assignedTo || null,
-        isArchived: formData.isArchived,
+        assignedTo: formData.assignedTo || null, // Handle unassigned
       };
 
       if (isEditMode) {
@@ -309,29 +307,21 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     }
   };
 
-  // Main Form Submit (triggered by Enter key or Final Button)
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // If not on the last step, treat 'Enter' as 'Next'
     if (currentStep < totalSteps) {
       handleNext();
       return;
     }
-
-    // Final validation before submitting
     if (!validateAllRequired()) {
       showWarning(t("tasks.form.validation.fixAllErrors"));
       return;
     }
-
     await submitData();
   };
 
-  // Quick Update (Bypasses steps if Step 1 is valid)
   const handleQuickUpdate = async (e) => {
     e.preventDefault();
-    // Ensure minimal required fields (Title) are present
     if (!validateStep(1)) {
       setCurrentStep(1);
       showWarning(t("tasks.form.validation.fixErrors"));
@@ -340,22 +330,19 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     await submitData();
   };
 
-  // --- Renders ---
-
+  // --- Render Steps ---
   const renderStepIndicator = () => (
     <div className="mb-8 px-4">
       <div className="flex items-center justify-between relative max-w-lg mx-auto">
         <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-100 dark:bg-gray-700 -z-10" />
-
         {steps.map((step) => {
           const isCompleted = step.number < currentStep;
           const isCurrent = step.number === currentStep;
           const StepIcon = step.icon;
-
           return (
             <button
               key={step.number}
-              type="button" // ✅ Explicit type
+              type="button" // ✅ Critical: Prevents form submission on click
               onClick={() => handleStepClick(step.number)}
               disabled={!isCompleted && !isCurrent}
               className={`group flex flex-col items-center gap-2 bg-white dark:bg-[#1f2937] px-2 transition-all ${
@@ -378,11 +365,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 )}
               </div>
               <span
-                className={`text-xs font-semibold whitespace-nowrap ${
-                  isCurrent
-                    ? "text-gray-900 dark:text-white"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
+                className={`text-xs font-semibold whitespace-nowrap ${isCurrent ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
               >
                 {step.title}
               </span>
@@ -408,7 +391,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               placeholder={t("tasks.form.fields.titlePlaceholder")}
               className="w-full"
             />
-
             <Textarea
               label={t("tasks.form.fields.description")}
               name="description"
@@ -418,7 +400,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
               placeholder={t("tasks.form.fields.descriptionPlaceholder")}
               className="w-full"
             />
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Select
                 label={t("tasks.form.fields.priority")}
@@ -446,7 +427,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
             </div>
           </div>
         );
-
       case 2:
         return (
           <div className="space-y-6 animate-fadeIn">
@@ -460,7 +440,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 required
                 className="w-full"
               />
-
               <Select
                 label={`${t("tasks.form.fields.assignedTo")} (${t("common.optional")})`}
                 name="assignedTo"
@@ -475,7 +454,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
             </div>
           </div>
         );
-
       case 3:
         return (
           <div className="space-y-6 animate-fadeIn">
@@ -491,19 +469,18 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault();
+                      e.preventDefault(); // Stop submitting form on Enter in tag input
                       handleAddTag(e);
                     }
                   }}
                   placeholder={t("tasks.form.fields.tagPlaceholder")}
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm"
                 />
-                {/* 
-                  IMPORTANT: This button has type="button", but if the handler crashes
-                  (due to missing 'e'), the form might behave unexpectedly.
-                  Now fixed in handleAddTag definition.
-                */}
-                <Button type="button" variant="outline" onClick={handleAddTag}>
+                <Button
+                  type="button" // ✅ Explicitly set type button to prevent submit
+                  variant="outline"
+                  onClick={handleAddTag}
+                >
                   {t("tasks.form.buttons.add")}
                 </Button>
               </div>
@@ -535,7 +512,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   onChange={(e) => setNewSubtask({ title: e.target.value })}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault();
+                      e.preventDefault(); // Stop submitting form on Enter in subtask input
                       handleAddSubtask(e);
                     }
                   }}
@@ -543,7 +520,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   className="flex-1"
                 />
                 <Button
-                  type="button"
+                  type="button" // ✅ Explicitly set type button to prevent submit
                   variant="outline"
                   icon={<Plus className="size-4" />}
                   onClick={handleAddSubtask}
@@ -582,7 +559,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   };
 
   if (fetchLoading && isEditMode) {
-      return (
+    return (
       <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
           <OrbitLoader />
@@ -616,7 +593,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
         <div className="flex items-center justify-between pt-6 mt-auto">
           <Button
-            type="button"
+            type="button" // Prevent submit
             variant="outline"
             onClick={
               currentStep === 1
@@ -639,7 +616,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
           </Button>
 
           <div className="flex items-center gap-3">
-            {/* Quick Save in Edit Mode */}
             {isEditMode && currentStep < totalSteps && (
               <Button
                 type="button"

@@ -14,31 +14,66 @@ import {
   Receipt,
   FileSignature,
   FolderOpen,
-  Settings
+  Settings,
+  Package,
+  ArrowRight
 } from "lucide-react";
 
 const Home = () => {
   const { t } = useTranslation();
 
-  // Animation Variants
+  // --- Animation Variants ---
+
+  // Container to orchestrate the staggered entrance of children
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
+        staggerChildren: 0.08,
+        delayChildren: 0.1
       }
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 50, scale: 0.8 },
+  // Individual Card Entrance
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
     visible: { 
       opacity: 1, 
       y: 0, 
       scale: 1,
-      transition: { type: "spring", stiffness: 100, damping: 10 }
+      transition: { type: "spring", stiffness: 100, damping: 15 }
+    }
+  };
+
+  // Header Entrance
+  const headerVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" }
+    }
+  };
+
+  // Icon Hover Effect
+  const iconVariants = {
+    rest: { scale: 1, rotate: 0 },
+    hover: { 
+      scale: 1.1, 
+      rotate: [0, -5, 5, 0], // Subtle wiggle
+      transition: { duration: 0.4 } 
+    }
+  };
+
+  // Arrow Slide Effect
+  const arrowVariants = {
+    rest: { x: -10, opacity: 0 },
+    hover: { 
+      x: 0, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 20 }
     }
   };
 
@@ -49,7 +84,8 @@ const Home = () => {
       icon: LayoutDashboard,
       path: "/dashboard",
       color: "text-blue-600 dark:text-blue-400",
-      bgHover: "hover:border-blue-500 hover:shadow-blue-500/20",
+      bg: "bg-blue-50 dark:bg-blue-900/20",
+      border: "group-hover:border-blue-200 dark:group-hover:border-blue-800",
       description: t("home.dashboardDesc", "Reports & Analytics")
     },
     {
@@ -58,7 +94,8 @@ const Home = () => {
       icon: Calendar,
       path: "/events",
       color: "text-emerald-600 dark:text-emerald-400",
-      bgHover: "hover:border-emerald-500 hover:shadow-emerald-500/20",
+      bg: "bg-emerald-50 dark:bg-emerald-900/20",
+      border: "group-hover:border-emerald-200 dark:group-hover:border-emerald-800",
       description: t("home.eventsDesc", "Calendar Management")
     },
     {
@@ -67,7 +104,8 @@ const Home = () => {
       icon: Users,
       path: "/clients",
       color: "text-purple-600 dark:text-purple-400",
-      bgHover: "hover:border-purple-500 hover:shadow-purple-500/20",
+      bg: "bg-purple-50 dark:bg-purple-900/20",
+      border: "group-hover:border-purple-200 dark:group-hover:border-purple-800",
       description: t("home.clientsDesc", "Customer Database")
     },
     {
@@ -76,7 +114,8 @@ const Home = () => {
       icon: Handshake,
       path: "/partners",
       color: "text-teal-600 dark:text-teal-400",
-      bgHover: "hover:border-teal-500 hover:shadow-teal-500/20",
+      bg: "bg-teal-50 dark:bg-teal-900/20",
+      border: "group-hover:border-teal-200 dark:group-hover:border-teal-800",
       description: t("home.partnersDesc", "Vendor Relationships")
     },
     {
@@ -85,7 +124,8 @@ const Home = () => {
       icon: ClipboardList,
       path: "/tasks",
       color: "text-indigo-600 dark:text-indigo-400",
-      bgHover: "hover:border-indigo-500 hover:shadow-indigo-500/20",
+      bg: "bg-indigo-50 dark:bg-indigo-900/20",
+      border: "group-hover:border-indigo-200 dark:group-hover:border-indigo-800",
       description: t("home.tasksDesc", "To-Do Lists")
     },
     {
@@ -94,8 +134,19 @@ const Home = () => {
       icon: Bell,
       path: "/reminders",
       color: "text-yellow-600 dark:text-yellow-400",
-      bgHover: "hover:border-yellow-500 hover:shadow-yellow-500/20",
+      bg: "bg-yellow-50 dark:bg-yellow-900/20",
+      border: "group-hover:border-yellow-200 dark:group-hover:border-yellow-800",
       description: t("home.remindersDesc", "Alerts & Notifications")
+    },
+    {
+      title: t("common.supplies", "Supplies"),
+      id: "supplies",
+      icon: Package,
+      path: "/supplies",
+      color: "text-red-600 dark:text-red-400",
+      bg: "bg-red-50 dark:bg-red-900/20",
+      border: "group-hover:border-red-200 dark:group-hover:border-red-800",
+      description: t("home.suppliesDesc", "Inventory & Stock")
     },
     {
       title: t("common.finance", "Finance"),
@@ -103,7 +154,8 @@ const Home = () => {
       icon: TrendingUp,
       path: "/finance",
       color: "text-green-600 dark:text-green-400",
-      bgHover: "hover:border-green-500 hover:shadow-green-500/20",
+      bg: "bg-green-50 dark:bg-green-900/20",
+      border: "group-hover:border-green-200 dark:group-hover:border-green-800",
       description: t("home.financeDesc", "Financial Overview")
     },
     {
@@ -112,7 +164,8 @@ const Home = () => {
       icon: Wallet,
       path: "/payments",
       color: "text-orange-600 dark:text-orange-400",
-      bgHover: "hover:border-orange-500 hover:shadow-orange-500/20",
+      bg: "bg-orange-50 dark:bg-orange-900/20",
+      border: "group-hover:border-orange-200 dark:group-hover:border-orange-800",
       description: t("home.paymentsDesc", "Income Tracking")
     },
     {
@@ -121,7 +174,8 @@ const Home = () => {
       icon: Receipt,
       path: "/invoices",
       color: "text-cyan-600 dark:text-cyan-400",
-      bgHover: "hover:border-cyan-500 hover:shadow-cyan-500/20",
+      bg: "bg-cyan-50 dark:bg-cyan-900/20",
+      border: "group-hover:border-cyan-200 dark:group-hover:border-cyan-800",
       description: t("home.invoicesDesc", "Billing & Charges")
     },
     {
@@ -130,7 +184,8 @@ const Home = () => {
       icon: FileSignature,
       path: "/contracts",
       color: "text-rose-600 dark:text-rose-400",
-      bgHover: "hover:border-rose-500 hover:shadow-rose-500/20",
+      bg: "bg-rose-50 dark:bg-rose-900/20",
+      border: "group-hover:border-rose-200 dark:group-hover:border-rose-800",
       description: t("home.contractsDesc", "Legal Agreements")
     },
     {
@@ -139,7 +194,8 @@ const Home = () => {
       icon: FolderOpen,
       path: "/documents",
       color: "text-pink-600 dark:text-pink-400",
-      bgHover: "hover:border-pink-500 hover:shadow-pink-500/20",
+      bg: "bg-pink-50 dark:bg-pink-900/20",
+      border: "group-hover:border-pink-200 dark:group-hover:border-pink-800",
       description: t("home.documentsDesc", "Template Layouts")
     },
     {
@@ -148,54 +204,94 @@ const Home = () => {
       icon: Settings,
       path: "/settings",
       color: "text-gray-600 dark:text-gray-400",
-      bgHover: "hover:border-gray-500 hover:shadow-gray-500/20",
+      bg: "bg-gray-100 dark:bg-gray-700/50",
+      border: "group-hover:border-gray-300 dark:group-hover:border-gray-600",
       description: t("home.settingsDesc", "System Configuration")
     }
   ];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-[calc(100vh-4rem)] flex flex-col justify-center">
+    <div className="p-4 md:p-8 max-w-screen-2xl mx-auto min-h-[calc(100vh-4rem)] flex flex-col justify-center">
+      
+      {/* --- Header Section --- */}
+      <motion.div 
+        variants={headerVariants}
+        initial="hidden"
+        animate="visible"
+        className="mb-10 md:mb-14 text-center"
+      >
+        <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
+          {t("home.welcome", "Welcome Back")}
+        </h1>
+        <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          {t("home.subtitle", "Select a module below to get started with your management tasks.")}
+        </p>
+      </motion.div>
+
+      {/* --- Grid Section --- */}
       <motion.div 
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
         {modules.map((module) => {
           const IconComponent = module.icon;
           return (
             <motion.div
               key={module.id}
-              variants={itemVariants}
+              variants={cardVariants}
+              whileHover={{ y: -8, transition: { duration: 0.2 } }}
+              whileTap={{ scale: 0.98 }}
+              className="h-full"
             >
               <Link
                 to={module.path}
                 className={`
-                  group flex flex-col items-center justify-center 
+                  group relative flex flex-col items-start p-6 h-full
                   bg-white dark:bg-gray-800 
-                  p-6 md:p-8 rounded-2xl 
-                  border-2 border-gray-100 dark:border-gray-700 
-                  shadow-sm 
-                  transition-all duration-300
-                  ${module.bgHover}
-                  hover:shadow-xl
+                  rounded-2xl border border-gray-100 dark:border-gray-700
+                  shadow-sm hover:shadow-xl dark:hover:shadow-black/40
+                  transition-all duration-300 ease-out
+                  ${module.border}
+                  overflow-hidden
                 `}
               >
-                {/* Animated Icon Wrapper */}
-                <motion.div 
-                  className="mb-6"
-                  whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <IconComponent className={`w-16 h-16 ${module.color}`} />
-                </motion.div>
+                {/* Icon & Arrow Row */}
+                <div className="flex w-full justify-between items-start mb-5">
+                  <motion.div 
+                    variants={iconVariants}
+                    initial="rest"
+                    whileHover="hover"
+                    className={`
+                      p-3.5 rounded-2xl
+                      ${module.bg} ${module.color}
+                    `}
+                  >
+                    <IconComponent className="w-8 h-8" strokeWidth={1.5} />
+                  </motion.div>
+                  
+                  <motion.div 
+                    variants={arrowVariants}
+                    initial="rest"
+                    whileHover="hover"
+                  >
+                    <ArrowRight className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                  </motion.div>
+                </div>
 
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1 text-center group-hover:scale-105 transition-transform duration-200">
-                  {module.title}
-                </h3>
-                <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium text-center">
-                  {module.description}
-                </p>
+                {/* Text Content */}
+                <div className="mt-auto z-10">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-orange-500 transition-colors duration-300">
+                    {module.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                    {module.description}
+                  </p>
+                </div>
+                
+                {/* Subtle Gradient Overlay on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-50/80 dark:to-gray-700/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
               </Link>
             </motion.div>
           );

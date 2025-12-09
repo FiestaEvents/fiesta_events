@@ -13,29 +13,40 @@ export const useLanguage = () => {
 
 export const LanguageProvider = ({ children }) => {
   const { i18n } = useTranslation();
-  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  
+  // ✅ Get current language from i18n (already set to 'fr' by default)
+  const [currentLanguage, setCurrentLanguage] = useState(() => {
+    return i18n.language || 'fr';
+  });
+
+  // ✅ Sync on mount and when i18n language changes
+  useEffect(() => {
+    const handleLanguageChanged = (lng) => {
+      setCurrentLanguage(lng);
+      document.documentElement.lang = lng;
+      document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
+    };
+
+    // Set initial
+    handleLanguageChanged(i18n.language);
+
+    // Listen for changes
+    i18n.on('languageChanged', handleLanguageChanged);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, [i18n]);
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
     setCurrentLanguage(lng);
+    localStorage.setItem('language', lng);
     
-    // Update HTML direction for RTL languages
-    if (lng === 'ar') {
-      document.documentElement.dir = 'rtl';
-      document.documentElement.lang = 'ar';
-    } else {
-      document.documentElement.dir = 'ltr';
-      document.documentElement.lang = lng;
-    }
+    // Update HTML attributes
+    document.documentElement.lang = lng;
+    document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
   };
-
-  useEffect(() => {
-    // Set initial direction
-    if (currentLanguage === 'ar') {
-      document.documentElement.dir = 'rtl';
-      document.documentElement.lang = 'ar';
-    }
-  }, [currentLanguage]);
 
   const value = {
     currentLanguage,

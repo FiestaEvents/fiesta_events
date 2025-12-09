@@ -15,17 +15,17 @@ import {
   Tag,
 } from "lucide-react";
 
-// ✅ API & Services
+// API & Services
 import { supplyService, supplyCategoryService } from "../../api/index";
 
-// ✅ Generic Components
+// Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Textarea from "../../components/common/Textarea";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 
-// ✅ Context
+// Context
 import { useToast } from "../../hooks/useToast";
 
 const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
@@ -38,11 +38,10 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
   const supplyId = id || supplyProp?._id;
   const isModalMode = Boolean(onSuccess && onCancel);
 
-  // Multi-step state
+  // --- State ---
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
 
-  // Data
   const [categories, setCategories] = useState([]);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -50,7 +49,6 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [errors, setErrors] = useState({});
 
-  // Form State
   const [formData, setFormData] = useState({
     name: "",
     categoryId: "",
@@ -72,7 +70,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
     notes: "",
   });
 
-  // Constants
+  // --- Constants ---
   const steps = [
     { number: 1, title: t("supplies.form.steps.basicInfo"), icon: Package },
     { number: 2, title: t("supplies.form.steps.inventory"), icon: Tag },
@@ -91,12 +89,12 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
   ];
 
   const PRICING_TYPES = [
-    { value: "included", label: "Included (Free to client)" },
-    { value: "chargeable", label: "Chargeable" },
-    { value: "optional", label: "Optional" },
+    { value: "included", label: t("supplies.pricing.included") },
+    { value: "chargeable", label: t("supplies.pricing.chargeable") },
+    { value: "optional", label: t("supplies.pricing.optional") },
   ];
 
-  // --- Helper: Load Data ---
+  // --- Data Loading ---
   const loadSupplyData = useCallback((data) => {
     if (!data) return;
     setFormData({
@@ -127,7 +125,6 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
     });
   }, []);
 
-  // --- Fetch Data ---
   useEffect(() => {
     const initData = async () => {
       setFetchLoading(true);
@@ -149,16 +146,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
       }
     };
     initData();
-  }, [
-    isEditMode,
-    supplyId,
-    supplyProp,
-    isModalMode,
-    navigate,
-    loadSupplyData,
-    apiError,
-    t,
-  ]);
+  }, [isEditMode, supplyId, supplyProp, isModalMode, navigate, loadSupplyData, apiError, t]);
 
   // --- Handlers ---
   const handleChange = (e) => {
@@ -177,8 +165,14 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleCreateCategory = async () => {
+  const handleCreateCategory = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (!newCategoryName.trim()) return;
+    
     try {
       const res = await supplyCategoryService.create({
         name: newCategoryName,
@@ -195,22 +189,17 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
     }
   };
 
-  // Validation
+  // --- Validation ---
   const validateStep = (step) => {
     const newErrors = {};
     if (step === 1) {
-      if (!formData.name.trim())
-        newErrors.name = t("supplies.validation.nameRequired");
-      if (!formData.categoryId)
-        newErrors.categoryId = t("supplies.validation.categoryRequired");
-      if (!formData.unit)
-        newErrors.unit = t("supplies.validation.unitRequired");
+      if (!formData.name.trim()) newErrors.name = t("supplies.validation.nameRequired");
+      if (!formData.categoryId) newErrors.categoryId = t("supplies.validation.categoryRequired");
+      if (!formData.unit) newErrors.unit = t("supplies.validation.unitRequired");
     }
     if (step === 2) {
-      if (formData.currentStock < 0)
-        newErrors.currentStock = t("supplies.validation.negativeStock");
-      if (formData.costPerUnit < 0)
-        newErrors.costPerUnit = t("supplies.validation.negativeCost");
+      if (formData.currentStock < 0) newErrors.currentStock = t("supplies.validation.negativeStock");
+      if (formData.costPerUnit < 0) newErrors.costPerUnit = t("supplies.validation.negativeCost");
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -218,17 +207,13 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
 
   const validateAllRequired = () => {
     const newErrors = {};
-    if (!formData.name.trim())
-      newErrors.name = t("supplies.validation.nameRequired");
-    if (!formData.categoryId)
-      newErrors.categoryId = t("supplies.validation.categoryRequired");
+    if (!formData.name.trim()) newErrors.name = t("supplies.validation.nameRequired");
+    if (!formData.categoryId) newErrors.categoryId = t("supplies.validation.categoryRequired");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // --- NAVIGATION LOGIC ---
-
-  // ✅ FIX: Accept event `e` and preventDefault to stop unintentional form submission
+  // --- Navigation & Submit ---
   const handleNext = (e) => {
     if (e) e.preventDefault();
     if (validateStep(currentStep)) {
@@ -247,13 +232,12 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
     if (step < currentStep || validateStep(currentStep)) setCurrentStep(step);
   };
 
-  // --- SUBMISSION LOGIC ---
-
   const submitData = async () => {
     try {
       setLoading(true);
       const payload = { ...formData };
 
+      // Ensure numbers
       payload.currentStock = Number(payload.currentStock);
       payload.minimumStock = Number(payload.minimumStock);
       payload.maximumStock = Number(payload.maximumStock);
@@ -277,25 +261,20 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
     }
   };
 
-  // ✅ FIX: Smart handleSubmit to handle "Enter" key correctly
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // If user presses Enter on an intermediate step, treat as Next
+    // Check if user is on intermediate steps
     if (currentStep < totalSteps) {
       handleNext();
       return;
     }
-
-    // If on last step, validate all and submit
+    // Validate final step before submit
     if (!validateAllRequired()) return showWarning(t("common.fixErrors"));
     await submitData();
   };
 
-  // ✅ FIX: Dedicated handler for Quick Save button
   const handleQuickUpdate = async (e) => {
     e.preventDefault();
-    // Ensure basic required fields (Step 1) are valid before quick saving
     if (!validateStep(1)) {
       setCurrentStep(1);
       showWarning(t("common.fixErrors"));
@@ -304,8 +283,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
     await submitData();
   };
 
-  // --- Renders ---
-
+  // --- Render Functions ---
   const renderStepIndicator = () => (
     <div className="mb-8 px-4">
       <div className="flex items-center justify-between relative max-w-lg mx-auto">
@@ -317,7 +295,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
           return (
             <button
               key={step.number}
-              type="button" // ✅ Explicitly set type button
+              type="button" // ✅ Critical: Prevents form submission
               onClick={() => handleStepClick(step.number)}
               disabled={!isCompleted && !isCurrent}
               className={`group flex flex-col items-center gap-2 bg-white dark:bg-[#1f2937] px-2 transition-all ${
@@ -333,15 +311,9 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
                       : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
                 }`}
               >
-                {isCompleted ? (
-                  <Check className="w-6 h-6" />
-                ) : (
-                  <StepIcon className="w-5 h-5" />
-                )}
+                {isCompleted ? <Check className="w-6 h-6" /> : <StepIcon className="w-5 h-5" />}
               </div>
-              <span
-                className={`text-xs font-semibold whitespace-nowrap ${isCurrent ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
-              >
+              <span className={`text-xs font-semibold whitespace-nowrap ${isCurrent ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>
                 {step.title}
               </span>
             </button>
@@ -369,8 +341,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t("supplies.form.category")}{" "}
-                  <span className="text-red-500">*</span>
+                  {t("supplies.form.category")} <span className="text-red-500">*</span>
                 </label>
                 {!showCategoryInput ? (
                   <div className="flex gap-2">
@@ -380,18 +351,16 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
                       onChange={handleChange}
                       options={[
                         { value: "", label: t("common.select") },
-                        ...categories.map((c) => ({
-                          value: c._id,
-                          label: c.name,
-                        })),
+                        ...categories.map((c) => ({ value: c._id, label: c.name })),
                       ]}
                       error={errors.categoryId}
-                      className="flex-1"
+                      className="w-full"
                     />
+                    {/* ✅ FIX: Added type="button" and passed icon correctly */}
                     <Button
                       type="button"
                       variant="outline"
-                      icon={Plus}
+                      icon={<Plus className="w-4 h-4" />}
                       onClick={() => setShowCategoryInput(true)}
                     />
                   </div>
@@ -400,23 +369,19 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
                     <Input
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="New category..."
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault(); // Stop main form submit
+                          handleCreateCategory(e);
+                        }
+                      }}
+                      placeholder={t("supplies.form.newCategoryPlaceholder")}
                       className="flex-1"
                     />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleCreateCategory}
-                      variant="primary"
-                    >
-                      Add
+                    <Button type="button" size="sm" onClick={handleCreateCategory} variant="primary">
+                      {t("common.add")}
                     </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setShowCategoryInput(false)}
-                    >
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setShowCategoryInput(false)}>
                       <X size={16} />
                     </Button>
                   </div>
@@ -441,10 +406,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
               options={[
                 { value: "active", label: t("common.active") },
                 { value: "inactive", label: t("common.inactive") },
-                {
-                  value: "discontinued",
-                  label: t("supplies.status.discontinued"),
-                },
+                { value: "discontinued", label: t("supplies.status.discontinued") },
               ]}
             />
           </div>
@@ -483,10 +445,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
 
             {Number(formData.currentStock) <= Number(formData.minimumStock) && (
               <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg flex items-start gap-2">
-                <AlertCircle
-                  className="text-orange-600 dark:text-orange-400 mt-0.5 shrink-0"
-                  size={16}
-                />
+                <AlertCircle className="text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" size={16} />
                 <p className="text-sm text-orange-800 dark:text-orange-300">
                   {t("supplies.form.lowStockWarning")}
                 </p>
@@ -613,57 +572,46 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
             />
           </div>
         );
-
       default:
         return null;
     }
   };
 
-  if (fetchLoading && isEditMode)
+  if (fetchLoading && isEditMode) {
     return (
       <div className="p-10 text-center text-gray-500">
         <OrbitLoader /> {t("common.loading")}
       </div>
     );
+  }
 
   return (
     <div className="bg-white dark:bg-[#1f2937] h-full flex flex-col p-4 sm:p-6 rounded-lg">
       {!isModalMode && (
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {isEditMode
-              ? t("supplies.form.editTitle")
-              : t("supplies.form.createTitle")}
+            {isEditMode ? t("supplies.form.editTitle") : t("supplies.form.createTitle")}
           </h1>
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex-1 flex flex-col max-w-4xl mx-auto w-full"
-      >
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
         {renderStepIndicator()}
-
         <div className="flex-1 mt-4 mb-8">{renderStepContent()}</div>
 
         <div className="flex items-center justify-between pt-6 mt-auto">
-          {/* Previous / Cancel */}
           <Button
-            type="button" // ✅ Explicitly prevent submit
+            type="button"
             variant="ghost"
             onClick={
               currentStep === 1
-                ? isModalMode && onCancel
-                  ? onCancel
-                  : () => navigate("/supplies")
+                ? isModalMode && onCancel ? onCancel : () => navigate("/supplies")
                 : handlePrevious
             }
             disabled={loading}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
           >
-            {currentStep === 1 ? (
-              t("common.cancel")
-            ) : (
+            {currentStep === 1 ? t("common.cancel") : (
               <span className="flex items-center">
                 <ChevronLeft className="w-4 h-4 mr-1" /> {t("common.previous")}
               </span>
@@ -671,10 +619,9 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
           </Button>
 
           <div className="flex items-center gap-3">
-            {/* Quick Save (Only in Edit Mode & Not Last Step) */}
             {isEditMode && currentStep < totalSteps && (
               <Button
-                type="button" // ✅ Explicitly prevent submit, handled by onClick
+                type="button"
                 variant="ghost"
                 onClick={handleQuickUpdate}
                 disabled={loading}
@@ -684,10 +631,9 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
               </Button>
             )}
 
-            {/* Next / Submit */}
             {currentStep < totalSteps ? (
               <Button
-                type="button" // ✅ Explicitly prevent submit
+                type="button"
                 variant="primary"
                 onClick={handleNext}
                 disabled={loading}
@@ -698,14 +644,9 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
                 </span>
               </Button>
             ) : (
-              <Button
-                type="submit" // ✅ Only this button submits
-                variant="primary"
-                loading={loading}
-                className="px-6"
-              >
+              <Button type="submit" variant="primary" loading={loading} className="px-6">
                 <span className="flex items-center">
-                  <Save className="w-4 h-4 mr-2" />{" "}
+                  <Save className="w-4 h-4 mr-2" />
                   {isEditMode ? t("common.update") : t("common.create")}
                 </span>
               </Button>
