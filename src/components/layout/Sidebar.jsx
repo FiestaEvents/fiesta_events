@@ -22,6 +22,7 @@ import {
   Home,
   TrendingUp,
   Sparkles,
+  BoxIcon,
 } from "lucide-react";
 
 // ============================================================
@@ -291,7 +292,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               />
               <NavLink
                 to="/supplies"
-                icon={Handshake}
+                icon={BoxIcon}
                 labelKey="common.supplies"
                 isCollapsed={isCollapsed}
               />

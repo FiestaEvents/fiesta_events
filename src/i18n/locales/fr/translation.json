@@ -901,8 +901,13 @@
       "previous": "Précédent",
       "continue": "Suivant",
       "createEvent": "Créer l'Événement",
-      "updateEvent": "Mettre à jour"
+      "updateEvent": "Mettre à jour",
+      "quickSave ": "Enregistrement Rapide"
     },
+    "validation": {
+    "actionRequired": "Action requise",
+    "fixErrors": "Veuillez corriger les erreurs ci-dessous pour continuer."
+  },
     "messages": {
       "saveFailed": "Échec de l'enregistrement de l'événement.",
       "draftRestored": "Brouillon restauré avec succès.",
@@ -1531,6 +1536,10 @@
         "checklist": "Liste de contrôle"
       },
       "fields": {
+        "subtasks": "Sous-tâches",
+        "tags": "Tags",
+        "assignedTo ": "Assigné à",
+        "dueDate": "Date d'échéance",
         "title": "Titre",
         "titlePlaceholder": "Entrez le titre de la tâche",
         "description": "Description",
@@ -1541,6 +1550,8 @@
       },
       "buttons": {
         "next": "Suivant",
+        "previous": "Précédent",
+        "create": "Créer la tâche",
         "updateNow": "Mettre à jour maintenant"
       },
       "validation": {
@@ -1549,11 +1560,11 @@
       }
     },
     "messages": {
+      "resultsCount": "Affichage de {{count}} tâches",
       "noResults": "Aucune tâche trouvée",
       "noResultsDescription": "Essayez d'ajuster votre recherche ou vos filtres.",
       "noTasks": "Aucune tâche pour le moment",
       "noTasksDescription": "Commencez par créer une nouvelle tâche pour suivre votre travail.",
-      "resultsCount": "Affichage de {{count}} sur {{total}} tâches",
       "thisTask": "cette tâche",
       "error": {
         "load": "Échec du chargement des tâches"
@@ -1622,6 +1633,11 @@
     }
   },
   "reminders": {
+     "tabs": {
+        "overview": "Aperçu",
+        "details": "Détails",
+        "history": "Historique"
+      },
     "dateTimeFormat": "{{date}} à {{time}}",
     "errorLoading": "Échec du chargement des rappels",
     "noReminders": "Aucun rappel trouvé",
@@ -1657,16 +1673,33 @@
       "additionalInfo": "Infos supplémentaires",
       "notificationMethods": "Méthodes de notification",
       "recurrenceSettings": "Paramètres de récurrence",
-      "activityHistory": "Historique d'activité"
+      "activityHistory": "Historique d'activité",
+      "subtitle": "Voir les éléments liés et les utilisateurs assignés",
+      "noLinkedItems": "Ce rappel n'est lié à aucun élément"
+
     },
+    "dateTime": "Date et Heure",
+      "category": "Catégorie",
+      "linkedTo": "Éléments Liés",
+      "assignedTo": "Assigné à",
+      "relatedItems": "Éléments Associés",
+      "paymentLinked": "Paiement",
+      "untitled": "Rappel Sans Titre",
+      "noDescription": "Aucune description fournie",
+      "updating": "Mise à jour...",
+      "completing": "Finalisation...",
+      "every": "Tous les",
     "status": {
       "all": "Tous les statuts",
       "active": "Actif",
       "completed": "Terminé",
       "snoozed": "Reporté",
-      "label": "Statut"
+      "label": "Statut",
+      "cancelled": "Annulé"
     },
     "actions": {
+      "markComplete": "Marquer Terminé",
+      "snooze": "Reporter",
       "unsnooze": "Annuler le report",
       "edit": "Modifier",
       "delete": "Supprimer",
@@ -1685,29 +1718,36 @@
       "showingResults": "Affichage de {{count}} résultats",
        "updated": "Rappel mis à jour",
        "filtersApplied":"Filtres appliqués",
-       "deleting": "Suppression du rappel...",
-      "deleted": "Rappel supprimé avec succès",
-      "deleteError": "Échec de la suppression du rappel",
       "snoozing": "Mise en veille du rappel...",
       "snoozed": "Rappel mis en veille",
       "snoozeError": "Échec de la mise en veille",
       "activating": "Activation du rappel...",
       "unsnoozed": "Rappel activé",
       "activateError": "Échec de l'activation du rappel",
-      "loadError": "Échec du chargement des données",
-      "saveError": "Échec de l'enregistrement du rappel",
+
       "markDoneError": "Échec de la mise en veille",
       "reactivateError": "Échec de la reactivation",
       "rescheduleError": "Échec de la reactivation",
       "cancelError": "Échec de la reactivation",
-      "markCompleted": "Marquer comme terminé"
+      "markCompleted": "Marquer comme terminé",
+      "loadError": "Échec du chargement du rappel",
+        "saveError": "Échec de l'enregistrement du rappel",
+        "updateSuccess": "Rappel mis à jour avec succès",
+        "deleted": "Rappel supprimé avec succès",
+        "deleteError": "Échec de la suppression du rappel",
+        "deleting": "Suppression de {{name}}...",
+        "markedCompleted": "Rappel marqué comme terminé",
+        "reactivated": "Rappel réactivé",
+        "updating": "Mise à jour du rappel...",
+        "updateError": "Échec de la mise à jour du rappel"
     },
     "validation": {
-      "notificationMethodsRequired": "Au moins une méthode de notification est requise",
-      "titleRequired": "Le titre est requis",
-      "dateRequired": "La date est requise",
-      "timeRequired": "L'heure est requise",
-      "fixErrors": "Veuillez corriger les erreurs avant d'enregistrer"
+      "titleRequired": "Le titre est obligatoire",
+        "dateRequired": "La date est obligatoire",
+        "timeRequired": "L'heure est obligatoire",
+        "fixErrors": "Veuillez corriger les erreurs avant de soumettre",
+      "notificationMethodsRequired": "Au moins une méthode de notification est requise"
+
     },
     "filters": {
       "allStatus": "Tous les statuts",
@@ -1729,32 +1769,36 @@
       "all": "Toutes les priorités"
     },
     "form": {
-      "createTitle": "Créer un Rappel",
-      "editTitle": "Modifier le Rappel",
-      "fields": {
-        "title": "Titre",
-        "date": "Date",
-        "time": "Heure",
-        "type": "Type",
-        "priority": "Priorité",
-        "description": "Description",
-        "relatedEvent": "Événement",
-        "relatedClient": "Client",
-        "relatedTask": "Tâche"
+        "createTitle": "Créer un Nouveau Rappel",
+        "editTitle": "Modifier le Rappel",
+        "fields": {
+          "title": "Titre",
+          "description": "Description",
+          "type": "Type",
+          "priority": "Priorité",
+          "date": "Date",
+          "time": "Heure",
+          "relatedEvent": "Événement Associé",
+          "relatedClient": "Client Associé",
+          "relatedTask": "Tâche Associée",
+          "frequency": "Fréquence",
+          "interval": "Intervalle",
+          "daysOfWeek": "Jours de la Semaine"
+        },
+        "placeholders": {
+          "title": "Entrez le titre du rappel...",
+          "description": "Ajoutez des détails supplémentaires..."
+        },
+        "sections": {
+          "links": "Liens Optionnels"
+        },
+        "buttons": {
+          "create": "Créer le Rappel",
+          "update": "Mettre à Jour",
+          "cancel": "Annuler"
+        },
+        "linksDescription": "Lier éventuellement ce rappel à un événement, client ou tâche"
       },
-      "placeholders": {
-        "title": "ex: Appeler le traiteur",
-        "description": "Notes optionnelles..."
-      },
-      "sections": {
-        "links": "Lier à (Optionnel)"
-      },
-      "buttons": {
-        "create": "Créer Rappel",
-        "update": "Mettre à jour",
-        "cancel": "Annuler"
-      }
-    },
     "type": {
       "label": "Type",
       "client": "Client",
@@ -1770,8 +1814,16 @@
     },
     "clearFilters": "Effacer les filtres",
    "history": {
-    "comingSoon": "Journal d'activité bientôt disponible",
-    "description": "Nous travaillons sur une chronologie détaillée pour suivre les modifications, les reports et l'historique d'achèvement de ce rappel."
+    "comingSoon": "Journal d'Activité Détaillé Bientôt Disponible",
+        "description": "Suivez tous les changements, mises à jour de statut et historique de complétion de ce rappel.",
+        "created": "Créé",
+        "updated": "Mis à jour",
+        "completed": "Terminé",
+        "features": {
+          "edits": "Historique des Modifications",
+          "completions": "Complétions",
+          "assignments": "Affectations"
+        }
   },
     "modals": {
       "detail": {
@@ -1779,19 +1831,29 @@
         "dueDate": "Date d'échéance",
         "noNotes": "Aucune note supplémentaire."
       },
-      "snooze": {
-        "title": "Reporte le rappel"
-      },
       "delete": {
-        "title": "Supprimer le rappel",
-        "description": "Êtes-vous sûr de vouloir supprimer ce rappel ?",
-        "confirm": "Supprimer",
+          "title": "Supprimer le Rappel",
+          "description": "Êtes-vous sûr de vouloir supprimer '{{name}}' ? Cette action est irréversible.",
+          "confirm": "Supprimer",
         "cancel": "Annuler",
         "question": "Supprimer ce rappel ?",
         "warning": "Cette action est irréversible."
+        },
+         "errors": {
+        "notFound": "Rappel Non Trouvé",
+        "notFoundDescription": "Le rappel que vous recherchez n'existe pas ou a été supprimé."
+      },
+       "noNotificationMethods": "Aucune notification active configurée",
+      "snooze": {
+        "title": "Reporte le rappel"
       }
     },
     "recurrence": {
+        "comingSoon": "Les rappels récurrents seront disponibles dans une prochaine mise à jour",
+        "endDate": "Date de Fin",
+        "forever": "Pas de date de fin",
+        "day": "Jour",
+        "dayOfMonth": "Jour du Mois",
       "none": "Aucune",
       "daily": "Quotidien",
       "weekly": "Hebdomadaire",
@@ -1986,6 +2048,18 @@
       "loadOptionsError": "Échec du chargement des options du formulaire",
       "filtersApplied": "Filtres appliqués",
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet enregistrement de paiement ?"
+    },
+    "csv": {
+      "type": "Type",
+      "description": "Description",
+      "client": "Client",
+      "reference": "Référence",
+      "date": "Date",
+      "amount": "Montant",
+      "method": "Méthode de Paiement",
+      "status": "Statut",
+      "netAmount": "Montant Net",
+      "createdAt": "Créé le"
     },
     "detail": {
       "title": "Détails du Paiement",
@@ -2387,6 +2461,7 @@
     }
   },
   "common": {
+    "optional":"Optionnel",
     "none": "Aucun",
     "noResults": "Aucun résultat trouvé",
     "clearFilters": "Effacer les filtres",
@@ -2988,6 +3063,11 @@
     }
   },
   "invoicePreview": {
+    "zoom": {
+      "zoomIn": "Zoom Avant (Ctrl/Cmd +)",
+      "zoomOut": "Zoom Arrière (Ctrl/Cmd -)",
+      "reset": "Réinitialiser le Zoom (Ctrl/Cmd 0)"
+    },
     "date": "Date",
     "dueDate": "Échéance",
     "subtotal": "Sous-total",
@@ -3310,6 +3390,11 @@
       }
     },
     "preview": {
+       "zoom": {
+        "zoomIn": "Zoom Avant (Ctrl/Cmd +)",
+        "zoomOut": "Zoom Arrière (Ctrl/Cmd -)",
+        "reset": "Réinitialiser le Zoom (Ctrl/Cmd 0)"
+      },
       "tooltips": {
         "drag": "Glisser pour réorganiser",
         "edit": "Modifier les paramètres"

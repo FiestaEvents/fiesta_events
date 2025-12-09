@@ -898,15 +898,17 @@ const TasksList = () => {
         </div>
       )}
 
-      {/* Content Area */}
-      <div className="flex-1 flex flex-col relative">
+          {/* Content Area */}
+      <div className="flex-1 flex flex-col">
         {loading && !hasInitialLoad && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
-            <OrbitLoader />
-            <p className="text-gray-500 dark:text-gray-400 mt-4 font-medium animate-pulse">
-              {t("common.loading")}
-            </p>
-          </div>
+          <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <OrbitLoader />
+          <p className="mt-4 text-gray-500 dark:text-gray-400">
+            {t("common.loading")}
+          </p>
+        </div>
+      </div>
         )}
 
         {/* List View */}

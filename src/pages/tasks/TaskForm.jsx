@@ -65,7 +65,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   const [errors, setErrors] = useState({});
   const [tagInput, setTagInput] = useState("");
   const [newSubtask, setNewSubtask] = useState({ title: "" });
-  
+
   // Constants
   const TASK_PRIORITIES = [
     { value: "low", label: t("tasks.priority.low") },
@@ -174,7 +174,10 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleAddTag = () => {
+  // --- FIXED: Added (e) argument to capture the event ---
+  const handleAddTag = (e) => {
+    if (e) e.preventDefault(); // This now works because 'e' is defined
+    
     if (
       tagInput.trim() &&
       !formData.tags.includes(tagInput.trim().toLowerCase())
@@ -194,7 +197,10 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     }));
   };
 
-  const handleAddSubtask = () => {
+  // --- FIXED: Added (e) argument to capture the event ---
+  const handleAddSubtask = (e) => {
+    if (e) e.preventDefault(); // This now works because 'e' is defined
+
     if (newSubtask.title.trim()) {
       setFormData((prev) => ({
         ...prev,
@@ -483,12 +489,20 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   type="text"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={(e) =>
-                    e.key === "Enter" && (e.preventDefault(), handleAddTag())
-                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTag(e);
+                    }
+                  }}
                   placeholder={t("tasks.form.fields.tagPlaceholder")}
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm"
                 />
+                {/* 
+                  IMPORTANT: This button has type="button", but if the handler crashes
+                  (due to missing 'e'), the form might behave unexpectedly.
+                  Now fixed in handleAddTag definition.
+                */}
                 <Button type="button" variant="outline" onClick={handleAddTag}>
                   {t("tasks.form.buttons.add")}
                 </Button>
@@ -519,10 +533,12 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 <Input
                   value={newSubtask.title}
                   onChange={(e) => setNewSubtask({ title: e.target.value })}
-                  onKeyPress={(e) =>
-                    e.key === "Enter" &&
-                    (e.preventDefault(), handleAddSubtask())
-                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddSubtask(e);
+                    }
+                  }}
                   placeholder={t("tasks.form.fields.subtaskTitlePlaceholder")}
                   className="flex-1"
                 />
@@ -566,9 +582,14 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
   };
 
   if (fetchLoading && isEditMode) {
-    return (
-      <div className="p-10 text-center text-gray-500">
-        <OrbitLoader /> {t("common.loading")}
+      return (
+      <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <OrbitLoader />
+          <p className="mt-4 text-gray-500 dark:text-gray-400">
+            {t("common.loading")}
+          </p>
+        </div>
       </div>
     );
   }
@@ -653,7 +674,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                 className="px-6"
               >
                 <span className="flex items-center">
-                  <Save className="w-4 h-4 mr-2" />
                   {isEditMode
                     ? t("tasks.form.buttons.update")
                     : t("tasks.form.buttons.create")}

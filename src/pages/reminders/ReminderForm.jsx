@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Save, X, Calendar, Clock, AlertCircle } from "lucide-react";
+import { Save, X, Calendar, Clock, AlertCircle, Tag } from "lucide-react";
 
-// ✅ API & Services
+// API & Services
 import {
   reminderService,
   eventService,
@@ -11,14 +11,14 @@ import {
   taskService,
 } from "../../api/index";
 
-// ✅ Generic Components
+// Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 
-// ✅ Hooks
+// Hooks
 import { useToast } from "../../hooks/useToast";
 
 const REMINDER_TYPES = {
@@ -60,7 +60,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    type: REMINDER_TYPES.TASK,
+    type: REMINDER_TYPES.OTHER,
     priority: REMINDER_PRIORITIES.MEDIUM,
     reminderDate: new Date().toISOString().split("T")[0],
     reminderTime: "09:00",
@@ -77,7 +77,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
     setFormData({
       title: data.title || "",
       description: data.description || "",
-      type: data.type || REMINDER_TYPES.TASK,
+      type: data.type || REMINDER_TYPES.OTHER,
       priority: data.priority || REMINDER_PRIORITIES.MEDIUM,
       reminderDate: data.reminderDate
         ? new Date(data.reminderDate).toISOString().split("T")[0]
@@ -185,7 +185,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
     );
 
   return (
-    <div className="bg-white dark:bg-[#1f2937] p-6 rounded-lg max-w-2xl mx-auto w-full">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-3xl mx-auto w-full">
       {!isModalMode && (
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -195,7 +195,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
           </h1>
           <button
             onClick={() => navigate("/reminders")}
-            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             <X size={24} />
           </button>
@@ -203,19 +203,23 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        
         {/* Title */}
-        <Input
-          label={t("reminders.form.fields.title")}
-          value={formData.title}
-          onChange={(e) => handleChange("title", e.target.value)}
-          error={errors.title}
-          placeholder={t("reminders.form.placeholders.title")}
-          required
-          autoFocus
-        />
+        <div className="rounded-xl">
+          <Input
+            label={t("reminders.form.fields.title")}
+            value={formData.title}
+            onChange={(e) => handleChange("title", e.target.value)}
+            error={errors.title}
+            placeholder={t("reminders.form.placeholders.title")}
+            required
+            autoFocus
+            className="w-full bg-white dark:bg-gray-800"
+          />
+        </div>
 
         {/* Date & Time Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label={t("reminders.form.fields.date")}
             type="date"
@@ -224,6 +228,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             onChange={(e) => handleChange("reminderDate", e.target.value)}
             error={errors.reminderDate}
             required
+            className="w-full bg-white dark:bg-gray-800"
           />
           <Input
             label={t("reminders.form.fields.time")}
@@ -233,15 +238,17 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             onChange={(e) => handleChange("reminderTime", e.target.value)}
             error={errors.reminderTime}
             required
+            className="w-full bg-white dark:bg-gray-800"
           />
         </div>
 
         {/* Type & Priority Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
             label={t("reminders.form.fields.type")}
             value={formData.type}
             onChange={(e) => handleChange("type", e.target.value)}
+            icon={Tag}
             options={Object.values(REMINDER_TYPES).map((v) => ({
               value: v,
               label: t(`reminders.type.${v}`),
@@ -251,6 +258,7 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             label={t("reminders.form.fields.priority")}
             value={formData.priority}
             onChange={(e) => handleChange("priority", e.target.value)}
+            icon={AlertCircle}
             options={Object.values(REMINDER_PRIORITIES).map((v) => ({
               value: v,
               label: t(`reminders.priority.${v}`),
@@ -263,15 +271,20 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
           label={t("reminders.form.fields.description")}
           value={formData.description}
           onChange={(e) => handleChange("description", e.target.value)}
-          rows={3}
+          rows={4}
           placeholder={t("reminders.form.placeholders.description")}
+          className="w-full bg-white dark:bg-gray-800"
         />
 
         {/* Optional Links */}
-        <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <AlertCircle size={14} />
-            {t("reminders.form.sections.links")}
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              {t("reminders.form.sections.links")}
+            </h3>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            {t("reminders.form.linksDescription", "Optionally link this reminder to an event, client, or task")}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select
@@ -305,13 +318,13 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel || (() => navigate("/reminders"))}
           >
-            {t("reminders.form.buttons.cancel")}
+            {t("common.cancel")}
           </Button>
           <Button
             type="submit"
@@ -320,8 +333,8 @@ const ReminderForm = ({ reminder: reminderProp, onSuccess, onCancel }) => {
             icon={Save}
           >
             {isEditMode
-              ? t("reminders.form.buttons.update")
-              : t("reminders.form.buttons.create")}
+              ? t("common.update")
+              : t("common.create")}
           </Button>
         </div>
       </form>

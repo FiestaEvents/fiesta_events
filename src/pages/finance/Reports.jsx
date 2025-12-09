@@ -134,54 +134,86 @@ const FinanceReports = () => {
   };
 
   // CSV export logic
-  const handleExportCSV = () => {
-    if (!reportData) {
-      showError(t("reports.errors.generateFirst"));
-      return;
+  const convertToCSV = (payments, t) => {
+  if (!payments || payments.length === 0) return "";
+
+  const headers = [
+    t("payments.csv.type", "Type"),
+    t("payments.csv.description", "Description"),
+    t("payments.csv.client", "Client"),
+    t("payments.csv.reference", "Reference"),
+    t("payments.csv.date", "Date"),
+    t("payments.csv.amount", "Amount"),
+    t("payments.csv.method", "Payment Method"),
+    t("payments.csv.status", "Status"),
+    t("payments.csv.netAmount", "Net Amount"),
+    t("payments.csv.createdAt", "Created At"),
+  ];
+
+  const escapeCSV = (value) => {
+    if (value === null || value === undefined) return "";
+    const stringValue = String(value);
+    if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
     }
+    return stringValue;
+  };
 
+  const formatDateForCSV = (date) => {
+    if (!date) return "";
     try {
-      let csvContent = "";
-      // Format filename date as dd-mm-yyyy
-      const now = new Date();
-      const timestamp = `${String(now.getDate()).padStart(2, "0")}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
-
-      switch (reportType) {
-        case "profit-loss":
-          csvContent = generateProfitLossCSV(reportData);
-          break;
-        case "cash-flow":
-          csvContent = generateCashFlowCSV(reportData);
-          break;
-        case "expense-breakdown":
-          csvContent = generateExpenseBreakdownCSV(reportData);
-          break;
-        case "revenue-analysis":
-          csvContent = generateRevenueAnalysisCSV(reportData);
-          break;
-        case "tax-summary":
-          csvContent = generateTaxSummaryCSV(reportData);
-          break;
-        default:
-          throw new Error("Invalid report type");
-      }
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${reportType}-report-${timestamp}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      showSuccess(t("reports.success.exported"));
-    } catch (error) {
-      console.error("Error exporting CSV:", error);
-      showError(t("reports.errors.exportFailed"));
+      return new Date(date).toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
     }
   };
+
+  const getClientName = (payment) => {
+    if (payment.client?.name) return payment.client.name;
+    if (payment.event?.clientId?.name) return payment.event.clientId.name;
+    return "";
+  };
+
+  const rows = payments.map((payment) => {
+    return [
+      escapeCSV(payment.type?.toUpperCase() || ""),
+      escapeCSV(payment.description || ""),
+      escapeCSV(getClientName(payment)),
+      escapeCSV(payment.reference || ""),
+      escapeCSV(formatDateForCSV(payment.paidDate || payment.createdAt)),
+      escapeCSV(payment.amount?.toFixed(3) || "0.000"),
+      escapeCSV(payment.method || ""),
+      escapeCSV(payment.status?.toUpperCase() || ""),
+      escapeCSV(payment.netAmount?.toFixed(3) || payment.amount?.toFixed(3) || "0.000"),
+      escapeCSV(formatDateForCSV(payment.createdAt)),
+    ].join(",");
+  });
+
+  return [headers.join(","), ...rows].join("\n");
+};
+
+const downloadCSV = (csvContent, filename = "payments-export.csv") => {
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+};
 
   // --- CSV Generators ---
   const generateProfitLossCSV = (data) => {

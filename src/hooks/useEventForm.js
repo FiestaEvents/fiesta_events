@@ -1,42 +1,40 @@
 import { useState, useEffect, useCallback } from "react";
-import { useToast } from "./useToast";
-import {
-  eventService,
-  clientService,
-  partnerService,
-  venueSpacesService,
-} from "../api/index";
+import { eventService, clientService, partnerService, venueService } from "../api/index";
 
-export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) => {
-  const { showError, showSuccess } = useToast();
-
-  const [formData, setFormData] = useState({
+export const useEventForm = (eventId, isEditMode, prefillClient, prefillPartner, initialDate) => {
+  // ============================================
+  // INITIAL STATE
+  // ============================================
+  const getInitialFormData = () => ({
     title: "",
     description: "",
-    type: "",
+    type: "wedding",
     venueSpaceId: "",
-    clientId: "",
+    clientId: prefillClient?._id || "",
     sameDayEvent: true,
-    startDate: "",
-    endDate: "",
+    startDate: initialDate 
+    ? (typeof initialDate === "string" ? initialDate : initialDate.toISOString().split("T")[0])
+    : "",
+   endDate: initialDate 
+    ? (typeof initialDate === "string" ? initialDate : initialDate.toISOString().split("T")[0])
+    : "",
     startTime: "",
     endTime: "",
     guestCount: "",
     status: "pending",
-    pricing: { 
-      basePrice: "", 
-      discount: "", 
-      discountType: "fixed", 
-      taxRate: 19 
+    pricing: {
+      basePrice: 0,
+      discount: 0,
+      discountType: "fixed",
+      taxRate: 19,
     },
     partners: [],
-    // ⭐ SUPPLY MANAGEMENT
     supplies: [],
     supplySummary: {
       totalCost: 0,
       totalCharge: 0,
       totalMargin: 0,
-      includeInBasePrice: true
+      includeInBasePrice: true,
     },
     notes: "",
     payment: {
@@ -49,191 +47,196 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
     createInvoice: false,
   });
 
+  // ============================================
+  // STATE
+  // ============================================
+  const [formData, setFormData] = useState(getInitialFormData());
   const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedVenueSpace, setSelectedVenueSpace] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  
+  // ✅ NEW: Resource Lists
   const [clients, setClients] = useState([]);
   const [partners, setPartners] = useState([]);
   const [venueSpaces, setVenueSpaces] = useState([]);
-  const [existingEvents, setExistingEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(true);
-  const [errors, setErrors] = useState({});
-  const [warnings, setWarnings] = useState({});
 
-  // Data Fetching
+  // ============================================
+  // FETCH RESOURCES ON MOUNT
+  // ============================================
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchResources = async () => {
       try {
-        setFetchLoading(true);
-        const [clientsRes, partnersRes, spacesRes, eventsRes] = await Promise.allSettled([
-          clientService.getAll({ limit: 100 }),
-          partnerService.getAll({ limit: 100 }),
-          venueSpacesService.getAll({ limit: 100 }),
-          eventService.getAll({ limit: 200, includeArchived: false })
+        const [clientsRes, partnersRes, spacesRes] = await Promise.all([
+          clientService.getAll(),
+          partnerService.getAll(),
+          venueService.getSpaces(),
         ]);
 
-        const getArr = (res, key) => res.status === 'fulfilled' ? (res.value[key] || res.value.data?.[key] || res.value.data || []) : [];
-
-        setClients(getArr(clientsRes, 'clients'));
-        setPartners(getArr(partnersRes, 'partners'));
-        setVenueSpaces(getArr(spacesRes, 'spaces'));
-        setExistingEvents(getArr(eventsRes, 'events'));
-
+        setClients(clientsRes?.data?.clients || clientsRes?.clients || []);
+        setPartners(partnersRes?.data?.partners || partnersRes?.partners || []);
+        setVenueSpaces(spacesRes?.data?.spaces || spacesRes?.spaces || []);
       } catch (error) {
-        console.error("Init Error:", error);
-        showError("Failed to load form data. Please refresh.");
-      } finally {
-        setFetchLoading(false);
+        console.error("Failed to fetch resources:", error);
       }
     };
-    fetchData();
-  }, [showError]);
 
-  // Date Prefill
-  useEffect(() => {
-    if (initialDate && !isEditMode) {
-      const dateObj = new Date(initialDate);
-      const dateStr = dateObj.toISOString().split('T')[0];
-      setFormData(prev => ({ ...prev, startDate: dateStr, endDate: dateStr }));
-    }
-  }, [initialDate, isEditMode]);
+    fetchResources();
+  }, []);
 
-  // Auto-Populate Venue Price
+  // ============================================
+  // HANDLE PREFILL (CREATE MODE)
+  // ============================================
   useEffect(() => {
-    if (formData.venueSpaceId && venueSpaces.length > 0) {
-      const selectedSpace = venueSpaces.find(s => s._id === formData.venueSpaceId);
-      if (selectedSpace) {
-        setFormData(prev => ({
-          ...prev,
-          pricing: { ...prev.pricing, basePrice: selectedSpace.basePrice || 0 }
-        }));
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors["pricing.basePrice"];
-          return newErrors;
-        });
+    if (!isEditMode && clients.length > 0) {
+      // Auto-select prefilled client
+      if (prefillClient && !selectedClient) {
+        const foundClient = clients.find(c => c._id === prefillClient._id);
+        if (foundClient) {
+          console.log("✅ Auto-selecting prefilled client:", foundClient.name);
+          setSelectedClient(foundClient);
+          setFormData(prev => ({ ...prev, clientId: foundClient._id }));
+        }
       }
     }
-  }, [formData.venueSpaceId, venueSpaces]);
+  }, [prefillClient, clients, isEditMode, selectedClient]);
 
-  // Edit Mode Loading
+  // ============================================
+  // LOAD EVENT DATA (EDIT MODE)
+  // ============================================
   useEffect(() => {
-    if (isEditMode && eventId) {
-      const loadEvent = async () => {
-        try {
-          setFetchLoading(true);
-          const response = await eventService.getById(eventId);
-          const event = response.event || response.data;
+    const loadEventData = async () => {
+      if (!eventId || !isEditMode) return;
 
-          if (event) {
-            // Map Partners with full details
-            const mappedPartners = (event.partners || []).map(p => ({
-              partner: p.partner?._id || p.partner,
-              partnerName: p.partner?.name || p.partnerName || "Partner",
-              service: p.service,
-              priceType: p.priceType || p.partner?.priceType || "fixed",
-              rate: p.rate || (p.partner?.priceType === "hourly" ? p.partner?.hourlyRate : p.partner?.fixedRate) || 0,
-              hours: p.hours || 0,
-              cost: p.cost, // Preserve database cost
-              status: p.status
-            }));
+      try {
+        setLoading(true);
+        const response = await eventService.getById(eventId);
+        const event = response?.data?.event || response?.event || response;
 
-            // ⭐ MAP SUPPLIES with all required fields
-            const mappedSupplies = (event.supplies || []).map(s => ({
-              supply: s.supply?._id || s.supply,
-              supplyName: s.supplyName || s.supply?.name || "",
-              supplyCategoryId: s.supplyCategoryId?._id || s.supplyCategoryId,
-              supplyCategoryName: s.supplyCategoryName || s.supplyCategoryId?.name || "",
-              supplyUnit: s.supplyUnit || s.supply?.unit || "",
-              quantityRequested: s.quantityRequested || s.quantityAllocated || 0,
-              quantityAllocated: s.quantityAllocated || 0,
-              costPerUnit: s.costPerUnit || s.supply?.costPerUnit || 0,
-              chargePerUnit: s.chargePerUnit || s.supply?.chargePerUnit || 0,
-              pricingType: s.pricingType || s.supply?.pricingType || "included",
-              status: s.status || "pending",
-              currentStock: s.supply?.currentStock || 0,
-              // Preserve additional fields if they exist
-              totalCost: s.totalCost,
-              totalCharge: s.totalCharge,
-              deliveryDate: s.deliveryDate,
-              notes: s.notes
-            }));
-
-            const mappedData = {
-              ...formData,
-              title: event.title,
-              description: event.description || "",
-              type: event.type,
-              venueSpaceId: typeof event.venueSpaceId === 'object' ? event.venueSpaceId._id : event.venueSpaceId,
-              clientId: typeof event.clientId === 'object' ? event.clientId._id : event.clientId,
-              sameDayEvent: event.startDate?.split('T')[0] === event.endDate?.split('T')[0],
-              startDate: event.startDate?.split('T')[0],
-              endDate: event.endDate?.split('T')[0],
-              startTime: event.startTime,
-              endTime: event.endTime,
-              guestCount: event.guestCount,
-              status: event.status,
-              pricing: {
-                basePrice: event.pricing?.basePrice || 0,
-                discount: event.pricing?.discount || 0,
-                discountType: event.pricing?.discountType || "fixed",
-                taxRate: event.pricing?.taxRate !== undefined ? event.pricing.taxRate : 19
-              },
-              partners: mappedPartners,
-              // ⭐ SUPPLIES
-              supplies: mappedSupplies,
-              supplySummary: event.supplySummary || {
-                totalCost: 0,
-                totalCharge: 0,
-                totalMargin: 0,
-                includeInBasePrice: true
-              },
-              notes: event.notes || "",
-              createInvoice: false
-            };
-
-            setFormData(mappedData);
-            setSelectedClient(mappedData.clientId);
-          }
-        } catch (error) {
-          console.error(error);
-          showError("Failed to load event details");
-        } finally {
-          setFetchLoading(false);
+        if (!event) {
+          console.error("No event data found");
+          return;
         }
-      };
-      loadEvent();
-    }
-  }, [eventId, isEditMode, showError]);
 
-  // Handle Change (supports nested paths like "pricing.discount" and "supplySummary.includeInBasePrice")
-  const handleChange = useCallback((eOrName, valueVal) => {
-    let name, value;
-    if (typeof eOrName === 'string') {
-      name = eOrName;
-      value = valueVal;
-    } else {
-      name = eOrName.target.name;
-      value = eOrName.target.type === 'checkbox' ? eOrName.target.checked : eOrName.target.value;
-    }
+        // Map partners
+        const mappedPartners = (event.partners || []).map(p => ({
+          partner: p.partner?._id || p.partner,
+          partnerName: p.partner?.name || p.partnerName || "Partner",
+          service: p.service,
+          priceType: p.priceType || p.partner?.priceType || "fixed",
+          rate: p.rate || 0,
+          hours: p.hours || 0,
+          cost: p.cost,
+          status: p.status,
+        }));
 
-    setFormData(prev => {
-      if (name.includes('.')) {
-        const keys = name.split('.');
+        // Map supplies
+        const mappedSupplies = (event.supplies || []).map(s => ({
+          supply: s.supply?._id || s.supply,
+          supplyName: s.supplyName || s.supply?.name || "",
+          supplyCategoryId: s.supplyCategoryId?._id || s.supplyCategoryId,
+          supplyCategoryName: s.supplyCategoryName || s.supplyCategoryId?.name || "",
+          supplyUnit: s.supplyUnit || s.supply?.unit || "",
+          quantityRequested: s.quantityRequested || 0,
+          quantityAllocated: s.quantityAllocated || 0,
+          costPerUnit: s.costPerUnit || 0,
+          chargePerUnit: s.chargePerUnit || 0,
+          pricingType: s.pricingType || "included",
+          status: s.status || "pending",
+          currentStock: s.supply?.currentStock || 0,
+        }));
+
+        const transformedData = {
+          title: event.title || "",
+          description: event.description || "",
+          type: event.type || "wedding",
+          venueSpaceId: typeof event.venueSpaceId === "object" ? event.venueSpaceId._id : event.venueSpaceId || "",
+          clientId: typeof event.clientId === "object" ? event.clientId._id : event.clientId || "",
+          sameDayEvent: event.startDate?.split("T")[0] === event.endDate?.split("T")[0],
+          startDate: event.startDate?.split("T")[0] || "",
+          endDate: event.endDate?.split("T")[0] || "",
+          startTime: event.startTime || "",
+          endTime: event.endTime || "",
+          guestCount: event.guestCount?.toString() || "",
+          status: event.status || "pending",
+          pricing: {
+            basePrice: event.pricing?.basePrice || 0,
+            discount: event.pricing?.discount || 0,
+            discountType: event.pricing?.discountType || "fixed",
+            taxRate: event.pricing?.taxRate ?? 19,
+          },
+          partners: mappedPartners,
+          supplies: mappedSupplies,
+          supplySummary: event.supplySummary || {
+            totalCost: 0,
+            totalCharge: 0,
+            totalMargin: 0,
+            includeInBasePrice: true,
+          },
+          notes: event.notes || "",
+          payment: {
+            amount: "",
+            paymentMethod: "cash",
+            paymentDate: new Date().toISOString().split("T")[0],
+            status: "pending",
+            notes: "",
+          },
+          createInvoice: false,
+        };
+
+        setFormData(transformedData);
+
+        // Set selected client
+        if (event.clientId && clients.length > 0) {
+          const clientData = typeof event.clientId === "object" ? event.clientId : clients.find(c => c._id === event.clientId);
+          if (clientData) setSelectedClient(clientData);
+        }
+
+        // Set selected venue space
+        if (event.venueSpaceId && venueSpaces.length > 0) {
+          const spaceData = typeof event.venueSpaceId === "object" ? event.venueSpaceId : venueSpaces.find(s => s._id === event.venueSpaceId);
+          if (spaceData) setSelectedVenueSpace(spaceData);
+        }
+
+        console.log("✅ Event data loaded successfully");
+      } catch (error) {
+        console.error("❌ Error loading event data:", error);
+        setErrors({ fetch: "Failed to load event data" });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (clients.length > 0 && venueSpaces.length > 0) {
+      loadEventData();
+    }
+  }, [eventId, isEditMode, clients, venueSpaces]);
+
+  // ============================================
+  // FORM HANDLERS
+  // ============================================
+  const handleChange = useCallback((e) => {
+    const { name, value, type, checked } = e.target;
+    const fieldValue = type === "checkbox" ? checked : value;
+
+    if (name.includes(".")) {
+      // Nested field (e.g., "pricing.discount")
+      const keys = name.split(".");
+      setFormData(prev => {
         const newData = { ...prev };
         let current = newData;
         
-        // Navigate to the nested property
         for (let i = 0; i < keys.length - 1; i++) {
           current[keys[i]] = { ...current[keys[i]] };
           current = current[keys[i]];
         }
         
-        // Set the final value
-        current[keys[keys.length - 1]] = value;
+        current[keys[keys.length - 1]] = fieldValue;
         return newData;
-      }
-      return { ...prev, [name]: value };
-    });
+      });
+    } else {
+      setFormData(prev => ({ ...prev, [name]: fieldValue }));
+    }
 
     // Clear error for this field
     if (errors[name]) {
@@ -245,45 +248,61 @@ export const useEventForm = (eventId, isEditMode, selectedEvent, initialDate) =>
     }
   }, [errors]);
 
-  const handleSelectClient = useCallback((clientId) => {
-    if (selectedClient === clientId) {
-      // Deselect (toggle off)
+  const handleSelectClient = useCallback((clientOrId) => {
+    const clientId = typeof clientOrId === "object" ? clientOrId._id : clientOrId;
+    const clientObj = typeof clientOrId === "object" ? clientOrId : clients.find(c => c._id === clientOrId);
+
+    if (selectedClient?._id === clientId) {
+      // Deselect
       setSelectedClient(null);
       setFormData(prev => ({ ...prev, clientId: "" }));
     } else {
-      // Select client
-      setSelectedClient(clientId);
+      // Select
+      setSelectedClient(clientObj || { _id: clientId });
       setFormData(prev => ({ ...prev, clientId }));
       
-      // Remove error completely
+      // Clear error
       setErrors(prev => {
-        const { clientId: removedError, ...rest } = prev;
+        const { clientId: _, ...rest } = prev;
         return rest;
       });
     }
-  }, [selectedClient]);
+  }, [selectedClient, clients]);
 
+  const resetForm = useCallback(() => {
+    setFormData(getInitialFormData());
+    setSelectedClient(prefillClient || null);
+    setSelectedVenueSpace(null);
+    setErrors({});
+  }, [prefillClient]);
+
+  // ============================================
+  // RETURN
+  // ============================================
   return {
-    formData, 
+    // Form Data
+    formData,
     setFormData,
-    selectedClient, 
-    setSelectedClient,
-    clients, 
-    setClients,
-    partners, 
-    setPartners,
-    venueSpaces, 
-    setVenueSpaces,
-    existingEvents,
-    loading, 
-    setLoading,
-    fetchLoading, 
-    setFetchLoading,
-    errors, 
-    setErrors,
-    warnings, 
-    setWarnings,
     handleChange,
-    handleSelectClient
+    
+    // Selections
+    selectedClient,
+    setSelectedClient,
+    handleSelectClient,
+    selectedVenueSpace,
+    setSelectedVenueSpace,
+    
+    // Resources
+    clients,
+    setClients,
+    partners,
+    venueSpaces,
+    
+    // State
+    errors,
+    setErrors,
+    loading,
+    setLoading,
+    resetForm,
   };
 };

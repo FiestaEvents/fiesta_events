@@ -1,10 +1,55 @@
-import React from "react";
-import { Edit2, GripVertical } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Edit2, GripVertical, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { useTranslation } from "react-i18next"; // ✅ Import translation hook
+import { useTranslation } from "react-i18next";
 
 // ==========================================
-// COMPONENT: DRAGGABLE WRAPPER
+// ZOOM CONTROLS COMPONENT
+// ==========================================
+const ZoomControls = ({ zoom, onZoomIn, onZoomOut, onZoomReset }) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="absolute top-4 right-4 z-50 flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+      {/* Zoom In */}
+      <button
+        onClick={onZoomIn}
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400"
+        title={t("invoicePreview.zoom.zoomIn")}
+      >
+        <ZoomIn size={20} />
+      </button>
+
+      {/* Zoom Percentage */}
+      <div className="px-2 py-1 text-center">
+        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+          {Math.round(zoom * 100)}%
+        </span>
+      </div>
+
+      {/* Zoom Out */}
+      <button
+        onClick={onZoomOut}
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400"
+        title={t("invoicePreview.zoom.zoomOut")}
+      >
+        <ZoomOut size={20} />
+      </button>
+
+      {/* Reset Zoom */}
+      <button
+        onClick={onZoomReset}
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 border-t border-gray-200 dark:border-gray-600"
+        title={t("invoicePreview.zoom.reset")}
+      >
+        <Maximize2 size={20} />
+      </button>
+    </div>
+  );
+};
+
+// ==========================================
+// DRAGGABLE WRAPPER COMPONENT
 // ==========================================
 const DraggableBlock = ({
   id,
@@ -14,7 +59,7 @@ const DraggableBlock = ({
   className = "",
   style = {},
 }) => {
-  const { t } = useTranslation(); // ✅ Hook for tooltips
+  const { t } = useTranslation();
 
   return (
     <Draggable draggableId={id} index={index}>
@@ -58,7 +103,9 @@ const DraggableBlock = ({
           {/* Hover Border Effect */}
           <div
             onClick={onEdit}
-            className={`border-2 border-transparent ${onEdit ? "hover:border-dashed hover:border-gray-300 cursor-pointer" : ""} rounded-sm transition-colors`}
+            className={`border-2 border-transparent ${
+              onEdit ? "hover:border-dashed hover:border-gray-300 cursor-pointer" : ""
+            } rounded-sm transition-colors`}
           >
             {children}
           </div>
@@ -72,11 +119,57 @@ const DraggableBlock = ({
 // MAIN COMPONENT
 // ==========================================
 const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
-  const { t, i18n } = useTranslation(); // ✅ Use translation
+  const { t, i18n } = useTranslation();
 
-  // Format Currency Helper (uses dynamic locale)
+  // ==========================================
+  // ZOOM STATE
+  // ==========================================
+  const [zoom, setZoom] = useState(1);
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 2;
+  const ZOOM_STEP = 0.1;
+
+  const handleZoomIn = () => {
+    setZoom((prev) => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
+  };
+
+  const handleZoomReset = () => {
+    setZoom(1);
+  };
+
+  // Keyboard shortcuts for zoom
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + Plus/Equals
+      if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        handleZoomIn();
+      }
+      // Ctrl/Cmd + Minus
+      if ((e.ctrlKey || e.metaKey) && e.key === "-") {
+        e.preventDefault();
+        handleZoomOut();
+      }
+      // Ctrl/Cmd + 0
+      if ((e.ctrlKey || e.metaKey) && e.key === "0") {
+        e.preventDefault();
+        handleZoomReset();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // ==========================================
+  // HELPER FUNCTIONS
+  // ==========================================
+
   const formatCurrency = (amount, currency = "DT") => {
-    // Map i18next language to standard locale (e.g., 'en' -> 'en-US', 'ar' -> 'ar-TN')
     const localeMap = {
       en: "en-US",
       fr: "fr-FR",
@@ -86,11 +179,11 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
 
     return new Intl.NumberFormat(locale, {
       style: "currency",
-      currency: "TND", // Using TND as base, but replacing symbol below if needed
+      currency: "TND",
     })
       .format(amount)
       .replace("TND", currency)
-      .replace("د.ت.‏", currency); // Arabic replacement
+      .replace("د.ت.‏", currency);
   };
 
   const formatDate = (d) => {
@@ -107,7 +200,10 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
     });
   };
 
-  // 1. Safe Settings Access
+  // ==========================================
+  // SETTINGS & STYLES
+  // ==========================================
+
   const s = {
     colors: settings?.branding?.colors || {
       primary: "#F18237",
@@ -133,7 +229,6 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
     paymentTerms: settings?.paymentTerms || {},
   };
 
-  // 2. Dynamic Styles
   const pageStyle = {
     fontFamily: s.fonts.body,
     fontSize: `${s.fonts.size}px`,
@@ -162,7 +257,10 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
   const discountAmount = data.discount || 0;
   const totalAmount = subtotal + taxAmount - discountAmount;
 
-  // 3. Renderers Dictionary (Maps Section ID -> JSX)
+  // ==========================================
+  // BLOCK RENDERERS
+  // ==========================================
+
   const renderers = {
     header: (
       <div className="flex justify-between items-start mb-6">
@@ -400,7 +498,10 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
     ) : null,
   };
 
-  // 4. Map ID to Edit Tab
+  // ==========================================
+  // SECTION MAPPING & SORTING
+  // ==========================================
+
   const sectionEditMap = {
     header: "branding",
     details: "text",
@@ -409,12 +510,10 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
     footer: "text",
   };
 
-  // 5. Sort Sections for Rendering
   const activeSections = (s.layout.sections || [])
     .filter((sec) => sec.visible)
     .sort((a, b) => a.order - b.order);
 
-  // 6. Handle Drag End
   const handleDragEnd = (result) => {
     if (!result.destination) return;
 
@@ -427,15 +526,29 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
     }
   };
 
+  // ==========================================
+  // RENDER
+  // ==========================================
+
   return (
-    <div className="flex justify-center items-start p-8 bg-gray-800/50 min-h-full select-none">
-      {/* A4 PAGE CONTAINER */}
+    <div className="flex justify-center items-start overflow-auto p-8 bg-gray-800/50 min-h-full select-none relative">
+      {/* Zoom Controls */}
+      <ZoomControls
+        zoom={zoom}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onZoomReset={handleZoomReset}
+      />
+
+      {/* A4 PAGE CONTAINER with Zoom Transform */}
       <div
         className="shadow-2xl relative flex flex-col transition-all duration-300"
         style={{
           width: "794px",
           minHeight: "1123px",
           ...pageStyle,
+          transform: `scale(${zoom})`,
+          transformOrigin: "top center",
         }}
       >
         {/* Watermark */}

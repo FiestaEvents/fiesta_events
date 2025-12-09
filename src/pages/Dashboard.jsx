@@ -9,7 +9,7 @@ import {
   useInView,
   useSpring,
   useTransform,
-} from "framer-motion"; // ADDED
+} from "framer-motion";
 
 // Hooks & API
 import useToast from "../hooks/useToast";
@@ -26,6 +26,7 @@ import {
 import Button from "../components/common/Button";
 import { StatusBadge } from "../components/common/Badge";
 import OrbitLoader from "../components/common/LoadingSpinner";
+
 // Icons
 import {
   TrendingUp,
@@ -75,6 +76,10 @@ ChartJS.register(
   Filler,
   ArcElement
 );
+
+// Set default chart colors for better visibility in both modes
+ChartJS.defaults.color = "#9CA3AF"; // gray-400
+ChartJS.defaults.borderColor = "rgba(156, 163, 175, 0.1)"; // gray-400 with low opacity
 
 // ============================================
 // ANIMATION VARIANTS & UTILS
@@ -189,8 +194,10 @@ const Card = ({ children, className = "", onClick }) => (
         ? { scale: 1.01, boxShadow: "0px 10px 20px rgba(0,0,0,0.05)" }
         : {}
     }
-    className={`bg-white border border-gray-200 rounded-2xl p-6 ${
-      onClick ? "cursor-pointer hover:border-orange-200 transition-colors" : ""
+    className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 ${
+      onClick
+        ? "cursor-pointer hover:border-orange-200 dark:hover:border-orange-900 transition-colors"
+        : ""
     } ${className}`}
   >
     {children}
@@ -210,26 +217,30 @@ const MetricCard = ({
 
   const colors = {
     orange: {
-      bg: "bg-orange-50",
-      text: "text-orange-600",
+      bg: "bg-orange-50 dark:bg-orange-900/20",
+      text: "text-orange-600 dark:text-orange-400",
       border: "border-orange-100",
     },
     blue: {
-      bg: "bg-blue-50",
-      text: "text-blue-600",
+      bg: "bg-blue-50 dark:bg-blue-900/20",
+      text: "text-blue-600 dark:text-blue-400",
       border: "border-blue-100",
     },
     green: {
-      bg: "bg-emerald-50",
-      text: "text-emerald-600",
+      bg: "bg-emerald-50 dark:bg-emerald-900/20",
+      text: "text-emerald-600 dark:text-emerald-400",
       border: "border-emerald-100",
     },
     purple: {
-      bg: "bg-purple-50",
-      text: "text-purple-600",
+      bg: "bg-purple-50 dark:bg-purple-900/20",
+      text: "text-purple-600 dark:text-purple-400",
       border: "border-purple-100",
     },
-    red: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-100" },
+    red: {
+      bg: "bg-rose-50 dark:bg-rose-900/20",
+      text: "text-rose-600 dark:text-rose-400",
+      border: "border-rose-100",
+    },
   };
 
   const currentTheme = colors[color] || colors.orange;
@@ -239,7 +250,7 @@ const MetricCard = ({
       <motion.div
         variants={itemVariants}
         whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
-        className="rounded-2xl p-6 bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-xl relative overflow-hidden group cursor-default"
+        className="rounded-2xl p-6 bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white shadow-xl relative overflow-hidden group cursor-default"
       >
         <motion.div
           animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
@@ -259,7 +270,6 @@ const MetricCard = ({
         </div>
         <div className="mt-4 relative z-10">
           <h3 className="text-3xl font-bold text-white">
-            {/* If value is strictly a string (like a formatted currency), don't animate or handle differently */}
             {typeof value === "number" || !isNaN(parseFloat(value)) ? (
               <CountUp value={value} />
             ) : (
@@ -276,7 +286,7 @@ const MetricCard = ({
     <motion.div
       variants={itemVariants}
       whileHover={{ y: -5 }}
-      className="rounded-2xl p-6 bg-white border border-gray-200 hover:border-gray-300 transition-all duration-300 group shadow-sm hover:shadow-md"
+      className="rounded-2xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 group shadow-sm hover:shadow-md"
     >
       <div className="flex justify-between items-start mb-4">
         <div
@@ -288,8 +298,8 @@ const MetricCard = ({
           <div
             className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${
               trend >= 0
-                ? "bg-emerald-50 text-emerald-600"
-                : "bg-rose-50 text-rose-600"
+                ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                : "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
             }`}
           >
             {trend >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
@@ -298,7 +308,7 @@ const MetricCard = ({
         )}
       </div>
       <div>
-        <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
           {typeof value === "number" ||
           !isNaN(parseFloat(String(value).replace(/[^0-9.-]+/g, ""))) ? (
             <CountUp value={value} />
@@ -306,18 +316,20 @@ const MetricCard = ({
             value
           )}
         </h3>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-1">
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-1">
           {title}
         </p>
       </div>
       {subValue && (
-        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-2">
+        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-2">
           <div
             className={`w-1.5 h-1.5 rounded-full ${currentTheme.bg
               .replace("bg-", "bg-")
               .replace("50", "500")}`}
           ></div>
-          <span className="text-xs text-gray-400 font-medium">{subValue}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+            {subValue}
+          </span>
         </div>
       )}
     </motion.div>
@@ -375,13 +387,13 @@ const MiniCalendar = ({ events = [], displayDate }) => {
   return (
     <Card className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-bold text-gray-900">
+        <h3 className="font-bold text-gray-900 dark:text-white">
           {baseDate.toLocaleString(i18n.language, {
             month: "long",
             year: "numeric",
           })}
         </h3>
-        <div className="p-2 bg-gray-50 rounded-lg text-gray-500">
+        <div className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400">
           <Calendar size={16} />
         </div>
       </div>
@@ -390,7 +402,7 @@ const MiniCalendar = ({ events = [], displayDate }) => {
         {weekDays.map((d, i) => (
           <div
             key={`${d}-${i}`}
-            className="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+            className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider"
           >
             {d}
           </div>
@@ -417,20 +429,24 @@ const MiniCalendar = ({ events = [], displayDate }) => {
                 w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all
                 ${
                   isToday
-                    ? "bg-orange-500 text-white shadow-md shadow-orange-200"
-                    : "text-gray-700"
+                    ? "bg-orange-500 text-white shadow-md shadow-orange-200 dark:shadow-none"
+                    : "text-gray-700 dark:text-gray-300"
                 }
                 ${
                   !isToday && status === "booked"
-                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-100"
+                    ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-100 dark:ring-emerald-800"
                     : ""
                 }
                 ${
                   !isToday && status === "pending"
-                    ? "bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-100"
+                    ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-inset ring-amber-100 dark:ring-amber-800"
                     : ""
                 }
-                ${!isToday && !status ? "hover:bg-gray-50" : ""}
+                ${
+                  !isToday && !status
+                    ? "hover:bg-gray-50 dark:hover:bg-gray-700"
+                    : ""
+                }
               `}
               >
                 {day}
@@ -494,28 +510,148 @@ const DashboardPage = () => {
   const [lowStockItems, setLowStockItems] = useState([]);
   const [currentDateContext] = useState(new Date());
 
-  // ... (Keep existing CSV Generation logic here, it is unchanged)
+  // ============================================
+  // CSV GENERATION FUNCTION
+  // ============================================
+
   const generateMonthlyReceiptCSV = () => {
-    // ... same implementation as before ...
     try {
       setGeneratingReceipt(true);
-      // [Existing CSV Logic]
+
+      const currentMonth = new Date();
+      // Format filename like "OCTOBRE-25"
+      const monthName = currentMonth
+        .toLocaleDateString("fr-FR", { month: "long" })
+        .toUpperCase();
+      const yearShort = currentMonth.getFullYear().toString().slice(-2);
+      const title = `${monthName}-${yearShort}`;
+
+      // Filter payments for current month (Income only)
+      const receipts = financeData.recentPayments.filter((payment) => {
+        const paymentDate = new Date(payment.paidDate || payment.createdAt);
+        return (
+          paymentDate.getMonth() === currentMonth.getMonth() &&
+          paymentDate.getFullYear() === currentMonth.getFullYear() &&
+          payment.type === "income"
+        );
+      });
+
+      // Headers corresponding to the Excel file
+      const headers = [
+        "Date",
+        "Mois",
+        "Nom et Prenom",
+        "Evenement",
+        "Prix",
+        "A Compte",
+        "N° Reçu",
+        "Reste a payer",
+        "Status",
+        "Date de Ver",
+      ];
+
+      // Variables to calculate totals
+      let totalPrix = 0;
+      let totalAcompte = 0;
+      let totalReste = 0;
+
+      // Prepare Data Rows
+      const rows = receipts.map((payment) => {
+        const pDate = new Date(payment.paidDate || payment.createdAt);
+        const dateStr = formatDateDDMMYYYY(pDate);
+
+        // Format Month like "oct-25"
+        const monthStr = pDate
+          .toLocaleDateString("fr-FR", { month: "short", year: "2-digit" })
+          .replace(".", "");
+
+        const name = (payment.client?.name || "Client").substring(0, 30);
+        const eventName = (
+          payment.event?.title ||
+          payment.description ||
+          "Event"
+        ).substring(0, 30);
+
+        const price = payment.amount || 0;
+        // Logic for "A Compte" (Deposit) vs Total Price.
+        // Adjust this logic if your data structure for deposits is different.
+        const advance = payment.fees?.processingFee || 0;
+        const remaining = price - advance;
+        const receiptNo = payment.reference || "";
+        const status = "payer";
+        const dateVer = payment.verificationDate
+          ? formatDateDDMMYYYY(payment.verificationDate)
+          : "";
+
+        // Accumulate totals
+        totalPrix += price;
+        totalAcompte += advance;
+        totalReste += remaining;
+
+        // Escape helper for CSV (handles quotes inside content)
+        const safe = (str) => `"${String(str || "").replace(/"/g, '""')}"`;
+
+        return [
+          safe(dateStr),
+          safe(monthStr),
+          safe(name),
+          safe(eventName),
+          price, // Numbers don't need quotes usually, allows Excel math
+          advance,
+          safe(receiptNo),
+          remaining,
+          safe(status),
+          safe(dateVer),
+        ].join(",");
+      });
+
+      // Create Totals Row
+      const totalsRow = [
+        "",
+        "",
+        "",
+        "TOTAUX",
+        totalPrix,
+        totalAcompte,
+        "",
+        totalReste,
+        "",
+        "",
+      ].join(",");
+
+      // Combine CSV Content
+      // \uFEFF is the BOM (Byte Order Mark) so Excel opens UTF-8 correctly with French chars (é, à, etc.)
+      const csvContent =
+        "\uFEFF" + [headers.join(","), ...rows, totalsRow].join("\n");
+
+      // Trigger Download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Recette_${title}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       showSuccess("Receipt CSV downloaded successfully!");
     } catch (error) {
+      console.error("Error generating CSV:", error);
       showError("Failed to generate CSV");
     } finally {
       setGeneratingReceipt(false);
     }
   };
 
-  // ... (Keep existing Data Fetching logic here)
+  // ============================================
+  // DATA FETCHING
+  // ============================================
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // ... [Existing fetch logic unchanged]
 
-        // Mocking data for visualization based on your logic:
         const [
           eventsRes,
           paymentsRes,
@@ -671,10 +807,18 @@ const DashboardPage = () => {
                   totalExpenses * 0.95,
                   totalExpenses,
                 ],
-                borderColor: "#000000",
+                borderColor: "#ef4444", // red-500
+                backgroundColor: (context) => {
+                  const ctx = context.chart.ctx;
+                  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                  gradient.addColorStop(0, "rgba(239, 68, 68, 0.2)");
+                  gradient.addColorStop(1, "rgba(239, 68, 68, 0)");
+                  return gradient;
+                },
                 borderWidth: 2,
                 tension: 0.4,
                 pointRadius: 0,
+                fill: true,
               },
             ],
           },
@@ -694,6 +838,7 @@ const DashboardPage = () => {
             labels,
             datasets: [
               {
+                label: "Revenue",
                 data: [
                   totalRevenue * 0.8,
                   totalRevenue * 0.9,
@@ -702,7 +847,7 @@ const DashboardPage = () => {
                   totalRevenue * 0.95,
                   totalRevenue,
                 ],
-                borderColor: "#f97316",
+                borderColor: "#f97316", // orange-500
                 backgroundColor: (context) => {
                   const ctx = context.chart.ctx;
                   const gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -749,7 +894,7 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -764,7 +909,7 @@ const DashboardPage = () => {
             repeat: Infinity,
             repeatType: "reverse",
           }}
-          className="text-gray-500 font-medium"
+          className="text-gray-500 dark:text-gray-400 font-medium"
         >
           {t("dashboard.status.systemOperational") ||
             "Synchronizing dashboard..."}
@@ -788,26 +933,26 @@ const DashboardPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 p-4 md:p-8 font-sans">
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-8"
+          className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 dark:border-gray-800 pb-8"
         >
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
               {t("dashboard.title")}
             </h1>
-            <p className="text-gray-500 mt-2 font-medium">
+            <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">
               {t("dashboard.welcome")}
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden md:block text-right mr-4 rtl:mr-0 rtl:ml-4">
-              <p className="text-xs font-bold uppercase text-gray-400">
+              <p className="text-xs font-bold uppercase text-gray-400 dark:text-gray-500">
                 {t("dashboard.currentDate")}
               </p>
               <p className="text-sm font-semibold">
@@ -821,7 +966,7 @@ const DashboardPage = () => {
             <Button
               onClick={generateMonthlyReceiptCSV}
               disabled={generatingReceipt}
-              className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 py-3 shadow-lg shadow-green-200"
+              className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 py-3 shadow-lg shadow-green-200 dark:shadow-none"
             >
               {generatingReceipt ? (
                 <>
@@ -848,22 +993,26 @@ const DashboardPage = () => {
           transition={{ delay: 0.2 }}
           className="flex flex-col sm:flex-row items-center justify-between gap-4"
         >
-          <div className="flex p-1 bg-gray-50 border border-gray-200 rounded-xl w-full sm:w-auto">
+          <div className="flex p-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl w-full sm:w-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="relative px-6 py-2 rounded-lg text-sm font-bold transition-all flex-1 sm:flex-none flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700"
+                className="relative px-6 py-2 rounded-lg text-sm font-bold transition-all flex-1 sm:flex-none flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               >
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-0 bg-white shadow-sm ring-1 ring-black/5 rounded-lg"
+                    className="absolute inset-0 bg-white dark:bg-gray-700 shadow-sm ring-1 ring-black/5 dark:ring-white/10 rounded-lg"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
                 <span
-                  className={`relative z-10 flex items-center gap-2 ${activeTab === tab.id ? "text-gray-900" : ""}`}
+                  className={`relative z-10 flex items-center gap-2 ${
+                    activeTab === tab.id
+                      ? "text-gray-900 dark:text-white"
+                      : ""
+                  }`}
                 >
                   <tab.icon
                     size={16}
@@ -876,7 +1025,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
               <motion.div
                 animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -951,12 +1100,12 @@ const DashboardPage = () => {
                   {/* Today & Upcoming Events */}
                   <div className="lg:col-span-2 space-y-6">
                     {/* Today's Agenda */}
-                    <Card className="border-orange-100 bg-orange-50/30">
+                    <Card className="border-orange-100 bg-orange-50/30 dark:bg-orange-900/10 dark:border-orange-900/30">
                       <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                        <div className="p-2 bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 rounded-lg">
                           <Bell size={20} />
                         </div>
-                        <h3 className="font-bold text-gray-900">
+                        <h3 className="font-bold text-gray-900 dark:text-white">
                           {t("sections.todaysAgenda")}
                         </h3>
                       </div>
@@ -968,17 +1117,17 @@ const DashboardPage = () => {
                               whileHover={{ x: 5 }}
                               key={event._id}
                               onClick={() => navigate(`/events/${event._id}`)}
-                              className="bg-white border border-gray-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:border-orange-300 transition-colors"
+                              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:border-orange-300 dark:hover:border-orange-500 transition-colors"
                             >
                               <div className="flex items-center gap-4">
-                                <div className="font-mono text-sm font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">
+                                <div className="font-mono text-sm font-bold bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-600 dark:text-gray-300">
                                   {event.startTime || "00:00"}
                                 </div>
                                 <div>
-                                  <h4 className="font-bold text-gray-900">
+                                  <h4 className="font-bold text-gray-900 dark:text-white">
                                     {event.title}
                                   </h4>
-                                  <p className="text-sm text-gray-500">
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">
                                     {event.clientId?.name} • {event.guestCount}{" "}
                                     {t("common.pax")}
                                   </p>
@@ -986,19 +1135,19 @@ const DashboardPage = () => {
                               </div>
                               <ChevronRight
                                 size={18}
-                                className="text-gray-400 rtl:rotate-180"
+                                className="text-gray-400 dark:text-gray-500 rtl:rotate-180"
                               />
                             </motion.div>
                           ))}
                         </div>
                       ) : (
                         <div className="text-center py-8">
-                          <p className="text-gray-500">
+                          <p className="text-gray-500 dark:text-gray-400">
                             {t("dashboard.status.noEvents")}
                           </p>
                           <Button
                             variant="link"
-                            className="text-orange-600 mt-2"
+                            className="text-orange-600 dark:text-orange-400 mt-2"
                             onClick={() => navigate("/events/new")}
                           >
                             {t("dashboard.buttons.scheduleOne")}
@@ -1009,8 +1158,8 @@ const DashboardPage = () => {
 
                     {/* Upcoming Events Table */}
                     <Card className="p-0 overflow-hidden">
-                      <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="font-bold text-gray-900">
+                      <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                        <h3 className="font-bold text-gray-900 dark:text-white">
                           {t("sections.upcomingEvents")}
                         </h3>
                         <Button
@@ -1021,36 +1170,36 @@ const DashboardPage = () => {
                           {t("dashboard.buttons.viewAll")}
                         </Button>
                       </div>
-                      <div className="divide-y divide-gray-100">
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
                         {eventsData.upcomingEvents.map((event, index) => (
                           <motion.div
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
                             whileHover={{
-                              backgroundColor: "rgba(249, 250, 251, 1)",
+                              backgroundColor: "rgba(0,0,0,0.02)",
                             }}
+                            className="p-4 flex items-center justify-between transition cursor-pointer group hover:bg-gray-50 dark:hover:bg-gray-700/50"
                             key={event._id}
                             onClick={() => navigate(`/events/${event._id}`)}
-                            className="p-4 flex items-center justify-between transition cursor-pointer group"
                           >
                             <div className="flex items-center gap-4">
                               <div className="w-12 text-center">
-                                <div className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">
+                                <div className="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
                                   {new Date(event.startDate).toLocaleString(
                                     i18n.language,
                                     { month: "short" }
                                   )}
                                 </div>
-                                <div className="text-xl font-bold text-gray-900">
+                                <div className="text-xl font-bold text-gray-900 dark:text-white">
                                   {new Date(event.startDate).getDate()}
                                 </div>
                               </div>
                               <div>
-                                <h4 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
+                                <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
                                   {event.title}
                                 </h4>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
                                   {event.type || "General"} • {event.guestCount}{" "}
                                   {t("common.guests")}
                                 </p>
@@ -1077,18 +1226,18 @@ const DashboardPage = () => {
                 {/* Header with Action Button */}
                 <div className="flex justify-between items-center">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                       {t("sections.inventoryOverview") ||
                         "Inventory & Supply Overview"}
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       {t("sections.inventorySubtitle") ||
                         "Real-time stock levels and expense tracking"}
                     </p>
                   </div>
                   <Button
                     onClick={() => navigate("/supplies")}
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-3 shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-3 shadow-lg shadow-blue-200 dark:shadow-none transition-all hover:-translate-y-0.5"
                   >
                     <Box size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
                     {t("dashboard.buttons.manageSupplies") || "Manage Supplies"}
@@ -1136,10 +1285,10 @@ const DashboardPage = () => {
                   <Card className="lg:col-span-2">
                     <div className="flex justify-between items-center mb-6">
                       <div>
-                        <h3 className="font-bold text-gray-900">
+                        <h3 className="font-bold text-gray-900 dark:text-white">
                           {t("sections.expenseAnalysis")}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {t("sections.expenseSubtitle") || "Total Expenses"}:{" "}
                           {formatCurrency(expensesData.totalExpenses)}
                         </p>
@@ -1151,10 +1300,30 @@ const DashboardPage = () => {
                         options={{
                           responsive: true,
                           maintainAspectRatio: false,
-                          plugins: { legend: { display: false } },
+                          plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                              mode: "index",
+                              intersect: false,
+                              backgroundColor: "rgba(17, 24, 39, 0.8)",
+                              titleColor: "#fff",
+                              bodyColor: "#fff",
+                              borderColor: "rgba(255, 255, 255, 0.1)",
+                              borderWidth: 1,
+                            },
+                          },
                           scales: {
-                            x: { grid: { display: false } },
-                            y: { border: { display: false } },
+                            x: {
+                              grid: { display: false },
+                              ticks: { color: "#9CA3AF" },
+                            },
+                            y: {
+                              border: { display: false },
+                              grid: {
+                                color: "rgba(156, 163, 175, 0.1)",
+                              },
+                              ticks: { color: "#9CA3AF" },
+                            },
                           },
                           animation: {
                             duration: 2000,
@@ -1168,7 +1337,7 @@ const DashboardPage = () => {
                   {/* Low Stock List */}
                   <Card>
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 text-red-700">
+                      <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
                         <AlertTriangle size={20} />
                         <h3 className="font-bold">
                           {t("sections.lowStockAlerts") || "Low Stock Alerts"}
@@ -1177,7 +1346,7 @@ const DashboardPage = () => {
                       <motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold"
+                        className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-1 rounded-full font-bold"
                       >
                         {lowStockItems.length}
                       </motion.span>
@@ -1194,18 +1363,18 @@ const DashboardPage = () => {
                           <motion.div
                             variants={itemVariants}
                             key={item._id}
-                            className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-100 hover:border-red-200 transition-colors"
+                            className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/30 hover:border-red-200 dark:hover:border-red-800 transition-colors"
                           >
                             <div className="flex-1">
-                              <p className="font-bold text-sm text-gray-800">
+                              <p className="font-bold text-sm text-gray-800 dark:text-gray-200">
                                 {item.name}
                               </p>
-                              <p className="text-xs text-red-600 font-medium">
+                              <p className="text-xs text-red-600 dark:text-red-400 font-medium">
                                 {item.currentStock} {item.unit}{" "}
                                 {t("common.remaining") || "remaining"}
                               </p>
                               {item.minimumStock && (
-                                <p className="text-xs text-gray-500 mt-0.5">
+                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
                                   Min: {item.minimumStock} {item.unit}
                                 </p>
                               )}
@@ -1213,7 +1382,7 @@ const DashboardPage = () => {
                             <Button
                               size="sm"
                               onClick={() => navigate(`/supplies/${item._id}`)}
-                              className="bg-white text-red-600 border border-red-200 hover:bg-red-50 text-xs px-3 py-1.5 h-8"
+                              className="bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs px-3 py-1.5 h-8"
                             >
                               {t("common.reorder") || "Reorder"}
                             </Button>
@@ -1222,15 +1391,15 @@ const DashboardPage = () => {
                       </motion.div>
                     ) : (
                       <div className="text-center py-8">
-                        <Package className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                        <p className="text-gray-400 text-sm">
+                        <Package className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                        <p className="text-gray-400 dark:text-gray-500 text-sm">
                           {t("dashboard.status.noLowStock") ||
                             "All supplies are adequately stocked"}
                         </p>
                       </div>
                     )}
 
-                    <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                       <Button
                         variant="outline"
                         className="w-full justify-center"
@@ -1286,10 +1455,10 @@ const DashboardPage = () => {
                   <Card className="lg:col-span-2">
                     <div className="flex justify-between items-center mb-6">
                       <div>
-                        <h3 className="font-bold text-gray-900">
+                        <h3 className="font-bold text-gray-900 dark:text-white">
                           {t("sections.revenuePerformance")}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {t("sections.revenueSubtitle")}
                         </p>
                       </div>
@@ -1305,10 +1474,30 @@ const DashboardPage = () => {
                         options={{
                           responsive: true,
                           maintainAspectRatio: false,
-                          plugins: { legend: { display: false } },
+                          plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                              mode: "index",
+                              intersect: false,
+                              backgroundColor: "rgba(17, 24, 39, 0.8)",
+                              titleColor: "#fff",
+                              bodyColor: "#fff",
+                              borderColor: "rgba(255, 255, 255, 0.1)",
+                              borderWidth: 1,
+                            },
+                          },
                           scales: {
-                            x: { grid: { display: false } },
-                            y: { border: { display: false } },
+                            x: {
+                              grid: { display: false },
+                              ticks: { color: "#9CA3AF" },
+                            },
+                            y: {
+                              border: { display: false },
+                              grid: {
+                                color: "rgba(156, 163, 175, 0.1)",
+                              },
+                              ticks: { color: "#9CA3AF" },
+                            },
                           },
                           animation: {
                             duration: 2000,
@@ -1319,8 +1508,8 @@ const DashboardPage = () => {
                   </Card>
 
                   <Card className="p-0 overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="font-bold text-gray-900">
+                    <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+                      <h3 className="font-bold text-gray-900 dark:text-white">
                         {t("sections.recentTransactions")}
                       </h3>
                     </div>
@@ -1328,22 +1517,22 @@ const DashboardPage = () => {
                       variants={containerVariants}
                       initial="hidden"
                       animate="visible"
-                      className="divide-y divide-gray-100 flex-1"
+                      className="divide-y divide-gray-100 dark:divide-gray-700 flex-1"
                     >
                       {financeData.recentPayments.length > 0 ? (
                         financeData.recentPayments.map((p) => (
                           <motion.div
                             variants={itemVariants}
                             key={p._id}
-                            className="p-4 flex justify-between items-center hover:bg-gray-50"
+                            className="p-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700/50"
                           >
                             <div>
-                              <p className="font-bold text-gray-900 text-sm">
+                              <p className="font-bold text-gray-900 dark:text-white text-sm">
                                 {p.client?.name ||
                                   p.description ||
                                   t("common.unknown")}
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {formatDateDDMMYYYY(p.paidDate, i18n.language)}
                               </p>
                             </div>
@@ -1351,30 +1540,30 @@ const DashboardPage = () => {
                               <p
                                 className={`font-bold text-sm ${
                                   p.type === "expense"
-                                    ? "text-red-600"
-                                    : "text-emerald-600"
+                                    ? "text-red-600 dark:text-red-400"
+                                    : "text-emerald-600 dark:text-emerald-400"
                                 }`}
                               >
                                 {p.type === "expense" ? "-" : "+"}
                                 {formatCurrency(p.amount)}
                               </p>
-                              <p className="text-[10px] text-gray-400 uppercase">
+                              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">
                                 {t(`paymentMethods.${p.method}`) || p.method}
                               </p>
                             </div>
                           </motion.div>
                         ))
                       ) : (
-                        <div className="p-8 text-center text-gray-400 text-sm">
+                        <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-sm">
                           {t("dashboard.status.noTransactions")}
                         </div>
                       )}
                     </motion.div>
-                    <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 text-center">
                       <Button
                         variant="link"
                         size="sm"
-                        className="text-gray-600"
+                        className="text-gray-600 dark:text-gray-400"
                       >
                         {t("dashboard.buttons.viewTransactions")}{" "}
                         <ArrowUpRight

@@ -1,8 +1,8 @@
-import React from "react";
-import { Edit2, GripVertical } from "lucide-react";
+import React, { useState } from "react";
+import { Edit2, GripVertical, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useTranslation } from "react-i18next";
-import formatCurrency from "../../utils/formatCurrency"; // Ensure path is correct
+import formatCurrency from "../../utils/formatCurrency";
 
 // ==========================================
 // HELPER: DRAGGABLE + EDITABLE WRAPPER
@@ -67,8 +67,100 @@ const DraggableBlock = ({
   );
 };
 
+// ==========================================
+// ZOOM CONTROLS COMPONENT
+// ==========================================
+const ZoomControls = ({ zoom, onZoomIn, onZoomOut, onZoomReset }) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="absolute top-4 right-4 z-50 flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+      {/* Zoom In */}
+      <button
+        onClick={onZoomIn}
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400"
+        title={t("contracts.preview.zoom.zoomIn")}
+      >
+        <ZoomIn size={20} />
+      </button>
+
+      {/* Zoom Percentage */}
+      <div className="px-2 py-1 text-center">
+        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+          {Math.round(zoom * 100)}%
+        </span>
+      </div>
+
+      {/* Zoom Out */}
+      <button
+        onClick={onZoomOut}
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400"
+        title={t("contracts.preview.zoom.zoomOut")}
+      >
+        <ZoomOut size={20} />
+      </button>
+
+      {/* Reset Zoom */}
+      <button
+        onClick={onZoomReset}
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 border-t border-gray-200 dark:border-gray-600"
+        title={t("contracts.preview.zoom.reset")}
+      >
+        <Maximize2 size={20} />
+      </button>
+    </div>
+  );
+};
+
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
 const LiveContractPreview = ({ settings, data, onEditSection, onReorder }) => {
   const { t, i18n } = useTranslation();
+
+  // ==========================================
+  // ZOOM STATE
+  // ==========================================
+  const [zoom, setZoom] = useState(1);
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 2;
+  const ZOOM_STEP = 0.1;
+
+  const handleZoomIn = () => {
+    setZoom((prev) => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
+  };
+
+  const handleZoomReset = () => {
+    setZoom(1);
+  };
+
+  // Keyboard shortcuts for zoom
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + Plus/Equals
+      if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        handleZoomIn();
+      }
+      // Ctrl/Cmd + Minus
+      if ((e.ctrlKey || e.metaKey) && e.key === "-") {
+        e.preventDefault();
+        handleZoomOut();
+      }
+      // Ctrl/Cmd + 0
+      if ((e.ctrlKey || e.metaKey) && e.key === "0") {
+        e.preventDefault();
+        handleZoomReset();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Safe Defaults
   const s = {
@@ -379,8 +471,16 @@ const LiveContractPreview = ({ settings, data, onEditSection, onReorder }) => {
   };
 
   return (
-    <div className="w-full h-full flex justify-center items-start overflow-hidden bg-gray-800/50 py-8 select-none">
-      {/* A4 PAGE CONTAINER */}
+    <div className="w-full h-full flex justify-center items-start overflow-auto bg-gray-800/50 py-8 select-none relative">
+      {/* Zoom Controls */}
+      <ZoomControls
+        zoom={zoom}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onZoomReset={handleZoomReset}
+      />
+
+      {/* A4 PAGE CONTAINER with Zoom Transform */}
       <div
         className="bg-white shadow-2xl origin-top transform-gpu transition-transform duration-300"
         style={{
@@ -391,6 +491,8 @@ const LiveContractPreview = ({ settings, data, onEditSection, onReorder }) => {
           fontFamily: "Helvetica, Arial, sans-serif",
           fontSize: "11px",
           lineHeight: "1.5",
+          transform: `scale(${zoom})`,
+          transformOrigin: "top center",
         }}
       >
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -419,7 +521,6 @@ const LiveContractPreview = ({ settings, data, onEditSection, onReorder }) => {
                       id={blockId}
                       index={index}
                       onEdit={() => onEditSection(editId)}
-                      // Special styling for footer to push it down if it's the last item
                       className={
                         blockId === "footer" && index === blockOrder.length - 1
                           ? "mt-auto"

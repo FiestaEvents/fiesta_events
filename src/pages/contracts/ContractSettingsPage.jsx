@@ -1346,9 +1346,7 @@ const ContractSettingsPage = () => {
       </div>
 
       {/* RIGHT COLUMN: PREVIEW */}
-      <div
-        className={`hidden lg:flex flex-1 bg-gray-900 flex-col overflow-hidden ${isRTL ? "border-r" : "border-l"} border-gray-700`}
-      >
+      <div className={`hidden lg:flex flex-1 bg-gray-900 flex-col overflow-hidden ${isRTL ? "border-r" : "border-l"} border-gray-700`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-800 bg-gray-900 shrink-0 shadow-lg z-20">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -1360,7 +1358,6 @@ const ContractSettingsPage = () => {
         </div>
 
         <div className="flex-1 overflow-auto p-10 flex justify-center items-start bg-gray-800/50 backdrop-blur-sm">
-          <div className="origin-top transform scale-[0.65] xl:scale-[0.75] shadow-2xl transition-all duration-300 ease-out ring-1 ring-white/10">
             <LiveContractPreview
               settings={settings}
               data={{
@@ -1376,7 +1373,6 @@ const ContractSettingsPage = () => {
               onEditSection={handlePreviewEdit}
               onReorder={handleLayoutReorder}
             />
-          </div>
         </div>
       </div>
     </div>

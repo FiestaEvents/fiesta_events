@@ -18,28 +18,29 @@ import {
   FolderOpen,
   Filter,
 } from "lucide-react";
-import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ API & Services
-import { paymentService } from "../../api/index";
 
-// ✅ Generic Components
+// ✅ Components & Utils
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable"; // Using NewTable
+import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
-
 import formatCurrency from "../../utils/formatCurrency";
 
-// ✅ Context
+// ✅ API & Context
+import { paymentService } from "../../api/index";
 import { useToast } from "../../context/ToastContext";
 
 // ✅ Sub-components
 import PaymentDetailModal from "./PaymentDetailModal";
 import PaymentForm from "./PaymentForm";
 
-// ... (Constants and Helpers remain the same)
+// ========================================================================
+// CONSTANTS
+// ========================================================================
+
 const INITIAL_FILTERS = {
   search: "",
   type: "all",
@@ -48,7 +49,12 @@ const INITIAL_FILTERS = {
   page: 1,
   limit: 10,
 };
-const PAYMENT_TYPES = { INCOME: "income", EXPENSE: "expense" };
+
+const PAYMENT_TYPES = {
+  INCOME: "income",
+  EXPENSE: "expense",
+};
+
 const PAYMENT_STATUSES = {
   COMPLETED: "completed",
   PAID: "paid",
@@ -56,6 +62,7 @@ const PAYMENT_STATUSES = {
   FAILED: "failed",
   REFUNDED: "refunded",
 };
+
 const BADGE_VARIANTS = {
   STATUS: {
     completed: "success",
@@ -64,8 +71,12 @@ const BADGE_VARIANTS = {
     failed: "danger",
     refunded: "info",
   },
-  TYPE: { income: "success", expense: "danger" },
+  TYPE: {
+    income: "success",
+    expense: "danger",
+  },
 };
+
 const STAT_CONFIGS = [
   {
     key: "income",
@@ -123,6 +134,14 @@ const STAT_CONFIGS = [
     isStatusCard: true,
   },
 ];
+
+// ========================================================================
+// HELPER FUNCTIONS
+// ========================================================================
+
+/**
+ * Format date for display
+ */
 const formatDate = (date) => {
   if (!date) return "-";
   try {
@@ -131,16 +150,28 @@ const formatDate = (date) => {
     return date;
   }
 };
+
+/**
+ * Extract client name from payment object
+ */
 const getClientName = (payment) => {
   if (payment.client?.name) return payment.client.name;
   if (payment.event?.clientId?.name) return payment.event.clientId.name;
   return "N/A";
 };
+
+/**
+ * Get badge variant based on value and type
+ */
 const getBadgeVariant = (value, type) => {
   const variants =
     type === "status" ? BADGE_VARIANTS.STATUS : BADGE_VARIANTS.TYPE;
   return variants[value?.toLowerCase()] || "secondary";
 };
+
+/**
+ * Calculate payment statistics
+ */
 const calculateStats = (payments) => {
   const stats = {
     completedIncome: 0,
@@ -151,6 +182,7 @@ const calculateStats = (payments) => {
     pendingPayments: 0,
     failedPayments: 0,
   };
+
   payments.forEach((payment) => {
     const status = payment.status?.toLowerCase();
     const isCompleted = [
@@ -159,6 +191,7 @@ const calculateStats = (payments) => {
     ].includes(status);
     const isPending = status === PAYMENT_STATUSES.PENDING;
     const amount = payment.netAmount || payment.amount || 0;
+
     if (payment.type === PAYMENT_TYPES.INCOME) {
       if (isCompleted) stats.completedIncome += amount;
       if (isPending) stats.pendingIncome += amount;
@@ -166,20 +199,125 @@ const calculateStats = (payments) => {
       if (isCompleted) stats.completedExpenses += amount;
       if (isPending) stats.pendingExpenses += amount;
     }
+
     if (isCompleted) stats.completedPayments++;
     if (isPending) stats.pendingPayments++;
     if (status === PAYMENT_STATUSES.FAILED) stats.failedPayments++;
   });
+
   stats.netCompleted = stats.completedIncome - stats.completedExpenses;
   stats.netPending = stats.pendingIncome - stats.pendingExpenses;
   stats.netProjected = stats.netCompleted + stats.netPending;
+
   return stats;
 };
+
+/**
+ * Convert payments array to CSV format
+ */
+const convertToCSV = (payments, t) => {
+  if (!payments || payments.length === 0) return "";
+
+  // Define CSV headers
+  const headers = [
+    t("payments.csv.type", "Type"),
+    t("payments.csv.description", "Description"),
+    t("payments.csv.client", "Client"),
+    t("payments.csv.reference", "Reference"),
+    t("payments.csv.date", "Date"),
+    t("payments.csv.amount", "Amount"),
+    t("payments.csv.method", "Payment Method"),
+    t("payments.csv.status", "Status"),
+    t("payments.csv.netAmount", "Net Amount"),
+    t("payments.csv.createdAt", "Created At"),
+  ];
+
+  // Helper to escape CSV values
+  const escapeCSV = (value) => {
+    if (value === null || value === undefined) return "";
+    const stringValue = String(value);
+    if (
+      stringValue.includes(",") ||
+      stringValue.includes('"') ||
+      stringValue.includes("\n")
+    ) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    return stringValue;
+  };
+
+  // Helper to format dates
+  const formatDateForCSV = (date) => {
+    if (!date) return "";
+    try {
+      return new Date(date).toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  // Map payments to CSV rows
+  const rows = payments.map((payment) => {
+    return [
+      escapeCSV(payment.type?.toUpperCase() || ""),
+      escapeCSV(payment.description || ""),
+      escapeCSV(getClientName(payment)),
+      escapeCSV(payment.reference || ""),
+      escapeCSV(formatDateForCSV(payment.paidDate || payment.createdAt)),
+      escapeCSV(payment.amount?.toFixed(3) || "0.000"),
+      escapeCSV(payment.method || ""),
+      escapeCSV(payment.status?.toUpperCase() || ""),
+      escapeCSV(
+        payment.netAmount?.toFixed(3) || payment.amount?.toFixed(3) || "0.000"
+      ),
+      escapeCSV(formatDateForCSV(payment.createdAt)),
+    ].join(",");
+  });
+
+  return [headers.join(","), ...rows].join("\n");
+};
+
+/**
+ * Download CSV file
+ */
+const downloadCSV = (csvContent, filename = "payments-export.csv") => {
+  const BOM = "\uFEFF"; // UTF-8 BOM for Excel compatibility
+  const blob = new Blob([BOM + csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+};
+
+// ========================================================================
+// MAIN COMPONENT
+// ========================================================================
 
 const PaymentsList = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { showSuccess, showError, showInfo, promise } = useToast();
+
+  // ========================================================================
+  // STATE
+  // ========================================================================
 
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -194,7 +332,7 @@ const PaymentsList = () => {
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [searchTerm, setSearchTerm] = useState(""); 
+  const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [localType, setLocalType] = useState("all");
   const [localStatus, setLocalStatus] = useState("all");
@@ -207,53 +345,17 @@ const PaymentsList = () => {
     onConfirm: null,
   });
 
-  const stats = calculateStats(payments);
+  // ========================================================================
+  // COMPUTED VALUES
+  // ========================================================================
+
+  const stats = useMemo(() => calculateStats(payments), [payments]);
+
   const hasActiveFilters =
     filters.search.trim() !== "" ||
     filters.type !== "all" ||
     filters.status !== "all" ||
     filters.method !== "all";
-
-  useEffect(() => {
-    if (isFilterOpen) {
-      setLocalType(filters.type);
-      setLocalStatus(filters.status);
-      setLocalMethod(filters.method);
-    }
-  }, [isFilterOpen, filters]);
-useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      setFilters((prev) => {
-        if (prev.search === searchTerm) return prev;
-        return { ...prev, search: searchTerm, page: 1 };
-      });
-    }, 500);
-return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
-  const handleApplyFilters = () => {
-    setFilters((prev) => ({
-      ...prev,
-      type: localType,
-      status: localStatus,
-      method: localMethod,
-      page: 1,
-    }));
-    setIsFilterOpen(false);
-    showSuccess(
-      t("payments.notifications.filtersApplied") || "Filters applied"
-    );
-  };
-
-  const handleResetLocalFilters = () => {
-    setLocalType("all");
-    setLocalStatus("all");
-    setLocalMethod("all");
-  };
-
-  const handleClearAllFilters = () => {
-    setFilters(INITIAL_FILTERS);
-    showInfo(t("payments.notifications.filtersCleared"));
-  };
 
   const showEmptyState =
     !loading &&
@@ -261,19 +363,34 @@ return () => clearTimeout(delayDebounceFn);
     payments.length === 0 &&
     !hasActiveFilters &&
     hasInitialLoad;
+
   const showNoResults =
     !loading &&
     !error &&
     payments.length === 0 &&
     hasActiveFilters &&
     hasInitialLoad;
+
   const showData =
     hasInitialLoad && (payments.length > 0 || (loading && totalCount > 0));
+
+  const paginatedPayments = useMemo(() => {
+    if (payments.length > filters.limit) {
+      const startIndex = (filters.page - 1) * filters.limit;
+      return payments.slice(startIndex, startIndex + filters.limit);
+    }
+    return payments;
+  }, [payments, filters.page, filters.limit]);
+
+  // ========================================================================
+  // API CALLS
+  // ========================================================================
 
   const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+
       const params = {
         page: filters.page,
         limit: filters.limit,
@@ -282,15 +399,16 @@ return () => clearTimeout(delayDebounceFn);
         ...(filters.status !== "all" && { status: filters.status }),
         ...(filters.method !== "all" && { method: filters.method }),
       };
+
       const response = await paymentService.getAll(params);
       let data =
         response?.data?.data?.payments ||
         response?.data?.payments ||
         response?.payments ||
         [];
+
       if (!Array.isArray(data)) data = [];
 
-      // ✅ FIX: Robust Calculation
       const totalItems =
         response?.data?.data?.totalCount ||
         response?.pagination?.total ||
@@ -315,18 +433,36 @@ return () => clearTimeout(delayDebounceFn);
     }
   }, [filters, showError, t]);
 
+  // ========================================================================
+  // EFFECTS
+  // ========================================================================
+
   useEffect(() => {
     fetchPayments();
   }, [fetchPayments]);
 
-  // ✅ FIX: Client-Side Slicing Fallback
-  const paginatedPayments = useMemo(() => {
-    if (payments.length > filters.limit) {
-      const startIndex = (filters.page - 1) * filters.limit;
-      return payments.slice(startIndex, startIndex + filters.limit);
+  useEffect(() => {
+    if (isFilterOpen) {
+      setLocalType(filters.type);
+      setLocalStatus(filters.status);
+      setLocalMethod(filters.method);
     }
-    return payments;
-  }, [payments, filters.page, filters.limit]);
+  }, [isFilterOpen, filters]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.search === searchTerm) return prev;
+        return { ...prev, search: searchTerm, page: 1 };
+      });
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  // ========================================================================
+  // HANDLERS
+  // ========================================================================
 
   const updateFilter = useCallback((key, value) => {
     setFilters((prev) => ({
@@ -335,6 +471,30 @@ return () => clearTimeout(delayDebounceFn);
       ...(key !== "page" && { page: 1 }),
     }));
   }, []);
+
+  const handleApplyFilters = useCallback(() => {
+    setFilters((prev) => ({
+      ...prev,
+      type: localType,
+      status: localStatus,
+      method: localMethod,
+      page: 1,
+    }));
+    setIsFilterOpen(false);
+    showSuccess(t("payments.notifications.filtersApplied") || "Filters applied");
+  }, [localType, localStatus, localMethod, showSuccess, t]);
+
+  const handleResetLocalFilters = useCallback(() => {
+    setLocalType("all");
+    setLocalStatus("all");
+    setLocalMethod("all");
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    setFilters(INITIAL_FILTERS);
+    setSearchTerm("");
+    showInfo(t("payments.notifications.filtersCleared"));
+  }, [showInfo, t]);
 
   const handleDeleteConfirm = useCallback(
     async (paymentId, paymentName) => {
@@ -352,7 +512,9 @@ return () => clearTimeout(delayDebounceFn);
           onConfirm: null,
         });
         if (selectedPayment?._id === paymentId) setIsDetailModalOpen(false);
-      } catch (err) {}
+      } catch (err) {
+        // Error handled by promise
+      }
     },
     [fetchPayments, selectedPayment, promise, t]
   );
@@ -368,11 +530,42 @@ return () => clearTimeout(delayDebounceFn);
     },
     [handleDeleteConfirm]
   );
+
   const handleExportCSV = useCallback(() => {
-    if (!payments.length)
-      return showError(t("payments.notifications.noPaymentsExport"));
-    showSuccess(t("payments.notifications.exportSuccess"));
-  }, [payments.length, showError, showSuccess, t]);
+    if (!payments.length) {
+      return showError(
+        t("payments.notifications.noPaymentsExport", "No payments to export")
+      );
+    }
+
+    try {
+      const csvContent = convertToCSV(payments, t);
+
+      if (!csvContent) {
+        return showError(
+          t("payments.notifications.exportError", "Failed to generate CSV")
+        );
+      }
+
+      const date = new Date().toISOString().split("T")[0];
+      const filename = `payments-${date}.csv`;
+
+      downloadCSV(csvContent, filename);
+
+      showSuccess(
+        t("payments.notifications.exportSuccess", {
+          count: payments.length,
+          defaultValue: `Successfully exported ${payments.length} payments`,
+        })
+      );
+    } catch (error) {
+      console.error("CSV Export Error:", error);
+      showError(
+        t("payments.notifications.exportError", "Failed to export payments")
+      );
+    }
+  }, [payments, showError, showSuccess, t]);
+
   const handleFormSuccess = useCallback(() => {
     fetchPayments();
     setIsFormOpen(false);
@@ -384,165 +577,180 @@ return () => clearTimeout(delayDebounceFn);
     );
   }, [fetchPayments, selectedPayment, showSuccess, t]);
 
-  const tableColumns = [
-    {
-      header: t("payments.table.type"),
-      accessor: "type",
-      width: "10%",
-      sortable: true,
-      render: (row) => (
-        <Badge variant={getBadgeVariant(row.type, "type")}>
-          <div className="flex items-center gap-1">
-            {row.type === PAYMENT_TYPES.INCOME ? (
-              <TrendingUp className="w-3 h-3" />
-            ) : (
-              <TrendingDown className="w-3 h-3" />
-            )}
-            <span className="capitalize">
-              {t(`payments.types.${row.type}`)}
-            </span>
-          </div>
-        </Badge>
-      ),
-    },
-    {
-      header: t("payments.table.description"),
-      accessor: "description",
-      width: "25%",
-      sortable: true,
-      render: (row) => (
-        <div>
-          <div className="font-medium text-gray-900 dark:text-white">
-            {row.description || "N/A"}
-          </div>
-          {row.reference && (
-            <div className="text-xs text-gray-500">
-              {t("payments.table.reference")}: {row.reference}
+  // ========================================================================
+  // TABLE CONFIGURATION
+  // ========================================================================
+
+  const tableColumns = useMemo(
+    () => [
+      {
+        header: t("payments.table.type"),
+        accessor: "type",
+        width: "10%",
+        sortable: true,
+        render: (row) => (
+          <Badge variant={getBadgeVariant(row.type, "type")}>
+            <div className="flex items-center gap-1">
+              {row.type === PAYMENT_TYPES.INCOME ? (
+                <TrendingUp className="w-3 h-3" />
+              ) : (
+                <TrendingDown className="w-3 h-3" />
+              )}
+              <span className="capitalize">
+                {t(`payments.types.${row.type}`)}
+              </span>
             </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: t("payments.table.client"),
-      accessor: "client",
-      width: "15%",
-      render: (row) => (
-        <div className="text-gray-600 dark:text-gray-400">
-          {getClientName(row)}
-        </div>
-      ),
-    },
-    {
-      header: t("payments.table.date"),
-      accessor: "date",
-      width: "12%",
-      sortable: true,
-      render: (row) => (
-        <div className="text-gray-600 dark:text-gray-400">
-          {formatDate(row.paidDate || row.createdAt)}
-        </div>
-      ),
-    },
-    {
-      header: t("payments.table.amount"),
-      accessor: "amount",
-      width: "13%",
-      sortable: true,
-      render: (row) => (
-        <div
-          className={`font-bold ${row.type === PAYMENT_TYPES.INCOME ? "text-green-600" : "text-red-600"}`}
-        >
-          {row.type === PAYMENT_TYPES.INCOME ? "+" : "-"}
-          {formatCurrency(row.amount)}
-        </div>
-      ),
-    },
-    {
-      header: t("payments.table.status"),
-      accessor: "status",
-      width: "10%",
-      sortable: true,
-      render: (row) => (
-        <Badge variant={getBadgeVariant(row.status, "status")}>
-          {t(`payments.statuses.${row.status}`) || "Unknown"}
-        </Badge>
-      ),
-    },
-    {
-      header: t("payments.table.actions"),
-      accessor: "actions",
-      width: "15%",
-      className: "text-center",
-      render: (row) => (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedPayment(row);
-              setIsDetailModalOpen(true);
-            }}
-            className="text-gray-500 hover:text-orange-600"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedPayment(row);
-              setIsFormOpen(true);
-            }}
-            className="text-blue-500 hover:text-blue-700"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          {row.type === PAYMENT_TYPES.INCOME &&
-            [PAYMENT_STATUSES.COMPLETED, PAYMENT_STATUSES.PAID].includes(
-              row.status?.toLowerCase()
-            ) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedPayment(row);
-                  setIsRefundModalOpen(true);
-                }}
-                className="text-yellow-500 hover:text-yellow-700"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
+          </Badge>
+        ),
+      },
+      {
+        header: t("payments.table.description"),
+        accessor: "description",
+        width: "25%",
+        sortable: true,
+        render: (row) => (
+          <div>
+            <div className="font-medium text-gray-900 dark:text-white">
+              {row.description || "N/A"}
+            </div>
+            {row.reference && (
+              <div className="text-xs text-gray-500">
+                {t("payments.table.reference")}: {row.reference}
+              </div>
             )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeletePayment(row._id, row.description);
-            }}
-            className="text-red-500 hover:text-red-700"
+          </div>
+        ),
+      },
+      {
+        header: t("payments.table.client"),
+        accessor: "client",
+        width: "15%",
+        render: (row) => (
+          <div className="text-gray-600 dark:text-gray-400">
+            {getClientName(row)}
+          </div>
+        ),
+      },
+      {
+        header: t("payments.table.date"),
+        accessor: "date",
+        width: "12%",
+        sortable: true,
+        render: (row) => (
+          <div className="text-gray-600 dark:text-gray-400">
+            {formatDate(row.paidDate || row.createdAt)}
+          </div>
+        ),
+      },
+      {
+        header: t("payments.table.amount"),
+        accessor: "amount",
+        width: "13%",
+        sortable: true,
+        render: (row) => (
+          <div
+            className={`font-bold ${
+              row.type === PAYMENT_TYPES.INCOME
+                ? "text-green-600"
+                : "text-red-600"
+            }`}
           >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+            {row.type === PAYMENT_TYPES.INCOME ? "+" : "-"}
+            {formatCurrency(row.amount)}
+          </div>
+        ),
+      },
+      {
+        header: t("payments.table.status"),
+        accessor: "status",
+        width: "10%",
+        sortable: true,
+        render: (row) => (
+          <Badge variant={getBadgeVariant(row.status, "status")}>
+            {t(`payments.statuses.${row.status}`) || "Unknown"}
+          </Badge>
+        ),
+      },
+      {
+        header: t("payments.table.actions"),
+        accessor: "actions",
+        width: "15%",
+        className: "text-center",
+        render: (row) => (
+          <div className="flex justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPayment(row);
+                setIsDetailModalOpen(true);
+              }}
+              className="text-gray-500 hover:text-orange-600"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPayment(row);
+                setIsFormOpen(true);
+              }}
+              className="text-blue-500 hover:text-blue-700"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            {row.type === PAYMENT_TYPES.INCOME &&
+              [PAYMENT_STATUSES.COMPLETED, PAYMENT_STATUSES.PAID].includes(
+                row.status?.toLowerCase()
+              ) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPayment(row);
+                    setIsRefundModalOpen(true);
+                  }}
+                  className="text-yellow-500 hover:text-yellow-700"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeletePayment(row._id, row.description);
+              }}
+              className="text-red-500 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [t, handleDeletePayment]
+  );
+
+  // ========================================================================
+  // RENDER
+  // ========================================================================
 
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {t("payments.title")}
           </h1>
           <p className="mt-1 text-gray-500 dark:text-gray-400">
-            {t("payments.subtitle")}{" "}
-            {/*hasInitialLoad && totalCount > 0 &&` • ${t("payments.notifications.showingResults", { count: payments.length, total: totalCount })}`*/}
+            {t("payments.subtitle")}
           </p>
         </div>
         {!showEmptyState && (
@@ -572,6 +780,7 @@ return () => clearTimeout(delayDebounceFn);
         )}
       </div>
 
+      {/* Stats Cards */}
       {!showEmptyState && hasInitialLoad && payments.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
           {STAT_CONFIGS.map((config) => {
@@ -613,8 +822,10 @@ return () => clearTimeout(delayDebounceFn);
                 </div>
               );
             }
+
             const mainValue = config.getValue(stats);
             const subValue = config.getSubValue(stats);
+
             return (
               <div
                 key={config.key}
@@ -630,7 +841,11 @@ return () => clearTimeout(delayDebounceFn);
                 </div>
                 <div className="space-y-1">
                   <div
-                    className={`text-2xl font-bold ${config.isDynamic && mainValue < 0 ? "text-red-600" : config.valueClass}`}
+                    className={`text-2xl font-bold ${
+                      config.isDynamic && mainValue < 0
+                        ? "text-red-600"
+                        : config.valueClass
+                    }`}
                   >
                     {formatCurrency(mainValue)}
                   </div>
@@ -645,6 +860,7 @@ return () => clearTimeout(delayDebounceFn);
         </div>
       )}
 
+      {/* Search & Filters */}
       {!showEmptyState && hasInitialLoad && (
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -661,7 +877,11 @@ return () => clearTimeout(delayDebounceFn);
               <Button
                 variant={hasActiveFilters ? "primary" : "outline"}
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+                className={`flex items-center gap-2 transition-all whitespace-nowrap ${
+                  isFilterOpen
+                    ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900"
+                    : ""
+                }`}
               >
                 <Filter className="w-4 h-4" />
                 {t("payments.filters.advanced") || "Filters"}
@@ -683,6 +903,8 @@ return () => clearTimeout(delayDebounceFn);
               )}
             </div>
           </div>
+
+          {/* Filter Panel */}
           {isFilterOpen && (
             <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex justify-between items-center mb-4">
@@ -702,9 +924,9 @@ return () => clearTimeout(delayDebounceFn);
                   value={localType}
                   onChange={(e) => setLocalType(e.target.value)}
                   options={[
-                    { value: "all", label: "All Types" },
-                    { value: "income", label: "Income" },
-                    { value: "expense", label: "Expense" },
+                    { value: "all", label: t("payments.filters.allTypes", "All Types") },
+                    { value: "income", label: t("payments.types.income", "Income") },
+                    { value: "expense", label: t("payments.types.expense", "Expense") },
                   ]}
                   className="w-full"
                 />
@@ -713,9 +935,9 @@ return () => clearTimeout(delayDebounceFn);
                   value={localStatus}
                   onChange={(e) => setLocalStatus(e.target.value)}
                   options={[
-                    { value: "all", label: "All Status" },
-                    { value: "pending", label: "Pending" },
-                    { value: "completed", label: "Completed" },
+                    { value: "all", label: t("payments.filters.allStatus", "All Status") },
+                    { value: "pending", label: t("payments.statuses.pending", "Pending") },
+                    { value: "completed", label: t("payments.statuses.completed", "Completed") },
                   ]}
                   className="w-full"
                 />
@@ -724,11 +946,11 @@ return () => clearTimeout(delayDebounceFn);
                   value={localMethod}
                   onChange={(e) => setLocalMethod(e.target.value)}
                   options={[
-                    { value: "all", label: "All Methods" },
-                    { value: "cash", label: "Cash" },
-                    { value: "card", label: "Card" },
-                    { value: "transfer", label: "Transfer" },
-                    { value: "check", label: "Check" },
+                    { value: "all", label: t("payments.filters.allMethods", "All Methods") },
+                    { value: "cash", label: t("payments.methods.cash", "Cash") },
+                    { value: "card", label: t("payments.methods.card", "Card") },
+                    { value: "bank_transfer", label: t("payments.methods.bank_transfer", "Transfer") },
+                    { value: "check", label: t("payments.methods.check", "Check") },
                   ]}
                   className="w-full"
                 />
@@ -754,7 +976,9 @@ return () => clearTimeout(delayDebounceFn);
         </div>
       )}
 
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative">
+        {/* Loading State */}
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
             <OrbitLoader />
@@ -763,11 +987,12 @@ return () => clearTimeout(delayDebounceFn);
             </p>
           </div>
         )}
+
+        {/* Data Table */}
         {showData && (
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <Table
               columns={tableColumns}
-              // ✅ Pass sliced data
               data={paginatedPayments}
               loading={loading}
               emptyMessage={t("payments.table.empty")}
@@ -791,6 +1016,8 @@ return () => clearTimeout(delayDebounceFn);
             />
           </div>
         )}
+
+        {/* No Results State */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -807,6 +1034,8 @@ return () => clearTimeout(delayDebounceFn);
             </Button>
           </div>
         )}
+
+        {/* Empty State */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -821,8 +1050,10 @@ return () => clearTimeout(delayDebounceFn);
               {t("payments.table.noPayments")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-              Get started by recording your first payment transaction to track
-              your financials.
+              {t(
+                "payments.emptyStateDescription",
+                "Get started by recording your first payment transaction to track your financials."
+              )}
             </p>
             <Button
               onClick={() => {
@@ -840,6 +1071,7 @@ return () => clearTimeout(delayDebounceFn);
         )}
       </div>
 
+      {/* Modals */}
       <PaymentDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
@@ -851,6 +1083,7 @@ return () => clearTimeout(delayDebounceFn);
         }}
         refreshData={fetchPayments}
       />
+
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}

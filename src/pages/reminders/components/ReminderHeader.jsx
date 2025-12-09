@@ -5,12 +5,11 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  Clock,
-  XCircle,
+  RotateCcw,
   ArrowLeft,
 } from "lucide-react";
 
-// ✅ Generic Components
+// Generic Components
 import Button from "../../../components/common/Button";
 import Badge, { StatusBadge } from "../../../components/common/Badge";
 
@@ -20,8 +19,6 @@ const ReminderHeader = ({
   onEdit,
   onDelete,
   onComplete,
-  onSnooze,
-  onCancel,
   actionLoading,
 }) => {
   const { t } = useTranslation();
@@ -30,37 +27,36 @@ const ReminderHeader = ({
   const getPriorityVariant = (priority) => {
     const map = {
       urgent: "danger",
-      high: "warning", // Orange/Red
-      medium: "info", // Blue
-      low: "secondary", // Gray
+      high: "warning",
+      medium: "info",
+      low: "secondary",
     };
     return map[priority?.toLowerCase()] || "secondary";
   };
 
+  const isCompleted = reminder.status === "completed";
+
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8 dark:bg-gray-800 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 sticky top-8">
+      
       {/* Top Navigation & Actions */}
       <div className="flex justify-between items-center gap-2 mb-6">
-        <div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">
-              {t("reminders.backToReminders", "Back")}
-            </span>
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBack}
+          icon={ArrowLeft}
+          className="flex items-center gap-2"
+        >
+          <span className="hidden sm:inline">{t("common.back", "Back")}</span>
+        </Button>
 
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={onEdit}
-            title={t("reminders.actions.edit", "Edit")}
+            title={t("common.edit", "Edit")}
             className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30"
           >
             <Edit className="w-4 h-4" />
@@ -70,7 +66,7 @@ const ReminderHeader = ({
             variant="outline"
             size="sm"
             onClick={onDelete}
-            title={t("reminders.actions.delete", "Delete")}
+            title={t("common.delete", "Delete")}
             className="text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30"
           >
             <Trash2 className="w-4 h-4" />
@@ -80,11 +76,11 @@ const ReminderHeader = ({
 
       {/* Reminder Identity */}
       <div className="text-center mb-6">
-        <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto shadow-md">
-          <Bell className="w-8 h-8" />
+        <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto shadow-lg mb-4">
+          <Bell className="w-10 h-10" />
         </div>
 
-        <h1 className="text-xl font-bold text-gray-900 mt-4 dark:text-white break-words leading-tight">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white break-words leading-tight px-2">
           {reminder.title || t("reminders.untitled", "Untitled Reminder")}
         </h1>
 
@@ -97,49 +93,81 @@ const ReminderHeader = ({
               size="md"
               className="capitalize"
             >
-              {reminder.priority}
+              {t(`reminders.priority.${reminder.priority}`, reminder.priority)}
             </Badge>
           )}
         </div>
       </div>
 
-      {/* Primary Actions (Snooze/Complete/Cancel) */}
-      {reminder.status === "active" && (
-        <div className="flex flex-col gap-3 pt-2 border-t border-gray-100 dark:border-gray-700 mt-2">
-          <Button
-            onClick={onComplete}
-            disabled={actionLoading}
-            className="w-full justify-center bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-            icon={CheckCircle}
-          >
-            {actionLoading
-              ? t("reminders.completing", "Completing...")
-              : t("reminders.markComplete", "Mark Complete")}
-          </Button>
+      {/* Divider */}
+      <div className="border-t border-gray-100 dark:border-gray-700 my-6"></div>
 
-          <Button
-            onClick={onSnooze}
-            disabled={actionLoading}
-            variant="outline"
-            className="w-full justify-center text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/20"
-            icon={Clock}
-          >
-            {actionLoading
-              ? t("reminders.snoozing", "Snoozing...")
-              : t("reminders.snooze1Hour", "Snooze 1 Hour")}
-          </Button>
+      {/* Quick Info */}
+      <div className="space-y-3 mb-6">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-500 dark:text-gray-400">
+            {t("reminders.form.fields.type", "Type")}
+          </span>
+          <Badge variant="secondary" size="sm" className="capitalize">
+            {t(`reminders.type.${reminder.type}`, reminder.type)}
+          </Badge>
+        </div>
 
-          <Button
-            onClick={onCancel}
-            disabled={actionLoading}
-            variant="outline"
-            className="w-full justify-center text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-            icon={XCircle}
-          >
-            {actionLoading
-              ? t("reminders.cancelling", "Cancelling...")
-              : t("reminders.cancelReminder", "Cancel Reminder")}
-          </Button>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-500 dark:text-gray-400">
+            {t("reminders.form.fields.date", "Date")}
+          </span>
+          <span className="font-medium text-gray-900 dark:text-white">
+            {new Date(reminder.reminderDate).toLocaleDateString()}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-500 dark:text-gray-400">
+            {t("reminders.form.fields.time", "Time")}
+          </span>
+          <span className="font-medium text-gray-900 dark:text-white">
+            {reminder.reminderTime}
+          </span>
+        </div>
+      </div>
+
+      {/* Primary Action - Toggle Complete */}
+      <Button
+        onClick={onComplete}
+        disabled={actionLoading}
+        className={`w-full justify-center ${
+          isCompleted
+            ? "bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800"
+            : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+        }`}
+        icon={isCompleted ? RotateCcw : CheckCircle}
+        size="lg"
+      >
+        {actionLoading
+          ? t("reminders.updating", "Updating...")
+          : isCompleted
+          ? t("reminders.actions.reactivate", "Reactivate")
+          : t("reminders.actions.markComplete", "Mark Complete")}
+      </Button>
+
+      {/* Metadata Footer */}
+      {reminder.createdBy && (
+        <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+            <div className="flex items-center justify-between">
+              <span>{t("common.createdBy", "Created by")}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {reminder.createdBy?.name || t("common.unknown", "Unknown")}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>{t("common.createdAt", "Created")}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {new Date(reminder.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,19 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Save,
-  ArrowRight,
-  ArrowLeft,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
+import { Save, ArrowRight, ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../../hooks/useToast";
-
-// Context
 import { useEventContext } from "./EventFormContext";
-
-// Components
 import FormHeader from "./FormHeader";
 import Step1EventDetails from "./steps/Step1EventDetails";
 import Step2ClientSelection from "./steps/Step2ClientSelection";
@@ -21,14 +11,9 @@ import Step3VenuePricing from "./steps/Step3VenuePricing";
 import Step4Payment from "./steps/Step4Payment";
 import Step5Review from "./steps/Step5Review";
 import DraftRestoreModal from "./components/DraftRestoreModal";
-
-// Generic UI
 import Button from "../../../components/common/Button";
+import { eventService, paymentService, invoiceService } from "../../../api";
 
-// Services
-import { eventService, paymentService, invoiceService, clientService, supplyService } from "../../../api";
-
-// --- MAIN FORM LAYOUT ---
 const SharedEventForm = ({ onSuccess }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -52,48 +37,31 @@ const SharedEventForm = ({ onSuccess }) => {
 
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState(null);
-
-  // Focus management
   const containerRef = useRef(null);
 
   const steps = [
-    {
-      id: 1,
-      title: t("eventForm.steps.eventDetails"),
-      component: Step1EventDetails,
-    },
-    {
-      id: 2,
-      title: t("eventForm.steps.clientSelection"),
-      component: Step2ClientSelection,
-    },
-    {
-      id: 3,
-      title: t("eventForm.steps.venuePricing"),
-      component: Step3VenuePricing,
-    },
+    { id: 1, title: t("eventForm.steps.eventDetails"), component: Step1EventDetails },
+    { id: 2, title: t("eventForm.steps.clientSelection"), component: Step2ClientSelection },
+    { id: 3, title: t("eventForm.steps.venuePricing"), component: Step3VenuePricing },
     { id: 4, title: t("eventForm.steps.payment"), component: Step4Payment },
     { id: 5, title: t("eventForm.steps.review"), component: Step5Review },
   ];
 
   const CurrentStepComponent = steps[currentStep - 1].component;
 
-  // --- LOGIC (Draft/Submit) ---
+  // Draft logic
   useEffect(() => {
     if (!meta.isEditMode) {
       const draft = localStorage.getItem("eventFormDraft");
       if (draft) {
         try {
           const parsed = JSON.parse(draft);
-          if (
-            Date.now() - new Date(parsed.timestamp).getTime() < 86400000 &&
-            parsed.savedData
-          ) {
+          if (Date.now() - new Date(parsed.timestamp).getTime() < 86400000 && parsed.savedData) {
             setDraftData(parsed);
             setShowDraftModal(true);
           }
         } catch (e) {
-          console.error(e);
+          console.error("Draft restore error:", e);
         }
       }
     }
@@ -115,11 +83,10 @@ const SharedEventForm = ({ onSuccess }) => {
     }
   }, [formData, currentStep, meta.isEditMode]);
 
-  // Smart Enter Key Logic
+  // Enter key navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === "TEXTAREA") return;
-
       if (e.key === "Enter") {
         e.preventDefault();
         if (currentStep < totalSteps) {
@@ -132,11 +99,11 @@ const SharedEventForm = ({ onSuccess }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentStep, totalSteps, goToNextStep]); // eslint-disable-line
+  }, [currentStep, totalSteps, goToNextStep]);
 
   const handleRestoreDraft = () => {
     if (draftData?.savedData) {
-      setFormData((prev) => ({ ...prev, ...draftData.savedData }));
+      setFormData(prev => ({ ...prev, ...draftData.savedData }));
       goToStep(draftData.currentStep || 1);
     }
     setDraftData(null);
@@ -149,21 +116,32 @@ const SharedEventForm = ({ onSuccess }) => {
     setShowDraftModal(false);
   };
 
+  // ============================================
+  // ✅ FIXED SUBMIT HANDLER
+  // ============================================
   const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
 
     try {
       setLoading(true);
-      const finalEndDate = formData.sameDayEvent
-        ? formData.startDate
-        : formData.endDate;
+      const finalEndDate = formData.sameDayEvent ? formData.startDate : formData.endDate;
 
+      // ✅ FIX: Extract only IDs from objects
       const submitData = {
         ...formData,
         endDate: finalEndDate,
-        guestCount: formData.guestCount
-          ? parseInt(formData.guestCount)
-          : undefined,
+        guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined,
+        
+        // ✅ Ensure clientId is a string, not an object
+        clientId: typeof formData.clientId === "object" 
+          ? formData.clientId._id 
+          : formData.clientId,
+        
+        // ✅ Ensure venueSpaceId is a string
+        venueSpaceId: typeof formData.venueSpaceId === "object"
+          ? formData.venueSpaceId._id
+          : formData.venueSpaceId,
+        
         pricing: {
           basePrice: calculations.basePrice,
           discount: parseFloat(formData.pricing.discount) || 0,
@@ -171,17 +149,44 @@ const SharedEventForm = ({ onSuccess }) => {
           taxRate: calculations.taxRate,
           totalAmount: calculations.totalPrice,
         },
-        partners: calculations.partnersDetails.map((p) => ({
-          partner: p.partner,
+        
+        // ✅ Clean partner data - only IDs and primitives
+        partners: calculations.partnersDetails.map(p => ({
+          partner: typeof p.partner === "object" ? p.partner._id : p.partner,
           service: p.service,
           cost: p.calculatedCost,
           hours: p.priceType === "hourly" ? p.displayHours : undefined,
-          status: p.status,
+          status: p.status || "confirmed",
         })),
+        
+        // ✅ Clean supply data - only IDs and primitives
+        supplies: (formData.supplies || []).map(s => ({
+          supply: typeof s.supply === "object" ? s.supply._id : s.supply,
+          supplyName: s.supplyName,
+          supplyCategoryId: typeof s.supplyCategoryId === "object" 
+            ? s.supplyCategoryId._id 
+            : s.supplyCategoryId,
+          supplyCategoryName: s.supplyCategoryName,
+          supplyUnit: s.supplyUnit,
+          quantityRequested: s.quantityRequested,
+          costPerUnit: s.costPerUnit,
+          chargePerUnit: s.chargePerUnit,
+          pricingType: s.pricingType,
+        })),
+        
+        supplySummary: {
+          totalCost: calculations.suppliesTotalCost,
+          totalCharge: calculations.suppliesTotalCharge,
+          totalMargin: calculations.suppliesMargin,
+          includeInBasePrice: formData.supplySummary?.includeInBasePrice !== false,
+        },
       };
 
+      // Remove fields that shouldn't be sent to API
       delete submitData.payment;
       delete submitData.createInvoice;
+
+      console.log("📤 Submitting cleaned data:", submitData);
 
       let response;
       if (meta.isEditMode) {
@@ -191,18 +196,14 @@ const SharedEventForm = ({ onSuccess }) => {
         localStorage.removeItem("eventFormDraft");
       }
 
-      const createdEventId =
-        response.event?._id ||
-        response.data?._id ||
-        meta.eventId ||
-        response._id;
-      const createdVenueId =
-        response.event?.venueId || response.data?.venueId || submitData.venueId;
+      const createdEventId = response.event?._id || response.data?._id || meta.eventId || response._id;
+      const createdVenueId = response.event?.venueId || response.data?.venueId || submitData.venueId;
 
+      // Handle payment if provided
       if (formData.payment.amount && parseFloat(formData.payment.amount) > 0) {
         await paymentService.create({
           event: createdEventId,
-          client: formData.clientId,
+          client: submitData.clientId,
           amount: parseFloat(formData.payment.amount),
           method: formData.payment.paymentMethod,
           status: formData.payment.status,
@@ -212,6 +213,7 @@ const SharedEventForm = ({ onSuccess }) => {
         });
       }
 
+      // Handle invoice creation
       if (formData.createInvoice && !meta.isEditMode) {
         try {
           const items = [
@@ -222,7 +224,7 @@ const SharedEventForm = ({ onSuccess }) => {
               amount: calculations.basePrice,
               category: "venue_rental",
             },
-            ...calculations.partnersDetails.map((p) => ({
+            ...calculations.partnersDetails.map(p => ({
               description: `${p.partnerName} - ${p.service}`,
               quantity: 1,
               rate: p.calculatedCost,
@@ -233,7 +235,7 @@ const SharedEventForm = ({ onSuccess }) => {
 
           await invoiceService.create({
             venue: createdVenueId,
-            client: formData.clientId,
+            client: submitData.clientId,
             event: createdEventId,
             invoiceType: "client",
             status: "draft",
@@ -246,13 +248,13 @@ const SharedEventForm = ({ onSuccess }) => {
             notes: formData.notes,
           });
         } catch (invError) {
-          console.error("Invoice Gen Error:", invError);
+          console.error("Invoice creation error:", invError);
         }
       }
 
       if (onSuccess) onSuccess(response);
     } catch (error) {
-      console.error(error);
+      console.error("Submit error:", error);
       apiError(error, t("eventForm.messages.saveFailed"));
     } finally {
       setLoading(false);
@@ -265,11 +267,7 @@ const SharedEventForm = ({ onSuccess }) => {
   };
 
   return (
-    // Root container: Flex column ensures footer pushes down. min-h-screen covers full height.
-    <div
-      className="min-h-screen flex flex-col bg-white dark:bg-gray-900 relative"
-      ref={containerRef}
-    >
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 relative" ref={containerRef}>
       {showDraftModal && (
         <DraftRestoreModal
           draftData={draftData}
@@ -278,7 +276,6 @@ const SharedEventForm = ({ onSuccess }) => {
         />
       )}
 
-      {/* Header (Sticky Top handled internally by FormHeader) */}
       <FormHeader
         currentStep={currentStep}
         totalSteps={totalSteps}
@@ -286,9 +283,7 @@ const SharedEventForm = ({ onSuccess }) => {
         onStepClick={goToStep}
       />
 
-      {/* MAIN CONTENT: Grows to fill space (flex-1) */}
       <div className="flex-1 w-full px-4 mt-8 pb-12">
-        {/* Validation Banner */}
         {Object.keys(errors).length > 0 && (
           <div className="mb-6 animate-in slide-in-from-top-2">
             <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
@@ -296,10 +291,10 @@ const SharedEventForm = ({ onSuccess }) => {
                 <AlertCircle className="text-red-500" size={20} />
                 <div>
                   <h3 className="font-bold text-red-800 dark:text-red-200 text-sm">
-                    Action Required
+                    {t("eventForm.validation.actionRequired")}
                   </h3>
                   <p className="text-red-600 dark:text-red-300 text-xs mt-0.5">
-                    Please fix the errors below to proceed.
+                    {t("eventForm.validation.fixErrors")}
                   </p>
                 </div>
               </div>
@@ -307,25 +302,17 @@ const SharedEventForm = ({ onSuccess }) => {
           </div>
         )}
 
-        {/* Step Content */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
           <CurrentStepComponent />
         </div>
       </div>
 
-      {/* FOOTER: Sticky Bottom
-          - sticky bottom-0: Sticks to viewport bottom when scrolling
-          - w-full: Background spans full width
-          - Inner div (max-w-5xl mx-auto): Aligns content perfectly with the form above
-      */}
       <div className="sticky bottom-0 z-40 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
           <Button
             type="button"
             variant="outline"
-            onClick={
-              currentStep === 1 ? () => navigate("/events") : goToPrevStep
-            }
+            onClick={currentStep === 1 ? () => navigate("/events") : goToPrevStep}
             icon={ArrowLeft}
             className="text-gray-500 hover:text-gray-900 dark:text-gray-400"
           >
@@ -342,7 +329,7 @@ const SharedEventForm = ({ onSuccess }) => {
                 loading={loading}
                 className="hidden sm:flex"
               >
-                Quick Save
+                {t("eventForm.buttons.updateEvent")}
               </Button>
             )}
 

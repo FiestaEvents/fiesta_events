@@ -846,7 +846,7 @@ const InvoiceFormPage = () => {
     );
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans text-slate-800 dark:text-slate-100">
+    <div className="flex flex-col lg:flex-row h-full bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans text-slate-800 dark:text-slate-100">
       {/* LEFT PANEL */}
       <div className="flex-1 flex flex-col h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl z-10 max-w-2xl">
         {/* HEADER */}
@@ -1205,7 +1205,6 @@ const InvoiceFormPage = () => {
           </div>
         </div>
         <div className="flex-1 overflow-auto p-8 flex justify-center items-start bg-gray-800/50">
-          <div className="origin-top transform scale-[0.65] xl:scale-[0.75] shadow-2xl transition-all duration-300">
             <LiveInvoicePreview
               settings={settings}
               data={formData}
@@ -1214,7 +1213,6 @@ const InvoiceFormPage = () => {
               companyName="My Venue"
             />
           </div>
-        </div>
       </div>
     </div>
   );

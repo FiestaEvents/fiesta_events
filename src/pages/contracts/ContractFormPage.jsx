@@ -277,7 +277,7 @@ const ContractFormPage = () => {
   if (fetchLoading) return <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><OrbitLoader /></div>;
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden text-slate-800 dark:text-slate-100 font-sans" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="flex flex-col lg:flex-row h-full bg-gray-50 dark:bg-gray-900 overflow-hidden text-slate-800 dark:text-slate-100 font-sans" dir={isRTL ? "rtl" : "ltr"}>
       
       {/* --- LEFT: FORM PANEL --- */}
       <div className={`flex-1 flex flex-col h-full bg-white dark:bg-[#1f2937] border-r border-gray-200 dark:border-gray-700 z-10 shadow-xl max-w-2xl ${isRTL ? 'border-l border-r-0' : ''}`}>
@@ -571,10 +571,8 @@ const ContractFormPage = () => {
 
       {/* --- RIGHT: PREVIEW --- */}
       <div className={`hidden lg:flex flex-1 bg-gray-900 items-center justify-center relative ${isRTL ? 'border-r' : 'border-l'} border-gray-700`}>
-        <div className="transform scale-[0.70] shadow-2xl origin-center">
           <LiveContractPreview settings={settings} data={{...formData, services}} />
         </div>
-      </div>
     </div>
   );
 };

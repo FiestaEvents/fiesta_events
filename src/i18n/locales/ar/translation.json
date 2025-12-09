@@ -787,8 +787,13 @@
       "previous": "السابق",
       "continue": "متابعة",
       "updateEvent": "تحديث الحدث",
-      "createEvent": "إنشاء الحدث"
+      "createEvent": "إنشاء الحدث",
+      "quickSave ": "حفظ سريع"
     },
+    "validation": {
+    "actionRequired": "إجراء مطلوب",
+    "fixErrors": "يرجى تصحيح الأخطاء أدناه للمتابعة"
+  },
     "messages": {
       "draftRestored": "تم استعادة المسودة بنجاح",
       "clientNameRequired": "اسم العميل مطلوب",
@@ -1259,6 +1264,7 @@
       "other": "أخرى"
     },
     "messages": {
+      "resultsCount": "تم العثور على {{count}} مهمة",
       "noResults": "لا توجد مهام",
       "noResultsDescription": "حاول تعديل البحث أو المرشحات للعثور على ما تبحث عنه.",
       "noTasks": "لا توجد مهام حتى الآن",
@@ -1343,31 +1349,45 @@
       "actions": "إجراءات"
     },
     "form": {
-      "createTitle": "إنشاء مهمة جديدة",
-      "editTitle": "تعديل المهمة",
-      "steps": {
-        "basicInfo": "المعلومات الأساسية",
-        "planning": "التخطيط",
-        "checklist": "قائمة المراجعة"
+        "createTitle": "إنشاء مهمة جديدة",
+        "editTitle": "تعديل المهمة",
+        "steps": {
+          "basicInfo": "المعلومات الأساسية",
+          "planning": "التخطيط",
+          "checklist": "قائمة المراجعة"
+        },
+        "fields": {
+          "title": "العنوان",
+          "titlePlaceholder": "أدخل عنوان المهمة",
+          "description": "الوصف",
+          "descriptionPlaceholder": "أدخل تفاصيل المهمة",
+          "priority": "الأولوية",
+          "status": "الحالة",
+          "category": "الفئة",
+          "dueDate": "تاريخ الاستحقاق",
+          "assignedTo": "معين إلى",
+          "unassigned": "غير معين",
+          "tags": "الوسوم",
+          "tagPlaceholder": "إضافة وسم",
+          "subtasks": "المهام الفرعية",
+          "subtaskTitlePlaceholder": "أدخل عنوان المهمة الفرعية"
+        },
+        "buttons": {
+          "add": "إضافة",
+          "next": "التالي",
+          "previous": "السابق",
+          "create": "إنشاء المهمة",
+          "update": "تحديث المهمة",
+          "updateNow": "تحديث الآن"
+        },
+        "validation": {
+          "titleRequired": "العنوان مطلوب",
+          "categoryRequired": "الفئة مطلوبة",
+          "dueDateRequired": "تاريخ الاستحقاق مطلوب",
+          "fixErrors": "يرجى إصلاح الأخطاء",
+          "fixAllErrors": "يرجى إصلاح جميع الأخطاء قبل الإرسال"
+        }
       },
-      "fields": {
-        "title": "العنوان",
-        "titlePlaceholder": "أدخل عنوان المهمة",
-        "description": "الوصف",
-        "descriptionPlaceholder": "أدخل تفاصيل المهمة",
-        "priority": "الأولوية",
-        "status": "الحالة",
-        "category": "الفئة"
-      },
-      "buttons": {
-        "next": "التالي",
-        "updateNow": "التحديث الآن"
-      },
-      "validation": {
-        "titleRequired": "العنوان مطلوب",
-        "fixErrors": "يرجى تصحيح الأخطاء"
-      }
-    },
     "status": {
       "pending": "قيد الانتظار",
       "in_progress": "قيد التنفيذ",
@@ -1473,6 +1493,7 @@
     }
   },
   "reminders": {
+    "subtitle": "إدارة تذكيرات الفعاليات والإشعارات",
     "dateTimeFormat": "{{date}} في {{time}}",
     "errorLoading": "فشل تحميل التذكيرات",
     "noReminders": "لا توجد تذكيرات",
@@ -1515,6 +1536,7 @@
       "notFound": "التذكير غير موجود"
     },
     "notifications": {
+       "showingResults": "عرض {{count}} من أصل {{total}} تذكير",
       "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذا التذكير؟",
       "updated": "تم تحديث التذكير",
       "deleting": "جاري حذف التذكير...",
@@ -1829,6 +1851,18 @@
       "loadOptionsError": "فشل في تحميل خيارات النموذج",
       "filtersApplied": "تم تطبيق المرشحات",
       "deleteConfirm": "هل أنت متأكد أنك تريد حذف سجل الدفع هذا؟"
+    },
+     "csv": {
+      "type": "النوع",
+      "description": "الوصف",
+      "client": "العميل",
+      "reference": "المرجع",
+      "date": "التاريخ",
+      "amount": "المبلغ",
+      "method": "طريقة الدفع",
+      "status": "الحالة",
+      "netAmount": "المبلغ الصافي",
+      "createdAt": "تاريخ الإنشاء"
     },
     "detail": {
       "title": "تفاصيل الدفعة",
@@ -2237,7 +2271,24 @@
     "card": "البطاقة"
   },
   "common": {
-    "none": "لا شيء",
+    "optional": "اختياري",
+    "required": "مطلوب",
+    "back": "رجوع",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "create": "إنشاء",
+      "update": "تحديث",
+      "none": "لا شيء",
+      "by": "بواسطة",
+      "createdBy": "تم الإنشاء بواسطة",
+      "createdAt": "تم الإنشاء في",
+      "unknown": "غير معروف",
+      "event": "حدث",
+      "client": "عميل",
+      "task": "مهمة",
+      "viewDetails": "عرض التفاصيل",
     "noResults": "لم يتم العثور على نتائج",
     "clearFilters": "مسح المرشحات",
     "all": "الكل",
@@ -2251,8 +2302,6 @@
     "eventsCount": "عدد الأحداث",
     "exportPDF": "تصدير PDF",
     "updateNow": "تحديث الآن",
-    "update": "تحديث",
-    "viewDetails": "تفاصيل",
     "confirmDelete": "تأكيد الحذف",
     "restore": "استعادة",
     "archive": "أرشفة",
@@ -2263,7 +2312,6 @@
     "guests": "ضيوف",
     "remaining": "متبقي",
     "reorder": "إعادة طلب",
-    "unknown": "مجهول",
     "supplies": "المتطلبات",
     "home": "الرئيسية",
     "logout": "تسجيل الخروج",
@@ -2275,14 +2323,9 @@
     "warning": "تحذير",
     "noResultsDesc": "لم يتم العثور على نتائج",
     "loading": "جاري التحميل...",
-    "save": "حفظ",
-    "cancel": "إلغاء",
-    "delete": "حذف",
-    "edit": "تعديل",
     "view": "عرض",
     "close": "إغلاق",
     "confirm": "تأكيد",
-    "back": "رجوع",
     "next": "التالي",
     "previous": "السابق",
     "submit": "إرسال",
@@ -2315,7 +2358,6 @@
     "contracts": "العقود",
     "documents": "المستندات",
     "settings": "الإعدادات",
-    "create": "إنشاء",
     "actions": {
       "cancel": "إلغاء",
       "delete": "حذف",
@@ -2838,6 +2880,11 @@
     }
   },
   "invoicePreview": {
+    "zoom": {
+      "zoomIn": "تكبير (Ctrl/Cmd +)",
+      "zoomOut": "تصغير (Ctrl/Cmd -)",
+      "reset": "إعادة تعيين التكبير (Ctrl/Cmd 0)"
+    },
     "date": "التاريخ",
     "dueDate": "تاريخ الاستحقاق",
     "subtotal": "المجموع الفرعي",
@@ -3160,6 +3207,11 @@
       }
     },
      "preview": {
+      "zoom": {
+        "zoomIn": "تكبير (Ctrl/Cmd +)",
+        "zoomOut": "تصغير (Ctrl/Cmd -)",
+        "reset": "إعادة تعيين التكبير (Ctrl/Cmd 0)"
+      },
       "tooltips": {
         "drag": "اسحب لإعادة الترتيب",
         "edit": "تعديل الإعدادات"
