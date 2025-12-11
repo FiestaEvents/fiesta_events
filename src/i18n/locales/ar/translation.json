@@ -963,6 +963,21 @@
         "apply": "تطبيق"
       }
     },
+        "categories": {
+      "driver": " سائق",
+      "bakery": "مخبز ",
+      "catering": "تموين ",
+      "decoration": "تزيين ",
+      "photography": "تصوير فوتوغرافي",
+      "music": "موسيقى",
+      "security": "أمن",
+      "cleaning": "تنظيف",
+      "audio_visual": "سمعي بصرية",
+      "floral": "زهور",
+      "entertainment": "ترفيه",
+      "hairstyling": "تصفيف الشعر",
+      "other": "أخرى"
+    },
     "table": {
       "columns": {
         "name": "اسم الشريك",
@@ -3665,7 +3680,13 @@
   },
   "supplies": {
     "notifications": {
-      "filtersApplied": "تم تصفية قائمة المستلزمات"
+      "filtersApplied": "تم تصفية قائمة المستلزمات",
+      "categoryCreated": "تم إنشاء فئة المستلزمات بنجاح",
+      "created": "تم إنشاء المستلزم بنجاح",
+      "updated":   "تم تحديث المستلزم بنجاح",
+      "loadError": "فشل في تحميل البيانات",
+      "categoryCreateError": "فشل في إنشاء الفئة",
+      "stockUpdated": "تم تحديث المخزون بنجاح"
     },
     "title": "إدارة المستلزمات",
     "subtitle": "إدارة المخزون وتتبع مستويات المخزون ومراقبة تكاليف المستلزمات",
@@ -3772,6 +3793,11 @@
       "createTitle": "إضافة مستلزمات جديدة",
       "editTitle": "تعديل المستلزمات",
       "newCategoryPlaceholder": "اسم الفئة الجديدة...",
+      "notesPlaceholder": "أضف ملاحظات إضافية حول هذا المستلزم...",
+      "createCategory": "إنشاء فئة جديدة",
+      "categoryName": "اسم الفئة",
+      "supplier":"المورد",
+      "storage":"التخزين",
       "steps": {
         "basicInfo": "المعلومات الأساسية",
         "inventory": "المخزون",

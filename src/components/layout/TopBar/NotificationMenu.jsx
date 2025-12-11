@@ -12,7 +12,7 @@ import {
   Monitor 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import OrbitLoader from "../../common/LoadingSpinner"; // Ensure this path is correct
+import OrbitLoader from "../../common/LoadingSpinner"; 
 import { useNotifications } from "../../../context/NotificationContext";
 
 // ==========================================
@@ -21,7 +21,7 @@ import { useNotifications } from "../../../context/NotificationContext";
 const NotificationBadge = ({ count }) => {
   if (count <= 0) return null;
   return (
-    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900 text-[10px] font-bold text-white shadow-sm animate-pulse-once">
+    <span className="absolute -top-1 ltr:-right-1 rtl:-left-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900 text-[10px] font-bold text-white shadow-sm animate-pulse-once">
       {count > 9 ? "9+" : count}
     </span>
   );
@@ -38,7 +38,6 @@ const NotificationMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // ✅ FIX: Added 'loading' to destructuring
   const { 
     notifications, 
     categorized, 
@@ -48,7 +47,6 @@ const NotificationMenu = () => {
     loading 
   } = useNotifications();
 
-  // Local state for UI preferences
   const [preferences, setPreferences] = useState({ sound: true, desktop: true });
   const updatePreferences = (newPrefs) => setPreferences(prev => ({...prev, ...newPrefs}));
 
@@ -63,17 +61,34 @@ const NotificationMenu = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Helper: Determine visual severity
+  // Helper: Determine visual severity & RTL Border support
   const getSeverityStyles = (reminder) => {
     const now = new Date();
     const due = new Date(reminder.due || reminder.reminderDate); 
     const isOverdue = due < now;
 
-    if (isOverdue) return { bg: "bg-red-50 dark:bg-red-900/20", icon: "text-red-600 dark:text-red-400", border: "border-l-red-500" };
-    if (reminder.urgency === 'imminent') return { bg: "bg-orange-50 dark:bg-orange-900/20", icon: "text-orange-600 dark:text-orange-400", border: "border-l-orange-500" };
-    if (reminder.urgency === 'today') return { bg: "bg-blue-50 dark:bg-blue-900/20", icon: "text-blue-600 dark:text-blue-400", border: "border-l-blue-500" };
+    // Note: Using ltr/rtl classes for the colored border strip
+    if (isOverdue) return { 
+      bg: "bg-red-50 dark:bg-red-900/20", 
+      icon: "text-red-600 dark:text-red-400", 
+      border: "ltr:border-l-red-500 rtl:border-r-red-500" 
+    };
+    if (reminder.urgency === 'imminent') return { 
+      bg: "bg-orange-50 dark:bg-orange-900/20", 
+      icon: "text-orange-600 dark:text-orange-400", 
+      border: "ltr:border-l-orange-500 rtl:border-r-orange-500" 
+    };
+    if (reminder.urgency === 'today') return { 
+      bg: "bg-blue-50 dark:bg-blue-900/20", 
+      icon: "text-blue-600 dark:text-blue-400", 
+      border: "ltr:border-l-blue-500 rtl:border-r-blue-500" 
+    };
     
-    return { bg: "bg-white dark:bg-gray-800", icon: "text-gray-500 dark:text-gray-400", border: "border-l-gray-300 dark:border-l-gray-600" };
+    return { 
+      bg: "bg-white dark:bg-gray-800", 
+      icon: "text-gray-500 dark:text-gray-400", 
+      border: "ltr:border-l-gray-300 rtl:border-r-gray-600" 
+    };
   };
 
   // Logic: Which list to show
@@ -86,7 +101,24 @@ const NotificationMenu = () => {
     }
   };
 
+  // Logic: Get empty state text based on category
+  const getEmptyMessage = () => {
+    switch (selectedCategory) {
+      case "overdue": return t("notifications.empty.overdue", "No overdue items. Great job!");
+      case "critical": return t("notifications.empty.critical", "No critical alerts at the moment.");
+      case "today": return t("notifications.empty.today", "No tasks scheduled for today.");
+      default: return t("notifications.empty.all", "You're all caught up! No notifications.");
+    }
+  };
+
   const currentList = getList();
+
+  // Defined inside component to access 't'
+  const tabs = [
+    { id: "all", label: t("notifications.tabs.all", "All") },
+    { id: "overdue", label: t("notifications.tabs.overdue", "Overdue"), count: categorized.overdue.length },
+    { id: "critical", label: t("notifications.tabs.critical", "Critical"), count: categorized.critical.length },
+  ];
 
   return (
     <div className="relative z-50" ref={menuRef}>
@@ -112,7 +144,8 @@ const NotificationMenu = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-3 w-[400px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden origin-top-right"
+            // RTL FIX: Added ltr:right-0 rtl:left-0 and origin adjustments
+            className="absolute ltr:right-0 rtl:left-0 mt-3 w-[400px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden ltr:origin-top-right rtl:origin-top-left"
           >
             {/* HEADER */}
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm">
@@ -123,17 +156,13 @@ const NotificationMenu = () => {
                 onClick={() => { setIsOpen(false); navigate("/reminders"); }}
                 className="text-xs font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline"
               >
-                {t("notifications.viewAll", "View Calendar")}
+                {t("notifications.viewAll", "View All")}
               </button>
             </div>
 
             {/* TABS */}
             <div className="flex px-2 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-              {[
-                { id: "all", label: "All" },
-                { id: "overdue", label: "Overdue", count: categorized.overdue.length },
-                { id: "critical", label: "Urgent", count: categorized.critical.length },
-              ].map((tab) => (
+              {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setSelectedCategory(tab.id)}
@@ -145,7 +174,8 @@ const NotificationMenu = () => {
                 >
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className="ml-1.5 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] text-gray-600 dark:text-gray-300">
+                    // RTL FIX: ml-1.5 -> ms-1.5 (margin start)
+                    <span className="ms-1.5 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] text-gray-600 dark:text-gray-300">
                       {tab.count}
                     </span>
                   )}
@@ -155,7 +185,6 @@ const NotificationMenu = () => {
 
             {/* NOTIFICATION LIST */}
             <div className="max-h-[350px] overflow-y-auto custom-scrollbar bg-gray-50/30 dark:bg-black/20">
-              {/* ✅ This caused the crash previously. Now 'loading' exists. */}
               {loading && currentList.length === 0 ? (
                  <div className="flex justify-center items-center py-8">
                     <OrbitLoader />
@@ -172,7 +201,8 @@ const NotificationMenu = () => {
                         exit={{ opacity: 0 }}
                         key={rem._id}
                         onClick={() => { setIsOpen(false); navigate(`/reminders/${rem._id}`); }}
-                        className={`group relative p-4 hover:bg-white dark:hover:bg-gray-800 transition-all cursor-pointer border-l-4 ${style.border} ${style.bg}`}
+                        // RTL FIX: Border logic moved to getSeverityStyles (ltr:border-l / rtl:border-r)
+                        className={`group relative p-4 hover:bg-white dark:hover:bg-gray-800 transition-all cursor-pointer border-l-4 rtl:border-l-0 rtl:border-r-4 ${style.border} ${style.bg}`}
                       >
                         <div className="flex gap-3">
                           <div className={`mt-1 w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-gray-700 shadow-sm ${style.icon}`}>
@@ -181,7 +211,8 @@ const NotificationMenu = () => {
 
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-start">
-                              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate pr-2">
+                              {/* RTL FIX: pr-2 -> pe-2 (padding end) */}
+                              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate pe-2">
                                 {rem.title}
                               </h4>
                               <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap bg-white dark:bg-gray-900 px-2 py-0.5 rounded-full border border-gray-100 dark:border-gray-700">
@@ -189,7 +220,7 @@ const NotificationMenu = () => {
                               </span>
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
-                               {rem.description || "No details provided"}
+                               {rem.description || t("notifications.noDescription", "No description available")}
                             </p>
                             
                             <div className="mt-2 flex items-center gap-2">
@@ -200,7 +231,8 @@ const NotificationMenu = () => {
                           </div>
                         </div>
 
-                        <div className="absolute right-2 bottom-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-y-1 group-hover:translate-y-0 duration-200">
+                        {/* RTL FIX: Absolute positioning flip */}
+                        <div className="absolute ltr:right-2 rtl:left-2 bottom-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-y-1 group-hover:translate-y-0 duration-200">
                           <button 
                             onClick={(e) => { e.stopPropagation(); markAsComplete(rem._id); }}
                             className="p-1.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-md shadow-sm"
@@ -225,8 +257,10 @@ const NotificationMenu = () => {
                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3">
                     <Bell className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-900 dark:text-white font-medium">All caught up!</p>
-                  <p className="text-xs text-gray-500">No {selectedCategory !== 'all' ? selectedCategory : ''} reminders.</p>
+                  {/* Translated Empty Messages */}
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    {getEmptyMessage()}
+                  </p>
                 </div>
               )}
             </div>
@@ -235,7 +269,7 @@ const NotificationMenu = () => {
             <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
               <div className="flex items-center gap-2 text-xs text-gray-500">
                  <Settings className="w-3 h-3" />
-                 <span>Preferences</span>
+                 <span>{t("notifications.settings.title", "Preferences")}</span>
               </div>
               
               <div className="flex gap-2">
@@ -248,7 +282,7 @@ const NotificationMenu = () => {
                     }`}
                 >
                     {preferences.sound ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
-                    {preferences.sound ? "Sound On" : "Muted"}
+                    {t("notifications.settings.sound", "Sound")}
                 </button>
 
                 <button
@@ -260,7 +294,7 @@ const NotificationMenu = () => {
                     }`}
                 >
                     <Monitor className="w-3 h-3" />
-                    {preferences.desktop ? "Desktop On" : "Desktop Off"}
+                    {t("notifications.settings.desktop", "Desktop")}
                 </button>
               </div>
             </div>

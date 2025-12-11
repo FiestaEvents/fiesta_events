@@ -74,19 +74,19 @@ const PartnersList = () => {
 
   const categoryOptions = [
     { value: "all", label: t("partners.actions.filters.allCategories") },
-    { value: "driver", label: "Driver" },
-    { value: "bakery", label: "Bakery" },
-    { value: "catering", label: "Catering" },
-    { value: "decoration", label: "Decoration" },
-    { value: "photography", label: "Photography" },
-    { value: "music", label: "Music" },
-    { value: "security", label: "Security" },
-    { value: "cleaning", label: "Cleaning" },
-    { value: "audio_visual", label: "Audio/Visual" },
-    { value: "floral", label: "Floral" },
-    { value: "entertainment", label: "Entertainment" },
-    { value: "hairstyling", label: "Hair Styling" },
-    { value: "other", label: "Other" },
+    { value: "driver", label: t("partners.categories.driver") },
+    { value: "bakery", label: t("partners.categories.bakery") },
+    { value: "catering", label: t("partners.categories.catering") },
+    { value: "decoration", label: t("partners.categories.decoration") },
+    { value: "photography", label: t("partners.categories.photography") },
+    { value: "music", label: t("partners.categories.music") },
+    { value: "security", label: t("partners.categories.security") },
+    { value: "cleaning", label: t("partners.categories.cleaning") },
+    { value: "audio_visual", label: t("partners.categories.audio_visual") },
+    { value: "floral", label: t("partners.categories.floral") },
+    { value: "entertainment", label: t("partners.categories.entertainment") },
+    { value: "hairstyling", label: t("partners.categories.hairstyling") },
+    { value: "other", label: t("partners.categories.other") },
   ];
 
   useEffect(() => {

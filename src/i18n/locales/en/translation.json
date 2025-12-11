@@ -1064,6 +1064,21 @@
         "apply": "Apply"
       }
     },
+    "categories": {
+      "driver": "Driver",
+      "bakery": "Bakery",
+      "catering": "Catering",
+      "decoration": "Decoration",
+      "photography": "Photography",
+      "music": "Music",
+      "security": "Security",
+      "cleaning": "Cleaning",
+      "audio_visual": "Audio/Visual",
+      "floral": "Floral",
+      "entertainment": "Entertainment",
+      "hairstyling": "Hair Styling",
+      "other": "Other"
+    },
     "table": {
       "columns": {
         "name": "Partner Name",
@@ -3674,11 +3689,16 @@
     "form": {
       "createTitle": "Add New Supply",
       "editTitle": "Edit Supply",
+      "notesPlaceholder": "Additional notes about the supply...",
+      "createCategory": "Create a new category",
+      "categoryName": "Category Name",
       "newCategoryPlaceholder": "New category name...",
+      "storage": "Storage",
+      "supplier": "Supplier",
       "steps": {
         "basicInfo": "Basic Info",
         "inventory": "Inventory",
-        "supplier": "Supplier & Storage"
+        "supplier": "Supplier"
       },
       "name": "Supply Name",
       "category": "Category",
@@ -3805,7 +3825,8 @@
       "updated": "Supply updated successfully",
       "loadError": "Failed to load supply data",
       "categoryCreateError": "Failed to create category",
-      "filtersApplied": "Supplies list filtered"
+      "filtersApplied": "Supplies list filtered",
+      "categoryCreated": "Category created successfully"
     },
     "details": {
       "inventoryInfo": "Inventory Information"

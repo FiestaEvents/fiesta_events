@@ -1070,6 +1070,21 @@
         "apply": "Appliquer"
       }
     },
+   "categories": {
+      "driver": "Chauffeur",
+      "bakery": "Boulangerie",
+      "catering": "Traiteur",
+      "decoration": "Décoration",
+      "photography": "Photographie",
+      "music": "Musique",
+      "security": "Sécurité",
+      "cleaning": "Nettoyage",
+      "audio_visual": "Audiovisuel",
+      "floral": "Fleuriste",
+      "entertainment": "Divertissement",
+      "hairstyling": "Coiffure",
+      "other": "Autre"
+    },
     "table": {
       "columns": {
         "name": "Nom du Partenaire",
@@ -1934,6 +1949,7 @@
     "notFound": "Paiement non trouvé",
     "getStarted": "Commencez par enregistrer votre premier paiement",
     "showing": "Affichage de {{count}} sur {{total}} paiements",
+    
     "filters": {
       "allTypes": "Tous les Types",
       "allStatus": "Tous les Statuts",
@@ -3898,6 +3914,11 @@
       "createTitle": "Ajouter une fourniture",
       "editTitle": "Modifier la fourniture",
       "newCategoryPlaceholder": "Nom de la nouvelle catégorie...",
+      "notesPlaceholder": "Notes supplémentaires sur la fourniture...",
+      "createCategory": "Créer une nouvelle catégorie",
+      "categoryName": "Nom de la catégorie",
+      "storage": "Stockage",
+      "supplier": "Fournisseur",
       "steps": {
         "basicInfo": "Infos de base",
         "inventory": "Inventaire",
@@ -3963,10 +3984,15 @@
       "updated": "Fourniture mise à jour avec succès",
       "loadError": "Erreur de chargement des données",
       "categoryCreateError": "Échec de la création de la catégorie",
-      "filtersApplied": "Liste des fournitures filtrée"
+      "filtersApplied": "Liste des fournitures filtrée",
+      "categoryCreated": "Catégorie créée avec succès"
     },
-    "details": {
-      "inventoryInfo": "Informations d'Inventaire"
+    "detail": {
+      "inventoryInfo": "Informations d'Inventaire",
+      "updateStock": "Mettre à jour le stock",
+      "totalValue": "Valeur Totale",
+      "supplierDetails": "Détails du Fournisseur",
+      "notes": "Notes"
     },
     "errors": {
       "loadFailed": "Échec du chargement de la liste"

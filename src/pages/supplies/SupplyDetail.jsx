@@ -10,14 +10,11 @@ import {
   TrendingDown,
   AlertTriangle,
   DollarSign,
-  Calendar,
-  Archive,
-  RefreshCw,
   History,
   Truck,
   MapPin,
-  Info,
-  X,
+  RefreshCw,
+  Archive,
 } from "lucide-react";
 
 // API & Hooks
@@ -33,6 +30,9 @@ import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
 
+// Import Supply Form
+import SupplyForm from "./SupplyForm"; // Ensure path is correct
+
 const SupplyDetail = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -42,8 +42,13 @@ const SupplyDetail = () => {
   // State
   const [supply, setSupply] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Modals State
   const [showStockModal, setShowStockModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // <--- New State
+
+  // Stock Action State
   const [stockAction, setStockAction] = useState({
     type: "purchase",
     quantity: "",
@@ -55,7 +60,8 @@ const SupplyDetail = () => {
   // Fetch Supply
   const fetchSupply = async () => {
     try {
-      setLoading(true);
+      // Don't set full page loading on refetch to avoid flicker
+      if (!supply) setLoading(true); 
       const response = await supplyService.getById(id);
       setSupply(response.supply || response);
     } catch (error) {
@@ -69,6 +75,13 @@ const SupplyDetail = () => {
   useEffect(() => {
     fetchSupply();
   }, [id]);
+
+  // Handle Edit Success (Called by SupplyForm)
+  const handleEditSuccess = () => {
+    setShowEditModal(false);
+    showSuccess(t("supplies.notifications.updated"));
+    fetchSupply(); // Refresh data immediately
+  };
 
   // Stock Status Helper
   const getStockStatus = () => {
@@ -98,7 +111,7 @@ const SupplyDetail = () => {
     };
   };
 
-  // Update Stock
+  // Update Stock Logic
   const handleStockUpdate = async () => {
     if (!stockAction.quantity || stockAction.quantity <= 0) {
       apiError(new Error("Invalid Quantity"), t("supplies.modal.invalidQty"));
@@ -141,7 +154,7 @@ const SupplyDetail = () => {
     return supply.currentStock;
   };
 
-  // Actions
+  // Delete & Archive Actions
   const handleDelete = async () => {
     try {
       await supplyService.delete(id);
@@ -180,15 +193,15 @@ const SupplyDetail = () => {
   const totalValue = supply.currentStock * supply.costPerUnit;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 font-sans">
+    <div className="min-h-screen bg-white rounded-xl dark:bg-gray-900 p-4 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-800 p-6 rounded-xl">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               onClick={() => navigate("/supplies")}
-              className="p-2 h-auto"
+              className="p-2 h-auto bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600 focus:ring-4 focus:ring-orange-300"
             >
               <ArrowLeft size={20} />
             </Button>
@@ -209,10 +222,11 @@ const SupplyDetail = () => {
           </div>
 
           <div className="flex gap-2">
+            {/* ✅ OPEN MODAL INSTEAD OF NAVIGATE */}
             <Button
               variant="outline"
               icon={Edit}
-              onClick={() => navigate(`/supplies/${id}/edit`)}
+              onClick={() => setShowEditModal(true)}
             >
               {t("common.edit")}
             </Button>
@@ -311,7 +325,6 @@ const SupplyDetail = () => {
 
         {/* Info Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Supplier Info */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
@@ -437,7 +450,25 @@ const SupplyDetail = () => {
         </div>
       </div>
 
-      {/* Stock Update Modal */}
+      {/* ----------------- MODALS ----------------- */}
+
+      {/* 1. EDIT MODAL */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title={t("supplies.form.editTitle")}
+        size="lg" // Larger modal for the multi-step form
+      >
+        <div className="p-0"> {/* Remove padding so the form fits nicely */}
+           <SupplyForm 
+              supply={supply} // Pass current data
+              onSuccess={handleEditSuccess}
+              onCancel={() => setShowEditModal(false)}
+           />
+        </div>
+      </Modal>
+
+      {/* 2. STOCK UPDATE MODAL */}
       <Modal
         open={showStockModal}
         onClose={() => setShowStockModal(false)}
@@ -507,7 +538,7 @@ const SupplyDetail = () => {
         </div>
       </Modal>
 
-      {/* Delete Modal */}
+      {/* 3. DELETE MODAL */}
       <Modal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}

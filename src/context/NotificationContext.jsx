@@ -1,31 +1,48 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
-import { reminderService } from "../api/index"; // Adjust path to your api
-import { useAuth } from "./AuthContext"; // Import Auth to ensure we only fetch when logged in
+import { io } from "socket.io-client"; // Import Socket.io
+import { reminderService } from "../api/index"; 
+import { useAuth } from "./AuthContext";
 
 const NotificationContext = createContext();
 
+// Initialize Socket connection
+// Adjust URL if your backend runs on a different port/domain
+const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+const socket = io(SOCKET_URL, {
+  autoConnect: false, 
+  withCredentials: true,
+});
+
 export const NotificationProvider = ({ children }) => {
-  const { user } = useAuth(); // Get auth state
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Refs to prevent overlapping fetches
-  const isFetching = useRef(false);
   const mounted = useRef(true);
 
-  // --- 1. STABLE FETCH FUNCTION ---
+  // Sound Effect
+  const playAlertSound = useCallback(() => {
+    try {
+      const audio = new Audio("/sounds/urgent.mp3"); // Ensure this file exists in public/sounds/
+      audio.volume = 0.5;
+      audio.play().catch(e => console.log("Audio play blocked (interaction needed)"));
+    } catch (e) {
+      console.warn("Sound error", e);
+    }
+  }, []);
+
+  // --- 1. INITIAL FETCH (Get existing data once) ---
   const fetchNotifications = useCallback(async () => {
-    // Stop if not logged in or already fetching
-    if (!user || isFetching.current) return;
+    if (!user) return;
 
     try {
-      isFetching.current = true;
+      // Fetch upcoming for the next 7 days (168 hours) to populate the list initially
       const response = await reminderService.getUpcoming({ hours: 168 });
       
-      // Defensive parsing to prevent "map is not a function"
       const payload = response.data;
       let list = [];
       
+      // Defensive parsing
       if (Array.isArray(payload)) list = payload;
       else if (Array.isArray(payload?.data?.reminders)) list = payload.data.reminders;
       else if (Array.isArray(payload?.data)) list = payload.data;
@@ -36,36 +53,60 @@ export const NotificationProvider = ({ children }) => {
         setLoading(false);
       }
     } catch (err) {
-      console.error("Context Fetch Error:", err);
-    } finally {
-      isFetching.current = false;
+      console.error("Initial Fetch Error:", err);
     }
   }, [user]);
 
-  // --- 2. POLLING SETUP ---
+  // --- 2. SOCKET SETUP (Replaces setInterval) ---
   useEffect(() => {
     mounted.current = true;
 
-    // Only start polling if user exists
     if (user) {
+      // A. Load initial data
       fetchNotifications();
-      
-      // Poll every 60 seconds
-      const intervalId = setInterval(fetchNotifications, 60000);
-      
-      return () => {
-        clearInterval(intervalId);
-      };
+
+      // B. Connect Socket
+      socket.connect();
+
+      // C. Join Room (Identify this client to the server)
+      // Assuming your backend emits to 'venueId' or 'userId'
+      const roomId = user.venueId || user._id; 
+      socket.emit("join_room", roomId);
+      console.log(`🔌 Socket connecting to room: ${roomId}`);
+
+      // D. Listen for Cron Job Events
+      // The backend Cron should emit this event when it finds a due reminder
+      socket.on("reminder_alert", (newReminder) => {
+        console.log("🔔 CRON Alert Received:", newReminder);
+        
+        playAlertSound();
+
+        // Add to state immediately (Real-time update)
+        setNotifications((prev) => {
+          // Prevent duplicates
+          const exists = prev.find(n => n._id === newReminder._id);
+          if (exists) return prev;
+          return [newReminder, ...prev];
+        });
+
+        // Optional: Trigger Browser Notification
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification(newReminder.title, { body: newReminder.description });
+        }
+      });
     }
 
-    return () => { 
-      mounted.current = false; 
+    // Cleanup on logout/unmount
+    return () => {
+      mounted.current = false;
+      socket.off("reminder_alert");
+      socket.disconnect();
     };
-  }, [user, fetchNotifications]);
+  }, [user, fetchNotifications, playAlertSound]);
 
   // --- 3. ACTIONS ---
   const markAsComplete = async (id) => {
-    setNotifications(prev => prev.filter(n => n._id !== id)); // Optimistic UI
+    setNotifications(prev => prev.filter(n => n._id !== id));
     try { await reminderService.toggleComplete(id); } catch { fetchNotifications(); }
   };
 
@@ -78,11 +119,10 @@ export const NotificationProvider = ({ children }) => {
   const categorized = {
     overdue: notifications.filter(n => new Date(n.reminderDate) < new Date()),
     critical: notifications.filter(n => {
-       // Logic for critical/urgent
        const hours = (new Date(n.reminderDate) - new Date()) / 36e5;
        return hours > 0 && hours <= 24;
     }),
-    today: notifications // Add specific filter logic if needed
+    today: notifications 
   };
 
   const alertCount = categorized.overdue.length + categorized.critical.length;
@@ -102,5 +142,4 @@ export const NotificationProvider = ({ children }) => {
   );
 };
 
-// Custom Hook
 export const useNotifications = () => useContext(NotificationContext);

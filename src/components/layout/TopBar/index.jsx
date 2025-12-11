@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Menu, LayoutGrid, Sun, Moon } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Contexts
 import { useTheme } from "../../../context/ThemeContext";
@@ -20,6 +20,23 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
   const topBarOffset = isCollapsed
     ? (isRTL ? "lg:right-16" : "lg:left-16")
     : (isRTL ? "lg:right-56" : "lg:left-56");
+
+  // Animation Variants for the Icons
+  const iconVariants = {
+    initial: { scale: 0, rotate: -180, opacity: 0 },
+    animate: { 
+      scale: 1, 
+      rotate: 0, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 260, damping: 20 } 
+    },
+    exit: { 
+      scale: 0, 
+      rotate: 180, 
+      opacity: 0,
+      transition: { duration: 0.2 } 
+    }
+  };
 
   return (
     <header className={`fixed top-0 ${isRTL ? "left-0 right-0" : "left-0 right-0"} h-16 bg-white/90 backdrop-blur-md z-40 transition-all duration-300 ${topBarOffset} dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800`}>
@@ -53,8 +70,47 @@ const TopBar = ({ onMenuClick, isCollapsed, onToggleCollapse }) => {
             <LanguageSwitcher />
           </div>
 
-          <motion.button whileTap={{ scale: 0.9 }} onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            {theme === "light" ? <Sun className="w-5 h-5 text-orange-500" /> : <Moon className="w-5 h-5 text-blue-400" />}
+          {/* =======================================================
+              COOL THEME TOGGLE ANIMATION
+             ======================================================= */}
+          <motion.button 
+            whileTap={{ scale: 0.9 }} 
+            onClick={toggleTheme} 
+            className={`
+              relative w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300
+              ${theme === "light" 
+                ? "bg-orange-100 hover:bg-orange-200" 
+                : "bg-gray-800 hover:bg-gray-700"
+              }
+            `}
+            aria-label="Toggle Dark Mode"
+          >
+            {/* The AnimatePresence allows the exit animation to play */}
+            <AnimatePresence mode="wait" initial={false}>
+              {theme === "light" ? (
+                <motion.div
+                  key="sun"
+                  variants={iconVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="absolute"
+                >
+                  <Sun className="w-5 h-5 text-orange-600 fill-orange-600" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="moon"
+                  variants={iconVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="absolute"
+                >
+                  <Moon className="w-5 h-5 text-blue-400 fill-blue-400" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.button>
 
           <NotificationMenu />

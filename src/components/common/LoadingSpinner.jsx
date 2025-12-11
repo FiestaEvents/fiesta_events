@@ -1,11 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-const OrbitLoader = ({ size = "medium" }) => {
+const OrbitLoader = ({ size = "md" }) => {
   const sizes = {
     sm: "w-12 h-12 text-2xl",
-    medium: "w-20 h-20 text-4xl",
-    large: "w-32 h-32 text-6xl",
+    md: "w-20 h-20 text-4xl",
+    lg: "w-32 h-32 text-6xl",
   };
 
   return (
