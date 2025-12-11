@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import TopBar from "./TopBar";
+import TopBar from "./TopBar/index.jsx";
 import { useLanguage } from "../../context/LanguageContext";
 
 const MainLayout = () => {
