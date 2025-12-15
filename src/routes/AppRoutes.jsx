@@ -114,10 +114,10 @@ const DocumentsSettings = lazy(
   () => import("../pages/settings/DocumentsSettings.jsx")
 );
 
-// Supplies 
-const SuppliesPage = lazy(() => import("../pages/Supplies/SuppliesPage.jsx"));
-const SupplyDetail = lazy(() => import("../pages/Supplies/SupplyDetail.jsx"));
-const SupplyForm = lazy(() => import("../pages/Supplies/SupplyForm.jsx"));
+// Supplies
+const SuppliesPage = lazy(() => import("../pages/supplies/SuppliesPage.jsx"));
+const SupplyDetail = lazy(() => import("../pages/supplies/SupplyDetail.jsx"));
+const SupplyForm = lazy(() => import("../pages/supplies/SupplyForm.jsx"));
 
 // ============================================
 // ROUTING CONFIGURATION
@@ -127,7 +127,7 @@ const AppRoutes = () => {
   // Center the spinner for the initial load
   const LoadingFallback = () => (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
-      <OrbitLoader/>
+      <OrbitLoader />
     </div>
   );
 
