@@ -7,13 +7,19 @@ header {
 }
 
 @keyframes slideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* 2. The Logo Drawing Animation */
 .logo-path {
-  stroke: #EF7D32; /* Orange outline */
+  stroke: #ef7d32; /* Orange outline */
   stroke-width: 3;
   fill: transparent; /* Start empty */
   stroke-dasharray: 400; /* Length of the line */
@@ -32,8 +38,8 @@ header {
   }
   100% {
     stroke-dashoffset: 0;
-    fill: #EF7D32; /* Fills with orange */
-    stroke: none;   /* Removes outline */
+    fill: #ef7d32; /* Fills with orange */
+    stroke: none; /* Removes outline */
   }
 }
 /* Optional: global styles */
@@ -44,7 +50,7 @@ body {
 /* ADD THIS SECTION: Zooms out to 70% on Desktop only (screens larger than 1024px) */
 @media (min-width: 1024px) {
   body {
-    zoom: 70%; 
+    zoom: 100%;
   }
 }
 /* RTL specific styles */
@@ -126,11 +132,22 @@ body {
 }
 /* 1. Swinging Bell Animation */
 @keyframes swing-bell {
-  0%, 100% { transform: rotate(0deg); }
-  20% { transform: rotate(15deg); }
-  40% { transform: rotate(-10deg); }
-  60% { transform: rotate(5deg); }
-  80% { transform: rotate(-5deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(15deg);
+  }
+  40% {
+    transform: rotate(-10deg);
+  }
+  60% {
+    transform: rotate(5deg);
+  }
+  80% {
+    transform: rotate(-5deg);
+  }
 }
 
 .animate-swing {
@@ -140,8 +157,14 @@ body {
 
 /* 2. Dropdown Entrance (Smooth Slide Down) */
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .animate-dropdown {
@@ -154,5 +177,5 @@ body {
 }
 .search-glow:focus-within {
   box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15); /* Orange Glow */
-  border-color: #F97316;
+  border-color: #f97316;
 }
