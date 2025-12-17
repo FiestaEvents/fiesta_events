@@ -166,7 +166,6 @@ npm run dev
 
 The frontend will be available at `http://localhost:5173` (Vite default port).
 
-
 ## 🔌 API Documentation
 
 ### Base URL
@@ -480,7 +479,6 @@ Language can be switched dynamically from the UI without page reload.
 - **Error Handling** - User-friendly error messages
 - **Accessibility** - WCAG compliant components
 
-
 ## 🗺 Roadmap
 
 ### Coming Soon
@@ -509,7 +507,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 **Fiesta Development Team**
 
 - Website: [fiesta.events](https://fiesta.events)
-- Email: support@fiesta.events
+- Email: contact@fiesta.events
 
 ---
 
@@ -524,7 +522,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 📞 Support
 
-For support, email support@fiesta.events or join our community Discord server.
+For support, email contact@fiesta.events or join our community Discord server.
 
 ---
 
