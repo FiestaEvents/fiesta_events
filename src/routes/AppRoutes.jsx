@@ -145,16 +145,8 @@ const AppRoutes = () => {
             </PageTransition>
           }
         />
-        <Route
-          path="/landing"
-          element={
-            <PageTransition>
-              <Landing />
-            </PageTransition>
-          }
-        />
-        <Route path="/fiesta-venue" element={<FiestaVenue />} />
-        <Route path="/" element={<Navigate to="/landing" replace />} />
+
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* ============================================ */}
         {/* AUTH LAYOUT ROUTES */}

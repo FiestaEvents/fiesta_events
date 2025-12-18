@@ -9,8 +9,6 @@ import ErrorBoundary from "./components/common/ErrorBoundary.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 
 const App = () => {
-  // ... (Your existing Favicon logic here) ...
-
   return (
     <ErrorBoundary>
       <BrowserRouter>
@@ -19,7 +17,7 @@ const App = () => {
             <ToastProvider>
               <AuthProvider>
                 <NotificationProvider>
-                   <AppRoutes />
+                  <AppRoutes />
                 </NotificationProvider>
               </AuthProvider>
             </ToastProvider>
