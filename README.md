@@ -355,7 +355,8 @@ Fiesta/
 
 Fiesta supports multiple languages with full RTL (Right-to-Left) support:
 
-- **English** (Default)
+- **Frensh**(Default)
+- **English** 
 - **Arabic** (العربية) with RTL layout
 
 Language can be switched dynamically from the UI without page reload.

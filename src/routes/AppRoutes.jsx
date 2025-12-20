@@ -98,10 +98,6 @@ const DocumentsSettings = lazy(() => import("../pages/settings/DocumentsSettings
 const SuppliesPage = lazy(() => import("../pages/supplies/SuppliesPage.jsx"));
 const SupplyDetail = lazy(() => import("../pages/supplies/SupplyDetail.jsx"));
 const SupplyForm = lazy(() => import("../pages/supplies/SupplyForm.jsx"));
-// Supplies
-const SuppliesPage = lazy(() => import("../pages/supplies/SuppliesPage.jsx"));
-const SupplyDetail = lazy(() => import("../pages/supplies/SupplyDetail.jsx"));
-const SupplyForm = lazy(() => import("../pages/supplies/SupplyForm.jsx"));
 
 // ============================================
 // ROUTING CONFIGURATION
