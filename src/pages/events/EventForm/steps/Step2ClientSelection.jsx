@@ -92,7 +92,7 @@ const Step2ClientSelection = () => {
               label={t("eventForm.step2.clientName")}
               value={newClient.name}
               onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
-              placeholder={t("eventForm.step2.namePlaceholder")}
+              placeholder={t("eventForm.step2.clientNamePlaceholder")}
               required
               className="w-full"
             />

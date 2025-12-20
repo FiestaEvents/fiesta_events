@@ -218,6 +218,7 @@
     "subtitle": "Manage your personal information and account settings"
   },
   "common": {
+    "added":"added",
     "copied" : "Copied!",
     "ProfileSettings":"Profile Settings",
     "team": "Team",
@@ -553,6 +554,7 @@
     "dashboardDesc": "Reports & Analytics",
     "financeDesc": "Financial Overview",
     "documentsDesc": "Template Layouts"
+    
   },
   "documents": {
     "hub": {
@@ -1174,6 +1176,7 @@
       "clientName": "Create Name",
       "clientPhone": "Client Phone",
       "searchClients": "Search Clients..."
+      
     },
     "step3": {
       "noPartnersSelected": "No partners selected",
@@ -1209,7 +1212,8 @@
       "paymentAmount": "Payment Amount",
       "paymentMethod": "Payment Method",
       "paymentDate": "Payment Date",
-      "paymentNotes": "Payment Notes"
+      "paymentNotes": "Payment Notes",
+      "totalEstimated": "Total Estimated Amount"
     },
     "step5": {
       "eventSummary": "Event Summary",
@@ -2057,7 +2061,6 @@
     "system": "System",
     "notFound": "Payment not found",
     "getStarted": "Get started by recording your first payment",
-
     "filters": {
       "allTypes": "All Types",
       "allStatus": "All Status",
@@ -2156,6 +2159,8 @@
       "paidDate": "Paid Date",
       "client": "Client",
       "event": "Related Event",
+      "linkInvoice": "Link Invoice (Optional)",
+     "descPlaceholder": "Enter payment details, notes, or remarks...",
       "fees": {
         "processingFee": "Processing Fee",
         "platformFee": "Platform Fee",
@@ -2177,7 +2182,8 @@
         "feesNegative": "Fees cannot be negative",
         "feesExceedAmount": "Total fees cannot exceed payment amount",
         "fixErrors": "Please fix the errors before proceeding",
-        "fixAllErrors": "Please fix all required fields"
+        "fixAllErrors": "Please fix all required fields",
+        "clientOrEventRequired": "Please select a client or related event"
       }
     },
     "steps": {

@@ -20,49 +20,41 @@ const Step3VenuePricing = () => {
     calculations,
   } = useEventContext();
 
-  const handleAddPartner = (newPartner) => {
+  const handleAddPartner = (newPartner) =>
     setFormData((prev) => ({
       ...prev,
       partners: [...prev.partners, newPartner],
     }));
-  };
-
-  const handleRemovePartner = (index) => {
+  const handleRemovePartner = (index) =>
     setFormData((prev) => ({
       ...prev,
       partners: prev.partners.filter((_, i) => i !== index),
     }));
-  };
 
-  // ⭐ SUPPLY HANDLERS
-  const handleAddSupply = (newSupply) => {
+  const handleAddSupply = (newSupply) =>
     setFormData((prev) => ({
       ...prev,
       supplies: [...(prev.supplies || []), newSupply],
     }));
-  };
-
-  const handleRemoveSupply = (index) => {
+  const handleRemoveSupply = (index) =>
     setFormData((prev) => ({
       ...prev,
       supplies: (prev.supplies || []).filter((_, i) => i !== index),
     }));
-  };
 
-  const handleUpdateSupplyQuantity = (index, newQuantity) => {
+  // ✅ New Generic Updater
+  const handleUpdateSupply = (index, updates) => {
     setFormData((prev) => ({
       ...prev,
-      supplies: (prev.supplies || []).map((supply, i) => 
-        i === index ? { ...supply, quantityRequested: newQuantity } : supply
+      supplies: (prev.supplies || []).map((supply, i) =>
+        i === index ? { ...supply, ...updates } : supply
       ),
     }));
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* LEFT: Venue, Partners & Supplies */}
       <div className="lg:col-span-2 space-y-8">
-        {/* Venue Section */}
         <div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
             {t("eventForm.step3.venueSpace")}
@@ -86,7 +78,6 @@ const Step3VenuePricing = () => {
           />
         </div>
 
-        {/* Partners Section */}
         <div className="border-t border-gray-100 dark:border-gray-700 pt-6">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
             {t("eventForm.step3.additionalServices")}
@@ -100,7 +91,6 @@ const Step3VenuePricing = () => {
           />
         </div>
 
-        {/* ⭐ SUPPLIES SECTION */}
         <div className="border-t border-gray-100 dark:border-gray-700 pt-6">
           <div className="mb-4">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -110,21 +100,18 @@ const Step3VenuePricing = () => {
               {t("eventForm.step3.eventSuppliesDescription")}
             </p>
           </div>
-          
           <SupplySelector
             selectedSupplies={formData.supplies || []}
             onAddSupply={handleAddSupply}
             onRemoveSupply={handleRemoveSupply}
-            onUpdateQuantity={handleUpdateSupplyQuantity}
+            onUpdateSupply={handleUpdateSupply} // ✅ Pass new handler
           />
         </div>
       </div>
 
-      {/* RIGHT: Pricing Breakdown */}
       <div className="lg:col-span-1">
         <div className="sticky top-24 space-y-4">
           <PriceSummary />
-
           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <h4 className="font-bold text-sm mb-3">
               {t("eventForm.step3.adjustments")}
@@ -142,10 +129,7 @@ const Step3VenuePricing = () => {
                 type="button"
                 onClick={() =>
                   handleChange({
-                    target: {
-                      name: "pricing.discountType",
-                      value: "fixed",
-                    },
+                    target: { name: "pricing.discountType", value: "fixed" },
                   })
                 }
                 className={`flex-1 text-xs py-1 rounded ${formData.pricing.discountType === "fixed" ? "bg-orange-100 text-orange-700 font-bold" : "bg-gray-100"}`}

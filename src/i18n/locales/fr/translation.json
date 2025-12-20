@@ -1022,7 +1022,8 @@
       "paymentAmount": "Montant du Paiement",
       "paymentMethod": "Méthode de Paiement",
       "paymentDate": "Date de Paiement",
-      "paymentNotes": "Notes de Paiement"
+      "paymentNotes": "Notes de Paiement",
+      "totalEstimated": "Total Estimé"
     },
     "step5": {
       "eventSummary": "Résumé de l'Événement",
@@ -2048,6 +2049,8 @@
       "event": "Événement Associé",
       "createTitle": "Créer un paiement",
       "editTitle": "Modifier le paiement",
+      "linkInvoice": "Lier une facture (Optionnel)",
+     "descPlaceholder": "Saisissez les détails du paiement, notes ou remarques...",
       "fees": {
         "processingFee": "Frais de Traitement",
         "platformFee": "Frais de Plateforme",
@@ -2069,7 +2072,8 @@
         "feesNegative": "Les frais ne peuvent pas être négatifs",
         "feesExceedAmount": "Le total des frais ne peut pas dépasser le montant du paiement",
         "fixErrors": "Veuillez corriger les erreurs avant de continuer",
-        "fixAllErrors": "Veuillez corriger tous les champs obligatoires"
+        "fixAllErrors": "Veuillez corriger tous les champs obligatoires",
+        "clientOrEventRequired": "Veuillez sélectionner un client ou un événement associé"
       }
     },
     "steps": {
@@ -2701,6 +2705,7 @@
     }
   },
   "common": {
+    "added": "Ajouté",
     "copied" : "Copié !",
     "ProfileSettings": "Paramètres du Profil",
     "team":"Équipe",
