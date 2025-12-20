@@ -1,3 +1,4 @@
+//src/pages/events/EventForm/CreateEventPage.jsx
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";

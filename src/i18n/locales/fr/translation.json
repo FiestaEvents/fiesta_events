@@ -2714,8 +2714,8 @@
     "partner": "Partenaire",
     "supplies": "Fournitures",
     "add": "Ajouter",
-   "searchPlaceholder": "Rechercher (⌘K)",
-    "loading": "Chargement...",
+    "searchPlaceholder": "Rechercher (⌘K)",
+   "loading": "Chargement...",
     "noResults": "Aucun résultat trouvé",
     "markAsDone": "Marquer comme fait",
     "dismiss": "Ignorer",
@@ -2797,6 +2797,7 @@
     "contracts": "Contrats",
     "documents": "Documents",
     "settings": "Paramètres",
+    "invalidEmail": "Adresse email invalide",
     "nav": {
       "features": "Fonctionnalités",
       "marketplace": "Marché",

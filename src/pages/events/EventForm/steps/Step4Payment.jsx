@@ -1,3 +1,4 @@
+//src/pages/events/EventForm/steps/Step4Payment.jsx
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useEventContext } from "../EventFormContext"; 

@@ -1,3 +1,4 @@
+//src/pages/events/EventForm/steps/Step5Review.jsx
 import React from "react";
 import { Package, Users, Home } from "lucide-react";
 import { useEventContext } from "../EventFormContext"; 

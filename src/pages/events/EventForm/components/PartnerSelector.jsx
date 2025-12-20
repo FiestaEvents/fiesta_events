@@ -1,3 +1,4 @@
+//src/pages/events/EventForm/components/PartnerSelector.jsx
 import {
   Briefcase,
   Clock,

@@ -2761,14 +2761,9 @@ export const supplyService = {
    * @returns {Promise<{ supply }>}
    */
   update: async (id, data) => {
-    try {
-      const response = await api.patch(`/supplies/${id}`, data);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const response = await api.put(`/supplies/${id}`, data);
+    return response.data;
   },
-
   /**
    * Delete supply
    * @param {string} id - Supply ID

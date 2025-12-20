@@ -1,3 +1,4 @@
+//src/pages/events/EventForm/components/ClientSelector.jsx
 import React, { useState, useEffect } from "react";
 import { Search, Mail, Phone, Check } from "lucide-react";
 import Input from "../../../../components/common/Input";

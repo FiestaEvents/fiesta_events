@@ -1,3 +1,5 @@
+//src/pages/events/EventForm/steps/Step2ClientSelection.jsx
+import React from "react";
 import { Plus, X, Search } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
