@@ -16,14 +16,15 @@ import {
   CheckCircle,
   Clock,
   SlidersHorizontal,
-  ChevronDown,
   CalendarDays,
   ArrowUpDown,
   ListFilter,
+  Zap,
 } from "lucide-react";
 
-// ✅ API & Services
+// ✅ API & Permissions
 import { reminderService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard"; // Guard
 
 // ✅ Generic Components
 import Button from "../../components/common/Button";
@@ -34,8 +35,10 @@ import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 
-// ✅ Context & Sub-components
+// ✅ Context
 import { useToast } from "../../context/ToastContext";
+
+// ✅ Sub-components
 import ReminderDetailModal from "./ReminderDetailModal";
 import ReminderForm from "./ReminderForm";
 
@@ -43,11 +46,7 @@ const RemindersList = () => {
   const { showSuccess, apiError, showInfo, promise } = useToast();
   const { t } = useTranslation();
 
-  // ==========================================
-  // STATE MANAGEMENT
-  // ==========================================
-
-  // Data
+  // State
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
@@ -58,7 +57,7 @@ const RemindersList = () => {
   const [limit, setLimit] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Active Filters (Applied)
+  // Filters
   const [filters, setFilters] = useState({
     search: "",
     status: "all",
@@ -70,17 +69,9 @@ const RemindersList = () => {
     sortOrder: "asc",
   });
 
-  // Local Filters (Buffered in UI)
+  // Local Filters
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [localFilters, setLocalFilters] = useState({
-    status: "all",
-    type: "all",
-    priority: "all",
-    startDate: "",
-    endDate: "",
-    sortBy: "date",
-    sortOrder: "asc",
-  });
+  const [localFilters, setLocalFilters] = useState({ ...filters });
 
   // Modals
   const [selectedReminder, setSelectedReminder] = useState(null);
@@ -92,40 +83,103 @@ const RemindersList = () => {
     name: "",
   });
 
-  // ==========================================
-  // SYNC LOCAL FILTERS
-  // ==========================================
-
-  // When filter panel opens, sync local state with active state
+  // Effects
   useEffect(() => {
-    if (isFilterOpen) {
-      setLocalFilters({
-        status: filters.status,
-        type: filters.type,
-        priority: filters.priority,
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-      });
-    }
+    if (isFilterOpen) setLocalFilters({ ...filters });
   }, [isFilterOpen, filters]);
 
-  // ==========================================
-  // FILTER HANDLERS
-  // ==========================================
+  // Fetch Logic
+  const fetchReminders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page,
+        limit,
+        status: filters.status !== "all" ? filters.status : undefined,
+        type: filters.type !== "all" ? filters.type : undefined,
+        priority: filters.priority !== "all" ? filters.priority : undefined,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+      };
 
+      const response = await reminderService.getAll(params);
+      let data = response?.data?.reminders || response?.reminders || [];
+
+      // Client-side Search
+      if (filters.search.trim()) {
+        const q = filters.search.toLowerCase();
+        data = data.filter(
+          (r) =>
+            r.title.toLowerCase().includes(q) ||
+            r.description?.toLowerCase().includes(q)
+        );
+      }
+
+      // Sort
+      data = sortRemindersData(data, filters.sortBy, filters.sortOrder);
+
+      const totalItems = filters.search.trim()
+        ? data.length
+        : response?.data?.pagination?.total ||
+          response?.pagination?.total ||
+          data.length;
+      const calculatedTotalPages = Math.ceil(totalItems / limit);
+
+      setReminders(data);
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+      setTotalCount(totalItems);
+    } catch (err) {
+      apiError(err, t("reminders.notifications.loadError"));
+      setReminders([]);
+    } finally {
+      setLoading(false);
+      setHasInitialLoad(true);
+    }
+  }, [filters, page, limit, t]);
+
+  useEffect(() => {
+    fetchReminders();
+  }, [fetchReminders]);
+
+  const sortRemindersData = (data, field, order) => {
+    return [...data].sort((a, b) => {
+      let valA, valB;
+      if (field === "date") {
+        valA = new Date(a.reminderDate);
+        valB = new Date(b.reminderDate);
+      } else if (field === "priority") {
+        const pMap = { urgent: 4, high: 3, medium: 2, low: 1 };
+        valA = pMap[a.priority];
+        valB = pMap[b.priority];
+      } else if (field === "status") {
+        valA = a.status;
+        valB = b.status;
+      } else {
+        valA = a.title.toLowerCase();
+        valB = b.title.toLowerCase();
+      }
+      if (valA < valB) return order === "asc" ? -1 : 1;
+      if (valA > valB) return order === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const paginatedReminders = useMemo(() => {
+    if (reminders.length > limit) {
+      const startIndex = (page - 1) * limit;
+      return reminders.slice(startIndex, startIndex + limit);
+    }
+    return reminders;
+  }, [reminders, page, limit]);
+
+  // Handlers
   const handleApplyFilters = () => {
-    setFilters((prev) => ({
-      ...prev,
-      ...localFilters,
-    }));
+    setFilters((prev) => ({ ...prev, ...localFilters }));
     setPage(1);
     setIsFilterOpen(false);
     showSuccess(t("reminders.notifications.filtersApplied"));
   };
-
-  const handleResetLocalFilters = () => {
+  const handleResetLocalFilters = () =>
     setLocalFilters({
       status: "all",
       type: "all",
@@ -135,8 +189,6 @@ const RemindersList = () => {
       sortBy: "date",
       sortOrder: "asc",
     });
-  };
-
   const handleClearAllFilters = () => {
     setFilters({
       search: "",
@@ -158,7 +210,6 @@ const RemindersList = () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const nextWeek = new Date(today);
     nextWeek.setDate(nextWeek.getDate() + 7);
-
     let newFilters = {
       ...filters,
       status: "active",
@@ -166,134 +217,24 @@ const RemindersList = () => {
       endDate: "",
     };
 
-    switch (preset) {
-      case "overdue":
-        newFilters.endDate = format(today, "yyyy-MM-dd");
-        break;
-      case "today":
-        newFilters.startDate = format(today, "yyyy-MM-dd");
-        newFilters.endDate = format(today, "yyyy-MM-dd");
-        break;
-      case "tomorrow":
-        newFilters.startDate = format(tomorrow, "yyyy-MM-dd");
-        newFilters.endDate = format(tomorrow, "yyyy-MM-dd");
-        break;
-      case "week":
-        newFilters.startDate = format(today, "yyyy-MM-dd");
-        newFilters.endDate = format(nextWeek, "yyyy-MM-dd");
-        break;
-      case "urgent":
-        newFilters.priority = "urgent";
-        break;
-      case "completed":
-        newFilters.status = "completed";
-        break;
-      default:
-        break;
-    }
+    if (preset === "overdue") newFilters.endDate = format(today, "yyyy-MM-dd");
+    else if (preset === "today") {
+      newFilters.startDate = format(today, "yyyy-MM-dd");
+      newFilters.endDate = format(today, "yyyy-MM-dd");
+    } else if (preset === "tomorrow") {
+      newFilters.startDate = format(tomorrow, "yyyy-MM-dd");
+      newFilters.endDate = format(tomorrow, "yyyy-MM-dd");
+    } else if (preset === "week") {
+      newFilters.startDate = format(today, "yyyy-MM-dd");
+      newFilters.endDate = format(nextWeek, "yyyy-MM-dd");
+    } else if (preset === "urgent") newFilters.priority = "urgent";
+    else if (preset === "completed") newFilters.status = "completed";
+
     setFilters(newFilters);
+    setIsFilterOpen(false); // Close panel on preset selection
     setPage(1);
+    showSuccess(t("reminders.notifications.filtersApplied"));
   };
-
-  // ==========================================
-  // FETCH DATA
-  // ==========================================
-
-  const fetchReminders = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const params = {
-        page,
-        limit,
-        status: filters.status !== "all" ? filters.status : undefined,
-        type: filters.type !== "all" ? filters.type : undefined,
-        priority: filters.priority !== "all" ? filters.priority : undefined,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
-      };
-
-      const response = await reminderService.getAll(params);
-      let data = response?.data?.reminders || response?.reminders || [];
-
-      // Client-side Filter (Search)
-      if (filters.search.trim()) {
-        const lowerQ = filters.search.toLowerCase();
-        data = data.filter(
-          (r) =>
-            r.title.toLowerCase().includes(lowerQ) ||
-            r.description?.toLowerCase().includes(lowerQ)
-        );
-      }
-
-      // Client-side Sort
-      data = sortRemindersData(data, filters.sortBy, filters.sortOrder);
-
-      const totalItems = filters.search.trim()
-        ? data.length
-        : response?.data?.pagination?.total ||
-          response?.pagination?.total ||
-          data.length;
-      const calculatedTotalPages = Math.ceil(totalItems / limit);
-
-      setReminders(data);
-      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
-      setTotalCount(totalItems);
-    } catch (err) {
-      apiError(err, t("reminders.notifications.loadError"));
-      setReminders([]);
-    } finally {
-      setLoading(false);
-      setHasInitialLoad(true);
-    }
-  }, [filters, page, limit, apiError, t]);
-
-  useEffect(() => {
-    fetchReminders();
-  }, [fetchReminders]);
-
-  const sortRemindersData = (data, sortField, order) => {
-    return [...data].sort((a, b) => {
-      let aVal, bVal;
-      switch (sortField) {
-        case "date":
-          aVal = new Date(a.reminderDate);
-          bVal = new Date(b.reminderDate);
-          break;
-        case "priority":
-          const pMap = { urgent: 4, high: 3, medium: 2, low: 1 };
-          aVal = pMap[a.priority] || 0;
-          bVal = pMap[b.priority] || 0;
-          break;
-        case "status":
-          aVal = a.status;
-          bVal = b.status;
-          break;
-        case "title":
-          aVal = a.title.toLowerCase();
-          bVal = b.title.toLowerCase();
-          break;
-        default:
-          return 0;
-      }
-      if (aVal < bVal) return order === "asc" ? -1 : 1;
-      if (aVal > bVal) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-  };
-
-  // Client-side slicing
-  const paginatedReminders = useMemo(() => {
-    if (reminders.length > limit) {
-      const startIndex = (page - 1) * limit;
-      return reminders.slice(startIndex, startIndex + limit);
-    }
-    return reminders;
-  }, [reminders, page, limit]);
-
-  // ==========================================
-  // ACTIONS
-  // ==========================================
 
   const handleDeleteConfirm = async () => {
     try {
@@ -337,19 +278,7 @@ const RemindersList = () => {
     );
   };
 
-  // ==========================================
-  // UI HELPERS
-  // ==========================================
-
-  const hasActiveFilters =
-    filters.search !== "" ||
-    filters.status !== "all" ||
-    filters.type !== "all" ||
-    filters.priority !== "all" ||
-    filters.startDate !== "" ||
-    filters.endDate !== "" ||
-    filters.sortBy !== "date"; // Default sort check
-
+  // UI Helpers
   const getTypeColor = (tp) =>
     ({
       event: "primary",
@@ -359,15 +288,20 @@ const RemindersList = () => {
       followup: "success",
       other: "secondary",
     })[tp] || "secondary";
-
   const getPriorityColor = (p) =>
-    ({
-      urgent: "danger",
-      high: "warning",
-      medium: "info",
-      low: "secondary",
-    })[p] || "secondary";
+    ({ urgent: "danger", high: "warning", medium: "info", low: "secondary" })[
+      p
+    ] || "secondary";
+  const hasActiveFilters =
+    filters.search !== "" ||
+    filters.status !== "all" ||
+    filters.type !== "all" ||
+    filters.priority !== "all" ||
+    filters.startDate !== "" ||
+    filters.endDate !== "" ||
+    filters.sortBy !== "date";
 
+  // Columns
   const columns = [
     {
       header: t("reminders.columns.title"),
@@ -465,26 +399,26 @@ const RemindersList = () => {
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggleComplete(row);
-            }}
-            title={
-              row.status === "active"
-                ? t("reminders.actions.markDone")
-                : t("reminders.actions.reactivate")
-            }
-            className={
-              row.status === "completed"
-                ? "text-green-600 bg-green-50"
-                : "text-gray-400 hover:text-green-600"
-            }
-          >
-            <CheckCircle className="w-4 h-4" />
-          </Button>
+          {/* Toggle Complete: Protected */}
+          <PermissionGuard permission="reminders.update.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleComplete(row);
+              }}
+              className={
+                row.status === "completed"
+                  ? "text-green-600 bg-green-50"
+                  : "text-gray-400 hover:text-green-600"
+              }
+            >
+              <CheckCircle className="w-4 h-4" />
+            </Button>
+          </PermissionGuard>
+
+          {/* View: Everyone */}
           <Button
             variant="outline"
             size="sm"
@@ -493,37 +427,42 @@ const RemindersList = () => {
               setSelectedReminder(row);
               setIsDetailModalOpen(true);
             }}
-            title={t("reminders.actions.view")}
           >
             <Eye className="w-4 h-4 text-blue-500" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedReminder(row);
-              setIsFormOpen(true);
-            }}
-            title={t("reminders.actions.edit")}
-          >
-            <Edit className="w-4 h-4 text-green-500" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setConfirmationModal({
-                isOpen: true,
-                id: row._id,
-                name: row.title,
-              });
-            }}
-            title={t("reminders.actions.delete")}
-          >
-            <Trash2 className="w-4 h-4 text-red-500" />
-          </Button>
+
+          {/* Edit: Protected */}
+          <PermissionGuard permission="reminders.update.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedReminder(row);
+                setIsFormOpen(true);
+              }}
+            >
+              <Edit className="w-4 h-4 text-green-500" />
+            </Button>
+          </PermissionGuard>
+
+          {/* Delete: Protected */}
+          <PermissionGuard permission="reminders.delete.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirmationModal({
+                  isOpen: true,
+                  id: row._id,
+                  name: row.title,
+                });
+              }}
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </Button>
+          </PermissionGuard>
         </div>
       ),
     },
@@ -551,38 +490,25 @@ const RemindersList = () => {
             )}
           </p>
         </div>
+
+        {/* ✅ Create Guard */}
         {(!loading || hasInitialLoad) && (
-          <Button
-            variant="primary"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={() => {
-              setSelectedReminder(null);
-              setIsFormOpen(true);
-            }}
-          >
-            {t("reminders.addReminder")}
-          </Button>
+          <PermissionGuard permission="reminders.create">
+            <Button
+              variant="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedReminder(null);
+                setIsFormOpen(true);
+              }}
+            >
+              {t("reminders.addReminder")}
+            </Button>
+          </PermissionGuard>
         )}
       </div>
 
-      {/* QUICK PRESETS */}
-      {hasInitialLoad && reminders.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {["overdue", "today", "tomorrow", "week", "urgent", "completed"].map(
-            (preset) => (
-              <button
-                key={preset}
-                onClick={() => handleQuickPreset(preset)}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 hover:bg-orange-100 text-gray-600 hover:text-orange-700 dark:bg-gray-700 dark:hover:bg-orange-900/30 dark:text-gray-300 transition-colors border border-transparent hover:border-orange-200"
-              >
-                {t(`reminders.filters.presets.${preset}`)}
-              </button>
-            )
-          )}
-        </div>
-      )}
-
-      {/* FILTER BAR */}
+      {/* FILTER BAR & PANEL */}
       {hasInitialLoad && (
         <div className="relative z-20">
           <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
@@ -621,7 +547,7 @@ const RemindersList = () => {
 
           {/* ADVANCED FILTERS PANEL */}
           {isFilterOpen && (
-            <div className="mt-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
+            <div className="mt-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
                   <Filter className="w-5 h-5" />
@@ -637,8 +563,31 @@ const RemindersList = () => {
                 </button>
               </div>
 
+              {/* ✅ MERGED: Quick Presets Section */}
+              <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-3 text-gray-700 dark:text-gray-200">
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "overdue",
+                    "today",
+                    "tomorrow",
+                    "week",
+                    "urgent",
+                    "completed",
+                  ].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => handleQuickPreset(preset)}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-50 hover:bg-orange-50 text-gray-600 hover:text-orange-600 border border-gray-200 hover:border-orange-200 transition-all dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                    >
+                      {t(`reminders.filters.presets.${preset}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Column 1: Status & Type */}
                 <div className="space-y-4">
                   <Select
                     label={t("reminders.status.label")}
@@ -675,8 +624,6 @@ const RemindersList = () => {
                     }))}
                   />
                 </div>
-
-                {/* Column 2: Priority */}
                 <div className="space-y-4">
                   <Select
                     label={t("reminders.priority.label")}
@@ -692,9 +639,7 @@ const RemindersList = () => {
                     )}
                   />
                 </div>
-
-                {/* Column 3: Date Range */}
-                <div className="md:col-span-2 lg:col-span-1 space-y-4 p-4 bg-white dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                <div className="md:col-span-2 lg:col-span-1 space-y-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-600">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <CalendarDays className="w-4 h-4 text-orange-500" />{" "}
                     {t("reminders.filters.dateRange")}
@@ -724,9 +669,7 @@ const RemindersList = () => {
                     />
                   </div>
                 </div>
-
-                {/* Column 4: Sorting */}
-                <div className="md:col-span-2 lg:col-span-1 space-y-4 p-4 bg-white dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                <div className="md:col-span-2 lg:col-span-1 space-y-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-600">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <ArrowUpDown className="w-4 h-4 text-orange-500" />{" "}
                     {t("reminders.filters.sorting")}
@@ -762,7 +705,6 @@ const RemindersList = () => {
                   </div>
                 </div>
               </div>
-
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
                 <Button variant="ghost" onClick={handleResetLocalFilters}>
                   <X className="w-4 h-4 mr-2" /> {t("reminders.filters.reset")}
@@ -847,17 +789,20 @@ const RemindersList = () => {
                   <p className="text-gray-500 mb-8 text-center max-w-md">
                     {t("reminders.emptyDesc")}
                   </p>
-                  <Button
-                    onClick={() => {
-                      setSelectedReminder(null);
-                      setIsFormOpen(true);
-                    }}
-                    variant="primary"
-                    size="lg"
-                    icon={<Plus className="w-5 h-5" />}
-                  >
-                    {t("reminders.createFirst")}
-                  </Button>
+
+                  <PermissionGuard permission="reminders.create">
+                    <Button
+                      onClick={() => {
+                        setSelectedReminder(null);
+                        setIsFormOpen(true);
+                      }}
+                      variant="primary"
+                      size="lg"
+                      icon={<Plus className="w-5 h-5" />}
+                    >
+                      {t("reminders.createFirst")}
+                    </Button>
+                  </PermissionGuard>
                 </>
               )}
             </div>
@@ -877,7 +822,6 @@ const RemindersList = () => {
         }}
         refreshData={fetchReminders}
       />
-
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -894,7 +838,6 @@ const RemindersList = () => {
           onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
-
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() => setConfirmationModal((p) => ({ ...p, isOpen: false }))}

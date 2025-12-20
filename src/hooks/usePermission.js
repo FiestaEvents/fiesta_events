@@ -1,24 +1,22 @@
-import { useMemo } from 'react';
-import { useAuth } from './useAuth.jsx';
+import { useAuth } from "../context/AuthContext";
 
-export const usePermission = (permissionName) => {
+export const usePermission = (requiredPermission) => {
   const { user } = useAuth();
 
-  return useMemo(() => {
-    if (!user?.permissions) return false;
-    return user.permissions.some(p => p.name === permissionName);
-  }, [user, permissionName]);
-};
+  if (!user) return false;
 
-export const usePermissions = (permissionNames = []) => {
-  const { user } = useAuth();
+  // 1. Owner Override (Always true)
+  if (user.role?.name === "Owner" || user.role?.type === "owner") {
+    return true;
+  }
 
-  return useMemo(() => {
-    if (!user?.permissions) return {};
-    
-    return permissionNames.reduce((acc, permName) => {
-      acc[permName] = user.permissions.some(p => p.name === permName);
-      return acc;
-    }, {});
-  }, [user, permissionNames]);
+  // 2. Check the flattened permissions array
+  // The backend now sends 'permissions' as an array of strings like ["events.read.all", "clients.create"]
+  const userPermissions = user.permissions || [];
+
+  if (Array.isArray(userPermissions)) {
+    return userPermissions.includes(requiredPermission);
+  }
+
+  return false;
 };

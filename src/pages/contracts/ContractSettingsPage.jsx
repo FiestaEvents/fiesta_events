@@ -346,6 +346,7 @@ const ContractSettingsPage = () => {
   const [hasChanges, setHasChanges] = useState(false);
 
   // --- FETCH SETTINGS ---
+// --- FETCH SETTINGS ---
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
@@ -356,6 +357,41 @@ const ContractSettingsPage = () => {
         setSettings(DEFAULT_SETTINGS);
         return;
       }
+
+      // --- FIX START: Handle the object-like address string ---
+      let cleanAddress = dbSettings.companyInfo?.address;
+      
+      // Check if address looks like the stringified object: "{ street: '...', ... }"
+      if (typeof cleanAddress === 'string' && cleanAddress.trim().startsWith('{') && cleanAddress.includes('street:')) {
+        try {
+          // Extract values using Regex since strictly parsing this format is difficult
+          const getVal = (key) => {
+            const match = cleanAddress.match(new RegExp(`${key}:\\s*'([^']*)'`));
+            return match ? match[1] : '';
+          };
+
+          const street = getVal('street');
+          const city = getVal('city');
+          const state = getVal('state');
+          const zip = getVal('zipCode');
+          const country = getVal('country');
+
+          // Combine into a readable string
+          const parts = [street, zip, city, state, country].filter(p => p && p.trim());
+          
+          if (parts.length > 0) {
+            cleanAddress = parts.join(', ');
+          }
+        } catch (e) {
+          console.warn("Could not parse address format, using original string");
+        }
+      }
+      
+      // Override the malformed address in dbSettings before merging
+      if (dbSettings.companyInfo) {
+        dbSettings.companyInfo.address = cleanAddress;
+      }
+      // --- FIX END ---
 
       const mergedSettings = {
         companyInfo: deepMerge(

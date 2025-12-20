@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { NavLink as RouterNavLink, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../context/LanguageContext";
+import { usePermission } from "../../hooks/usePermission";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -16,17 +17,17 @@ import {
   FileSignature,
   FolderOpen,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   X,
   Home,
   TrendingUp,
   Sparkles,
   BoxIcon,
+  ShieldCheck, // Added for Roles
+  UserCog, // Added for Team
 } from "lucide-react";
 
 // ============================================================
-// TOOLTIP COMPONENT
+// TOOLTIP COMPONENT (Unchanged)
 // ============================================================
 const Tooltip = ({ children, text, isRTL, show }) => {
   if (!show || !text) return children;
@@ -57,7 +58,7 @@ const Tooltip = ({ children, text, isRTL, show }) => {
 };
 
 // ============================================================
-// ANIMATED NAVLINK COMPONENT
+// NAVLINK COMPONENT (Unchanged)
 // ============================================================
 const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
   const { t } = useTranslation();
@@ -79,11 +80,9 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
         {({ isActive }) => (
           <motion.div
             className={`flex items-center w-full ${isCollapsed ? "justify-center" : ""}`}
-            // ✅ CHANGED: Only apply hover/tap scale effects if the item is NOT active
             whileHover={isActive ? {} : { scale: 1.02, x: isRTL ? -2 : 2 }}
             whileTap={isActive ? {} : { scale: 0.98 }}
           >
-            {/* Active Indicator */}
             {isActive && !isCollapsed && (
               <motion.div
                 layoutId="activeIndicator"
@@ -92,12 +91,9 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
               />
             )}
 
-            {/* Icon with pulse effect on active */}
             <div className="relative">
               <Icon
-                className={`flex-shrink-0 transition-all duration-300 ${
-                  isCollapsed ? "w-5 h-5" : "w-4 h-4"
-                }`}
+                className={`flex-shrink-0 transition-all duration-300 ${isCollapsed ? "w-5 h-5" : "w-4 h-4"}`}
               />
               {isActive && (
                 <motion.div
@@ -109,7 +105,6 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
               )}
             </div>
 
-            {/* Text Label */}
             <AnimatePresence mode="wait">
               {!isCollapsed && (
                 <motion.span
@@ -117,16 +112,13 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: isRTL ? 10 : -10 }}
                   transition={{ duration: 0.2 }}
-                  className={`whitespace-nowrap font-medium text-xs ${
-                    isRTL ? "mr-3" : "ml-3"
-                  }`}
+                  className={`whitespace-nowrap font-medium text-xs ${isRTL ? "mr-3" : "ml-3"}`}
                 >
                   {t(labelKey)}
                 </motion.span>
               )}
             </AnimatePresence>
 
-            {/* Badge */}
             {!isCollapsed && badge && (
               <motion.span
                 initial={{ scale: 0 }}
@@ -145,11 +137,15 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
 };
 
 // ============================================================
-// NAV SECTION COMPONENT
+// NAV SECTION COMPONENT (Unchanged)
 // ============================================================
 const NavSection = ({ titleKey, children, isCollapsed }) => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
+
+  // Hide section if no children (permissions hidden all links)
+  if (!children || (Array.isArray(children) && children.every((c) => !c)))
+    return null;
 
   return (
     <div className="mb-4">
@@ -162,9 +158,7 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
             transition={{ duration: 0.2 }}
           >
             <h3
-              className={`px-2 mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2 ${
-                isRTL ? "text-right" : "text-left"
-              }`}
+              className={`px-2 mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2 ${isRTL ? "text-right" : "text-left"}`}
             >
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
               <span>{t(titleKey)}</span>
@@ -188,6 +182,25 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
 
+  // ✅ PERMISSIONS HOOKS
+  const canViewEvents = usePermission("events.read.all");
+  const canViewClients = usePermission("clients.read.all");
+  const canViewPartners = usePermission("partners.read.all");
+  const canViewSupplies = usePermission("supplies.read.all");
+  const canViewTasks = usePermission("tasks.read.all");
+  const canViewReminders = usePermission("reminders.read.all");
+
+  const canViewFinance = usePermission("finance.read.all");
+  const canViewPayments = usePermission("payments.read.all"); // or finance.read.all
+
+  const canViewContracts = usePermission("contracts.read.all");
+  const canViewDocs = usePermission("settings.read"); // Assuming docs under settings permission
+  const canViewVenueSettings = usePermission("venue.update"); // Only Managers/Owners
+
+  // ✅ TEAM & ROLES (Restricted to Owner/Admin usually)
+  const canViewTeam = usePermission("users.read.all");
+  const canViewRoles = usePermission("roles.read.all");
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -207,22 +220,15 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       {/* Sidebar Container */}
       <motion.aside
         initial={false}
-        animate={{
-          width: isCollapsed ? 64 : 240,
-        }}
+        animate={{ width: isCollapsed ? 64 : 240 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-50 shadow-xl dark:border-gray-800
         ${isRTL ? "right-0 border-r-0 border-l" : "left-0"}
-        ${
-          isOpen
-            ? "translate-x-0"
-            : isRTL
-              ? "translate-x-full lg:translate-x-0"
-              : "-translate-x-full lg:translate-x-0"
-        } transition-transform duration-300 ease-in-out`}
+        ${isOpen ? "translate-x-0" : isRTL ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"} 
+        transition-transform duration-300 ease-in-out`}
       >
         <div className="flex flex-col h-full">
-          {/* Header / Logo Area */}
+          {/* Header */}
           <div className="h-16 flex items-center justify-center shrink-0 px-4 relative dark:border-gray-800/50">
             <Link
               to="/"
@@ -231,19 +237,11 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               <motion.img
                 src="/fiesta logo-01.png"
                 alt="Fiesta Logo"
-                animate={{
-                  height: isCollapsed ? "24px" : "32px",
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 25,
-                }}
+                animate={{ height: isCollapsed ? "24px" : "32px" }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className="object-contain max-w-full"
               />
             </Link>
-
-            {/* Mobile Close Button */}
             <button
               onClick={onClose}
               className="lg:hidden absolute right-4 p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -252,9 +250,9 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             </button>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-3 space-y-2 hide-scrollbar">
-            {/* Overview Section */}
+            {/* 1. Overview (Available to everyone) */}
             <NavSection titleKey="sidebar.overview" isCollapsed={isCollapsed}>
               <NavLink
                 to="/home"
@@ -270,89 +268,156 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               />
             </NavSection>
 
-            {/* Operations Section */}
-            <NavSection titleKey="sidebar.operations" isCollapsed={isCollapsed}>
-              <NavLink
-                to="/events"
-                icon={Calendar}
-                labelKey="common.events"
+            {/* 2. Operations (Conditional) */}
+            {(canViewEvents ||
+              canViewClients ||
+              canViewPartners ||
+              canViewSupplies) && (
+              <NavSection
+                titleKey="sidebar.operations"
                 isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/clients"
-                icon={Users}
-                labelKey="common.clients"
-                isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/partners"
-                icon={Handshake}
-                labelKey="common.partners"
-                isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/supplies"
-                icon={BoxIcon}
-                labelKey="common.supplies"
-                isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/tasks"
-                icon={ClipboardList}
-                labelKey="common.tasks"
-                isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/reminders"
-                icon={Bell}
-                labelKey="common.reminders"
-                isCollapsed={isCollapsed}
-              />
-            </NavSection>
+              >
+                {canViewEvents && (
+                  <NavLink
+                    to="/events"
+                    icon={Calendar}
+                    labelKey="common.events"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {canViewClients && (
+                  <NavLink
+                    to="/clients"
+                    icon={Users}
+                    labelKey="common.clients"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {canViewPartners && (
+                  <NavLink
+                    to="/partners"
+                    icon={Handshake}
+                    labelKey="common.partners"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {canViewSupplies && (
+                  <NavLink
+                    to="/supplies"
+                    icon={BoxIcon}
+                    labelKey="common.supplies"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {canViewTasks && (
+                  <NavLink
+                    to="/tasks"
+                    icon={ClipboardList}
+                    labelKey="common.tasks"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {canViewReminders && (
+                  <NavLink
+                    to="/reminders"
+                    icon={Bell}
+                    labelKey="common.reminders"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+              </NavSection>
+            )}
 
-            {/* Financial Section */}
-            <NavSection titleKey="sidebar.financial" isCollapsed={isCollapsed}>
-              <NavLink
-                to="/finance"
-                icon={TrendingUp}
-                labelKey="common.finance"
+            {/* 3. Financial (Conditional) */}
+            {(canViewFinance || canViewPayments) && (
+              <NavSection
+                titleKey="sidebar.financial"
                 isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/payments"
-                icon={Wallet}
-                labelKey="common.payments"
-                isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/invoices"
-                icon={Receipt}
-                labelKey="common.invoices"
-                isCollapsed={isCollapsed}
-              />
-            </NavSection>
+              >
+                {canViewFinance && (
+                  <NavLink
+                    to="/finance"
+                    icon={TrendingUp}
+                    labelKey="common.finance"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {canViewPayments && (
+                  <NavLink
+                    to="/payments"
+                    icon={Wallet}
+                    labelKey="common.payments"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {/* Invoices usually fall under Finance or Payments perm */}
+                {canViewFinance && (
+                  <NavLink
+                    to="/invoices"
+                    icon={Receipt}
+                    labelKey="common.invoices"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+              </NavSection>
+            )}
 
-            {/* Management Section */}
-            <NavSection titleKey="sidebar.management" isCollapsed={isCollapsed}>
-              <NavLink
-                to="/contracts"
-                icon={FileSignature}
-                labelKey="common.contracts"
+            {/* 4. Team & Administration (Restricted) */}
+            {(canViewTeam || canViewRoles) && (
+              <NavSection titleKey="sidebar.team" isCollapsed={isCollapsed}>
+                {canViewTeam && (
+                  <NavLink
+                    to="/team"
+                    icon={UserCog}
+                    labelKey="common.team"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {canViewRoles && (
+                  <NavLink
+                    to="/roles"
+                    icon={ShieldCheck}
+                    labelKey="common.roles"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+              </NavSection>
+            )}
+
+            {/* 5. Management & Settings */}
+            {(canViewContracts || canViewVenueSettings) && (
+              <NavSection
+                titleKey="sidebar.management"
                 isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/documents"
-                icon={FolderOpen}
-                labelKey="common.documents"
-                isCollapsed={isCollapsed}
-              />
-              <NavLink
-                to="/settings"
-                icon={Settings}
-                labelKey="common.settings"
-                isCollapsed={isCollapsed}
-              />
-            </NavSection>
+              >
+                {canViewContracts && (
+                  <NavLink
+                    to="/contracts"
+                    icon={FileSignature}
+                    labelKey="common.contracts"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                {canViewDocs && (
+                  <NavLink
+                    to="/documents"
+                    icon={FolderOpen}
+                    labelKey="common.documents"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+
+                {/* Points to Venue Settings - Profile is in TopBar */}
+                {canViewVenueSettings && (
+                  <NavLink
+                    to="/settings"
+                    icon={Settings}
+                    labelKey="common.settings"
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+              </NavSection>
+            )}
           </nav>
 
           {/* Footer */}

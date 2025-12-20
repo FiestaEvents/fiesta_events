@@ -1,170 +1,63 @@
-# 🎉 Fiesta - Event & Venue Management Platform
+    
+# 🎉 Fiesta - Frontend Client
 
-<div align="center">
+The modern, responsive dashboard for the **Fiesta Venue Management Platform**. Built with React 19, Vite, and TailwindCSS, it features a dynamic permission system, multi-language support, and a polished UI.
 
-![Fiesta Logo](public/fiesta%20logo-01.png)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css)
+![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite)
 
-**Transform Your Event Management Experience**
+## ✨ Key Features
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-orange.svg)](https://opensource.org/licenses/MIT)
-[![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js)](https://nodejs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248?logo=mongodb)](https://www.mongodb.com/)
+*   **🛡️ Dynamic RBAC:** Real-time permission handling. Sidebar items and action buttons hide/disable based on the user's role.
+*   **🌙 Dark Mode:** Fully supported system-wide dark/light theme toggling.
+*   **🌍 Internationalization (i18n):** Full support for English, French, and Arabic (RTL layouts).
+*   **🔐 Secure Auth:** Uses HttpOnly Cookies for session management (No tokens in LocalStorage).
+*   **📊 Interactive Dashboards:** Kanban boards for Tasks, Calendar views for Events, and Chart.js for Finance.
+*   **⚡ Real-time Feedback:** Toast notifications and optimistic UI updates.
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Screenshots](#-screenshots) • [API Documentation](#-api-documentation)
+## 🛠️ Tech Stack
 
-</div>
-
----
-
-## 📖 Overview
-
-**Fiesta** is a comprehensive, full-stack event and venue management platform designed to streamline the entire event lifecycle. From booking venues to managing contracts, invoices, and team collaboration, Fiesta provides an all-in-one solution for venue owners, event planners, and service partners.
-
-### 🎯 Key Highlights
-
-- **🏢 Venue Management** - Complete venue and space management with availability tracking
-- **📅 Event Planning** - Intuitive calendar-based event scheduling and management
-- **💼 Client & Partner Management** - Centralized database for clients and service partners
-- **📄 Contract & Invoice Generation** - Automated contract creation and customizable invoicing
-- **💰 Financial Tracking** - Real-time financial analytics and payment management
-- **✅ Task Management** - Comprehensive task tracking with drag-and-drop Kanban boards
-- **🔔 Smart Reminders** - Automated notifications for important deadlines
-- **👥 Team Collaboration** - Role-based access control with team invitations
-- **🌍 Multi-language Support** - Full internationalization (English & Arabic)
-- **📊 Analytics Dashboard** - Real-time insights and performance metrics
-
----
-
-## ✨ Features
-
-### For Venue Owners
-
-- **Smart Calendar Management** - Visual event scheduling with conflict detection
-- **Financial Analytics** - Revenue tracking, expense management, and profit analysis
-- **Team Management** - Role-based permissions and team collaboration tools
-- **Automated Invoicing** - Customizable invoice templates with PDF generation
-- **Contract Management** - Digital contract creation, tracking, and e-signatures
-- **Space Management** - Multiple venue spaces with individual availability
-
-### For Event Planners
-
-- **Venue Discovery** - Browse and book venues through the marketplace
-- **Service Partner Network** - Connect with photographers, caterers, decorators, and more
-- **Real-time Booking** - Instant availability checks and booking confirmations
-- **Event Dashboard** - Centralized view of all events and their status
-- **Budget Tracking** - Monitor expenses and payments in real-time
-
-### For Service Partners
-
-- **Business Exposure** - Get discovered by venue owners and event planners
-- **Booking Management** - Manage service requests and availability
-- **Payment Integration** - Streamlined payment processing
-- **Review System** - Build reputation through client reviews
-
----
-
-## 🛠 Tech Stack
-
-### Frontend (`fiesta_events`)
-
-| Technology                 | Purpose                                  |
-| -------------------------- | ---------------------------------------- |
-| **React 19.2.0**           | Modern UI library with latest features   |
-| **Vite 7.1**               | Lightning-fast build tool and dev server |
-| **React Router 7.9**       | Client-side routing and navigation       |
-| **TailwindCSS 3.4**        | Utility-first CSS framework              |
-| **Framer Motion 12**       | Smooth animations and transitions        |
-| **FullCalendar 6.1**       | Interactive event calendar               |
-| **Chart.js 4.5**           | Data visualization and analytics         |
-| **React Query 5.90**       | Server state management                  |
-| **Zustand 5.0**            | Lightweight state management             |
-| **i18next 25.6**           | Internationalization (EN/AR)             |
-| **React Hook Form 7.65**   | Form validation and management           |
-| **Axios 1.12**             | HTTP client for API requests             |
-| **React PDF Renderer 4.3** | PDF generation for invoices/contracts    |
-| **Lucide React**           | Beautiful icon library                   |
-| **React Hot Toast**        | Elegant notification system              |
-
-### Backend (`fiesta_backend`)
-
-| Technology                  | Purpose                               |
-| --------------------------- | ------------------------------------- |
-| **Node.js**                 | JavaScript runtime environment        |
-| **Express 4.21**            | Web application framework             |
-| **MongoDB 8.20** (Mongoose) | NoSQL database with ODM               |
-| **JWT**                     | Secure authentication & authorization |
-| **bcryptjs**                | Password hashing                      |
-| **Nodemailer 7.0**          | Email notifications                   |
-| **PDFKit 0.17**             | Server-side PDF generation            |
-| **Multer 2.0**              | File upload handling                  |
-| **Helmet 7.1**              | Security middleware                   |
-| **Express Rate Limit**      | API rate limiting                     |
-| **Express Validator**       | Request validation                    |
-| **Morgan**                  | HTTP request logger                   |
-| **CORS**                    | Cross-origin resource sharing         |
-
----
+*   **Core:** React 19, Vite, React Router DOM 6
+*   **Styling:** TailwindCSS, Framer Motion (Animations), Lucide React (Icons)
+*   **State Management:** Zustand (Global State), React Context (Auth/Theme)
+*   **Forms:** React Hook Form
+*   **Data Fetching:** Axios (with Interceptors for 401 handling)
+*   **Utilities:** Date-fns, i18next, React Hot Toast
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 1. Prerequisites
+*   Node.js (v18+)
+*   The Backend server must be running.
 
-- **Node.js** >= 18.x
-- **MongoDB** >= 6.x
-- **npm** or **yarn**
-
-### Installation
-
-#### Backend Setup
-
+### 2. Installation
 ```bash
-cd fiesta_backend
-
-# Install dependencies
+cd fiesta_events
 npm install
 
-# Configure environment variables
-cp .env.example .env
-# Edit .env with your configuration
+  
 
-# Seed database with sample data (optional)
-npm run seed
+3. Environment Setup
 
-# Start development server
-npm run dev
-```
+Create a .env file in the fiesta_events root:
+code Env
 
-**Backend Environment Variables** (`.env`):
+    
+# URL of the Backend API
+VITE_API_URL=http://localhost:5000/api/v1
 
-```env
-PORT=5000
-NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/venue-management
-JWT_SECRET=your-super-secret-jwt-key-here
-JWT_EXPIRES_IN=7d
-FRONTEND_URL=http://localhost:3000
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-MAX_FILE_SIZE=5242880
-UPLOAD_PATH=./uploads
-```
+  
 
-#### Frontend Setup
+4. Run Development Server
+code Bash
 
-```bash
-cd ../fiesta_events
-
-# Install dependencies
-npm install
-
-# Start development server
+    
 npm run dev
 ```
 
 The frontend will be available at `http://localhost:5173` (Vite default port).
+
 
 ## 🔌 API Documentation
 
@@ -479,6 +372,7 @@ Language can be switched dynamically from the UI without page reload.
 - **Error Handling** - User-friendly error messages
 - **Accessibility** - WCAG compliant components
 
+
 ## 🗺 Roadmap
 
 ### Coming Soon
@@ -507,7 +401,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 **Fiesta Development Team**
 
 - Website: [fiesta.events](https://fiesta.events)
-- Email: contact@fiesta.events
+- Email: support@fiesta.events
 
 ---
 
@@ -522,7 +416,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 📞 Support
 
-For support, email contact@fiesta.events or join our community Discord server.
+For support, email support@fiesta.events or join our community Discord server.
 
 ---
 

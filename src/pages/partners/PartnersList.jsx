@@ -2,26 +2,19 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  X,
-  Edit,
-  Trash2,
-  Users,
-  Star,
-  AlertTriangle,
-  FolderOpen,
+  Plus, Search, Filter, Eye, X, Edit, Trash2, Users, Star,
+  AlertTriangle, FolderOpen
 } from "lucide-react";
-import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ API & Services
+
+// ✅ API & Permissions
 import { partnerService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard"; // 🔒 Guard
 
 // ✅ Generic Components & Utils
+import OrbitLoader from "../../components/common/LoadingSpinner";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
-import Table from "../../components/common/NewTable"; // Using NewTable
+import Table from "../../components/common/NewTable"; 
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
@@ -49,12 +42,7 @@ const PartnersList = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Confirmation modal
-  const [confirmationModal, setConfirmationModal] = useState({
-    isOpen: false,
-    partnerId: null,
-    partnerName: "",
-    onConfirm: null,
-  });
+  const [confirmationModal, setConfirmationModal] = useState({ isOpen: false, partnerId: null, partnerName: "", onConfirm: null });
 
   // Filters (Active State)
   const [search, setSearch] = useState("");
@@ -101,9 +89,7 @@ const PartnersList = () => {
     setCategory(localCategory);
     setPage(1);
     setIsFilterOpen(false);
-    showSuccess(
-      t("partners.notifications.filtersApplied") || "Filters applied"
-    );
+    showSuccess(t("partners.notifications.filtersApplied"));
   };
 
   const handleResetLocalFilters = () => {
@@ -134,11 +120,9 @@ const PartnersList = () => {
       };
 
       const response = await partnerService.getAll(params);
-
       let data = response?.partners || response?.data || response || [];
       if (!Array.isArray(data)) data = [];
 
-      // ✅ FIX: Robust Calculation
       const totalItems = response?.pagination?.total || data.length || 0;
       const calculatedTotalPages = Math.ceil(totalItems / limit);
 
@@ -146,22 +130,20 @@ const PartnersList = () => {
       setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
       setTotalCount(totalItems);
     } catch (err) {
-      const msg = err.response?.data?.message || t("partners.errors.loading");
-      setError(msg);
-      showError(msg);
+      setError(t("partners.errors.loading"));
       setPartners([]);
       setTotalCount(0);
     } finally {
       setLoading(false);
       setHasInitialLoad(true);
     }
-  }, [search, status, category, page, limit, t, showError]);
+  }, [search, status, category, page, limit, t]);
 
   useEffect(() => {
     fetchPartners();
   }, [fetchPartners]);
 
-  // ✅ FIX: Client-Side Slicing Fallback
+  // Client-Side Slicing Fallback
   const paginatedPartners = useMemo(() => {
     if (partners.length > limit) {
       const startIndex = (page - 1) * limit;
@@ -171,61 +153,38 @@ const PartnersList = () => {
   }, [partners, page, limit]);
 
   // --- Handlers ---
-  const handleDeleteConfirm = useCallback(
-    async (partnerId, partnerName) => {
-      try {
-        await promise(partnerService.delete(partnerId), {
-          loading: t("partners.deleteModal.deleting", { name: partnerName }),
-          success: t("partners.notifications.deleted"),
-          error: t("partners.deleteModal.errorDeleting", { name: partnerName }),
-        });
-        fetchPartners();
-        setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
-        if (selectedPartner?._id === partnerId) setIsDetailModalOpen(false);
-      } catch (err) {}
-    },
-    [fetchPartners, selectedPartner, promise, t]
-  );
+  const handleDeleteConfirm = useCallback(async (partnerId, partnerName) => {
+    try {
+      await promise(partnerService.delete(partnerId), {
+        loading: t("partners.deleteModal.deleting", { name: partnerName }),
+        success: t("partners.notifications.deleted"),
+        error: t("partners.deleteModal.errorDeleting", { name: partnerName }),
+      });
+      fetchPartners();
+      setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+      if (selectedPartner?._id === partnerId) setIsDetailModalOpen(false);
+    } catch (err) {}
+  }, [fetchPartners, selectedPartner, promise, t]);
 
   const handleDeletePartner = (partnerId, partnerName) => {
-    setConfirmationModal({
-      isOpen: true,
-      partnerId,
-      partnerName,
-      onConfirm: () => handleDeleteConfirm(partnerId, partnerName),
-    });
+    setConfirmationModal({ isOpen: true, partnerId, partnerName, onConfirm: () => handleDeleteConfirm(partnerId, partnerName) });
   };
 
   const handleFormSuccess = () => {
     fetchPartners();
     setIsFormOpen(false);
-    showSuccess(
-      selectedPartner
-        ? t("partners.notifications.updated")
-        : t("partners.notifications.added")
-    );
+    showSuccess(selectedPartner ? t("partners.notifications.updated") : t("partners.notifications.added"));
   };
 
-  const formatCategory = (cat) =>
-    categoryOptions.find((opt) => opt.value === cat)?.label || cat;
+  const formatCategory = (cat) => categoryOptions.find((opt) => opt.value === cat)?.label || cat;
 
-  const hasActiveFilters =
-    search.trim() !== "" || status !== "all" || category !== "all";
-  const showEmptyState =
-    !loading &&
-    !error &&
-    partners.length === 0 &&
-    !hasActiveFilters &&
-    hasInitialLoad;
-  const showNoResults =
-    !loading &&
-    !error &&
-    partners.length === 0 &&
-    hasActiveFilters &&
-    hasInitialLoad;
-  const showData =
-    hasInitialLoad && (partners.length > 0 || (loading && totalCount > 0));
+  // Logic States
+  const hasActiveFilters = search.trim() !== "" || status !== "all" || category !== "all";
+  const showEmptyState = !loading && !error && partners.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults = !loading && !error && partners.length === 0 && hasActiveFilters && hasInitialLoad;
+  const showData = hasInitialLoad && (partners.length > 0 || (loading && totalCount > 0));
 
+  // Columns
   const columns = [
     {
       header: t("partners.table.columns.name"),
@@ -234,14 +193,8 @@ const PartnersList = () => {
       width: "20%",
       render: (row) => (
         <div>
-          <div className="font-medium text-gray-900 dark:text-white">
-            {row.name || "Unnamed"}
-          </div>
-          {row.company && (
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              {row.company}
-            </div>
-          )}
+          <div className="font-medium text-gray-900 dark:text-white">{row.name || "Unnamed"}</div>
+          {row.company && <div className="text-xs text-gray-500 dark:text-gray-400">{row.company}</div>}
         </div>
       ),
     },
@@ -252,12 +205,8 @@ const PartnersList = () => {
       width: "20%",
       render: (row) => (
         <div className="text-sm">
-          <div className="text-gray-900 dark:text-white">
-            {row.email || "-"}
-          </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            {row.phone || "-"}
-          </div>
+          <div className="text-gray-900 dark:text-white">{row.email || "-"}</div>
+          <div className="text-gray-600 dark:text-gray-400">{row.phone || "-"}</div>
         </div>
       ),
     },
@@ -266,9 +215,7 @@ const PartnersList = () => {
       accessor: "category",
       sortable: true,
       width: "15%",
-      render: (row) => (
-        <Badge variant="info">{formatCategory(row.category)}</Badge>
-      ),
+      render: (row) => <Badge variant="info">{formatCategory(row.category)}</Badge>,
     },
     {
       header: t("partners.table.columns.rating"),
@@ -278,9 +225,7 @@ const PartnersList = () => {
       render: (row) => (
         <div className="flex items-center gap-1">
           <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {row.rating?.toFixed(1) || "0.0"}
-          </span>
+          <span className="text-sm font-medium text-gray-900 dark:text-white">{row.rating?.toFixed(1) || "0.0"}</span>
           <span className="text-xs text-gray-500">({row.totalJobs || 0})</span>
         </div>
       ),
@@ -292,9 +237,7 @@ const PartnersList = () => {
       width: "12%",
       render: (row) => (
         <Badge variant={row.status === "active" ? "success" : "danger"}>
-          {row.status === "active"
-            ? t("partners.actions.filters.active")
-            : t("partners.actions.filters.inactive")}
+          {row.status === "active" ? t("partners.actions.filters.active") : t("partners.actions.filters.inactive")}
         </Badge>
       ),
     },
@@ -304,9 +247,7 @@ const PartnersList = () => {
       width: "10%",
       render: (row) => (
         <div className="text-sm text-gray-900 dark:text-white">
-          {row.priceType === "hourly"
-            ? `${row.hourlyRate} TND/hr`
-            : `${row.fixedRate} TND`}
+          {row.priceType === "hourly" ? `${row.hourlyRate} TND/hr` : `${row.fixedRate} TND`}
         </div>
       ),
     },
@@ -317,40 +258,39 @@ const PartnersList = () => {
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
+          {/* View: Everyone */}
           <Button
             variant="outline"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/partners/${row._id}`, { state: { partner: row } });
-            }}
+            onClick={(e) => { e.stopPropagation(); navigate(`/partners/${row._id}`, { state: { partner: row } }); }}
             className="text-orange-600 hover:text-orange-700 dark:text-orange-400"
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedPartner(row);
-              setIsFormOpen(true);
-            }}
-            className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeletePartner(row._id, row.name);
-            }}
-            className="text-red-600 hover:text-red-700 dark:text-red-400"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+
+          {/* ✅ Edit Guard */}
+          <PermissionGuard permission="partners.update.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); setSelectedPartner(row); setIsFormOpen(true); }}
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </PermissionGuard>
+
+          {/* ✅ Delete Guard */}
+          <PermissionGuard permission="partners.delete.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); handleDeletePartner(row._id, row.name); }}
+              className="text-red-600 hover:text-red-700 dark:text-red-400"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </PermissionGuard>
         </div>
       ),
     },
@@ -360,27 +300,20 @@ const PartnersList = () => {
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t("partners.title")}
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("partners.title")}</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             {t("partners.subtitle")}
-            {hasInitialLoad &&
-              totalCount > 0 &&
-              ` • ${t("partners.showingResults", { count: partners.length, total: totalCount })}`}
+            {hasInitialLoad && totalCount > 0 && ` • ${t("partners.showingResults", { count: partners.length, total: totalCount })}`}
           </p>
         </div>
+        
+        {/* ✅ Create Guard */}
         {!showEmptyState && (
-          <Button
-            variant="primary"
-            icon={<Plus className="size-4" />}
-            onClick={() => {
-              setSelectedPartner(null);
-              setIsFormOpen(true);
-            }}
-          >
-            {t("partners.actions.addPartner")}
-          </Button>
+          <PermissionGuard permission="partners.create">
+             <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => { setSelectedPartner(null); setIsFormOpen(true); }}>
+               {t("partners.actions.addPartner")}
+             </Button>
+          </PermissionGuard>
         )}
       </div>
 
@@ -388,100 +321,30 @@ const PartnersList = () => {
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div className="w-full sm:max-w-md relative">
-              <Input
-                icon={Search}
-                placeholder={t("partners.actions.search")}
-                value={search}
-                onChange={(e) => {
-                  setPage(1);
-                  setSearch(e.target.value);
-                }}
-                className="w-full"
-              />
+              <Input icon={Search} placeholder={t("partners.actions.search")} value={search} onChange={(e) => { setPage(1); setSearch(e.target.value); }} className="w-full" />
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <Button
-                variant={hasActiveFilters ? "primary" : "outline"}
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
-              >
+              <Button variant={hasActiveFilters ? "primary" : "outline"} onClick={() => setIsFilterOpen(!isFilterOpen)} className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}>
                 <Filter className="w-4 h-4" />
-                {t("partners.actions.filters.advanced") || "Filters"}
-                {hasActiveFilters && (
-                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
-                    !
-                  </span>
-                )}
+                {t("partners.actions.filters.advanced")}
+                {hasActiveFilters && <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">!</span>}
               </Button>
-              {hasActiveFilters && (
-                <Button
-                  variant="outline"
-                  icon={X}
-                  onClick={handleClearAllFilters}
-                  className="text-gray-500"
-                >
-                  {t("partners.actions.clearFilters")}
-                </Button>
-              )}
+              {hasActiveFilters && <Button variant="outline" icon={X} onClick={handleClearAllFilters} className="text-gray-500">{t("partners.actions.clearFilters")}</Button>}
             </div>
           </div>
           {isFilterOpen && (
             <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                  {t("partners.actions.filters.options") || "Filter Options"}
-                </h3>
-                <button
-                  onClick={() => setIsFilterOpen(false)}
-                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">{t("partners.actions.filters.options")}</h3>
+                <button onClick={() => setIsFilterOpen(false)} className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"><X className="w-5 h-5" /></button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
-                <Select
-                  label={t("partners.table.columns.category")}
-                  value={localCategory}
-                  onChange={(e) => setLocalCategory(e.target.value)}
-                  options={categoryOptions}
-                  className="w-full"
-                />
-                <Select
-                  label={t("partners.table.columns.status")}
-                  value={localStatus}
-                  onChange={(e) => setLocalStatus(e.target.value)}
-                  options={[
-                    {
-                      value: "all",
-                      label: t("partners.actions.filters.allStatus"),
-                    },
-                    {
-                      value: "active",
-                      label: t("partners.actions.filters.active"),
-                    },
-                    {
-                      value: "inactive",
-                      label: t("partners.actions.filters.inactive"),
-                    },
-                  ]}
-                  className="w-full"
-                />
+                <Select label={t("partners.table.columns.category")} value={localCategory} onChange={(e) => setLocalCategory(e.target.value)} options={categoryOptions} className="w-full" />
+                <Select label={t("partners.table.columns.status")} value={localStatus} onChange={(e) => setLocalStatus(e.target.value)} options={[{ value: "all", label: t("partners.actions.filters.allStatus") }, { value: "active", label: t("partners.actions.filters.active") }, { value: "inactive", label: t("partners.actions.filters.inactive") }]} className="w-full" />
               </div>
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleResetLocalFilters}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                >
-                  {t("partners.actions.filters.reset") || "Reset"}
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleApplyFilters}
-                  className="px-6"
-                >
-                  {t("partners.actions.filters.apply") || "Apply Filters"}
-                </Button>
+                <Button variant="outline" onClick={handleResetLocalFilters} className="text-gray-500 hover:text-gray-700 dark:text-gray-400">{t("partners.actions.filters.reset")}</Button>
+                <Button variant="primary" onClick={handleApplyFilters} className="px-6">{t("partners.actions.filters.apply")}</Button>
               </div>
             </div>
           )}
@@ -492,153 +355,51 @@ const PartnersList = () => {
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg min-h-[300px]">
             <OrbitLoader />
-            <p className="text-gray-500 dark:text-gray-400">
-              {t("partners.loading.initial", "Loading...")}
-            </p>
+            <p className="text-gray-500 dark:text-gray-400">{t("partners.loading.initial", "Loading...")}</p>
           </div>
         )}
         {showData && (
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            <Table
-              columns={columns}
-              // ✅ Pass sliced data
-              data={paginatedPartners}
-              loading={loading}
-              onRowClick={(row) => {
-                setSelectedPartner(row);
-                setIsDetailModalOpen(true);
-              }}
-              striped
-              hoverable
-              pagination={true}
-              currentPage={page}
-              totalPages={totalPages}
-              totalItems={totalCount}
-              pageSize={limit}
-              onPageChange={setPage}
-              onPageSizeChange={(newSize) => {
-                setLimit(newSize);
-                setPage(1);
-              }}
-              pageSizeOptions={[10, 25, 50, 100]}
-            />
+            <Table columns={columns} data={paginatedPartners} loading={loading} onRowClick={(row) => { setSelectedPartner(row); setIsDetailModalOpen(true); }} striped hoverable pagination={true} currentPage={page} totalPages={totalPages} totalItems={totalCount} pageSize={limit} onPageChange={setPage} onPageSizeChange={(newSize) => { setLimit(newSize); setPage(1); }} pageSizeOptions={[10, 25, 50, 100]} />
           </div>
         )}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
-              <FolderOpen className="h-12 w-12 text-gray-400 dark:text-gray-500" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {t("partners.table.noResults.title")}
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t(
-                "partners.notifications.filtersCleared",
-                "Adjust your filters to find who you're looking for."
-              )}
-            </p>
-            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
-              {t("partners.actions.clearFilters")}
-            </Button>
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4"><FolderOpen className="h-12 w-12 text-gray-400 dark:text-gray-500" /></div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("partners.table.noResults.title")}</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">{t("partners.notifications.filtersCleared")}</p>
+            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>{t("partners.actions.clearFilters")}</Button>
           </div>
         )}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
-              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
-                <Users
-                  className="h-12 w-12 text-orange-500"
-                  strokeWidth={1.5}
-                />
-              </div>
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full"><Users className="h-12 w-12 text-orange-500" strokeWidth={1.5} /></div>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              {t("partners.emptyState.title")}
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-              {t(
-                "partners.emptyState.description",
-                "Collaborate with trusted vendors. Add your first partner to start managing contracts and services."
-              )}
-            </p>
-            <Button
-              onClick={() => {
-                setSelectedPartner(null);
-                setIsFormOpen(true);
-              }}
-              variant="primary"
-              size="lg"
-              icon={<Plus className="size-4" />}
-              className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
-            >
-              {t("partners.emptyState.addFirst")}
-            </Button>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("partners.emptyState.title")}</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">{t("partners.emptyState.description")}</p>
+            
+            <PermissionGuard permission="partners.create">
+                <Button onClick={() => { setSelectedPartner(null); setIsFormOpen(true); }} variant="primary" size="lg" icon={<Plus className="size-4" />} className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow">
+                  {t("partners.emptyState.addFirst")}
+                </Button>
+            </PermissionGuard>
           </div>
         )}
       </div>
 
-      <PartnerDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        partner={selectedPartner}
-        onEdit={(p) => {
-          setSelectedPartner(p);
-          setIsDetailModalOpen(false);
-          setIsFormOpen(true);
-        }}
-        refreshData={fetchPartners}
-      />
-      <Modal
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        title={
-          selectedPartner
-            ? t("partnerForm.editTitle")
-            : t("partnerForm.addTitle")
-        }
-        size="lg"
-      >
-        <PartnerForm
-          partner={selectedPartner}
-          onSuccess={handleFormSuccess}
-          onCancel={() => setIsFormOpen(false)}
-        />
+      {/* Modals remain the same */}
+      <PartnerDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} partner={selectedPartner} onEdit={(p) => { setSelectedPartner(p); setIsDetailModalOpen(false); setIsFormOpen(true); }} refreshData={fetchPartners} />
+      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={selectedPartner ? t("partnerForm.editTitle") : t("partnerForm.addTitle")} size="lg">
+        <PartnerForm partner={selectedPartner} onSuccess={handleFormSuccess} onCancel={() => setIsFormOpen(false)} />
       </Modal>
-      <Modal
-        isOpen={confirmationModal.isOpen}
-        onClose={() =>
-          setConfirmationModal((prev) => ({ ...prev, isOpen: false }))
-        }
-        title={t("partners.deleteModal.title")}
-        size="sm"
-      >
+      <Modal isOpen={confirmationModal.isOpen} onClose={() => setConfirmationModal((prev) => ({ ...prev, isOpen: false }))} title={t("partners.deleteModal.title")} size="sm">
         <div className="p-6">
-          <div className="flex items-center gap-4 mb-4 text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-            <AlertTriangle className="w-6 h-6" />
-            <h3 className="font-semibold">{t("partners.deleteModal.title")}</h3>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {t("partners.deleteModal.description", {
-              name: confirmationModal.partnerName,
-            })}
-          </p>
+          <div className="flex items-center gap-4 mb-4 text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg"><AlertTriangle className="w-6 h-6" /><h3 className="font-semibold">{t("partners.deleteModal.title")}</h3></div>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{t("partners.deleteModal.description", { name: confirmationModal.partnerName })}</p>
           <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() =>
-                setConfirmationModal((prev) => ({ ...prev, isOpen: false }))
-              }
-            >
-              {t("partners.deleteModal.cancel")}
-            </Button>
-            <Button
-              variant="danger"
-              onClick={confirmationModal.onConfirm}
-              icon={Trash2}
-            >
-              {t("partners.deleteModal.confirm")}
-            </Button>
+            <Button variant="outline" onClick={() => setConfirmationModal((prev) => ({ ...prev, isOpen: false }))}>{t("partners.deleteModal.cancel")}</Button>
+            <Button variant="danger" onClick={confirmationModal.onConfirm} icon={Trash2}>{t("partners.deleteModal.confirm")}</Button>
           </div>
         </div>
       </Modal>

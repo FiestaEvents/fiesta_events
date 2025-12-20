@@ -23,10 +23,13 @@ import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
-import Badge, { StatusBadge } from "../../components/common/Badge";
+import { StatusBadge } from "../../components/common/Badge";
 
-// ✅ Context & Sub-components
+// ✅ Auth & Permissions
+import PermissionGuard from "../../components/auth/PermissionGuard"; 
 import { useToast } from "../../context/ToastContext";
+
+// ✅ Sub-components
 import ClientDetailModal from "./ClientDetailModal";
 import ClientForm from "./ClientForm";
 
@@ -67,7 +70,7 @@ const ClientsList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // ✅ Helper: Strict DD/MM/YYYY format
+  // Helper: Strict DD/MM/YYYY format
   const formatDate = (dateString) => {
     if (!dateString) return t("clients.table.defaultValues.noDate");
     return new Date(dateString).toLocaleDateString("en-GB");
@@ -121,7 +124,7 @@ const ClientsList = () => {
         [];
       if (!Array.isArray(data)) data = [];
 
-      // ✅ Robust Pagination Calculation
+      // Pagination Calculation
       const totalItems =
         response?.data?.data?.totalCount ||
         response?.pagination?.total ||
@@ -150,7 +153,7 @@ const ClientsList = () => {
     fetchClients();
   }, [fetchClients]);
 
-  // ✅ Client-Side Slicing Fallback
+  // Client-Side Slicing Fallback
   const paginatedClients = useMemo(() => {
     if (clients.length > limit) {
       const startIndex = (page - 1) * limit;
@@ -203,7 +206,7 @@ const ClientsList = () => {
     );
   };
 
-  // ✅ Logic States
+  // Logic States
   const hasActiveFilters = search.trim() !== "" || status !== "all";
 
   const showEmptyState =
@@ -223,7 +226,7 @@ const ClientsList = () => {
   const showData =
     hasInitialLoad && (clients.length > 0 || (loading && totalCount > 0));
 
-  // Columns
+  // Columns Configuration
   const columns = [
     {
       header: t("clients.table.columns.name"),
@@ -282,6 +285,7 @@ const ClientsList = () => {
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
+          {/* View Action - Basic Read Permission */}
           <Button
             variant="outline"
             size="sm"
@@ -290,32 +294,43 @@ const ClientsList = () => {
               navigate(`/clients/${row._id}`, { state: { client: row } });
             }}
             className="text-orange-600 hover:text-orange-700 dark:text-orange-400"
+            title={t("common.view")}
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedClient(row);
-              setIsFormOpen(true);
-            }}
-            className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClient(row._id, row.name);
-            }}
-            className="text-red-600 hover:text-red-700 dark:text-red-400"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+
+          {/* Edit Action - Protected */}
+          <PermissionGuard permission="clients.update.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedClient(row);
+                setIsFormOpen(true);
+              }}
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              title={t("common.edit")}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </PermissionGuard>
+
+          {/* Delete Action - Protected */}
+          <PermissionGuard permission="clients.delete.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClient(row._id, row.name);
+              }}
+              className="text-red-600 hover:text-red-700 dark:text-red-400"
+              title={t("common.delete")}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </PermissionGuard>
         </div>
       ),
     },
@@ -337,21 +352,24 @@ const ClientsList = () => {
           </p>
         </div>
 
+        {/* Add Client Button - Protected */}
         {!showEmptyState && (
-          <Button
-            variant="primary"
-            onClick={() => {
-              setSelectedClient(null);
-              setIsFormOpen(true);
-            }}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> {t("clients.buttons.addClient")}
-          </Button>
+          <PermissionGuard permission="clients.create">
+            <Button
+              variant="primary"
+              onClick={() => {
+                setSelectedClient(null);
+                setIsFormOpen(true);
+              }}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> {t("clients.buttons.addClient")}
+            </Button>
+          </PermissionGuard>
         )}
       </div>
 
-      {/* ✅ ENHANCED FILTERS (List View) */}
+      {/* FILTERS */}
       {hasInitialLoad && !showEmptyState && (
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -515,18 +533,20 @@ const ClientsList = () => {
               {t("clients.empty.description")}
             </p>
 
-            <Button
-              onClick={() => {
-                setSelectedClient(null);
-                setIsFormOpen(true);
-              }}
-              variant="primary"
-              size="lg"
-              icon={<Plus className="size-4" />}
-              className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
-            >
-              {t("clients.buttons.addFirstClient")}
-            </Button>
+            <PermissionGuard permission="clients.create">
+              <Button
+                onClick={() => {
+                  setSelectedClient(null);
+                  setIsFormOpen(true);
+                }}
+                variant="primary"
+                size="lg"
+                icon={<Plus className="size-4" />}
+                className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
+              >
+                {t("clients.buttons.addFirstClient")}
+              </Button>
+            </PermissionGuard>
           </div>
         )}
       </div>
@@ -537,6 +557,7 @@ const ClientsList = () => {
         onClose={() => setIsDetailModalOpen(false)}
         client={selectedClient}
         onEdit={() => {
+          // Protected inside the modal logic or here
           setIsDetailModalOpen(false);
           setIsFormOpen(true);
         }}

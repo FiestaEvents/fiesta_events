@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-// ... (imports remain the same)
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -20,8 +19,10 @@ import {
   FolderOpen,
   Filter,
 } from "lucide-react";
-// ✅ API & Services
+
+// ✅ API & Permissions
 import { eventService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard"; // Import Guard
 
 // ✅ Generic Components
 import Button from "../../components/common/Button";
@@ -37,7 +38,7 @@ import OrbitLoader from "../../components/common/LoadingSpinner";
 import { useToast } from "../../context/ToastContext";
 import EventDetailModal from "./EventDetailModal";
 
-// ... (Utility functions getTypeVariant, formatDateTime, etc. remain the same)
+// --- Utility Functions ---
 const getTypeVariant = (type) => {
   const map = {
     wedding: "purple",
@@ -102,7 +103,7 @@ const getTypeClasses = (type) => {
   return classes[normalizedType] || classes.other;
 };
 
-// ... (DateEventsModal remains the same)
+// --- Modals ---
 const DateEventsModal = ({
   isOpen,
   onClose,
@@ -160,7 +161,7 @@ const DateEventsModal = ({
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                     <Clock className="w-3.5 h-3.5" />
-                    {formatTime(event.startDate)}
+                    {formatTime(event.startDate)}{" "}
                     {event.endDate && ` - ${formatTime(event.endDate)}`}
                   </div>
                   {event.clientId?.name && (
@@ -183,14 +184,17 @@ const DateEventsModal = ({
         )}
 
         <div className="pt-4 mt-2 border-t border-gray-100 dark:border-gray-700">
-          <Button
-            variant="primary"
-            icon={<Plus className="size-4" />}
-            onClick={() => onCreateEvent(selectedDate)}
-            className="w-full justify-center"
-          >
-            {t("eventList.actions.createEventOnDate")}
-          </Button>
+          {/* ✅ Protected Action: Create Event from Modal */}
+          <PermissionGuard permission="events.create">
+            <Button
+              variant="primary"
+              icon={<Plus className="size-4" />}
+              onClick={() => onCreateEvent(selectedDate)}
+              className="w-full justify-center"
+            >
+              {t("eventList.actions.createEventOnDate")}
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
     </Modal>
@@ -218,7 +222,7 @@ const EventList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Modals & Filters (Same as before)
+  // Modals & Filters
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDateEventsModalOpen, setIsDateEventsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -265,7 +269,7 @@ const EventList = () => {
     setLocalEndDate("");
   };
 
-  // Calendar helpers (Same)
+  // Calendar helpers
   const currentYear = currentDate.getFullYear();
   const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
   const eventTypeColors = [
@@ -331,7 +335,6 @@ const EventList = () => {
     try {
       setLoading(true);
       setError(null);
-
       const params = {
         page: currentPage,
         limit: pageSize,
@@ -342,7 +345,6 @@ const EventList = () => {
         ...(filterStartDate && { startDate: filterStartDate }),
         ...(filterEndDate && { endDate: filterEndDate }),
       };
-
       const response = await eventService.getAll(params);
       let eventsData =
         response?.data?.events ||
@@ -352,11 +354,8 @@ const EventList = () => {
         [];
       let paginationData =
         response?.data?.pagination || response?.pagination || {};
-
-      // ✅ FIX: Robust Total Calculation
       const total = paginationData.total || eventsData.length || 0;
       const calculatedTotalPages = Math.ceil(total / pageSize);
-
       setEvents(eventsData);
       setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
       setTotalItems(total);
@@ -385,10 +384,9 @@ const EventList = () => {
       setError(null);
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-
       const params = {
         page: 1,
-        limit: 100, // Load many for calendar
+        limit: 100,
         sort: "startDate",
         year: year,
         month: month,
@@ -396,7 +394,6 @@ const EventList = () => {
         ...(status !== "all" && { status }),
         ...(eventType !== "all" && { type: eventType }),
       };
-
       const response = await eventService.getAll(params);
       let eventsData =
         response?.data?.events ||
@@ -404,7 +401,6 @@ const EventList = () => {
         response?.data ||
         response ||
         [];
-
       setEvents(eventsData);
       setTotalItems(eventsData.length);
       setHasInitialLoad(true);
@@ -426,7 +422,7 @@ const EventList = () => {
     refreshAllData();
   }, [refreshAllData]);
 
-  // ✅ FIX: Client-Side Slicing Fallback
+  // Client-Side Slicing Fallback
   const paginatedEvents = useMemo(() => {
     if (viewMode === "list" && events.length > pageSize) {
       const startIndex = (currentPage - 1) * pageSize;
@@ -457,6 +453,7 @@ const EventList = () => {
     !loading && events.length === 0 && hasActiveFilters && hasInitialLoad;
   const showData =
     hasInitialLoad && (events.length > 0 || (loading && totalItems > 0));
+
   const handleRetry = useCallback(() => {
     setError(null);
     refreshAllData();
@@ -502,7 +499,7 @@ const EventList = () => {
     [navigate]
   );
 
-  // Calendar Logic
+  // Calendar Logic (Unchanged)
   const { daysInMonth, startingDayOfWeek } = useMemo(() => {
     const date = currentDate;
     const year = date.getFullYear();
@@ -558,10 +555,10 @@ const EventList = () => {
     setSelectedDate(today);
     showInfo(t("eventList.notifications.navigatedToToday"));
   };
-  const handleYearChange = (e) => {
-    const newYear = parseInt(e.target.value);
-    setCurrentDate(new Date(newYear, currentDate.getMonth(), 1));
-  };
+  const handleYearChange = (e) =>
+    setCurrentDate(
+      new Date(parseInt(e.target.value), currentDate.getMonth(), 1)
+    );
   const formatMonth = (date) =>
     date.toLocaleDateString("en-US", { month: "long" });
   const isToday = (date) => {
@@ -581,6 +578,9 @@ const EventList = () => {
     );
   };
 
+  // ==========================================
+  // TABLE COLUMNS (With Permission Guards)
+  // ==========================================
   const tableColumns = [
     {
       header: t("eventList.table.eventTitle"),
@@ -641,6 +641,7 @@ const EventList = () => {
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-2">
+          {/* View: Everyone can View */}
           <Button
             variant="outline"
             size="sm"
@@ -651,26 +652,34 @@ const EventList = () => {
           >
             <Eye className="h-4 w-4 text-orange-500 dark:text-orange-400" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditEvent(row);
-            }}
-          >
-            <Edit className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteEvent(row);
-            }}
-          >
-            <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
-          </Button>
+
+          {/* ✅ Edit Guard */}
+          <PermissionGuard permission="events.update.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditEvent(row);
+              }}
+            >
+              <Edit className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+            </Button>
+          </PermissionGuard>
+
+          {/* ✅ Delete Guard */}
+          <PermissionGuard permission="events.delete.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteEvent(row);
+              }}
+            >
+              <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
+            </Button>
+          </PermissionGuard>
         </div>
       ),
     },
@@ -711,15 +720,19 @@ const EventList = () => {
               <Grid className="w-4 h-4" /> {t("eventList.viewMode.calendar")}
             </button>
           </div>
+
+          {/* ✅ Create Event Guard */}
           {(!showEmptyState || viewMode === "calendar") && (
-            <Button
-              className="shrink-0 whitespace-nowrap"
-              variant="primary"
-              icon={<Plus className="size-4" />}
-              onClick={() => handleCreateEvent()}
-            >
-              {t("eventList.actions.createEvent")}
-            </Button>
+            <PermissionGuard permission="events.create">
+              <Button
+                className="shrink-0 whitespace-nowrap"
+                variant="primary"
+                icon={<Plus className="size-4" />}
+                onClick={() => handleCreateEvent()}
+              >
+                {t("eventList.actions.createEvent")}
+              </Button>
+            </PermissionGuard>
           )}
         </div>
       </div>
@@ -868,6 +881,7 @@ const EventList = () => {
         </div>
       )}
 
+      {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
@@ -884,7 +898,6 @@ const EventList = () => {
               <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <Table
                   columns={tableColumns}
-                  // ✅ Pass sliced data
                   data={paginatedEvents}
                   loading={loading}
                   onRowClick={onEventClick}
@@ -928,19 +941,21 @@ const EventList = () => {
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   {t("eventList.emptyState.noEvents")}
                 </h3>
-                <Button
-                  onClick={() => handleCreateEvent()}
-                  variant="primary"
-                  size="lg"
-                  icon={<Plus className="size-4" />}
-                >
-                  {t("eventList.actions.createFirstEvent")}
-                </Button>
+                <PermissionGuard permission="events.create">
+                  <Button
+                    onClick={() => handleCreateEvent()}
+                    variant="primary"
+                    size="lg"
+                    icon={<Plus className="size-4" />}
+                  >
+                    {t("eventList.actions.createFirstEvent")}
+                  </Button>
+                </PermissionGuard>
               </div>
             )}
           </>
         ) : (
-          /* Calendar View (Existing) */
+          /* Calendar View (Unchanged) */
           <div className="dark:bg-gray-800 h-full">
             <div className="flex gap-8">
               <div className="w-64 flex-shrink-0 hidden lg:block">

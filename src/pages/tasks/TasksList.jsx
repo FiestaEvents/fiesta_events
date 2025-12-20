@@ -22,10 +22,12 @@ import {
   Filter,
 } from "lucide-react";
 
-// API & Services
+// ✅ API & Permissions
 import { taskService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard";
+import { usePermission } from "../../hooks/usePermission";
 
-// Components
+// ✅ Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
@@ -34,20 +36,18 @@ import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 
-// Context & Sub-components
+// ✅ Context
 import { useToast } from "../../context/ToastContext";
+
+// ✅ Sub-components
 import TaskDetailModal from "./TaskDetailModal";
 import TaskForm from "./TaskForm";
 
 // ================================================================
-// CONSTANTS
+// CONFIG
 // ================================================================
 
-const VIEW_MODES = {
-  LIST: "list",
-  KANBAN: "kanban",
-};
-
+const VIEW_MODES = { LIST: "list", KANBAN: "kanban" };
 const INITIAL_STATE = {
   search: "",
   status: "all",
@@ -149,26 +149,16 @@ const STAT_STYLES = {
   gray: "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
 };
 
-// ================================================================
-// HELPER FUNCTIONS
-// ================================================================
-
-const getBadgeVariant = (value, type) => {
-  const variants =
-    type === "priority" ? BADGE_VARIANTS.PRIORITY : BADGE_VARIANTS.STATUS;
-  return variants[value?.toLowerCase()] || "secondary";
-};
-
-const isOverdue = (date, status) => {
-  const excludedStatuses = ["completed", "cancelled", "archived", "blocked"];
-  return new Date(date) < new Date() && !excludedStatuses.includes(status);
-};
-
-const formatDate = (date) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString("en-GB");
-};
-
+// Helpers
+const getBadgeVariant = (val, type) =>
+  (type === "priority" ? BADGE_VARIANTS.PRIORITY : BADGE_VARIANTS.STATUS)[
+    val?.toLowerCase()
+  ] || "secondary";
+const isOverdue = (date, status) =>
+  new Date(date) < new Date() &&
+  !["completed", "cancelled", "archived", "blocked"].includes(status);
+const formatDate = (date) =>
+  !date ? "-" : new Date(date).toLocaleDateString("en-GB");
 const getStoredViewMode = () =>
   localStorage.getItem("tasksViewMode") || VIEW_MODES.KANBAN;
 const setStoredViewMode = (mode) => localStorage.setItem("tasksViewMode", mode);
@@ -180,6 +170,9 @@ const setStoredViewMode = (mode) => localStorage.setItem("tasksViewMode", mode);
 const TasksList = () => {
   const { t } = useTranslation();
   const { showSuccess, showError, promise } = useToast();
+
+  // ✅ Permissions
+  const canUpdate = usePermission("tasks.update.all");
 
   // State
   const [tasks, setTasks] = useState([]);
@@ -194,18 +187,17 @@ const TasksList = () => {
   const [viewMode, setViewMode] = useState(getStoredViewMode);
   const [showArchived, setShowArchived] = useState(false);
 
-  // Filter States
+  // Filters
   const [filters, setFilters] = useState(INITIAL_STATE);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
-  // Filter Panel
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Local Filter Buffer
   const [localStatus, setLocalStatus] = useState("all");
   const [localPriority, setLocalPriority] = useState("all");
   const [localCategory, setLocalCategory] = useState("all");
 
-  // Confirmation Modal
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     title: "",
@@ -240,7 +232,6 @@ const TasksList = () => {
     setLocalPriority("all");
     setLocalCategory("all");
   };
-
   const handleClearAllFilters = () => {
     setFilters(INITIAL_STATE);
   };
@@ -253,6 +244,7 @@ const TasksList = () => {
     }));
   }, []);
 
+  // Stats
   const stats = {
     total: tasks.length,
     pending: tasks.filter((t) => t.status === "pending").length,
@@ -294,11 +286,11 @@ const TasksList = () => {
     },
   ];
 
+  // Fetch Logic
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
       const params = {
         page: filters.page,
         limit: viewMode === VIEW_MODES.KANBAN ? 100 : filters.limit,
@@ -312,7 +304,6 @@ const TasksList = () => {
       const response = showArchived
         ? await taskService.getArchived(params)
         : await taskService.getAll(params);
-
       let data =
         response?.data?.data?.tasks ||
         response?.data?.tasks ||
@@ -324,9 +315,8 @@ const TasksList = () => {
         response?.data?.data?.totalCount ||
         response?.pagination?.total ||
         data.length;
-      if (viewMode === VIEW_MODES.KANBAN && totalItems < data.length) {
+      if (viewMode === VIEW_MODES.KANBAN && totalItems < data.length)
         totalItems = data.length;
-      }
 
       const calculatedTotalPages = Math.ceil(
         totalItems / (viewMode === VIEW_MODES.KANBAN ? 100 : filters.limit)
@@ -336,7 +326,7 @@ const TasksList = () => {
       setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
       setTotalCount(totalItems);
     } catch (err) {
-      console.error("Fetch tasks error:", err);
+      console.error(err);
       setError(t("tasks.messages.error.load"));
       setTasks([]);
       setTotalCount(0);
@@ -349,7 +339,6 @@ const TasksList = () => {
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
-
   useEffect(() => {
     setStoredViewMode(viewMode);
   }, [viewMode]);
@@ -373,6 +362,7 @@ const TasksList = () => {
     );
   }, [fetchTasks, selectedTask, showSuccess, t]);
 
+  // Drag & Drop
   const handleDragEnd = async (result) => {
     const { destination, source, draggableId } = result;
     if (
@@ -382,9 +372,15 @@ const TasksList = () => {
     )
       return;
 
+    if (!canUpdate) {
+      showError(t("common.noPermission"));
+      return;
+    }
+
     const newStatus = destination.droppableId;
     const oldStatus = source.droppableId;
 
+    // Optimistic Update
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
         task._id === draggableId ? { ...task, status: newStatus } : task
@@ -399,6 +395,7 @@ const TasksList = () => {
         })
       );
     } catch (error) {
+      // Revert
       setTasks((prevTasks) =>
         prevTasks.map((task) =>
           task._id === draggableId ? { ...task, status: oldStatus } : task
@@ -459,7 +456,7 @@ const TasksList = () => {
         } catch (err) {}
       };
 
-      if (action === "archive") {
+      if (action === "archive")
         showConfirmation(
           t("tasks.messages.archiveConfirm.title"),
           t("tasks.messages.archiveConfirm.message", { title: taskTitle }),
@@ -472,7 +469,7 @@ const TasksList = () => {
               "tasks.messages.success.archived"
             )
         );
-      } else if (action === "restore") {
+      else if (action === "restore")
         showConfirmation(
           t("tasks.messages.restoreConfirm.title"),
           t("tasks.messages.restoreConfirm.message", { title: taskTitle }),
@@ -485,7 +482,7 @@ const TasksList = () => {
               "tasks.messages.success.restored"
             )
         );
-      } else if (action === "delete") {
+      else if (action === "delete")
         showConfirmation(
           t("tasks.messages.deleteConfirm.title"),
           t("tasks.messages.deleteConfirm.message", { title: taskTitle }),
@@ -498,11 +495,11 @@ const TasksList = () => {
               "tasks.messages.success.deleted"
             )
         );
-      }
     },
     [showConfirmation, t, fetchTasks, selectedTask, promise]
   );
 
+  // Table Columns
   const tableColumns = [
     {
       header: t("tasks.table.title"),
@@ -577,6 +574,7 @@ const TasksList = () => {
       className: "text-center",
       render: (row) => (
         <div className="flex justify-center gap-1">
+          {/* View: Everyone */}
           <Button
             variant="outline"
             size="sm"
@@ -588,52 +586,62 @@ const TasksList = () => {
           >
             <Eye className="w-4 h-4 text-blue-500" />
           </Button>
+
           {!showArchived ? (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedTask(row);
-                  setIsFormOpen(true);
-                }}
-              >
-                <Edit className="w-4 h-4 text-green-500" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTaskAction(row, "archive");
-                }}
-              >
-                <Archive className="w-4 h-4 text-orange-500" />
-              </Button>
+              {/* Edit Guard */}
+              <PermissionGuard permission="tasks.update.all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedTask(row);
+                    setIsFormOpen(true);
+                  }}
+                >
+                  <Edit className="w-4 h-4 text-green-500" />
+                </Button>
+              </PermissionGuard>
+              {/* Archive Guard */}
+              <PermissionGuard permission="tasks.delete.all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTaskAction(row, "archive");
+                  }}
+                >
+                  <Archive className="w-4 h-4 text-orange-500" />
+                </Button>
+              </PermissionGuard>
             </>
           ) : (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTaskAction(row, "restore");
-                }}
-              >
-                <RotateCcw className="w-4 h-4 text-green-500" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTaskAction(row, "delete");
-                }}
-              >
-                <Trash2 className="w-4 h-4 text-red-500" />
-              </Button>
+              {/* Restore/Delete Guard */}
+              <PermissionGuard permission="tasks.delete.all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTaskAction(row, "restore");
+                  }}
+                >
+                  <RotateCcw className="w-4 h-4 text-green-500" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTaskAction(row, "delete");
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              </PermissionGuard>
             </>
           )}
         </div>
@@ -643,7 +651,7 @@ const TasksList = () => {
 
   return (
     <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -688,30 +696,35 @@ const TasksList = () => {
                     <KanbanIcon className=" w-4 h-4" /> {t("tasks.view.kanban")}
                   </button>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowArchived(true)}
-                  icon={Archive}
-                >
-                  {t("tasks.archived")}
-                </Button>
-                <Button
-                  variant="primary"
-                  icon={<Plus className="size-4" />}
-                  onClick={() => {
-                    setSelectedTask(null);
-                    setIsFormOpen(true);
-                  }}
-                >
-                  {t("tasks.createTask")}
-                </Button>
+                <PermissionGuard permission="tasks.delete.all">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowArchived(true)}
+                    icon={Archive}
+                  >
+                    {t("tasks.archived")}
+                  </Button>
+                </PermissionGuard>
+
+                <PermissionGuard permission="tasks.create">
+                  <Button
+                    variant="primary"
+                    icon={<Plus className="size-4" />}
+                    onClick={() => {
+                      setSelectedTask(null);
+                      setIsFormOpen(true);
+                    }}
+                  >
+                    {t("tasks.createTask")}
+                  </Button>
+                </PermissionGuard>
               </>
             )}
           </div>
         )}
       </div>
 
-      {/* Stats */}
+      {/* STATS */}
       {!showEmptyState &&
         !showArchived &&
         hasInitialLoad &&
@@ -736,7 +749,7 @@ const TasksList = () => {
           </div>
         )}
 
-      {/* Filters */}
+      {/* FILTERS */}
       {!showEmptyState && hasInitialLoad && (
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -756,11 +769,6 @@ const TasksList = () => {
                 className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
               >
                 <Filter className="w-4 h-4" /> {t("tasks.filters.advanced")}
-                {hasActiveFilters && (
-                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
-                    !
-                  </span>
-                )}
               </Button>
               {hasActiveFilters && (
                 <Button
@@ -774,20 +782,9 @@ const TasksList = () => {
               )}
             </div>
           </div>
-
           {isFilterOpen && (
             <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                  {t("tasks.filters.filterOptions")}
-                </h3>
-                <button
-                  onClick={() => setIsFilterOpen(false)}
-                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              {/* ... Filter Content ... */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
                 <Select
                   label={t("tasks.filters.allStatus")}
@@ -804,7 +801,6 @@ const TasksList = () => {
                     { value: "blocked", label: t("tasks.status.blocked") },
                     { value: "completed", label: t("tasks.status.completed") },
                   ]}
-                  className="w-full"
                 />
                 <Select
                   label={t("tasks.filters.allPriorities")}
@@ -817,15 +813,17 @@ const TasksList = () => {
                     { value: "high", label: t("tasks.priority.high") },
                     { value: "urgent", label: t("tasks.priority.urgent") },
                   ]}
-                  className="w-full"
                 />
                 <Select
-                   label={t("tasks.categoryLabel")}
+                  label={t("tasks.categoryLabel")}
                   value={localCategory}
                   onChange={(e) => setLocalCategory(e.target.value)}
                   options={[
                     { value: "all", label: t("tasks.filters.allCategories") },
-                    { value: "event_preparation", label: t("tasks.category.event_preparation") },
+                    {
+                      value: "event_preparation",
+                      label: t("tasks.category.event_preparation"),
+                    },
                     {
                       value: "administrative",
                       label: t("tasks.category.administrative"),
@@ -837,15 +835,10 @@ const TasksList = () => {
                     { value: "finance", label: t("tasks.category.finance") },
                     { value: "other", label: t("tasks.category.other") },
                   ]}
-                  className="w-full"
                 />
               </div>
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleResetLocalFilters}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                >
+                <Button variant="outline" onClick={handleResetLocalFilters}>
                   {t("tasks.filters.reset")}
                 </Button>
                 <Button
@@ -861,9 +854,8 @@ const TasksList = () => {
         </div>
       )}
 
-      {/* ✅ FIX: Content Area + Loader Centering */}
+      {/* CONTENT AREA */}
       <div className="flex-1 flex flex-col relative min-h-[400px]">
-        {/* Absolute Centered Loader */}
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/80 dark:bg-gray-900/80 rounded-lg">
             <OrbitLoader />
@@ -873,7 +865,7 @@ const TasksList = () => {
           </div>
         )}
 
-        {/* List View */}
+        {/* LIST VIEW */}
         {viewMode === VIEW_MODES.LIST &&
           !showEmptyState &&
           !showNoResults &&
@@ -904,7 +896,7 @@ const TasksList = () => {
             </div>
           )}
 
-        {/* Kanban View */}
+        {/* KANBAN VIEW (With Drag & Drop) */}
         {viewMode === VIEW_MODES.KANBAN &&
           !showEmptyState &&
           !showNoResults &&
@@ -923,6 +915,7 @@ const TasksList = () => {
                           key={column.id}
                           className="flex flex-col h-full rounded-xl bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
                         >
+                          {/* Column Header */}
                           <div
                             className={`p-3 border-b rounded-t-xl flex items-center justify-between ${COLUMN_STYLES.BG[column.color]}`}
                           >
@@ -946,32 +939,42 @@ const TasksList = () => {
                               {columnTasks.length}
                             </Badge>
                           </div>
-                          <Droppable droppableId={column.status}>
+
+                          <Droppable
+                            droppableId={column.status}
+                            isDropDisabled={!canUpdate}
+                          >
                             {(provided, snapshot) => (
                               <div
                                 {...provided.droppableProps}
                                 ref={provided.innerRef}
-                                className={`p-3 flex-1 space-y-3 transition-colors duration-200 min-h-[150px] ${snapshot.isDraggingOver ? "bg-gray-100/50 dark:bg-gray-700/50" : ""}`}
+                                className={`p-3 flex-1 space-y-3 transition-colors duration-200 min-h-[150px] ${snapshot.isDraggingOver ? "bg-blue-50/50 dark:bg-blue-900/10 ring-2 ring-blue-200 dark:ring-blue-800 rounded-b-xl" : ""}`}
                               >
                                 {columnTasks.map((task, index) => (
                                   <Draggable
                                     key={task._id}
                                     draggableId={task._id}
                                     index={index}
+                                    isDragDisabled={!canUpdate}
                                   >
                                     {(provided, snapshot) => (
                                       <div
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          if (
+                                            snapshot.isDragging ||
+                                            e.defaultPrevented
+                                          )
+                                            return;
                                           setSelectedTask(task);
                                           setIsDetailModalOpen(true);
                                         }}
                                         style={{
                                           ...provided.draggableProps.style,
                                         }}
-                                        className={`bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all cursor-grab ${snapshot.isDragging ? "shadow-xl ring-2 ring-blue-500/20 rotate-1 z-50" : ""}`}
+                                        className={`bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all cursor-grab ${snapshot.isDragging ? "shadow-xl ring-2 ring-blue-500/20 rotate-2 z-50 scale-105" : ""}`}
                                       >
                                         <div className="flex justify-between items-start mb-2">
                                           <Badge
@@ -1054,7 +1057,7 @@ const TasksList = () => {
         )}
 
         {showEmptyState && (
-          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
+          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
               <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
                 <CheckSquare
@@ -1069,18 +1072,20 @@ const TasksList = () => {
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
               {t("tasks.messages.noTasksDescription")}
             </p>
-            <Button
-              onClick={() => {
-                setSelectedTask(null);
-                setIsFormOpen(true);
-              }}
-              variant="primary"
-              size="lg"
-              icon={<Plus className="size-4" />}
-              className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
-            >
-              {t("tasks.createFirstTask")}
-            </Button>
+
+            <PermissionGuard permission="tasks.create">
+              <Button
+                onClick={() => {
+                  setSelectedTask(null);
+                  setIsFormOpen(true);
+                }}
+                variant="primary"
+                size="lg"
+                icon={<Plus className="size-4" />}
+              >
+                {t("tasks.createFirstTask")}
+              </Button>
+            </PermissionGuard>
           </div>
         )}
       </div>

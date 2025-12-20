@@ -18,8 +18,9 @@ import {
   Eye,
 } from "lucide-react";
 
-// ✅ API & Services
+// ✅ API & Permissions
 import { supplyService, supplyCategoryService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard"; // Guard
 
 // ✅ Generic Components
 import Button from "../../components/common/Button";
@@ -39,10 +40,7 @@ import SupplyDetailModal from "./SupplyDetailModal";
 
 const SuppliesPage = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { showSuccess, showError, showInfo, promise } = useToast();
-
-  // State
+  const { showError, showInfo } = useToast();
   const [supplies, setSupplies] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,26 +55,26 @@ const SuppliesPage = () => {
     supply: null,
   });
 
-  // Filters (Active State)
+  // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
   const [showArchived, setShowArchived] = useState(false);
 
-  // Filter Panel (Buffered State)
+  // Local Filter Buffer
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [localCategory, setLocalCategory] = useState("all");
   const [localStatus, setLocalStatus] = useState("all");
   const [localStockFilter, setLocalStockFilter] = useState("all");
 
-  // Pagination State
+  // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Sync local filters
+  // Sync filters
   useEffect(() => {
     if (isFilterOpen) {
       setLocalCategory(selectedCategory);
@@ -91,9 +89,6 @@ const SuppliesPage = () => {
     setStockFilter(localStockFilter);
     setPage(1);
     setIsFilterOpen(false);
-    showSuccess(
-      t("supplies.notifications.filtersApplied") || "Filters applied"
-    );
   };
 
   const handleResetLocalFilters = () => {
@@ -101,7 +96,6 @@ const SuppliesPage = () => {
     setLocalStatus("all");
     setLocalStockFilter("all");
   };
-
   const handleClearAllFilters = () => {
     setSearchTerm("");
     setSelectedCategory("all");
@@ -116,7 +110,6 @@ const SuppliesPage = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-
       const params = {
         page,
         limit,
@@ -139,7 +132,6 @@ const SuppliesPage = () => {
       const categoriesData =
         categoriesRes.categories || categoriesRes.data?.categories || [];
 
-      // ✅ FIX 1: Robust Total Calculation
       const totalItems = paginationData.total || suppliesData.length || 0;
       const calculatedTotalPages = Math.ceil(totalItems / limit);
 
@@ -147,7 +139,6 @@ const SuppliesPage = () => {
       setCategories(categoriesData);
       setTotalCount(totalItems);
       setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
-
       setHasInitialLoad(true);
     } catch (error) {
       showError(t("supplies.errors.loadFailed"));
@@ -171,14 +162,11 @@ const SuppliesPage = () => {
     fetchData();
   }, [fetchData]);
 
-  // ✅ FIX 2: Client-Side Slicing Fallback
-  // If API returns ALL items (e.g. 17 items) but limit is 10, slice it here.
-  // If API works correctly (returns 10 items), this logic just passes data through.
+  // Client-Side Pagination Fallback
   const paginatedSupplies = useMemo(() => {
     if (supplies.length > limit) {
       const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      return supplies.slice(startIndex, endIndex);
+      return supplies.slice(startIndex, startIndex + limit);
     }
     return supplies;
   }, [supplies, page, limit]);
@@ -192,36 +180,24 @@ const SuppliesPage = () => {
   const handleDelete = async () => {
     if (!deleteConfirm.supply) return;
     try {
-      await promise(supplyService.delete(deleteConfirm.supply._id), {
-        loading: t("supplies.delete.loading"),
-        success: t("supplies.delete.success"),
-        error: t("supplies.delete.error"),
-      });
+      await supplyService.delete(deleteConfirm.supply._id);
       fetchData();
       setDeleteConfirm({ open: false, supply: null });
       if (selectedSupply?._id === deleteConfirm.supply._id)
         setIsDetailModalOpen(false);
-    } catch (error) {
-      // Handled by promise
-    }
+    } catch (error) {}
   };
 
   const handleFormSuccess = () => {
     fetchData();
     setIsFormOpen(false);
-    showSuccess(
-      selectedSupply
-        ? t("supplies.notifications.updated")
-        : t("supplies.notifications.created")
-    );
   };
-
   const handleOpenForm = (supply = null) => {
     setSelectedSupply(supply);
     setIsFormOpen(true);
   };
 
-  // Stats Calculation
+  // Stats
   const stats = useMemo(() => {
     const totalValue = supplies.reduce(
       (sum, s) => sum + s.currentStock * s.costPerUnit,
@@ -234,23 +210,19 @@ const SuppliesPage = () => {
     return { total: totalCount, totalValue, lowStock, outOfStock };
   }, [supplies, totalCount]);
 
-  // Logic States
+  // UI Helpers
   const hasActiveFilters =
     searchTerm !== "" ||
     selectedCategory !== "all" ||
     selectedStatus !== "all" ||
     stockFilter !== "all";
-
   const showEmptyState =
     !loading && supplies.length === 0 && !hasActiveFilters && hasInitialLoad;
-
   const showNoResults =
     !loading && supplies.length === 0 && hasActiveFilters && hasInitialLoad;
-
   const showData =
     hasInitialLoad && (supplies.length > 0 || (loading && totalCount > 0));
 
-  // Stock Status Badge
   const getStockBadge = (supply) => {
     if (supply.currentStock === 0)
       return (
@@ -277,7 +249,7 @@ const SuppliesPage = () => {
     );
   };
 
-  // Table Columns
+  // Columns
   const columns = [
     {
       header: t("supplies.table.name"),
@@ -344,6 +316,7 @@ const SuppliesPage = () => {
       className: "text-center",
       render: (supply) => (
         <div className="flex justify-center gap-2">
+          {/* View: Everyone */}
           <Button
             variant="ghost"
             size="sm"
@@ -355,28 +328,36 @@ const SuppliesPage = () => {
           >
             <Eye size={16} />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOpenForm(supply);
-            }}
-            className="text-blue-500 hover:text-blue-600"
-          >
-            <Edit size={16} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setDeleteConfirm({ open: true, supply });
-            }}
-            className="text-red-500 hover:text-red-600"
-          >
-            <Trash2 size={16} />
-          </Button>
+
+          {/* ✅ Edit Guard */}
+          <PermissionGuard permission="supplies.update.all">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenForm(supply);
+              }}
+              className="text-blue-500 hover:text-blue-600"
+            >
+              <Edit size={16} />
+            </Button>
+          </PermissionGuard>
+
+          {/* ✅ Delete Guard */}
+          <PermissionGuard permission="supplies.delete.all">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteConfirm({ open: true, supply });
+              }}
+              className="text-red-500 hover:text-red-600"
+            >
+              <Trash2 size={16} />
+            </Button>
+          </PermissionGuard>
         </div>
       ),
     },
@@ -387,7 +368,7 @@ const SuppliesPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {t("supplies.title")}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -395,8 +376,10 @@ const SuppliesPage = () => {
             {hasInitialLoad && totalCount > 0 && ` • ${totalCount} items`}
           </p>
         </div>
+
+        {/* ✅ Create Guard */}
         {!showEmptyState && (
-          <div className="flex gap-2 w-full sm:w-auto">
+          <PermissionGuard permission="supplies.create">
             <Button
               variant="primary"
               icon={Plus}
@@ -405,7 +388,7 @@ const SuppliesPage = () => {
             >
               {t("supplies.buttons.addSupply")}
             </Button>
-          </div>
+          </PermissionGuard>
         )}
       </div>
 
@@ -439,11 +422,10 @@ const SuppliesPage = () => {
         </div>
       )}
 
-      {/* Enhanced Filters */}
+      {/* Filters */}
       {!showEmptyState && hasInitialLoad && (
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            {/* 1. Search Bar (Left) */}
             <div className="w-full sm:max-w-md relative">
               <Input
                 icon={Search}
@@ -456,8 +438,6 @@ const SuppliesPage = () => {
                 className="w-full"
               />
             </div>
-
-            {/* 2. Advanced Filters Button (Right) */}
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <Button
                 variant={hasActiveFilters ? "primary" : "outline"}
@@ -465,41 +445,21 @@ const SuppliesPage = () => {
                 className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
               >
                 <Filter className="w-4 h-4" />
-                {t("supplies.filters.advanced") || "Filters"}
-                {hasActiveFilters && (
-                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
-                    !
-                  </span>
-                )}
+                {t("supplies.filters.advanced")}
               </Button>
               {hasActiveFilters && (
                 <Button
                   variant="outline"
                   icon={X}
                   onClick={handleClearAllFilters}
-                  className="text-gray-500"
                 >
                   {t("common.clear")}
                 </Button>
               )}
             </div>
           </div>
-
-          {/* 3. Expandable Filter Panel */}
           {isFilterOpen && (
             <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                  {t("supplies.filters.options") || "Filter Options"}
-                </h3>
-                <button
-                  onClick={() => setIsFilterOpen(false)}
-                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
                 <Select
                   label={t("supplies.filters.category")}
@@ -510,10 +470,7 @@ const SuppliesPage = () => {
                       value: "all",
                       label: t("supplies.filters.allCategories"),
                     },
-                    ...categories.map((c) => ({
-                      value: c._id,
-                      label: c.name,
-                    })),
+                    ...categories.map((c) => ({ value: c._id, label: c.name })),
                   ]}
                   className="w-full"
                 />
@@ -540,22 +497,16 @@ const SuppliesPage = () => {
                   className="w-full"
                 />
               </div>
-
-              {/* Footer Actions */}
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleResetLocalFilters}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                >
-                  {t("supplies.filters.reset") || "Reset"}
+                <Button variant="outline" onClick={handleResetLocalFilters}>
+                  {t("supplies.filters.reset")}
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleApplyFilters}
                   className="px-6"
                 >
-                  {t("supplies.filters.apply") || "Apply Filters"}
+                  {t("supplies.filters.apply")}
                 </Button>
               </div>
             </div>
@@ -563,30 +514,25 @@ const SuppliesPage = () => {
         </div>
       )}
 
-      {/* Content Area */}
+      {/* Content */}
       <div className="flex-1 flex flex-col relative min-h-[300px]">
-        {/* Loading Overlay */}
         {loading && !hasInitialLoad && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg transition-all duration-300">
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg">
             <OrbitLoader />
-            <p className="text-gray-500 dark:text-gray-400 mt-4 font-medium animate-pulse">
+            <p className="text-gray-500 dark:text-gray-400 mt-4">
               {t("common.loading")}
             </p>
           </div>
         )}
-
-        {/* Data Table */}
         {showData && (
           <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <Table
               columns={columns}
-              // ✅ Pass the pre-sliced data to the table
               data={paginatedSupplies}
               loading={loading && hasInitialLoad}
               striped
               hoverable
               onRowClick={handleRowClick}
-              // Pagination Props
               pagination={true}
               currentPage={page}
               totalPages={totalPages}
@@ -602,8 +548,6 @@ const SuppliesPage = () => {
             />
           </div>
         )}
-
-        {/* No Results */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -612,46 +556,37 @@ const SuppliesPage = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               {t("common.noResults")}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t("common.noResultsDesc", "Try adjusting your filters.")}
-            </p>
             <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("common.clearFilters")}
             </Button>
           </div>
         )}
-
-        {/* Empty State */}
         {showEmptyState && (
-          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
-              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
-                <Box
-                  className="h-12 w-12 text-orange-500"
-                  strokeWidth={1.5}
-                />
-              </div>
+          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full mb-4">
+              <Box className="h-12 w-12 text-orange-500" strokeWidth={1.5} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
               {t("supplies.empty.title")}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8">
               {t("supplies.empty.description")}
             </p>
-            <Button
-              onClick={() => handleOpenForm()}
-              variant="primary"
-              size="lg"
-              icon={Plus}
-              className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
-            >
-              {t("supplies.buttons.addSupply")}
-            </Button>
+            <PermissionGuard permission="supplies.create">
+              <Button
+                onClick={() => handleOpenForm()}
+                variant="primary"
+                size="lg"
+                icon={Plus}
+              >
+                {t("supplies.buttons.addSupply")}
+              </Button>
+            </PermissionGuard>
           </div>
         )}
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Modals */}
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -668,8 +603,6 @@ const SuppliesPage = () => {
           onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
-
-      {/* Details Modal */}
       <SupplyDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
@@ -680,8 +613,6 @@ const SuppliesPage = () => {
         }}
         refreshData={fetchData}
       />
-
-      {/* Delete Modal */}
       <Modal
         isOpen={deleteConfirm.open}
         onClose={() => setDeleteConfirm({ open: false, supply: null })}

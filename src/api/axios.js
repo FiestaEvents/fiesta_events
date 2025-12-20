@@ -4,97 +4,100 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
   timeout: 30000, // 30 seconds
+  withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - Add auth token to requests
+// =====================================================================
+// REQUEST INTERCEPTOR
+// =====================================================================
 api.interceptors.request.use(
   (config) => {
-    // Get token from localStorage
-    const token = localStorage.getItem('token');
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
 
-    // Get venueId from localStorage (for multi-tenancy)
+    // ✅ KEEP: Venue Context
+    // Useful for switching venues without changing the user account
     const venueId = localStorage.getItem('venueId');
     if (venueId) {
       config.headers['X-Venue-ID'] = venueId;
     }
 
-    // Log request in development
+    // Dev Logging
     if (import.meta.env.DEV) {
-      console.log('🚀 API Request:', {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        data: config.data,
-      });
+      console.log(`🚀 [API] ${config.method?.toUpperCase()} ${config.url}`, config.data || '');
     }
 
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
+    console.error('❌ Request Setup Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor - Handle responses and errors
+// =====================================================================
+// RESPONSE INTERCEPTOR
+// =====================================================================
 api.interceptors.response.use(
   (response) => {
-    // Log response in development
+    // Dev Logging
     if (import.meta.env.DEV) {
-      console.log('✅ API Response:', {
-        url: response.config.url,
-        status: response.status,
-        data: response.data,
-      });
+      console.log(`✅ [API] ${response.status} ${response.config.url}`);
     }
     return response;
   },
   (error) => {
-    // ENHANCED ERROR LOGGING
-    console.error('❌ API Error Details:', {
+    // 1. Log Detailed Error
+    const errorDetails = {
       url: error.config?.url,
       method: error.config?.method?.toUpperCase(),
       status: error.response?.status,
-      statusText: error.response?.statusText,
-      responseData: error.response?.data, // This is the key!
-      message: error.message,
-      requestData: error.config?.data, // See what we sent
-    });
+      message: error.response?.data?.message || error.message,
+    };
+    
+    if (import.meta.env.DEV) {
+      console.error('❌ [API Error]', errorDetails);
+    }
 
-    // Handle specific error cases
+    // 2. Handle Server Responses
     if (error.response) {
       const { status, data } = error.response;
-      
-      // Return a consistent error object with FULL error details
+
+      // 🔒 GLOBAL AUTH HANDLER: Session Expired / Invalid Cookie
+      if (status === 401) {
+        if (!window.location.pathname.includes('/login')) {
+           window.dispatchEvent(new Event("auth:session-expired"));
+        }
+      }
+
+      // Return consistent error object
       return Promise.reject({
         status,
         message: data.message || data.error || 'An error occurred',
         errors: data.errors || {},
-        data: data, // Include full error response
+        data: data,
       });
-    } else if (error.request) {
-      console.error('No response received:', error.message);
+    } 
+    
+    // 3. Handle Network Errors (No Response)
+    else if (error.request) {
       return Promise.reject({
         status: 0,
-        message: 'No response from server. Please check your connection.',
-        errors: {},
+        message: 'Unable to connect to server. Please check your internet connection.',
         data: {},
       });
-    } else {
-      console.error('Request setup error:', error.message);
+    } 
+    
+    // 4. Handle Setup Errors
+    else {
       return Promise.reject({
         status: 0,
-        message: error.message || 'Request failed',
-        errors: {},
+        message: error.message || 'Request configuration failed',
         data: {},
       });
     }
   }
 );
+
 export default api;

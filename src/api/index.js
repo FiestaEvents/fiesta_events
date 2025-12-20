@@ -13,132 +13,63 @@ import { handleResponse, handleError } from "../utils/apiUtils.js";
 // AUTH SERVICE
 // ============================================
 export const authService = {
-  /**
-   * Register new user and venue
-   * @param {Object} data - { email, password, venueName, ... }
-   * @returns {Promise<{ user, token, venue }>}
-   */
+  
   verifyEmail: async (data) => {
     try {
       const response = await api.post("/auth/verify-email", data);
-      const result = handleResponse(response);
-      return result;
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  /**
-   * Register new user and venue
-   * @param {Object} data - { email, password, venueName, ... }
-   * @returns {Promise<{ user, token, venue }>}
-   */
   register: async (data) => {
     try {
       const response = await api.post("/auth/register", data);
-      const result = handleResponse(response);
-
-      // Store auth data
-      if (result.token) {
-        localStorage.setItem("token", result.token);
-        localStorage.setItem("user", JSON.stringify(result.user));
-        if (result.user?.venue?.id) {
-          localStorage.setItem("venueId", result.user.venue.id);
-        }
-      }
-
-      return result;
+      // NOTE: Token is set in HttpOnly cookie by backend.
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  /**
-   * Login user
-   * @param {string} email
-   * @param {string} password
-   * @returns {Promise<{ user, token }>}
-   */
   login: async (email, password) => {
     try {
       const response = await api.post("/auth/login", { email, password });
-      const result = handleResponse(response);
-
-      // Store auth data
-      if (result.token) {
-        localStorage.setItem("token", result.token);
-        localStorage.setItem("user", JSON.stringify(result.user));
-        if (result.user?.venue?.id) {
-          localStorage.setItem("venueId", result.user.venue.id);
-        }
-      }
-
-      return result;
+      // NOTE: Token is set in HttpOnly cookie by backend.
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  /**
-   * Logout user
-   */
   logout: async () => {
     try {
       await api.post("/auth/logout");
+      // NOTE: Backend clears the cookie. Frontend just redirects.
     } catch (error) {
       console.error("Logout error:", error);
-    } finally {
-      // Always clear local storage
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("venueId");
     }
   },
 
-  /**
-   * Get current user profile
-   * @returns {Promise<{ user }>}
-   */
   getMe: async () => {
     try {
       const response = await api.get("/auth/me");
-      const result = handleResponse(response);
-
-      if (result.user) {
-        localStorage.setItem("user", JSON.stringify(result.user));
-      }
-
-      return result;
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  /**
-   * Update user profile
-   * @param {Object} data - Profile fields to update
-   * @returns {Promise<{ user }>}
-   */
   updateProfile: async (data) => {
     try {
       const response = await api.put("/auth/profile", data);
-      const result = handleResponse(response);
-
-      if (result.user) {
-        localStorage.setItem("user", JSON.stringify(result.user));
-      }
-
-      return result;
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  /**
-   * Change password
-   * @param {string} currentPassword
-   * @param {string} newPassword
-   */
   changePassword: async (currentPassword, newPassword) => {
     try {
       const response = await api.put("/auth/change-password", {
@@ -151,10 +82,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Request password reset
-   * @param {string} email
-   */
   forgotPassword: async (email) => {
     try {
       const response = await api.post("/auth/forgot-password", { email });
@@ -164,11 +91,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Reset password with token
-   * @param {string} token - Reset token from email
-   * @param {string} password - New password
-   */
   resetPassword: async (token, password) => {
     try {
       const response = await api.post("/auth/reset-password", {
@@ -181,9 +103,8 @@ export const authService = {
     }
   },
 
-  // Helper methods
-  isAuthenticated: () => !!localStorage.getItem("token"),
-  getToken: () => localStorage.getItem("token"),
+  // Helper methods (Simplified)
+  // isAuthenticated: Logic moved to Context/Hook via API check
   getUser: () => {
     try {
       const userStr = localStorage.getItem("user");
@@ -194,7 +115,6 @@ export const authService = {
   },
   getVenueId: () => localStorage.getItem("venueId"),
 };
-
 // ============================================
 // EVENT SERVICE
 // ============================================
@@ -296,7 +216,7 @@ export const eventService = {
    */
   getByClientId: async (clientId, params = {}) => {
     try {
-      const response = await api.get(`/events/client/${clientId}`, { params });
+      const response = await api.get(`/events/event/${clientId}`, { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -1454,43 +1374,44 @@ export const teamService = {
     }
   },
 
-  acceptInvitation: async (token) => {
-    try {
-      const response = await api.post("/team/accept-invitation", { token });
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+  acceptInvitation: async (data) => {
+    // data = { token, name, password }
+    const response = await api.post(`/team/invitations/accept`, data);
+    return handleResponse(response);
   },
 
+  // Ensure these exist:
+  invite: async (data) => {
+    // data = { email, roleId }
+    const response = await api.post(`/team/invite`, data);
+    return handleResponse(response);
+  },
+
+  getInvitations: async () => {
+    const response = await api.get(`/team/invitations`);
+    return handleResponse(response);
+  },
+
+  revokeInvitation: async (id) => {
+    const response = await api.delete(`/team/invitations/${id}`);
+    return handleResponse(response);
+  },
+  
   resendInvitation: async (id) => {
-    try {
-      const response = await api.post(`/team/invitations/${id}/resend`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const response = await api.post(`/team/invitations/${id}/resend`);
+    return handleResponse(response);
+  },
+  validateInvitation: async (token) => {
+    // Passes token as a query parameter
+    const response = await api.get(`/team/invitations/validate?token=${token}`);
+    return handleResponse(response);
+  },
+  getActivity: async (id) => {
+  const response = await api.get(`/users/${id}/activity`);
+  return handleResponse(response);
   },
 
-  cancelInvitation: async (id) => {
-    try {
-      const response = await api.delete(`/team/invitations/${id}`);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  getStats: async () => {
-    try {
-      const response = await api.get("/team/stats");
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
 };
-
 // ============================================
 // ROLE SERVICE
 // ============================================

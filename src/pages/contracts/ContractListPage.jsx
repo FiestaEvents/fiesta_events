@@ -26,8 +26,9 @@ import {
   FolderOpen,
 } from "lucide-react";
 
-// ✅ Services
+// ✅ Services & Permissions
 import { contractService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard"; // Guard
 
 // ✅ Generic Components
 import Button from "../../components/common/Button";
@@ -40,12 +41,9 @@ import Select from "../../components/common/Select";
 import { useToast } from "../../hooks/useToast";
 import formatCurrency from "../../utils/formatCurrency";
 
-// ============================================
-// STATS CARDS
-// ============================================
+// --- Stats Cards ---
 const StatsCards = ({ stats }) => {
   if (!stats) return null;
-
   const cards = [
     {
       label: "Total Contracts",
@@ -107,6 +105,7 @@ const ContractListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
   const { promise, showSuccess, showError, showInfo } = useToast();
+  const isRTL = i18n.dir() === "rtl";
 
   // State
   const [contracts, setContracts] = useState([]);
@@ -114,33 +113,32 @@ const ContractListPage = () => {
   const [loading, setLoading] = useState(true);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // Filters (Active)
+  // Filters
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState(
     searchParams.get("status") || ""
   );
   const [typeFilter, setTypeFilter] = useState(searchParams.get("type") || "");
 
-  // Filters (Buffered)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [localStatus, setLocalStatus] = useState("");
   const [localType, setLocalType] = useState("");
 
+  // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Confirmation Modal
+  // Modal
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     contractId: null,
     contractTitle: "",
-    actionType: "",
     onConfirm: null,
   });
 
-  // Sync local filters
+  // Sync Filters
   useEffect(() => {
     if (isFilterOpen) {
       setLocalStatus(statusFilter);
@@ -171,7 +169,7 @@ const ContractListPage = () => {
     showInfo(t("common.actions.clearFilters"));
   };
 
-  // Status Config
+  // Helper: Status Config
   const getStatusConfig = (status) => {
     const config = {
       draft: {
@@ -223,7 +221,6 @@ const ContractListPage = () => {
   const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
-
       const params = {
         page,
         limit,
@@ -251,7 +248,6 @@ const ContractListPage = () => {
         paginationData = contractsRes.data.pagination || {};
       }
 
-      // ✅ FIX: Robust Calculation
       const totalItems =
         paginationData.total || (Array.isArray(dataList) ? dataList.length : 0);
       const calculatedTotalPages = Math.ceil(totalItems / limit);
@@ -259,10 +255,9 @@ const ContractListPage = () => {
       setContracts(Array.isArray(dataList) ? dataList : []);
       setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
       setTotalCount(totalItems);
-
       setStats(statsRes?.message || statsRes?.data || statsRes || {});
 
-      // Update URL params
+      // URL Params Update
       const urlParams = {};
       if (search) urlParams.search = search;
       if (statusFilter) urlParams.status = statusFilter;
@@ -279,13 +274,11 @@ const ContractListPage = () => {
   }, [page, limit, search, statusFilter, typeFilter, setSearchParams]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchContracts();
-    }, 300);
+    const timer = setTimeout(() => fetchContracts(), 300);
     return () => clearTimeout(timer);
   }, [fetchContracts]);
 
-  // ✅ FIX: Client-Side Slicing Fallback
+  // Client-Side Pagination Fallback
   const paginatedContracts = useMemo(() => {
     if (contracts.length > limit) {
       const startIndex = (page - 1) * limit;
@@ -297,13 +290,11 @@ const ContractListPage = () => {
   // ============================================
   // HANDLERS
   // ============================================
-
   const handleDeleteClick = (row) => {
     setConfirmationModal({
       isOpen: true,
       contractId: row._id,
       contractTitle: row.title,
-      actionType: "delete",
       onConfirm: async () => {
         try {
           await promise(contractService.delete(row._id), {
@@ -340,25 +331,18 @@ const ContractListPage = () => {
   const handleEdit = (row) => navigate(`/contracts/${row._id}/edit`);
   const handleView = (row) => navigate(`/contracts/${row._id}`);
 
-  // ============================================
-  // LOGIC STATES
-  // ============================================
+  // Logic States
   const hasActiveFilters =
     search.trim() !== "" || statusFilter !== "" || typeFilter !== "";
-
   const showEmptyState =
     !loading && contracts.length === 0 && !hasActiveFilters && hasInitialLoad;
-
   const showNoResults =
     !loading && contracts.length === 0 && hasActiveFilters && hasInitialLoad;
-
   const showData =
     hasInitialLoad && (contracts.length > 0 || (loading && totalCount > 0));
 
-  const isRTL = i18n.dir() === "rtl";
-
   // ============================================
-  // TABLE COLUMNS
+  // COLUMNS
   // ============================================
   const columns = [
     {
@@ -469,19 +453,24 @@ const ContractListPage = () => {
             >
               <Eye size={16} className="text-orange-600" />
             </Button>
+
+            {/* ✅ GUARD: Edit */}
             {canEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEdit(row);
-                }}
-                className="text-gray-500 hover:text-orange-600 hover:bg-orange-50"
-              >
-                <Edit size={16} className="text-blue-600" />
-              </Button>
+              <PermissionGuard permission="contracts.update.all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(row);
+                  }}
+                  className="text-gray-500 hover:text-orange-600 hover:bg-orange-50"
+                >
+                  <Edit size={16} className="text-blue-600" />
+                </Button>
+              </PermissionGuard>
             )}
+
             <Button
               variant="outline"
               size="sm"
@@ -493,18 +482,22 @@ const ContractListPage = () => {
             >
               <Download size={16} className="text-green-600" />
             </Button>
+
+            {/* ✅ GUARD: Delete */}
             {row.status === "draft" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(row);
-                }}
-                className="text-gray-500 hover:text-red-600 hover:bg-red-50"
-              >
-                <Trash2 size={16} />
-              </Button>
+              <PermissionGuard permission="contracts.delete.all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(row);
+                  }}
+                  className="text-gray-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </PermissionGuard>
             )}
           </div>
         );
@@ -532,34 +525,35 @@ const ContractListPage = () => {
         </div>
         {!showEmptyState && (
           <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/contracts/new?type=partner")}
-              icon={Briefcase}
-              className="flex-1 sm:flex-none justify-center"
-            >
-              {t("contracts.list.newPartner")}
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => navigate("/contracts/new?type=client")}
-              icon={<Plus className="size-4" />}
-              className="flex-1 sm:flex-none justify-center"
-            >
-              {t("contracts.list.newClient")}
-            </Button>
+            <PermissionGuard permission="contracts.create">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/contracts/new?type=partner")}
+                icon={Briefcase}
+                className="flex-1 sm:flex-none justify-center"
+              >
+                {t("contracts.list.newPartner")}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => navigate("/contracts/new?type=client")}
+                icon={<Plus className="size-4" />}
+                className="flex-1 sm:flex-none justify-center"
+              >
+                {t("contracts.list.newClient")}
+              </Button>
+            </PermissionGuard>
           </div>
         )}
       </div>
 
-      {/* 2. Stats (Hidden if empty) */}
+      {/* 2. Stats */}
       {!showEmptyState && hasInitialLoad && <StatsCards stats={stats} />}
 
-      {/* 3. ✅ ENHANCED FILTERS (List View) */}
+      {/* 3. FILTERS */}
       {!showEmptyState && hasInitialLoad && (
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            {/* Search Bar */}
             <div className="w-full sm:max-w-md relative">
               <Input
                 icon={Search}
@@ -572,8 +566,6 @@ const ContractListPage = () => {
                 className="w-full"
               />
             </div>
-
-            {/* Advanced Filters Button */}
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <Button
                 variant={hasActiveFilters ? "primary" : "outline"}
@@ -601,12 +593,12 @@ const ContractListPage = () => {
             </div>
           </div>
 
-          {/* Expandable Filter Panel */}
+          {/* Filter Panel */}
           {isFilterOpen && (
             <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                  {t("contracts.list.filter.options") || "Filter Options"}
+                  {t("contracts.list.filter.options")}
                 </h3>
                 <button
                   onClick={() => setIsFilterOpen(false)}
@@ -615,7 +607,6 @@ const ContractListPage = () => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
                 <Select
                   label={t("contracts.list.filter.status")}
@@ -641,22 +632,20 @@ const ContractListPage = () => {
                   className="w-full"
                 />
               </div>
-
-              {/* Footer Actions */}
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
                 <Button
                   variant="outline"
                   onClick={handleResetLocalFilters}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 >
-                  {t("common.actions.reset") || "Reset"}
+                  {t("common.actions.reset")}
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleApplyFilters}
                   className="px-6"
                 >
-                  {t("common.actions.apply") || "Apply Filters"}
+                  {t("common.actions.apply")}
                 </Button>
               </div>
             </div>
@@ -664,20 +653,17 @@ const ContractListPage = () => {
         </div>
       )}
 
-      {/* 4. Content Area */}
+      {/* 4. Content */}
       <div className="flex-1 flex flex-col relative">
-        {/* Data Table */}
         {showData && (
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <Table
               columns={columns}
-              // ✅ Pass sliced data
               data={paginatedContracts}
               loading={loading}
               onRowClick={(row) => navigate(`/contracts/${row._id}`)}
               striped
               hoverable
-              // Pagination
               pagination={true}
               currentPage={page}
               totalPages={totalPages}
@@ -693,7 +679,6 @@ const ContractListPage = () => {
           </div>
         )}
 
-        {/* ✅ NO RESULTS (Active Filter) */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -711,7 +696,6 @@ const ContractListPage = () => {
           </div>
         )}
 
-        {/* ✅ EMPTY STATE (No Data) */}
         {showEmptyState && (
           <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
@@ -728,24 +712,28 @@ const ContractListPage = () => {
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">
               {t("contracts.list.emptyDesc")}
             </p>
-            <div className="flex gap-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate("/contracts/new?type=partner")}
-                icon={Briefcase}
-                className="shadow-sm"
-              >
-                {t("contracts.list.newPartner")}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => navigate("/contracts/new?type=client")}
-                icon={<Plus className="size-4" />}
-                className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30"
-              >
-                {t("contracts.list.newClient")}
-              </Button>
-            </div>
+
+            {/* ✅ GUARD: Create Buttons */}
+            <PermissionGuard permission="contracts.create">
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/contracts/new?type=partner")}
+                  icon={Briefcase}
+                  className="shadow-sm"
+                >
+                  {t("contracts.list.newPartner")}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate("/contracts/new?type=client")}
+                  icon={<Plus className="size-4" />}
+                  className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30"
+                >
+                  {t("contracts.list.newClient")}
+                </Button>
+              </div>
+            </PermissionGuard>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Briefcase,
@@ -16,13 +16,17 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  FileText,
   Filter,
   X,
   FolderOpen,
+  FileText,
 } from "lucide-react";
 
-// Components
+// ✅ Services & Permissions
+import { invoiceService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard";
+
+// ✅ Generic Components
 import OrbitLoader from "../../components/common/LoadingSpinner";
 import { StatusBadge } from "../../components/common/Badge";
 import Button from "../../components/common/Button";
@@ -31,42 +35,35 @@ import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Select from "../../components/common/Select";
 
-// Services & Utils
-import { invoiceService } from "../../api/index";
+// ✅ Context & Utils
 import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
-  // eslint-disable-next-line no-unused-vars
-  const location = useLocation();
   const { showSuccess, showError, showInfo, promise } = useToast();
   const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === "rtl";
 
   // --- State ---
-
-  // Data & Status
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  const [invoiceType, setInvoiceType] = useState("client");
 
-  // Filters & Search
+  // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
-  // Active Filters
+  const [invoiceType, setInvoiceType] = useState("client");
+
+  // Filter State
   const [filters, setFilters] = useState({
     status: "all",
     startDate: "",
     endDate: "",
   });
-  
-  // Local Filters (inside the filter dropdown)
   const [localStatus, setLocalStatus] = useState("all");
   const [localStartDate, setLocalStartDate] = useState("");
   const [localEndDate, setLocalEndDate] = useState("");
@@ -77,8 +74,7 @@ const InvoicesPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Modals & Selection
-  const [selectedRows, setSelectedRows] = useState([]);
+  // Modals
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [confirmationModal, setConfirmationModal] = useState({
@@ -88,55 +84,7 @@ const InvoicesPage = () => {
     onConfirm: null,
   });
 
-  // --- Helpers ---
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-GB");
-  };
-
-  const normalizeInvoiceData = useCallback((invoice) => {
-    if (!invoice || typeof invoice !== "object") return null;
-    
-    let recipientName = "",
-      recipientEmail = "",
-      recipientCompany = "";
-
-    if (invoice.invoiceType === "client") {
-      recipientName =
-        invoice.client?.name ||
-        invoice.recipientName ||
-        t("invoices.recipient.client");
-      recipientEmail = invoice.client?.email || invoice.recipientEmail;
-      recipientCompany = invoice.client?.company || invoice.recipientCompany;
-    } else {
-      recipientName =
-        invoice.partner?.name ||
-        invoice.recipientName ||
-        t("invoices.recipient.partner");
-      recipientEmail = invoice.partner?.email || invoice.recipientEmail;
-      recipientCompany = invoice.partner?.company || invoice.recipientCompany;
-    }
-
-    return {
-      ...invoice,
-      _id: invoice._id || invoice.id,
-      invoiceNumber:
-        invoice.invoiceNumber || `INV-${(invoice._id || "").substring(0, 8)}`,
-      recipientName,
-      recipientEmail,
-      recipientCompany,
-      totalAmount: invoice.totalAmount || 0,
-      status: invoice.status || "draft",
-      issueDate: invoice.issueDate || new Date().toISOString(),
-      dueDate: invoice.dueDate || new Date().toISOString(),
-      items: invoice.items || [],
-    };
-  }, [t]);
-
   // --- Effects ---
-
-  // Sync local filters when dropdown opens
   useEffect(() => {
     if (isFilterOpen) {
       setLocalStatus(filters.status);
@@ -145,22 +93,16 @@ const InvoicesPage = () => {
     }
   }, [isFilterOpen, filters]);
 
-  // Debounce Search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-    }, 500);
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Reset pagination on type change
   useEffect(() => {
     setPage(1);
-    setSelectedRows([]);
   }, [invoiceType]);
 
   // --- API Calls ---
-
   const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
@@ -173,7 +115,7 @@ const InvoicesPage = () => {
       const statsData = Array.isArray(data)
         ? data.find((s) => s._id === invoiceType) || {}
         : data;
-      
+
       setStats({
         totalRevenue: statsData.totalRevenue || 0,
         paid: statsData.paid || 0,
@@ -181,7 +123,7 @@ const InvoicesPage = () => {
         overdue: statsData.overdue || 0,
       });
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error(error);
     } finally {
       setStatsLoading(false);
     }
@@ -190,9 +132,7 @@ const InvoicesPage = () => {
   const fetchInvoices = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-      
-      // FIX: Removed duplicate 'search' key
+
       const params = {
         invoiceType: invoiceType,
         status: filters.status !== "all" ? filters.status : undefined,
@@ -206,44 +146,50 @@ const InvoicesPage = () => {
 
       const response = await invoiceService.getAll(params);
       let rawData = response?.invoices || response?.data?.invoices || [];
-      const data = rawData.map(normalizeInvoiceData).filter(Boolean);
+
+      const data = rawData.map((inv) => ({
+        ...inv,
+        _id: inv._id || inv.id,
+        invoiceNumber:
+          inv.invoiceNumber || `INV-${(inv._id || "").substring(0, 8)}`,
+        recipientName:
+          inv.invoiceType === "client"
+            ? inv.client?.name || inv.recipientName
+            : inv.partner?.name || inv.recipientName,
+        recipientEmail:
+          inv.invoiceType === "client"
+            ? inv.client?.email || inv.recipientEmail
+            : inv.partner?.email || inv.recipientEmail,
+        totalAmount: inv.totalAmount || 0,
+        status: inv.status || "draft",
+        dueDate: inv.dueDate,
+        items: inv.items || [],
+      }));
 
       const totalItems =
         response?.pagination?.total ||
         response?.data?.pagination?.total ||
         data.length;
-      
-      // Ensure totalPages is at least 1
       const calculatedTotalPages = Math.ceil(totalItems / limit);
 
       setInvoices(data);
       setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
       setTotalCount(totalItems);
     } catch (err) {
-      const msg =
-        err.response?.data?.message || t("invoices.errors.loadInvoicesFailed");
-      setError(msg);
-      showError(msg);
+      showError(t("invoices.errors.loadInvoicesFailed"));
       setInvoices([]);
       setTotalCount(0);
     } finally {
       setLoading(false);
       setHasInitialLoad(true);
     }
-  }, [debouncedSearch, filters, page, limit, invoiceType, t, showError, normalizeInvoiceData]);
+  }, [debouncedSearch, filters, page, limit, invoiceType, t, showError]);
 
-  // Trigger Data Fetch
   useEffect(() => {
     fetchInvoices();
-  }, [fetchInvoices]);
-
-  useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+  }, [fetchInvoices, fetchStats]);
 
-  // --- Derived State ---
-
-  // Client-Side Slicing Fallback (Only active if API returns all items instead of paginated items)
   const paginatedInvoices = useMemo(() => {
     if (invoices.length > limit) {
       const startIndex = (page - 1) * limit;
@@ -252,31 +198,7 @@ const InvoicesPage = () => {
     return invoices;
   }, [invoices, page, limit]);
 
-  const hasActiveFilters =
-    searchTerm.trim() !== "" ||
-    filters.status !== "all" ||
-    filters.startDate !== "" ||
-    filters.endDate !== "";
-
-  const showEmptyState =
-    !loading &&
-    !error &&
-    invoices.length === 0 &&
-    !hasActiveFilters &&
-    hasInitialLoad;
-
-  const showNoResults =
-    !loading &&
-    !error &&
-    invoices.length === 0 &&
-    hasActiveFilters &&
-    hasInitialLoad;
-
-  const showData =
-    hasInitialLoad && (invoices.length > 0 || (loading && totalCount > 0));
-
   // --- Handlers ---
-
   const handleApplyFilters = () => {
     setFilters({
       status: localStatus,
@@ -285,7 +207,7 @@ const InvoicesPage = () => {
     });
     setPage(1);
     setIsFilterOpen(false);
-    showSuccess(t("invoices.filters.applied") || "Filters applied");
+    showSuccess(t("invoices.filters.applied"));
   };
 
   const handleResetLocalFilters = () => {
@@ -303,7 +225,6 @@ const InvoicesPage = () => {
 
   const handleCreateInvoice = () =>
     navigate(`/invoices/new?type=${invoiceType}`);
-  
   const handleEditInvoice = (invoice) =>
     navigate(`/invoices/${invoice._id}/edit`);
 
@@ -313,64 +234,45 @@ const InvoicesPage = () => {
   }, []);
 
   const handleDownloadInvoice = async (invoice) => {
-    const downloadAndSave = async () => {
+    const downloadAction = async () => {
       const blob = await invoiceService.download(invoice._id, i18n.language);
-      
-      if (!blob || !(blob instanceof Blob)) {
-         throw new Error("Invalid file received from server");
-      }
-
+      if (!blob || !(blob instanceof Blob)) throw new Error("Invalid file");
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      const filename = `${invoice.invoiceNumber || "invoice"}.pdf`;
-      link.setAttribute("download", filename);
+      link.setAttribute("download", `${invoice.invoiceNumber}.pdf`);
       document.body.appendChild(link);
       link.click();
-      
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
-      
-      return true;
     };
-
     try {
-      await promise(
-        downloadAndSave(),
-        {
-          loading: t("invoices.download.loading", "Downloading PDF..."),
-          success: t("invoices.download.success", "Downloaded successfully"), 
-          error: t("invoices.download.error", "Download failed"),
-        }
-      );
-    } catch (error) {
-      console.error("Download flow error:", error);
+      await promise(downloadAction(), {
+        loading: t("invoices.download.loading"),
+        success: t("invoices.download.success"),
+        error: t("invoices.download.error"),
+      });
+    } catch (e) {
+      console.error(e);
     }
   };
 
   const handleDeleteConfirm = async (id) => {
     setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
-
     try {
       await promise(invoiceService.delete(id), {
-        loading: t("invoices.delete.loading", "Deleting invoice..."),
+        loading: t("invoices.delete.loading"),
         success: () => {
-          setInvoices((prev) => prev.filter((inv) => inv._id !== id));
+          fetchInvoices();
           fetchStats();
-          // Adjust page if we deleted the last item on the current page
-          if (invoices.length === 1 && page > 1) {
-            setPage((prev) => prev - 1);
-          } else {
-            fetchInvoices();
-          }
-          return t("invoices.delete.success", "Invoice deleted successfully");
+          return t("invoices.delete.success");
         },
-        error: t("invoices.delete.error", "Failed to delete invoice"),
+        error: t("invoices.delete.error"),
       });
-    } catch (error) {
-      console.error("Delete failed:", error);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -383,59 +285,72 @@ const InvoicesPage = () => {
     });
   };
 
-  // --- Table Columns ---
+  // Logic States
+  const hasActiveFilters =
+    searchTerm.trim() !== "" ||
+    filters.status !== "all" ||
+    filters.startDate !== "" ||
+    filters.endDate !== "";
+  const showEmptyState =
+    !loading && invoices.length === 0 && !hasActiveFilters && hasInitialLoad;
+  const showNoResults =
+    !loading && invoices.length === 0 && hasActiveFilters && hasInitialLoad;
+  const showData =
+    hasInitialLoad && (invoices.length > 0 || (loading && totalCount > 0));
 
+  // Columns
   const columns = [
     {
-      accessor: "invoiceNumber",
       header: t("invoices.table.headers.invoiceNumber"),
+      accessor: "invoiceNumber",
       width: "15%",
       sortable: true,
       render: (row) => (
-        <div className="font-medium text-gray-900 dark:text-white">
+        <span className="font-medium text-gray-900 dark:text-white">
           {row.invoiceNumber}
-        </div>
+        </span>
       ),
     },
     {
-      accessor: "recipientName",
       header: t("invoices.table.headers.recipient"),
+      accessor: "recipientName",
       width: "25%",
-      sortable: true,
       render: (row) => (
         <div>
           <div className="font-medium text-gray-900 dark:text-white">
             {row.recipientName}
           </div>
-          <div className="text-xs text-gray-500">{row.recipientCompany}</div>
+          <div className="text-xs text-gray-500">{row.recipientEmail}</div>
         </div>
       ),
     },
     {
-      accessor: "dueDate",
       header: t("invoices.table.headers.dueDate"),
+      accessor: "dueDate",
       width: "15%",
       sortable: true,
       render: (row) => (
-        <div className="text-gray-600 dark:text-gray-400 font-mono text-sm">
-          {formatDate(row.dueDate)}
-        </div>
+        <span className="text-gray-600 dark:text-gray-400 font-mono text-sm">
+          {row.dueDate
+            ? new Date(row.dueDate).toLocaleDateString("en-GB")
+            : "-"}
+        </span>
       ),
     },
     {
-      accessor: "totalAmount",
       header: t("invoices.table.headers.amount"),
+      accessor: "totalAmount",
       width: "15%",
       sortable: true,
       render: (row) => (
-        <div className="font-bold text-green-600 dark:text-green-600">
+        <span className="font-bold text-green-600 dark:text-green-400">
           {formatCurrency(row.totalAmount)}
-        </div>
+        </span>
       ),
     },
     {
-      accessor: "status",
       header: t("invoices.table.headers.status"),
+      accessor: "status",
       width: "10%",
       sortable: true,
       render: (row) => <StatusBadge status={row.status} size="sm" />,
@@ -456,23 +371,23 @@ const InvoicesPage = () => {
                 handleRowClick(row);
               }}
               className="text-orange-500 hover:text-orange-600"
-              title={t("invoices.actions.view")}
             >
               <Eye size={16} />
             </Button>
             {canEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditInvoice(row);
-                }}
-                className="text-blue-500 hover:text-blue-600"
-                title={t("invoices.actions.edit")}
-              >
-                <Edit size={16} />
-              </Button>
+              <PermissionGuard permission="finance.update.all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditInvoice(row);
+                  }}
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  <Edit size={16} />
+                </Button>
+              </PermissionGuard>
             )}
             <Button
               variant="outline"
@@ -482,22 +397,24 @@ const InvoicesPage = () => {
                 handleDownloadInvoice(row);
               }}
               className="text-green-500 hover:text-green-600"
-              title={t("invoices.actions.download")}
             >
               <Download size={16} />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteClick(row._id, row.invoiceNumber);
-              }}
-              className="text-red-500 hover:text-red-600"
-              title={t("invoices.actions.delete")}
-            >
-              <Trash2 size={16} />
-            </Button>
+            {row.status === "draft" && (
+              <PermissionGuard permission="finance.delete.all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(row._id, row.invoiceNumber);
+                  }}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </PermissionGuard>
+            )}
           </div>
         );
       },
@@ -505,31 +422,50 @@ const InvoicesPage = () => {
   ];
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
-      {/* Header */}
+    <div
+      className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      {/* 1. Header (Always Visible) */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t("invoices.title")}
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            {t("invoices.subtitle", {
-              type:
-                invoiceType === "client"
-                  ? t("invoices.recipient.client")
-                  : t("invoices.recipient.partner"),
-            })}{" "}
-            {hasInitialLoad &&
-              totalCount > 0 &&
-              ` • ${t("invoices.pagination.showing", {
-                start: (page - 1) * limit + 1,
-                end: Math.min(page * limit, totalCount),
-                total: totalCount,
-              })}`}
-          </p>
+        {/* Title & Toggle */}
+        <div className="flex flex-col gap-3 w-full sm:w-auto">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {t("invoices.title")}
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400">
+              {hasInitialLoad && totalCount > 0
+                ? `${t("invoices.pagination.showing", { start: (page - 1) * limit + 1, end: Math.min(page * limit, totalCount), total: totalCount })}`
+                : t("invoices.subtitle", {
+                    type:
+                      invoiceType === "client"
+                        ? t("invoices.recipient.client")
+                        : t("invoices.recipient.partner"),
+                  })}
+            </p>
+          </div>
+
+          {/* ✅ Type Toggle (Now Permanent) */}
+          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 self-start">
+            <button
+              onClick={() => setInvoiceType("client")}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${invoiceType === "client" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"}`}
+            >
+              <Users size={16} /> {t("invoices.tabs.clients")}
+            </button>
+            <button
+              onClick={() => setInvoiceType("partner")}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${invoiceType === "partner" ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white" : "text-gray-500 dark:text-gray-300 hover:text-gray-900"}`}
+            >
+              <Briefcase size={16} /> {t("invoices.tabs.partners")}
+            </button>
+          </div>
         </div>
-        {!showEmptyState && (
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+
+        {/* Actions */}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <PermissionGuard permission="venue.read">
             <Button
               variant="outline"
               icon={Settings}
@@ -538,23 +474,26 @@ const InvoicesPage = () => {
             >
               {t("invoices.settings")}
             </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="finance.create">
             <Button
               variant="primary"
               icon={<Plus className="size-4" />}
               onClick={handleCreateInvoice}
               className="flex-1 sm:flex-none justify-center"
             >
-              {t("invoices.create.button", {
-                type: t("invoices.types.invoice"),
-              })}
+              {/* Dynamic Label */}
+              {invoiceType === "client"
+                ? t("invoices.create.clientButton", "Create Client Invoice")
+                : t("invoices.create.partnerButton", "Create Partner Invoice")}
             </Button>
-          </div>
-        )}
+          </PermissionGuard>
+        </div>
       </div>
 
+      {/* 2. Stats & Filters */}
       {!showEmptyState && hasInitialLoad && (
         <>
-          {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
             <StatBox
               label={t("invoices.stats.totalRevenue")}
@@ -586,34 +525,8 @@ const InvoicesPage = () => {
             />
           </div>
 
-          {/* Filters & Search Bar */}
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shrink-0 flex flex-col gap-4">
             <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
-              {/* Type Toggle */}
-              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 self-start md:self-auto">
-                <button
-                  onClick={() => setInvoiceType("client")}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    invoiceType === "client"
-                      ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white"
-                      : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
-                  }`}
-                >
-                  <Users size={16} /> {t("invoices.tabs.clients")}
-                </button>
-                <button
-                  onClick={() => setInvoiceType("partner")}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    invoiceType === "partner"
-                      ? "bg-white shadow text-orange-600 dark:bg-gray-600 dark:text-white"
-                      : "text-gray-500 dark:text-gray-300 hover:text-gray-900"
-                  }`}
-                >
-                  <Briefcase size={16} /> {t("invoices.tabs.partners")}
-                </button>
-              </div>
-
-              {/* Search & Filter Buttons */}
               <div className="flex gap-3 flex-1 justify-end w-full md:w-auto items-center">
                 <Input
                   className="w-full md:w-64"
@@ -629,11 +542,7 @@ const InvoicesPage = () => {
                   variant={isFilterOpen ? "primary" : "outline"}
                   icon={Filter}
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`whitespace-nowrap ${
-                    isFilterOpen
-                      ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900"
-                      : ""
-                  }`}
+                  className={`whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
                 >
                   {t("invoices.filters.status")}
                 </Button>
@@ -650,20 +559,8 @@ const InvoicesPage = () => {
               </div>
             </div>
 
-            {/* Expanded Filters */}
             {isFilterOpen && (
               <div className="mt-2 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                    {t("invoices.filters.options") || "Filter Options"}
-                  </h3>
-                  <button
-                    onClick={() => setIsFilterOpen(false)}
-                    className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Select
                     label={t("invoices.filters.status")}
@@ -696,14 +593,14 @@ const InvoicesPage = () => {
                     onClick={handleResetLocalFilters}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
                   >
-                    {t("invoices.filters.reset") || "Reset"}
+                    {t("invoices.filters.reset")}
                   </Button>
                   <Button
                     variant="primary"
                     onClick={handleApplyFilters}
                     className="px-6"
                   >
-                    {t("invoices.filters.apply") || "Apply Filters"}
+                    {t("invoices.filters.apply")}
                   </Button>
                 </div>
               </div>
@@ -712,7 +609,7 @@ const InvoicesPage = () => {
         </>
       )}
 
-      {/* Main Content Area */}
+      {/* 3. Content Area */}
       <div className="flex-1 flex flex-col relative">
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
@@ -722,7 +619,7 @@ const InvoicesPage = () => {
             </p>
           </div>
         )}
-        
+
         {showData && (
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <Table
@@ -731,8 +628,6 @@ const InvoicesPage = () => {
               loading={loading}
               onRowClick={handleRowClick}
               selectable={false}
-              selectedRows={selectedRows}
-              onSelectionChange={setSelectedRows}
               striped
               hoverable
               pagination={true}
@@ -758,9 +653,6 @@ const InvoicesPage = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               {t("invoices.empty.noResults")}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t("invoices.empty.noResultsDesc")}
-            </p>
             <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("invoices.empty.clearAll")}
             </Button>
@@ -768,7 +660,7 @@ const InvoicesPage = () => {
         )}
 
         {showEmptyState && (
-          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
+          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
               <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
                 <FileText
@@ -783,125 +675,22 @@ const InvoicesPage = () => {
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
               {t("invoices.empty.description")}
             </p>
-            <Button
-              onClick={handleCreateInvoice}
-              variant="primary"
-              size="lg"
-              icon={<Plus className="size-4" />}
-              className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
-            >
-              {t("invoices.create.firstButton")}
-            </Button>
+            <PermissionGuard permission="finance.create">
+              <Button
+                onClick={handleCreateInvoice}
+                variant="primary"
+                size="lg"
+                icon={<Plus className="size-4" />}
+                className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
+              >
+                {t("invoices.create.firstButton")}
+              </Button>
+            </PermissionGuard>
           </div>
         )}
       </div>
 
-      {/* Detail Modal */}
-      {selectedInvoice && isDetailModalOpen && (
-        <Modal
-          isOpen={isDetailModalOpen}
-          onClose={() => setIsDetailModalOpen(false)}
-          size="lg"
-          title={t("invoices.modal.title", {
-            number: selectedInvoice.invoiceNumber,
-          })}
-        >
-          <div className="p-6 space-y-6">
-            <div className="flex justify-between border-b pb-4 border-gray-100 dark:border-gray-700">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {selectedInvoice.recipientName}
-                </h3>
-                <p className="text-gray-500">
-                  {selectedInvoice.recipientEmail}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {selectedInvoice.recipientCompany}
-                </p>
-              </div>
-              <div className="text-right">
-                <StatusBadge status={selectedInvoice.status} size="lg" />
-                <p className="text-xs text-gray-400 mt-2">
-                  {t("invoices.modal.due")}{" "}
-                  {formatDate(selectedInvoice.dueDate)}
-                </p>
-              </div>
-            </div>
-            
-            <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                  <tr>
-                    <th className="p-3 text-left">
-                      {t("invoices.modal.headers.description")}
-                    </th>
-                    <th className="p-3 text-right">
-                      {t("invoices.modal.headers.qty")}
-                    </th>
-                    <th className="p-3 text-right">
-                      {t("invoices.modal.headers.price")}
-                    </th>
-                    <th className="p-3 text-right">
-                      {t("invoices.modal.headers.total")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {selectedInvoice.items.map((item, i) => (
-                    <tr key={i}>
-                      <td className="p-3 text-gray-900 dark:text-white">
-                        {item.description}
-                      </td>
-                      <td className="p-3 text-right text-gray-600 dark:text-gray-400">
-                        {item.quantity}
-                      </td>
-                      <td className="p-3 text-right text-gray-600 dark:text-gray-400">
-                        {formatCurrency(item.rate)}
-                      </td>
-                      <td className="p-3 text-right font-medium text-gray-900 dark:text-white">
-                        {formatCurrency(item.amount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <div className="w-64 space-y-2 text-right">
-                <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white">
-                  <span>{t("invoices.modal.total")}</span>{" "}
-                  <span>{formatCurrency(selectedInvoice.totalAmount)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-6 border-t border-gray-100 dark:border-gray-700">
-              <Button
-                variant="outline"
-                onClick={() => handleDownloadInvoice(selectedInvoice)}
-                icon={Download}
-              >
-                {t("invoices.actions.download")}
-              </Button>
-              {selectedInvoice.status === "draft" && (
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    setIsDetailModalOpen(false);
-                    handleEditInvoice(selectedInvoice);
-                  }}
-                  icon={Edit}
-                >
-                  {t("invoices.actions.edit")}
-                </Button>
-              )}
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Delete Confirmation Modal */}
+      {/* Confirmation Modal */}
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() => setConfirmationModal((p) => ({ ...p, isOpen: false }))}
@@ -943,11 +732,83 @@ const InvoicesPage = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Detail Modal */}
+      {selectedInvoice && isDetailModalOpen && (
+        <Modal
+          isOpen={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
+          size="lg"
+          title={t("invoices.modal.title", {
+            number: selectedInvoice.invoiceNumber,
+          })}
+        >
+          <div className="p-6 space-y-6">
+            <div className="flex justify-between border-b pb-4 dark:border-gray-700">
+              <div>
+                <h3 className="text-xl font-bold dark:text-white">
+                  {selectedInvoice.recipientName}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  {selectedInvoice.recipientEmail}
+                </p>
+              </div>
+              <div>
+                <StatusBadge status={selectedInvoice.status} size="lg" />
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-md border dark:border-gray-700">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
+                  <tr>
+                    <th className="p-3 text-left">Desc</th>
+                    <th className="p-3 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {selectedInvoice.items.map((item, i) => (
+                    <tr key={i}>
+                      <td className="p-3 dark:text-gray-200">
+                        {item.description}
+                      </td>
+                      <td className="p-3 text-right dark:text-gray-200">
+                        {formatCurrency(item.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end gap-2 pt-6 border-t dark:border-gray-700">
+              <Button
+                variant="outline"
+                onClick={() => handleDownloadInvoice(selectedInvoice)}
+                icon={Download}
+              >
+                {t("invoices.actions.download")}
+              </Button>
+              {selectedInvoice.status === "draft" && (
+                <PermissionGuard permission="finance.update.all">
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      setIsDetailModalOpen(false);
+                      handleEditInvoice(selectedInvoice);
+                    }}
+                    icon={Edit}
+                  >
+                    {t("invoices.actions.edit")}
+                  </Button>
+                </PermissionGuard>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
 
-// Subcomponent: StatBox
 const StatBox = ({ label, value, loading, icon: Icon, color }) => {
   const colors = {
     blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",

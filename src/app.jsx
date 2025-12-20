@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { LanguageProvider } from "./context/LanguageContext.jsx";
-import { NotificationProvider } from "./context/NotificationContext.jsx"; // <--- IMPORT THIS
+import { NotificationProvider } from "./context/NotificationContext.jsx";
 import ErrorBoundary from "./components/common/ErrorBoundary.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 

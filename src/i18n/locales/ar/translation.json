@@ -2343,7 +2343,192 @@
     "bank_transfer": "التحويل",
     "card": "البطاقة"
   },
+    "roles": {
+    "title": "الأدوار والصلاحيات",
+    "subtitle": "إدارة أدوار الفريق ومستويات الوصول",
+    "create": "إنشاء دور",
+    "edit": "تعديل الدور",
+    "delete": "حذف الدور",
+    "view": "عرض الدور",
+    "searchPlaceholder": "بحث عن دور...",
+    "systemRole": "نظام",
+    "infoBanner": {
+      "title": "أدوار النظام",
+      "description": "أدوار مثل المالك والمدير والموظف محمية. يمكنك عرض صلاحياتها ولكن لا يمكنك حذفها."
+    },
+    "stats": {
+      "total": "إجمالي الأدوار",
+      "system": "أدوار النظام",
+      "custom": "أدوار مخصصة"
+    },
+    "table": {
+      "roleName": "اسم الدور",
+      "permissions": "الصلاحيات",
+      "level": "المستوى",
+      "status": "الحالة",
+      "actions": "إجراءات",
+      "permissionsCount": "{{count}} صلاحية"
+    },
+    "deleteConfirmation": {
+      "title": "حذف الدور",
+      "warning": "تحذير",
+      "message": "هل أنت متأكد من رغبتك في حذف الدور **{{name}}**؟ سيفقد المستخدمون المرتبطون بهذا الدور صلاحياتهم."
+    },
+    "alerts": {
+      "systemRoleDelete": "لا يمكن حذف أدوار النظام",
+      "deleteSuccess": "تم حذف الدور بنجاح",
+      "deleteError": "فشل حذف الدور",
+      "loadError": "فشل تحميل الأدوار"
+    },
+    "form": {
+      "createTitle": "إنشاء دور جديد",
+      "editTitle": "تعديل الدور",
+      "subtitle": "تحديد مستويات الوصول والقدرات لهذا الدور",
+      "detailsTitle": "تفاصيل الدور",
+      "permissionsTitle": "صلاحيات الوصول",
+      "permissionsCount": "{{count}} صلاحية محددة",
+      "ownerWarning": "دور المالك لديه وصول كامل لجميع الميزات ولا يمكن تعديله.",
+      "selectAll": "تحديد الكل",
+      "clear": "مسح",
+      "fields": {
+        "name": "اسم الدور",
+        "description": "الوصف"
+      },
+      "placeholders": {
+        "name": "مثال: منسق الفعاليات",
+        "description": "وصف موجز للمسؤوليات"
+      },
+      "validation": {
+        "nameRequired": "اسم الدور مطلوب",
+        "permissionRequired": "يرجى تحديد صلاحية واحدة على الأقل لهذا الدور"
+      },
+      "notifications": {
+        "created": "تم إنشاء الدور بنجاح",
+        "updated": "تم تحديث الدور بنجاح",
+        "loadError": "فشل تحميل بيانات الدور",
+        "saveError": "فشل حفظ الدور",
+        "selectedAll": "تم تحديد جميع الصلاحيات",
+        "cleared": "تم مسح جميع الصلاحيات"
+      }
+    },
+    "matrix": {
+      "feature": "وحدة الميزة",
+      "fullAccess": "وصول كامل",
+      "view": "عرض",
+      "create": "إنشاء",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "export": "تصدير",
+      "manage": "إدارة"
+    },
+    "modules": {
+      "events": "إدارة الفعاليات",
+      "clients": "العملاء (CRM)",
+      "partners": "شركاء الخدمة",
+      "finance": "المالية والتحليلات",
+      "payments": "المدفوعات",
+      "invoices": "الفواتير",
+      "tasks": "المهام",
+      "reminders": "التذكيرات",
+      "supplies": "المخزون / التجهيزات",
+      "contracts": "العقود",
+      "users": "إدارة الفريق",
+      "roles": "إدارة الأدوار",
+      "venue": "إعدادات المكان",
+      "settings": "الإعدادات العامة",
+      "reports": "التقارير"
+    }
+  },
+  "team": {
+    "title": "إدارة الفريق",
+    "subtitle": "إدارة موظفي المكان والمتعاونين",
+    "invite": "دعوة عضو",
+    "inviteSubtitle": "دعوة أعضاء جدد للانضمام إلى فريقك",
+    "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني...",
+    "noData": "لم يتم العثور على أعضاء نشطين.",
+    "inviteTitle": "دعوة عضو جديد للفريق",
+    "emailLabel": "البريد الإلكتروني",
+    "roleLabel": "تعيين الدور",
+    "sendInvite": "إرسال الدعوة",
+    "copyLink": "نسخ الرابط",
+    "alerts": {
+      "inviteSuccess": "تم إنشاء الدعوة بنجاح!",
+      "linkCopied": "تم نسخ الرابط إلى الحافظة",
+      "resentSuccess": "تم إعادة إرسال الدعوة بنجاح",
+      "resentError": "فشل إعادة إرسال الدعوة",
+      "revokedSuccess": "تم إلغاء الدعوة",
+      "revokedError": "فشل إلغاء الدعوة",
+      "confirmRevoke": "هل أنت متأكد أنك تريد إلغاء هذه الدعوة؟",
+      "loadMembers": "فشل تحميل أعضاء الفريق",
+      "joinSuccess": "تم إنشاء الحساب! مرحبًا بك في الفريق.",
+      "acceptFailed": "فشل قبول الدعوة"
+    },
+    "stats": {
+      "total": "إجمالي الأعضاء",
+      "active": "الأعضاء النشطين",
+      "pending": "الدعوات المعلقة"
+    },
+    "sections": {
+      "pending": "الدعوات المعلقة",
+      "active": "الأعضاء النشطين"
+    },
+    "table": {
+      "email": "البريد الإلكتروني",
+      "name": "الاسم",
+      "role": "الدور",
+      "sentDate": "تاريخ الإرسال",
+      "status": "الحالة",
+      "actions": "إجراءات"
+    },
+    "actions": {
+      "resend": "إعادة إرسال",
+      "revoke": "إلغاء"
+    },
+    "filters": {
+      "allRoles": "كل الأدوار"
+    },
+    "invitation": {
+      "joinTitle": "انضم إلى الفريق",
+      "joinSubtitle": "قم بإعداد حسابك للبدء",
+      "venueInvite": "لقد تمت دعوتك للانضمام إلى مساحة عمل",
+      "roleSetup": "أنشئ حسابك للوصول إلى لوحة التحكم",
+      "createAccount": "إنشاء حساب والانضمام",
+      "invalidTitle": "رابط دعوة غير صالح",
+      "invalidDesc": "رابط الدعوة هذا مفقود، غير صالح، أو منتهي الصلاحية. يرجى الطلب من المسؤول إرسال دعوة جديدة.",
+      "terms": "بانضمامك، أنت توافق على شروط الخدمة وسياسة الخصوصية الخاصة بنا."
+    },
+     "form": {
+      "editTitle": "تعديل عضو الفريق",
+      "personalInfo": "المعلومات الشخصية",
+      "accessControl": "التحكم في الوصول",
+      "name": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "role": "الدور",
+      "status": "الحالة",
+      "active": "نشط",
+      "inactive": "غير نشط (مقفل)"
+    },
+    "detail": {
+      "editProfile": "تعديل الملف الشخصي",
+      "role": "الدور",
+      "status": "الحالة",
+      "joined": "انضم في {{date}}",
+      "activityHistory": "سجل النشاط",
+      "noActivity": "لا يوجد نشاط مسجل بعد.",
+      "notFound": "المستخدم غير موجود"
+    },
+    "notifications": {
+      "updated": "تم تحديث العضو بنجاح",
+      "loadError": "فشل تحميل تفاصيل المستخدم",
+      "updateError": "فشل التحديث"
+    }
+  },
   "common": {
+    "copied" : "تم النسخ!",
+    "ProfileSettings":"إعدادات الملف الشخصي",
+    "team": "الفريق",
+    "role": "الدور",
     "partner": "شريك",
     "searchPlaceholder": "بحث (⌘K)",
     "markAsDone": "تحديد كمكتمل",
@@ -3094,12 +3279,22 @@
       "paymentInstructions": "تعليمات الدفع"
     }
   },
+  "profileSettings": {
+    "title": "إعدادات الملف الشخصي",
+    "subtitle": "إدارة ملفك الشخصي وتفضيلات الحساب",
+    "common": {
+      "loading": "جار التحميل...",
+      "saveChanges": "حفظ التغييرات",
+      "unsavedChanges": "تغييرات غير محفوظة",
+      "saving": "جار الحفظ..."}
+    },
   "venueSettings": {
     "title": "الإعدادات",
     "subtitle": "إدارة ملفك الشخصي وتفاصيل القاعة وإعدادات الأمان",
     "common": {
       "loading": "جار التحميل...",
       "saveChanges": "حفظ التغييرات",
+      "unsavedChanges": "تغييرات غير محفوظة",
       "saving": "جار الحفظ...",
       "saved": "تم الحفظ",
       "cancel": "إلغاء",

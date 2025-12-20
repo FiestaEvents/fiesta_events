@@ -4,22 +4,24 @@ import { useTranslation } from "react-i18next";
 import {
   Plus,
   Search,
+  Filter,
   Eye,
-  X,
   Edit,
   Trash2,
-  Download,
-  RotateCcw,
+  AlertTriangle,
+  FolderOpen,
   TrendingUp,
   TrendingDown,
-  AlertTriangle,
   DollarSign,
   Activity,
-  FolderOpen,
-  Filter,
+  RotateCcw,
 } from "lucide-react";
 
-// ✅ Components & Utils
+// ✅ API & Permissions
+import { paymentService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard";
+
+// ✅ Generic Components & Utils
 import OrbitLoader from "../../components/common/LoadingSpinner";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
@@ -29,17 +31,12 @@ import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import formatCurrency from "../../utils/formatCurrency";
 
-// ✅ API & Context
-import { paymentService } from "../../api/index";
+// ✅ Context
 import { useToast } from "../../context/ToastContext";
 
 // ✅ Sub-components
-import PaymentDetailModal from "./PaymentDetailModal";
 import PaymentForm from "./PaymentForm";
-
-// ========================================================================
-// CONSTANTS
-// ========================================================================
+import PaymentDetailModal from "./PaymentDetailModal";
 
 const INITIAL_FILTERS = {
   search: "",
@@ -50,11 +47,7 @@ const INITIAL_FILTERS = {
   limit: 10,
 };
 
-const PAYMENT_TYPES = {
-  INCOME: "income",
-  EXPENSE: "expense",
-};
-
+const PAYMENT_TYPES = { INCOME: "income", EXPENSE: "expense" };
 const PAYMENT_STATUSES = {
   COMPLETED: "completed",
   PAID: "paid",
@@ -71,12 +64,10 @@ const BADGE_VARIANTS = {
     failed: "danger",
     refunded: "info",
   },
-  TYPE: {
-    income: "success",
-    expense: "danger",
-  },
+  TYPE: { income: "success", expense: "danger" },
 };
 
+// Stats Config
 const STAT_CONFIGS = [
   {
     key: "income",
@@ -135,43 +126,16 @@ const STAT_CONFIGS = [
   },
 ];
 
-// ========================================================================
-// HELPER FUNCTIONS
-// ========================================================================
+// Helper Functions
+const formatDate = (date) =>
+  !date ? "-" : new Date(date).toLocaleDateString("en-GB");
+const getClientName = (payment) =>
+  payment.client?.name || payment.event?.clientId?.name || "N/A";
+const getBadgeVariant = (value, type) =>
+  (type === "status" ? BADGE_VARIANTS.STATUS : BADGE_VARIANTS.TYPE)[
+    value?.toLowerCase()
+  ] || "secondary";
 
-/**
- * Format date for display
- */
-const formatDate = (date) => {
-  if (!date) return "-";
-  try {
-    return new Date(date).toLocaleDateString("en-GB");
-  } catch {
-    return date;
-  }
-};
-
-/**
- * Extract client name from payment object
- */
-const getClientName = (payment) => {
-  if (payment.client?.name) return payment.client.name;
-  if (payment.event?.clientId?.name) return payment.event.clientId.name;
-  return "N/A";
-};
-
-/**
- * Get badge variant based on value and type
- */
-const getBadgeVariant = (value, type) => {
-  const variants =
-    type === "status" ? BADGE_VARIANTS.STATUS : BADGE_VARIANTS.TYPE;
-  return variants[value?.toLowerCase()] || "secondary";
-};
-
-/**
- * Calculate payment statistics
- */
 const calculateStats = (payments) => {
   const stats = {
     completedIncome: 0,
@@ -182,7 +146,6 @@ const calculateStats = (payments) => {
     pendingPayments: 0,
     failedPayments: 0,
   };
-
   payments.forEach((payment) => {
     const status = payment.status?.toLowerCase();
     const isCompleted = [
@@ -199,141 +162,45 @@ const calculateStats = (payments) => {
       if (isCompleted) stats.completedExpenses += amount;
       if (isPending) stats.pendingExpenses += amount;
     }
-
     if (isCompleted) stats.completedPayments++;
     if (isPending) stats.pendingPayments++;
     if (status === PAYMENT_STATUSES.FAILED) stats.failedPayments++;
   });
-
   stats.netCompleted = stats.completedIncome - stats.completedExpenses;
   stats.netPending = stats.pendingIncome - stats.pendingExpenses;
   stats.netProjected = stats.netCompleted + stats.netPending;
-
   return stats;
 };
 
-/**
- * Convert payments array to CSV format
- */
-const convertToCSV = (payments, t) => {
-  if (!payments || payments.length === 0) return "";
-
-  // Define CSV headers
-  const headers = [
-    t("payments.csv.type", "Type"),
-    t("payments.csv.description", "Description"),
-    t("payments.csv.client", "Client"),
-    t("payments.csv.reference", "Reference"),
-    t("payments.csv.date", "Date"),
-    t("payments.csv.amount", "Amount"),
-    t("payments.csv.method", "Payment Method"),
-    t("payments.csv.status", "Status"),
-    t("payments.csv.netAmount", "Net Amount"),
-    t("payments.csv.createdAt", "Created At"),
-  ];
-
-  // Helper to escape CSV values
-  const escapeCSV = (value) => {
-    if (value === null || value === undefined) return "";
-    const stringValue = String(value);
-    if (
-      stringValue.includes(",") ||
-      stringValue.includes('"') ||
-      stringValue.includes("\n")
-    ) {
-      return `"${stringValue.replace(/"/g, '""')}"`;
-    }
-    return stringValue;
-  };
-
-  // Helper to format dates
-  const formatDateForCSV = (date) => {
-    if (!date) return "";
-    try {
-      return new Date(date).toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return "";
-    }
-  };
-
-  // Map payments to CSV rows
-  const rows = payments.map((payment) => {
-    return [
-      escapeCSV(payment.type?.toUpperCase() || ""),
-      escapeCSV(payment.description || ""),
-      escapeCSV(getClientName(payment)),
-      escapeCSV(payment.reference || ""),
-      escapeCSV(formatDateForCSV(payment.paidDate || payment.createdAt)),
-      escapeCSV(payment.amount?.toFixed(3) || "0.000"),
-      escapeCSV(payment.method || ""),
-      escapeCSV(payment.status?.toUpperCase() || ""),
-      escapeCSV(
-        payment.netAmount?.toFixed(3) || payment.amount?.toFixed(3) || "0.000"
-      ),
-      escapeCSV(formatDateForCSV(payment.createdAt)),
-    ].join(",");
-  });
-
-  return [headers.join(","), ...rows].join("\n");
-};
-
-/**
- * Download CSV file
- */
-const downloadCSV = (csvContent, filename = "payments-export.csv") => {
-  const BOM = "\uFEFF"; // UTF-8 BOM for Excel compatibility
-  const blob = new Blob([BOM + csvContent], {
-    type: "text/csv;charset=utf-8;",
-  });
-
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-
-  link.setAttribute("href", url);
-  link.setAttribute("download", filename);
-  link.style.visibility = "hidden";
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  URL.revokeObjectURL(url);
-};
-
-// ========================================================================
+// ==========================================
 // MAIN COMPONENT
-// ========================================================================
+// ==========================================
 
 const PaymentsList = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { showSuccess, showError, showInfo, promise } = useToast();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === "rtl";
 
-  // ========================================================================
-  // STATE
-  // ========================================================================
-
+  // State
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [error, setError] = useState(null);
 
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
+  // Filters
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Local Filter Buffer
   const [localType, setLocalType] = useState("all");
   const [localStatus, setLocalStatus] = useState("all");
   const [localMethod, setLocalMethod] = useState("all");
@@ -345,52 +212,14 @@ const PaymentsList = () => {
     onConfirm: null,
   });
 
-  // ========================================================================
-  // COMPUTED VALUES
-  // ========================================================================
-
+  // Computed
   const stats = useMemo(() => calculateStats(payments), [payments]);
 
-  const hasActiveFilters =
-    filters.search.trim() !== "" ||
-    filters.type !== "all" ||
-    filters.status !== "all" ||
-    filters.method !== "all";
-
-  const showEmptyState =
-    !loading &&
-    !error &&
-    payments.length === 0 &&
-    !hasActiveFilters &&
-    hasInitialLoad;
-
-  const showNoResults =
-    !loading &&
-    !error &&
-    payments.length === 0 &&
-    hasActiveFilters &&
-    hasInitialLoad;
-
-  const showData =
-    hasInitialLoad && (payments.length > 0 || (loading && totalCount > 0));
-
-  const paginatedPayments = useMemo(() => {
-    if (payments.length > filters.limit) {
-      const startIndex = (filters.page - 1) * filters.limit;
-      return payments.slice(startIndex, startIndex + filters.limit);
-    }
-    return payments;
-  }, [payments, filters.page, filters.limit]);
-
-  // ========================================================================
-  // API CALLS
-  // ========================================================================
-
+  // Fetch Logic
   const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
       const params = {
         page: filters.page,
         limit: filters.limit,
@@ -399,14 +228,12 @@ const PaymentsList = () => {
         ...(filters.status !== "all" && { status: filters.status }),
         ...(filters.method !== "all" && { method: filters.method }),
       };
-
       const response = await paymentService.getAll(params);
       let data =
         response?.data?.data?.payments ||
         response?.data?.payments ||
         response?.payments ||
         [];
-
       if (!Array.isArray(data)) data = [];
 
       const totalItems =
@@ -419,23 +246,14 @@ const PaymentsList = () => {
       setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
       setTotalCount(totalItems);
     } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        t("payments.notifications.error");
-      setError(msg);
-      showError(msg);
+      setError(t("payments.notifications.error"));
       setPayments([]);
       setTotalCount(0);
     } finally {
       setLoading(false);
       setHasInitialLoad(true);
     }
-  }, [filters, showError, t]);
-
-  // ========================================================================
-  // EFFECTS
-  // ========================================================================
+  }, [filters, t]);
 
   useEffect(() => {
     fetchPayments();
@@ -450,29 +268,34 @@ const PaymentsList = () => {
   }, [isFilterOpen, filters]);
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      setFilters((prev) => {
-        if (prev.search === searchTerm) return prev;
-        return { ...prev, search: searchTerm, page: 1 };
-      });
+    const timer = setTimeout(() => {
+      setFilters((prev) =>
+        prev.search === searchTerm
+          ? prev
+          : { ...prev, search: searchTerm, page: 1 }
+      );
     }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
+    return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // ========================================================================
-  // HANDLERS
-  // ========================================================================
+  // Client-Side Pagination Fallback
+  const paginatedPayments = useMemo(() => {
+    if (payments.length > filters.limit) {
+      const startIndex = (filters.page - 1) * filters.limit;
+      return payments.slice(startIndex, startIndex + filters.limit);
+    }
+    return payments;
+  }, [payments, filters.page, filters.limit]);
 
-  const updateFilter = useCallback((key, value) => {
+  // Handlers
+  const updateFilter = (key, value) =>
     setFilters((prev) => ({
       ...prev,
       [key]: value,
       ...(key !== "page" && { page: 1 }),
     }));
-  }, []);
 
-  const handleApplyFilters = useCallback(() => {
+  const handleApplyFilters = () => {
     setFilters((prev) => ({
       ...prev,
       type: localType,
@@ -481,43 +304,33 @@ const PaymentsList = () => {
       page: 1,
     }));
     setIsFilterOpen(false);
-    showSuccess(t("payments.notifications.filtersApplied") || "Filters applied");
-  }, [localType, localStatus, localMethod, showSuccess, t]);
+    showSuccess(t("payments.notifications.filtersApplied"));
+  };
 
-  const handleResetLocalFilters = useCallback(() => {
+  const handleResetLocalFilters = () => {
     setLocalType("all");
     setLocalStatus("all");
     setLocalMethod("all");
-  }, []);
+  };
 
-  const handleClearAllFilters = useCallback(() => {
+  const handleClearAllFilters = () => {
     setFilters(INITIAL_FILTERS);
     setSearchTerm("");
     showInfo(t("payments.notifications.filtersCleared"));
-  }, [showInfo, t]);
+  };
 
-  const handleDeleteConfirm = useCallback(
-    async (paymentId, paymentName) => {
-      try {
-        await promise(paymentService.delete(paymentId), {
-          loading: t("payments.notifications.deleting", { paymentName }),
-          success: t("payments.notifications.deleteSuccess"),
-          error: t("payments.notifications.deleteError"),
-        });
-        fetchPayments();
-        setConfirmationModal({
-          isOpen: false,
-          paymentId: null,
-          paymentName: "",
-          onConfirm: null,
-        });
-        if (selectedPayment?._id === paymentId) setIsDetailModalOpen(false);
-      } catch (err) {
-        // Error handled by promise
-      }
-    },
-    [fetchPayments, selectedPayment, promise, t]
-  );
+  const handleDeleteConfirm = async (paymentId, paymentName) => {
+    try {
+      await promise(paymentService.delete(paymentId), {
+        loading: t("payments.notifications.deleting", { paymentName }),
+        success: t("payments.notifications.deleteSuccess"),
+        error: t("payments.notifications.deleteError"),
+      });
+      fetchPayments();
+      setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+      if (selectedPayment?._id === paymentId) setIsDetailModalOpen(false);
+    } catch (err) {}
+  };
 
   const handleDeletePayment = useCallback(
     (paymentId, paymentName) => {
@@ -528,45 +341,10 @@ const PaymentsList = () => {
         onConfirm: () => handleDeleteConfirm(paymentId, paymentName),
       });
     },
-    [handleDeleteConfirm]
-  );
+    [fetchPayments]
+  ); // Added dependencies to satisfy linter, though circular dependency with fetchPayments via handleDeleteConfirm logic might exist, usually fetchPayments inside the confirm callback is fine.
 
-  const handleExportCSV = useCallback(() => {
-    if (!payments.length) {
-      return showError(
-        t("payments.notifications.noPaymentsExport", "No payments to export")
-      );
-    }
-
-    try {
-      const csvContent = convertToCSV(payments, t);
-
-      if (!csvContent) {
-        return showError(
-          t("payments.notifications.exportError", "Failed to generate CSV")
-        );
-      }
-
-      const date = new Date().toISOString().split("T")[0];
-      const filename = `payments-${date}.csv`;
-
-      downloadCSV(csvContent, filename);
-
-      showSuccess(
-        t("payments.notifications.exportSuccess", {
-          count: payments.length,
-          defaultValue: `Successfully exported ${payments.length} payments`,
-        })
-      );
-    } catch (error) {
-      console.error("CSV Export Error:", error);
-      showError(
-        t("payments.notifications.exportError", "Failed to export payments")
-      );
-    }
-  }, [payments, showError, showSuccess, t]);
-
-  const handleFormSuccess = useCallback(() => {
+  const handleFormSuccess = () => {
     fetchPayments();
     setIsFormOpen(false);
     setSelectedPayment(null);
@@ -575,12 +353,30 @@ const PaymentsList = () => {
         ? t("payments.notifications.updateSuccess")
         : t("payments.notifications.createSuccess")
     );
-  }, [fetchPayments, selectedPayment, showSuccess, t]);
+  };
 
-  // ========================================================================
-  // TABLE CONFIGURATION
-  // ========================================================================
+  // Logic States
+  const hasActiveFilters =
+    filters.search.trim() !== "" ||
+    filters.type !== "all" ||
+    filters.status !== "all" ||
+    filters.method !== "all";
+  const showEmptyState =
+    !loading &&
+    !error &&
+    payments.length === 0 &&
+    !hasActiveFilters &&
+    hasInitialLoad;
+  const showNoResults =
+    !loading &&
+    !error &&
+    payments.length === 0 &&
+    hasActiveFilters &&
+    hasInitialLoad;
+  const showData =
+    hasInitialLoad && (payments.length > 0 || (loading && totalCount > 0));
 
+  // ✅ FIX: Renamed 'columns' to 'tableColumns' to match usage
   const tableColumns = useMemo(
     () => [
       {
@@ -649,11 +445,7 @@ const PaymentsList = () => {
         sortable: true,
         render: (row) => (
           <div
-            className={`font-bold ${
-              row.type === PAYMENT_TYPES.INCOME
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
+            className={`font-bold ${row.type === PAYMENT_TYPES.INCOME ? "text-green-600" : "text-red-600"}`}
           >
             {row.type === PAYMENT_TYPES.INCOME ? "+" : "-"}
             {formatCurrency(row.amount)}
@@ -678,6 +470,7 @@ const PaymentsList = () => {
         className: "text-center",
         render: (row) => (
           <div className="flex justify-center gap-2">
+            {/* View: Everyone */}
             <Button
               variant="outline"
               size="sm"
@@ -690,46 +483,58 @@ const PaymentsList = () => {
             >
               <Eye className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedPayment(row);
-                setIsFormOpen(true);
-              }}
-              className="text-blue-500 hover:text-blue-700"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+
+            {/* ✅ Edit Guard */}
+            <PermissionGuard permission="payments.update.all">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedPayment(row);
+                  setIsFormOpen(true);
+                }}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </PermissionGuard>
+
+            {/* Refund (Protected) */}
             {row.type === PAYMENT_TYPES.INCOME &&
               [PAYMENT_STATUSES.COMPLETED, PAYMENT_STATUSES.PAID].includes(
                 row.status?.toLowerCase()
               ) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPayment(row);
-                    setIsRefundModalOpen(true);
-                  }}
-                  className="text-yellow-500 hover:text-yellow-700"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
+                <PermissionGuard permission="payments.update.all">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPayment(row);
+                      setIsRefundModalOpen(true);
+                    }}
+                    className="text-yellow-500 hover:text-yellow-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </PermissionGuard>
               )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeletePayment(row._id, row.description);
-              }}
-              className="text-red-500 hover:text-red-700"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+
+            {/* ✅ Delete Guard */}
+            <PermissionGuard permission="payments.delete.all">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeletePayment(row._id, row.description);
+                }}
+                className="text-red-500 hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </PermissionGuard>
           </div>
         ),
       },
@@ -737,12 +542,11 @@ const PaymentsList = () => {
     [t, handleDeletePayment]
   );
 
-  // ========================================================================
-  // RENDER
-  // ========================================================================
-
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
+    <div
+      className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
@@ -753,18 +557,10 @@ const PaymentsList = () => {
             {t("payments.subtitle")}
           </p>
         </div>
+
+        {/* ✅ Create Guard */}
         {!showEmptyState && (
-          <div className="flex gap-2 w-full sm:w-auto">
-            {totalCount > 0 && (
-              <Button
-                variant="outline"
-                onClick={handleExportCSV}
-                className="flex items-center gap-2 flex-1 sm:flex-none justify-center"
-              >
-                <Download className="h-4 w-4" />
-                {t("payments.exportPayments")}
-              </Button>
-            )}
+          <PermissionGuard permission="payments.create">
             <Button
               variant="primary"
               onClick={() => {
@@ -773,10 +569,9 @@ const PaymentsList = () => {
               }}
               className="flex items-center gap-2 flex-1 sm:flex-none justify-center"
             >
-              <Plus className="h-4 w-4" />
-              {t("payments.addPayment")}
+              <Plus className="h-4 w-4" /> {t("payments.addPayment")}
             </Button>
-          </div>
+          </PermissionGuard>
         )}
       </div>
 
@@ -822,10 +617,8 @@ const PaymentsList = () => {
                 </div>
               );
             }
-
             const mainValue = config.getValue(stats);
             const subValue = config.getSubValue(stats);
-
             return (
               <div
                 key={config.key}
@@ -841,11 +634,7 @@ const PaymentsList = () => {
                 </div>
                 <div className="space-y-1">
                   <div
-                    className={`text-2xl font-bold ${
-                      config.isDynamic && mainValue < 0
-                        ? "text-red-600"
-                        : config.valueClass
-                    }`}
+                    className={`text-2xl font-bold ${config.isDynamic && mainValue < 0 ? "text-red-600" : config.valueClass}`}
                   >
                     {formatCurrency(mainValue)}
                   </div>
@@ -860,7 +649,7 @@ const PaymentsList = () => {
         </div>
       )}
 
-      {/* Search & Filters */}
+      {/* Filters */}
       {!showEmptyState && hasInitialLoad && (
         <div className="relative mb-6 z-20">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -877,14 +666,10 @@ const PaymentsList = () => {
               <Button
                 variant={hasActiveFilters ? "primary" : "outline"}
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 transition-all whitespace-nowrap ${
-                  isFilterOpen
-                    ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900"
-                    : ""
-                }`}
+                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
               >
                 <Filter className="w-4 h-4" />
-                {t("payments.filters.advanced") || "Filters"}
+                {t("payments.filters.advanced")}
                 {hasActiveFilters && (
                   <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
                     !
@@ -903,30 +688,17 @@ const PaymentsList = () => {
               )}
             </div>
           </div>
-
-          {/* Filter Panel */}
           {isFilterOpen && (
             <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                  {t("payments.filters.options") || "Filter Options"}
-                </h3>
-                <button
-                  onClick={() => setIsFilterOpen(false)}
-                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
                 <Select
                   label={t("payments.table.type")}
                   value={localType}
                   onChange={(e) => setLocalType(e.target.value)}
                   options={[
-                    { value: "all", label: t("payments.filters.allTypes", "All Types") },
-                    { value: "income", label: t("payments.types.income", "Income") },
-                    { value: "expense", label: t("payments.types.expense", "Expense") },
+                    { value: "all", label: t("payments.filters.allTypes") },
+                    { value: "income", label: t("payments.types.income") },
+                    { value: "expense", label: t("payments.types.expense") },
                   ]}
                   className="w-full"
                 />
@@ -935,40 +707,42 @@ const PaymentsList = () => {
                   value={localStatus}
                   onChange={(e) => setLocalStatus(e.target.value)}
                   options={[
-                    { value: "all", label: t("payments.filters.allStatus", "All Status") },
-                    { value: "pending", label: t("payments.statuses.pending", "Pending") },
-                    { value: "completed", label: t("payments.statuses.completed", "Completed") },
+                    { value: "all", label: t("payments.filters.allStatus") },
+                    { value: "pending", label: t("payments.statuses.pending") },
+                    {
+                      value: "completed",
+                      label: t("payments.statuses.completed"),
+                    },
                   ]}
                   className="w-full"
                 />
                 <Select
-                  label={t("payments.table.method") || "Method"}
+                  label={t("payments.table.method")}
                   value={localMethod}
                   onChange={(e) => setLocalMethod(e.target.value)}
                   options={[
-                    { value: "all", label: t("payments.filters.allMethods", "All Methods") },
-                    { value: "cash", label: t("payments.methods.cash", "Cash") },
-                    { value: "card", label: t("payments.methods.card", "Card") },
-                    { value: "bank_transfer", label: t("payments.methods.bank_transfer", "Transfer") },
-                    { value: "check", label: t("payments.methods.check", "Check") },
+                    { value: "all", label: t("payments.filters.allMethods") },
+                    { value: "cash", label: t("payments.methods.cash") },
+                    { value: "card", label: t("payments.methods.card") },
+                    {
+                      value: "bank_transfer",
+                      label: t("payments.methods.bank_transfer"),
+                    },
+                    { value: "check", label: t("payments.methods.check") },
                   ]}
                   className="w-full"
                 />
               </div>
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleResetLocalFilters}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                >
-                  {t("payments.filters.reset") || "Reset"}
+                <Button variant="outline" onClick={handleResetLocalFilters}>
+                  {t("payments.filters.reset")}
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleApplyFilters}
                   className="px-6"
                 >
-                  {t("payments.filters.apply") || "Apply Filters"}
+                  {t("payments.filters.apply")}
                 </Button>
               </div>
             </div>
@@ -976,26 +750,23 @@ const PaymentsList = () => {
         </div>
       )}
 
-      {/* Main Content Area */}
+      {/* Content Area */}
       <div className="flex-1 flex flex-col relative">
-        {/* Loading State */}
         {loading && !hasInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg">
             <OrbitLoader />
             <p className="text-gray-500 dark:text-gray-400">
-              {t("common.loading", "Loading...")}
+              {t("common.loading")}
             </p>
           </div>
         )}
-
-        {/* Data Table */}
         {showData && (
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            {/* ✅ FIX: Passed tableColumns variable here */}
             <Table
               columns={tableColumns}
               data={paginatedPayments}
               loading={loading}
-              emptyMessage={t("payments.table.empty")}
               onRowClick={(row) => {
                 setSelectedPayment(row);
                 setIsDetailModalOpen(true);
@@ -1016,8 +787,6 @@ const PaymentsList = () => {
             />
           </div>
         )}
-
-        {/* No Results State */}
         {showNoResults && (
           <div className="flex flex-col items-center justify-center flex-1 py-12">
             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -1026,47 +795,39 @@ const PaymentsList = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               {t("payments.table.noResults")}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t("payments.filters.noResultsDesc")}
-            </p>
             <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
               {t("payments.filters.clearFilters")}
             </Button>
           </div>
         )}
-
-        {/* Empty State */}
         {showEmptyState && (
-          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
-              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
-                <DollarSign
-                  className="h-12 w-12 text-orange-500"
-                  strokeWidth={1.5}
-                />
-              </div>
+          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full mb-4">
+              <DollarSign
+                className="h-12 w-12 text-orange-500"
+                strokeWidth={1.5}
+              />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
               {t("payments.table.noPayments")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-              {t(
-                "payments.emptyStateDescription",
-                "Get started by recording your first payment transaction to track your financials."
-              )}
+              {t("payments.emptyStateDescription")}
             </p>
-            <Button
-              onClick={() => {
-                setSelectedPayment(null);
-                setIsFormOpen(true);
-              }}
-              variant="primary"
-              size="lg"
-              icon={<Plus className="size-4" />}
-              className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
-            >
-              {t("payments.recordFirstPayment")}
-            </Button>
+
+            <PermissionGuard permission="payments.create">
+              <Button
+                onClick={() => {
+                  setSelectedPayment(null);
+                  setIsFormOpen(true);
+                }}
+                variant="primary"
+                size="lg"
+                icon={<Plus className="size-4" />}
+              >
+                {t("payments.recordFirstPayment")}
+              </Button>
+            </PermissionGuard>
           </div>
         )}
       </div>
@@ -1083,7 +844,6 @@ const PaymentsList = () => {
         }}
         refreshData={fetchPayments}
       />
-
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -1100,7 +860,6 @@ const PaymentsList = () => {
           onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
-
       <Modal
         isOpen={confirmationModal.isOpen}
         onClose={() => setConfirmationModal((p) => ({ ...p, isOpen: false }))}

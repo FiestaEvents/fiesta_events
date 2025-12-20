@@ -2515,7 +2515,196 @@
       "neutral": "↕"
     }
   },
+    "profileSettings": {
+    "title": "Paramètres du Profil",
+    "subtitle": "Gérez les informations de votre compte et les préférences"
+    },
+     "roles": {
+    "title": "Rôles et Permissions",
+    "subtitle": "Gérer les rôles et leurs niveaux d'accès",
+    "create": "Créer un rôle",
+    "edit": "Modifier le rôle",
+    "delete": "Supprimer le rôle",
+    "view": "Voir le rôle",
+    "searchPlaceholder": "Rechercher un rôle...",
+    "systemRole": "Système",
+    "infoBanner": {
+      "title": "Rôles Système",
+      "description": "Les rôles comme Propriétaire, Manager et Staff sont protégés. Vous pouvez voir leurs permissions mais ne pouvez pas les supprimer."
+    },
+    "stats": {
+      "total": "Total Rôles",
+      "system": "Rôles Système",
+      "custom": "Rôles Personnalisés"
+    },
+    "table": {
+      "roleName": "Nom du Rôle",
+      "permissions": "Permissions",
+      "level": "Niveau",
+      "status": "Statut",
+      "actions": "Actions",
+      "permissionsCount": "{{count}} permissions"
+    },
+    "deleteConfirmation": {
+      "title": "Supprimer le rôle",
+      "warning": "Attention",
+      "message": "Êtes-vous sûr de vouloir supprimer le rôle **{{name}}** ? Les utilisateurs avec ce rôle perdront leurs permissions."
+    },
+    "alerts": {
+      "systemRoleDelete": "Impossible de supprimer les rôles système",
+      "deleteSuccess": "Rôle supprimé avec succès",
+      "deleteError": "Échec de la suppression",
+      "loadError": "Échec du chargement des rôles"
+    },
+    "form": {
+      "createTitle": "Créer un nouveau rôle",
+      "editTitle": "Modifier le rôle",
+      "subtitle": "Définir les niveaux d'accès et les capacités pour ce rôle",
+      "detailsTitle": "Détails du rôle",
+      "permissionsTitle": "Permissions d'accès",
+      "permissionsCount": "{{count}} permissions sélectionnées",
+      "ownerWarning": "Le rôle Propriétaire a un accès complet à toutes les fonctionnalités et ne peut pas être modifié.",
+      "selectAll": "Tout sélectionner",
+      "clear": "Effacer",
+      "fields": {
+        "name": "Nom du rôle",
+        "description": "Description"
+      },
+      "placeholders": {
+        "name": "ex : Coordinateur d'événements",
+        "description": "Brève description des responsabilités"
+      },
+      "validation": {
+        "nameRequired": "Le nom du rôle est requis",
+        "permissionRequired": "Veuillez sélectionner au moins une permission pour ce rôle"
+      },
+      "notifications": {
+        "created": "Rôle créé avec succès",
+        "updated": "Rôle mis à jour avec succès",
+        "loadError": "Échec du chargement des données du rôle",
+        "saveError": "Échec de l'enregistrement du rôle",
+        "selectedAll": "Toutes les permissions ont été sélectionnées",
+        "cleared": "Toutes les permissions ont été effacées"
+      }
+    },
+    "matrix": {
+      "feature": "Module de fonctionnalité",
+      "fullAccess": "Accès complet",
+      "view": "Voir",
+      "create": "Créer",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "export": "Exporter",
+      "manage": "Gérer"
+    },
+    "modules": {
+      "events": "Gestion des événements",
+      "clients": "Clients (CRM)",
+      "partners": "Partenaires de service",
+      "finance": "Finance et analyses",
+      "payments": "Paiements",
+      "invoices": "Factures",
+      "tasks": "Tâches",
+      "reminders": "Rappels",
+      "supplies": "Inventaire / Fournitures",
+      "contracts": "Contrats",
+      "users": "Gestion d'équipe",
+      "roles": "Gestion des rôles",
+      "venue": "Paramètres du lieu",
+      "settings": "Paramètres globaux",
+      "reports": "Rapports"
+    }
+  },
+  "team": {
+    "title": "Gestion d'Équipe",
+    "invite": "Inviter un membre",
+    "subtitle": "Gérez le personnel et les collaborateurs de votre lieu",
+    "searchPlaceholder": "Rechercher par nom ou e-mail...",
+    "inviteSubtitle": "Invitez des membres à rejoindre votre équipe en leur attribuant des rôles spécifiques.",
+    "noData": "Aucun membre actif trouvé.",
+    "inviteTitle": "Inviter un membre d'équipe",
+    "emailLabel": "Adresse E-mail",
+    "roleLabel": "Assigner un rôle",
+    "sendInvite": "Envoyer l'invitation",
+    "copyLink": "Copier le lien",
+    "alerts": {
+      "inviteSuccess": "Invitation créée avec succès !",
+      "linkCopied": "Lien copié dans le presse-papiers",
+      "resentSuccess": "Invitation renvoyée avec succès",
+      "resentError": "Échec du renvoi de l'invitation",
+      "revokedSuccess": "Invitation révoquée",
+      "revokedError": "Échec de la révocation de l'invitation",
+      "confirmRevoke": "Êtes-vous sûr de vouloir révoquer cette invitation ?",
+      "loadMembers": "Échec du chargement des membres",
+      "joinSuccess": "Compte créé ! Bienvenue dans l'équipe.",
+      "acceptFailed": "Échec de l'acceptation de l'invitation"
+    },
+    "stats": {
+      "total": "Total Membres",
+      "active": "Membres Actifs",
+      "pending": "Invitations En Attente"
+    },
+    "sections": {
+      "pending": "Invitations En Attente",
+      "active": "Membres Actifs"
+    },
+    "table": {
+      "email": "E-mail",
+      "name": "Nom",
+      "role": "Rôle",
+      "sentDate": "Date d'envoi",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "actions": {
+      "resend": "Renvoyer",
+      "revoke": "Révoquer"
+    },
+    "filters": {
+      "allRoles": "Tous les rôles"
+    },
+    "invitation": {
+      "joinTitle": "Rejoindre l'équipe",
+      "joinSubtitle": "Configurez votre compte pour commencer",
+      "venueInvite": "Vous avez été invité à rejoindre un espace de travail",
+      "roleSetup": "Créez votre compte pour accéder au tableau de bord",
+      "createAccount": "Créer un compte & Rejoindre",
+      "invalidTitle": "Lien d'invitation invalide",
+      "invalidDesc": "Ce lien d'invitation est manquant, invalide ou a expiré. Veuillez demander à votre administrateur d'envoyer une nouvelle invitation.",
+      "terms": "En rejoignant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité."
+    },
+    "form": {
+      "editTitle": "Modifier le membre",
+      "personalInfo": "Informations personnelles",
+      "accessControl": "Contrôle d'accès",
+      "name": "Nom complet",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "role": "Rôle",
+      "status": "Statut",
+      "active": "Actif",
+      "inactive": "Inactif (Verrouillé)"
+    },
+    "detail": {
+      "editProfile": "Modifier le profil",
+      "role": "Rôle",
+      "status": "Statut",
+      "joined": "Rejoint le {{date}}",
+      "activityHistory": "Historique d'activité",
+      "noActivity": "Aucune activité enregistrée.",
+      "notFound": "Utilisateur non trouvé"
+    },
+    "notifications": {
+      "updated": "Membre mis à jour avec succès",
+      "loadError": "Échec du chargement des détails",
+      "updateError": "Échec de la mise à jour"
+    }
+  },
   "common": {
+    "copied" : "Copié !",
+    "ProfileSettings": "Paramètres du Profil",
+    "team":"Équipe",
+    "roles":"Rôles",
     "client": "Client",
     "partner": "Partenaire",
     "supplies": "Fournitures",
@@ -3265,6 +3454,7 @@
     "title": "Paramètres",
     "subtitle": "Gérez votre profil, les détails du lieu et la sécurité",
     "common": {
+      "unsavedChanges": "Modifications non enregistrées",
       "loading": "Chargement...",
       "saveChanges": "Enregistrer",
       "saving": "Enregistrement...",
@@ -3453,6 +3643,7 @@
   },
   "allRightsReserved": "Tous droits réservés.",
   "sidebar": {
+    "team":"Staff et Roles",
     "overview": "Vue d'ensemble",
     "operations": "Opérations",
     "financial": "Financier",

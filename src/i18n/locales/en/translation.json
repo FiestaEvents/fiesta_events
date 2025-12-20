@@ -213,7 +213,15 @@
     "expenseSubtitle": "Total Expenses",
     "lowStockAlerts": "Low Stock Alerts"
   },
+    "profileSettings": {
+    "title": "Profile Settings",
+    "subtitle": "Manage your personal information and account settings"
+  },
   "common": {
+    "copied" : "Copied!",
+    "ProfileSettings":"Profile Settings",
+    "team": "Team",
+    "role": "ROLES",
     "partner": "Partner",
     "add": "Add",
     "markAsDone": "Mark as Done",
@@ -345,6 +353,188 @@
       "clearFilters": "Clear Filters"
     }
   },
+  "roles": {
+    "title": "Roles & Permissions",
+    "subtitle": "Manage roles and their associated permissions",
+    "create": "Create Role",
+    "edit": "Edit Role",
+    "delete": "Delete Role",
+    "view": "View Role",
+    "searchPlaceholder": "Search roles...",
+    "systemRole": "System",
+    "infoBanner": {
+      "title": "System Roles",
+      "description": "Roles like Owner, Manager, and Staff are protected. You can view their permissions but cannot delete them."
+    },
+    "stats": {
+      "total": "Total Roles",
+      "system": "System Roles",
+      "custom": "Custom Roles"
+    },
+    "table": {
+      "roleName": "Role Name",
+      "permissions": "Permissions",
+      "level": "Level",
+      "status": "Status",
+      "actions": "Actions",
+      "permissionsCount": "{{count}} permissions"
+    },
+    "deleteConfirmation": {
+      "title": "Delete Role",
+      "warning": "Warning",
+      "message": "Are you sure you want to delete the role **{{name}}**? Users with this role will lose their permissions."
+    },
+    "alerts": {
+      "systemRoleDelete": "Cannot delete system roles",
+      "deleteSuccess": "Role deleted successfully",
+      "deleteError": "Failed to delete role",
+      "loadError": "Failed to load roles"
+    },
+    "form": {
+      "createTitle": "Create New Role",
+      "editTitle": "Edit Role",
+      "subtitle": "Define access levels and capabilities for this role",
+      "detailsTitle": "Role Details",
+      "permissionsTitle": "Access Permissions",
+      "permissionsCount": "{{count}} permissions selected",
+      "ownerWarning": "The Owner role has full access to all features and cannot be modified.",
+      "selectAll": "Select All",
+      "clear": "Clear",
+      "fields": {
+        "name": "Role Name",
+        "description": "Description"
+      },
+      "placeholders": {
+        "name": "e.g., Event Coordinator",
+        "description": "Brief description of responsibilities"
+      },
+      "validation": {
+        "nameRequired": "Role Name is required",
+        "permissionRequired": "Please select at least one permission for this role"
+      },
+      "notifications": {
+        "created": "Role created successfully",
+        "updated": "Role updated successfully",
+        "loadError": "Failed to load role data",
+        "saveError": "Failed to save role",
+        "selectedAll": "All permissions selected",
+        "cleared": "All permissions cleared"
+      }
+    },
+    "matrix": {
+      "feature": "Feature Module",
+      "fullAccess": "Full Access",
+      "view": "View",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "export": "Export",
+      "manage": "Manage"
+    },
+    "modules": {
+      "events": "Events Management",
+      "clients": "Clients (CRM)",
+      "partners": "Service Partners",
+      "finance": "Finance & Analytics",
+      "payments": "Payments",
+      "invoices": "Invoices",
+      "tasks": "Tasks",
+      "reminders": "Reminders",
+      "supplies": "Inventory / Supplies",
+      "contracts": "Contracts",
+      "users": "Team Management",
+      "roles": "Roles Management",
+      "venue": "Venue Settings",
+      "settings": "Global Settings",
+      "reports": "Reports"
+    }
+  },
+  "team": {
+    "title": "Team Management",
+    "subtitle": "Manage your venue staff and collaborators",
+    "invite": "Invite Member",
+    "inviteSubtitle": "Create an invitation link for a new team member.",
+    "searchPlaceholder": "Search by name or email...",
+    "noData": "No active team members found.",
+    "inviteTitle": "Invite Team Member",
+    "emailLabel": "Email Address",
+    "roleLabel": "Assign Role",
+    "sendInvite": "Send Invitation",
+    "copyLink": "Copy Link",
+    "alerts": {
+      "inviteSuccess": "Invitation created successfully!",
+      "linkCopied": "Link copied to clipboard",
+      "resentSuccess": "Invitation resent successfully",
+      "resentError": "Failed to resend invitation",
+      "revokedSuccess": "Invitation revoked",
+      "revokedError": "Failed to revoke invitation",
+      "confirmRevoke": "Are you sure you want to revoke this invitation?",
+      "loadMembers": "Failed to load team members",
+      "joinSuccess": "Account created! Welcome to the team.",
+      "acceptFailed": "Failed to accept invitation"
+    },
+    "stats": {
+      "total": "Total Members",
+      "active": "Active Members",
+      "pending": "Pending Invites"
+    },
+    "sections": {
+      "pending": "Pending Invitations",
+      "active": "Active Members"
+    },
+    "table": {
+      "email": "Email",
+      "name": "Name",
+      "role": "Role",
+      "sentDate": "Sent Date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "resend": "Resend",
+      "revoke": "Revoke"
+    },
+    "filters": {
+      "allRoles": "All Roles"
+    },
+    "invitation": {
+    "joinTitle": "Join the Team",
+    "joinSubtitle": "Set up your account to get started",
+    "venueInvite": "You've been invited to join a venue workspace",
+    "roleSetup": "Create your account to access the dashboard",
+    "createAccount": "Create Account & Join",
+    "invalidTitle": "Invalid Invitation Link",
+    "invalidDesc": "This invitation link is missing, invalid, or has expired. Please ask your administrator to send a new invite.",
+    "terms": "By joining, you agree to our Terms of Service and Privacy Policy."
+  },
+
+  "form": {
+      "editTitle": "Edit Team Member",
+      "personalInfo": "Personal Information",
+      "accessControl": "Access Control",
+      "name": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive (Locked)"
+    },
+    "detail": {
+      "editProfile": "Edit Profile",
+      "role": "Role",
+      "status": "Status",
+      "joined": "Joined {{date}}",
+      "activityHistory": "Activity History",
+      "noActivity": "No activity recorded yet.",
+      "notFound": "User not found"
+    },
+     "notifications": {
+      "updated": "Team member updated successfully",
+      "loadError": "Failed to load user details",
+      "updateError": "Update failed"
+    }
+},
   "home": {
     "welcome": "Welcome Back",
     "subtitle": "Select a module to get started with your management tasks.",
@@ -2893,6 +3083,7 @@
     "title": "Settings",
     "subtitle": "Manage your profile, venue details, and security preferences",
     "common": {
+      "unsavedChanges": "unsaved changes",
       "loading": "Loading...",
       "saveChanges": "Save Changes",
       "saving": "Saving...",
