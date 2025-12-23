@@ -1,403 +1,345 @@
-//src/pages/events/EventForm/components/PartnerSelector.jsx
-import {
-  Briefcase,
-  Clock,
-  DollarSign,
-  Mail,
-  Phone,
-  Plus,
-  Save,
-  Tag,
-  User,
-  X,
-  XIcon,
-} from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
+import { useFormContext, useFieldArray } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { Trash2, Plus, X, User, Save, AlertCircle } from "lucide-react";
 import { partnerService } from "../../../../api/index";
-import { useToast } from "../../../../hooks/useToast";
+import { FormInput } from "../../../../components/forms/FormInput";
 
-// ✅ Generic Components
-import Badge from "../../../../components/common/Badge";
-import Button from "../../../../components/common/Button";
-import Input from "../../../../components/common/Input";
-import Select from "../../../../components/common/Select";
-
-const PartnerSelector = ({
-  partners,
-  selectedPartners,
-  onAddPartner,
-  onRemovePartner,
-  calculateEventHours,
-}) => {
+export const PartnerSelector = () => {
   const { t } = useTranslation();
-  const { showSuccess, showError } = useToast();
-
-  // --- STATE ---
-  const [isCreating, setIsCreating] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Quick Create Form State
-  const [newPartner, setNewPartner] = useState({
-    name: "",
-    email: "", // ✅ Added
-    phone: "", // ✅ Added
-    category: "",
-    priceType: "hourly",
-    hourlyRate: "",
-    fixedRate: "",
-    location: "",
+  const { control } = useFormContext();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "partners",
   });
 
-  // --- OPTIONS ---
-  const categoryOptions = [
-    { value: "driver", label: "Driver" },
-    { value: "bakery", label: "Bakery" },
-    { value: "catering", label: "Catering" },
-    { value: "decoration", label: "Decoration" },
-    { value: "photography", label: "Photography" },
-    { value: "music", label: "Music" },
-    { value: "security", label: "Security" },
-    { value: "cleaning", label: "Cleaning" },
-    { value: "audio_visual", label: "Audio/Visual" },
-    { value: "floral", label: "Floral" },
-    { value: "entertainment", label: "Entertainment" },
-    { value: "hairstyling", label: "Hair Styling" },
-    { value: "other", label: "Other" },
-  ];
+  const [dbPartners, setDbPartners] = useState([]);
+  const [showBrowser, setShowBrowser] = useState(false);
+  const [viewMode, setViewMode] = useState("list");
 
-  // --- HANDLERS ---
+  const [newPartner, setNewPartner] = useState({
+    name: "",
+    category: "Catering",
+    email: "",
+    phone: "",
+    priceType: "fixed",
+    fixedRate: 0,
+    hourlyRate: 0,
+  });
 
-  const handleSelect = (e) => {
-    const partnerId = e.target.value;
-    if (!partnerId) return;
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
 
-    const p = partners.find((x) => x._id === partnerId);
-    if (p) {
-      addPartnerToEvent(p);
+  const openBrowser = async () => {
+    setShowBrowser(true);
+    setViewMode("list");
+    setError("");
+    if (dbPartners.length === 0) {
+      try {
+        const res = await partnerService.getAll();
+        setDbPartners(res.partners || res.data?.partners || []);
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
-  const addPartnerToEvent = (p) => {
-    const hours =
-      typeof calculateEventHours === "function" ? calculateEventHours() : 1;
-    const rate =
-      p.priceType === "hourly" ? p.hourlyRate || 0 : p.fixedRate || 0;
-    const cost = p.priceType === "hourly" ? rate * hours : rate;
-
-    onAddPartner({
+  const handleSelect = (p) => {
+    append({
       partner: p._id,
       partnerName: p.name,
-      service: p.category || "Service",
-      priceType: p.priceType || "fixed",
-      rate: rate,
-      hours: p.priceType === "hourly" ? 1 : undefined,
-      cost: cost,
-      status: "confirmed",
+      service: p.category,
+      priceType: p.priceType,
+      rate: p.priceType === "hourly" ? p.hourlyRate : p.fixedRate,
+      cost: 0,
     });
+    setShowBrowser(false);
   };
 
-  const handleCreatePartner = async () => {
-    // Validation
-    if (!newPartner.name.trim()) return showError("Partner Name is required");
-    if (!newPartner.email.trim()) return showError("Email is required"); // ✅ Added Validation
-    if (!newPartner.phone.trim()) return showError("Phone is required"); // ✅ Added Validation
-    if (!newPartner.category) return showError("Category is required");
+  const validateEmail = (email) => {
+    return String(email)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      );
+  };
 
-    const rateCheck =
-      newPartner.priceType === "hourly"
-        ? newPartner.hourlyRate
-        : newPartner.fixedRate;
-    if (!rateCheck || parseFloat(rateCheck) <= 0)
-      return showError("Valid rate is required");
+  const handleQuickCreate = async (e) => {
+    // 🛑 1. STOP EVERYTHING
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
+    // 🛑 2. Validation
+    setError("");
+    if (!newPartner.name.trim()) return setError("Name is required");
+    if (!newPartner.email.trim()) return setError("Email is required");
+    if (!validateEmail(newPartner.email))
+      return setError("Invalid email format");
+
+    setCreating(true);
     try {
-      setLoading(true);
-
-      // Construct API Payload
       const payload = {
-        name: newPartner.name,
-        email: newPartner.email, // ✅ Added
-        phone: newPartner.phone, // ✅ Added
-        category: newPartner.category,
-        priceType: newPartner.priceType,
-        location: newPartner.location,
-        status: "active",
+        ...newPartner,
         hourlyRate:
           newPartner.priceType === "hourly"
-            ? parseFloat(newPartner.hourlyRate)
+            ? Number(newPartner.hourlyRate)
             : undefined,
         fixedRate:
           newPartner.priceType === "fixed"
-            ? parseFloat(newPartner.fixedRate)
+            ? Number(newPartner.fixedRate)
             : undefined,
       };
+      const res = await partnerService.create(payload);
+      const created = res.partner || res.data || res.data?.partner;
 
-      const response = await partnerService.create(payload);
-      const createdPartner = response.partner || response.data;
+      setDbPartners((prev) => [...prev, created]);
+      handleSelect(created); // Select the new partner
 
-      // Add to event immediately
-      addPartnerToEvent(createdPartner);
-
-      // Reset & UI Feedback
-      showSuccess(`Partner "${createdPartner.name}" created and added.`);
-      setIsCreating(false);
+      // Reset Inputs
       setNewPartner({
         name: "",
+        category: "Catering",
         email: "",
         phone: "",
-        category: "",
-        priceType: "hourly",
-        hourlyRate: "",
-        fixedRate: "",
-        location: "",
+        priceType: "fixed",
+        fixedRate: 0,
+        hourlyRate: 0,
       });
-    } catch (error) {
-      console.error(error);
-      // Display the specific error message from backend if available
-      const msg = error.response?.data?.message || "Failed to create partner";
-      showError(msg);
+      setViewMode("list");
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to create partner";
+      setError(msg);
     } finally {
-      setLoading(false);
+      setCreating(false);
     }
   };
 
-  const availablePartners = partners.filter(
-    (p) => !selectedPartners.some((sp) => sp.partner === p._id)
-  );
-
   return (
-    <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
-      {/* --- Header / Toggle --- */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-gray-100 dark:border-gray-700">
-        <h5 className="font-semibold text-gray-900 dark:text-white text-sm">
-          {isCreating
-            ? t("eventForm.step3.createNewPartner")
-            : t("eventForm.step3.selectPartners")}
-        </h5>
-        <Button
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            Service Partners
+          </h3>
+          <p className="text-xs text-gray-500">
+            External services (Catering, Music, etc)
+          </p>
+        </div>
+
+        {/* NATIVE HTML BUTTON - Prevents Default Submit */}
+        <button
           type="button"
-          variant={isCreating ? "outline" : "primary"}
-          size="lg"
-          icon={isCreating ? <XIcon size={16} /> : <Plus size={16} />}
-          onClick={() => setIsCreating(!isCreating)}
-          className="text-xs"
+          onClick={() => (!showBrowser ? openBrowser() : setShowBrowser(false))}
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold border border-gray-300 rounded hover:bg-gray-100 transition-colors bg-white dark:bg-transparent dark:text-white dark:border-gray-600"
         >
-          {isCreating ? t("common.cancel") : t("eventForm.step3.createAndAdd")}
-        </Button>
+          {showBrowser ? <X size={14} /> : <Plus size={14} />}
+          {showBrowser ? "Close" : "Add Partner"}
+        </button>
       </div>
 
-      {/* --- Main Interaction Area --- */}
-      {isCreating ? (
-        /* --- QUICK CREATE FORM --- */
-        <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-600 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Name */}
-            <Input
-              label={t("eventForm.step3.partnerName")}
-              placeholder="e.g. DJ Khaled"
-              value={newPartner.name}
-              onChange={(e) =>
-                setNewPartner({ ...newPartner, name: e.target.value })
-              }
-              icon={User}
-              className="bg-white dark:bg-gray-800 w-full"
-            />
-
-            {/* Category */}
-            <Select
-              label={t("eventForm.step3.category")}
-              options={[
-                { value: "", label: t("eventForm.step3.selectCategory") },
-                ...categoryOptions,
-              ]}
-              value={newPartner.category}
-              onChange={(e) =>
-                setNewPartner({ ...newPartner, category: e.target.value })
-              }
-              icon={Briefcase}
-              className="bg-white dark:bg-gray-800 w-full"
-            />
-          </div>
-
-          {/* ✅ NEW ROW: Contact Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="partner@example.com"
-              value={newPartner.email}
-              onChange={(e) =>
-                setNewPartner({ ...newPartner, email: e.target.value })
-              }
-              icon={Mail}
-              className="bg-white dark:bg-gray-800 w-full"
-            />
-            <Input
-              label={t("eventForm.step3.partnerPhone")}
-              type="tel"
-              placeholder="12 345 678"
-              value={newPartner.phone}
-              onChange={(e) =>
-                setNewPartner({ ...newPartner, phone: e.target.value })
-              }
-              icon={Phone}
-              className="bg-white dark:bg-gray-800 w-full"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Price Type Toggle */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                {t("eventForm.step3.priceModel")}
-              </label>
-              <div className="flex bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNewPartner({ ...newPartner, priceType: "hourly" })
-                  }
-                  className={`flex-1 py-2 text-xs font-medium rounded transition-colors ${newPartner.priceType === "hourly" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" : "text-gray-500"}`}
-                >
-                  {t("eventForm.step3.hourly")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNewPartner({ ...newPartner, priceType: "fixed" })
-                  }
-                  className={`flex-1 py-2 text-xs font-medium rounded transition-colors ${newPartner.priceType === "fixed" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" : "text-gray-500"}`}
-                >
-                  {t("eventForm.step3.fixed")}
-                </button>
+      {/* SELECTED LIST */}
+      <div className="space-y-3">
+        {fields.length === 0 && !showBrowser && (
+          <p className="text-sm text-gray-400 italic py-2 border-l-2 border-gray-200 pl-3">
+            No partners added.
+          </p>
+        )}
+        {fields.map((field, index) => (
+          <div
+            key={field.id}
+            className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                <User size={14} />
               </div>
-            </div>
-
-            {/* Rate Input */}
-            <div>
-              <Input
-                label={
-                  newPartner.priceType === "hourly"
-                    ? t("eventForm.step3.hourlyRate")
-                    : t("eventForm.step3.fixedCost")
-                }
-                type="number"
-                placeholder="0.00"
-                value={
-                  newPartner.priceType === "hourly"
-                    ? newPartner.hourlyRate
-                    : newPartner.fixedRate
-                }
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (newPartner.priceType === "hourly")
-                    setNewPartner({ ...newPartner, hourlyRate: val });
-                  else setNewPartner({ ...newPartner, fixedRate: val });
-                }}
-                icon={newPartner.priceType === "hourly" ? Clock : DollarSign}
-                className="bg-white dark:bg-gray-800"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              onClick={handleCreatePartner}
-              loading={loading}
-              icon={<Save />}
-            >
-              {t("eventForm.step3.createAndAdd")}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        /* --- SELECT DROPDOWN --- */
-        <Select
-          value=""
-          onChange={handleSelect}
-          options={[
-            {
-              value: "",
-              label:
-                t("eventForm.components.partnerSelector.selectPartner") ||
-                "Select Partner...",
-            },
-            ...availablePartners.map((p) => ({
-              value: p._id,
-              label: `${p.name} - ${p.category} (${p.priceType === "hourly" ? p.hourlyRate + "/hr" : p.fixedRate})`,
-            })),
-          ]}
-        />
-      )}
-
-      {/* --- SELECTED LIST --- */}
-      <div className="space-y-2.5">
-        {selectedPartners.length > 0
-          ? selectedPartners.map((p, idx) => (
-              <div
-                key={idx}
-                className="group flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:border-blue-300 dark:hover:border-blue-500 transition-all"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-                    <Tag size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                      {p.partnerName}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {p.service}
-                      </span>
-                      <Badge
-                        variant="secondary"
-                        size="sm"
-                        className="px-1.5 py-0 text-[10px] uppercase"
-                      >
-                        {p.priceType}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 shrink-0 pl-2">
-                  <div className="text-right">
-                    <p className="font-bold text-orange-600 dark:text-orange-400 text-sm">
-                      {p.cost.toFixed(2)}{" "}
-                      <span className="text-xs text-gray-400 font-normal">
-                        TND
-                      </span>
-                    </p>
-                    {p.priceType === "hourly" && (
-                      <p className="text-[10px] text-gray-400">{p.rate}/hr</p>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    icon={<XIcon size={16} />}
-                    onClick={() => onRemovePartner(idx)}
-                    className="text-gray-400 hover:text-red-500 hover:bg-red-50"
-                  ></Button>
-                </div>
-              </div>
-            ))
-          : !isCreating && (
-              <div className="flex flex-col items-center justify-center py-8 px-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/50 dark:bg-gray-800/30">
-                <Briefcase className="w-8 h-8 text-gray-300 dark:text-gray-600 mb-2" />
-                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-                  {t("eventForm.step3.noPartnersSelected")}
+              <div>
+                <p className="font-bold text-sm text-gray-900 dark:text-white">
+                  {field.partnerName}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {field.service} ({field.priceType})
                 </p>
               </div>
-            )}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-24">
+                <FormInput
+                  name={`partners.${index}.rate`}
+                  type="number"
+                  className="text-xs mb-0"
+                  placeholder="Price"
+                  // Prevent Enter key in this input from submitting form
+                  onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="p-2 text-gray-400 hover:text-red-600"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* BROWSER / CREATOR */}
+      {showBrowser && (
+        <div className="mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 animate-in fade-in slide-in-from-top-2">
+          {/* Header Toggles - NATIVE BUTTONS */}
+          <div className="flex justify-between mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`text-xs font-bold px-3 py-1.5 rounded transition-all ${viewMode === "list" ? "bg-white shadow text-black" : "text-gray-500"}`}
+              >
+                Select Existing
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("create")}
+                className={`text-xs font-bold px-3 py-1.5 rounded transition-all ${viewMode === "create" ? "bg-orange-100 text-orange-700" : "text-gray-500"}`}
+              >
+                Create New
+              </button>
+            </div>
+          </div>
+
+          {viewMode === "list" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+              {dbPartners.length === 0 ? (
+                <p className="text-xs text-center col-span-2 text-gray-400">
+                  No partners in database.
+                </p>
+              ) : (
+                dbPartners.map((p) => (
+                  <button
+                    key={p._id}
+                    type="button"
+                    onClick={() => handleSelect(p)}
+                    className="p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded hover:border-orange-500 text-left transition-colors"
+                  >
+                    <p className="text-sm font-semibold">{p.name}</p>
+                    <p className="text-[10px] text-gray-500">
+                      {p.category} • {p.email || "No email"}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          ) : (
+            /* FORM WRAPPER DIV (Not a form tag) */
+            <div
+              className="space-y-3"
+              onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+            >
+              {error && (
+                <div className="flex items-center gap-2 p-2 bg-red-100 text-red-700 rounded text-xs">
+                  <AlertCircle size={14} /> {error}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Partner Name *"
+                  value={newPartner.name}
+                  onChange={(e) =>
+                    setNewPartner({ ...newPartner, name: e.target.value })
+                  }
+                />
+
+                <select
+                  className="p-2 border rounded text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={newPartner.category}
+                  onChange={(e) =>
+                    setNewPartner({ ...newPartner, category: e.target.value })
+                  }
+                >
+                  <option value="catering">Catering</option>
+                  <option value="photography">Photography</option>
+                  <option value="music">Music</option>
+                  <option value="decoration">Decoration</option>
+                  <option value="security">Security</option>
+                  <option value="driver">Driver</option>
+                  <option value="cleaning">Cleaning</option>
+                  <option value="entertainment">Entertainment</option>
+                  <option value="other">Other</option>
+                </select>
+
+                {/* EMAIL INPUT */}
+                <input
+                  className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  type="email"
+                  placeholder="Email Address *"
+                  value={newPartner.email}
+                  onChange={(e) =>
+                    setNewPartner({ ...newPartner, email: e.target.value })
+                  }
+                />
+
+                <input
+                  className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Phone"
+                  value={newPartner.phone}
+                  onChange={(e) =>
+                    setNewPartner({ ...newPartner, phone: e.target.value })
+                  }
+                />
+
+                <select
+                  className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={newPartner.priceType}
+                  onChange={(e) =>
+                    setNewPartner({ ...newPartner, priceType: e.target.value })
+                  }
+                >
+                  <option value="fixed">Fixed Price</option>
+                  <option value="hourly">Hourly Rate</option>
+                </select>
+
+                <input
+                  className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  type="number"
+                  placeholder="Rate (TND)"
+                  value={
+                    newPartner.priceType === "hourly"
+                      ? newPartner.hourlyRate
+                      : newPartner.fixedRate
+                  }
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    newPartner.priceType === "hourly"
+                      ? setNewPartner({ ...newPartner, hourlyRate: val })
+                      : setNewPartner({ ...newPartner, fixedRate: val });
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+                {/* NATIVE SAVE BUTTON */}
+                <button
+                  type="button"
+                  onClick={handleQuickCreate}
+                  disabled={creating}
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded text-sm font-bold hover:bg-orange-700 disabled:opacity-50"
+                >
+                  {creating ? "Saving..." : "Save & Select"}
+                  {!creating && <Save size={16} />}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
-
-export default PartnerSelector;

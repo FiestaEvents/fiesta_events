@@ -1,203 +1,292 @@
-//src/pages/events/EventForm/steps/Step5Review.jsx
-import React from "react";
-import { Package, Users, Home } from "lucide-react";
-import { useEventContext } from "../EventFormContext"; 
-import Textarea from "../../../../components/common/Textarea";
-import Badge from "../../../../components/common/Badge";
+import React, { useEffect, useState } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import {
+  Package,
+  Users,
+  Home,
+  User,
+  Calendar,
+  AlertTriangle,
+} from "lucide-react";
+import { useEventCalculations } from "../../../../hooks/useEventCalculations";
+import { clientService, venueService } from "../../../../api/index";
 
 const Step5Review = () => {
-  const { formData, handleChange, clients, venueSpaces, calculations } = useEventContext();
-  
-  const client = clients.find(c => c._id === formData.clientId);
-  const space = venueSpaces.find(s => s._id === formData.venueSpaceId);
+  const { t } = useTranslation();
+  const { control, register } = useFormContext();
+
+  // 1. Live Data
+  const formData = useWatch({ control });
+  const calculations = useEventCalculations(control);
+
+  // 2. Local Display Data
+  const [clientDetails, setClientDetails] = useState(null);
+  const [venueDetails, setVenueDetails] = useState(null);
+
+  useEffect(() => {
+    const resolveData = async () => {
+      // A. Resolve Client
+      if (formData.clientId) {
+        try {
+          const res = await clientService.getById(formData.clientId);
+          // Handle different API wrapper structures (res.client vs res.data.client)
+          const client = res.client || res.data?.client || res.data || res;
+          setClientDetails(client);
+        } catch (e) {
+          console.error("Could not fetch client name", e);
+        }
+      }
+
+      // B. Resolve Venue Space (SAFE FIX: Fetch list and find)
+      if (formData.venueSpaceId) {
+        try {
+          // We fetch all spaces (since it worked in Step 3) and find the match
+          const res = await venueService.getSpaces();
+          const spaces = res.spaces || res.data?.spaces || [];
+          const selectedSpace = spaces.find(
+            (s) => s._id === formData.venueSpaceId
+          );
+          setVenueDetails(selectedSpace);
+        } catch (e) {
+          console.error("Could not fetch venue details", e);
+        }
+      }
+    };
+    resolveData();
+  }, [formData.clientId, formData.venueSpaceId]);
+
+  const {
+    basePrice,
+    partnersCost,
+    suppliesChargeToClient,
+    suppliesMargin,
+    discountAmount,
+    taxAmount,
+    total,
+  } = calculations;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+      {/* Header */}
       <div>
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Final Review</h3>
-        <p className="text-gray-500">Please review all details before creating the event.</p>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Final Review
+        </h3>
+        <p className="text-gray-500">Confirm all details before saving.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Event Details */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-           <h4 className="font-bold text-gray-900 dark:text-white mb-4 border-b pb-2">Event Details</h4>
-           <dl className="space-y-2 text-sm">
-             <div className="flex justify-between"><dt className="text-gray-500">Title:</dt> <dd className="font-medium">{formData.title}</dd></div>
-             <div className="flex justify-between"><dt className="text-gray-500">Date:</dt> <dd className="font-medium">{formData.startDate}</dd></div>
-             <div className="flex justify-between"><dt className="text-gray-500">Time:</dt> <dd className="font-medium">{formData.startTime} - {formData.endTime}</dd></div>
-             <div className="flex justify-between"><dt className="text-gray-500">Type:</dt> <dd className="font-medium capitalize">{formData.type}</dd></div>
-             <div className="flex justify-between"><dt className="text-gray-500">Guests:</dt> <dd className="font-medium">{formData.guestCount || "N/A"}</dd></div>
-             <div className="flex justify-between"><dt className="text-gray-500">Client:</dt> <dd className="font-medium text-blue-600">{client?.name}</dd></div>
-             <div className="flex justify-between"><dt className="text-gray-500">Venue:</dt> <dd className="font-medium text-purple-600">{space?.name}</dd></div>
-           </dl>
+        {/* --- EVENT DETAILS CARD --- */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h4 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-700">
+            <Calendar className="w-4 h-4 text-orange-500" /> Event Summary
+          </h4>
+          <dl className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Title</dt>
+              <dd className="font-bold text-gray-900 dark:text-white">
+                {formData.title || "Untitled"}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Date</dt>
+              <dd className="font-medium">
+                {formData.startDate}
+                {formData.sameDayEvent ? "" : ` to ${formData.endDate}`}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Time</dt>
+              <dd className="font-medium">
+                {formData.startTime} - {formData.endTime}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Guests</dt>
+              <dd className="font-medium">{formData.guestCount}</dd>
+            </div>
+
+            <div className="border-t border-dashed my-2 border-gray-100 dark:border-gray-700" />
+
+            <div className="flex justify-between items-center">
+              <dt className="text-gray-500 flex items-center gap-1">
+                <User size={14} /> Client
+              </dt>
+              <dd className="font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-xs truncate max-w-[150px]">
+                {clientDetails?.name || "Loading..."}
+              </dd>
+            </div>
+            <div className="flex justify-between items-center">
+              <dt className="text-gray-500 flex items-center gap-1">
+                <Home size={14} /> Venue
+              </dt>
+              <dd className="font-medium text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-xs truncate max-w-[150px]">
+                {venueDetails?.name || "Loading..."}
+              </dd>
+            </div>
+          </dl>
         </div>
 
-        {/* Financial Summary */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-           <h4 className="font-bold text-gray-900 dark:text-white mb-4 border-b pb-2">Financials</h4>
-           <dl className="space-y-2 text-sm">
-             <div className="flex items-center justify-between">
-               <dt className="text-gray-500 flex items-center gap-2">
-                 <Home className="w-4 h-4" />
-                 Base Price:
-               </dt>
-               <dd>{calculations.basePrice.toFixed(3)} TND</dd>
-             </div>
-             
-             {calculations.partnersTotal > 0 && (
-               <div className="flex items-center justify-between">
-                 <dt className="text-gray-500 flex items-center gap-2">
-                   <Users className="w-4 h-4" />
-                   Partners:
-                 </dt>
-                 <dd>{calculations.partnersTotal.toFixed(3)} TND</dd>
-               </div>
-             )}
-             
-             {calculations.suppliesTotalCharge > 0 && (
-               <div className="flex items-center justify-between">
-                 <dt className="text-gray-500 flex items-center gap-2">
-                   <Package className="w-4 h-4" />
-                   Supplies:
-                 </dt>
-                 <dd>{calculations.suppliesTotalCharge.toFixed(3)} TND</dd>
-               </div>
-             )}
-             
-             {calculations.discountAmount > 0 && (
-               <div className="flex justify-between text-red-600">
-                 <dt>Discount:</dt>
-                 <dd>-{calculations.discountAmount.toFixed(3)} TND</dd>
-               </div>
-             )}
-             
-             {calculations.taxAmount > 0 && (
-               <div className="flex justify-between">
-                 <dt className="text-gray-500">Tax ({calculations.taxRate}%):</dt>
-                 <dd>{calculations.taxAmount.toFixed(3)} TND</dd>
-               </div>
-             )}
-             
-             <div className="mt-4 pt-4 border-t flex justify-between text-lg font-bold text-gray-900 dark:text-white">
-               <dt>Total:</dt>
-               <dd className="text-orange-600">{calculations.totalPrice.toFixed(3)} TND</dd>
-             </div>
-           </dl>
+        {/* --- FINANCIAL SUMMARY CARD --- */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h4 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-700">
+            <Home className="w-4 h-4 text-green-500" /> Financials
+          </h4>
+          <dl className="space-y-2 text-sm">
+            <div className="flex justify-between text-gray-600 dark:text-gray-400">
+              <dt>Base Venue Fee</dt>
+              <dd>{(basePrice || 0).toFixed(3)}</dd>
+            </div>
+            {partnersCost > 0 && (
+              <div className="flex justify-between text-blue-600 dark:text-blue-400">
+                <dt>Service Partners</dt>
+                <dd>+{(partnersCost || 0).toFixed(3)}</dd>
+              </div>
+            )}
+            {suppliesChargeToClient > 0 && (
+              <div className="flex justify-between text-green-600 dark:text-green-400">
+                <dt>Supplies (Billable)</dt>
+                <dd>+{(suppliesChargeToClient || 0).toFixed(3)}</dd>
+              </div>
+            )}
+
+            <div className="border-t border-dashed my-2 border-gray-200 dark:border-gray-700" />
+
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-red-500 text-xs">
+                <dt>Discount</dt>
+                <dd>-{(discountAmount || 0).toFixed(3)}</dd>
+              </div>
+            )}
+
+            <div className="flex justify-between text-gray-500 text-xs">
+              <dt>Tax</dt>
+              <dd>+{(taxAmount || 0).toFixed(3)}</dd>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <dt className="font-bold text-lg text-gray-900 dark:text-white">
+                Total
+              </dt>
+              <dd className="font-bold text-xl text-orange-600 dark:text-orange-500">
+                {(total || 0).toFixed(3)} TND
+              </dd>
+            </div>
+          </dl>
         </div>
       </div>
 
-      {/* ⭐ PARTNERS BREAKDOWN */}
+      {/* --- PARTNERS BREAKDOWN --- */}
       {formData.partners?.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-          <h4 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-600" />
-            Service Partners ({formData.partners.length})
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
+          <h4 className="font-bold text-sm text-gray-900 dark:text-white mb-3 uppercase tracking-wider text-xs">
+            Selected Partners
           </h4>
-          <div className="space-y-2">
-            {calculations.partnersDetails.map((partner, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                <div>
-                  <p className="font-medium text-sm">{partner.partnerName}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{partner.service}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {formData.partners.map((p, idx) => {
+              const isHourly =
+                (p.priceType || "fixed").toLowerCase() === "hourly";
+              return (
+                <div
+                  key={idx}
+                  className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center">
+                      <Users size={14} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{p.partnerName}</p>
+                      <p className="text-[10px] text-gray-500 capitalize">
+                        {p.service} • {p.priceType}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-sm">
+                      {(isHourly
+                        ? (p.hours || 1) * p.rate
+                        : Number(p.rate)
+                      ).toFixed(3)}
+                    </p>
+                    <p className="text-[10px] text-gray-500">
+                      {isHourly ? `${p.rate}/hr` : "Fixed"}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-blue-600">{partner.calculatedCost.toFixed(3)} TND</p>
-                  {partner.priceType === "hourly" && (
-                    <p className="text-xs text-gray-500">{partner.rate} TND/hr × {partner.displayHours}h</p>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* ⭐ SUPPLIES BREAKDOWN */}
+      {/* --- SUPPLIES BREAKDOWN --- */}
       {formData.supplies?.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-          <h4 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Package className="w-5 h-5 text-green-600" />
-            Event Supplies ({formData.supplies.length})
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
+          <h4 className="font-bold text-sm text-gray-900 dark:text-white mb-3 uppercase tracking-wider text-xs">
+            Allocated Inventory
           </h4>
           <div className="space-y-2">
-            {formData.supplies.map((supply, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+            {formData.supplies.map((s, idx) => (
+              <div
+                key={idx}
+                className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+              >
                 <div className="flex items-center gap-3">
-                  <Package className="w-4 h-4 text-gray-400" />
+                  <Package size={16} className="text-gray-400" />
                   <div>
-                    <p className="font-medium text-sm">{supply.supplyName}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {supply.quantityRequested} {supply.supplyUnit} • {supply.supplyCategoryName}
+                    <p className="font-medium text-sm">{s.supplyName}</p>
+                    <p className="text-xs text-gray-500">
+                      {s.quantityRequested} x {s.supplyUnit}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  {supply.pricingType === "included" ? (
-                    <Badge variant="success" size="sm">Included</Badge>
-                  ) : supply.pricingType === "chargeable" ? (
-                    <div>
-                      <p className="font-bold text-green-600">
-                        {(supply.quantityRequested * supply.chargePerUnit).toFixed(3)} TND
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {supply.chargePerUnit.toFixed(3)} TND/{supply.supplyUnit}
-                      </p>
-                    </div>
+                  {s.pricingType === "chargeable" ? (
+                    <>
+                      <span className="font-bold text-green-600 text-sm">
+                        {(s.quantityRequested * s.chargePerUnit).toFixed(3)}
+                      </span>
+                      <span className="text-[10px] bg-green-100 text-green-700 px-1.5 rounded ml-2">
+                        Extra
+                      </span>
+                    </>
                   ) : (
-                    <Badge variant="secondary" size="sm">Optional</Badge>
+                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                      Included
+                    </span>
                   )}
                 </div>
               </div>
             ))}
           </div>
-          
-          {/* Supply Cost Summary */}
-          {calculations.suppliesTotalCost > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Venue Cost</p>
-                  <p className="font-bold text-red-600">{calculations.suppliesTotalCost.toFixed(3)} TND</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Client Charge</p>
-                  <p className="font-bold text-green-600">{calculations.suppliesTotalCharge.toFixed(3)} TND</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Margin</p>
-                  <p className="font-bold text-blue-600">+{calculations.suppliesMargin.toFixed(3)} TND</p>
-                </div>
-              </div>
+
+          {/* Internal Margin (Hidden unless profitable) */}
+          {suppliesMargin > 0 && (
+            <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-900/10 rounded-lg text-xs flex justify-between items-center border border-emerald-100">
+              <span className="text-emerald-800 font-medium">
+                Estimated Supplies Profit
+              </span>
+              <span className="font-bold text-emerald-600">
+                +{suppliesMargin.toFixed(3)} TND
+              </span>
             </div>
           )}
         </div>
       )}
 
-      {/* Notes */}
+      {/* --- FINAL NOTES --- */}
       <div>
-        <Textarea 
-          label="Final Notes" 
-          name="notes" 
-          value={formData.notes} 
-          onChange={handleChange} 
-          rows={4}
-          placeholder="Any special instructions..."
-        />
-      </div>
-      
-      {/* Invoice Generation Option */}
-      <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-        <input 
-          type="checkbox" 
-          id="invoice"
-          checked={formData.createInvoice}
-          onChange={(e) => handleChange({ target: { name: "createInvoice", value: e.target.checked } })}
-          className="w-5 h-5 text-blue-600 rounded"
-        />
-        <label htmlFor="invoice" className="text-sm font-medium text-blue-800 dark:text-blue-300">
-          Automatically generate a draft invoice for this event
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Confirm Special Requests & Notes
         </label>
+        <textarea
+          {...register("notes")}
+          rows={2}
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-sm focus:border-orange-500 outline-none"
+          placeholder="Final check on instructions..."
+        />
       </div>
     </div>
   );

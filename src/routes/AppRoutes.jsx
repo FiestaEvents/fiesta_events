@@ -33,8 +33,8 @@ const Dashboard = lazy(() => import("../pages/Dashboard.jsx"));
 // Events
 const EventsList = lazy(() => import("../pages/events/EventsList.jsx"));
 const EventDetail = lazy(() => import("../pages/events/EventDetail.jsx"));
-const CreateEventPage = lazy(() => import("../pages/events/EventForm/CreateEventPage.jsx"));
-const EditEventPage = lazy(() => import("../pages/events/EventForm/EditEventPage.jsx"));
+const CreateEventPage = lazy(() => import("../pages/events/EventForm/EventFormPage.jsx"));
+const EditEventPage = lazy(() => import("../pages/events/EventForm/EventFormPage.jsx"));
 
 // Clients
 const ClientsList = lazy(() => import("../pages/clients/ClientsList.jsx"));
