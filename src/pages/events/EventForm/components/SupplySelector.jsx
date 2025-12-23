@@ -53,7 +53,6 @@ export const SupplySelector = () => {
   );
 
   const handleAddFromBrowser = (supply, e) => {
-    // 🛑 STOP SUBMISSION
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -73,7 +72,6 @@ export const SupplySelector = () => {
     });
   };
 
-  // Safe Math
   const calculateTotal = (field) => {
     if (field.pricingType !== "chargeable") return "0.00";
     const qty = Number(field.quantityRequested) || 0;
@@ -86,11 +84,13 @@ export const SupplySelector = () => {
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-500">
           {fields.length > 0
-            ? `${fields.length} item(s) allocated`
-            : "No items allocated yet"}
+            ? t("eventForm.components.supplySelector.status.allocated", {
+                count: fields.length,
+              })
+            : t("eventForm.components.supplySelector.status.none")}
         </span>
 
-        {/* NATIVE BUTTON - SAFE FROM SUBMIT */}
+        {/* NATIVE BUTTON */}
         <button
           type="button"
           onClick={(e) => {
@@ -100,7 +100,9 @@ export const SupplySelector = () => {
           className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded text-xs font-bold hover:bg-gray-50 bg-white dark:bg-transparent dark:text-white dark:border-gray-600 transition-colors"
         >
           {showBrowser ? <X size={14} /> : <Plus size={14} />}
-          {showBrowser ? t("common.close") : "Add Inventory"}
+          {showBrowser
+            ? t("common.close")
+            : t("eventForm.components.supplySelector.buttons.addInventory")}
         </button>
       </div>
 
@@ -109,9 +111,15 @@ export const SupplySelector = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-orange-700 overflow-hidden shadow-sm">
           {/* Header */}
           <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-gray-50 dark:bg-orange-900/50 border-b border-gray-200 dark:border-orange-700 text-xs font-semibold text-gray-500 uppercase">
-            <div className="col-span-5 md:col-span-6">Item</div>
-            <div className="col-span-3 md:col-span-2 text-center">Qty</div>
-            <div className="col-span-2 md:col-span-3 text-right">Price</div>
+            <div className="col-span-5 md:col-span-6">
+              {t("eventForm.components.supplySelector.table.item")}
+            </div>
+            <div className="col-span-3 md:col-span-2 text-center">
+              {t("eventForm.components.supplySelector.table.qty")}
+            </div>
+            <div className="col-span-2 md:col-span-3 text-right">
+              {t("eventForm.components.supplySelector.table.price")}
+            </div>
             <div className="col-span-2 md:col-span-1"></div>
           </div>
 
@@ -135,7 +143,8 @@ export const SupplySelector = () => {
                         {field.supplyName}
                       </p>
                       <p className="text-[10px] text-gray-500">
-                        {field.currentStock} {field.supplyUnit} stock
+                        {field.currentStock} {field.supplyUnit}{" "}
+                        {t("eventForm.components.supplySelector.item.stock")}
                       </p>
                     </div>
                   </div>
@@ -161,7 +170,8 @@ export const SupplySelector = () => {
                         {calculateTotal(field)}
                       </p>
                       <p className="text-[10px] text-gray-400">
-                        {field.chargePerUnit} ea
+                        {field.chargePerUnit}{" "}
+                        {t("eventForm.components.supplySelector.item.each")}
                       </p>
                     </div>
                   ) : (
@@ -174,7 +184,7 @@ export const SupplySelector = () => {
                 {/* 4. Remove */}
                 <div className="col-span-2 md:col-span-1 text-right">
                   <button
-                    type="button" // EXPLICIT TYPE
+                    type="button"
                     onClick={() => remove(index)}
                     className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
                   >
@@ -210,12 +220,12 @@ export const SupplySelector = () => {
                       : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
                   }`}
                 >
-                  All Items
+                  {t("eventForm.components.supplySelector.browser.allItems")}
                 </button>
                 {categories.map((c) => (
                   <button
                     key={c._id}
-                    type="button" // EXPLICIT TYPE
+                    type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       setActiveCategory(c._id);
@@ -235,7 +245,7 @@ export const SupplySelector = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto custom-scrollbar pr-1">
                 {filteredDbSupplies.length === 0 ? (
                   <div className="col-span-full py-8 text-center text-gray-500 text-sm">
-                    No stock available in this category.
+                    {t("eventForm.components.supplySelector.browser.noStock")}
                   </div>
                 ) : (
                   filteredDbSupplies.map((item) => {
@@ -245,7 +255,7 @@ export const SupplySelector = () => {
                     return (
                       <button
                         key={item._id}
-                        type="button" // CRITICAL FIX HERE
+                        type="button"
                         disabled={isAllocated}
                         onClick={(e) => handleAddFromBrowser(item, e)}
                         className={`
@@ -268,14 +278,18 @@ export const SupplySelector = () => {
                           >
                             {item.pricingType === "chargeable"
                               ? `${item.chargePerUnit}`
-                              : "Free"}
+                              : t(
+                                  "eventForm.components.supplySelector.browser.free"
+                                )}
                           </span>
                         </div>
                         <p className="font-semibold text-xs text-gray-900 dark:text-white truncate">
                           {item.name}
                         </p>
                         <p className="text-[10px] text-gray-500">
-                          {item.currentStock} {item.unit} left
+                          {item.currentStock} {item.unit}{" "}
+                          {t("eventForm.components.supplySelector.item.left") ||
+                            "left"}
                         </p>
                       </button>
                     );

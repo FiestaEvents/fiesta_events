@@ -319,7 +319,14 @@ const ContractFormPage = () => {
     setLoading(true);
     try {
       const payload = { ...formData, services };
+      
+      // Cleanup empty strings for MongoIDs
+      if (!payload.eventId) delete payload.eventId;
       if (!payload.contractNumber) delete payload.contractNumber;
+      
+      // Ensure financials are numbers
+      payload.financials.amountHT = parseFloat(payload.financials.amountHT);
+      payload.financials.totalTTC = parseFloat(payload.financials.totalTTC);
 
       if (isEditMode) await contractService.update(id, payload);
       else await contractService.create(payload);

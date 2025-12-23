@@ -67,7 +67,6 @@ const EventFormPage = () => {
              partner: p.partner?._id || p.partner, 
              partnerName: p.partner?.name, // For Display
              service: p.service,
-             // FORCE LOWERCASE: "Fixed" -> "fixed"
              priceType: (p.priceType || "fixed").toLowerCase(),
              rate: Number(p.rate) || Number(p.cost) || 0, // Ensure Number
              hours: p.hours ? Number(p.hours) : undefined,

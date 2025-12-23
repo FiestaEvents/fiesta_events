@@ -10,7 +10,7 @@ import {
   MapPin,
   Users,
   AlertTriangle,
-  Loader2,
+  Loader2
 } from "lucide-react";
 
 // Components
@@ -19,6 +19,7 @@ import { FormSelect } from "../../../../components/forms/FormSelect";
 import { PartnerSelector } from "../components/PartnerSelector";
 import { SupplySelector } from "../components/SupplySelector";
 import { venueService } from "../../../../api/index";
+import OrbitLoader from "../../../../components/common/LoadingSpinner"; 
 
 const Step3VenuePricing = () => {
   const { t } = useTranslation();
@@ -50,7 +51,7 @@ const Step3VenuePricing = () => {
         const currentSelection = getValues("venueSpaceId");
         if (!currentSelection && loadedSpaces.length > 0) {
           const firstSpace = loadedSpaces[0];
-          console.log("📍 Auto-selecting first venue:", firstSpace.name);
+          // console.log("📍 Auto-selecting first venue:", firstSpace.name);
           setValue("venueSpaceId", firstSpace._id, {
             shouldValidate: true,
             shouldDirty: true,
@@ -71,26 +72,26 @@ const Step3VenuePricing = () => {
     [spaces, watchedSpaceId]
   );
 
+  // ✅ FIX: Calculate maxVal here (Component Scope) so JSX can see it
+  const maxCap = selectedSpace?.capacity?.seated || selectedSpace?.capacity || 0;
+  const maxVal = typeof maxCap === "object" ? maxCap.max || 9999 : maxCap;
+
   // 3. Logic: Auto-fill Base Price & Capacity Check
   useEffect(() => {
     if (selectedSpace) {
       setValue("pricing.basePrice", selectedSpace.basePrice);
 
-      // Capacity Logic
-      const maxCap =
-        selectedSpace.capacity?.seated || selectedSpace.capacity || 0;
-      const maxVal = typeof maxCap === "object" ? maxCap.max || 9999 : maxCap;
-
+      // Use the calculated maxVal variable
       if (Number(guestCount) > Number(maxVal)) {
         setError("venueSpaceId", {
           type: "custom",
-          message: `Warning: ${guestCount} guests exceeds capacity (${maxVal})`,
+          message: t("eventForm.step3.warningCapacity", { count: guestCount, max: maxVal }) || `Warning: ${guestCount} exceeds capacity (${maxVal})`,
         });
       } else {
         clearErrors("venueSpaceId");
       }
     }
-  }, [selectedSpace, guestCount, setValue, setError, clearErrors]);
+  }, [selectedSpace, guestCount, maxVal, setValue, setError, clearErrors, t]);
 
   const formatCapacity = (cap) => {
     if (!cap) return "N/A";
@@ -108,13 +109,13 @@ const Step3VenuePricing = () => {
             <Building2 size={20} />
           </div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Venue Configuration
+            {t("eventForm.step3.title")}
           </h3>
         </div>
 
         {loadingSpaces ? (
-          <div className="flex items-center justify-center p-8 text-gray-400">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading halls...
+          <div className="flex items-center justify-center p-8 text-gray-400 gap-2">
+            <OrbitLoader /> {t("eventForm.step3.loading")}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -123,7 +124,7 @@ const Step3VenuePricing = () => {
               <FormSelect
                 name="venueSpaceId"
                 label={t("eventForm.step3.selectVenueSpace")}
-                placeholder="Choose a hall..."
+                placeholder={t("eventForm.step3.placeholder")}
                 options={spaces.map((s) => ({
                   value: s._id,
                   label: s.name,
@@ -141,7 +142,7 @@ const Step3VenuePricing = () => {
             {/* 2. DETAILS CARD */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Selected Space Details
+                {t("eventForm.step3.selectedDetails")}
               </label>
 
               {selectedSpace ? (
@@ -152,7 +153,7 @@ const Step3VenuePricing = () => {
                         <MapPin size={14} /> {selectedSpace.name}
                       </h4>
                       <p className="text-xs text-purple-700 dark:text-purple-300 mt-1 flex items-center gap-2">
-                        <Users size={12} /> Max Capacity:
+                        <Users size={12} /> {t("eventForm.step3.maxCapacity")}
                         <span className="font-semibold">
                           {formatCapacity(selectedSpace.capacity)}
                         </span>
@@ -160,7 +161,7 @@ const Step3VenuePricing = () => {
                     </div>
                     <div className="text-right">
                       <span className="block text-[10px] text-purple-500 uppercase font-bold tracking-wider">
-                        Base Rate
+                       {t("eventForm.step3.baseRate")}
                       </span>
                       <span className="text-xl font-bold text-purple-800 dark:text-white">
                         {selectedSpace.basePrice}{" "}
@@ -176,7 +177,7 @@ const Step3VenuePricing = () => {
                       style={{
                         width: `${Math.min((Number(guestCount || 0) / (typeof selectedSpace.capacity === "object" ? selectedSpace.capacity.max || 200 : selectedSpace.capacity || 200)) * 100, 100)}%`,
                       }}
-                    ></div>
+                    />
                   </div>
                 </div>
               ) : (
@@ -197,14 +198,14 @@ const Step3VenuePricing = () => {
             <Tags size={20} />
           </div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Pricing Adjustments
+            {t("eventForm.step3.pricingTitle")}
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <FormInput
             name="pricing.taxRate"
-            label="Tax Rate (%)"
+            label={t("eventForm.step3.taxRate")}
             type="number"
             placeholder="19"
           />
@@ -212,7 +213,7 @@ const Step3VenuePricing = () => {
           <div className="md:col-span-2 flex flex-col sm:flex-row gap-4">
             <div className="sm:w-1/3">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Discount Mode
+                {t("eventForm.step3.discountMode")}
               </label>
               <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
                 <button
@@ -228,7 +229,7 @@ const Step3VenuePricing = () => {
                       : "text-gray-500"
                   }`}
                 >
-                  <DollarSign size={14} /> Fixed
+                  <DollarSign size={14} /> {t("eventForm.step3.fixed")}
                 </button>
                 <button
                   type="button"
@@ -243,14 +244,14 @@ const Step3VenuePricing = () => {
                       : "text-gray-500"
                   }`}
                 >
-                  <Percent size={14} /> Percent
+                  <Percent size={14} /> {t("eventForm.step3.percent")}
                 </button>
               </div>
             </div>
             <div className="flex-1">
               <FormInput
                 name="pricing.discount"
-                label="Discount Value"
+                label={t("eventForm.step3.discountValue")}
                 type="number"
                 min="0"
               />

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next"; // ✅ Added Import
 import { Search, Mail, Phone, Check, Building } from "lucide-react";
 
-// Replaced generic input import with standard HTML to avoid circular deps or complex context logic in this child
 const ClientSelector = ({ clients, selectedClient, onSelectClient, error }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Logic to handle if parent passes ID (string) or full Object
   const getSelectedId = (val) => {
      if (!val) return null;
      return typeof val === "object" ? val._id : val;
@@ -24,7 +24,6 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error }) => {
 
   return (
     <div className="space-y-4">
-      {/* Search Input */}
       <div className="relative">
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -32,7 +31,7 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error }) => {
         />
         <input
           type="text"
-          placeholder="Search by name, email or phone..."
+          placeholder={t("eventForm.components.clientSelector.searchPlaceholder")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 pl-10 pr-4 py-2.5 text-sm focus:border-orange-500 outline-none transition-colors"
@@ -42,7 +41,10 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error }) => {
       {/* Validation Error */}
       {error && (
         <div className="bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-300 text-sm p-3 rounded-lg border border-red-100 dark:border-red-900/50 flex items-center gap-2 animate-in slide-in-from-top-1">
-          <span className="font-bold">Required:</span> Please select a client.
+          <span className="font-bold">
+            {t("eventForm.components.clientSelector.validation.required")}
+          </span> 
+          {t("eventForm.components.clientSelector.validation.message")}
         </div>
       )}
 
@@ -108,7 +110,10 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error }) => {
           })
         ) : (
           <div className="col-span-full py-8 text-center">
-            <p className="text-gray-400 text-sm">No clients found matching "{searchQuery}"</p>
+            {/* ✅ Uses t() here */}
+            <p className="text-gray-400 text-sm">
+                {t("eventForm.components.clientSelector.noResults", { query: searchQuery })}
+            </p>
           </div>
         )}
       </div>

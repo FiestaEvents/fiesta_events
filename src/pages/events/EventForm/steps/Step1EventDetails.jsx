@@ -14,27 +14,13 @@ const Step1EventDetails = () => {
   const startDate = useWatch({ control, name: "startDate" });
 
   const eventTypeOptions = [
-    {
-      value: "wedding",
-      label: t("eventForm.step1.eventTypes.wedding") || "Wedding",
-    },
-    {
-      value: "birthday",
-      label: t("eventForm.step1.eventTypes.birthday") || "Birthday",
-    },
-    {
-      value: "corporate",
-      label: t("eventForm.step1.eventTypes.corporate") || "Corporate",
-    },
-    {
-      value: "conference",
-      label: t("eventForm.step1.eventTypes.conference") || "Conference",
-    },
-    {
-      value: "party",
-      label: t("eventForm.step1.eventTypes.party") || "Private Party",
-    },
-    { value: "other", label: t("eventForm.step1.eventTypes.other") || "Other" },
+    { value: "wedding", label: t("eventForm.step1.eventTypes.wedding") },
+    { value: "birthday", label: t("eventForm.step1.eventTypes.birthday") },
+    { value: "corporate", label: t("eventForm.step1.eventTypes.corporate") },
+    { value: "conference", label: t("eventForm.step1.eventTypes.conference") },
+    { value: "social", label: t("eventForm.step1.eventTypes.social") },
+    { value: "party", label: t("eventForm.step1.eventTypes.party") },
+    { value: "other", label: t("eventForm.step1.eventTypes.other") },
   ];
 
   return (
@@ -42,10 +28,10 @@ const Step1EventDetails = () => {
       {/* --- HEADER --- */}
       <div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          Event Basics
+          {t("eventForm.step1.basicsTitle")}
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Define the core identity and schedule of the event.
+          {t("eventForm.step1.basicsDescription")}
         </p>
       </div>
 
@@ -55,7 +41,7 @@ const Step1EventDetails = () => {
           <FormInput
             name="title"
             label={t("eventForm.step1.eventTitle")}
-            placeholder="e.g. Summer Wedding Gala 2024"
+            placeholder={t("eventForm.step1.placeholders.title")}
             className="w-full text-lg"
             autoFocus
           />
@@ -66,7 +52,7 @@ const Step1EventDetails = () => {
           name="type"
           label={t("eventForm.step1.eventType")}
           options={eventTypeOptions}
-          placeholder="Select event type..."
+          placeholder={t("eventForm.step1.placeholders.type")}
         />
 
         {/* GUESTS */}
@@ -76,7 +62,7 @@ const Step1EventDetails = () => {
             type="number"
             label={t("eventForm.step1.guestCount")}
             min="1"
-            placeholder="e.g. 150"
+            placeholder={t("eventForm.step1.placeholders.guests")}
           />
           <Users className="absolute right-3 top-9 text-gray-400 w-4 h-4 pointer-events-none" />
         </div>
@@ -89,7 +75,7 @@ const Step1EventDetails = () => {
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900 dark:text-white">
-              Time & Duration
+              {t("eventForm.step1.timeDuration")}
             </h3>
           </div>
 
@@ -98,16 +84,24 @@ const Step1EventDetails = () => {
             <button
               type="button"
               onClick={() => setValue("sameDayEvent", true)}
-              className={`px-4 py-1.5 rounded-md transition-all shadow-sm ${sameDayEvent ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
+              className={`px-4 py-1.5 rounded-md transition-all shadow-sm ${
+                sameDayEvent 
+                  ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white" 
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+              }`}
             >
-              One Day
+              {t("eventForm.step1.duration.oneDay")}
             </button>
             <button
               type="button"
               onClick={() => setValue("sameDayEvent", false)}
-              className={`px-4 py-1.5 rounded-md transition-all shadow-sm ${!sameDayEvent ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
+              className={`px-4 py-1.5 rounded-md transition-all shadow-sm ${
+                !sameDayEvent 
+                  ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white" 
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+              }`}
             >
-              Multi-Day
+              {t("eventForm.step1.duration.multiDay")}
             </button>
           </div>
         </div>
@@ -115,7 +109,11 @@ const Step1EventDetails = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Start Date - Spans 2 cols if single day */}
           <div className={sameDayEvent ? "md:col-span-2" : ""}>
-            <FormInput name="startDate" type="date" label="Start Date" />
+            <FormInput 
+              name="startDate" 
+              type="date" 
+              label={t("eventForm.step1.startDate")} 
+            />
           </div>
 
           {/* End Date (Conditionally Rendered) */}
@@ -124,15 +122,23 @@ const Step1EventDetails = () => {
               <FormInput
                 name="endDate"
                 type="date"
-                label="End Date"
+                label={t("eventForm.step1.endDate")}
                 min={startDate} // Validates logical end date
               />
             </div>
           )}
 
           {/* Time Inputs */}
-          <FormInput name="startTime" type="time" label="Start Time" />
-          <FormInput name="endTime" type="time" label="End Time" />
+          <FormInput 
+            name="startTime" 
+            type="time" 
+            label={t("eventForm.step1.startTime")} 
+          />
+          <FormInput 
+            name="endTime" 
+            type="time" 
+            label={t("eventForm.step1.endTime")} 
+          />
         </div>
       </div>
 
@@ -143,14 +149,14 @@ const Step1EventDetails = () => {
           className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
         >
           <AlignLeft className="w-4 h-4" />
-          <span>Description / Notes</span>
+          <span>{t("eventForm.step1.notesLabel")}</span>
         </label>
         <textarea
           id="notes"
           {...register("notes")}
           rows={3}
           className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors placeholder:text-gray-400"
-          placeholder="Add specific instructions, agenda details, or internal notes here..."
+          placeholder={t("eventForm.step1.placeholders.notes")}
         />
       </div>
     </div>

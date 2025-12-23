@@ -19,7 +19,7 @@ export const PartnerSelector = () => {
 
   const [newPartner, setNewPartner] = useState({
     name: "",
-    category: "Catering",
+    category: "catering",
     email: "",
     phone: "",
     priceType: "fixed",
@@ -29,6 +29,19 @@ export const PartnerSelector = () => {
 
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+
+  // Categories list for mapping
+  const categories = [
+    "catering",
+    "photography",
+    "music",
+    "decoration",
+    "security",
+    "driver",
+    "cleaning",
+    "entertainment",
+    "other",
+  ];
 
   const openBrowser = async () => {
     setShowBrowser(true);
@@ -65,18 +78,24 @@ export const PartnerSelector = () => {
   };
 
   const handleQuickCreate = async (e) => {
-    // 🛑 1. STOP EVERYTHING
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
 
-    // 🛑 2. Validation
     setError("");
-    if (!newPartner.name.trim()) return setError("Name is required");
-    if (!newPartner.email.trim()) return setError("Email is required");
+    if (!newPartner.name.trim())
+      return setError(
+        t("eventForm.components.partnerSelector.validation.name")
+      );
+    if (!newPartner.email.trim())
+      return setError(
+        t("eventForm.components.partnerSelector.validation.emailRequired")
+      );
     if (!validateEmail(newPartner.email))
-      return setError("Invalid email format");
+      return setError(
+        t("eventForm.components.partnerSelector.validation.emailInvalid")
+      );
 
     setCreating(true);
     try {
@@ -95,12 +114,11 @@ export const PartnerSelector = () => {
       const created = res.partner || res.data || res.data?.partner;
 
       setDbPartners((prev) => [...prev, created]);
-      handleSelect(created); // Select the new partner
+      handleSelect(created);
 
-      // Reset Inputs
       setNewPartner({
         name: "",
-        category: "Catering",
+        category: "catering",
         email: "",
         phone: "",
         priceType: "fixed",
@@ -112,7 +130,7 @@ export const PartnerSelector = () => {
       const msg =
         err.response?.data?.message ||
         err.message ||
-        "Failed to create partner";
+        t("eventForm.components.partnerSelector.validation.createFailed");
       setError(msg);
     } finally {
       setCreating(false);
@@ -124,21 +142,22 @@ export const PartnerSelector = () => {
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Service Partners
+            {t("eventForm.components.partnerSelector.title")}
           </h3>
           <p className="text-xs text-gray-500">
-            External services (Catering, Music, etc)
+            {t("eventForm.components.partnerSelector.subtitle")}
           </p>
         </div>
 
-        {/* NATIVE HTML BUTTON - Prevents Default Submit */}
         <button
           type="button"
           onClick={() => (!showBrowser ? openBrowser() : setShowBrowser(false))}
           className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold border border-gray-300 rounded hover:bg-gray-100 transition-colors bg-white dark:bg-transparent dark:text-white dark:border-gray-600"
         >
           {showBrowser ? <X size={14} /> : <Plus size={14} />}
-          {showBrowser ? "Close" : "Add Partner"}
+          {showBrowser
+            ? t("eventForm.components.partnerSelector.buttons.close")
+            : t("eventForm.components.partnerSelector.buttons.add")}
         </button>
       </div>
 
@@ -146,7 +165,7 @@ export const PartnerSelector = () => {
       <div className="space-y-3">
         {fields.length === 0 && !showBrowser && (
           <p className="text-sm text-gray-400 italic py-2 border-l-2 border-gray-200 pl-3">
-            No partners added.
+            {t("eventForm.components.partnerSelector.noPartners")}
           </p>
         )}
         {fields.map((field, index) => (
@@ -163,7 +182,14 @@ export const PartnerSelector = () => {
                   {field.partnerName}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {field.service} ({field.priceType})
+                  {t(
+                    `eventForm.components.partnerSelector.categories.${field.service}`
+                  ) || field.service}{" "}
+                  (
+                  {t(
+                    `eventForm.components.partnerSelector.priceTypes.${field.priceType}`
+                  )}
+                  )
                 </p>
               </div>
             </div>
@@ -173,8 +199,9 @@ export const PartnerSelector = () => {
                   name={`partners.${index}.rate`}
                   type="number"
                   className="text-xs mb-0"
-                  placeholder="Price"
-                  // Prevent Enter key in this input from submitting form
+                  placeholder={t(
+                    "eventForm.components.partnerSelector.placeholders.price"
+                  )}
                   onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                 />
               </div>
@@ -193,7 +220,7 @@ export const PartnerSelector = () => {
       {/* BROWSER / CREATOR */}
       {showBrowser && (
         <div className="mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 animate-in fade-in slide-in-from-top-2">
-          {/* Header Toggles - NATIVE BUTTONS */}
+          {/* Header Toggles */}
           <div className="flex justify-between mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
             <div className="flex gap-2">
               <button
@@ -201,14 +228,14 @@ export const PartnerSelector = () => {
                 onClick={() => setViewMode("list")}
                 className={`text-xs font-bold px-3 py-1.5 rounded transition-all ${viewMode === "list" ? "bg-white shadow text-black" : "text-gray-500"}`}
               >
-                Select Existing
+                {t("eventForm.components.partnerSelector.tabs.existing")}
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("create")}
                 className={`text-xs font-bold px-3 py-1.5 rounded transition-all ${viewMode === "create" ? "bg-orange-100 text-orange-700" : "text-gray-500"}`}
               >
-                Create New
+                {t("eventForm.components.partnerSelector.tabs.create")}
               </button>
             </div>
           </div>
@@ -217,7 +244,7 @@ export const PartnerSelector = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
               {dbPartners.length === 0 ? (
                 <p className="text-xs text-center col-span-2 text-gray-400">
-                  No partners in database.
+                  {t("eventForm.components.partnerSelector.dbEmpty")}
                 </p>
               ) : (
                 dbPartners.map((p) => (
@@ -229,14 +256,17 @@ export const PartnerSelector = () => {
                   >
                     <p className="text-sm font-semibold">{p.name}</p>
                     <p className="text-[10px] text-gray-500">
-                      {p.category} • {p.email || "No email"}
+                      {t(
+                        `eventForm.components.partnerSelector.categories.${p.category}`
+                      ) || p.category}
+                      • {p.email || t("common.na")}
                     </p>
                   </button>
                 ))
               )}
             </div>
           ) : (
-            /* FORM WRAPPER DIV (Not a form tag) */
+            /* CREATE FORM */
             <div
               className="space-y-3"
               onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
@@ -250,7 +280,9 @@ export const PartnerSelector = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="Partner Name *"
+                  placeholder={t(
+                    "eventForm.components.partnerSelector.placeholders.name"
+                  )}
                   value={newPartner.name}
                   onChange={(e) =>
                     setNewPartner({ ...newPartner, name: e.target.value })
@@ -264,22 +296,21 @@ export const PartnerSelector = () => {
                     setNewPartner({ ...newPartner, category: e.target.value })
                   }
                 >
-                  <option value="catering">Catering</option>
-                  <option value="photography">Photography</option>
-                  <option value="music">Music</option>
-                  <option value="decoration">Decoration</option>
-                  <option value="security">Security</option>
-                  <option value="driver">Driver</option>
-                  <option value="cleaning">Cleaning</option>
-                  <option value="entertainment">Entertainment</option>
-                  <option value="other">Other</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {t(
+                        `eventForm.components.partnerSelector.categories.${cat}`
+                      )}
+                    </option>
+                  ))}
                 </select>
 
-                {/* EMAIL INPUT */}
                 <input
                   className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   type="email"
-                  placeholder="Email Address *"
+                  placeholder={t(
+                    "eventForm.components.partnerSelector.placeholders.email"
+                  )}
                   value={newPartner.email}
                   onChange={(e) =>
                     setNewPartner({ ...newPartner, email: e.target.value })
@@ -288,7 +319,9 @@ export const PartnerSelector = () => {
 
                 <input
                   className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="Phone"
+                  placeholder={t(
+                    "eventForm.components.partnerSelector.placeholders.phone"
+                  )}
                   value={newPartner.phone}
                   onChange={(e) =>
                     setNewPartner({ ...newPartner, phone: e.target.value })
@@ -302,14 +335,22 @@ export const PartnerSelector = () => {
                     setNewPartner({ ...newPartner, priceType: e.target.value })
                   }
                 >
-                  <option value="fixed">Fixed Price</option>
-                  <option value="hourly">Hourly Rate</option>
+                  <option value="fixed">
+                    {t("eventForm.components.partnerSelector.priceTypes.fixed")}
+                  </option>
+                  <option value="hourly">
+                    {t(
+                      "eventForm.components.partnerSelector.priceTypes.hourly"
+                    )}
+                  </option>
                 </select>
 
                 <input
                   className="p-2 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   type="number"
-                  placeholder="Rate (TND)"
+                  placeholder={t(
+                    "eventForm.components.partnerSelector.placeholders.rate"
+                  )}
                   value={
                     newPartner.priceType === "hourly"
                       ? newPartner.hourlyRate
@@ -325,14 +366,17 @@ export const PartnerSelector = () => {
               </div>
 
               <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
-                {/* NATIVE SAVE BUTTON */}
                 <button
                   type="button"
                   onClick={handleQuickCreate}
                   disabled={creating}
                   className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded text-sm font-bold hover:bg-orange-700 disabled:opacity-50"
                 >
-                  {creating ? "Saving..." : "Save & Select"}
+                  {creating
+                    ? t("eventForm.components.partnerSelector.buttons.saving")
+                    : t(
+                        "eventForm.components.partnerSelector.buttons.saveAndSelect"
+                      )}
                   {!creating && <Save size={16} />}
                 </button>
               </div>

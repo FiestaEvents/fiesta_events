@@ -150,7 +150,7 @@ export const EventFormWizard = ({ defaultValues, isEditMode }) => {
         console.error("Submission Error:", err);
         const errorMsg = err.response?.data?.message || err.message;
         if (errorMsg && (errorMsg.includes("conflict") || errorMsg.includes("Time slot"))) {
-           showError("Collision Detected: Time slot unavailable.");
+           showError(t("eventForm.errors.collision"))
            methods.setError("startTime", { type: "manual", message: "Conflict" });
            setCurrentStep(1); 
            window.scrollTo(0,0);
@@ -213,7 +213,7 @@ export const EventFormWizard = ({ defaultValues, isEditMode }) => {
         <div className="w-full lg:w-[65%] xl:w-[70%] bg-white dark:bg-gray-900 flex flex-col h-full border-r border-gray-200 dark:border-gray-800">
            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
                <div className="flex items-center gap-2 mb-2 text-xs font-bold tracking-wider text-orange-600 uppercase">
-                  Step {currentStep} of 5
+                  {t("eventForm.header.stepIndicator", { current: currentStep, total: 5 })}
                </div>
                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   {currentStep === 1 && t("eventForm.steps.eventDetails")}
@@ -248,7 +248,7 @@ export const EventFormWizard = ({ defaultValues, isEditMode }) => {
                {/* LOGIC: Show Next on steps 1-4, Submit on Step 5 */}
                {currentStep < 5 ? (
                    <button 
-                     type="button" // ✅ Explicit Type: PREVENTS SUBMIT
+                     type="button"
                      onClick={nextStep}
                      className="px-6 py-2.5 rounded-lg text-sm font-bold bg-orange-600 text-white hover:bg-orange-700 dark:bg-white dark:text-black transition-colors"
                    >
@@ -260,7 +260,7 @@ export const EventFormWizard = ({ defaultValues, isEditMode }) => {
                      disabled={isSubmitting}
                      className="px-8 py-2.5 rounded-lg text-sm font-bold bg-orange-600 text-white hover:bg-orange-700 flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all active:scale-95"
                    >
-                     {isSubmitting ? "Processing..." : (isEditMode ? t("eventForm.buttons.updateEvent") : t("eventForm.buttons.createEvent"))}
+                     {isSubmitting ? t("eventForm.buttons.processing") : (isEditMode ? t("eventForm.buttons.updateEvent") : t("eventForm.buttons.createEvent"))}
                      {!isSubmitting && <Check size={18} />}
                    </button>
                )}
@@ -283,19 +283,19 @@ export const EventFormWizard = ({ defaultValues, isEditMode }) => {
                 </div>
                 <div className="space-y-4 text-sm mb-6">
                    <div className="flex justify-between">
-                      <span className="text-gray-500">Venue Fee</span>
+                      <span className="text-gray-500">{t("eventForm.preview.venueFee")}</span>
                       <span className="font-medium text-gray-900 dark:text-white">{(calculations.basePrice || 0).toFixed(3)}</span>
                    </div>
-                   {calculations.partnersCost > 0 && <div className="flex justify-between text-blue-600 dark:text-blue-400"><span>Services</span><span>+{(calculations.partnersCost || 0).toFixed(3)}</span></div>}
-                   {calculations.suppliesChargeToClient > 0 && <div className="flex justify-between text-green-600 dark:text-green-400"><span>Supplies</span><span>+{(calculations.suppliesChargeToClient || 0).toFixed(3)}</span></div>}
+                   {calculations.partnersCost > 0 && <div className="flex justify-between text-blue-600 dark:text-blue-400"><span>{t("eventForm.preview.services")}</span><span>+{(calculations.partnersCost || 0).toFixed(3)}</span></div>}
+                   {calculations.suppliesChargeToClient > 0 && <div className="flex justify-between text-green-600 dark:text-green-400"><span>{t("eventForm.preview.supplies")}</span><span>+{(calculations.suppliesChargeToClient || 0).toFixed(3)}</span></div>}
                    
                    <div className="border-t border-dashed border-gray-200 dark:border-gray-700"></div>
                    
-                   {calculations.discountAmount > 0 && <div className="flex justify-between text-red-500"><span>Discount</span><span>-{(calculations.discountAmount || 0).toFixed(3)}</span></div>}
-                   <div className="flex justify-between text-gray-500"><span>Tax ({methods.watch('pricing.taxRate')}%)</span><span>{(calculations.taxAmount || 0).toFixed(3)}</span></div>
+                   {calculations.discountAmount > 0 && <div className="flex justify-between text-red-500"><span>{t("eventForm.preview.discount")}</span><span>-{(calculations.discountAmount || 0).toFixed(3)}</span></div>}
+                   <div className="flex justify-between text-gray-500"><span>{t("eventForm.preview.tax")} ({methods.watch('pricing.taxRate')}%)</span><span>{(calculations.taxAmount || 0).toFixed(3)}</span></div>
                 </div>
                 <div className="bg-orange-600 dark:bg-gray-800 text-white rounded-xl p-4 text-center">
-                    <p className="text-gray-50 text-xs mb-1 uppercase tracking-wider">Total Estimated</p>
+                    <p className="text-gray-50 text-xs mb-1 uppercase tracking-wider">{t("eventForm.preview.totalEstimated")}</p>
                     <p className="text-3xl font-bold">{(calculations.total || 0).toFixed(3)} <span className="text-sm font-normal opacity-70">TND</span></p>
                 </div>
             </div>
