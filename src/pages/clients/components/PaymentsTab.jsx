@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
 import { useToast } from "../../../context/ToastContext"; // Assuming context path
-
+import PermissionGuard from "../../../components/auth/PermissionGuard";
 const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
   const { t } = useTranslation();
   const { showError } = useToast();
@@ -45,6 +45,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
       {/* Top Action Bar */}
       {events.length > 0 && (
         <div className="flex items-center justify-end mb-6">
+          <PermissionGuard permission="payments.create">
           <Button
             variant="primary"
             icon={<Plus className="size-4" />}
@@ -52,6 +53,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
           >
             {t("payments.buttons.recordPayment")}
           </Button>
+          </PermissionGuard>
         </div>
       )}
 
@@ -144,6 +146,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
 
                   {balance > 0 && (
                     <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+                       <PermissionGuard permission="payments.create">
                       <Button
                         size="sm"
                         variant="success" // Assuming success variant maps to green in theme
@@ -152,6 +155,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                       >
                         {t("payments.buttons.recordPayment")}
                       </Button>
+                      </PermissionGuard>
                     </div>
                   )}
                 </div>

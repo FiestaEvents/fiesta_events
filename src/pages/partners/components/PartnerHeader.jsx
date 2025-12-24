@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 // ✅ Generic Components
 import Button from "../../../components/common/Button";
 import Badge, { StatusBadge } from "../../../components/common/Badge";
-
+import PermissionGuard from "../../../components/auth/PermissionGuard";
 const getInitials = (name = "") =>
   name
     .trim()
@@ -59,6 +59,7 @@ const PartnerHeader = ({ partner, onBack, onEdit, onDelete }) => {
         </div>
 
         <div className="flex items-center gap-2">
+           <PermissionGuard permission="partners.update.all">
           <Button
             variant="outline"
             size="sm"
@@ -68,7 +69,8 @@ const PartnerHeader = ({ partner, onBack, onEdit, onDelete }) => {
           >
             <Edit className="w-4 h-4" />
           </Button>
-
+          </PermissionGuard>
+          <PermissionGuard permission="partners.delete.all">
           <Button
             variant="outline"
             size="sm"
@@ -78,6 +80,7 @@ const PartnerHeader = ({ partner, onBack, onEdit, onDelete }) => {
           >
             <Trash2 className="w-4 h-4" />
           </Button>
+          </PermissionGuard>
         </div>
       </div>
 

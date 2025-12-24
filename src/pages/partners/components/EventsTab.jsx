@@ -19,7 +19,7 @@ import { StatusBadge } from "../../../components/common/Badge";
 
 // ✅ Utils
 import formatCurrency from "../../../utils/formatCurrency";
-
+import PermissionGuard from "../../../components/auth/PermissionGuard";
 const EventsTab = ({
   events,
   eventsStats,
@@ -63,18 +63,6 @@ const EventsTab = ({
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {t("eventsTab.totalEvents", { count: events?.length || 0 })}
           </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={RefreshCw}
-            onClick={onRefresh}
-            loading={loading}
-          >
-            {t("partnerDetail.actions.refresh", "Refresh")}
-          </Button>
         </div>
       </div>
 
@@ -140,6 +128,7 @@ const EventsTab = ({
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
+                     <PermissionGuard permission="events.read.all">
                     <Button
                       variant="outline"
                       size="sm"
@@ -151,6 +140,7 @@ const EventsTab = ({
                     >
                       <ExternalLink className="w-4 h-4" />
                     </Button>
+                    </PermissionGuard>
                   </div>
                 </div>
               </div>

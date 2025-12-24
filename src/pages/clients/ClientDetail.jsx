@@ -1,7 +1,13 @@
 import React, { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, ArrowLeft, Calendar, CreditCard, Activity } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Calendar,
+  CreditCard,
+  Activity,
+} from "lucide-react";
 
 // Components
 import OrbitLoader from "../../components/common/LoadingSpinner";
@@ -20,6 +26,7 @@ import { useToast } from "../../hooks/useToast";
 import { clientService } from "../../api/index";
 import { useClientDetail } from "../../hooks/useClientDetail";
 import { statusToBadgeVariant } from "../../config/theme.config";
+import PermissionGuard from "../../components/auth/PermissionGuard"; // ✅ Guard Import
 
 const ClientDetail = () => {
   const { t } = useTranslation();
@@ -27,14 +34,11 @@ const ClientDetail = () => {
   const { id } = useParams();
   const { showSuccess, showInfo, promise, apiError } = useToast();
 
-  // ============================================
-  // DATA FETCHING
-  // ============================================
-  const { clientData, events, eventsStats, loading, error, refreshData } = useClientDetail(id);
+  // Data Fetching
+  const { clientData, events, eventsStats, loading, error, refreshData } =
+    useClientDetail(id);
 
-  // ============================================
-  // UI STATE
-  // ============================================
+  // UI State
   const [activeTab, setActiveTab] = useState("activity");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -42,32 +46,24 @@ const ClientDetail = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  // ============================================
-  // UTILITY FUNCTIONS
-  // ============================================
-  const formatDate = useCallback((date) => {
-    if (!date) return "-";
-    try {
-      return new Date(date).toLocaleDateString("en-GB");
-    } catch {
-      return date;
-    }
-  }, []);
-
+  // Utility Functions
+  const formatDate = useCallback(
+    (date) => (!date ? "-" : new Date(date).toLocaleDateString("en-GB")),
+    []
+  );
   const getStatusLabel = useCallback(
-    (status) => {
-      return t(`clientDetail.status.${status}`) || status || t("clients.table.defaultValues.unnamed");
-    },
+    (status) =>
+      t(`clientDetail.status.${status}`) ||
+      status ||
+      t("clients.table.defaultValues.unnamed"),
     [t]
   );
+  const getStatusVariant = useCallback(
+    (status) => statusToBadgeVariant[status] || "secondary",
+    []
+  );
 
-  const getStatusVariant = useCallback((status) => {
-    return statusToBadgeVariant[status] || "secondary";
-  }, []);
-
-  // ============================================
-  // CLIENT HANDLERS
-  // ============================================
+  // Handlers
   const handleEditClient = useCallback(() => {
     if (!id) return apiError(null, t("clients.errors.invalidId"));
     setIsEditModalOpen(true);
@@ -81,7 +77,6 @@ const ClientDetail = () => {
 
   const handleDeleteClient = useCallback(async () => {
     if (!id) return apiError(null, t("clients.errors.invalidId"));
-
     try {
       setDeleteLoading(true);
       await promise(clientService.delete(id), {
@@ -98,12 +93,8 @@ const ClientDetail = () => {
     }
   }, [id, navigate, promise, clientData, t, apiError]);
 
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
   const handleCreateEvent = useCallback(() => {
     if (!id) return apiError(null, t("clients.errors.invalidId"));
-
     navigate("/events/new", {
       state: {
         prefillClient: {
@@ -121,17 +112,12 @@ const ClientDetail = () => {
     setSelectedEvent(event);
     setIsEventModalOpen(true);
   }, []);
-
   const handleEditEvent = useCallback(
     (event) => {
       setIsEventModalOpen(false);
       const eventId = typeof event === "object" ? event._id : event;
-
       navigate(`/events/${eventId}/edit`, {
-        state: {
-          fromClient: id,
-          clientData,
-        },
+        state: { fromClient: id, clientData },
       });
     },
     [navigate, id, clientData]
@@ -163,18 +149,13 @@ const ClientDetail = () => {
     [navigate, id, clientData, apiError]
   );
 
-  // ============================================
-  // LOADING & ERROR STATES
-  // ============================================
-  if (loading && !clientData) {
+  if (loading && !clientData)
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <OrbitLoader />
       </div>
     );
-  }
-
-  if (error || !clientData) {
+  if (error || !clientData)
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center">
@@ -182,13 +163,19 @@ const ClientDetail = () => {
             <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {!clientData ? t("clientDetail.notFound") : t("clientDetail.errorLoading")}
+            {!clientData
+              ? t("clientDetail.notFound")
+              : t("clientDetail.errorLoading")}
           </h3>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
             {error?.message || t("clientDetail.notFoundDescription")}
           </p>
           <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => navigate("/clients")} icon={ArrowLeft}>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/clients")}
+              icon={ArrowLeft}
+            >
               {t("clientDetail.buttons.backToClients")}
             </Button>
             {error && (
@@ -206,11 +193,7 @@ const ClientDetail = () => {
         </div>
       </div>
     );
-  }
 
-  // ============================================
-  // TABS CONFIGURATION
-  // ============================================
   const tabs = [
     {
       id: "activity",
@@ -229,19 +212,14 @@ const ClientDetail = () => {
     },
   ];
 
-  // ============================================
-  // MAIN RENDER
-  // ============================================
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* ============================================ */}
-          {/* LEFT COLUMN: HEADER & INFO */}
-          {/* ============================================ */}
+          {/* Left Column */}
           <div className="lg:col-span-4 space-y-6">
-            {/* Header Card */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              {/* ✅ Wrapped ClientHeader actions inside the component or pass guards */}
               <ClientHeader
                 client={clientData}
                 onBack={() => navigate("/clients")}
@@ -251,41 +229,27 @@ const ClientDetail = () => {
                 getStatusLabel={getStatusLabel}
               />
             </div>
-
-            {/* Info Card */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <ClientInfo client={clientData} formatDate={formatDate} />
             </div>
           </div>
 
-          {/* ============================================ */}
-          {/* RIGHT COLUMN: TABS & CONTENT */}
-          {/* ============================================ */}
+          {/* Right Column */}
           <div className="lg:col-span-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 min-h-[600px] flex flex-col">
-              {/* Tabs Navigation */}
               <div className="border-b border-gray-200 dark:border-gray-700">
-                <nav className="flex overflow-x-auto no-scrollbar" aria-label="Tabs">
+                <nav
+                  className="flex overflow-x-auto no-scrollbar"
+                  aria-label="Tabs"
+                >
                   {tabs.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`
-                        flex-1 group flex items-center justify-center gap-2 px-6 py-4 
-                        text-sm font-medium border-b-2 transition-all whitespace-nowrap
-                        ${
-                          activeTab === tab.id
-                            ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400"
-                            : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300"
-                        }
-                      `}
+                      className={`flex-1 group flex items-center justify-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id ? "border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400" : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300"}`}
                     >
                       <tab.icon
-                        className={`w-4 h-4 ${
-                          activeTab === tab.id
-                            ? "text-orange-500"
-                            : "text-gray-400 group-hover:text-gray-500"
-                        }`}
+                        className={`w-4 h-4 ${activeTab === tab.id ? "text-orange-500" : "text-gray-400 group-hover:text-gray-500"}`}
                       />
                       {tab.label}
                     </button>
@@ -293,7 +257,6 @@ const ClientDetail = () => {
                 </nav>
               </div>
 
-              {/* Tab Content */}
               <div className="p-6 flex-1">
                 {activeTab === "events" && (
                   <EventsTab
@@ -309,7 +272,6 @@ const ClientDetail = () => {
                     getStatusLabel={getStatusLabel}
                   />
                 )}
-
                 {activeTab === "payments" && (
                   <PaymentsTab
                     events={events}
@@ -317,7 +279,6 @@ const ClientDetail = () => {
                     onRecordPayment={handleRecordPayment}
                   />
                 )}
-
                 {activeTab === "activity" && (
                   <ActivityTab
                     events={events}
@@ -333,11 +294,7 @@ const ClientDetail = () => {
         </div>
       </div>
 
-      {/* ============================================ */}
-      {/* MODALS */}
-      {/* ============================================ */}
-
-      {/* Edit Client Modal */}
+      {/* Modals */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -351,20 +308,20 @@ const ClientDetail = () => {
         />
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteClient}
         title={t("clientDetail.modals.deleteClient")}
-        message={t("clientDetail.modals.deleteMessage", { name: clientData?.name })}
+        message={t("clientDetail.modals.deleteMessage", {
+          name: clientData?.name,
+        })}
         confirmText={t("clients.buttons.deleteClient")}
         cancelText={t("clients.buttons.cancel")}
         variant="danger"
         loading={deleteLoading}
       />
 
-      {/* Event Detail Modal */}
       <EventDetailModal
         isOpen={isEventModalOpen}
         onClose={() => {

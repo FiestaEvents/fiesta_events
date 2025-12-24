@@ -6,6 +6,9 @@ import { useTranslation } from "react-i18next";
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
 
+// ✅ Auth Guard
+import PermissionGuard from "../../../components/auth/PermissionGuard";
+
 const getInitials = (name = "") =>
   name
     .trim()
@@ -39,25 +42,31 @@ const ClientHeader = ({ client, onBack, onEdit, onDelete }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onEdit}
-            title={t("clientDetail.actions.edit")}
-            className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
+          {/* ✅ Edit Guard */}
+          <PermissionGuard permission="clients.update.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onEdit}
+              title={t("clientDetail.actions.edit")}
+              className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          </PermissionGuard>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onDelete}
-            title={t("clientDetail.actions.delete")}
-            className="text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {/* ✅ Delete Guard */}
+          <PermissionGuard permission="clients.delete.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onDelete}
+              title={t("clientDetail.actions.delete")}
+              className="text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

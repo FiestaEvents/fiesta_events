@@ -21,15 +21,14 @@ import OverviewTab from "./components/OverviewTab";
 import { partnerService } from "../../api/index";
 import { usePartnerDetail } from "../../hooks/usePartnerDetail";
 import { useToast } from "../../hooks/useToast";
+import PermissionGuard from "../../components/auth/PermissionGuard"; 
 
 const PartnerDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { t } = useTranslation();
   
-  // ✅ Use extended toast methods
   const { showSuccess, apiError, showInfo, promise } = useToast();
-
   const { partnerData, events, eventsStats, loading, error, refreshData } = usePartnerDetail(id);
 
   // UI state
@@ -114,7 +113,6 @@ const PartnerDetail = () => {
       setIsDeleteModalOpen(false);
       navigate("/partners");
     } catch (err) {
-      // Toast handles the error display
       console.error(err);
     } finally {
       setDeleteLoading(false);
@@ -202,6 +200,7 @@ const PartnerDetail = () => {
           <div className="lg:col-span-1">
             <div className="space-y-6">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
+                {/* ✅ Wrapped Header actions inside component, but passed protected handlers */}
                 <PartnerHeader
                   partner={partnerData}
                   onBack={() => navigate("/partners")}
