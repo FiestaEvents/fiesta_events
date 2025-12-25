@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { usePermission } from "../hooks/usePermission";
+import { useAuth } from "../context/AuthContext"; // ✅ Added to get Category
 import {
   LayoutDashboard,
   Calendar,
@@ -19,11 +20,60 @@ import {
   Package,
   ArrowRight,
   ShieldCheck,
-  UserCog
+  UserCog,
+  Briefcase, // Service Jobs
+  Truck, // Driver Schedule/Vehicle
+  Camera, // Portfolio
+  Layers, // Generic Resources
 } from "lucide-react";
 
 const Home = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+
+  // 1. Determine Vertical Configuration
+  const category = user?.business?.category || "venue";
+
+  // Dynamic Label/Icon Logic
+  const getVerticalConfig = (cat) => {
+    switch (cat) {
+      case 'driver':
+      case 'transport':
+        return {
+          eventsTitle: 'common.schedule',
+          eventsDesc: 'home.scheduleDesc', // "Route & Shift Management"
+          eventsIcon: Calendar,
+          resourcesTitle: 'common.vehicles', 
+          resourcesIcon: Truck,
+          showPortfolio: false,
+          showPartners: false
+        };
+      case 'photography':
+      case 'videography':
+        return {
+          eventsTitle: 'common.jobs',
+          eventsDesc: 'home.jobsDesc', // "Gig Management"
+          eventsIcon: Briefcase,
+          resourcesTitle: 'common.equipment',
+          resourcesIcon: Camera,
+          showPortfolio: true,
+          showPartners: false
+        };
+      case 'venue':
+      default:
+        return {
+          eventsTitle: 'common.events',
+          eventsDesc: 'home.eventsDesc',
+          eventsIcon: Calendar,
+          resourcesTitle: 'common.supplies',
+          resourcesIcon: Package,
+          showPortfolio: false,
+          showPartners: true
+        };
+    }
+  };
+
+  const config = getVerticalConfig(category);
 
   // --- Permissions Hooks ---
   const canViewEvents = usePermission("events.read.all");
@@ -33,12 +83,15 @@ const Home = () => {
   const canViewTasks = usePermission("tasks.read.all");
   const canViewReminders = usePermission("reminders.read.all");
   
+  // New: Portfolio Permission
+  const canViewPortfolio = usePermission("portfolio.read.all");
+
   const canViewFinance = usePermission("finance.read.all");
   const canViewPayments = usePermission("payments.read.all");
   
   const canViewContracts = usePermission("contracts.read.all");
   const canViewDocs = usePermission("settings.read");
-  const canViewVenueSettings = usePermission("venue.update"); 
+  const canViewSettings = usePermission("business.update"); // Updated
 
   const canViewTeam = usePermission("users.read.all");
   const canViewRoles = usePermission("roles.read.all");
@@ -59,15 +112,26 @@ const Home = () => {
     },
     // 2. Operations
     {
-      title: t("common.events"),
+      title: t(config.eventsTitle), // Dynamic Title
       id: "events",
-      icon: Calendar,
+      icon: config.eventsIcon,      // Dynamic Icon
       path: "/events",
       show: canViewEvents,
       color: "text-emerald-600 dark:text-emerald-400",
       bg: "bg-emerald-50 dark:bg-emerald-900/20",
       border: "group-hover:border-emerald-200 dark:group-hover:border-emerald-800",
-      description: t("home.eventsDesc", "Calendar Management")
+      description: t(config.eventsDesc, "Management")
+    },
+    {
+      title: t("common.portfolio"), // New Portfolio Module
+      id: "portfolio",
+      icon: Camera,
+      path: "/portfolio",
+      show: canViewPortfolio || config.showPortfolio,
+      color: "text-pink-600 dark:text-pink-400",
+      bg: "bg-pink-50 dark:bg-pink-900/20",
+      border: "group-hover:border-pink-200 dark:group-hover:border-pink-800",
+      description: t("home.portfolioDesc", "Gallery & Projects")
     },
     {
       title: t("common.clients"),
@@ -85,16 +149,16 @@ const Home = () => {
       id: "partners",
       icon: Handshake,
       path: "/partners",
-      show: canViewPartners,
+      show: canViewPartners && config.showPartners, // Hide for some service providers
       color: "text-teal-600 dark:text-teal-400",
       bg: "bg-teal-50 dark:bg-teal-900/20",
       border: "group-hover:border-teal-200 dark:group-hover:border-teal-800",
       description: t("home.partnersDesc", "Vendor Relationships")
     },
     {
-      title: t("common.supplies"),
+      title: t(config.resourcesTitle), // Supplies / Equipment / Vehicles
       id: "supplies",
-      icon: Package,
+      icon: config.resourcesIcon,
       path: "/supplies",
       show: canViewSupplies,
       color: "text-red-600 dark:text-red-400",
@@ -209,7 +273,7 @@ const Home = () => {
       id: "settings",
       icon: Settings,
       path: "/settings",
-      show: canViewVenueSettings,
+      show: canViewSettings,
       color: "text-gray-600 dark:text-gray-400",
       bg: "bg-gray-100 dark:bg-gray-700/50",
       border: "group-hover:border-gray-300 dark:group-hover:border-gray-600",
@@ -256,7 +320,7 @@ const Home = () => {
           {t("home.welcome", "Welcome Back")}
         </h1>
         <p className="text-lg text-gray-500 dark:text-gray-400">
-          {t("home.subtitle", "Select a module to manage your venue operations.")}
+          {t("home.subtitle", "Select a module to manage your business operations.")}
         </p>
       </motion.div>
 

@@ -218,6 +218,8 @@
     "subtitle": "Manage your personal information and account settings"
   },
   "common": {
+    "portfolio":"Portfolio",
+    "jobs":"Jobs",
     "added":"added",
     "copied" : "Copied!",
     "ProfileSettings":"Profile Settings",

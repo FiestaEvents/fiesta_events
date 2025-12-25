@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Search,  Calendar, Users, Briefcase, FileText, DollarSign, CheckSquare, Bell, Box, Command } from "lucide-react";
+import { Search,  Calendar, Users, Briefcase, FileText, DollarSign, CheckSquare, Bell, Box, Command, Camera } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "../../../context/LanguageContext";
 import SearchResultItem from "./components/SearchResultItem";
 import OrbitLoader from "../../common/LoadingSpinner";
 import {
   eventService, clientService, partnerService, invoiceService,
-  paymentService, taskService, reminderService, supplyService
+  paymentService, taskService, reminderService, supplyService, portfolioService
 } from "../../../api/index";
 
 // Config (Keep your existing config)
@@ -21,6 +21,7 @@ const CATEGORY_CONFIG = {
   tasks: { icon: CheckSquare, color: "indigo", labelKey: "common.tasks" },
   reminders: { icon: Bell, color: "yellow", labelKey: "common.reminders" },
   supplies: { icon: Box, color: "red", labelKey: "common.supplies" },
+  Portfolio: { icon: Camera, color: "indigo", labelKey: "common.Portfolio" },
 };
 
 // --- Logic Hook (No changes needed here) ---
@@ -56,6 +57,7 @@ const useSearch = () => {
           taskService.getAll(fetchOptions),
           reminderService.getAll(fetchOptions),
           supplyService.getAll(fetchOptions),
+          portfolioService.getAll(fetchOptions),
         ]);
 
         if (signal.aborted) return;
@@ -93,6 +95,7 @@ const useSearch = () => {
           tasks: filter(extract(tasks), "tasks"),
           reminders: filter(extract(reminders), "reminders"),
           supplies: filter(extract(supplies), "supplies"),
+          portfolio: filter(extract(portfolio), "portfolio"),
         });
       } catch (err) {
         if (err.name !== 'AbortError') console.error(err);
@@ -157,6 +160,7 @@ const SearchBar = () => {
       tasks: `/tasks/${id}`,
       reminders: `/reminders/${id}`,
       supplies: `/supplies/${id}`,
+      portfolio: `/portfolio/${id}`,
     };
     navigate(routes[type] || "/");
   };

@@ -1,9 +1,16 @@
+// src/routes/AppRoutes.jsx
 import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import ProtectedRoute from "./ProtectedRoutes.jsx";
-import PermissionRoute from "./PermissionRoute.jsx"; 
 
-// Components
+// Route Guards
+import ProtectedRoute from "./ProtectedRoutes.jsx";
+import PermissionRoute from "./PermissionRoute.jsx";
+import PublicRoute from "./PublicRoutes.jsx";
+
+// Logic Components
+import DashboardController from "./DashboardController.jsx";
+
+// UI Components
 import OrbitLoader from "../components/common/LoadingSpinner.jsx";
 import PageTransition from "../components/common/PageTransition.jsx";
 
@@ -26,9 +33,10 @@ const AcceptInvitation = lazy(() => import("../pages/auth/AcceptInvitation.jsx")
 const Landing = lazy(() => import("../pages/website/landing.jsx"));
 const FiestaVenue = lazy(() => import("../pages/website/fiesta-venue.jsx"));
 
-// Main App
+// Core App Pages
 const Home = lazy(() => import("../pages/Home.jsx"));
-const Dashboard = lazy(() => import("../pages/Dashboard.jsx"));
+
+// --- MODULES ---
 
 // Events
 const EventsList = lazy(() => import("../pages/events/EventsList.jsx"));
@@ -36,22 +44,30 @@ const EventDetail = lazy(() => import("../pages/events/EventDetail.jsx"));
 const CreateEventPage = lazy(() => import("../pages/events/EventForm/EventFormPage.jsx"));
 const EditEventPage = lazy(() => import("../pages/events/EventForm/EventFormPage.jsx"));
 
-// Clients
+// Clients (CRM)
 const ClientsList = lazy(() => import("../pages/clients/ClientsList.jsx"));
 const ClientDetail = lazy(() => import("../pages/clients/ClientDetail.jsx"));
 const ClientForm = lazy(() => import("../pages/clients/ClientForm.jsx"));
 
-// Partners
+// Partners (Vendors)
 const PartnersList = lazy(() => import("../pages/partners/PartnersList.jsx"));
 const PartnerDetail = lazy(() => import("../pages/partners/PartnerDetail.jsx"));
 const PartnerForm = lazy(() => import("../pages/partners/PartnerForm.jsx"));
 
-// Payments
+// Portfolio (Creatives)
+const Portfolio = lazy(() => import("../pages/portfolio/Portfolio.jsx"));
+
+// Finance Suite
+const Finance = lazy(() => import("../pages/finance/Finance.jsx"));
+const FinanceReports = lazy(() => import("../pages/finance/Reports.jsx"));
+const Transactions = lazy(() => import("../pages/finance/Transactions.jsx"));
+const Analytics = lazy(() => import("../pages/finance/Analytics.jsx"));
+const Profitability = lazy(() => import("../pages/finance/Profitability.jsx"));
+
+// Payments & Invoices
 const PaymentsList = lazy(() => import("../pages/payments/PaymentsList.jsx"));
 const PaymentDetail = lazy(() => import("../pages/payments/PaymentDetail.jsx"));
 const PaymentForm = lazy(() => import("../pages/payments/PaymentForm.jsx"));
-
-// Invoices
 const Invoices = lazy(() => import("../pages/invoices/InvoicesPage.jsx"));
 const InvoiceFormPage = lazy(() => import("../pages/invoices/InvoiceFormPage.jsx"));
 const InvoiceSettingPage = lazy(() => import("../pages/invoices/InvoiceCustomizationPage.jsx"));
@@ -62,42 +78,31 @@ const ContractFormPage = lazy(() => import("../pages/contracts/ContractFormPage.
 const ContractDetail = lazy(() => import("../pages/contracts/ContractDetailPage.jsx"));
 const ContractSettingsPage = lazy(() => import("../pages/contracts/ContractSettingsPage.jsx"));
 
-// Finance
-const Finance = lazy(() => import("../pages/finance/Finance.jsx"));
-const FinanceReports = lazy(() => import("../pages/finance/Reports.jsx"));
-const Transactions = lazy(() => import("../pages/finance/Transactions.jsx"));
-const Analytics = lazy(() => import("../pages/finance/Analytics.jsx"));
-const Profitability = lazy(() => import("../pages/finance/Profitability.jsx"));
-
-// Tasks
+// Workflow (Tasks & Reminders)
 const TasksList = lazy(() => import("../pages/tasks/TasksList.jsx"));
 const TaskDetail = lazy(() => import("../pages/tasks/TaskDetail.jsx"));
 const TaskForm = lazy(() => import("../pages/tasks/TaskForm.jsx"));
-
-// Reminders
 const RemindersList = lazy(() => import("../pages/reminders/RemindersList.jsx"));
 const ReminderDetail = lazy(() => import("../pages/reminders/ReminderDetails.jsx"));
 const ReminderForm = lazy(() => import("../pages/reminders/ReminderForm.jsx"));
 
-// Team
+// Team & Roles
 const TeamList = lazy(() => import("../pages/team/TeamList.jsx"));
 const TeamMemberDetail = lazy(() => import("../pages/team/TeamMemberDetail.jsx"));
 const InviteTeam = lazy(() => import("../pages/team/InviteTeam.jsx"));
 const TeamMemberEdit = lazy(() => import("../pages/team/TeamForm.jsx"));
-
-// Roles
 const RolesList = lazy(() => import("../pages/roles/RolesList.jsx"));
 const RoleForm = lazy(() => import("../pages/roles/RoleForm.jsx"));
 
-// Settings & Profile
-const VenueSettings = lazy(() => import("../pages/settings/VenueSettings.jsx"));
-const ProfileSettings = lazy(() => import("../pages/settings/ProfileSettings.jsx")); 
-const DocumentsSettings = lazy(() => import("../pages/settings/DocumentsSettings.jsx"));
-
-// Supplies 
+// Inventory & Supplies
 const SuppliesPage = lazy(() => import("../pages/supplies/SuppliesPage.jsx"));
 const SupplyDetail = lazy(() => import("../pages/supplies/SupplyDetail.jsx"));
 const SupplyForm = lazy(() => import("../pages/supplies/SupplyForm.jsx"));
+
+// Settings
+const VenueSettings = lazy(() => import("../pages/settings/VenueSettings.jsx"));
+const ProfileSettings = lazy(() => import("../pages/settings/ProfileSettings.jsx")); 
+const DocumentsSettings = lazy(() => import("../pages/settings/DocumentsSettings.jsx"));
 
 // ============================================
 // ROUTING CONFIGURATION
@@ -113,46 +118,38 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
+        
         {/* ============================================ */}
-        {/* PUBLIC ROUTES */}
+        {/* 🌎 PUBLIC WEBSITE ROUTES */}
         {/* ============================================ */}
-        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/landing" element={<PageTransition><Landing /></PageTransition>} />
         <Route path="/fiesta-venue" element={<FiestaVenue />} />
-        <Route path="/accept-invite" element={<PageTransition><AcceptInvitation /></PageTransition>} />
         
+        {/* Root Redirect Logic */}
         <Route path="/" element={<Navigate to="/landing" replace />} />
-        <Route
-          path="/login"
-          element={
-            <PageTransition>
-              <Login />
-            </PageTransition>
-          }
-        />
-
-        <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* ============================================ */}
-        {/* AUTH LAYOUT ROUTES */}
+        {/* 🔓 AUTHENTICATION ROUTES (Public Only) */}
         {/* ============================================ */}
-        <Route element={<AuthLayout />}>
+        <Route element={<PublicRoute><AuthLayout /></PublicRoute>}>
+          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
           <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
           <Route path="/reset-password/:token" element={<PageTransition><ResetPassword /></PageTransition>} />
+          <Route path="/accept-invite" element={<PageTransition><AcceptInvitation /></PageTransition>} />
         </Route>
 
         {/* ============================================ */}
-        {/* PROTECTED ROUTES */}
+        {/* 🔒 PROTECTED APP ROUTES */}
         {/* ============================================ */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             
-            {/* --- DASHBOARD (Accessible to all authenticated users) --- */}
-            <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+            {/* --- DASHBOARD (THE CHAMELEON) --- */}
+            <Route path="/dashboard" element={<PageTransition><DashboardController /></PageTransition>} />
             <Route path="/home" element={<PageTransition><Home /></PageTransition>} />
 
-            {/* --- PROFILE (Accessible to all authenticated users) --- */}
+            {/* --- PROFILE (Common) --- */}
             <Route path="/profile" element={<PageTransition><ProfileSettings /></PageTransition>} />
 
             {/* --- EVENTS MODULE --- */}
@@ -161,9 +158,13 @@ const AppRoutes = () => {
               <Route path="/events/new" element={<PageTransition><CreateEventPage /></PageTransition>} />
               <Route path="/events/:id/edit" element={<PageTransition><EditEventPage /></PageTransition>} />
               <Route path="/events/:id" element={<PageTransition><EventDetail /></PageTransition>} />
-              <Route path="/events/:id/detail" element={<PageTransition><EventDetail /></PageTransition>} />
             </Route>
 
+            {/* --- PORTFOLIO MODULE --- */}
+            <Route element={<PermissionRoute permission="portfolio.read.all" />}>
+              <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
+            </Route>
+  
             {/* --- CLIENTS MODULE --- */}
             <Route element={<PermissionRoute permission="clients.read.all" />}>
               <Route path="/clients" element={<PageTransition><ClientsList /></PageTransition>} />
@@ -188,7 +189,7 @@ const AppRoutes = () => {
               <Route path="/payments/:id/edit" element={<PageTransition><PaymentForm /></PageTransition>} />
             </Route>
 
-            {/* --- FINANCE MODULE (Invoices, Reports, Analytics) --- */}
+            {/* --- FINANCE MODULE --- */}
             <Route element={<PermissionRoute permission="finance.read.all" />}>
               <Route path="/finance" element={<PageTransition><Finance /></PageTransition>} />
               <Route path="/finance/transactions" element={<PageTransition><Transactions /></PageTransition>} />
@@ -196,7 +197,7 @@ const AppRoutes = () => {
               <Route path="/finance/reports" element={<PageTransition><FinanceReports /></PageTransition>} />
               <Route path="/finance/profitability" element={<PageTransition><Profitability /></PageTransition>} />
               
-              {/* Invoices sub-module */}
+              {/* Invoices */}
               <Route path="/invoices" element={<PageTransition><Invoices /></PageTransition>} />
               <Route path="/invoices/new" element={<PageTransition><InvoiceFormPage /></PageTransition>} />
               <Route path="/invoices/:id/edit" element={<PageTransition><InvoiceFormPage /></PageTransition>} />
@@ -243,7 +244,7 @@ const AppRoutes = () => {
               <Route path="/roles/:id/edit" element={<PageTransition><RoleForm /></PageTransition>} />
             </Route>
 
-            {/* --- SUPPLIES MODULE --- */}
+            {/* --- SUPPLIES / INVENTORY MODULE --- */}
             <Route element={<PermissionRoute permission="supplies.read.all" />}>
               <Route path="/supplies" element={<PageTransition><SuppliesPage /></PageTransition>} />
               <Route path="/supplies/new" element={<PageTransition><SupplyForm /></PageTransition>} />
@@ -251,9 +252,8 @@ const AppRoutes = () => {
               <Route path="/supplies/:id/edit" element={<PageTransition><SupplyForm /></PageTransition>} />
             </Route>
 
-            {/* --- SETTINGS MODULE --- */}
-            {/* Split: Profile is above, specific venue settings are protected here */}
-            <Route element={<PermissionRoute permission="venue.update" />}>
+            {/* --- BUSINESS SETTINGS (Generic) --- */}
+            <Route element={<PermissionRoute permission="business.update" />}>
               <Route path="/settings" element={<PageTransition><VenueSettings /></PageTransition>} />
               <Route path="/documents" element={<PageTransition><DocumentsSettings /></PageTransition>} />
             </Route>
@@ -261,7 +261,9 @@ const AppRoutes = () => {
           </Route>
         </Route>
 
-        {/* Catch-All */}
+        {/* ============================================ */}
+        {/* CATCH ALL */}
+        {/* ============================================ */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Suspense>

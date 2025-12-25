@@ -2909,6 +2909,8 @@
     }
   },
   "common": {
+    "portfolio":"Portfolio",
+    "jobs":"Affairs",
     "added": "Ajouté",
     "copied" : "Copié !",
     "ProfileSettings": "Paramètres du Profil",
@@ -2916,6 +2918,7 @@
     "roles":"Rôles",
     "client": "Client",
     "partner": "Partenaire",
+    "equipment": "Fournitures",
     "supplies": "Fournitures",
     "add": "Ajouter",
     "searchPlaceholder": "Rechercher (⌘K)",

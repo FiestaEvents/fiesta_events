@@ -1,8 +1,8 @@
 // src/routes/DashboardController.jsx
 import { useAuth } from "../context/AuthContext";
-import VenueDashboard from "./dashboards/VenueDashboard";
-import ServiceDashboard from "./dashboards/ServiceDashboard";
-import DriverDashboard from "./dashboards/DriverDashboard";
+import VenueDashboard from "../pages/dashboards/VenueDashboard";
+import ServiceDashboard from "../pages/dashboards/ServiceDashboard.jsx";
+import DriverDashboard from "../pages/dashboards/DriverDashboard.jsx";
 
 const DashboardController = () => {
   const { user } = useAuth();

@@ -3,16 +3,17 @@ import { NavLink as RouterNavLink, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../context/LanguageContext";
 import { usePermission } from "../../hooks/usePermission";
+import { useAuth } from "../../context/AuthContext"; //
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Calendar,
+  Briefcase,
   Users,
   Handshake,
   ClipboardList,
   Bell,
   Wallet,
-  CreditCard,
   Receipt,
   FileSignature,
   FolderOpen,
@@ -22,9 +23,57 @@ import {
   TrendingUp,
   Sparkles,
   BoxIcon,
-  ShieldCheck, // Added for Roles
-  UserCog, // Added for Team
+  ShieldCheck,
+  UserCog,
+  Truck,
+  Camera, 
+  MapPin,
+  Layers,
 } from "lucide-react";
+
+// ============================================================
+// CONFIG: Vertical Specific Labels & Icons
+// ============================================================
+const getVerticalConfig = (category) => {
+  switch (category) {
+    case "driver":
+    case "transport":
+      return {
+        eventsLabel: "common.schedule",
+        eventsIcon: Calendar,
+        resourcesLabel: "common.vehicles",
+        resourcesIcon: Truck,
+        showSupplies: true, // Fuel/Maintenance supplies
+      };
+    case "photography":
+    case "videography":
+      return {
+        eventsLabel: "common.jobs",
+        eventsIcon: Briefcase,
+        resourcesLabel: "common.equipment",
+        resourcesIcon: Camera,
+        showSupplies: false,
+      };
+    case "catering":
+    case "bakery":
+      return {
+        eventsLabel: "common.orders",
+        eventsIcon: ClipboardList,
+        resourcesLabel: "common.kitchen",
+        resourcesIcon: Layers,
+        showSupplies: true, // Ingredients
+      };
+    case "venue":
+    default:
+      return {
+        eventsLabel: "common.events",
+        eventsIcon: Calendar,
+        resourcesLabel: "common.spaces",
+        resourcesIcon: Layers,
+        showSupplies: true,
+      };
+  }
+};
 
 // ============================================================
 // TOOLTIP COMPONENT (Unchanged)
@@ -60,12 +109,11 @@ const Tooltip = ({ children, text, isRTL, show }) => {
 // ============================================================
 // NAVLINK COMPONENT (Unchanged)
 // ============================================================
-const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
-  const { t } = useTranslation();
+const NavLink = ({ to, icon: Icon, label, badge, isCollapsed }) => {
   const { isRTL } = useLanguage();
 
   return (
-    <Tooltip text={t(labelKey)} isRTL={isRTL} show={isCollapsed}>
+    <Tooltip text={label} isRTL={isRTL} show={isCollapsed}>
       <RouterNavLink
         to={to}
         end={to === "/"}
@@ -114,7 +162,7 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
                   transition={{ duration: 0.2 }}
                   className={`whitespace-nowrap font-medium text-xs ${isRTL ? "mr-3" : "ml-3"}`}
                 >
-                  {t(labelKey)}
+                  {label}
                 </motion.span>
               )}
             </AnimatePresence>
@@ -137,13 +185,12 @@ const NavLink = ({ to, icon: Icon, labelKey, badge, isCollapsed }) => {
 };
 
 // ============================================================
-// NAV SECTION COMPONENT (Unchanged)
+// NAV SECTION COMPONENT
 // ============================================================
 const NavSection = ({ titleKey, children, isCollapsed }) => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
 
-  // Hide section if no children (permissions hidden all links)
   if (!children || (Array.isArray(children) && children.every((c) => !c)))
     return null;
 
@@ -181,8 +228,14 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
 const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
+  const { user } = useAuth(); // ✅ Get User Context
 
-  // ✅ PERMISSIONS HOOKS
+  // 1. Determine Vertical Configuration
+  // We use user.business.category if populated, otherwise default to 'venue'
+  const category = user?.business?.category || "venue";
+  const config = getVerticalConfig(category);
+
+  // 2. Permissions Hooks
   const canViewEvents = usePermission("events.read.all");
   const canViewClients = usePermission("clients.read.all");
   const canViewPartners = usePermission("partners.read.all");
@@ -190,14 +243,17 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const canViewTasks = usePermission("tasks.read.all");
   const canViewReminders = usePermission("reminders.read.all");
 
+  // New Permissions for Resources/Portfolio
+  const canViewResources =
+    usePermission("venue.read") || usePermission("business.read");
+  const canViewPortfolio = usePermission("portfolio.read.all");
+
   const canViewFinance = usePermission("finance.read.all");
-  const canViewPayments = usePermission("payments.read.all"); // or finance.read.all
-
+  const canViewPayments = usePermission("payments.read.all");
   const canViewContracts = usePermission("contracts.read.all");
-  const canViewDocs = usePermission("settings.read"); // Assuming docs under settings permission
-  const canViewVenueSettings = usePermission("venue.update"); // Only Managers/Owners
+  const canViewDocs = usePermission("settings.read");
+  const canViewSettings = usePermission("business.update"); // Updated permission name
 
-  // ✅ TEAM & ROLES (Restricted to Owner/Admin usually)
   const canViewTeam = usePermission("users.read.all");
   const canViewRoles = usePermission("roles.read.all");
 
@@ -252,83 +308,107 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-3 space-y-2 hide-scrollbar">
-            {/* 1. Overview (Available to everyone) */}
+            {/* 1. Overview */}
             <NavSection titleKey="sidebar.overview" isCollapsed={isCollapsed}>
               <NavLink
                 to="/home"
                 icon={Home}
-                labelKey="common.home"
+                label={t("common.home")}
                 isCollapsed={isCollapsed}
               />
               <NavLink
                 to="/dashboard"
                 icon={LayoutDashboard}
-                labelKey="common.dashboard"
+                label={t("common.dashboard")}
                 isCollapsed={isCollapsed}
               />
             </NavSection>
 
-            {/* 2. Operations (Conditional) */}
-            {(canViewEvents ||
-              canViewClients ||
-              canViewPartners ||
-              canViewSupplies) && (
-              <NavSection
-                titleKey="sidebar.operations"
-                isCollapsed={isCollapsed}
-              >
-                {canViewEvents && (
-                  <NavLink
-                    to="/events"
-                    icon={Calendar}
-                    labelKey="common.events"
-                    isCollapsed={isCollapsed}
-                  />
-                )}
-                {canViewClients && (
-                  <NavLink
-                    to="/clients"
-                    icon={Users}
-                    labelKey="common.clients"
-                    isCollapsed={isCollapsed}
-                  />
-                )}
-                {canViewPartners && (
-                  <NavLink
-                    to="/partners"
-                    icon={Handshake}
-                    labelKey="common.partners"
-                    isCollapsed={isCollapsed}
-                  />
-                )}
-                {canViewSupplies && (
-                  <NavLink
-                    to="/supplies"
-                    icon={BoxIcon}
-                    labelKey="common.supplies"
-                    isCollapsed={isCollapsed}
-                  />
-                )}
-                {canViewTasks && (
-                  <NavLink
-                    to="/tasks"
-                    icon={ClipboardList}
-                    labelKey="common.tasks"
-                    isCollapsed={isCollapsed}
-                  />
-                )}
-                {canViewReminders && (
-                  <NavLink
-                    to="/reminders"
-                    icon={Bell}
-                    labelKey="common.reminders"
-                    isCollapsed={isCollapsed}
-                  />
-                )}
-              </NavSection>
-            )}
+            {/* 2. Operations (Dynamic based on Category) */}
+            <NavSection titleKey="sidebar.operations" isCollapsed={isCollapsed}>
+              {/* Dynamic Events Link (Events / Jobs / Schedule) */}
+              {canViewEvents && (
+                <NavLink
+                  to="/events"
+                  icon={config.eventsIcon}
+                  label={t(config.eventsLabel)}
+                  isCollapsed={isCollapsed}
+                />
+              )}
 
-            {/* 3. Financial (Conditional) */}
+              {/* Dynamic Resources Link (Spaces / Equipment / Vehicles) */}
+              {canViewResources &&
+                category === "venue" && ( // Only Venues usually manage Spaces via UI currently
+                  <NavLink
+                    to="/spaces" // Route might need update to /resources later
+                    icon={config.resourcesIcon}
+                    label={t(config.resourcesLabel)}
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+
+              {/* Clients */}
+              {canViewClients && (
+                <NavLink
+                  to="/clients"
+                  icon={Users}
+                  label={t("common.clients")}
+                  isCollapsed={isCollapsed}
+                />
+              )}
+
+              {/* Portfolio (For Creatives) */}
+              {(canViewPortfolio ||
+                category === "photography" ||
+                category === "videography") && (
+                <NavLink
+                  to="/portfolio"
+                  icon={Camera}
+                  label={t("common.portfolio")}
+                  isCollapsed={isCollapsed}
+                />
+              )}
+
+              {/* Partners (Usually specific to Venues/Planners) */}
+              {canViewPartners && category === "venue" && (
+                <NavLink
+                  to="/partners"
+                  icon={Handshake}
+                  label={t("common.partners")}
+                  isCollapsed={isCollapsed}
+                />
+              )}
+
+              {/* Supplies (Configurable) */}
+              {canViewSupplies && config.showSupplies && (
+                <NavLink
+                  to="/supplies"
+                  icon={BoxIcon}
+                  label={t("common.supplies")}
+                  isCollapsed={isCollapsed}
+                />
+              )}
+
+              {/* Tasks & Reminders (Everyone) */}
+              {canViewTasks && (
+                <NavLink
+                  to="/tasks"
+                  icon={ClipboardList}
+                  label={t("common.tasks")}
+                  isCollapsed={isCollapsed}
+                />
+              )}
+              {canViewReminders && (
+                <NavLink
+                  to="/reminders"
+                  icon={Bell}
+                  label={t("common.reminders")}
+                  isCollapsed={isCollapsed}
+                />
+              )}
+            </NavSection>
+
+            {/* 3. Financial */}
             {(canViewFinance || canViewPayments) && (
               <NavSection
                 titleKey="sidebar.financial"
@@ -338,7 +418,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                   <NavLink
                     to="/finance"
                     icon={TrendingUp}
-                    labelKey="common.finance"
+                    label={t("common.finance")}
                     isCollapsed={isCollapsed}
                   />
                 )}
@@ -346,30 +426,29 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                   <NavLink
                     to="/payments"
                     icon={Wallet}
-                    labelKey="common.payments"
+                    label={t("common.payments")}
                     isCollapsed={isCollapsed}
                   />
                 )}
-                {/* Invoices usually fall under Finance or Payments perm */}
                 {canViewFinance && (
                   <NavLink
                     to="/invoices"
                     icon={Receipt}
-                    labelKey="common.invoices"
+                    label={t("common.invoices")}
                     isCollapsed={isCollapsed}
                   />
                 )}
               </NavSection>
             )}
 
-            {/* 4. Team & Administration (Restricted) */}
+            {/* 4. Team & Administration */}
             {(canViewTeam || canViewRoles) && (
               <NavSection titleKey="sidebar.team" isCollapsed={isCollapsed}>
                 {canViewTeam && (
                   <NavLink
                     to="/team"
                     icon={UserCog}
-                    labelKey="common.team"
+                    label={t("common.team")}
                     isCollapsed={isCollapsed}
                   />
                 )}
@@ -377,15 +456,15 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                   <NavLink
                     to="/roles"
                     icon={ShieldCheck}
-                    labelKey="common.roles"
+                    label={t("common.roles")}
                     isCollapsed={isCollapsed}
                   />
                 )}
               </NavSection>
             )}
 
-            {/* 5. Management & Settings */}
-            {(canViewContracts || canViewVenueSettings) && (
+            {/* 5. Management */}
+            {(canViewContracts || canViewSettings) && (
               <NavSection
                 titleKey="sidebar.management"
                 isCollapsed={isCollapsed}
@@ -394,7 +473,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                   <NavLink
                     to="/contracts"
                     icon={FileSignature}
-                    labelKey="common.contracts"
+                    label={t("common.contracts")}
                     isCollapsed={isCollapsed}
                   />
                 )}
@@ -402,17 +481,15 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                   <NavLink
                     to="/documents"
                     icon={FolderOpen}
-                    labelKey="common.documents"
+                    label={t("common.documents")}
                     isCollapsed={isCollapsed}
                   />
                 )}
-
-                {/* Points to Venue Settings - Profile is in TopBar */}
-                {canViewVenueSettings && (
+                {canViewSettings && (
                   <NavLink
                     to="/settings"
                     icon={Settings}
-                    labelKey="common.settings"
+                    label={t("common.settings")}
                     isCollapsed={isCollapsed}
                   />
                 )}
