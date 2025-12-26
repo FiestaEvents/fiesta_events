@@ -55,8 +55,9 @@ const PartnerDetail = lazy(() => import("../pages/partners/PartnerDetail.jsx"));
 const PartnerForm = lazy(() => import("../pages/partners/PartnerForm.jsx"));
 
 // Portfolio (Creatives)
-const Portfolio = lazy(() => import("../pages/portfolio/Portfolio.jsx"));
-
+const PortfolioList = lazy(() => import("../pages/portfolio/PortfolioList.jsx"));
+const PortfolioForm = lazy(() => import("../pages/portfolio/PortfolioForm.jsx"));
+const PortfolioView = lazy(() => import("../pages/portfolio/PortfolioView.jsx"));
 // Finance Suite
 const Finance = lazy(() => import("../pages/finance/Finance.jsx"));
 const FinanceReports = lazy(() => import("../pages/finance/Reports.jsx"));
@@ -162,8 +163,11 @@ const AppRoutes = () => {
 
             {/* --- PORTFOLIO MODULE --- */}
             <Route element={<PermissionRoute permission="portfolio.read.all" />}>
-              <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
-            </Route>
+  <Route path="/portfolio" element={<PageTransition><PortfolioList /></PageTransition>} />
+  <Route path="/portfolio/new" element={<PageTransition><PortfolioForm /></PageTransition>} />
+  <Route path="/portfolio/:id" element={<PageTransition><PortfolioView /></PageTransition>} />
+  <Route path="/portfolio/:id/edit" element={<PageTransition><PortfolioForm /></PageTransition>} />
+</Route>
   
             {/* --- CLIENTS MODULE --- */}
             <Route element={<PermissionRoute permission="clients.read.all" />}>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { eventService } from "../../../api"; 
-import { EventFormWizard } from "./EventFormWizard"; 
+import EventFormController from "./EventFormController";
 
 const EventFormPage = () => {
   const { id } = useParams();
@@ -20,33 +20,20 @@ const EventFormPage = () => {
   };
 
   const [initialData, setInitialData] = useState(() => {
-    // 1. Edit Mode: Wait for fetch
     if (isEditMode) return null;
     
-    // 2. Create Mode: Use navigation state
+    // Create Mode: Use navigation state
     if (location.state) {
       return {
          clientId: location.state.prefillClient?._id, 
-         // ✅ FIX: Ensure this is a string
          startDate: toDateString(location.state.initialDate),
-         
-         // Setup Partner logic...
-         partners: location.state.prefillPartner 
-            ? [{
-                partner: location.state.prefillPartner._id,
-                partnerName: location.state.prefillPartner.name,
-                service: location.state.prefillPartner.category || "Service",
-                priceType: location.state.prefillPartner.priceType || "hourly",
-                rate: location.state.prefillPartner.hourlyRate || location.state.prefillPartner.fixedRate || 0,
-                cost: 0 
-              }]
-            : []
+         // Optional partner prefill
+         partners: location.state.prefillPartner ? [{/*...*/}] : []
       };
     }
     return null;
   });
 
-  // Fetch Logic (Updated helper usage here too)
   useEffect(() => {
     if (!isEditMode) return;
     const fetchEvent = async () => {
@@ -54,24 +41,26 @@ const EventFormPage = () => {
         const res = await eventService.getById(id);
         const event = res.event || res.data; 
 
+        // ✅ SAFE MAPPING (Works for Venues AND Services)
         const formattedData = {
           ...event,
-          venueSpaceId: event.venueSpaceId?._id || event.venueSpaceId,
+          // Use optional chaining because Service Events won't have venueSpaceId
+          venueSpaceId: event.resourceId?._id || event.resourceId || event.venueSpaceId?._id, 
           clientId: event.clientId?._id || event.clientId,
-          // ✅ FIX: Ensure string format on edit fetch
           startDate: toDateString(event.startDate),
           endDate: toDateString(event.endDate),
           sameDayEvent: toDateString(event.startDate) === toDateString(event.endDate),
-          // Map Relations...
+          
           partners: (event.partners || []).map(p => ({
              partner: p.partner?._id || p.partner, 
-             partnerName: p.partner?.name, // For Display
+             partnerName: p.partner?.name, 
              service: p.service,
              priceType: (p.priceType || "fixed").toLowerCase(),
-             rate: Number(p.rate) || Number(p.cost) || 0, // Ensure Number
+             rate: Number(p.rate) || Number(p.cost) || 0,
              hours: p.hours ? Number(p.hours) : undefined,
              cost: Number(p.cost) || 0
           })),
+          
           supplies: (event.supplies || []).map(s => ({
              ...s,
              supply: s.supply?._id || s.supply,
@@ -90,7 +79,7 @@ const EventFormPage = () => {
 
   if (loading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin"/></div>;
 
-  return <EventFormWizard isEditMode={isEditMode} defaultValues={initialData} />;
+  return <EventFormController isEditMode={isEditMode} defaultValues={initialData} />;
 };
 
 export default EventFormPage;

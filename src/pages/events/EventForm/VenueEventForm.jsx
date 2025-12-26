@@ -16,7 +16,7 @@ import Step3VenuePricing from "./steps/Step3VenuePricing";
 import Step4Payment from "./steps/Step4Payment"; 
 import Step5Review from "./steps/Step5Review";
 
-export const EventFormWizard = ({ defaultValues, isEditMode }) => {
+const VenueEventForm = ({ defaultValues, isEditMode }) => {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -237,7 +237,7 @@ export const EventFormWizard = ({ defaultValues, isEditMode }) => {
            {/* FOOTER */}
            <div className="p-6 border-t border-gray-100 dark:border-gray-800 flex justify-between bg-white dark:bg-gray-900">
                <button 
-                  type="button" // ✅ Explicit Type
+                  type="button"
                   onClick={prevStep}
                   disabled={currentStep === 1}
                   className="px-6 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
@@ -245,7 +245,6 @@ export const EventFormWizard = ({ defaultValues, isEditMode }) => {
                  {t("common.back")}
                </button>
                
-               {/* LOGIC: Show Next on steps 1-4, Submit on Step 5 */}
                {currentStep < 5 ? (
                    <button 
                      type="button"
@@ -305,3 +304,4 @@ export const EventFormWizard = ({ defaultValues, isEditMode }) => {
     </FormProvider>
   );
 };
+export default VenueEventForm;

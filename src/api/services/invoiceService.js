@@ -7,11 +7,6 @@ import api from "../axios";
 import { handleResponse, handleError } from "../../utils/apiUtils";
 
 export const invoiceService = {
-  /**
-   * Get all invoices with filters
-   * @param {Object} params - { page, limit, search, status, type, startDate, endDate }
-   * @returns {Promise<{ invoices: Array, pagination }>}
-   */
   getAll: async (params = {}) => {
     try {
       const response = await api.get("/invoices", { params });
@@ -21,11 +16,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Get invoice by ID
-   * @param {string} id
-   * @returns {Promise<{ invoice }>}
-   */
   getById: async (id) => {
     try {
       const response = await api.get(`/invoices/${id}`);
@@ -35,11 +25,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Create new invoice
-   * @param {Object} data
-   * @returns {Promise<{ invoice }>}
-   */
   create: async (data) => {
     try {
       const response = await api.post("/invoices", data);
@@ -49,12 +34,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Update invoice
-   * @param {string} id
-   * @param {Object} data
-   * @returns {Promise<{ invoice }>}
-   */
   update: async (id, data) => {
     try {
       const response = await api.put(`/invoices/${id}`, data);
@@ -64,11 +43,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Delete invoice (Archive)
-   * @param {string} id
-   * @returns {Promise<{ success: boolean }>}
-   */
   delete: async (id) => {
     try {
       const response = await api.delete(`/invoices/${id}`);
@@ -78,12 +52,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Send invoice via email
-   * @param {string} id
-   * @param {Object} data - { message, sendCopy }
-   * @returns {Promise<{ success: boolean }>}
-   */
   send: async (id, data = {}) => {
     try {
       const response = await api.post(`/invoices/${id}/send`, data);
@@ -93,12 +61,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Mark invoice as paid
-   * @param {string} id
-   * @param {Object} data - { paymentMethod, notes }
-   * @returns {Promise<{ invoice }>}
-   */
   markAsPaid: async (id, data = {}) => {
     try {
       const response = await api.post(`/invoices/${id}/mark-paid`, data);
@@ -108,12 +70,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Cancel invoice
-   * @param {string} id
-   * @param {string} reason
-   * @returns {Promise<{ invoice }>}
-   */
   cancel: async (id, reason = "") => {
     try {
       const response = await api.post(`/invoices/${id}/cancel`, { reason });
@@ -123,37 +79,33 @@ export const invoiceService = {
     }
   },
 
-/**
-   * Download invoice PDF
-   * @param {string} id
-   * @param {string} language
-   * @returns {Promise<Blob>}
-   */
-  download: async (id, language = "fr") => {
+   download: async (id, language = "fr") => {
     try {
       const response = await api.get(`/invoices/${id}/download`, {
         params: { language },
-        responseType: "blob", // Critical
+        responseType: "arraybuffer", // ✅ CRITICAL: Prevents data corruption
         headers: { Accept: "application/pdf" },
       });
 
-      // ✅ FIX: Check if the Blob is nested in .data (based on your logs)
-      if (response.data && response.data instanceof Blob) {
-        return response.data;
+      // Check if the response is actually JSON (Error) instead of PDF
+      const contentType = response.headers["content-type"];
+      if (contentType && contentType.includes("application/json")) {
+        // Decode the array buffer to string to parse the error
+        const text = new TextDecoder().decode(response.data);
+        const json = JSON.parse(text);
+        throw new Error(json.message || "Download failed");
       }
-      
-      // Fallback: If your interceptor already unwrapped it, return response
-      return response;
+
+      // Create Blob from ArrayBuffer
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      return blob;
+
     } catch (error) {
       console.error("Download service error:", error);
       throw error;
     }
   },
-  /**
-   * Get invoice statistics
-   * @param {Object} params - { startDate, endDate, invoiceType }
-   * @returns {Promise<{ stats }>}
-   */
+
   getStats: async (params = {}) => {
     try {
       const response = await api.get("/invoices/stats", { params });
@@ -167,10 +119,6 @@ export const invoiceService = {
   // INVOICE SETTINGS & CUSTOMIZATION
   // ============================================
 
-  /**
-   * Get invoice settings
-   * @returns {Promise<{ data: Object }>}
-   */
   getSettings: async () => {
     try {
       const response = await api.get("/invoices/settings");
@@ -180,11 +128,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Update invoice settings
-   * @param {Object} data - Full settings object
-   * @returns {Promise<{ message: string, data: Object }>}
-   */
   updateSettings: async (data) => {
     try {
       const response = await api.put("/invoices/settings", data);
@@ -194,11 +137,21 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Apply a preset template
-   * @param {string} template - 'modern', 'classic', 'minimal'
-   * @returns {Promise<{ message: string, data: Object }>}
-   */
+  //  Upload Logo Logic
+  uploadLogo: async (file) => {
+    const formData = new FormData();
+    formData.append("image", file); 
+
+    try {
+      const response = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return handleResponse(response); 
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   applyTemplate: async (template) => {
     try {
       const response = await api.post("/invoices/settings/apply-template", {
@@ -210,10 +163,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Reset settings to system defaults
-   * @returns {Promise<{ message: string, data: Object }>}
-   */
   resetSettings: async () => {
     try {
       const response = await api.post("/invoices/settings/reset");
@@ -223,11 +172,6 @@ export const invoiceService = {
     }
   },
 
-  /**
-   * Generate a preview based on data (for the settings editor)
-   * @param {Object} invoiceData - Dummy data or current settings
-   * @returns {Promise<{ data: Object }>}
-   */
   preview: async (invoiceData) => {
     try {
       const response = await api.post("/invoices/settings/preview", {

@@ -3437,6 +3437,8 @@
     "create": {
       "button": "Créer {{type}}",
       "firstButton": "Créer la première facture",
+      "partnerButton":"Créer facture Partenaire ",
+      "clientButton": "Créer facture Client ",
       "loading": "Chargement...",
       "success": "Facture créée avec succès"
     },
@@ -3467,7 +3469,8 @@
     },
     "download": {
       "generating": "Génération du PDF... Veuillez patienter",
-      "success": "Facture {{invoiceNumber}} téléchargée avec succès",
+      "success": "Facture téléchargée avec succès",
+      "loading":"Chargement...",
       "errors": {
         "generic": "Échec du téléchargement de la facture"
       }

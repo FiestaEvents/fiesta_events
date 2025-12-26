@@ -235,19 +235,24 @@ const InvoicesPage = () => {
 
   const handleDownloadInvoice = async (invoice) => {
     const downloadAction = async () => {
+      // service.download now returns a Blob directly
       const blob = await invoiceService.download(invoice._id, i18n.language);
-      if (!blob || !(blob instanceof Blob)) throw new Error("Invalid file");
+      
+      // Create URL and trigger download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", `${invoice.invoiceNumber}.pdf`);
       document.body.appendChild(link);
       link.click();
+      
+      // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
     };
+
     try {
       await promise(downloadAction(), {
         loading: t("invoices.download.loading"),

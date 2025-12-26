@@ -3051,6 +3051,8 @@
     "create": {
       "button": "Create {{type}}",
       "firstButton": "Create First Invoice",
+      "partnerButton":"Create Partner Invoice",
+      "clientButton": "Create Client Invoice",
       "loading": "Loading...",
       "success": "Invoice created successfully"
     },
@@ -3081,7 +3083,8 @@
     },
     "download": {
       "generating": "Generating PDF... Please wait",
-      "success": "Invoice {{invoiceNumber}} downloaded successfully",
+      "success": "Invoice downloaded successfully",
+      "loading":"Downloading PDF... Please wait",
       "errors": {
         "generic": "Failed to download invoice"
       }
