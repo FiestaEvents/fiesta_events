@@ -1,131 +1,390 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Edit2, GripVertical, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { useTranslation } from "react-i18next";
 
-// --- ZOOM CONTROLS ---
-const ZoomControls = ({ zoom, onZoomIn, onZoomOut, onZoomReset }) => (
-  <div className="fixed bottom-8 right-8 z-50 flex gap-2 bg-white rounded-full shadow-xl p-2 border border-gray-200">
-    <button onClick={onZoomOut} className="p-2 hover:bg-gray-100 rounded-full"><ZoomOut size={18}/></button>
-    <span className="px-2 py-2 text-xs font-bold w-12 text-center">{Math.round(zoom * 100)}%</span>
-    <button onClick={onZoomIn} className="p-2 hover:bg-gray-100 rounded-full"><ZoomIn size={18}/></button>
-    <button onClick={onZoomReset} className="p-2 hover:bg-gray-100 rounded-full border-l ml-1"><Maximize2 size={18}/></button>
-  </div>
-);
+// ==========================================
+// 1. HELPER COMPONENTS
+// ==========================================
 
-// --- DRAGGABLE BLOCK ---
-const DraggableBlock = ({ id, index, onEdit, children }) => (
-  <Draggable draggableId={id} index={index}>
-    {(provided, snapshot) => (
-      <div
-        ref={provided.innerRef}
-        {...provided.draggableProps}
-        className={`relative group transition-all duration-200 ${snapshot.isDragging ? "z-50 opacity-90 scale-105" : ""}`}
+const ZoomControls = ({ zoom, onZoomIn, onZoomOut, onZoomReset }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="absolute top-4 right-4 z-50 flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+      <button
+        onClick={onZoomIn}
+        className="p-2 hover:bg-gray-100 rounded transition text-gray-700 hover:text-orange-600"
       >
-        {/* Hover Controls */}
-        <div className="absolute -left-10 top-0 bottom-0 w-8 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div {...provided.dragHandleProps} className="p-1.5 bg-gray-100 hover:bg-orange-100 text-gray-500 hover:text-orange-600 rounded cursor-grab shadow-sm mb-1"><GripVertical size={14} /></div>
-          {onEdit && <div onClick={onEdit} className="p-1.5 bg-gray-100 hover:bg-blue-100 text-gray-500 hover:text-blue-600 rounded cursor-pointer shadow-sm"><Edit2 size={14} /></div>}
-        </div>
-        
-        {/* Content Wrapper */}
-        <div onClick={onEdit} className="border-2 border-transparent hover:border-dashed hover:border-blue-300 rounded transition-colors cursor-pointer">
-          {children}
-        </div>
+        <ZoomIn size={20} />
+      </button>
+      <div className="px-2 py-1 text-center">
+        <span className="text-xs font-semibold text-gray-700">
+          {Math.round(zoom * 100)}%
+        </span>
       </div>
-    )}
-  </Draggable>
-);
+      <button
+        onClick={onZoomOut}
+        className="p-2 hover:bg-gray-100 rounded transition text-gray-700 hover:text-orange-600"
+      >
+        <ZoomOut size={20} />
+      </button>
+      <button
+        onClick={onZoomReset}
+        className="p-2 hover:bg-gray-100 rounded transition text-gray-700 hover:text-orange-600 border-t"
+      >
+        <Maximize2 size={20} />
+      </button>
+    </div>
+  );
+};
+
+const DraggableBlock = ({
+  id,
+  index,
+  onEdit,
+  children,
+  className = "",
+  style = {},
+}) => {
+  const { t } = useTranslation();
+  return (
+    <Draggable draggableId={id} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          className={`relative group mb-1 transition-all duration-200 ${snapshot.isDragging ? "z-50 shadow-2xl scale-105 bg-white ring-2 ring-orange-400 rounded-lg opacity-90" : ""} ${className}`}
+          style={{ ...provided.draggableProps.style, ...style }}
+        >
+          <div className="absolute -left-12 top-0 bottom-0 w-10 flex flex-col items-end justify-start pt-2 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
+            <div
+              {...provided.dragHandleProps}
+              className="p-1.5 bg-gray-100 hover:bg-orange-100 text-gray-500 hover:text-orange-600 rounded cursor-grab shadow-sm mb-1"
+            >
+              <GripVertical size={16} />
+            </div>
+            {onEdit && (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="p-1.5 bg-gray-100 hover:bg-blue-100 text-gray-500 hover:text-blue-600 rounded cursor-pointer shadow-sm"
+              >
+                <Edit2 size={16} />
+              </div>
+            )}
+          </div>
+          <div
+            onClick={onEdit}
+            className={`border-2 border-transparent ${onEdit ? "hover:border-dashed hover:border-gray-300 cursor-pointer" : ""} rounded-sm transition-colors`}
+          >
+            {children}
+          </div>
+        </div>
+      )}
+    </Draggable>
+  );
+};
+
+// ==========================================
+// 2. MAIN PREVIEW COMPONENT
+// ==========================================
 
 const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
-  const [zoom, setZoom] = useState(0.8); // Start slightly zoomed out to fit
+  const { t, i18n } = useTranslation();
+  const [zoom, setZoom] = useState(0.8);
 
-  const s = {
-    colors: settings.branding.colors,
-    fonts: settings.branding.fonts,
-    labels: settings.labels,
-    layout: settings.layout,
-    table: settings.table
+  // --- SHORTCUTS ---
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        setZoom((z) => Math.min(z + 0.1, 2));
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "-") {
+        e.preventDefault();
+        setZoom((z) => Math.max(z - 0.1, 0.5));
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "0") {
+        e.preventDefault();
+        setZoom(0.8);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // --- UTILS ---
+  const formatCurrency = (amt) =>
+    new Intl.NumberFormat("fr-TN", {
+      style: "decimal",
+      minimumFractionDigits: 3,
+    }).format(amt) + " TND";
+
+  const formatDate = (d) => {
+    if (!d) return "...";
+    return new Date(d).toLocaleDateString("fr-FR");
   };
 
-  // --- STYLE VARIABLES ---
+  const formatAddress = (addr) => {
+    if (!addr) return null;
+    if (typeof addr === "object") {
+      return (
+        <>
+          <div>{addr.street}</div>
+          <div>{[addr.city, addr.zipCode].filter(Boolean).join(" ")}</div>
+          <div>{addr.country}</div>
+        </>
+      );
+    }
+    return <div className="whitespace-pre-line">{addr}</div>;
+  };
+
+  // --- STYLES & SETTINGS ---
+  const s = {
+    colors: settings?.branding?.colors || {
+      primary: "#F18237",
+      secondary: "#374151",
+      text: "#1F2937",
+    },
+    fonts: settings?.branding?.fonts || { size: 10 },
+    company: settings?.companyInfo || {},
+    labels: settings?.labels || {},
+    layout: settings?.layout || { sections: [] },
+    table: settings?.table || {
+      headerColor: "#F18237",
+      striped: false,
+      rounded: true,
+      columns: {},
+    },
+    logo: settings?.branding?.logo?.url,
+    paymentTerms: settings?.paymentTerms || {},
+  };
+
+  // Page Container Style
   const pageStyle = {
-    width: "794px", // A4 Width in px at 96 DPI
-    minHeight: "1123px", // A4 Height
+    width: "794px",
+    minHeight: "1123px",
     backgroundColor: "white",
-    padding: "40px",
+    padding: "50px 60px", // Matches Backend Margin
     fontFamily: "Helvetica, Arial, sans-serif",
     fontSize: `${s.fonts.size}px`,
     color: s.colors.text,
+    lineHeight: 1.5,
     transform: `scale(${zoom})`,
     transformOrigin: "top center",
-    boxShadow: "0 20px 50px rgba(0,0,0,0.3)"
+    boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
+    position: "relative",
+    overflow: "hidden", // For brand strip
   };
 
-  // --- HELPERS ---
-  const formatCurrency = (amt) => `${amt.toFixed(2)} TND`;
-  const formatDate = (d) => new Date(d).toLocaleDateString("fr-FR");
+  const styles = {
+    primaryText: { color: s.colors.primary },
+    secondaryText: { color: s.colors.secondary },
+    label: {
+      fontSize: "10px",
+      fontWeight: 700,
+      textTransform: "uppercase",
+      color: s.colors.secondary,
+      marginBottom: "5px",
+      display: "block",
+    },
+    headerValue: {
+      fontSize: "15px",
+      fontWeight: 700,
+      color: "#000",
+      marginBottom: "4px",
+    },
+    smallText: { fontSize: "11px", color: s.colors.secondary },
+  };
 
-  // --- RENDERERS ---
+  // Calculations
+  const subtotal =
+    data.items?.reduce((acc, item) => acc + (item.amount || 0), 0) || 0;
+  const taxAmount = (subtotal * (data.taxRate || 19)) / 100;
+  const discountAmount = data.discount || 0;
+  const totalAmount = subtotal + taxAmount - discountAmount;
+
+  // ==========================================
+  // RENDERERS
+  // ==========================================
+
   const renderers = {
     header: (
-      <div className="flex justify-between items-start mb-10">
+      <div className="flex justify-between items-start mb-10 mt-4">
         <div>
-          {settings.branding.logo.url ? (
-            <img src={settings.branding.logo.url} style={{ height: 80, maxWidth: 200, objectFit: 'contain' }} />
+          {s.logo ? (
+            <img
+              src={s.logo}
+              alt="Logo"
+              className="object-contain"
+              style={{ height: 80, maxWidth: 200 }}
+            />
           ) : (
-            <h1 style={{ color: s.colors.primary, fontSize: 24, fontWeight: 'bold' }}>Your Business</h1>
+            <h2
+              style={{
+                ...styles.primaryText,
+                fontSize: "28px",
+                fontWeight: 700,
+                margin: 0,
+              }}
+            >
+              {s.company.displayName || "My Company"}
+            </h2>
           )}
         </div>
         <div className="text-right">
-          <h1 style={{ color: s.colors.primary, fontSize: 32, fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>
-            {s.labels.invoiceTitle}
+          <h1
+            style={{
+              ...styles.primaryText,
+              fontSize: "32px",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              margin: 0,
+              lineHeight: 1,
+            }}
+          >
+            {s.labels.invoiceTitle || "FACTURE"}
           </h1>
-          <p style={{ color: s.colors.secondary, fontSize: 14, marginTop: 5, fontWeight: 'bold' }}># {data.invoiceNumber}</p>
+          <p
+            style={{
+              ...styles.secondaryText,
+              fontSize: "14px",
+              fontWeight: 600,
+              marginTop: "8px",
+            }}
+          >
+            # {data.invoiceNumber}
+          </p>
         </div>
       </div>
     ),
 
     details: (
-      <div className="flex justify-between mb-8 border-t pt-6" style={{ borderColor: '#eee' }}>
-         <div style={{ width: '45%' }}>
-            <span style={{ fontSize: 10, fontWeight: 'bold', color: s.colors.secondary, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>
-              {s.labels.from}
-            </span>
-            <div style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>Your Business Name</div>
-            <div style={{ fontSize: 12, color: s.colors.secondary, whiteSpace: 'pre-line' }}>123 Street Address, City, Country</div>
-         </div>
-         <div style={{ width: '45%', textAlign: 'right' }}>
-            <span style={{ fontSize: 10, fontWeight: 'bold', color: s.colors.secondary, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>
-              {s.labels.to}
-            </span>
-            <div style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>{data.recipient.name}</div>
-            <div style={{ fontSize: 12, color: s.colors.secondary }}>{data.recipient.email}</div>
-         </div>
-         <div style={{ position: 'absolute', top: 220, width: '100%', display: 'flex', gap: 40 }}>
-             <div><span style={{ fontWeight: 'bold', color: s.colors.secondary, marginRight: 8 }}>DATE:</span> {formatDate(data.issueDate)}</div>
-             <div><span style={{ fontWeight: 'bold', color: s.colors.secondary, marginRight: 8 }}>DUE:</span> {formatDate(data.dueDate)}</div>
-         </div>
+      <div className="mb-8">
+        <div className="flex justify-between gap-10">
+          {/* SENDER BOX (Left) */}
+          <div className="w-1/2">
+            <span style={styles.label}>{s.labels.from || "FROM"}</span>
+            <div style={styles.headerValue}>
+              {s.company.displayName || "Ma Société"}
+            </div>
+            <div style={styles.smallText}>
+              {formatAddress(
+                data.senderAddress || "123 Rue Exemple\nTunis, Tunisie"
+              )}
+              {s.company.matriculeFiscale && (
+                <div className="mt-1">MF: {s.company.matriculeFiscale}</div>
+              )}
+            </div>
+
+            {/* Dates (Aligned Left under sender) */}
+            <div className="flex gap-8 mt-6">
+              <div>
+                <span style={styles.label}>DATE</span>
+                <span className="font-medium text-sm text-black">
+                  {formatDate(data.issueDate)}
+                </span>
+              </div>
+              <div>
+                <span style={styles.label}>DUE</span>
+                <span className="font-medium text-sm text-black">
+                  {formatDate(data.dueDate)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* RECIPIENT BOX (Right - Gray Background) */}
+          <div
+            className="w-1/2 bg-gray-50 p-5 rounded-lg border-l-4"
+            style={{ borderColor: s.colors.primary }}
+          >
+            <span style={styles.label}>{s.labels.to || "BILL TO"}</span>
+            <div style={styles.headerValue}>
+              {data.recipient?.name || "Client Name"}
+            </div>
+            <div style={styles.smallText}>
+              {data.recipient?.email && <div>{data.recipient.email}</div>}
+              {data.recipient?.phone && <div>{data.recipient.phone}</div>}
+              {formatAddress(data.recipientAddress)}
+            </div>
+          </div>
+        </div>
       </div>
     ),
 
     items: (
-      <div className="mb-8 mt-12">
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="mb-6 mt-8">
+        <table className="w-full" style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              {s.table.columns.description && <th style={{ textAlign: 'left', padding: 12, backgroundColor: s.table.headerColor, color: 'white', borderTopLeftRadius: s.table.rounded ? 6 : 0 }}>{s.labels.item}</th>}
-              {s.table.columns.quantity && <th style={{ textAlign: 'center', padding: 12, backgroundColor: s.table.headerColor, color: 'white' }}>{s.labels.quantity}</th>}
-              {s.table.columns.rate && <th style={{ textAlign: 'right', padding: 12, backgroundColor: s.table.headerColor, color: 'white' }}>{s.labels.rate}</th>}
-              {s.table.columns.total && <th style={{ textAlign: 'right', padding: 12, backgroundColor: s.table.headerColor, color: 'white', borderTopRightRadius: s.table.rounded ? 6 : 0 }}>{s.labels.total}</th>}
+              {s.table.columns.description && (
+                <th
+                  className="text-left py-3 px-3 text-[11px] font-bold uppercase text-white first:rounded-l-md"
+                  style={{ backgroundColor: s.table.headerColor }}
+                >
+                  {s.labels.item || "Description"}
+                </th>
+              )}
+              {s.table.columns.quantity && (
+                <th
+                  className="text-center py-3 px-3 text-[11px] font-bold uppercase text-white"
+                  style={{ backgroundColor: s.table.headerColor }}
+                >
+                  {s.labels.quantity || "Qty"}
+                </th>
+              )}
+              {s.table.columns.rate && (
+                <th
+                  className="text-right py-3 px-3 text-[11px] font-bold uppercase text-white"
+                  style={{ backgroundColor: s.table.headerColor }}
+                >
+                  {s.labels.rate || "Price"}
+                </th>
+              )}
+              {s.table.columns.total && (
+                <th
+                  className="text-right py-3 px-3 text-[11px] font-bold uppercase text-white last:rounded-r-md"
+                  style={{ backgroundColor: s.table.headerColor }}
+                >
+                  {s.labels.total || "Total"}
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
-            {data.items.map((item, i) => (
-              <tr key={i} style={{ backgroundColor: s.table.striped && i % 2 !== 0 ? '#F9FAFB' : 'transparent' }}>
-                {s.table.columns.description && <td style={{ padding: 12, borderBottom: '1px solid #eee' }}>{item.description}</td>}
-                {s.table.columns.quantity && <td style={{ padding: 12, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.quantity}</td>}
-                {s.table.columns.rate && <td style={{ padding: 12, borderBottom: '1px solid #eee', textAlign: 'right' }}>{formatCurrency(item.rate)}</td>}
-                {s.table.columns.total && <td style={{ padding: 12, borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(item.amount)}</td>}
+            {data.items?.map((item, idx) => (
+              <tr
+                key={idx}
+                style={{
+                  backgroundColor:
+                    s.table.striped && idx % 2 !== 0
+                      ? "#F9FAFB"
+                      : "transparent",
+                }}
+              >
+                {s.table.columns.description && (
+                  <td className="py-3 px-3 border-b border-gray-100 text-xs font-medium">
+                    {item.description}
+                  </td>
+                )}
+                {s.table.columns.quantity && (
+                  <td className="py-3 px-3 border-b border-gray-100 text-xs text-center">
+                    {item.quantity}
+                  </td>
+                )}
+                {s.table.columns.rate && (
+                  <td className="py-3 px-3 border-b border-gray-100 text-xs text-right">
+                    {formatCurrency(item.rate)}
+                  </td>
+                )}
+                {s.table.columns.total && (
+                  <td className="py-3 px-3 border-b border-gray-100 text-xs text-right font-bold">
+                    {formatCurrency(item.amount)}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -134,39 +393,68 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
     ),
 
     totals: (
-      <div className="flex justify-end mb-10">
-        <div style={{ width: 300 }}>
-          <div className="flex justify-between py-1 border-b border-gray-100"><span>Subtotal:</span> <span>{formatCurrency(data.items.reduce((a, b) => a + b.amount, 0))}</span></div>
-          <div className="flex justify-between py-1 border-b border-gray-100"><span>Tax ({data.taxRate}%):</span> <span>{formatCurrency((data.items.reduce((a, b) => a + b.amount, 0) * data.taxRate)/100)}</span></div>
-          <div className="flex justify-between p-3 mt-4 rounded-lg text-white font-bold" style={{ backgroundColor: s.colors.primary }}>
-            <span>{s.labels.total}</span>
-            <span>{formatCurrency(data.items.reduce((a, b) => a + b.amount, 0) * 1.19)}</span>
+      <div className="flex justify-end mt-2">
+        <div style={{ width: "350px" }}>
+          <div className="flex justify-between py-1.5 border-b border-gray-100 text-xs">
+            <span style={styles.secondaryText}>
+              {t("invoicePreview.subtotal") || "Subtotal"}:
+            </span>
+            <span className="font-medium">{formatCurrency(subtotal)}</span>
+          </div>
+          <div className="flex justify-between py-1.5 border-b border-gray-100 text-xs">
+            <span style={styles.secondaryText}>
+              {t("invoicePreview.tax") || "Tax"} ({data.taxRate}%):
+            </span>
+            <span className="font-medium">{formatCurrency(taxAmount)}</span>
+          </div>
+          {discountAmount > 0 && (
+            <div className="flex justify-between py-1.5 border-b border-gray-100 text-xs text-red-500">
+              <span>Discount:</span>
+              <span>-{formatCurrency(discountAmount)}</span>
+            </div>
+          )}
+
+          <div
+            className="flex justify-between items-center p-3 mt-3 rounded-md text-white shadow-sm"
+            style={{ backgroundColor: s.colors.primary }}
+          >
+            <span className="text-sm font-bold uppercase">
+              {s.labels.total || "Total"}
+            </span>
+            <span className="text-lg font-bold">
+              {formatCurrency(totalAmount)}
+            </span>
           </div>
         </div>
       </div>
     ),
 
-    footer: (
-       <div className="mt-auto pt-6 border-t-2 border-gray-100">
-          <div style={{ fontSize: 11, fontWeight: 'bold', color: s.colors.secondary, textTransform: 'uppercase', marginBottom: 5 }}>
-            {s.labels.paymentInstructions}
+    footer:
+      s.paymentTerms.bankDetails || s.labels.paymentInstructions ? (
+        <div className="mt-auto pt-8 border-t-2 border-dashed border-gray-100">
+          <div style={{ ...styles.label, marginBottom: "8px" }}>
+            {s.labels.paymentInstructions || "Payment Instructions"}
           </div>
-          <div style={{ fontSize: 12, color: s.colors.text, whiteSpace: 'pre-line' }}>
-            {settings.paymentTerms.bankDetails || "Bank Name: XXXX\nIBAN: TN59..."}
+          <div className="text-xs text-gray-600 bg-gray-50 p-4 rounded-md whitespace-pre-line leading-relaxed">
+            {s.paymentTerms.bankDetails || "Bank details here..."}
           </div>
-       </div>
-    )
+        </div>
+      ) : null,
   };
 
-  // Section Mapping
-  const sectionMap = { header: "branding", details: "text", items: "table", totals: "text", footer: "text" };
-  
-  // Sort Sections
-  const activeSections = s.layout.sections
-    .filter(sec => sec.visible)
+  // --- SORTING ---
+  const sectionEditMap = {
+    header: "branding",
+    details: "text",
+    items: "table",
+    totals: "text",
+    footer: "text",
+  };
+  const activeSections = (s.layout.sections || [])
+    .filter((sec) => sec.visible)
     .sort((a, b) => a.order - b.order);
 
-  const onDragEnd = (result) => {
+  const handleDragEnd = (result) => {
     if (!result.destination) return;
     const items = Array.from(activeSections);
     const [reorderedItem] = items.splice(result.source.index, 1);
@@ -175,32 +463,67 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
   };
 
   return (
-    <>
-      <ZoomControls zoom={zoom} onZoomIn={() => setZoom(z => z + 0.1)} onZoomOut={() => setZoom(z => Math.max(0.5, z - 0.1))} onZoomReset={() => setZoom(0.8)} />
-      
+    <div className="flex justify-center items-start overflow-auto p-8 bg-gray-800/50 min-h-full select-none relative">
+      <ZoomControls
+        zoom={zoom}
+        onZoomIn={() => setZoom((z) => Math.min(z + 0.1, 2))}
+        onZoomOut={() => setZoom((z) => Math.max(z - 0.1, 0.5))}
+        onZoomReset={() => setZoom(0.8)}
+      />
+
       <div style={pageStyle}>
-        <div className="flex flex-col h-full">
-           <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="preview">
-                 {(provided) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col flex-1">
-                       {activeSections.map((sec, index) => {
-                          const content = renderers[sec.id];
-                          if (!content) return null;
-                          return (
-                             <DraggableBlock key={sec.id} id={sec.id} index={index} onEdit={() => onEditSection(sectionMap[sec.id])} className={sec.id === 'footer' ? 'mt-auto' : ''}>
-                                {content}
-                             </DraggableBlock>
-                          );
-                       })}
-                       {provided.placeholder}
-                    </div>
-                 )}
-              </Droppable>
-           </DragDropContext>
+        {/* Brand Strip */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "10px",
+            backgroundColor: s.colors.primary,
+          }}
+        />
+
+        <div className="flex-1 z-10 flex flex-col h-full pt-4">
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="invoice-preview-sections">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="flex flex-col flex-1"
+                >
+                  {activeSections.map((section, index) => {
+                    const content = renderers[section.id];
+                    if (!content) return null;
+                    return (
+                      <DraggableBlock
+                        key={section.id}
+                        id={section.id}
+                        index={index}
+                        onEdit={() =>
+                          onEditSection &&
+                          onEditSection(sectionEditMap[section.id])
+                        }
+                        className={section.id === "footer" ? "mt-auto" : ""}
+                      >
+                        {content}
+                      </DraggableBlock>
+                    );
+                  })}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </div>
+
+        {/* Page Number Mockup */}
+        <div className="absolute bottom-4 left-0 w-full text-center text-[10px] text-gray-400 uppercase tracking-widest">
+          Page 1 / 1
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
