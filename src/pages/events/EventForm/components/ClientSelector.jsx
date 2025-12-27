@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTranslation } from "react-i18next"; // ✅ Added Import
+import { useTranslation } from "react-i18next";
 import { Search, Mail, Phone, Check, Building } from "lucide-react";
 
 const ClientSelector = ({ clients, selectedClient, onSelectClient, error }) => {
@@ -110,7 +110,6 @@ const ClientSelector = ({ clients, selectedClient, onSelectClient, error }) => {
           })
         ) : (
           <div className="col-span-full py-8 text-center">
-            {/* ✅ Uses t() here */}
             <p className="text-gray-400 text-sm">
                 {t("eventForm.components.clientSelector.noResults", { query: searchQuery })}
             </p>

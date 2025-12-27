@@ -1,8 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { User, Lock, Building2, CheckCircle2, Grid3x3 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
-export const TabButton = ({ active, icon: Icon, label, onClick }) => (
+// Individual Tab Button
+export const TabButton = ({ active, icon: Icon, label, onClick, darkMode }) => (
   <button
     type="button"
     onClick={onClick}
@@ -10,17 +11,19 @@ export const TabButton = ({ active, icon: Icon, label, onClick }) => (
       ${
         active
           ? "border-orange-500 text-orange-600 dark:text-orange-400"
-          : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
+          : `border-transparent ${darkMode ? "text-gray-400 hover:text-gray-300 hover:border-gray-700" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"}`
       }`}
   >
-    <Icon
-      size={18}
-      className={
-        active
-          ? "text-orange-500 dark:text-orange-400"
-          : "text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400"
-      }
-    />
+    {Icon && (
+      <Icon
+        size={18}
+        className={
+          active
+            ? "text-orange-500 dark:text-orange-400"
+            : `${darkMode ? "text-gray-500 group-hover:text-gray-400" : "text-gray-400 group-hover:text-gray-500"}`
+        }
+      />
+    )}
     {label}
   </button>
 );
@@ -32,47 +35,22 @@ const SettingsLayout = ({
   tabs = [],
   activeTab,
   setActiveTab,
-  darkMode = false,
+  darkMode = false, // ✅ Ensure this prop is received
 }) => {
-  const { t } = useTranslation();
-
-  const defaultTabs = [
-    {
-      id: "personal",
-      label: t("venueSettings.tabs.personal") || "Personal",
-      icon: User,
-    },
-    {
-      id: "security",
-      label: t("venueSettings.tabs.security") || "Security",
-      icon: Lock,
-    },
-    {
-      id: "venue",
-      label: t("venueSettings.tabs.venue") || "Venue",
-      icon: Building2,
-    },
-    {
-      id: "amenities",
-      label: t("venueSettings.tabs.amenities") || "Amenities",
-      icon: CheckCircle2,
-    },
-    {
-      id: "spaces",
-      label: t("venueSettings.tabs.spaces") || "Spaces",
-      icon: Grid3x3,
-    },
-  ];
-
-  const displayTabs = tabs.length > 0 ? tabs : defaultTabs;
-
   return (
-    <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-white"}`}>
+    // ✅ Main Wrapper: Apply Dark Background Here
+    <div
+      className={`min-h-screen transition-colors duration-300 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}
+    >
+      {/* Header Section */}
       <div
-        className={`${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"} border-b sticky top-0 z-20`}
+        className={`border-b sticky top-0 z-20 transition-colors duration-300 ${
+          darkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
+        }`}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
+          {/* Title Area */}
+          <div className="py-8">
             <h1
               className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}
             >
@@ -85,20 +63,25 @@ const SettingsLayout = ({
             </p>
           </div>
 
-          <div className="flex space-x-1 overflow-x-auto scrollbar-hide -mb-px">
-            {displayTabs.map((tab) => (
-              <TabButton
-                key={tab.id}
-                active={activeTab === tab.id}
-                icon={tab.icon}
-                label={tab.label}
-                onClick={() => setActiveTab(tab.id)}
-              />
-            ))}
-          </div>
+          {/* Navigation Tabs */}
+          {tabs.length > 0 && (
+            <div className="flex space-x-1 overflow-x-auto scrollbar-hide -mb-px">
+              {tabs.map((tab) => (
+                <TabButton
+                  key={tab.id}
+                  active={activeTab === tab.id}
+                  icon={tab.icon}
+                  label={tab.label}
+                  onClick={() => setActiveTab(tab.id)}
+                  darkMode={darkMode}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Main Content Area */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </div>

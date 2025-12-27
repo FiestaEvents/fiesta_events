@@ -58,6 +58,11 @@ const PartnerForm = lazy(() => import("../pages/partners/PartnerForm.jsx"));
 const PortfolioList = lazy(() => import("../pages/portfolio/PortfolioList.jsx"));
 const PortfolioForm = lazy(() => import("../pages/portfolio/PortfolioForm.jsx"));
 const PortfolioView = lazy(() => import("../pages/portfolio/PortfolioView.jsx"));
+
+// fleet
+const FleetManagement = lazy(() => import("../pages/fleet/FleetManagement.jsx"));
+
+
 // Finance Suite
 const Finance = lazy(() => import("../pages/finance/Finance.jsx"));
 const FinanceReports = lazy(() => import("../pages/finance/Reports.jsx"));
@@ -101,7 +106,7 @@ const SupplyDetail = lazy(() => import("../pages/supplies/SupplyDetail.jsx"));
 const SupplyForm = lazy(() => import("../pages/supplies/SupplyForm.jsx"));
 
 // Settings
-const VenueSettings = lazy(() => import("../pages/settings/VenueSettings.jsx"));
+const BusinessSettings = lazy(() => import("../pages/settings/BusinessSettings.jsx"));
 const ProfileSettings = lazy(() => import("../pages/settings/ProfileSettings.jsx")); 
 const DocumentsSettings = lazy(() => import("../pages/settings/DocumentsSettings.jsx"));
 
@@ -163,11 +168,11 @@ const AppRoutes = () => {
 
             {/* --- PORTFOLIO MODULE --- */}
             <Route element={<PermissionRoute permission="portfolio.read.all" />}>
-  <Route path="/portfolio" element={<PageTransition><PortfolioList /></PageTransition>} />
-  <Route path="/portfolio/new" element={<PageTransition><PortfolioForm /></PageTransition>} />
-  <Route path="/portfolio/:id" element={<PageTransition><PortfolioView /></PageTransition>} />
-  <Route path="/portfolio/:id/edit" element={<PageTransition><PortfolioForm /></PageTransition>} />
-</Route>
+              <Route path="/portfolio" element={<PageTransition><PortfolioList /></PageTransition>} />
+              <Route path="/portfolio/new" element={<PageTransition><PortfolioForm /></PageTransition>} />
+              <Route path="/portfolio/:id" element={<PageTransition><PortfolioView /></PageTransition>} />
+              <Route path="/portfolio/:id/edit" element={<PageTransition><PortfolioForm /></PageTransition>} />
+            </Route>
   
             {/* --- CLIENTS MODULE --- */}
             <Route element={<PermissionRoute permission="clients.read.all" />}>
@@ -258,8 +263,9 @@ const AppRoutes = () => {
 
             {/* --- BUSINESS SETTINGS (Generic) --- */}
             <Route element={<PermissionRoute permission="business.update" />}>
-              <Route path="/settings" element={<PageTransition><VenueSettings /></PageTransition>} />
+              <Route path="/settings" element={<PageTransition><BusinessSettings /></PageTransition>} />
               <Route path="/documents" element={<PageTransition><DocumentsSettings /></PageTransition>} />
+              <Route path="/fleet" element={<PageTransition><FleetManagement /></PageTransition>} />
             </Route>
 
           </Route>

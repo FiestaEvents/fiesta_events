@@ -569,137 +569,92 @@
     }
   },
   "eventList": {
-    "loading": {
-      "initial": "Chargement des evenements..."
-    },
-    "title": "Calendrier des Événements",
-    "subtitle": "Voir et gérer les événements de votre salle",
-    "showingEvents": "Affichage de {{count}} sur {{total}} événements",
-    "viewMode": {
-      "list": "Liste",
-      "calendar": "Calendrier"
-    },
-    "actions": {
-      "advancedFilters": "Filtres Avancés",
-      "reset": "Réinitialiser les Filtres",
-      "applyFilters": "Appliquer les Filtres",
-      "createEvent": "Créer un Événement",
-      "createFirstEvent": "Créer le Premier Événement",
-      "createEventOnDate": "Créer un Événement à Cette Date",
-      "retry": "Réessayer",
-      "clear": "Effacer",
-      "clearAllFilters": "Effacer Tous les Filtres",
-      "today": "Aujourd'hui",
-      "viewEvent": "Voir l'Événement",
-      "editEvent": "Modifier l'Événement",
-      "deleteEvent": "Supprimer l'Événement",
-      "cancel": "Annuler"
-    },
-    "error": {
-      "title": "Erreur de Chargement des Événements",
-      "message": "Impossible de charger les événements. Veuillez réessayer."
-    },
-    "search": {
-      "placeholder": "Rechercher des événements par titre, description ou lieu...",
-      "activeFilters": "Filtres actifs :",
-      "search": "Rechercher",
-      "status": "Statut",
-      "type": "Type",
-      "date": "Date"
-    },
-    "filters": {
-      "filterOptions": "Options de Filtrage",
-      "startDate": "Date de début",
-      "endDate": "Date de fin",
-      "allStatus": "Tous les Statuts",
-      "draft": "Brouillon",
-      "pending": "En Attente",
-      "confirmed": "Confirmé",
-      "inProgress": "En Cours",
-      "completed": "Terminé",
-      "cancelled": "Annulé",
-      "allTypes": "Tous les Types",
-      "wedding": "Mariage",
-      "corporate": "Entreprise",
-      "birthday": "Anniversaire",
-      "conference": "Conférence",
-      "party": "Fête",
-      "social": "Social",
-      "other": "Autre",
-      "allDates": "Toutes les Dates",
-      "today": "Aujourd'hui",
-      "tomorrow": "Demain",
-      "thisWeek": "Cette Semaine",
-      "nextWeek": "Semaine Prochaine",
-      "thisMonth": "Ce Mois",
-      "pastEvents": "Événements Passés",
-      "upcoming": "À Venir"
-    },
-    "table": {
-      "eventTitle": "Titre de l'Événement",
-      "client": "Client",
-      "dateTime": "Date et Heure",
-      "type": "Type",
-      "status": "Statut",
-      "guests": "Invités",
-      "actions": "Actions",
-      "unknownClient": "Client Inconnu",
-      "loading": "Chargement...",
-      "noEvents": "Aucun événement trouvé"
-    },
-    "emptyState": {
-      "noEvents": "Aucun événement",
-      "noEventsMessage": "Commencez par créer votre premier événement.",
-      "noResults": "Aucun événement trouvé",
-      "noResultsMessage": "Aucun événement ne correspond à vos critères de recherche ou de filtre actuels."
-    },
-    "calendar": {
-      "weekDays": {
-        "sun": "Dim",
-        "mon": "Lun",
-        "tue": "Mar",
-        "wed": "Mer",
-        "thu": "Jeu",
-        "fri": "Ven",
-        "sat": "Sam"
-      },
-      "eventTypes": "Types d'Événements",
-      "events": "événements",
-      "event": "événement",
-      "thisMonth": "Ce Mois",
-      "totalEvents": "Total Événements",
-      "upcoming": "À Venir",
-      "selected": "Sélectionné",
-      "eventsThisMonth": "événements ce mois",
-      "moreEvents": "+{{count}} de plus"
-    },
-    "dateEventsModal": {
-      "noEventsScheduled": "Aucun événement prévu",
-      "noEventsMessage": "Il n'y a aucun événement prévu pour cette date.",
-      "client": "Client",
-      "guests": "invités"
-    },
-    "deleteModal": {
-      "title": "Confirmer la Suppression",
-      "deleteEvent": "Supprimer l'Événement",
-      "confirmMessage": "Êtes-vous sûr de vouloir supprimer",
-      "warningMessage": "Cette action est irréversible et toutes les données associées seront définitivement supprimées."
-    },
-    "notifications": {
-
-      "filtersApplied": "Filtres appliqués",
-      "filtersCleared": "Filtres effacés",
-      "retrying": "Nouvelle tentative de chargement des événements...",
-      "navigatedToToday": "Navigation vers aujourd'hui",
-      "navigatedToYear": "Navigation vers {{year}}",
-      "filteringBy": "Filtrage par événements {{type}}",
-      "eventUpdated": "Événement mis à jour avec succès",
-      "eventCreated": "Événement créé avec succès",
-      "eventDeleted": "{{name}} supprimé avec succès",
-      "deletingEvent": "Suppression de {{name}}...",
-      "deleteError": "Échec de la suppression de {{name}}"
-    }
+  "title": "Calendrier des Événements",
+  "subtitle": "Consultez et gérez les événements de votre établissement",
+  "showingEvents": "Affichage de {{count}} sur {{total}} événements",
+  "viewMode": {
+    "list": "Liste",
+    "calendar": "Calendrier",
+    "month": "Mois",
+    "week": "Semaine",
+    "day": "Jour",
+    "listWeek": "Agenda"
   },
+  "actions": {
+    "advancedFilters": "Filtres Avancés",
+    "reset": "Réinitialiser",
+    "applyFilters": "Appliquer",
+    "createEvent": "Créer un Événement",
+    "createFirstEvent": "Créer le Premier Événement",
+    "createEventOnDate": "Créer un Événement à cette date",
+    "retry": "Réessayer",
+    "clear": "Effacer",
+    "clearAllFilters": "Effacer tous les filtres",
+    "today": "Aujourd'hui",
+    "viewEvent": "Voir l'Événement",
+    "editEvent": "Modifier",
+    "deleteEvent": "Supprimer",
+    "cancel": "Annuler"
+  },
+  "error": {
+    "title": "Erreur de Chargement",
+    "message": "Impossible de charger les événements. Veuillez réessayer."
+  },
+  "search": {
+    "placeholder": "Rechercher par titre...",
+    "activeFilters": "Filtres actifs :"
+  },
+  "filters": {
+    "filterOptions": "Options de Filtrage",
+    "startDate": "Date de Début",
+    "endDate": "Date de Fin",
+    "allStatus": "Tous les Statuts",
+    "draft": "Brouillon",
+    "pending": "En Attente",
+    "confirmed": "Confirmé",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "allTypes": "Tous les Types",
+    "wedding": "Mariage",
+    "corporate": "Entreprise",
+    "birthday": "Anniversaire",
+    "conference": "Conférence",
+    "party": "Soirée",
+    "social": "Social",
+    "other": "Autre"
+  },
+  "table": {
+    "eventTitle": "Titre",
+    "client": "Client",
+    "dateTime": "Date et Heure",
+    "type": "Type",
+    "status": "Statut",
+    "actions": "Actions",
+    "unknownClient": "Client Inconnu"
+  },
+  "emptyState": {
+    "noEvents": "Aucun événement",
+    "noEventsMessage": "Commencez par créer votre premier événement.",
+    "noResults": "Aucun résultat",
+    "noResultsMessage": "Aucun événement ne correspond à vos critères."
+  },
+  "calendar": {
+    "moreEvents": "+{{count}} autres"
+  },
+  "deleteModal": {
+    "title": "Confirmer la Suppression",
+    "confirmMessage": "Êtes-vous sûr de vouloir supprimer",
+    "warningMessage": "Cette action est irréversible et toutes les données associées seront définitivement supprimées."
+  },
+  "notifications": {
+    "rescheduled": "Événement reprogrammé avec succès",
+    "updateError": "Échec de la mise à jour de l'événement",
+    "filtersCleared": "Filtres effacés",
+    "eventDeleted": "Événement supprimé avec succès",
+    "deletingEvent": "Suppression de l'événement...",
+    "deleteError": "Échec de la suppression de l'événement"
+  }
+},
   "eventDetailModal": {
     "close": "Fermer",
     "client": "Client",
@@ -894,6 +849,8 @@
   },
   "eventForm": {
     "header": {
+      "venueEvent": "Événement de Lieu",
+      "creativeProject": "Projet Créatif",
       "createNewEvent": "Créer un Nouvel Événement",
       "editEvent": "Modifier l'Événement",
       "stepProgress": "Étape {{current}} sur {{total}} : {{title}}",
@@ -1120,7 +1077,8 @@
       }
     },
     "step3": {
-      "title": "Configuration du lieu",
+    "Schedule":"Planning",
+    "title": "Configuration du lieu",
     "loading": "Chargement des salles...",
     "placeholder": "Choisir une salle...",
     "selectedDetails": "Détails de l'espace sélectionné",
@@ -2724,9 +2682,48 @@
     }
   },
     "profileSettings": {
-    "title": "Paramètres du Profil",
-    "subtitle": "Gérez les informations de votre compte et les préférences"
+  "title": "Paramètres du Profil",
+  "subtitle": "Gérez vos informations personnelles et les paramètres de votre compte",
+  "tabs": {
+    "personal": "Infos Personnelles",
+    "security": "Sécurité"
+  },
+  "personal": {
+    "title": "Informations Personnelles",
+    "fields": {
+      "fullName": "Nom Complet",
+      "phone": "Numéro de Téléphone",
+      "email": "Adresse Email",
+      "avatar": "URL de l'Avatar"
     },
+    "avatarHint": "Besoin d'un avatar ? Essayez"
+  },
+  "security": {
+    "title": "Paramètres de Sécurité",
+    "description": "Mettez à jour votre mot de passe pour sécuriser votre compte.",
+    "fields": {
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe"
+    },
+    "updatePassword": "Mettre à jour le mot de passe"
+  },
+  "common": {
+    "saveChanges": "Enregistrer les modifications"
+  },
+  "validation": {
+    "passwordMismatch": "Les mots de passe ne correspondent pas"
+  },
+  "notifications": {
+    "profileUpdated": "Profil mis à jour avec succès ! Actualisation...",
+    "passwordChanged": "Mot de passe modifié avec succès"
+  },
+  "errors": {
+    "loadFailed": "Échec du chargement du profil",
+    "updateFailed": "Échec de la mise à jour du profil",
+    "passwordFailed": "Échec de la modification du mot de passe"
+  }
+},
      "roles": {
     "title": "Rôles et Permissions",
     "subtitle": "Gérer les rôles et leurs niveaux d'accès",
@@ -2908,9 +2905,43 @@
       "updateError": "Échec de la mise à jour"
     }
   },
+  "fleet": {
+  "title": "Gestion de la Flotte",
+  "subtitle": "Gérez vos véhicules et vos actifs de transport",
+  "searchPlaceholder": "Rechercher par modèle ou nom...",
+  "emptyState": "Aucun véhicule trouvé. Ajoutez-en un pour commencer !",
+  "actions": {
+    "addVehicle": "Ajouter un Véhicule",
+    "confirmDelete": "Supprimer le Véhicule",
+    "deleteMessage": "Êtes-vous sûr de vouloir retirer ce véhicule de votre flotte ? Cette action est irréversible."
+  },
+  "modal": {
+    "addTitle": "Ajouter un Véhicule",
+    "editTitle": "Modifier le Véhicule",
+    "nameLabel": "Nom du Véhicule / Modèle",
+    "seatsLabel": "Places / Capacité",
+    "priceLabel": "Tarif Standard (TND)",
+    "descLabel": "Description / Plaque d'immatriculation"
+  },
+  "notifications": {
+    "created": "Véhicule ajouté avec succès",
+    "updated": "Véhicule mis à jour avec succès",
+    "deleted": "Véhicule supprimé avec succès"
+  },
+  "errors": {
+    "loadFailed": "Échec du chargement des données de la flotte",
+    "saveFailed": "Échec de l'enregistrement du véhicule",
+    "deleteFailed": "Échec de la suppression du véhicule"
+  }
+},
   "common": {
+    "schedule": "Planning",
+    "jobs": "Missions",
+    "orders": "Commandes",
+    "vehicles": "Véhicules",
+    "equipment": "Équipement",
+    "kitchen": "Cuisine",
     "portfolio":"Portfolio",
-    "jobs":"Affairs",
     "added": "Ajouté",
     "copied" : "Copié !",
     "ProfileSettings": "Paramètres du Profil",
@@ -2918,7 +2949,6 @@
     "roles":"Rôles",
     "client": "Client",
     "partner": "Partenaire",
-    "equipment": "Fournitures",
     "supplies": "Fournitures",
     "add": "Ajouter",
     "searchPlaceholder": "Rechercher (⌘K)",
@@ -3666,192 +3696,75 @@
       "paymentInstructions": "Instructions de paiement"
     }
   },
-  "venueSettings": {
-    "title": "Paramètres",
-    "subtitle": "Gérez votre profil, les détails du lieu et la sécurité",
-    "common": {
-      "unsavedChanges": "Modifications non enregistrées",
-      "loading": "Chargement...",
-      "saveChanges": "Enregistrer",
-      "saving": "Enregistrement...",
-      "saved": "Enregistré",
-      "cancel": "Annuler",
-      "add": "Ajouter",
-      "clearAll": "Tout effacer",
-      "tryAgain": "Réessayer",
-      "active": "Actif",
-      "inactive": "Inactif",
-      "open": "Ouvert",
-      "closed": "Fermé"
-    },
-    "tabs": {
-      "personal": "Personnel",
-      "security": "Sécurité",
-      "venue": "Infos Lieu",
-      "amenities": "Commodités",
-      "spaces": "Espaces"
-    },
-    "errors": {
-      "loadFailed": "Échec du chargement des données",
-      "saveFailed": "Échec de l'enregistrement",
-      "deleteFailed": "Échec de la suppression"
-    },
-    "validation": {
-      "required": "Ce champ est requis",
-      "minLength": "Le mot de passe est trop court",
-      "passwordMismatch": "Les mots de passe ne correspondent pas",
-      "emailInvalid": "Adresse e-mail invalide",
-      "fixErrors": "Veuillez corriger les erreurs avant d'enregistrer"
-    },
-    "notifications": {
-      "profileUpdated": "Profil mis à jour avec succès",
-      "passwordChanged": "Mot de passe modifié avec succès",
-      "venueUpdated": "Détails du lieu mis à jour avec succès"
-    },
-    "personal": {
-      "title": "Informations personnelles",
-      "description": "Mettez à jour vos coordonnées personnelles.",
-      "profilePicture": "Photo de profil",
-      "venueOwner": "Propriétaire",
-      "fields": {
-        "fullName": "Nom complet",
-        "phone": "Téléphone",
-        "email": "Adresse e-mail",
-        "avatar": "URL de l'avatar"
-      },
-      "placeholders": {
-        "fullName": "ex: Jean Dupont",
-        "phone": "ex: +33 6 12 34 56 78",
-        "avatar": "https://..."
-      }
-    },
-    "security": {
-      "title": "Paramètres de sécurité",
-      "description": "Gérez votre mot de passe et la sécurité du compte.",
-      "updatePassword": "Mettre à jour le mot de passe",
-      "fields": {
-        "currentPassword": "Mot de passe actuel",
-        "newPassword": "Nouveau mot de passe",
-        "confirmPassword": "Confirmer le mot de passe"
-      },
-      "placeholders": {
-        "currentPassword": "Entrez le mot de passe actuel",
-        "newPassword": "Entrez le nouveau mot de passe",
-        "confirmPassword": "Retapez le nouveau mot de passe"
-      },
-      "strength": {
-        "tooShort": "Trop court",
-        "weak": "Faible",
-        "fair": "Moyen",
-        "good": "Bon",
-        "strong": "Fort"
-      },
-      "requirements": {
-        "title": "Exigences du mot de passe :",
-        "minLength": "Au moins 6 caractères",
-        "uppercase": "Au moins une lettre majuscule",
-        "number": "Au moins un chiffre"
-      }
-    },
-    "venue": {
-      "basicInfo": {
-        "title": "Détails du lieu",
-        "description": "Informations générales visibles par les clients."
-      },
-      "location": {
-        "title": "Emplacement",
-        "description": "Où se trouve votre lieu ?"
-      },
-      "contact": {
-        "title": "Contact",
-        "description": "Comment les clients peuvent-ils vous joindre ?"
-      },
-      "fields": {
-        "name": "Nom du lieu",
-        "description": "Description",
-        "street": "Adresse",
-        "city": "Ville",
-        "state": "Région",
-        "zipCode": "Code Postal",
-        "country": "Pays",
-        "phone": "Tél. du lieu",
-        "email": "Email du lieu"
-      },
-      "placeholders": {
-        "name": "ex: Salle des Fêtes",
-        "description": "Décrivez votre lieu...",
-        "street": "123 Rue Principale",
-        "city": "Ville",
-        "state": "Région",
-        "zipCode": "75001",
-        "country": "France",
-        "phone": "+33 1 23 45 67 89",
-        "email": "contact@salle.com"
-      }
-    },
-    "amenities": {
-      "title": "Commodités",
-      "subtitle": "Commodités et Services",
-      "description": "Sélectionnez les services offerts par votre lieu.",
-      "selected": "Services sélectionnés",
-      "clickToAdd": "Cliquez sur les éléments pour les ajouter",
-      "quickAdd": "Ajout rapide",
-      "addCustom": "Ajouter personnalisé",
-      "placeholders": {
-        "custom": "ex: Service Voiturier"
-      },
-      "operatingHours": {
-        "title": "Heures d'ouverture",
-        "description": "Définissez les heures d'ouverture et de fermeture.",
-        "allDays": "Tous les jours",
-        "weekdays": "Semaine",
-        "weekends": "Week-end",
-        "days": {
-          "monday": "Lundi",
-          "tuesday": "Mardi",
-          "wednesday": "Mercredi",
-          "thursday": "Jeudi",
-          "friday": "Vendredi",
-          "saturday": "Samedi",
-          "sunday": "Dimanche"
-        }
-      }
-    },
-    "spaces": {
-      "capacity": "Capacité",
-      "basePrice": "Prix de base",
-      "addNew": "Ajouter un espace",
-      "addDescription": "Créez un nouvel espace réservable",
-      "emptyTitle": "Aucun espace ajouté",
-      "emptyDescription": "Commencez par ajouter votre premier espace (ex: Salle principale, Jardin).",
-      "addFirst": "Ajouter votre premier espace",
-      "edit": "Modifier l'espace",
-      "editDescription": "Mettre à jour les détails de l'espace",
-      "create": "Créer l'espace",
-      "availableForBooking": "Disponible à la réservation",
-      "availableDescription": "Les clients peuvent voir et demander cet espace",
-      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet espace ?",
-      "deleted": "Espace supprimé avec succès",
-      "created": "Espace créé avec succès",
-      "updated": "Espace mis à jour avec succès",
-      "fields": {
-        "name": "Nom de l'espace",
-        "basePrice": "Prix de base",
-        "minCapacity": "Cap. Min",
-        "maxCapacity": "Cap. Max",
-        "description": "Description"
-      },
-      "placeholders": {
-        "name": "ex: Salle Principale",
-        "basePrice": "0.00",
-        "description": "Décrivez l'espace..."
-      },
-      "validation": {
-        "capacity": "Veuillez définir la capacité min et max",
-        "price": "Veuillez définir un prix de base"
-      }
+  "settings": {
+  "title": "Paramètres de l'entreprise",
+  "subtitle": "Gérez la configuration de votre {{type}}",
+  "tabs": {
+    "general": "Info Générale",
+    "location": "Localisation",
+    "contact": "Contact",
+    "spaces": "Espaces",
+    "amenities": "Équipements",
+    "service": "Config Service"
+  },
+  "general": {
+    "title": "Informations de base",
+    "subtitle": "Mettez à jour votre profil public"
+  },
+  "location": { "title": "Localisation" },
+  "contact": { "title": "Coordonnées" },
+  "service": {
+    "title": "Configuration du Service",
+    "subtitle": "Définissez votre mode de fonctionnement et de facturation.",
+    "pricingModel": "Modèle de Prix",
+    "radius": "Rayon de Service (KM)",
+    "travelFee": "Frais de Déplacement (par KM)",
+    "models": {
+      "fixed": "Tarif Fixe",
+      "hourly": "Tarif Horaire",
+      "package": "Par Forfait"
     }
   },
+  "spaces": {
+    "addNew": "Ajouter un Espace",
+    "edit": "Modifier l'Espace",
+    "create": "Créer un Espace",
+    "guests": "Invités",
+    "updated": "Espace mis à jour",
+    "created": "Espace créé",
+    "deleted": "Espace supprimé",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet espace ?",
+    "fields": {
+      "name": "Nom",
+      "minCap": "Cap Min",
+      "maxCap": "Cap Max",
+      "basePrice": "Prix de Base"
+    }
+  },
+  "fields": {
+    "name": "Nom de l'entreprise",
+    "description": "Description",
+    "address": "Adresse",
+    "city": "Ville",
+    "zip": "Code Postal",
+    "country": "Pays",
+    "phone": "Téléphone",
+    "email": "Email"
+  },
+  "common": {
+    "saveChanges": "Enregistrer",
+    "unsavedChanges": "Vous avez des modifications non enregistrées",
+    "cancel": "Annuler",
+    "save": "Sauvegarder"
+  },
+  "notifications": {
+    "updated": "Paramètres mis à jour avec succès"
+  },
+  "errors": {
+    "loadFailed": "Échec du chargement des paramètres",
+    "saveFailed": "Échec de l'enregistrement"
+  }
+},
   "notFound": {
     "title": "404",
     "message": "Page non trouvée",

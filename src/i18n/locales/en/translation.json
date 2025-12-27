@@ -213,11 +213,84 @@
     "expenseSubtitle": "Total Expenses",
     "lowStockAlerts": "Low Stock Alerts"
   },
-    "profileSettings": {
-    "title": "Profile Settings",
-    "subtitle": "Manage your personal information and account settings"
+"profileSettings": {
+  "title": "Profile Settings",
+  "subtitle": "Manage your personal information and account settings",
+  "tabs": {
+    "personal": "Personal Info",
+    "security": "Security"
+  },
+  "personal": {
+    "title": "Personal Information",
+    "fields": {
+      "fullName": "Full Name",
+      "phone": "Phone Number",
+      "email": "Email Address",
+      "avatar": "Avatar URL"
+    },
+    "avatarHint": "Need an avatar? Try"
+  },
+  "security": {
+    "title": "Security Settings",
+    "description": "Update your password to keep your account secure.",
+    "fields": {
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password"
+    },
+    "updatePassword": "Update Password"
   },
   "common": {
+    "saveChanges": "Save Changes"
+  },
+  "validation": {
+    "passwordMismatch": "Passwords do not match"
+  },
+  "notifications": {
+    "profileUpdated": "Profile updated successfully! Refreshing...",
+    "passwordChanged": "Password changed successfully"
+  },
+  "errors": {
+    "loadFailed": "Failed to load profile",
+    "updateFailed": "Failed to update profile",
+    "passwordFailed": "Failed to change password"
+  }
+},
+"fleet": {
+  "title": "Fleet Management",
+  "subtitle": "Manage your vehicles and transport assets",
+  "searchPlaceholder": "Search by model or name...",
+  "emptyState": "No vehicles found. Add one to get started!",
+  "actions": {
+    "addVehicle": "Add Vehicle",
+    "confirmDelete": "Remove Vehicle",
+    "deleteMessage": "Are you sure you want to remove this vehicle from your fleet? This action cannot be undone."
+  },
+  "modal": {
+    "addTitle": "Add Vehicle",
+    "editTitle": "Edit Vehicle",
+    "nameLabel": "Vehicle Name / Model",
+    "seatsLabel": "Seats / Capacity",
+    "priceLabel": "Standard Rate (TND)",
+    "descLabel": "Description / License Plate"
+  },
+  "notifications": {
+    "created": "Vehicle added successfully",
+    "updated": "Vehicle updated successfully",
+    "deleted": "Vehicle removed successfully"
+  },
+  "errors": {
+    "loadFailed": "Failed to load fleet data",
+    "saveFailed": "Failed to save vehicle details",
+    "deleteFailed": "Failed to delete vehicle"
+  }
+},
+  "common": {
+  "schedule": "Schedule",    
+  "orders": "Orders",   
+  "vehicles": "Fleet",   
+  "equipment": "Equipment", 
+  "kitchen": "Kitchen",     
     "portfolio":"Portfolio",
     "jobs":"Jobs",
     "added":"added",
@@ -786,13 +859,17 @@
       "createSuccess": "Event created successfully!"
     }
   },
-  "eventList": {
+   "eventList": {
     "title": "Event Calendar",
     "subtitle": "View and manage your venue events",
     "showingEvents": "Showing {{count}} of {{total}} events",
     "viewMode": {
       "list": "List",
-      "calendar": "Calendar"
+      "calendar": "Calendar",
+      "month": "Month",
+      "week": "Week",
+      "day": "Day",
+      "listWeek": "Agenda"
     },
     "actions": {
       "advancedFilters": "Advanced Filters",
@@ -815,20 +892,17 @@
       "message": "Unable to load events. Please try again."
     },
     "search": {
-      "placeholder": "Search events by title, description, or location...",
-      "activeFilters": "Active filters:",
-      "search": "Search",
-      "status": "Status",
-      "type": "Type",
-      "date": "Date"
+      "placeholder": "Search events by title...",
+      "activeFilters": "Active filters:"
     },
     "filters": {
       "filterOptions": "Filter Options",
+      "startDate": "Start Date",
+      "endDate": "End Date",
       "allStatus": "All Statuses",
       "draft": "Draft",
       "pending": "Pending",
       "confirmed": "Confirmed",
-      "inProgress": "In Progress",
       "completed": "Completed",
       "cancelled": "Cancelled",
       "allTypes": "All Types",
@@ -838,15 +912,7 @@
       "conference": "Conference",
       "party": "Party",
       "social": "Social",
-      "other": "Other",
-      "allDates": "All Dates",
-      "today": "Today",
-      "tomorrow": "Tomorrow",
-      "thisWeek": "This Week",
-      "nextWeek": "Next Week",
-      "thisMonth": "This Month",
-      "pastEvents": "Past Events",
-      "upcoming": "Upcoming"
+      "other": "Other"
     },
     "table": {
       "eventTitle": "Event Title",
@@ -854,11 +920,8 @@
       "dateTime": "Date and Time",
       "type": "Type",
       "status": "Status",
-      "guests": "Guests",
       "actions": "Actions",
-      "unknownClient": "Unknown Client",
-      "loading": "Loading...",
-      "noEvents": "No events found"
+      "unknownClient": "Unknown Client"
     },
     "emptyState": {
       "noEvents": "No events",
@@ -867,49 +930,20 @@
       "noResultsMessage": "No events match your current search or filter criteria."
     },
     "calendar": {
-      "weekDays": {
-        "sun": "Sun",
-        "mon": "Mon",
-        "tue": "Tue",
-        "wed": "Wed",
-        "thu": "Thu",
-        "fri": "Fri",
-        "sat": "Sat"
-      },
-      "eventTypes": "Event Types",
-      "events": "events",
-      "event": "event",
-      "thisMonth": "This Month",
-      "totalEvents": "Total Events",
-      "upcoming": "Upcoming",
-      "selected": "Selected",
-      "eventsThisMonth": "events this month",
       "moreEvents": "+{{count}} more"
-    },
-    "dateEventsModal": {
-      "noEventsScheduled": "No events scheduled",
-      "noEventsMessage": "There are no events scheduled for this date.",
-      "client": "Client",
-      "guests": "guests"
     },
     "deleteModal": {
       "title": "Confirm Deletion",
-      "deleteEvent": "Delete Event",
       "confirmMessage": "Are you sure you want to delete",
       "warningMessage": "This action is irreversible and all associated data will be permanently deleted."
     },
     "notifications": {
-      "filtersApplied": "Filters applied",
+      "rescheduled": "Event rescheduled successfully",
+      "updateError": "Failed to update event",
       "filtersCleared": "Filters cleared",
-      "retrying": "Retrying to load events...",
-      "navigatedToToday": "Navigated to today",
-      "navigatedToYear": "Navigated to {{year}}",
-      "filteringBy": "Filtering by {{type}} events",
-      "eventUpdated": "Event updated successfully",
-      "eventCreated": "Event created successfully",
-      "eventDeleted": "{{name}} deleted successfully",
-      "deletingEvent": "Deleting {{name}}...",
-      "deleteError": "Failed to delete {{name}}"
+      "eventDeleted": "Event deleted successfully",
+      "deletingEvent": "Deleting event...",
+      "deleteError": "Failed to delete event"
     }
   },
   "eventDetailModal": {
@@ -1106,6 +1140,8 @@
   },
   "eventForm": {
     "header": {
+      "venueEvent": "Venue Event",
+      "creativeProject": "Creative Project",
       "stepIndicator": "Step {{current}} of {{total}}",
       "createNewEvent": "Create New Event",
       "editEvent": "Edit Event",
@@ -1126,7 +1162,8 @@
       "createEvent": "Create Event",
       "updateEvent": "Update Event",
       "quickSave ": "Quick Save",
-      "processing": "Processing..."
+      "processing": "Processing...",
+      "cancel":"Cancel"
     },
     "errors": {
     "collision": "Collision Detected: Time slot unavailable.",
@@ -1221,6 +1258,7 @@
       }
     },
     "step3": {
+    "Schedule":"Schedule",
     "title": "Venue Configuration",
     "loading": "Loading halls...",
     "placeholder": "Choose a hall...",
@@ -3281,192 +3319,75 @@
       "paymentInstructions": "Payment Instructions"
     }
   },
-  "venueSettings": {
-    "title": "Settings",
-    "subtitle": "Manage your profile, venue details, and security preferences",
-    "common": {
-      "unsavedChanges": "unsaved changes",
-      "loading": "Loading...",
-      "saveChanges": "Save Changes",
-      "saving": "Saving...",
-      "saved": "Saved",
-      "cancel": "Cancel",
-      "add": "Add",
-      "clearAll": "Clear All",
-      "tryAgain": "Try Again",
-      "active": "Active",
-      "inactive": "Inactive",
-      "open": "Open",
-      "closed": "Closed"
-    },
-    "tabs": {
-      "personal": "Personal",
-      "security": "Security",
-      "venue": "Venue Info",
-      "amenities": "Amenities",
-      "spaces": "Spaces"
-    },
-    "errors": {
-      "loadFailed": "Failed to load data",
-      "saveFailed": "Failed to save changes",
-      "deleteFailed": "Failed to delete item"
-    },
-    "validation": {
-      "required": "This field is required",
-      "minLength": "Password is too short",
-      "passwordMismatch": "Passwords do not match",
-      "emailInvalid": "Invalid email address",
-      "fixErrors": "Please fix the errors before saving"
-    },
-    "notifications": {
-      "profileUpdated": "Profile updated successfully",
-      "passwordChanged": "Password changed successfully",
-      "venueUpdated": "Venue details updated successfully"
-    },
-    "personal": {
-      "title": "Personal Information",
-      "description": "Update your personal details and contact information.",
-      "profilePicture": "Profile Picture",
-      "venueOwner": "Venue Owner",
-      "fields": {
-        "fullName": "Full Name",
-        "phone": "Phone Number",
-        "email": "Email Address",
-        "avatar": "Profile Picture URL"
-      },
-      "placeholders": {
-        "fullName": "e.g. John Doe",
-        "phone": "e.g. +1 234 567 890",
-        "avatar": "https://..."
-      }
-    },
-    "security": {
-      "title": "Security Settings",
-      "description": "Manage your password and account security.",
-      "updatePassword": "Update Password",
-      "fields": {
-        "currentPassword": "Current Password",
-        "newPassword": "New Password",
-        "confirmPassword": "Confirm New Password"
-      },
-      "placeholders": {
-        "currentPassword": "Enter current password",
-        "newPassword": "Enter new password",
-        "confirmPassword": "Re-enter new password"
-      },
-      "strength": {
-        "tooShort": "Too Short",
-        "weak": "Weak",
-        "fair": "Fair",
-        "good": "Good",
-        "strong": "Strong"
-      },
-      "requirements": {
-        "title": "Password Requirements:",
-        "minLength": "At least 6 characters long",
-        "uppercase": "Contains at least one uppercase letter",
-        "number": "Contains at least one number"
-      }
-    },
-    "venue": {
-      "basicInfo": {
-        "title": "Venue Details",
-        "description": "General information about your venue visible to clients."
-      },
-      "location": {
-        "title": "Location",
-        "description": "Where is your venue located?"
-      },
-      "contact": {
-        "title": "Contact Info",
-        "description": "How can clients reach the venue directly?"
-      },
-      "fields": {
-        "name": "Venue Name",
-        "description": "Description",
-        "street": "Street Address",
-        "city": "City",
-        "state": "State / Province",
-        "zipCode": "Zip / Postal Code",
-        "country": "Country",
-        "phone": "Venue Phone",
-        "email": "Venue Email"
-      },
-      "placeholders": {
-        "name": "e.g. Grand Plaza Hall",
-        "description": "Tell us about your venue...",
-        "street": "123 Main St",
-        "city": "City Name",
-        "state": "State Name",
-        "zipCode": "1000",
-        "country": "Country Name",
-        "phone": "+1 234 567 890",
-        "email": "contact@venue.com"
-      }
-    },
-    "amenities": {
-      "title": "Amenities",
-      "subtitle": "Amenities & Services",
-      "description": "Select the amenities your venue offers to clients.",
-      "selected": "Selected Amenities",
-      "clickToAdd": "Click items below to add them",
-      "quickAdd": "Quick Add",
-      "addCustom": "Add Custom",
-      "placeholders": {
-        "custom": "e.g. Valet Parking"
-      },
-      "operatingHours": {
-        "title": "Operating Hours",
-        "description": "Set your venue's standard opening and closing times.",
-        "allDays": "All Days",
-        "weekdays": "Weekdays Only",
-        "weekends": "Weekends Only",
-        "days": {
-          "monday": "Monday",
-          "tuesday": "Tuesday",
-          "wednesday": "Wednesday",
-          "thursday": "Thursday",
-          "friday": "Friday",
-          "saturday": "Saturday",
-          "sunday": "Sunday"
-        }
-      }
-    },
-    "spaces": {
-      "capacity": "Capacity",
-      "basePrice": "Base Price",
-      "addNew": "Add New Space",
-      "addDescription": "Create a new bookable space within your venue",
-      "emptyTitle": "No Spaces Added",
-      "emptyDescription": "Start by adding your first event space (e.g., Main Hall, Garden, Meeting Room).",
-      "addFirst": "Add Your First Space",
-      "edit": "Edit Space",
-      "editDescription": "Update space details",
-      "create": "Create Space",
-      "availableForBooking": "Available for booking",
-      "availableDescription": "Clients can view and request this space",
-      "confirmDelete": "Are you sure you want to delete this space?",
-      "deleted": "Space deleted successfully",
-      "created": "Space created successfully",
-      "updated": "Space updated successfully",
-      "fields": {
-        "name": "Space Name",
-        "basePrice": "Base Price",
-        "minCapacity": "Min Capacity",
-        "maxCapacity": "Max Capacity",
-        "description": "Description"
-      },
-      "placeholders": {
-        "name": "e.g. Main Ballroom",
-        "basePrice": "0.00",
-        "description": "Describe the space..."
-      },
-      "validation": {
-        "capacity": "Please set both minimum and maximum capacity",
-        "price": "Please set a base price"
-      }
+  "settings": {
+  "title": "Business Settings",
+  "subtitle": "Manage your {{type}} configuration",
+  "tabs": {
+    "general": "General Info",
+    "location": "Location",
+    "contact": "Contact",
+    "spaces": "Spaces",
+    "amenities": "Amenities",
+    "service": "Service Config"
+  },
+  "general": {
+    "title": "Basic Information",
+    "subtitle": "Update your public business profile"
+  },
+  "location": { "title": "Location" },
+  "contact": { "title": "Contact Info" },
+  "service": {
+    "title": "Service Configuration",
+    "subtitle": "Define how you operate and charge clients.",
+    "pricingModel": "Pricing Model",
+    "radius": "Service Radius (KM)",
+    "travelFee": "Travel Fee (per KM)",
+    "models": {
+      "fixed": "Fixed Rate",
+      "hourly": "Hourly Rate",
+      "package": "Package Based"
     }
   },
+  "spaces": {
+    "addNew": "Add New Space",
+    "edit": "Edit Space",
+    "create": "Create Space",
+    "guests": "Guests",
+    "updated": "Space updated",
+    "created": "Space created",
+    "deleted": "Space deleted",
+    "confirmDelete": "Are you sure you want to delete this space?",
+    "fields": {
+      "name": "Name",
+      "minCap": "Min Capacity",
+      "maxCap": "Max Capacity",
+      "basePrice": "Base Price"
+    }
+  },
+  "fields": {
+    "name": "Business Name",
+    "description": "Description",
+    "address": "Street Address",
+    "city": "City",
+    "zip": "Zip Code",
+    "country": "Country",
+    "phone": "Phone",
+    "email": "Email"
+  },
+  "common": {
+    "saveChanges": "Save Changes",
+    "unsavedChanges": "You have unsaved changes",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "notifications": {
+    "updated": "Settings updated successfully"
+  },
+  "errors": {
+    "loadFailed": "Failed to load settings",
+    "saveFailed": "Failed to save settings"
+  }
+},
   "notFound": {
     "title": "404",
     "message": "Page not found",

@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 import { UserPlus, User, Loader2 } from "lucide-react";
 import { clientService } from "../../../../api/index";
 import ClientSelector from "../components/ClientSelector";
-// We use native buttons for actions to prevent form submission conflicts
-// import Button from "../../../../components/common/Button"; 
+import Button from "../../../../components/common/Button"; 
 
 const Step2ClientSelection = () => {
   const { t } = useTranslation();

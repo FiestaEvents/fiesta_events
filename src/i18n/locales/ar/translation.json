@@ -460,131 +460,92 @@
     }
   },
   "eventList": {
-    "title": "تقويم الفعاليات",
-    "subtitle": "عرض وإدارة فعاليات قاعتك",
-    "showingEvents": "عرض {{count}} من {{total}} فعالية",
-    "viewMode": {
-      "list": "قائمة",
-      "calendar": "تقويم"
-    },
-    "actions": {
-      "advancedFilters": "فلاتر متقدمة",
-      "reset": "مسح الفلاتر",
-      "applyFilters": "تطبيق الفلاتر",
-      "createEvent": "إنشاء فعالية",
-      "createFirstEvent": "إنشاء أول فعالية",
-      "createEventOnDate": "إنشاء فعالية في هذا التاريخ",
-      "retry": "إعادة المحاولة",
-      "clear": "مسح",
-      "clearAllFilters": "مسح جميع الفلاتر",
-      "today": "اليوم",
-      "viewEvent": "عرض الفعالية",
-      "editEvent": "تعديل الفعالية",
-      "deleteEvent": "حذف الفعالية",
-      "cancel": "إلغاء"
-    },
-    "error": {
-      "title": "خطأ في تحميل الفعاليات",
-      "message": "فشل تحميل الفعاليات. يرجى المحاولة مرة أخرى."
-    },
-    "search": {
-      "placeholder": "البحث عن الفعاليات حسب العنوان أو الوصف أو الموقع...",
-      "activeFilters": "الفلاتر النشطة:",
-      "search": "بحث",
-      "status": "الحالة",
-      "type": "النوع",
-      "date": "التاريخ"
-    },
-    "filters": {
-      "filterOptions": "خيارات الفلترة",
-      "allStatus": "جميع الحالات",
-      "draft": "مسودة",
-      "pending": "قيد الانتظار",
-      "confirmed": "مؤكد",
-      "inProgress": "قيد التنفيذ",
-      "completed": "مكتمل",
-      "cancelled": "ملغى",
-      "allTypes": "جميع الأنواع",
-      "wedding": "زفاف",
-      "corporate": "شركات",
-      "birthday": "عيد ميلاد",
-      "conference": "مؤتمر",
-      "party": "حفلة",
-      "social": "اجتماعي",
-      "other": "أخرى",
-      "allDates": "جميع التواريخ",
-      "today": "اليوم",
-      "tomorrow": "غداً",
-      "thisWeek": "هذا الأسبوع",
-      "nextWeek": "الأسبوع القادم",
-      "thisMonth": "هذا الشهر",
-      "pastEvents": "فعاليات سابقة",
-      "upcoming": "قادمة"
-    },
-    "table": {
-      "eventTitle": "عنوان الفعالية",
-      "client": "العميل",
-      "dateTime": "التاريخ والوقت",
-      "type": "النوع",
-      "status": "الحالة",
-      "guests": "الضيوف",
-      "actions": "الإجراءات",
-      "unknownClient": "عميل غير معروف",
-      "loading": "جاري التحميل...",
-      "noEvents": "لم يتم العثور على فعاليات"
-    },
-    "emptyState": {
-      "noEvents": "لا توجد فعاليات بعد",
-      "noEventsMessage": "ابدأ بإنشاء فعاليتك الأولى.",
-      "noResults": "لم يتم العثور على فعاليات",
-      "noResultsMessage": "لا توجد فعاليات تطابق معايير البحث أو الفلتر الحالية."
-    },
-    "calendar": {
-      "weekDays": {
-        "sun": "الأحد",
-        "mon": "الاثنين",
-        "tue": "الثلاثاء",
-        "wed": "الأربعاء",
-        "thu": "الخميس",
-        "fri": "الجمعة",
-        "sat": "السبت"
-      },
-      "eventTypes": "أنواع الفعاليات",
-      "events": "فعاليات",
-      "event": "فعالية",
-      "thisMonth": "هذا الشهر",
-      "totalEvents": "إجمالي الفعاليات",
-      "upcoming": "قادمة",
-      "selected": "محدد",
-      "eventsThisMonth": "فعاليات هذا الشهر",
-      "moreEvents": "+{{count}} المزيد"
-    },
-    "dateEventsModal": {
-      "noEventsScheduled": "لا توجد فعاليات مجدولة",
-      "noEventsMessage": "لا توجد فعاليات مجدولة لهذا التاريخ.",
-      "client": "العميل",
-      "guests": "ضيوف"
-    },
-    "deleteModal": {
-      "title": "تأكيد الحذف",
-      "deleteEvent": "حذف الفعالية",
-      "confirmMessage": "هل أنت متأكد من رغبتك في حذف",
-      "warningMessage": "لا يمكن التراجع عن هذا الإجراء وسيتم حذف جميع البيانات المرتبطة نهائياً."
-    },
-    "notifications": {
-      "filtersApplied": "تم تطبيق الفلاتر",
-      "filtersCleared": "تم مسح الفلاتر",
-      "retrying": "إعادة محاولة تحميل الفعاليات...",
-      "navigatedToToday": "الانتقال إلى اليوم",
-      "navigatedToYear": "الانتقال إلى {{year}}",
-      "filteringBy": "الفلترة حسب فعاليات {{type}}",
-      "eventUpdated": "تم تحديث الفعالية بنجاح",
-      "eventCreated": "تم إنشاء الفعالية بنجاح",
-      "eventDeleted": "تم حذف {{name}} بنجاح",
-      "deletingEvent": "جاري حذف {{name}}...",
-      "deleteError": "فشل حذف {{name}}"
-    }
+  "title": "تقويم الفعاليات",
+  "subtitle": "عرض وإدارة فعاليات المكان الخاص بك",
+  "showingEvents": "عرض {{count}} من أصل {{total}} فعالية",
+  "viewMode": {
+    "list": "قائمة",
+    "calendar": "تقويم",
+    "month": "شهر",
+    "week": "أسبوع",
+    "day": "يوم",
+    "listWeek": "جدول"
   },
+  "actions": {
+    "advancedFilters": "تصفية متقدمة",
+    "reset": "إعادة تعيين",
+    "applyFilters": "تطبيق المرشحات",
+    "createEvent": "إنشاء فعالية",
+    "createFirstEvent": "إنشاء أول فعالية",
+    "createEventOnDate": "إنشاء فعالية في هذا التاريخ",
+    "retry": "إعادة المحاولة",
+    "clear": "مسح",
+    "clearAllFilters": "مسح جميع المرشحات",
+    "today": "اليوم",
+    "viewEvent": "عرض الفعالية",
+    "editEvent": "تعديل",
+    "deleteEvent": "حذف",
+    "cancel": "إلغاء"
+  },
+  "error": {
+    "title": "خطأ في تحميل الفعاليات",
+    "message": "تعذر تحميل الفعاليات. يرجى المحاولة مرة أخرى."
+  },
+  "search": {
+    "placeholder": "البحث عن الفعاليات بالعنوان...",
+    "activeFilters": "المرشحات النشطة:"
+  },
+  "filters": {
+    "filterOptions": "خيارات التصفية",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء",
+    "allStatus": "جميع الحالات",
+    "draft": "مسودة",
+    "pending": "قيد الانتظار",
+    "confirmed": "مؤكد",
+    "completed": "مكتمل",
+    "cancelled": "ملغى",
+    "allTypes": "جميع الأنواع",
+    "wedding": "حفل زفاف",
+    "corporate": "شركات",
+    "birthday": "عيد ميلاد",
+    "conference": "مؤتمر",
+    "party": "حفلة",
+    "social": "اجتماعي",
+    "other": "آخر"
+  },
+  "table": {
+    "eventTitle": "عنوان الفعالية",
+    "client": "العميل",
+    "dateTime": "التاريخ والوقت",
+    "type": "النوع",
+    "status": "الحالة",
+    "actions": "إجراءات",
+    "unknownClient": "عميل غير معروف"
+  },
+  "emptyState": {
+    "noEvents": "لا توجد فعاليات",
+    "noEventsMessage": "ابدأ بإنشاء أول فعالية لك.",
+    "noResults": "لا توجد نتائج",
+    "noResultsMessage": "لا توجد فعاليات تطابق معايير البحث الخاصة بك."
+  },
+  "calendar": {
+    "moreEvents": "+{{count}} المزيد"
+  },
+  "deleteModal": {
+    "title": "تأكيد الحذف",
+    "confirmMessage": "هل أنت متأكد أنك تريد حذف",
+    "warningMessage": "هذا الإجراء لا يمكن التراجع عنه وسيتم حذف جميع البيانات المرتبطة نهائيًا."
+  },
+  "notifications": {
+    "rescheduled": "تمت إعادة جدولة الفعالية بنجاح",
+    "updateError": "فشل تحديث الفعالية",
+    "filtersCleared": "تم مسح المرشحات",
+    "eventDeleted": "تم حذف الفعالية بنجاح",
+    "deletingEvent": "جارٍ حذف الفعالية...",
+    "deleteError": "فشل حذف الفعالية"
+  }
+},
   "eventDetailModal": {
     "close": "إغلاق",
     "client": "العميل",
@@ -779,6 +740,8 @@
   },
   "eventForm": {
     "header": {
+      "venueEvent": "فعالية المكان",
+      "creativeProject": "مشروع إبداعي",
       "editEvent": "تعديل الحدث",
       "createNewEvent": "إنشاء حدث جديد",
       "stepProgress": "الخطوة {{current}} من {{total}}: {{title}}",
@@ -1004,6 +967,7 @@
       }
     },
     "step3": {
+    "Schedule":"جدول",
     "title": "إعدادات المكان",
     "loading": "جارٍ تحميل القاعات...",
     "placeholder": "اختر قاعة...",
@@ -2704,7 +2668,41 @@
       "updateError": "فشل التحديث"
     }
   },
+  "fleet": {
+  "title": "إدارة الأسطول",
+  "subtitle": "إدارة المركبات وأصول النقل الخاصة بك",
+  "searchPlaceholder": "البحث حسب الطراز أو الاسم...",
+  "emptyState": "لم يتم العثور على مركبات. أضف واحدة للبدء!",
+  "actions": {
+    "addVehicle": "إضافة مركبة",
+    "confirmDelete": "إزالة المركبة",
+    "deleteMessage": "هل أنت متأكد أنك تريد إزالة هذه المركبة من الأسطول؟ لا يمكن التراجع عن هذا الإجراء."
+  },
+  "modal": {
+    "addTitle": "إضافة مركبة",
+    "editTitle": "تعديل المركبة",
+    "nameLabel": "اسم المركبة / الموديل",
+    "seatsLabel": "المقاعد / السعة",
+    "priceLabel": "التعريفة القياسية (د.ت)",
+    "descLabel": "الوصف / لوحة الترخيص"
+  },
+  "notifications": {
+    "created": "تمت إضافة المركبة بنجاح",
+    "updated": "تم تحديث بيانات المركبة بنجاح",
+    "deleted": "تم حذف المركبة بنجاح"
+  },
+  "errors": {
+    "loadFailed": "فشل تحميل بيانات الأسطول",
+    "saveFailed": "فشل حفظ بيانات المركبة",
+    "deleteFailed": "فشل حذف المركبة"
+  }
+},
   "common": {
+    "schedule": "الجدول",
+    "orders": "الطلبات",
+    "vehicles": "المركبات",
+    "equipment": "المعدات",
+    "kitchen": "المطبخ",
     "added": "تمت الإضافة",
     "copied" : "تم النسخ!",
     "ProfileSettings":"إعدادات الملف الشخصي",
@@ -3466,200 +3464,117 @@
     }
   },
   "profileSettings": {
-    "title": "إعدادات الملف الشخصي",
-    "subtitle": "إدارة ملفك الشخصي وتفضيلات الحساب",
-    "common": {
-      "loading": "جار التحميل...",
-      "saveChanges": "حفظ التغييرات",
-      "unsavedChanges": "تغييرات غير محفوظة",
-      "saving": "جار الحفظ..."}
+  "title": "إعدادات الملف الشخصي",
+  "subtitle": "إدارة معلوماتك الشخصية وإعدادات الحساب",
+  "tabs": {
+    "personal": "المعلومات الشخصية",
+    "security": "الأمان"
+  },
+  "personal": {
+    "title": "المعلومات الشخصية",
+    "fields": {
+      "fullName": "الاسم الكامل",
+      "phone": "رقم الهاتف",
+      "email": "البريد الإلكتروني",
+      "avatar": "رابط الصورة الرمزية"
     },
-  "venueSettings": {
-    "title": "الإعدادات",
-    "subtitle": "إدارة ملفك الشخصي وتفاصيل القاعة وإعدادات الأمان",
-    "common": {
-      "loading": "جار التحميل...",
-      "saveChanges": "حفظ التغييرات",
-      "unsavedChanges": "تغييرات غير محفوظة",
-      "saving": "جار الحفظ...",
-      "saved": "تم الحفظ",
-      "cancel": "إلغاء",
-      "add": "إضافة",
-      "clearAll": "مسح الكل",
-      "tryAgain": "حاول مرة أخرى",
-      "active": "نشط",
-      "inactive": "غير نشط",
-      "open": "مفتوح",
-      "closed": "مغلق"
+    "avatarHint": "هل تحتاج إلى صورة رمزية؟ جرب"
+  },
+  "security": {
+    "title": "إعدادات الأمان",
+    "description": "قم بتحديث كلمة المرور للحفاظ على أمان حسابك.",
+    "fields": {
+      "currentPassword": "كلمة المرور الحالية",
+      "newPassword": "كلمة المرور الجديدة",
+      "confirmPassword": "تأكيد كلمة المرور الجديدة"
     },
-    "tabs": {
-      "personal": "شخصي",
-      "security": "الأمان",
-      "venue": "معلومات القاعة",
-      "amenities": "المرافق",
-      "spaces": "المساحات"
-    },
-    "errors": {
-      "loadFailed": "فشل تحميل البيانات",
-      "saveFailed": "فشل حفظ التغييرات",
-      "deleteFailed": "فشل الحذف"
-    },
-    "validation": {
-      "required": "هذا الحقل مطلوب",
-      "minLength": "كلمة المرور قصيرة جداً",
-      "passwordMismatch": "كلمات المرور غير متطابقة",
-      "emailInvalid": "البريد الإلكتروني غير صحيح",
-      "fixErrors": "يرجى تصحيح الأخطاء قبل الحفظ"
-    },
-    "notifications": {
-      "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
-      "passwordChanged": "تم تغيير كلمة المرور بنجاح",
-      "venueUpdated": "تم تحديث تفاصيل القاعة بنجاح"
-    },
-    "personal": {
-      "title": "المعلومات الشخصية",
-      "description": "تحديث بياناتك الشخصية ومعلومات الاتصال.",
-      "profilePicture": "صورة الملف الشخصي",
-      "venueOwner": "صاحب القاعة",
-      "fields": {
-        "fullName": "الاسم الكامل",
-        "phone": "رقم الهاتف",
-        "email": "البريد الإلكتروني",
-        "avatar": "رابط الصورة"
-      },
-      "placeholders": {
-        "fullName": "مثال: أحمد سليم",
-        "phone": "مثال: 98123456 216+",
-        "avatar": "https://..."
-      }
-    },
-    "security": {
-      "title": "إعدادات الأمان",
-      "description": "إدارة كلمة المرور وأمان الحساب.",
-      "updatePassword": "تحديث كلمة المرور",
-      "fields": {
-        "currentPassword": "كلمة المرور الحالية",
-        "newPassword": "كلمة المرور الجديدة",
-        "confirmPassword": "تأكيد كلمة المرور"
-      },
-      "placeholders": {
-        "currentPassword": "أدخل كلمة المرور الحالية",
-        "newPassword": "أدخل كلمة المرور الجديدة",
-        "confirmPassword": "أعد إدخال كلمة المرور الجديدة"
-      },
-      "strength": {
-        "tooShort": "قصيرة جداً",
-        "weak": "ضعيفة",
-        "fair": "مقبولة",
-        "good": "جيدة",
-        "strong": "قوية"
-      },
-      "requirements": {
-        "title": "متطلبات كلمة المرور:",
-        "minLength": "6 أحرف على الأقل",
-        "uppercase": "حرف كبير واحد على الأقل",
-        "number": "رقم واحد على الأقل"
-      }
-    },
-    "venue": {
-      "basicInfo": {
-        "title": "تفاصيل القاعة",
-        "description": "معلومات عامة عن القاعة مرئية للعملاء."
-      },
-      "location": {
-        "title": "الموقع",
-        "description": "أين تقع قاعتك؟"
-      },
-      "contact": {
-        "title": "معلومات الاتصال",
-        "description": "كيف يمكن للعملاء الوصول للقاعة مباشرة؟"
-      },
-      "fields": {
-        "name": "اسم القاعة",
-        "description": "الوصف",
-        "street": "العنوان",
-        "city": "المدينة",
-        "state": "الولاية",
-        "zipCode": "الرمز البريدي",
-        "country": "البلد",
-        "phone": "هاتف القاعة",
-        "email": "بريد القاعة"
-      },
-      "placeholders": {
-        "name": "مثال: قاعة الأفراح الكبرى",
-        "description": "اوصف قاعتك...",
-        "street": "الشارع الرئيسي",
-        "city": "تونس",
-        "state": "تونس",
-        "zipCode": "1000",
-        "country": "تونس",
-        "phone": "71123456 216+",
-        "email": "contact@venue.com"
-      }
-    },
-    "amenities": {
-      "title": "المرافق",
-      "subtitle": "المرافق والخدمات",
-      "description": "اختر المرافق التي تقدمها قاعتك للعملاء.",
-      "selected": "المرافق المختارة",
-      "clickToAdd": "اضغط على العناصر أدناه لإضافتها",
-      "quickAdd": "إضافة سريعة",
-      "addCustom": "إضافة مخصص",
-      "placeholders": {
-        "custom": "مثال: خدمة ركن السيارات"
-      },
-      "operatingHours": {
-        "title": "ساعات العمل",
-        "description": "حدد أوقات العمل والإغلاق القياسية.",
-        "allDays": "كل الأيام",
-        "weekdays": "أيام الأسبوع",
-        "weekends": "عطلة نهاية الأسبوع",
-        "days": {
-          "monday": "الاثنين",
-          "tuesday": "الثلاثاء",
-          "wednesday": "الأربعاء",
-          "thursday": "الخميس",
-          "friday": "الجمعة",
-          "saturday": "السبت",
-          "sunday": "الأحد"
-        }
-      }
-    },
-    "spaces": {
-      "capacity": "السعة",
-      "basePrice": "السعر الأساسي",
-      "addNew": "إضافة مساحة جديدة",
-      "addDescription": "إنشاء مساحة جديدة قابلة للحجز",
-      "emptyTitle": "لا توجد مساحات مضافة",
-      "emptyDescription": "ابدأ بإضافة مساحتك الأولى (مثل القاعة الرئيسية، الحديقة).",
-      "addFirst": "إضافة مساحتك الأولى",
-      "edit": "تعديل المساحة",
-      "editDescription": "تحديث تفاصيل المساحة",
-      "create": "إنشاء المساحة",
-      "availableForBooking": "متاح للحجز",
-      "availableDescription": "يمكن للعملاء رؤية وطلب هذه المساحة",
-      "confirmDelete": "هل أنت متأكد أنك تريد حذف هذه المساحة؟",
-      "deleted": "تم حذف المساحة بنجاح",
-      "created": "تم إنشاء المساحة بنجاح",
-      "updated": "تم تحديث المساحة بنجاح",
-      "fields": {
-        "name": "اسم المساحة",
-        "basePrice": "السعر الأساسي",
-        "minCapacity": "السعة الدنيا",
-        "maxCapacity": "السعة القصوى",
-        "description": "الوصف"
-      },
-      "placeholders": {
-        "name": "مثال: القاعة الرئيسية",
-        "basePrice": "0.00",
-        "description": "وصف المساحة..."
-      },
-      "validation": {
-        "capacity": "يرجى تحديد السعة الدنيا والقصوى",
-        "price": "يرجى تحديد السعر الأساسي"
-      }
+    "updatePassword": "تحديث كلمة المرور"
+  },
+  "common": {
+    "saveChanges": "حفظ التغييرات"
+  },
+  "validation": {
+    "passwordMismatch": "كلمات المرور غير متطابقة"
+  },
+  "notifications": {
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح! جاري التحديث...",
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح"
+  },
+  "errors": {
+    "loadFailed": "فشل تحميل الملف الشخصي",
+    "updateFailed": "فشل تحديث الملف الشخصي",
+    "passwordFailed": "فشل تغيير كلمة المرور"
+  }
+},
+  "settings": {
+  "title": "إعدادات العمل",
+  "subtitle": "إدارة تكوين {{type}} الخاص بك",
+  "tabs": {
+    "general": "معلومات عامة",
+    "location": "الموقع",
+    "contact": "اتصال",
+    "spaces": "المساحات",
+    "amenities": "المرافق",
+    "service": "إعدادات الخدمة"
+  },
+  "general": {
+    "title": "المعلومات الأساسية",
+    "subtitle": "تحديث ملفك التجاري العام"
+  },
+  "location": { "title": "الموقع" },
+  "contact": { "title": "معلومات الاتصال" },
+  "service": {
+    "title": "تكوين الخدمة",
+    "subtitle": "حدد كيفية عملك وطريقة الفوترة.",
+    "pricingModel": "نموذج التسعير",
+    "radius": "نطاق الخدمة (كم)",
+    "travelFee": "رسوم التنقل (لكل كم)",
+    "models": {
+      "fixed": "سعر ثابت",
+      "hourly": "سعر بالساعة",
+      "package": "باقة"
     }
   },
+  "spaces": {
+    "addNew": "إضافة مساحة جديدة",
+    "edit": "تعديل المساحة",
+    "create": "إنشاء مساحة",
+    "guests": "ضيوف",
+    "updated": "تم تحديث المساحة",
+    "created": "تم إنشاء المساحة",
+    "deleted": "تم حذف المساحة",
+    "confirmDelete": "هل أنت متأكد أنك تريد حذف هذه المساحة؟",
+    "fields": {
+      "name": "الاسم",
+      "minCap": "الحد الأدنى للسعة",
+      "maxCap": "الحد الأقصى للسعة",
+      "basePrice": "السعر الأساسي"
+    }
+  },
+  "fields": {
+    "name": "اسم العمل",
+    "description": "الوصف",
+    "address": "العنوان",
+    "city": "المدينة",
+    "zip": "الرمز البريدي",
+    "country": "البلد",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني"
+  },
+  "common": {
+    "saveChanges": "حفظ التغييرات",
+    "unsavedChanges": "لديك تغييرات غير محفوظة",
+    "cancel": "إلغاء",
+    "save": "حفظ"
+  },
+  "notifications": {
+    "updated": "تم تحديث الإعدادات بنجاح"
+  },
+  "errors": {
+    "loadFailed": "فشل تحميل الإعدادات",
+    "saveFailed": "فشل حفظ الإعدادات"
+  }
+},
   "notFound": {
     "title": "404",
     "message": "الصفحة غير موجودة",

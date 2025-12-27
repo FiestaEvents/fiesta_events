@@ -3,7 +3,7 @@ import { NavLink as RouterNavLink, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../context/LanguageContext";
 import { usePermission } from "../../hooks/usePermission";
-import { useAuth } from "../../context/AuthContext"; //
+import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -26,8 +26,7 @@ import {
   ShieldCheck,
   UserCog,
   Truck,
-  Camera, 
-  MapPin,
+  Camera,
   Layers,
 } from "lucide-react";
 
@@ -41,9 +40,11 @@ const getVerticalConfig = (category) => {
       return {
         eventsLabel: "common.schedule",
         eventsIcon: Calendar,
-        resourcesLabel: "common.vehicles",
+        resourcesLabel: "common.vehicles", // Use translation key
         resourcesIcon: Truck,
-        showSupplies: true, // Fuel/Maintenance supplies
+        showSupplies: false, // ❌ Hide
+        showPortfolio: false, // ❌ Hide
+        showPartners: false, // ❌ Hide
       };
     case "photography":
     case "videography":
@@ -52,7 +53,9 @@ const getVerticalConfig = (category) => {
         eventsIcon: Briefcase,
         resourcesLabel: "common.equipment",
         resourcesIcon: Camera,
-        showSupplies: false,
+        showSupplies: false, // ❌ Hide
+        showPortfolio: true, // ✅ Show
+        showPartners: false,
       };
     case "catering":
     case "bakery":
@@ -61,7 +64,9 @@ const getVerticalConfig = (category) => {
         eventsIcon: ClipboardList,
         resourcesLabel: "common.kitchen",
         resourcesIcon: Layers,
-        showSupplies: true, // Ingredients
+        showSupplies: true, // ✅ Show
+        showPortfolio: true, // ✅ Show
+        showPartners: true,
       };
     case "venue":
     default:
@@ -71,47 +76,30 @@ const getVerticalConfig = (category) => {
         resourcesLabel: "common.spaces",
         resourcesIcon: Layers,
         showSupplies: true,
+        showPortfolio: false,
+        showPartners: true,
       };
   }
 };
 
-// ============================================================
-// TOOLTIP COMPONENT (Unchanged)
-// ============================================================
 const Tooltip = ({ children, text, isRTL, show }) => {
   if (!show || !text) return children;
-
   return (
     <div className="relative group">
       {children}
       <motion.div
         initial={{ opacity: 0, scale: 0.9, x: isRTL ? 10 : -10 }}
         whileHover={{ opacity: 1, scale: 1, x: 0 }}
-        className={`absolute top-1/2 -translate-y-1/2 ${
-          isRTL ? "right-full mr-2" : "left-full ml-2"
-        } px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50`}
+        className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-full mr-2" : "left-full ml-2"} px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50`}
       >
         {text}
-        <div
-          className={`absolute top-1/2 -translate-y-1/2 ${
-            isRTL ? "right-0 translate-x-full" : "left-0 -translate-x-full"
-          } w-0 h-0 border-t-4 border-b-4 border-transparent ${
-            isRTL
-              ? "border-r-4 border-r-gray-900 dark:border-r-gray-700"
-              : "border-l-4 border-l-gray-900 dark:border-l-gray-700"
-          }`}
-        />
       </motion.div>
     </div>
   );
 };
 
-// ============================================================
-// NAVLINK COMPONENT (Unchanged)
-// ============================================================
-const NavLink = ({ to, icon: Icon, label, badge, isCollapsed }) => {
+const NavLink = ({ to, icon: Icon, label, isCollapsed }) => {
   const { isRTL } = useLanguage();
-
   return (
     <Tooltip text={label} isRTL={isRTL} show={isCollapsed}>
       <RouterNavLink
@@ -135,24 +123,13 @@ const NavLink = ({ to, icon: Icon, label, badge, isCollapsed }) => {
               <motion.div
                 layoutId="activeIndicator"
                 className={`absolute ${isRTL ? "right-0" : "left-0"} top-0 bottom-0 w-1 bg-white rounded-r-full`}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
               />
             )}
-
             <div className="relative">
               <Icon
                 className={`flex-shrink-0 transition-all duration-300 ${isCollapsed ? "w-5 h-5" : "w-4 h-4"}`}
               />
-              {isActive && (
-                <motion.div
-                  className="absolute inset-0 bg-white rounded-full"
-                  initial={{ scale: 1, opacity: 0.5 }}
-                  animate={{ scale: 1.5, opacity: 0 }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                />
-              )}
             </div>
-
             <AnimatePresence mode="wait">
               {!isCollapsed && (
                 <motion.span
@@ -166,17 +143,6 @@ const NavLink = ({ to, icon: Icon, label, badge, isCollapsed }) => {
                 </motion.span>
               )}
             </AnimatePresence>
-
-            {!isCollapsed && badge && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                whileHover={{ scale: 1.1 }}
-                className={`${isRTL ? "mr-auto" : "ml-auto"} px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full shadow-sm`}
-              >
-                {badge}
-              </motion.span>
-            )}
           </motion.div>
         )}
       </RouterNavLink>
@@ -184,15 +150,15 @@ const NavLink = ({ to, icon: Icon, label, badge, isCollapsed }) => {
   );
 };
 
-// ============================================================
-// NAV SECTION COMPONENT
-// ============================================================
 const NavSection = ({ titleKey, children, isCollapsed }) => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
 
-  if (!children || (Array.isArray(children) && children.every((c) => !c)))
-    return null;
+  // Clean null children
+  const validChildren = React.Children.toArray(children).filter(
+    (child) => child
+  );
+  if (validChildren.length === 0) return null;
 
   return (
     <div className="mb-4">
@@ -202,7 +168,6 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
           >
             <h3
               className={`px-2 mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2 ${isRTL ? "text-right" : "text-left"}`}
@@ -217,25 +182,20 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
           <div className="my-2 mx-auto w-6 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
         )}
       </AnimatePresence>
-      <div className="space-y-0.5">{children}</div>
+      <div className="space-y-0.5">{validChildren}</div>
     </div>
   );
 };
 
-// ============================================================
-// MAIN SIDEBAR COMPONENT
-// ============================================================
-const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
+const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
-  const { user } = useAuth(); // ✅ Get User Context
+  const { user } = useAuth();
 
-  // 1. Determine Vertical Configuration
-  // We use user.business.category if populated, otherwise default to 'venue'
   const category = user?.business?.category || "venue";
   const config = getVerticalConfig(category);
 
-  // 2. Permissions Hooks
+  // Permission Hooks
   const canViewEvents = usePermission("events.read.all");
   const canViewClients = usePermission("clients.read.all");
   const canViewPartners = usePermission("partners.read.all");
@@ -243,49 +203,39 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const canViewTasks = usePermission("tasks.read.all");
   const canViewReminders = usePermission("reminders.read.all");
 
-  // New Permissions for Resources/Portfolio
   const canViewResources =
     usePermission("venue.read") || usePermission("business.read");
   const canViewPortfolio = usePermission("portfolio.read.all");
-
   const canViewFinance = usePermission("finance.read.all");
   const canViewPayments = usePermission("payments.read.all");
   const canViewContracts = usePermission("contracts.read.all");
   const canViewDocs = usePermission("settings.read");
-  const canViewSettings = usePermission("business.update"); // Updated permission name
-
+  const canViewSettings = usePermission("business.update");
   const canViewTeam = usePermission("users.read.all");
   const canViewRoles = usePermission("roles.read.all");
 
   return (
     <>
-      {/* Mobile Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
             onClick={onClose}
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar Container */}
       <motion.aside
         initial={false}
         animate={{ width: isCollapsed ? 64 : 240 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-50 shadow-xl dark:border-gray-800
-        ${isRTL ? "right-0 border-r-0 border-l" : "left-0"}
-        ${isOpen ? "translate-x-0" : isRTL ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"} 
-        transition-transform duration-300 ease-in-out`}
+        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-50 shadow-xl dark:border-gray-800 ${isRTL ? "right-0 border-r-0 border-l" : "left-0"} ${isOpen ? "translate-x-0" : isRTL ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"} transition-transform duration-300 ease-in-out`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="h-16 flex items-center justify-center shrink-0 px-4 relative dark:border-gray-800/50">
+          <div className="h-16 flex items-center justify-center shrink-0 px-4 relative">
             <Link
               to="/"
               className="flex items-center justify-center w-full overflow-hidden"
@@ -294,21 +244,18 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 src="/fiesta logo-01.png"
                 alt="Fiesta Logo"
                 animate={{ height: isCollapsed ? "24px" : "32px" }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className="object-contain max-w-full"
               />
             </Link>
             <button
               onClick={onClose}
-              className="lg:hidden absolute right-4 p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              className="lg:hidden absolute right-4 p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg"
             >
               <X size={18} />
             </button>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-3 space-y-2 hide-scrollbar">
-            {/* 1. Overview */}
             <NavSection titleKey="sidebar.overview" isCollapsed={isCollapsed}>
               <NavLink
                 to="/home"
@@ -324,9 +271,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               />
             </NavSection>
 
-            {/* 2. Operations (Dynamic based on Category) */}
             <NavSection titleKey="sidebar.operations" isCollapsed={isCollapsed}>
-              {/* Dynamic Events Link (Events / Jobs / Schedule) */}
               {canViewEvents && (
                 <NavLink
                   to="/events"
@@ -336,18 +281,24 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 />
               )}
 
-              {/* Dynamic Resources Link (Spaces / Equipment / Vehicles) */}
+              {/* ✅ VEHICLE / RESOURCE LINK */}
+              {/* Drivers manage vehicles via Settings currently, or a future /resources route */}
               {canViewResources &&
-                category === "venue" && ( // Only Venues usually manage Spaces via UI currently
+                (category === "driver" || category === "transport" ? (
                   <NavLink
-                    to="/spaces" // Route might need update to /resources later
+                    to="/fleet"
                     icon={config.resourcesIcon}
                     label={t(config.resourcesLabel)}
                     isCollapsed={isCollapsed}
                   />
-                )}
-
-              {/* Clients */}
+                ) : category === "venue" ? (
+                  <NavLink
+                    to="/settings"
+                    icon={config.resourcesIcon}
+                    label={t(config.resourcesLabel)}
+                    isCollapsed={isCollapsed}
+                  />
+                ) : null)}
               {canViewClients && (
                 <NavLink
                   to="/clients"
@@ -357,10 +308,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 />
               )}
 
-              {/* Portfolio (For Creatives) */}
-              {(canViewPortfolio ||
-                category === "photography" ||
-                category === "videography") && (
+              {/* ✅ PORTFOLIO (Hidden for Drivers) */}
+              {canViewPortfolio && config.showPortfolio && (
                 <NavLink
                   to="/portfolio"
                   icon={Camera}
@@ -369,17 +318,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 />
               )}
 
-              {/* Partners (Usually specific to Venues/Planners) */}
-              {canViewPartners && category === "venue" && (
-                <NavLink
-                  to="/partners"
-                  icon={Handshake}
-                  label={t("common.partners")}
-                  isCollapsed={isCollapsed}
-                />
-              )}
-
-              {/* Supplies (Configurable) */}
+              {/* ✅ SUPPLIES (Hidden for Drivers) */}
               {canViewSupplies && config.showSupplies && (
                 <NavLink
                   to="/supplies"
@@ -389,7 +328,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 />
               )}
 
-              {/* Tasks & Reminders (Everyone) */}
               {canViewTasks && (
                 <NavLink
                   to="/tasks"
@@ -408,7 +346,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               )}
             </NavSection>
 
-            {/* 3. Financial */}
             {(canViewFinance || canViewPayments) && (
               <NavSection
                 titleKey="sidebar.financial"
@@ -441,7 +378,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               </NavSection>
             )}
 
-            {/* 4. Team & Administration */}
             {(canViewTeam || canViewRoles) && (
               <NavSection titleKey="sidebar.team" isCollapsed={isCollapsed}>
                 {canViewTeam && (
@@ -463,7 +399,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               </NavSection>
             )}
 
-            {/* 5. Management */}
             {(canViewContracts || canViewSettings) && (
               <NavSection
                 titleKey="sidebar.management"
@@ -497,18 +432,16 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             )}
           </nav>
 
-          {/* Footer */}
           <AnimatePresence>
             {!isCollapsed && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
                 className="p-3 border-t border-gray-100 dark:border-gray-800"
               >
-                <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap overflow-hidden">
-                  <Sparkles className="w-2.5 h-2.5" />
+                <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 whitespace-nowrap overflow-hidden">
+                  <Sparkles className="w-2.5 h-2.5" />{" "}
                   <span>{t("allRightsReserved")} © 2025</span>
                 </div>
               </motion.div>
@@ -519,5 +452,4 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     </>
   );
 };
-
 export default Sidebar;
