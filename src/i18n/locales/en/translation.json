@@ -286,6 +286,7 @@
   }
 },
   "common": {
+    "spaces":"Spaces",
   "schedule": "Schedule",    
   "orders": "Orders",   
   "vehicles": "Fleet",   
@@ -3346,7 +3347,8 @@
       "logo": "Logo",
       "uploadLogo": "Upload Logo",
       "primaryColor": "Primary Color",
-      "secondaryColor": "Secondary Color"
+      "secondaryColor": "Secondary Color",
+      "textColor":"Text Color"
     },
     "layout": {
       "dragDropHint": "Drag and drop elements in the preview to reorder.",
