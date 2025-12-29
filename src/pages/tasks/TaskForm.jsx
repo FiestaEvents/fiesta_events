@@ -182,7 +182,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // ✅ FIX: Prevent Default behavior clearly
   const handleAddTag = (e) => {
     if (e) {
       e.preventDefault();
@@ -206,7 +205,6 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
     }));
   };
 
-  // ✅ FIX: Prevent Default behavior clearly
   const handleAddSubtask = (e) => {
     if (e) {
       e.preventDefault();
@@ -342,7 +340,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
           return (
             <button
               key={step.number}
-              type="button" // ✅ Critical: Prevents form submission on click
+              type="button"
               onClick={() => handleStepClick(step.number)}
               disabled={!isCompleted && !isCurrent}
               className={`group flex flex-col items-center gap-2 bg-white dark:bg-[#1f2937] px-2 transition-all ${
@@ -469,18 +467,14 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault(); // Stop submitting form on Enter in tag input
+                      e.preventDefault();
                       handleAddTag(e);
                     }
                   }}
                   placeholder={t("tasks.form.fields.tagPlaceholder")}
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm"
                 />
-                <Button
-                  type="button" // ✅ Explicitly set type button to prevent submit
-                  variant="outline"
-                  onClick={handleAddTag}
-                >
+                <Button type="button" variant="outline" onClick={handleAddTag}>
                   {t("tasks.form.buttons.add")}
                 </Button>
               </div>
@@ -512,7 +506,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   onChange={(e) => setNewSubtask({ title: e.target.value })}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault(); // Stop submitting form on Enter in subtask input
+                      e.preventDefault();
                       handleAddSubtask(e);
                     }
                   }}
@@ -520,7 +514,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
                   className="flex-1"
                 />
                 <Button
-                  type="button" // ✅ Explicitly set type button to prevent submit
+                  type="button"
                   variant="outline"
                   icon={<Plus className="size-4" />}
                   onClick={handleAddSubtask}
@@ -593,7 +587,7 @@ const TaskForm = ({ task: taskProp, onSuccess, onCancel }) => {
 
         <div className="flex items-center justify-between pt-6 mt-auto">
           <Button
-            type="button" // Prevent submit
+            type="button"
             variant="outline"
             onClick={
               currentStep === 1

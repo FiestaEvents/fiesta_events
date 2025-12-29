@@ -1,25 +1,23 @@
-
-// ============================================
-// FINANCE SERVICE
-// ============================================
 import api from "../axios";
 import { handleResponse, handleError } from "../../utils/apiUtils";
 
 export const financeService = {
-  getAll: async (params = {}) => {
+  /**
+   * Get all finance records with pagination and filters
+   */
+  getFinanceRecords: async (params = {}) => {
     try {
       const response = await api.get("/finance", { params });
-      // Backend returns: { records, pagination }
-      return {
-        finance: response.data?.data?.records || [],
-        pagination: response.data?.data?.pagination || {},
-      };
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getById: async (id) => {
+  /**
+   * Get single record
+   */
+  getFinanceRecord: async (id) => {
     try {
       const response = await api.get(`/finance/${id}`);
       return handleResponse(response);
@@ -28,7 +26,10 @@ export const financeService = {
     }
   },
 
-  create: async (data) => {
+  /**
+   * Create record
+   */
+  createFinanceRecord: async (data) => {
     try {
       const response = await api.post("/finance", data);
       return handleResponse(response);
@@ -37,7 +38,10 @@ export const financeService = {
     }
   },
 
-  update: async (id, data) => {
+  /**
+   * Update record
+   */
+  updateFinanceRecord: async (id, data) => {
     try {
       const response = await api.put(`/finance/${id}`, data);
       return handleResponse(response);
@@ -46,7 +50,10 @@ export const financeService = {
     }
   },
 
-  delete: async (id) => {
+  /**
+   * Delete record (archive)
+   */
+  deleteFinanceRecord: async (id) => {
     try {
       const response = await api.delete(`/finance/${id}`);
       return handleResponse(response);
@@ -55,71 +62,89 @@ export const financeService = {
     }
   },
 
+  // ============================================
+  // ANALYTICS & REPORTS
+  // ============================================
+
+  /**
+   * Get Financial Summary (Income, Expense, Profit)
+   */
   getSummary: async (params = {}) => {
     try {
       const response = await api.get("/finance/summary", { params });
-      // Backend returns: { summary, categoryBreakdown, timeSeries, topExpenses, topIncome }
-      return response.data?.data || {};
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getCashflow: async (params = {}) => {
+  /**
+   * Get Cash Flow Report (Timeline)
+   */
+  getCashFlowReport: async (params = {}) => {
     try {
       const response = await api.get("/finance/cashflow", { params });
-      // Backend returns: { cashFlow: array, currentBalance }
-      return response.data?.data || {};
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getExpensesBreakdown: async (params = {}) => {
+  /**
+   * Get Expense Breakdown by Category
+   */
+  getExpenseBreakdown: async (params = {}) => {
     try {
       const response = await api.get("/finance/expenses/breakdown", { params });
-      // Backend returns: { breakdown, totalExpenses }
-      return response.data?.data || {};
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
+  /**
+   * Get Income Breakdown by Category
+   */
   getIncomeBreakdown: async (params = {}) => {
     try {
       const response = await api.get("/finance/income/breakdown", { params });
-      // Backend returns: { breakdown, totalIncome }
-      return response.data?.data || {};
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
+  /**
+   * Get Financial Trends (Area Chart Data)
+   */
+  getFinancialTrends: async (params = {}) => {
+    try {
+      const response = await api.get("/finance/trends", { params });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  /**
+   * Get Profit & Loss Statement
+   */
   getProfitLoss: async (params = {}) => {
     try {
       const response = await api.get("/finance/profit-loss", { params });
-      // Backend returns: { revenue, expenses, profitability }
-      return response.data?.data || {};
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
-  getTrends: async (params = {}) => {
-    try {
-      const response = await api.get("/finance/trends", { params });
-      // Backend returns: { trends: array }
-      return response.data?.data || {};
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
+  /**
+   * Get Tax Summary
+   */
   getTaxSummary: async (params = {}) => {
     try {
       const response = await api.get("/finance/tax-summary", { params });
-      // Backend returns: { year, totalIncome, totalExpense, taxableIncome, totalTaxPaid, taxRecords }
-      return response.data?.data || {};
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }

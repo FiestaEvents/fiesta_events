@@ -21,9 +21,11 @@ import {
   Truck,
   Settings,
   DollarSign,
+  BoxIcon,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { venueService, venueSpacesService } from "../../api/index";
 
 import SettingsLayout from "../../components/shared/SettingsLayout";
@@ -33,37 +35,6 @@ import Textarea from "../../components/common/Textarea";
 import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-import { useTheme } from "../../context/ThemeContext";
-// --- Constants & Config ---
-const DEFAULT_AMENITIES = [
-  "WiFi",
-  "Parking",
-  "A/C",
-  "Restrooms",
-  "Kitchen",
-  "Security",
-];
-const DAYS_OF_WEEK = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-];
-
-const DEFAULT_HOURS = DAYS_OF_WEEK.reduce((acc, day) => {
-  acc[day] = { open: "09:00", close: "18:00", closed: day === "sunday" };
-  return acc;
-}, {});
-
-// --- Animations ---
-const fadeIn = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
-};
 
 // --- Custom Hook ---
 const useBusinessData = () => {
@@ -80,7 +51,8 @@ const useBusinessData = () => {
       ]);
 
       setData({
-        business: bizRes.data?.venue || bizRes.venue || {},
+        business:
+          bizRes.data?.venue || bizRes.venue || bizRes.data?.business || {},
         spaces: spacesRes.data?.spaces || spacesRes.spaces || [],
       });
     } catch (err) {
@@ -97,14 +69,17 @@ const useBusinessData = () => {
 };
 
 // --- Sub-Components ---
-
-const StickyActionBar = ({ onSave, saving, t }) => (
+const StickyActionBar = ({ onSave, saving, t, darkMode }) => (
   <motion.div
     initial={{ y: 100 }}
     animate={{ y: 0 }}
-    className="fixed bottom-6 right-6 z-40 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl flex items-center gap-4 border border-orange-100 dark:border-gray-700"
+    className={`fixed bottom-6 right-6 z-40 p-4 rounded-2xl shadow-xl flex items-center gap-4 border ${
+      darkMode
+        ? "bg-gray-800 border-gray-700 text-white"
+        : "bg-white border-orange-100 text-gray-900"
+    }`}
   >
-    <div className="text-sm text-gray-500 dark:text-gray-400">
+    <div className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
       {t("settings.common.unsavedChanges")}
     </div>
     <Button
@@ -118,15 +93,14 @@ const StickyActionBar = ({ onSave, saving, t }) => (
   </motion.div>
 );
 
-// 1. General Info Tab (Shared)
-const GeneralTab = ({ business, onSave, saving, t }) => {
+// 1. General Tab
+const GeneralTab = ({ business, onSave, saving, t, darkMode }) => {
   const {
     register,
     handleSubmit,
     reset,
     formState: { isDirty },
   } = useForm();
-
   useEffect(() => {
     if (business) {
       reset({
@@ -145,22 +119,21 @@ const GeneralTab = ({ business, onSave, saving, t }) => {
 
   return (
     <motion.div
-      variants={fadeIn}
+      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
       initial="hidden"
       animate="visible"
-      exit="exit"
       className="space-y-6 pb-24"
     >
-      <Card className="p-6">
+      <Card className="p-6" darkMode={darkMode}>
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
+          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl text-orange-600">
             <Building2 size={24} />
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
               {t("settings.general.title")}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("settings.general.subtitle")}
             </p>
           </div>
@@ -170,23 +143,25 @@ const GeneralTab = ({ business, onSave, saving, t }) => {
             label={t("settings.fields.name")}
             {...register("name")}
             className="w-full"
+            darkMode={darkMode}
           />
           <Textarea
             label={t("settings.fields.description")}
             {...register("description")}
             rows={3}
             className="w-full"
+            darkMode={darkMode}
           />
         </div>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
+        <Card className="p-6" darkMode={darkMode}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600">
               <MapPin size={20} />
             </div>
-            <h3 className="font-bold dark:text-white">
+            <h3 className="font-bold text-gray-900 dark:text-white">
               {t("settings.location.title")}
             </h3>
           </div>
@@ -194,31 +169,34 @@ const GeneralTab = ({ business, onSave, saving, t }) => {
             <Input
               label={t("settings.fields.address")}
               {...register("address.street")}
-              className="w-full"
+              darkMode={darkMode}
             />
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label={t("settings.fields.city")}
                 {...register("address.city")}
+                darkMode={darkMode}
               />
               <Input
                 label={t("settings.fields.zip")}
                 {...register("address.zipCode")}
+                darkMode={darkMode}
               />
             </div>
             <Input
               label={t("settings.fields.country")}
               {...register("address.country")}
+              darkMode={darkMode}
             />
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6" darkMode={darkMode}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-green-50 rounded-lg text-green-600">
+            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600">
               <Phone size={20} />
             </div>
-            <h3 className="font-bold dark:text-white">
+            <h3 className="font-bold text-gray-900 dark:text-white">
               {t("settings.contact.title")}
             </h3>
           </div>
@@ -227,34 +205,38 @@ const GeneralTab = ({ business, onSave, saving, t }) => {
               label={t("settings.fields.phone")}
               {...register("contact.phone")}
               icon={Phone}
-              className="w-full"
+              darkMode={darkMode}
             />
             <Input
               label={t("settings.fields.email")}
               {...register("contact.email")}
               icon={Mail}
-              className="w-full"
+              darkMode={darkMode}
             />
           </div>
         </Card>
       </div>
 
       {isDirty && (
-        <StickyActionBar onSave={handleSubmit(onSave)} saving={saving} t={t} />
+        <StickyActionBar
+          onSave={handleSubmit(onSave)}
+          saving={saving}
+          t={t}
+          darkMode={darkMode}
+        />
       )}
     </motion.div>
   );
 };
 
-// 2. Service Config Tab (For Service Providers)
-const ServiceConfigTab = ({ business, onSave, saving, t }) => {
+// 2. Service Config Tab
+const ServiceConfigTab = ({ business, onSave, saving, t, darkMode }) => {
   const {
     register,
     handleSubmit,
     reset,
     formState: { isDirty },
   } = useForm();
-
   useEffect(() => {
     if (business?.serviceDetails) {
       reset({
@@ -269,22 +251,21 @@ const ServiceConfigTab = ({ business, onSave, saving, t }) => {
 
   return (
     <motion.div
-      variants={fadeIn}
+      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
       initial="hidden"
       animate="visible"
-      exit="exit"
       className="space-y-6 pb-24"
     >
-      <Card className="p-6">
+      <Card className="p-6" darkMode={darkMode}>
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-purple-50 rounded-xl text-purple-600">
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-purple-600">
             <Settings size={24} />
           </div>
           <div>
             <h2 className="text-lg font-bold dark:text-white">
               {t("settings.service.title")}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("settings.service.subtitle")}
             </p>
           </div>
@@ -297,7 +278,11 @@ const ServiceConfigTab = ({ business, onSave, saving, t }) => {
             </label>
             <select
               {...register("serviceDetails.pricingModel")}
-              className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              className={`w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-orange-500 ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             >
               <option value="fixed">
                 {t("settings.service.models.fixed")}
@@ -310,35 +295,49 @@ const ServiceConfigTab = ({ business, onSave, saving, t }) => {
               </option>
             </select>
           </div>
-
           <Input
             label={t("settings.service.radius")}
             type="number"
             {...register("serviceDetails.serviceRadiusKM")}
             icon={MapPin}
+            darkMode={darkMode}
           />
-
           <Input
             label={t("settings.service.travelFee")}
             type="number"
             {...register("serviceDetails.travelFee")}
             icon={DollarSign}
+            darkMode={darkMode}
           />
         </div>
       </Card>
-
       {isDirty && (
-        <StickyActionBar onSave={handleSubmit(onSave)} saving={saving} t={t} />
+        <StickyActionBar
+          onSave={handleSubmit(onSave)}
+          saving={saving}
+          t={t}
+          darkMode={darkMode}
+        />
       )}
     </motion.div>
   );
 };
 
-// 3. Spaces Tab (For Venues)
-const SpacesTab = ({ spaces, refetch, t }) => {
+// 3. Dynamic Resources Tab (Spaces / Fleet / Equipment)
+const SpacesTab = ({ spaces, refetch, t, darkMode, labels }) => {
   const [editingSpace, setEditingSpace] = useState(null);
   const [saving, setSaving] = useState(false);
   const { register, handleSubmit, reset } = useForm();
+
+  // Labels Default (Venue)
+  const L = {
+    itemName: t("settings.spaces.fields.name"),
+    capLabel: t("settings.spaces.guests"),
+    addBtn: t("settings.spaces.addNew"),
+    editTitle: t("settings.spaces.edit"),
+    createTitle: t("settings.spaces.create"),
+    ...labels,
+  };
 
   const onEdit = (space) => {
     setEditingSpace(space);
@@ -378,12 +377,23 @@ const SpacesTab = ({ spaces, refetch, t }) => {
     }
   };
 
+  const onDelete = async (id) => {
+    if (!window.confirm(L.deleteMsg || t("settings.spaces.confirmDelete")))
+      return;
+    try {
+      await venueSpacesService.delete(id);
+      toast.success("Deleted");
+      refetch();
+    } catch (e) {
+      toast.error("Delete failed");
+    }
+  };
+
   return (
     <motion.div
-      variants={fadeIn}
+      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
       initial="hidden"
       animate="visible"
-      exit="exit"
       className="space-y-6 pb-24"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -391,30 +401,36 @@ const SpacesTab = ({ spaces, refetch, t }) => {
           <Card
             key={space._id}
             className="p-6 relative group hover:border-orange-200 transition-all"
+            darkMode={darkMode}
           >
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
+              <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl text-orange-600">
                 <Grid3x3 size={20} />
               </div>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => onEdit(space)}
-                  className="p-2 hover:bg-gray-100 rounded-lg text-blue-500"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-blue-500"
                 >
                   <Edit2 size={16} />
+                </button>
+                <button
+                  onClick={() => onDelete(space._id)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-red-500"
+                >
+                  <Trash2 size={16} />
                 </button>
               </div>
             </div>
             <h3 className="font-bold text-lg dark:text-white">{space.name}</h3>
-            <p className="text-sm text-gray-500 line-clamp-2 h-10">
+            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 h-10">
               {space.description}
             </p>
-            <div className="mt-4 pt-4 border-t flex justify-between items-center">
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
               <Badge variant="neutral">
-                {space.capacity.min}-{space.capacity.max}{" "}
-                {t("settings.spaces.guests")}
+                {space.capacity.min}-{space.capacity.max} {L.capLabel}
               </Badge>
-              <span className="font-bold text-orange-600">
+              <span className="font-bold text-orange-600 dark:text-orange-400">
                 {space.basePrice} TND
               </span>
             </div>
@@ -423,53 +439,57 @@ const SpacesTab = ({ spaces, refetch, t }) => {
 
         <button
           onClick={() => onEdit({})}
-          className="p-6 rounded-2xl border-2 border-dashed border-gray-300 hover:border-orange-500 hover:bg-orange-50/50 flex flex-col items-center justify-center min-h-[250px] transition-all group"
+          className={`p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center min-h-[250px] transition-all group ${darkMode ? "border-gray-700 hover:border-orange-500 hover:bg-gray-800" : "border-gray-300 hover:border-orange-500 hover:bg-orange-50/50"}`}
         >
-          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Plus className="text-orange-600" />
+          <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <Plus className="text-orange-600 dark:text-orange-400" />
           </div>
-          <span className="font-bold text-gray-600 group-hover:text-orange-700">
-            {t("settings.spaces.addNew")}
+          <span className="font-bold text-gray-600 dark:text-gray-400 group-hover:text-orange-700 dark:group-hover:text-orange-400">
+            {L.addBtn}
           </span>
         </button>
       </div>
 
-      {/* Inline Edit Modal Area */}
+      {/* Edit Modal */}
       <AnimatePresence>
         {editingSpace && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg p-6">
+            <div
+              className={`rounded-2xl shadow-2xl w-full max-w-lg p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+            >
               <h3 className="text-xl font-bold mb-4 dark:text-white">
-                {editingSpace._id
-                  ? t("settings.spaces.edit")
-                  : t("settings.spaces.create")}
+                {editingSpace._id ? L.editTitle : L.createTitle}
               </h3>
               <div className="space-y-4">
                 <Input
-                  label={t("settings.spaces.fields.name")}
-                  {...register("name")}
+                  label={L.itemName}
+                  {...register("name", { required: true })}
+                  darkMode={darkMode}
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    label={t("settings.spaces.fields.minCap")}
+                    label="Min"
                     type="number"
                     {...register("capacity.min")}
+                    darkMode={darkMode}
                   />
                   <Input
-                    label={t("settings.spaces.fields.maxCap")}
+                    label="Max"
                     type="number"
                     {...register("capacity.max")}
+                    darkMode={darkMode}
                   />
                 </div>
                 <Input
-                  label={t("settings.spaces.fields.basePrice")}
+                  label={L.priceLabel || "Price"}
                   type="number"
                   {...register("basePrice")}
+                  darkMode={darkMode}
                 />
                 <div className="flex justify-end gap-3 mt-6">
                   <Button
@@ -495,12 +515,14 @@ const SpacesTab = ({ spaces, refetch, t }) => {
 const BusinessSettings = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const { business, spaces, loading, refetch } = useBusinessData();
   const [activeTab, setActiveTab] = useState("general");
   const [saving, setSaving] = useState(false);
-  const { isDarkMode } = useTheme();
+
   const category = user?.business?.category || "venue";
   const isVenue = category === "venue";
+  const isDriver = category === "driver" || category === "transport";
 
   const tabs = useMemo(() => {
     const baseTabs = [
@@ -516,15 +538,27 @@ const BusinessSettings = () => {
           icon: CheckCircle2,
         }
       );
-    } else {
+    } else if (isDriver) {
       baseTabs.push(
+        { id: "spaces", label: t("settings.tabs.fleet", "Fleet"), icon: Truck },
         { id: "service", label: t("settings.tabs.service"), icon: Settings }
-        // Use window.location or navigate to switch to Portfolio page if needed
-        // Here just a placeholder or link if portfolio is settings-managed
       );
+    } else {
+      baseTabs.push({
+        id: "service",
+        label: t("settings.tabs.service"),
+        icon: Settings,
+      });
+      if (["music", "security", "decoration"].includes(category)) {
+        baseTabs.push({
+          id: "spaces",
+          label: t("settings.tabs.equipment", "Equipment"),
+          icon: BoxIcon,
+        });
+      }
     }
     return baseTabs;
-  }, [category, t, isVenue]);
+  }, [category, t, isVenue, isDriver]);
 
   const handleSave = async (data) => {
     setSaving(true);
@@ -542,7 +576,9 @@ const BusinessSettings = () => {
 
   if (loading)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div
+        className={`h-screen flex items-center justify-center ${isDarkMode ? "bg-gray-900" : "bg-white"}`}
+      >
         <OrbitLoader />
       </div>
     );
@@ -564,12 +600,42 @@ const BusinessSettings = () => {
             onSave={handleSave}
             saving={saving}
             t={t}
+            darkMode={isDarkMode}
           />
         )}
 
-        {isVenue && activeTab === "spaces" && (
-          <SpacesTab key="spaces" spaces={spaces} refetch={refetch} t={t} />
-        )}
+        {/* Dynamic Resources Tab (Spaces/Fleet/Equipment) */}
+        {(isVenue ||
+          isDriver ||
+          ["music", "security", "decoration"].includes(category)) &&
+          activeTab === "spaces" && (
+            <SpacesTab
+              key="spaces"
+              spaces={spaces}
+              refetch={refetch}
+              t={t}
+              darkMode={isDarkMode}
+              labels={
+                isDriver
+                  ? {
+                      itemName: "Vehicle Name",
+                      capLabel: "Seats",
+                      addBtn: "Add Vehicle",
+                      editTitle: "Edit Vehicle",
+                      createTitle: "Add Vehicle",
+                    }
+                  : !isVenue
+                    ? {
+                        itemName: "Item Name",
+                        capLabel: "Quantity",
+                        addBtn: "Add Item",
+                        editTitle: "Edit Item",
+                        createTitle: "Add Item",
+                      }
+                    : null // Use default Venue labels
+              }
+            />
+          )}
 
         {!isVenue && activeTab === "service" && (
           <ServiceConfigTab
@@ -578,6 +644,7 @@ const BusinessSettings = () => {
             onSave={handleSave}
             saving={saving}
             t={t}
+            darkMode={isDarkMode}
           />
         )}
       </AnimatePresence>

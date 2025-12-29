@@ -1927,14 +1927,6 @@
       "deleting": "Deleting task...",
       "filtersApplied": "Filters applied"
     },
-    "detail": {
-      "toasts": {
-        "taskCreated": "Task created successfully",
-        "taskUpdated": "Task updated successfully",
-        "taskDeleted": "Task deleted successfully",
-        "taskArchived": "Task archived successfully"
-      }
-    },
     "loading": "Loading task details...",
     "tabs": {
       "overview": "Overview",
@@ -1976,7 +1968,116 @@
         "title": "Delete Task",
         "message": "Are you sure you want to delete this task? This action cannot be undone."
       }
+    },
+     "detail": {
+    "loading": "Loading task details...",
+    "errorLoading": "Error Loading Task",
+    "notFound": "Task not found or you don't have permission to view it.",
+    "backToTasks": "Back to Tasks",
+    "tryAgain": "Try Again",
+    "tabs": {
+      "overview": "Overview",
+      "subtasks": "Subtasks",
+      "comments": "Comments",
+      "attachments": "Attachments",
+      "timeline": "Timeline"
+    },
+    "header": {
+      "backToTasks": "Back to Tasks",
+      "editTask": "Edit Task",
+      "deleteTask": "Delete Task",
+      "actions": {
+        "startWorking": "Start Working",
+        "pauseTask": "Pause Task",
+        "markComplete": "Mark Complete",
+        "archiveTask": "Archive Task"
+      }
+    },
+    "info": {
+      "title": "Task Info",
+      "dueDate": "Due Date",
+      "startDate": "Start Date",
+      "assignedTo": "Assigned To",
+      "category": "Category",
+      "estimatedHours": "Est. Hours",
+      "actualHours": "Actual Hours",
+      "taskBlocked": "Task Blocked",
+      "overdue": "Overdue"
+    },
+    "overview": {
+      "metrics": "Key Metrics",
+      "progress": "Progress",
+      "subtasks": "Subtasks",
+      "estimated": "Estimated",
+      "actual": "Actual",
+      "description": "Description",
+      "noDescription": "No description provided for this task."
+    },
+    "subtasks": {
+      "title": "Subtasks",
+      "noSubtasks": "No Subtasks",
+      "noSubtasksDescription": "Break this task down into smaller steps to track progress better.",
+      "errorToggle": "Failed to update subtask status"
+    },
+    "comments": {
+      "title": "Comments",
+      "unknownUser": "Unknown User",
+      "edited": "Edited",
+      "noComments": "No comments yet",
+      "noCommentsDescription": "Be the first to leave a comment on this task."
+    },
+    "attachments": {
+      "title": "Attachments",
+      "noAttachments": "No attachments",
+      "noAttachmentsDescription": "No files have been attached to this task yet."
+    },
+    "timeline": {
+      "title": "Activity Timeline",
+      "unknownDate": "Unknown Date",
+      "noEvents": "No history",
+      "noEventsDescription": "No activity recorded for this task yet.",
+      "by": "by",
+      "to": "to",
+      "noReason": "No reason provided",
+      "events": {
+        "created": "Task Created",
+        "assigned": "Task Assigned",
+        "statusChanged": "Status Changed",
+        "completed": "Task Completed",
+        "cancelled": "Task Cancelled"
+      }
+    },
+    "toasts": {
+      "status": {
+        "loading": "Updating status...",
+        "success": "Task status updated to {{status}}",
+        "error": "Failed to update status"
+      },
+      "complete": {
+        "loading": "Completing task...",
+        "success": "Task marked as completed",
+        "error": "Failed to complete task"
+      },
+      "archive": {
+        "loading": "Archiving task...",
+        "success": "Task archived successfully",
+        "error": "Failed to archive task"
+      },
+      "delete": {
+        "loading": "Deleting task...",
+        "success": "Task deleted successfully",
+        "error": "Failed to delete task"
+      },
+      "retry": "Retrying..."
+    },
+    "modals": {
+      "edit": { "title": "Edit Task" },
+      "delete": { 
+        "title": "Delete Task", 
+        "message": "Are you sure you want to permanently delete \"{{title}}\"? This action cannot be undone." 
+      }
     }
+  }
   },
   "taskDetailModal": {
     "title": "Task Details",
@@ -2009,7 +2110,7 @@
     }
   },
   "reminders": {
-    "noResults": "No results found",
+    "emptyDesc": "Get started by creating a new reminder to track your work.",
     "details": {
       "additionalInfo": "Additional Information",
       "subtitle": "View linked items and assigned users",
@@ -2274,6 +2375,7 @@
   },
 
   "payments": {
+    "emptyStateDescription": "No payments yet",
     "title": "Payments",
     "subtitle": "Track all income and expense payments",
     "addPayment": "Add Payment",

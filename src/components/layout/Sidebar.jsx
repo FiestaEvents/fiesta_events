@@ -40,11 +40,11 @@ const getVerticalConfig = (category) => {
       return {
         eventsLabel: "common.schedule",
         eventsIcon: Calendar,
-        resourcesLabel: "common.vehicles", // Use translation key
+        resourcesLabel: "common.vehicles", // Translation key for "Fleet"
         resourcesIcon: Truck,
-        showSupplies: false, // ❌ Hide
-        showPortfolio: false, // ❌ Hide
-        showPartners: false, // ❌ Hide
+        showSupplies: false, 
+        showPortfolio: false, 
+        showPartners: true, 
       };
     case "photography":
     case "videography":
@@ -53,9 +53,9 @@ const getVerticalConfig = (category) => {
         eventsIcon: Briefcase,
         resourcesLabel: "common.equipment",
         resourcesIcon: Camera,
-        showSupplies: false, // ❌ Hide
-        showPortfolio: true, // ✅ Show
-        showPartners: false,
+        showSupplies: false, 
+        showPortfolio: true, 
+        showPartners: true,
       };
     case "catering":
     case "bakery":
@@ -64,8 +64,8 @@ const getVerticalConfig = (category) => {
         eventsIcon: ClipboardList,
         resourcesLabel: "common.kitchen",
         resourcesIcon: Layers,
-        showSupplies: true, // ✅ Show
-        showPortfolio: true, // ✅ Show
+        showSupplies: true,
+        showPortfolio: true, 
         showPartners: true,
       };
     case "venue":
@@ -90,7 +90,9 @@ const Tooltip = ({ children, text, isRTL, show }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.9, x: isRTL ? 10 : -10 }}
         whileHover={{ opacity: 1, scale: 1, x: 0 }}
-        className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-full mr-2" : "left-full ml-2"} px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50`}
+        className={`absolute top-1/2 -translate-y-1/2 ${
+          isRTL ? "right-full mr-2" : "left-full ml-2"
+        } px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50`}
       >
         {text}
       </motion.div>
@@ -154,7 +156,6 @@ const NavSection = ({ titleKey, children, isCollapsed }) => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
 
-  // Clean null children
   const validChildren = React.Children.toArray(children).filter(
     (child) => child
   );
@@ -195,7 +196,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
   const category = user?.business?.category || "venue";
   const config = getVerticalConfig(category);
 
-  // Permission Hooks
   const canViewEvents = usePermission("events.read.all");
   const canViewClients = usePermission("clients.read.all");
   const canViewPartners = usePermission("partners.read.all");
@@ -231,7 +231,9 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
       <motion.aside
         initial={false}
         animate={{ width: isCollapsed ? 64 : 240 }}
-        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-50 shadow-xl dark:border-gray-800 ${isRTL ? "right-0 border-r-0 border-l" : "left-0"} ${isOpen ? "translate-x-0" : isRTL ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"} transition-transform duration-300 ease-in-out`}
+        className={`fixed top-0 bottom-0 bg-white dark:bg-gray-900 z-50 shadow-xl dark:border-gray-800 ${
+          isRTL ? "right-0 border-r-0 border-l" : "left-0"
+        } ${isOpen ? "translate-x-0" : isRTL ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"} transition-transform duration-300 ease-in-out`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -281,8 +283,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                 />
               )}
 
-              {/* ✅ VEHICLE / RESOURCE LINK */}
-              {/* Drivers manage vehicles via Settings currently, or a future /resources route */}
+              {/* ✅ RESOURCE LOGIC: Driver -> /fleet, Venue -> /settings */}
               {canViewResources &&
                 (category === "driver" || category === "transport" ? (
                   <NavLink
@@ -299,6 +300,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                     isCollapsed={isCollapsed}
                   />
                 ) : null)}
+
               {canViewClients && (
                 <NavLink
                   to="/clients"
@@ -308,7 +310,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                 />
               )}
 
-              {/* ✅ PORTFOLIO (Hidden for Drivers) */}
+              {/* ✅ PORTFOLIO: Hidden for Driver based on config */}
               {canViewPortfolio && config.showPortfolio && (
                 <NavLink
                   to="/portfolio"
@@ -318,7 +320,17 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                 />
               )}
 
-              {/* ✅ SUPPLIES (Hidden for Drivers) */}
+              {/* ✅ PARTNERS: Hidden for Driver based on config */}
+              {canViewPartners && config.showPartners && (
+                <NavLink
+                  to="/partners"
+                  icon={Handshake}
+                  label={t("common.partners")}
+                  isCollapsed={isCollapsed}
+                />
+              )}
+
+              {/* ✅ SUPPLIES: Hidden for Driver based on config */}
               {canViewSupplies && config.showSupplies && (
                 <NavLink
                   to="/supplies"

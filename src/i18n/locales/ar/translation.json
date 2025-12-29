@@ -1400,268 +1400,335 @@
     }
   },
   "tasks": {
-    "categoryLabel": "الفئة", 
-    "untitled": "Tâche sans titre",
-    "title": "المهام",
-    "subtitle": "إدارة وتتبع مهام فريقك",
-    "archivedTasks": "المهام المؤرشفة",
-    "archivedSubtitle": "عرض وإدارة المهام المؤرشفة سابقًا",
-    "createTask": "إنشاء مهمة",
-    "createFirstTask": "أنشئ مهمتك الأولى",
-    "returnToActive": "العودة للمهام النشطة",
-    "archived": "المؤرشفة",
-    "searchPlaceholder": "البحث في المهام...",
-    "view": {
-      "list": "قائمة",
-      "kanban": "كانبان"
+  "categoryLabel": "فئة",
+  "untitled": "مهمة بدون عنوان",
+  "title": "المهام",
+  "subtitle": "إدارة وتتبع مهام فريقك",
+  "archivedTasks": "المهام المؤرشفة",
+  "archivedSubtitle": "عرض وإدارة المهام المؤرشفة سابقًا",
+  "createTask": "إنشاء مهمة",
+  "createFirstTask": "أنشئ مهمتك الأولى",
+  "returnToActive": "العودة إلى المهام النشطة",
+  "archived": "مؤرشفة",
+  "searchPlaceholder": "البحث في المهام...",
+  "view": {
+    "list": "قائمة",
+    "kanban": "كانبان"
+  },
+  "stats": {
+    "total": "إجمالي المهام"
+  },
+  "filters": {
+    "allCategories": "جميع الفئات",
+    "allStatus": "جميع الحالات",
+    "allPriorities": "جميع الأولويات",
+    "clearFilters": "مسح التصفية",
+    "advanced": "تصفية متقدمة",
+    "filterOptions": "خيارات التصفية",
+    "reset": "إعادة تعيين",
+    "apply": "تطبيق",
+    "noResultsDesc": "لا توجد مهام تطابق التصفية"
+  },
+  "table": {
+    "title": "المهمة / الوصف",
+    "status": "الحالة",
+    "priority": "الأولوية",
+    "dueDate": "تاريخ الاستحقاق",
+    "assignedTo": "مكلف بـ",
+    "actions": "إجراءات"
+  },
+  "form": {
+    "createTitle": "إنشاء مهمة جديدة",
+    "editTitle": "تعديل المهمة",
+    "steps": {
+      "basicInfo": "المعلومات الأساسية",
+      "planning": "التخطيط",
+      "checklist": "قائمة التحقق"
     },
-    "stats": {
-      "total": "إجمالي المهام"
+    "fields": {
+      "title": "العنوان",
+      "titlePlaceholder": "أدخل عنوان المهمة",
+      "description": "الوصف",
+      "descriptionPlaceholder": "أدخل تفاصيل المهمة",
+      "priority": "الأولوية",
+      "status": "الحالة",
+      "category": "الفئة",
+      "dueDate": "تاريخ الاستحقاق",
+      "assignedTo": "مكلف بـ",
+      "unassigned": "غير معين",
+      "tags": "الوسوم",
+      "tagPlaceholder": "أضف وسم",
+      "subtasks": "المهام الفرعية",
+      "subtaskTitlePlaceholder": "أدخل عنوان المهمة الفرعية"
     },
-    "category": {
-      "event_preparation": "التحضير للحدث",
-      "design": "التصميم",
-      "development": "تطوير",
-      "marketing": "التسويق",
-      "maintenance": "الصيانة",
-      "client_followup": "متابعة العملاء",
-      "partner_coordination": "تنسيق الشركاء",
-      "administrative": "إداري",
-      "finance": "المالية",
-      "setup": "الإعداد / التجهيز",
-      "cleanup": "التنظيف",
-      "other": "أخرى"
+    "buttons": {
+      "add": "إضافة",
+      "next": "التالي",
+      "previous": "السابق",
+      "create": "إنشاء المهمة",
+      "update": "تحديث المهمة",
+      "updateNow": "تحديث الآن"
     },
-    "messages": {
-      "resultsCount": "تم العثور على {{count}} مهمة",
-      "noResults": "لا توجد مهام",
-      "noResultsDescription": "حاول تعديل البحث أو المرشحات للعثور على ما تبحث عنه.",
-      "noTasks": "لا توجد مهام حتى الآن",
-      "noTasksDescription": "ابدأ بإنشاء مهمة جديدة لتتبع عملك.",
-      "thisTask": "هذه المهمة",
-      "error": {
-        "load": "فشل تحميل المهام"
-      },
-      "success": {
-        "created": "تم إنشاء المهمة بنجاح",
-        "updated": "تم تحديث المهمة بنجاح",
-        "archived": "تم أرشفة المهمة بنجاح",
-        "restored": "تم استعادة المهمة بنجاح",
-        "deleted": "تم حذف المهمة بنجاح"
-      },
-      "archiveConfirm": {
-        "title": "أرشفة المهمة",
-        "message": "هل أنت متأكد أنك تريد أرشفة \"{{title}}\"؟"
-      },
-      "restoreConfirm": {
-        "title": "استعادة المهمة",
-        "message": "هل أنت متأكد أنك تريد استعادة \"{{title}}\"؟"
-      },
-      "deleteConfirm": {
-        "title": "حذف المهمة",
-        "message": "هل أنت متأكد أنك تريد حذف \"{{title}}\" نهائياً؟ لا يمكن التراجع عن هذا الإجراء."
+    "validation": {
+      "titleRequired": "العنوان مطلوب",
+      "categoryRequired": "الفئة مطلوبة",
+      "dueDateRequired": "تاريخ الاستحقاق مطلوب",
+      "fixErrors": "يرجى تصحيح الأخطاء",
+      "fixAllErrors": "يرجى تصحيح جميع الأخطاء قبل الإرسال"
+    }
+  },
+  "priority": {
+    "low": "منخفضة",
+    "medium": "متوسطة",
+    "high": "عالية",
+    "urgent": "عاجلة"
+  },
+  "status": {
+    "pending": "قيد الانتظار",
+    "todo": "للعمل",
+    "in_progress": "جاري التنفيذ",
+    "blocked": "مسدود",
+    "completed": "مكتمل",
+    "cancelled": "ملغى"
+  },
+  "category": {
+    "event_preparation": "تحضير الفعالية",
+    "marketing": "تسويق",
+    "maintenance": "صيانة",
+    "client_followup": "متابعة العملاء",
+    "partner_coordination": "تنسيق الشركاء",
+    "administrative": "إداري",
+    "finance": "مالية",
+    "setup": "تجهيز",
+    "cleanup": "تنظيف",
+    "other": "أخرى",
+    "design": "تصميم",
+    "development": "تطوير"
+  },
+  "messages": {
+    "noResults": "لم يتم العثور على مهام",
+    "noResultsDescription": "حاول تعديل البحث أو التصفية للعثور على ما تبحث عنه.",
+    "noTasks": "لا توجد مهام بعد",
+    "noTasksDescription": "ابدأ بإنشاء مهمة جديدة لتتبع عملك.",
+    "thisTask": "هذه المهمة",
+    "resultsCount": "عرض {{count}}",
+    "error": {
+      "load": "فشل تحميل المهام"
+    },
+    "success": {
+      "created": "تم إنشاء المهمة بنجاح",
+      "updated": "تم تحديث المهمة بنجاح",
+      "archived": "تم أرشفة المهمة بنجاح",
+      "restored": "تم استعادة المهمة بنجاح",
+      "deleted": "تم حذف المهمة بنجاح"
+    },
+    "archiveConfirm": {
+      "title": "أرشفة المهمة",
+      "message": "هل أنت متأكد أنك تريد أرشفة \"{{title}}\"؟"
+    },
+    "restoreConfirm": {
+      "title": "استعادة المهمة",
+      "message": "هل أنت متأكد أنك تريد استعادة \"{{title}}\"؟"
+    },
+    "deleteConfirm": {
+      "title": "حذف المهمة",
+      "message": "هل أنت متأكد أنك تريد حذف \"{{title}}\" بشكل دائم؟ لا يمكن التراجع عن هذا الإجراء."
+    }
+  },
+  "toasts": {
+    "status": {
+      "error": "فشل تحديث الحالة",
+      "success": "تم تحديث حالة المهمة"
+    }
+  },
+  "notifications": {
+    "archiving": "جارٍ الأرشفة...",
+    "restoring": "جارٍ الاستعادة...",
+    "deleting": "جارٍ الحذف...",
+    "filtersApplied": "تم تطبيق التصفية"
+  },
+  "detail": {
+    "loading": "جارٍ تحميل تفاصيل المهمة...",
+    "errorLoading": "خطأ في التحميل",
+    "notFound": "المهمة غير موجودة أو ليس لديك صلاحية لعرضها.",
+    "backToTasks": "العودة للمهام",
+    "tryAgain": "حاول مرة أخرى",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "subtasks": "المهام الفرعية",
+      "comments": "التعليقات",
+      "attachments": "المرفقات",
+      "timeline": "سجل النشاط"
+    },
+    "header": {
+      "backToTasks": "رجوع",
+      "editTask": "تعديل",
+      "deleteTask": "حذف",
+      "actions": {
+        "startWorking": "بدء العمل",
+        "pauseTask": "إيقاف مؤقت",
+        "markComplete": "تحديد كمكتمل",
+        "archiveTask": "أرشفة"
+      }
+    },
+    "info": {
+      "title": "معلومات المهمة",
+      "dueDate": "تاريخ الاستحقاق",
+      "startDate": "تاريخ البدء",
+      "assignedTo": "مكلف بـ",
+      "category": "الفئة",
+      "estimatedHours": "ساعات مقدرة",
+      "actualHours": "ساعات فعلية",
+      "taskBlocked": "مهمة محجوبة",
+      "overdue": "متأخر"
+    },
+    "overview": {
+      "metrics": "المقاييس الرئيسية",
+      "progress": "التقدم",
+      "subtasks": "المهام الفرعية",
+      "estimated": "مقدر",
+      "actual": "فعلي",
+      "description": "الوصف",
+      "noDescription": "لا يوجد وصف لهذه المهمة."
+    },
+    "subtasks": {
+      "title": "المهام الفرعية",
+      "noSubtasks": "لا توجد مهام فرعية",
+      "noSubtasksDescription": "قم بتقسيم هذه المهمة إلى خطوات أصغر لتتبع التقدم بشكل أفضل.",
+      "errorToggle": "فشل تحديث حالة المهمة الفرعية"
+    },
+    "comments": {
+      "title": "التعليقات",
+      "unknownUser": "مستخدم غير معروف",
+      "edited": "معدل",
+      "noComments": "لا توجد تعليقات",
+      "noCommentsDescription": "كن أول من يترك تعليقاً على هذه المهمة."
+    },
+    "attachments": {
+      "title": "المرفقات",
+      "noAttachments": "لا توجد مرفقات",
+      "noAttachmentsDescription": "لم يتم إرفاق أي ملفات بهذه المهمة بعد."
+    },
+    "timeline": {
+      "title": "الجدول الزمني للنشاط",
+      "unknownDate": "تاريخ غير معروف",
+      "noEvents": "لا يوجد سجل",
+      "noEventsDescription": "لم يتم تسجيل أي نشاط لهذه المهمة بعد.",
+      "by": "بواسطة",
+      "to": "إلى",
+      "noReason": "لم يتم تقديم سبب",
+      "events": {
+        "created": "تم إنشاء المهمة",
+        "assigned": "تم تعيين المهمة",
+        "statusChanged": "تغيرت الحالة",
+        "completed": "اكتملت المهمة",
+        "cancelled": "تم إلغاء المهمة"
       }
     },
     "toasts": {
       "status": {
-        "error": "فشل تحديث الحالة",
-        "success": "تم تحديث الحالة بنجاح",
-        "loading": "جارٍ تحديث الحالة..."
+        "loading": "جاري تحديث الحالة...",
+        "success": "تم تحديث الحالة إلى {{status}}",
+        "error": "فشل تحديث الحالة"
       },
-      "archive": {
-        "error": "فشل الأرشفة",
-        "success": "تم الأرشفة بنجاح",
-        "loading": "جارٍ الأرشفة..."
+      "complete": {
+        "loading": "جاري الإكمال...",
+        "success": "تم تحديد المهمة كمكتملة",
+        "error": "فشل إكمال المهمة"
       },
-      "restore": {
-        "error": "فشل الاستعادة",
-        "success": "تم الاستعادة بنجاح",
-        "loading": "جارٍ الاستعادة..."
-      },
-      "delete": {
-        "error": "فشل الحذف",
-        "success": "تم الحذف بنجاح",
-        "loading": "جارٍ الحذف..."
-      },
-      "markComplete": {
-        "error": "فشل التسجيل كمكتمل",
-        "success": "تم التسجيل كمكتمل بنجاح",
-        "loading": "جارٍ التسجيل كمكتمل..."
-      },
-      "markIncomplete": {
-        "error": "فشل التسجيل كغير مكتمل",
-        "success": "تم التسجيل كغير مكتمل بنجاح",
-        "loading": "جارٍ التسجيل كغير مكتمل..."
-      }
-    },
-    "notifications": {
-      "archiving": "جارٍ الأرشفة...",
-      "restoring": "جارٍ الاستعادة...",
-      "deleting": "جارٍ الحذف...",
-      "filtersApplied": "تم تطبيق المرشحات"
-    },
-    "filters": {
-      "allCategories": "جميع الفئات",
-      "allStatus": "جميع الحالات",
-      "allPriorities": "جميع الأولويات",
-      "clearFilters": "مسح التصفية",
-      "advanced": "تصفية متقدمة",
-      "filterOptions": "خيارات التصفية",
-      "reset": "إعادة تعيين",
-      "apply": "تطبيق"
-    },
-    "table": {
-      "title": "المهمة / الوصف",
-      "status": "الحالة",
-      "priority": "الأولوية",
-      "dueDate": "تاريخ الاستحقاق",
-      "assignedTo": "مكلف إلى",
-      "actions": "إجراءات"
-    },
-    "form": {
-        "createTitle": "إنشاء مهمة جديدة",
-        "editTitle": "تعديل المهمة",
-        "steps": {
-          "basicInfo": "المعلومات الأساسية",
-          "planning": "التخطيط",
-          "checklist": "قائمة المراجعة"
-        },
-        "fields": {
-          "title": "العنوان",
-          "titlePlaceholder": "أدخل عنوان المهمة",
-          "description": "الوصف",
-          "descriptionPlaceholder": "أدخل تفاصيل المهمة",
-          "priority": "الأولوية",
-          "status": "الحالة",
-          "category": "الفئة",
-          "dueDate": "تاريخ الاستحقاق",
-          "assignedTo": "معين إلى",
-          "unassigned": "غير معين",
-          "tags": "الوسوم",
-          "tagPlaceholder": "إضافة وسم",
-          "subtasks": "المهام الفرعية",
-          "subtaskTitlePlaceholder": "أدخل عنوان المهمة الفرعية"
-        },
-        "buttons": {
-          "add": "إضافة",
-          "next": "التالي",
-          "previous": "السابق",
-          "create": "إنشاء المهمة",
-          "update": "تحديث المهمة",
-          "updateNow": "تحديث الآن"
-        },
-        "validation": {
-          "titleRequired": "العنوان مطلوب",
-          "categoryRequired": "الفئة مطلوبة",
-          "dueDateRequired": "تاريخ الاستحقاق مطلوب",
-          "fixErrors": "يرجى إصلاح الأخطاء",
-          "fixAllErrors": "يرجى إصلاح جميع الأخطاء قبل الإرسال"
-        }
-      },
-    "status": {
-      "pending": "قيد الانتظار",
-      "in_progress": "قيد التنفيذ",
-      "completed": "مكتمل",
-      "cancelled": "ملغى",
-      "on_hold": "معلق",
-      "blocked": "مسدود"
-    },
-    "priority": {
-      "low": "منخفض",
-      "medium": "متوسط",
-      "high": "عالي",
-      "urgent": "عاجل"
-    },
-    "detail": {
-      "toasts": {
-        "archive": {
-          "success": "تم أرشفة المهمة بنجاح",
-          "error": "فشل أرشفة المهمة",
-          "loading": "جارٍ الأرشفة..."
-        },
-        "taskCreated": "تم إنشاء المهمة بنجاح",
-        "taskUpdated": "تم تحديث المهمة بنجاح",
-        "taskDeleted": "تم حذف المهمة بنجاح",
-        "taskArchived": "تم أرشفة المهمة بنجاح"
-      },
-      "loading": "جاري تحميل التفاصيل...",
-      "tabs": {
-        "overview": "نظرة عامة",
-        "subtasks": "المهام الفرعية",
-        "comments": "التعليقات",
-        "attachments": "المرفقات",
-        "timeline": "الجدول الزمني"
-      },
-      "header": {
-        "backToTasks": "عودة للمهام",
-        "editTask": "تعديل",
-        "deleteTask": "حذف",
-        "actions": {
-          "archiveTask": "أرشفة المهمة",
-          "restoreTask": "استعادة المهمة",
-          "deleteTask": "حذف المهمة",
-          "deleteTaskPermanently": "حذف المهمة نهائيًا",
-          "markComplete": "تثبيت المهمة"
-        }
-      },
-      "info": {
-        "title": "معلومات المهمة",
-        "dueDate": "تاريخ الاستحقاق",
-        "assignedTo": "مكلف إلى",
-        "category": "الفئة"
-      },
-      "overview": {
-        "metrics": "المقاييس",
-        "progress": "التقدم",
-        "subtasks": "المهام الفرعية المكتملة",
-        "estimated": "ساعات تقديرية",
-        "actual": "ساعات فعلية",
-        "description": "الوصف"
-      },
-      "subtasks": {
-        "label": "المهام الفرعية المكتملة"
-      },
-      "modals": {
-        "edit": {
-          "title": "تعديل المهمة"
-        },
-        "delete": {
-          "title": "حذف المهمة",
-          "message": "هل أنت متأكد أنك تريد حذف هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء."
-        }
-      }
-    }
-  },
-  "taskDetailModal": {
-    "title": "تفاصيل المهمة",
-    "overdue": "متأخر",
-    "progress": "تقدم",
-    "dueDate": "تاريخ الانتهاء",
-    "assignedTo": " назначен",
-    "estimatedHours": "ساعات مقدرة",
-    "description": "الوصف",
-    "actions": {
-      "moreDetails": "عرض التفاصيل",
       "archive": {
         "loading": "جاري الأرشفة...",
-        "success": "تم الأرشفة بنجاح",
-        "error": "فشل في الأرشفة"
-      },
-      "restore": {
-        "loading": "جاري التبديل...",
-        "success": "تم التبديل بنجاح",
-        "error": "فشل في التبديل"
+        "success": "تم أرشفة المهمة بنجاح",
+        "error": "فشل الأرشفة"
       },
       "delete": {
         "loading": "جاري الحذف...",
-        "success": "تم الحذف بنجاح",
-        "error": "فشل في الحذف"
-      }
+        "success": "تم حذف المهمة بنجاح",
+        "error": "فشل الحذف"
+      },
+      "retry": "إعادة المحاولة..."
     },
-    "delete": {
-      "confirmMessage": "هل أنت متأكد من رغبتك في حذف \"{{title}}\"؟ لا يمكن التراجع عن هذا الإجراء."
+    "modals": {
+      "edit": { "title": "تعديل المهمة" },
+      "delete": { 
+        "title": "حذف المهمة", 
+        "message": "هل أنت متأكد أنك تريد حذف \"{{title}}\" بشكل دائم؟ لا يمكن التراجع عن هذا الإجراء." 
+      }
     }
   },
+  "loading": "جارٍ تحميل تفاصيل المهمة...",
+  "tabs": {
+    "overview": "نظرة عامة",
+    "subtasks": "المهام الفرعية",
+    "comments": "التعليقات",
+    "attachments": "المرفقات",
+    "timeline": "الجدول الزمني"
+  },
+  "header": {
+    "backToTasks": "العودة للمهام",
+    "editTask": "تعديل",
+    "deleteTask": "حذف",
+    "actions": {
+      "archiveTask": "أرشفة المهمة"
+    }
+  },
+  "info": {
+    "title": "معلومات المهمة",
+    "dueDate": "تاريخ الاستحقاق",
+    "assignedTo": "مكلف بـ",
+    "category": "الفئة"
+  },
+  "overview": {
+    "metrics": "المقاييس",
+    "progress": "التقدم",
+    "subtasks": "المهام الفرعية المكتملة",
+    "estimated": "الساعات المقدرة",
+    "actual": "الساعات الفعلية",
+    "description": "الوصف"
+  },
+  "subtasks": {
+    "label": "المهام الفرعية المكتملة"
+  },
+  "modals": {
+    "edit": {
+      "title": "تعديل المهمة"
+    },
+    "delete": {
+      "title": "حذف المهمة",
+      "message": "هل أنت متأكد أنك تريد حذف هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء."
+    }
+  }
+},
+"taskDetailModal": {
+  "title": "تفاصيل المهمة",
+  "overdue": "متأخر",
+  "progress": "التقدم",
+  "dueDate": "تاريخ الاستحقاق",
+  "assignedTo": "مكلف بـ",
+  "estimatedHours": "الساعات المقدرة",
+  "description": "الوصف",
+  "actions": {
+    "moreDetails": "عرض التفاصيل",
+    "archive": {
+      "loading": "جارٍ الأرشفة...",
+      "success": "تم أرشفة المهمة",
+      "error": "فشل الأرشفة"
+    },
+    "restore": {
+      "loading": "جارٍ الاستعادة...",
+      "success": "تم استعادة المهمة",
+      "error": "فشل الاستعادة"
+    },
+    "delete": {
+      "loading": "جارٍ الحذف...",
+      "success": "تم حذف المهمة",
+      "error": "فشل الحذف"
+    }
+  },
+  "delete": {
+    "confirmMessage": "هل أنت متأكد أنك تريد حذف \"{{title}}\"؟ لا يمكن التراجع عن ذلك."
+  }
+},
   "reminders": {
     "title": "التذكيرات",
     "subtitle": "إدارة مهامك وإشعاراتك",
@@ -1893,6 +1960,7 @@
     }
   },
   "payments": {
+    "emptyStateDescription": "لا توجد مدفوعات حتى الآن",
     "title": "المدفوعات",
     "subtitle": "تتبع جميع مدفوعات الدخل والمصروفات",
     "addPayment": "إضافة دفعة",
@@ -2748,9 +2816,10 @@
     "updateNow": "تحديث الآن",
     "confirmDelete": "تأكيد الحذف",
     "restore": "استعادة",
-    "archive": "أرشفة",
-    "markComplete": "",
-    "markIncomplete": "",
+    "archive": "أرشفة", 
+    "markComplete": "تحديد كمكتمل",
+    "markIncomplete": "تحديد كغير مكتمل",
+    "completed":"مكتمل",
     "pax": "أشخاص",
     "guests": "ضيوف",
     "remaining": "متبقي",

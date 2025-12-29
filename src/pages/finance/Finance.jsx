@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,43 +14,51 @@ import {
   BarChart3,
   PieChart,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RePieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
-// ✅ API & Services
+// API & Services
 import { financeService, paymentService } from "../../api/index";
+import { useToast } from "../../context/ToastContext";
 
-// ✅ Generic Components & Utils
+// Components
 import Button from "../../components/common/Button";
 import Select from "../../components/common/Select";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
 import formatCurrency from "../../utils/formatCurrency";
 
-// ✅ Context
-import { useToast } from "../../hooks/useToast"; // Updated hook path
+const COLORS = ["#10B981", "#EF4444", "#F59E0B", "#3B82F6"];
 
 const Finance = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { apiError } = useToast(); // Use custom toast
+  const { showError } = useToast();
 
   const [period, setPeriod] = useState("month");
   const [isLoading, setIsLoading] = useState(true);
 
   const [financialData, setFinancialData] = useState({
-    summary: null,
-    cashflow: null,
-    expensesBreakdown: null,
-    incomeBreakdown: null,
-    trends: null,
+    summary: {},
+    cashflow: [],
+    currentBalance: 0,
+    expensesBreakdown: [],
+    incomeBreakdown: [],
+    trends: [],
     recentTransactions: [],
     upcomingPayments: [],
   });
-
-  // ✅ Helper: Strict DD/MM/YYYY format
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-GB");
-  };
 
   const getDateRange = useCallback((selectedPeriod) => {
     const now = new Date();
@@ -80,7 +88,7 @@ const Finance = () => {
   }, []);
 
   useEffect(() => {
-    const fetchAllFinancialData = async () => {
+    const loadData = async () => {
       try {
         setIsLoading(true);
         const dateRange = getDateRange(period);
@@ -95,17 +103,19 @@ const Finance = () => {
           paymentsRes,
         ] = await Promise.all([
           financeService.getSummary(dateRange),
-          financeService.getCashflow(dateRange),
-          financeService.getExpensesBreakdown(dateRange),
+          financeService.getCashFlowReport(dateRange),
+          financeService.getExpenseBreakdown(dateRange),
           financeService.getIncomeBreakdown(dateRange),
-          financeService.getTrends({ months: period === "year" ? 12 : 6 }),
-          financeService.getAll({
+          financeService.getFinancialTrends({
+            months: period === "year" ? 12 : 6,
+          }),
+          financeService.getFinanceRecords({
             ...dateRange,
             limit: 10,
             sortBy: "date",
             order: "desc",
           }),
-          paymentService.getAll({ status: "pending", limit: 10 }),
+          paymentService.getPayments({ status: "pending", limit: 6 }),
         ]);
 
         setFinancialData({
@@ -115,81 +125,68 @@ const Finance = () => {
           expensesBreakdown: expensesRes.breakdown || [],
           incomeBreakdown: incomeRes.breakdown || [],
           trends: trendsRes.trends || [],
-          recentTransactions: transactionsRes.finance || [],
-          upcomingPayments: paymentsRes.payments || paymentsRes || [],
+          recentTransactions: transactionsRes.records || [],
+          upcomingPayments: paymentsRes.payments || [],
         });
       } catch (error) {
-        apiError(error, t("finance.errors.loadFailed"));
+        console.error(error);
+        showError(t("finance.errors.loadFailed"));
       } finally {
         setIsLoading(false);
       }
     };
+    loadData();
+  }, [period, getDateRange, t, showError]);
 
-    fetchAllFinancialData();
-  }, [period, getDateRange, apiError, t]);
+  // Chart Data Preparation
+  const expenseChartData = useMemo(() => {
+    return financialData.expensesBreakdown
+      .map((item) => ({
+        name: item.category.replace(/_/g, " "),
+        value: item.totalAmount,
+      }))
+      .filter((i) => i.value > 0);
+  }, [financialData.expensesBreakdown]);
 
-  const getDaysUntil = (date) => {
-    const today = new Date();
-    const dueDate = new Date(date);
-    const diffTime = dueDate - today;
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
+  const trendChartData = useMemo(() => {
+    return financialData.trends.map((t) => ({
+      name: t.month,
+      Income: t.income,
+      Expense: t.expense,
+    }));
+  }, [financialData.trends]);
 
-  // Calculate event vs venue expenses
-  const calculateExpenseBreakdown = () => {
-    const expenses = financialData.expensesBreakdown || [];
-
-    const eventExpenses = expenses
-      .filter((exp) => ["partner_payment"].includes(exp.category))
-      .reduce((sum, exp) => sum + (exp.totalAmount || 0), 0);
-
-    const venueExpenses = expenses
-      .filter(
-        (exp) => !["partner_payment", "event_revenue"].includes(exp.category)
-      )
-      .reduce((sum, exp) => sum + (exp.totalAmount || 0), 0);
-
-    return { eventExpenses, venueExpenses };
-  };
-
-  const { eventExpenses, venueExpenses } = calculateExpenseBreakdown();
-
-  // Period Options for Select Component
-  const periodOptions = [
-    { value: "week", label: t("finance.period.week") },
-    { value: "month", label: t("finance.period.month") },
-    { value: "quarter", label: t("finance.period.quarter") },
-    { value: "year", label: t("finance.period.year") },
-  ];
-
-  if (isLoading) {
+  if (isLoading)
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="h-screen flex items-center justify-center">
         <OrbitLoader />
       </div>
     );
-  }
-
-  const summary = financialData.summary || {};
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-gray-800">
+    <div className="space-y-6 p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {t("finance.dashboard")}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {t("finance.overview")}
           </p>
         </div>
+
         <div className="flex items-center gap-3">
           <div className="w-40">
             <Select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              options={periodOptions}
+              options={[
+                { value: "week", label: t("finance.period.week") },
+                { value: "month", label: t("finance.period.month") },
+                { value: "quarter", label: t("finance.period.quarter") },
+                { value: "year", label: t("finance.period.year") },
+              ]}
             />
           </div>
           <Button
@@ -202,349 +199,190 @@ const Finance = () => {
         </div>
       </div>
 
-      {/* Main Metrics */}
+      {/* 1. Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           label={t("finance.metrics.totalRevenue")}
-          value={formatCurrency(summary.totalIncome || 0)}
+          value={financialData.summary.totalIncome}
           icon={TrendingUp}
           color="green"
-          description={t("finance.metrics.allIncomeSources")}
         />
         <MetricCard
           label={t("finance.metrics.totalExpenses")}
-          value={formatCurrency(summary.totalExpense || 0)}
+          value={financialData.summary.totalExpense}
           icon={TrendingDown}
           color="red"
-          description={t("finance.metrics.eventVenueCosts")}
         />
         <MetricCard
           label={t("finance.metrics.netProfit")}
-          value={formatCurrency(summary.netProfit || 0)}
+          value={financialData.summary.netProfit}
           icon={DollarSign}
           color="blue"
-          description={t("finance.metrics.afterAllExpenses")}
         />
         <MetricCard
           label={t("finance.metrics.profitMargin")}
-          value={`${summary.profitMargin || 0}%`}
+          value={`${financialData.summary.profitMargin || 0}%`}
           icon={Target}
           color="purple"
-          description={t("finance.metrics.overallProfitability")}
+          isPercent
         />
       </div>
 
-      {/* Event & Venue Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Event Financials */}
-        <Card>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg">
-              <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t("finance.eventFinancials.title")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t("finance.eventFinancials.description")}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <FinancialRow
-              label={t("finance.eventFinancials.eventRevenue")}
-              amount={
-                (financialData.incomeBreakdown || []).find(
-                  (inc) => inc.category === "event_revenue"
-                )?.totalAmount || 0
-              }
-              color="green"
-            />
-            <FinancialRow
-              label={t("finance.eventFinancials.partnerCosts")}
-              amount={eventExpenses}
-              color="red"
-            />
-
-            <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {t("finance.eventFinancials.eventProfit")}
-                </span>
-                <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  {formatCurrency(
-                    ((financialData.incomeBreakdown || []).find(
-                      (inc) => inc.category === "event_revenue"
-                    )?.totalAmount || 0) - eventExpenses
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Venue Operating Expenses */}
-        <Card>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-              <Building className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t("finance.venueExpenses.title")}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t("finance.venueExpenses.description")}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {(financialData.expensesBreakdown || [])
-              .filter(
-                (exp) =>
-                  !["partner_payment", "event_revenue"].includes(exp.category)
-              )
-              .slice(0, 5)
-              .map((expense, index) => {
-                const percentage =
-                  venueExpenses > 0
-                    ? ((expense.totalAmount || 0) / venueExpenses) * 100
-                    : 0;
-                return (
-                  <div key={index}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                        {expense.category.replace(/_/g, " ")}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(expense.totalAmount || 0)}
-                      </span>
-                    </div>
-                    <div className="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                      <div
-                        className="absolute left-0 top-0 h-full bg-orange-500 rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-
-            <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {t("finance.venueExpenses.totalVenueExpenses")}
-                </span>
-                <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                  {formatCurrency(venueExpenses)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Cash Flow & Recent Activity */}
+      {/* 2. Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cash Flow */}
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {t("finance.cashFlow.title")}
-            </h3>
+        {/* Income vs Expense Trend */}
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 className="font-bold text-gray-900 dark:text-white mb-6">
+            Financial Trends
+          </h3>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendChartData}>
+                <defs>
+                  <linearGradient id="colorInc" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#E5E7EB"
+                />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#9CA3AF" }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#9CA3AF" }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    backgroundColor: "#1F2937",
+                    color: "#fff",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="Income"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorInc)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="Expense"
+                  stroke="#EF4444"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorExp)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
+        </div>
 
-          {financialData.cashflow && financialData.cashflow.length > 0 ? (
-            <div className="space-y-3">
-              {financialData.cashflow.slice(-3).map((period, index) => (
-                <div
-                  key={index}
-                  className="p-3 bg-white dark:bg-gray-800/50 rounded-lg"
+        {/* Expense Breakdown Donut */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
+          <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+            Expense Breakdown
+          </h3>
+          <div className="flex-1 min-h-[250px] relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <RePieChart>
+                <Pie
+                  data={
+                    expenseChartData.length > 0
+                      ? expenseChartData
+                      : [{ name: "No Data", value: 1 }]
+                  }
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
                 >
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    {period.period}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {t("finance.cashFlow.net")}
-                    </span>
-                    <span
-                      className={`text-sm font-bold ${period.net >= 0 ? "text-green-600" : "text-red-600"}`}
-                    >
-                      {formatCurrency(period.net)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              <div className="pt-3 border-t border-gray-100 dark:border-gray-700 mt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {t("finance.cashFlow.currentBalance")}
-                  </span>
-                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {formatCurrency(financialData.currentBalance || 0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">
-                {t("finance.cashFlow.noData")}
-              </p>
-            </div>
-          )}
-        </Card>
-
-        {/* Recent Transactions */}
-        <div className="lg:col-span-2">
-          <Card>
-            <div className="flex items-center justify-between mb-4 ">
-              <h3 className="text-lg font-semibold text-gray-900  dark:text-gray-100">
-                {t("finance.recentTransactions.title")}
-              </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                className="dark:text-gray-600"
-                onClick={() => navigate("/finance/transactions")}
-              >
-                {t("finance.recentTransactions.viewAll")}
-              </Button>
-            </div>
-
-            {financialData.recentTransactions?.length > 0 ? (
-              <div className="space-y-2">
-                {financialData.recentTransactions
-                  .slice(0, 5)
-                  .map((transaction) => {
-                    const isIncome = transaction.type === "income";
-                    return (
-                      <div
-                        key={transaction._id}
-                        className="flex items-center justify-between p-3 bg-white dark:bg-gray-800/50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3 ">
-                          <div
-                            className={`p-2 rounded-lg ${isIncome ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
-                          >
-                            {isIncome ? (
-                              <TrendingUp className="w-4 h-4" />
-                            ) : (
-                              <TrendingDown className="w-4 h-4" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm text-gray-900  dark:text-gray-100">
-                              {transaction.description ||
-                                t("finance.recentTransactions.transaction")}
-                            </p>
-                            <p className="text-xs text-gray-500 capitalize">
-                              {(transaction.category || "other").replace(
-                                /_/g,
-                                " "
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p
-                            className={`text-sm font-bold ${isIncome ? "text-green-600" : "text-red-600"}`}
-                          >
-                            {isIncome ? "+" : "-"}
-                            {formatCurrency(transaction.amount)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatDate(transaction.date)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Wallet className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">
-                  {t("finance.recentTransactions.noData")}
-                </p>
-              </div>
-            )}
-          </Card>
+                  {expenseChartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend verticalAlign="bottom" height={36} />
+              </RePieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      {/* Upcoming Payments */}
-      {financialData.upcomingPayments?.length > 0 && (
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {t("finance.upcomingPayments.title")}
-            </h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/payments")}
-            >
-              {t("finance.upcomingPayments.viewAll")}
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {financialData.upcomingPayments.slice(0, 6).map((payment) => {
-              const daysUntil = getDaysUntil(payment.dueDate);
-              const isUrgent = daysUntil <= 3;
-
-              let dueText = "";
-              if (daysUntil === 0)
-                dueText = t("finance.upcomingPayments.dueToday");
-              else if (daysUntil === 1)
-                dueText = t("finance.upcomingPayments.dueTomorrow");
-              else
-                dueText = t("finance.upcomingPayments.dueInDays", {
-                  days: daysUntil,
-                });
-
+      {/* 3. Recent Transactions List */}
+      <Card title={t("finance.recentTransactions.title")}>
+        <div className="space-y-0 divide-y divide-gray-100 dark:divide-gray-700">
+          {financialData.recentTransactions.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              No transactions found for this period.
+            </div>
+          ) : (
+            financialData.recentTransactions.map((tx) => {
+              const isIncome = tx.type === "income";
               return (
                 <div
-                  key={payment._id}
-                  className="p-4 bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700"
+                  key={tx._id}
+                  className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-medium text-sm text-gray-900 dark:text-white">
-                        {payment.description ||
-                          t("finance.upcomingPayments.payment")}
-                      </p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Clock
-                          className={`w-3 h-3 ${isUrgent ? "text-red-500" : "text-gray-400"}`}
-                        />
-                        <span
-                          className={`text-xs ${isUrgent ? "text-red-500 font-medium" : "text-gray-500"}`}
-                        >
-                          {dueText}
-                        </span>
-                      </div>
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`p-2 rounded-lg ${isIncome ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
+                    >
+                      {isIncome ? (
+                        <TrendingUp size={18} />
+                      ) : (
+                        <TrendingDown size={18} />
+                      )}
                     </div>
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">
-                      {formatCurrency(payment.amount)}
-                    </span>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {tx.description || "Transaction"}
+                      </p>
+                      <p className="text-xs text-gray-500 capitalize">
+                        {tx.category?.replace(/_/g, " ") || "General"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p
+                      className={`font-bold ${isIncome ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {isIncome ? "+" : "-"}
+                      {formatCurrency(tx.amount)}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(tx.date).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
               );
-            })}
-          </div>
-        </Card>
-      )}
+            })
+          )}
+        </div>
+      </Card>
 
-      {/* Quick Actions */}
+      {/* 4. Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <QuickActionCard
           icon={Wallet}
@@ -579,52 +417,27 @@ const Finance = () => {
   );
 };
 
-// --- Sub-components ---
+// --- Sub Components ---
 
-const MetricCard = ({ label, value, icon: Icon, color, description }) => {
-  const colorClasses = {
-    green:
-      "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
-    red: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
-    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
-    purple:
-      "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
-  };
-
-  return (
-    <Card>
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="w-6 h-6" />
-        </div>
-      </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-        {label}
-      </p>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-        {value}
-      </p>
-      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-        {description}
-      </p>
-    </Card>
-  );
-};
-
-const FinancialRow = ({ label, amount, color }) => {
+const MetricCard = ({ label, value, icon: Icon, color, isPercent }) => {
   const bgColors = {
-    green:
-      "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400",
-    red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
+    green: "bg-green-50 text-green-600 dark:bg-green-900/20",
+    red: "bg-red-50 text-red-600 dark:bg-red-900/20",
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20",
+    purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/20",
   };
-
   return (
-    <div
-      className={`flex items-center justify-between p-3 rounded-lg ${bgColors[color]}`}
-    >
-      <span className="text-sm font-medium opacity-80">{label}</span>
-      <span className="text-base font-bold">{formatCurrency(amount)}</span>
-    </div>
+    <Card className="flex items-center gap-4 p-5 hover:shadow-md transition-shadow">
+      <div className={`p-3 rounded-xl ${bgColors[color]}`}>
+        <Icon size={24} />
+      </div>
+      <div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {isPercent ? value : formatCurrency(value || 0)}
+        </h3>
+      </div>
+    </Card>
   );
 };
 
@@ -636,33 +449,25 @@ const QuickActionCard = ({
   color,
 }) => {
   const colorClasses = {
-    blue: "bg-blue-50 text-blue-600",
-    purple: "bg-purple-50 text-purple-600",
-    green: "bg-green-50 text-green-600",
-    yellow: "bg-yellow-50 text-yellow-600",
+    blue: "text-blue-600 bg-blue-50",
+    purple: "text-purple-600 bg-purple-50",
+    green: "text-green-600 bg-green-50",
+    yellow: "text-yellow-600 bg-yellow-50",
   };
-
   return (
-    <div
-      onClick={onClick}
-      className="cursor-pointer transition-transform hover:-translate-y-1"
-    >
-      <Card className="h-full hover:shadow-md transition-shadow">
-        <div className="flex items-center gap-4">
+    <div onClick={onClick} className="cursor-pointer group">
+      <Card className="h-full p-5 hover:border-orange-200 transition-all group-hover:-translate-y-1">
+        <div className="flex items-start justify-between mb-4">
           <div
-            className={`p-3 rounded-lg dark:bg-opacity-20 ${colorClasses[color]}`}
+            className={`p-3 rounded-lg ${colorClasses[color]} dark:bg-opacity-10`}
           >
-            <Icon className="w-6 h-6" />
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-              {title}
-            </h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              {description}
-            </p>
+            <Icon size={20} />
           </div>
         </div>
+        <h4 className="font-bold text-gray-900 dark:text-white mb-1">
+          {title}
+        </h4>
+        <p className="text-xs text-gray-500">{description}</p>
       </Card>
     </div>
   );

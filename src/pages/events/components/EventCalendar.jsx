@@ -11,12 +11,12 @@ import { Users, Clock } from "lucide-react";
 // Event Type Colors
 const getTypeColor = (type) => {
   const map = {
-    wedding: "#9333ea",
-    corporate: "#2563eb",
-    birthday: "#db2777",
-    conference: "#16a34a",
-    party: "#ea580c",
-    other: "#4b5563",
+    wedding: "#9333ea", // Purple
+    corporate: "#2563eb", // Blue
+    birthday: "#db2777", // Pink
+    conference: "#16a34a", // Green
+    party: "#ea580c", // Orange
+    other: "#4b5563", // Gray
   };
   return map[type?.toLowerCase()] || "#4b5563";
 };
@@ -29,30 +29,52 @@ const EventCalendar = ({
   onEventDrop,
   onDatesSet,
 }) => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const { isRTL } = useLanguage();
 
-  const calendarEvents = events.map((event) => ({
-    id: event._id || event.id,
-    title: event.title,
-    start: event.startDate
-      ? new Date(event.startDate).toISOString()
-      : undefined,
-    end: event.endDate ? new Date(event.endDate).toISOString() : undefined,
-    backgroundColor: getTypeColor(event.type),
-    borderColor: getTypeColor(event.type),
-    extendedProps: { ...event },
-    className: event.status === "draft" ? "fc-event-draft" : "",
-  }));
+  const calendarEvents = events.map((event) => {
+    const color = getTypeColor(event.type);
+    return {
+      id: event._id || event.id,
+      title: event.title,
+      start: event.startDate
+        ? new Date(event.startDate).toISOString()
+        : undefined,
+      end: event.endDate ? new Date(event.endDate).toISOString() : undefined,
+      // Pass color as a standard prop so we can access it in render
+      backgroundColor: color,
+      borderColor: color,
+      textColor: "#ffffff",
+      extendedProps: {
+        ...event,
+        // Pass color again in extendedProps to be 100% sure we can access it
+        eventColor: color,
+      },
+      className: event.status === "draft" ? "fc-event-draft" : "",
+    };
+  });
 
+  // ✅ FIX: Apply background color directly to the inner container
   const renderEventContent = (eventInfo) => {
+    // Fallback to extendedProps color if standard prop isn't available immediately
+    const color =
+      eventInfo.event.backgroundColor ||
+      eventInfo.event.extendedProps.eventColor ||
+      "#4b5563";
+
     return (
-      <div className="w-full overflow-hidden px-1.5 py-1 flex flex-col gap-0.5">
+      <div
+        className="w-full h-full overflow-hidden px-2 py-1 flex flex-col gap-0.5 rounded-md shadow-sm transition-transform hover:scale-[1.02]"
+        style={{
+          backgroundColor: color,
+          borderLeft: `3px solid rgba(0,0,0,0.2)`,
+        }}
+      >
         <div className="flex items-center gap-1.5 text-xs font-bold text-white truncate">
-          <Clock size={10} className="shrink-0 opacity-80" />
+          <Clock size={10} className="shrink-0 opacity-90" />
           <span className="truncate">
             {eventInfo.timeText && (
-              <span className="opacity-80 mr-1">{eventInfo.timeText}</span>
+              <span className="opacity-90 mr-1">{eventInfo.timeText}</span>
             )}
             {eventInfo.event.title}
           </span>
@@ -77,42 +99,39 @@ const EventCalendar = ({
         /* Hide Default Header */
         .fc-header-toolbar { display: none !important; }
 
-        /* Grid Styling & Hover Effects */
+        /* Grid Styling */
         .fc-col-header-cell-cushion { color: #6b7280; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; padding: 12px 0 !important; }
         .dark .fc-col-header-cell-cushion { color: #9ca3af; }
         
         .fc-daygrid-day-number { color: #4b5563; font-weight: 500; font-size: 0.875rem; padding: 8px !important; }
         .dark .fc-daygrid-day-number { color: #d1d5db; }
 
-        /* Day Cell Hover Animation */
-        .fc-daygrid-day { transition: background-color 0.2s ease; }
-        .fc-daygrid-day:hover { background-color: #f9fafb; cursor: pointer; }
-        .dark .fc-daygrid-day:hover { background-color: #374151; }
-
         .fc-day-today { background-color: #fff7ed !important; }
         .dark .fc-day-today { background-color: #431407 !important; }
 
-        /* Event Styling & Hover Animation */
+        /* ✅ Event Container Reset */
+        /* We remove default FullCalendar styling so our custom div takes full control */
         .fc-event { 
-          border: none; 
-          border-radius: 6px; 
-          box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
-          margin-bottom: 2px; 
-          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          background: transparent !important;
+          border: none !important; 
+          box-shadow: none !important;
+          margin-bottom: 2px;
         }
         
-        .fc-event:hover { 
-          transform: translateY(-2px) scale(1.02); 
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-          z-index: 50; 
-          filter: brightness(1.05);
-        }
+        .fc-daygrid-event { white-space: normal !important; align-items: stretch; }
+        .fc-event-main { padding: 0 !important; }
 
-        .fc-event-draft { opacity: 0.7; border: 2px dashed rgba(255,255,255,0.6); }
-
+        .fc-event-draft { opacity: 0.7; }
+        
         /* List View Polish */
         .fc-list-event:hover td { background-color: #f3f4f6 !important; }
         .dark .fc-list-event:hover td { background-color: #374151 !important; }
+        
+        .fc-daygrid-more-link {
+            color: #ea580c !important;
+            font-weight: 600 !important;
+            font-size: 0.75rem !important;
+        }
       `}</style>
 
       <FullCalendar
@@ -136,7 +155,6 @@ const EventCalendar = ({
         moreLinkContent={(args) =>
           t("eventList.calendar.moreEvents", { count: args.num })
         }
-        moreLinkClassNames="text-xs font-semibold text-orange-600 hover:underline px-2"
       />
     </div>
   );
