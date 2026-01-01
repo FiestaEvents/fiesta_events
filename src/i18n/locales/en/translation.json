@@ -1926,7 +1926,8 @@
       "archiving": "Archiving task...",
       "restoring": "Restoring task...",
       "deleting": "Deleting task...",
-      "filtersApplied": "Filters applied"
+      "filtersApplied": "Filters applied",
+      "statusUpdated": "Task status updated"
     },
     "loading": "Loading task details...",
     "tabs": {

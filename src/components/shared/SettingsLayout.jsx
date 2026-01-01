@@ -1,17 +1,19 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
 
-// Individual Tab Button
 export const TabButton = ({ active, icon: Icon, label, onClick, darkMode }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`group inline-flex items-center gap-2.5 px-5 py-3.5 border-b-2 font-medium text-sm whitespace-nowrap transition-all duration-200
+    className={`group inline-flex items-center gap-2.5 px-5 py-4 border-b-2 font-medium text-sm whitespace-nowrap transition-all duration-200
       ${
         active
           ? "border-orange-500 text-orange-600 dark:text-orange-400"
-          : `border-transparent ${darkMode ? "text-gray-400 hover:text-gray-300 hover:border-gray-700" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"}`
+          : `border-transparent ${
+              darkMode
+                ? "text-gray-400 hover:text-gray-200 hover:border-gray-700"
+                : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`
       }`}
   >
     {Icon && (
@@ -20,7 +22,9 @@ export const TabButton = ({ active, icon: Icon, label, onClick, darkMode }) => (
         className={
           active
             ? "text-orange-500 dark:text-orange-400"
-            : `${darkMode ? "text-gray-500 group-hover:text-gray-400" : "text-gray-400 group-hover:text-gray-500"}`
+            : darkMode
+            ? "text-gray-500 group-hover:text-gray-300"
+            : "text-gray-400 group-hover:text-gray-600"
         }
       />
     )}
@@ -35,29 +39,33 @@ const SettingsLayout = ({
   tabs = [],
   activeTab,
   setActiveTab,
-  darkMode = false, // ✅ Ensure this prop is received
+  darkMode = false,
 }) => {
   return (
-    // ✅ Main Wrapper: Apply Dark Background Here
     <div
-      className={`min-h-screen transition-colors duration-300 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}
+      className={`min-h-screen transition-colors duration-300 ${
+        darkMode ? "bg-gray-900" : "bg-gray-50"
+      }`}
     >
-      {/* Header Section */}
       <div
-        className={`border-b sticky top-0 z-20 transition-colors duration-300 ${
+        className={`border-b sticky top-16 z-30 transition-colors duration-300 ${
           darkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
         }`}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Title Area */}
-          <div className="py-8">
+          <div className="py-6">
             <h1
-              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}
+              className={`text-2xl font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
             >
               {title}
             </h1>
             <p
-              className={`text-sm mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+              className={`text-sm mt-1 ${
+                darkMode ? "text-gray-400" : "text-gray-500"
+              }`}
             >
               {subtitle}
             </p>
@@ -81,7 +89,6 @@ const SettingsLayout = ({
         </div>
       </div>
 
-      {/* Main Content Area */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </div>

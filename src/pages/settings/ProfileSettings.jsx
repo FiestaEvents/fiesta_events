@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { User, Lock, Save, Eye, EyeOff } from "lucide-react";
 
+import { useTheme } from "../../context/ThemeContext"; 
 import { authService } from "../../api/index";
 import SettingsLayout from "../../components/shared/SettingsLayout";
 import Card from "../../components/common/Card";
@@ -66,7 +67,7 @@ const PersonalTab = ({ user, onSave, saving, t, darkMode }) => {
             className="w-full h-full object-cover"
           />
         </div>
-        {/* Dynamic Text Color */}
+        
         <h3
           className={`font-bold text-xl mb-1 ${darkMode ? "text-white" : "text-gray-900"}`}
         >
@@ -87,7 +88,6 @@ const PersonalTab = ({ user, onSave, saving, t, darkMode }) => {
 
       {/* Edit Form (Right) */}
       <div className="lg:col-span-2">
-        {/* ✅ Pass darkMode to Card */}
         <Card title={t("profileSettings.personal.title")} darkMode={darkMode}>
           <div className="p-6 space-y-5">
             <Input
@@ -103,11 +103,14 @@ const PersonalTab = ({ user, onSave, saving, t, darkMode }) => {
               {...register("phone")}
               darkMode={darkMode}
             />
+            {/* Conditional styling for disabled input in Dark Mode */}
             <Input
               label={t("profileSettings.personal.fields.email")}
               value={user?.email || ""}
               disabled
-              className={`opacity-60 cursor-not-allowed ${darkMode ? "bg-gray-700 text-gray-400" : ""}`}
+              className={`opacity-60 cursor-not-allowed ${
+                  darkMode ? "bg-gray-700 text-gray-400 border-gray-600" : "bg-gray-100 text-gray-500"
+              }`}
               darkMode={darkMode}
             />
             <Input
@@ -240,8 +243,13 @@ const SecurityTab = ({ onSave, saving, t, darkMode }) => {
 
 // --- Main Component ---
 
-const ProfileSettings = ({ darkMode = false }) => {
+const ProfileSettings = () => {
   const { t } = useTranslation();
+  
+  // FIX: Using the Context definition you provided
+  const { theme } = useTheme(); 
+  const isDarkMode = theme === 'dark'; // Derive boolean
+  
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -314,7 +322,7 @@ const ProfileSettings = ({ darkMode = false }) => {
   if (loading)
     return (
       <div
-        className={`h-screen flex items-center justify-center ${darkMode ? "bg-gray-900" : "bg-white"}`}
+        className={`h-screen flex items-center justify-center ${isDarkMode ? "bg-gray-900" : "bg-white"}`}
       >
         <OrbitLoader />
       </div>
@@ -332,7 +340,7 @@ const ProfileSettings = ({ darkMode = false }) => {
       tabs={tabs}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
-      darkMode={darkMode} // ✅ Ensures layout gets dark mode prop
+      darkMode={isDarkMode} 
     >
       {activeTab === "personal" && (
         <PersonalTab
@@ -340,7 +348,7 @@ const ProfileSettings = ({ darkMode = false }) => {
           onSave={handleUpdateProfile}
           saving={saving}
           t={t}
-          darkMode={darkMode} // ✅ Pass to child
+          darkMode={isDarkMode}
         />
       )}
       {activeTab === "security" && (
@@ -348,7 +356,7 @@ const ProfileSettings = ({ darkMode = false }) => {
           onSave={handleChangePassword}
           saving={saving}
           t={t}
-          darkMode={darkMode} // ✅ Pass to child
+          darkMode={isDarkMode}
         />
       )}
     </SettingsLayout>

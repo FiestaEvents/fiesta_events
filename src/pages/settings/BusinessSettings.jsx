@@ -4,24 +4,9 @@ import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Building2,
-  CheckCircle2,
-  Grid3x3,
-  Save,
-  Plus,
-  Trash2,
-  Edit2,
-  Clock,
-  MapPin,
-  Phone,
-  Mail,
-  X,
-  Briefcase,
-  Camera,
-  Truck,
-  Settings,
-  DollarSign,
-  BoxIcon,
+  Building2, CheckCircle2, Grid3x3, Save, Plus, Trash2, Edit2,
+  Clock, MapPin, Phone, Mail, X, Briefcase, Camera, Truck,
+  Settings, DollarSign, BoxIcon,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -75,7 +60,7 @@ const StickyActionBar = ({ onSave, saving, t, darkMode }) => (
     animate={{ y: 0 }}
     className={`fixed bottom-6 right-6 z-40 p-4 rounded-2xl shadow-xl flex items-center gap-4 border ${
       darkMode
-        ? "bg-gray-800 border-gray-700 text-white"
+        ? "bg-gray-800 border-gray-700 text-white shadow-black/50"
         : "bg-white border-orange-100 text-gray-900"
     }`}
   >
@@ -87,6 +72,7 @@ const StickyActionBar = ({ onSave, saving, t, darkMode }) => (
       loading={saving}
       icon={Save}
       className="shadow-lg shadow-orange-500/20"
+      darkMode={darkMode}
     >
       {t("settings.common.saveChanges")}
     </Button>
@@ -400,7 +386,7 @@ const SpacesTab = ({ spaces, refetch, t, darkMode, labels }) => {
         {spaces.map((space) => (
           <Card
             key={space._id}
-            className="p-6 relative group hover:border-orange-200 transition-all"
+            className={`p-6 relative group hover:border-orange-200 transition-all ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
             darkMode={darkMode}
           >
             <div className="flex justify-between items-start mb-4">
@@ -439,7 +425,11 @@ const SpacesTab = ({ spaces, refetch, t, darkMode, labels }) => {
 
         <button
           onClick={() => onEdit({})}
-          className={`p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center min-h-[250px] transition-all group ${darkMode ? "border-gray-700 hover:border-orange-500 hover:bg-gray-800" : "border-gray-300 hover:border-orange-500 hover:bg-orange-50/50"}`}
+          className={`p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center min-h-[250px] transition-all group ${
+            darkMode 
+              ? "border-gray-700 hover:border-orange-500 hover:bg-gray-800" 
+              : "border-gray-300 hover:border-orange-500 hover:bg-orange-50/50"
+          }`}
         >
           <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <Plus className="text-orange-600 dark:text-orange-400" />
@@ -495,10 +485,11 @@ const SpacesTab = ({ spaces, refetch, t, darkMode, labels }) => {
                   <Button
                     variant="outline"
                     onClick={() => setEditingSpace(null)}
+                    darkMode={darkMode}
                   >
                     {t("settings.common.cancel")}
                   </Button>
-                  <Button onClick={handleSubmit(onSaveSpace)} loading={saving}>
+                  <Button onClick={handleSubmit(onSaveSpace)} loading={saving} darkMode={darkMode}>
                     {t("settings.common.save")}
                   </Button>
                 </div>
@@ -515,7 +506,11 @@ const SpacesTab = ({ spaces, refetch, t, darkMode, labels }) => {
 const BusinessSettings = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { isDarkMode } = useTheme();
+  
+  // FIX: Using the Context definition you provided
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+
   const { business, spaces, loading, refetch } = useBusinessData();
   const [activeTab, setActiveTab] = useState("general");
   const [saving, setSaving] = useState(false);
@@ -604,7 +599,6 @@ const BusinessSettings = () => {
           />
         )}
 
-        {/* Dynamic Resources Tab (Spaces/Fleet/Equipment) */}
         {(isVenue ||
           isDriver ||
           ["music", "security", "decoration"].includes(category)) &&
@@ -632,7 +626,7 @@ const BusinessSettings = () => {
                         editTitle: "Edit Item",
                         createTitle: "Add Item",
                       }
-                    : null // Use default Venue labels
+                    : null
               }
             />
           )}

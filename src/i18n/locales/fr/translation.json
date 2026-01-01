@@ -1674,7 +1674,8 @@
     "archiving": "Archivage de la tâche...",
     "restoring": "Restauration de la tâche...",
     "deleting": "Suppression de la tâche...",
-    "filtersApplied": "Filtres appliqués"
+    "filtersApplied": "Filtres appliqués",
+    "statusUpdated": "Statut de la tâche met à jour"
   },
    "detail": {
     "loading": "Chargement des détails de la tâche...",

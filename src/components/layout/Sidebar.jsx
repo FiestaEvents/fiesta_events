@@ -40,7 +40,7 @@ const getVerticalConfig = (category) => {
       return {
         eventsLabel: "common.schedule",
         eventsIcon: Calendar,
-        resourcesLabel: "common.vehicles", // Translation key for "Fleet"
+        resourcesLabel: "common.vehicles",
         resourcesIcon: Truck,
         showSupplies: false, 
         showPortfolio: false, 
@@ -203,8 +203,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
   const canViewTasks = usePermission("tasks.read.all");
   const canViewReminders = usePermission("reminders.read.all");
 
-  const canViewResources =
-    usePermission("venue.read") || usePermission("business.read");
+  const canViewResources = usePermission("venue.read") || usePermission("business.read");
   const canViewPortfolio = usePermission("portfolio.read.all");
   const canViewFinance = usePermission("finance.read.all");
   const canViewPayments = usePermission("payments.read.all");
@@ -283,7 +282,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                 />
               )}
 
-              {/* ✅ RESOURCE LOGIC: Driver -> /fleet, Venue -> /settings */}
+              {/* RESOURCE */}
               {canViewResources &&
                 (category === "driver" || category === "transport" ? (
                   <NavLink
@@ -292,14 +291,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                     label={t(config.resourcesLabel)}
                     isCollapsed={isCollapsed}
                   />
-                ) : category === "venue" ? (
-                  <NavLink
-                    to="/settings"
-                    icon={config.resourcesIcon}
-                    label={t(config.resourcesLabel)}
-                    isCollapsed={isCollapsed}
-                  />
-                ) : null)}
+                ): null)}
 
               {canViewClients && (
                 <NavLink
@@ -310,7 +302,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                 />
               )}
 
-              {/* ✅ PORTFOLIO: Hidden for Driver based on config */}
+              {/* PORTFOLIO */}
               {canViewPortfolio && config.showPortfolio && (
                 <NavLink
                   to="/portfolio"
@@ -320,7 +312,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                 />
               )}
 
-              {/* ✅ PARTNERS: Hidden for Driver based on config */}
+              {/* PARTNERS */}
               {canViewPartners && config.showPartners && (
                 <NavLink
                   to="/partners"
@@ -330,7 +322,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed }) => {
                 />
               )}
 
-              {/* ✅ SUPPLIES: Hidden for Driver based on config */}
+              {/* SUPPLIES */}
               {canViewSupplies && config.showSupplies && (
                 <NavLink
                   to="/supplies"

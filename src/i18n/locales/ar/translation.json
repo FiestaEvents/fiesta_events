@@ -1545,7 +1545,8 @@
     "archiving": "جارٍ الأرشفة...",
     "restoring": "جارٍ الاستعادة...",
     "deleting": "جارٍ الحذف...",
-    "filtersApplied": "تم تطبيق التصفية"
+    "filtersApplied": "تم تطبيق التصفية",
+    "statusUpdated": "تم تحديث حالة المهمة"
   },
   "detail": {
     "loading": "جارٍ تحميل تفاصيل المهمة...",

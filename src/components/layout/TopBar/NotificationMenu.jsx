@@ -8,7 +8,6 @@ import {
   X, 
   Settings, 
   Volume2, 
-  VolumeX, 
   Monitor 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,7 +38,17 @@ const NotificationMenu = () => {
   
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const { notifications, categorized, alertCount, markAsComplete, dismissNotification, loading } = useNotifications();
+  
+  // Use the Context
+  const { 
+    notifications, 
+    categorized, 
+    alertCount, 
+    markAsComplete, 
+    dismissNotification, 
+    loading 
+  } = useNotifications();
+  
   const [preferences, setPreferences] = useState({ sound: true, desktop: true });
 
   const updatePreferences = (newPrefs) => setPreferences(prev => ({...prev, ...newPrefs}));
@@ -55,12 +64,19 @@ const NotificationMenu = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Styling helper
   const getSeverityStyles = (reminder) => {
     const now = new Date();
-    const due = new Date(reminder.due || reminder.reminderDate);
-    if (due < now) return { bg: "bg-red-50 dark:bg-red-900/20", icon: "text-red-600 dark:text-red-400", border: "ltr:border-l-red-500 rtl:border-r-red-500" };
-    if (reminder.urgency === 'imminent') return { bg: "bg-orange-50 dark:bg-orange-900/20", icon: "text-orange-600 dark:text-orange-400", border: "ltr:border-l-orange-500 rtl:border-r-orange-500" };
-    if (reminder.urgency === 'today') return { bg: "bg-blue-50 dark:bg-blue-900/20", icon: "text-blue-600 dark:text-blue-400", border: "ltr:border-l-blue-500 rtl:border-r-blue-500" };
+    const due = new Date(reminder.reminderDate);
+    
+    // Logic: Past Due OR High Priority sent via socket
+    if (due < now || reminder.priority === 'urgent') 
+      return { bg: "bg-red-50 dark:bg-red-900/20", icon: "text-red-600 dark:text-red-400", border: "ltr:border-l-red-500 rtl:border-r-red-500" };
+    
+    if (reminder.priority === 'high') 
+      return { bg: "bg-orange-50 dark:bg-orange-900/20", icon: "text-orange-600 dark:text-orange-400", border: "ltr:border-l-orange-500 rtl:border-r-orange-500" };
+    
+    // Default
     return { bg: "bg-white dark:bg-gray-800", icon: "text-gray-500 dark:text-gray-400", border: "ltr:border-l-gray-300 rtl:border-r-gray-600" };
   };
 
@@ -73,16 +89,8 @@ const NotificationMenu = () => {
     }
   };
 
-  const getEmptyMessage = () => {
-    switch (selectedCategory) {
-      case "overdue": return t("notifications.empty.overdue", "No overdue items. Great job!");
-      case "critical": return t("notifications.empty.critical", "No critical alerts at the moment.");
-      case "today": return t("notifications.empty.today", "No tasks scheduled for today.");
-      default: return t("notifications.empty.all", "You're all caught up! No notifications.");
-    }
-  };
-
   const currentList = getList();
+  
   const tabs = [
     { id: "all", label: t("notifications.tabs.all", "All") },
     { id: "overdue", label: t("notifications.tabs.overdue", "Overdue"), count: categorized.overdue.length },
@@ -109,7 +117,7 @@ const NotificationMenu = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="absolute ltr:right-0 rtl:left-0 mt-3 w-[400px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden ltr:origin-top-right rtl:origin-top-left"
+            className="absolute ltr:right-0 rtl:left-0 mt-3 w-[360px] sm:w-[400px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden ltr:origin-top-right rtl:origin-top-left"
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm">
@@ -141,24 +149,38 @@ const NotificationMenu = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        key={rem._id}
-                        onClick={() => { setIsOpen(false); navigate(`/reminders/${rem._id}`); }}
+                        key={rem._id || rem.id}
                         className={`group relative p-4 hover:bg-white dark:hover:bg-gray-800 transition-all cursor-pointer border-l-4 rtl:border-l-0 rtl:border-r-4 ${style.border} ${style.bg}`}
+                        onClick={() => { setIsOpen(false); navigate(`/reminders/${rem._id || rem.id}`); }}
                       >
                         <div className="flex gap-3">
                           <div className={`mt-1 w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-gray-700 shadow-sm ${style.icon}`}><Clock className="w-4 h-4" /></div>
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-start">
                               <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate pe-2">{rem.title}</h4>
-                              <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap bg-white dark:bg-gray-900 px-2 py-0.5 rounded-full border border-gray-100 dark:border-gray-700">{rem.reminderTime}</span>
+                              {rem.reminderTime && (
+                                <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap bg-white dark:bg-gray-900 px-2 py-0.5 rounded-full border border-gray-100 dark:border-gray-700">
+                                  {rem.reminderTime}
+                                </span>
+                              )}
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{rem.description || t("notifications.noDescription", "No description available")}</p>
                             <div className="mt-2 flex items-center gap-2">
-                              <span className={`text-[10px] font-bold uppercase ${style.icon}`}>{new Date(rem.reminderDate).toLocaleDateString()}</span>
+                              {rem.relatedEvent && (
+                                <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">
+                                  {rem.relatedEvent.title || "Event"}
+                                </span>
+                              )}
+                              {rem.reminderDate && (
+                                <span className={`text-[10px] font-bold uppercase ${style.icon}`}>
+                                  {new Date(rem.reminderDate).toLocaleDateString()}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
 
+                        {/* Hover Actions */}
                         <div className="absolute ltr:right-2 rtl:left-2 bottom-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-y-1 group-hover:translate-y-0 duration-200">
                           <button onClick={(e) => { e.stopPropagation(); markAsComplete(rem._id); }} className="p-1.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-md shadow-sm" title="Complete"><CheckCircle2 className="w-4 h-4" /></button>
                           <button onClick={(e) => { e.stopPropagation(); dismissNotification(rem._id); }} className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md shadow-sm" title="Dismiss"><X className="w-4 h-4" /></button>
@@ -170,17 +192,17 @@ const NotificationMenu = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center opacity-60">
                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3"><Bell className="w-8 h-8 text-gray-400" /></div>
-                  <p className="text-gray-900 dark:text-white font-medium">{getEmptyMessage()}</p>
+                  <p className="text-gray-900 dark:text-white font-medium">No new notifications</p>
                 </div>
               )}
             </div>
 
             {/* Footer Preferences */}
             <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <div className="flex items-center gap-2 text-xs text-gray-500"><Settings className="w-3 h-3" /><span>{t("notifications.settings.title", "Preferences")}</span></div>
+              <div className="flex items-center gap-2 text-xs text-gray-500"><Settings className="w-3 h-3" /><span>Preferences</span></div>
               <div className="flex gap-2">
-                <button onClick={(e) => { e.stopPropagation(); updatePreferences({ sound: !preferences.sound }); }} className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border transition-all ${preferences.sound ? "bg-white dark:bg-gray-800 border-green-200 text-green-600 shadow-sm" : "bg-gray-100 dark:bg-gray-800 border-transparent text-gray-400"}`}><Volume2 className="w-3 h-3" />{t("notifications.settings.sound", "Sound")}</button>
-                <button onClick={(e) => { e.stopPropagation(); updatePreferences({ desktop: !preferences.desktop }); }} className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border transition-all ${preferences.desktop ? "bg-white dark:bg-gray-800 border-blue-200 text-blue-600 shadow-sm" : "bg-gray-100 dark:bg-gray-800 border-transparent text-gray-400"}`}><Monitor className="w-3 h-3" />{t("notifications.settings.desktop", "Desktop")}</button>
+                <button onClick={(e) => { e.stopPropagation(); updatePreferences({ sound: !preferences.sound }); }} className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border transition-all ${preferences.sound ? "bg-white dark:bg-gray-800 border-green-200 text-green-600 shadow-sm" : "bg-gray-100 dark:bg-gray-800 border-transparent text-gray-400"}`}><Volume2 className="w-3 h-3" />Sound</button>
+                <button onClick={(e) => { e.stopPropagation(); updatePreferences({ desktop: !preferences.desktop }); }} className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border transition-all ${preferences.desktop ? "bg-white dark:bg-gray-800 border-blue-200 text-blue-600 shadow-sm" : "bg-gray-100 dark:bg-gray-800 border-transparent text-gray-400"}`}><Monitor className="w-3 h-3" />Desktop</button>
               </div>
             </div>
           </motion.div>
