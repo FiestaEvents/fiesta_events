@@ -14,13 +14,18 @@ import { taskService } from "./services/taskService";
 import { reminderService } from "./services/reminderService";
 import { teamService } from "./services/teamService";
 import { roleService } from "./services/roleService";
-import { venueService, venueSpacesService, dashboardService } from "./services/venueService";
+import {
+  venueService,
+  venueSpacesService,
+  dashboardService,
+} from "./services/venueService";
 import { invoiceService } from "./services/invoiceService";
-import { userService } from "./services/userService"; 
+import { userService } from "./services/userService";
 import { contractService } from "./services/contractService";
 import { supplyService, supplyCategoryService } from "./services/supplyService";
-import {portfolioService} from "./services/portfolioService.js";
-// Named Exports (Keeps `import { authService } from 'api'` working)
+import { portfolioService } from "./services/portfolioService.js";
+import { adminService } from "./services/adminService.js";
+
 export {
   authService,
   eventService,
@@ -40,7 +45,8 @@ export {
   contractService,
   supplyService,
   supplyCategoryService,
-  portfolioService
+  portfolioService,
+  adminService,
 };
 
 // Default Export (Keeps `import API from 'api'; API.authService...` working)
@@ -63,5 +69,6 @@ export default {
   contractService,
   supplyService,
   supplyCategoryService,
-  portfolioService
+  portfolioService,
+  adminService,
 };

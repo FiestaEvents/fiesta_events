@@ -17,13 +17,12 @@ import {
   ChevronRight,
   Check,
 } from "lucide-react";
-
-// API & Context
+//  API & Services
 import { eventService } from "../../api/index";
 import PermissionGuard from "../../components/auth/PermissionGuard";
 import { useToast } from "../../context/ToastContext";
 
-// Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Badge, { StatusBadge } from "../../components/common/Badge";
 import Table from "../../components/common/NewTable";
@@ -32,9 +31,10 @@ import Select from "../../components/common/Select";
 import DateInput from "../../components/common/DateInput";
 import Modal from "../../components/common/Modal";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-import EventCalendar from "./components/EventCalendar";
-import EventDetailModal from "./EventDetailModal";
 
+// Contexts & Modals
+import EventDetailModal from "./EventDetailModal";
+import EventCalendar from "./components/EventCalendar";
 // --- Helpers ---
 const getTypeVariant = (type) => {
   const map = {

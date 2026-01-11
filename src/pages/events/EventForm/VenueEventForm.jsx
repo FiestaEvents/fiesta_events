@@ -167,7 +167,7 @@ const VenueEventForm = ({ defaultValues, isEditMode }) => {
     showError("Please check the form for errors.");
   };
 
-  // ✅ FIXED NAVIGATION LOGIC
+  //  FIXED NAVIGATION LOGIC
   const nextStep = async (e) => {
     // Prevent button from acting as submit
     e.preventDefault(); 
@@ -180,7 +180,7 @@ const VenueEventForm = ({ defaultValues, isEditMode }) => {
             break;
         case 2: fields = ["clientId"]; break;
         case 3: fields = ["venueSpaceId", "pricing.basePrice"]; break;
-        // ✅ ADDED CASE 4: Validate payment fields if amount is entered
+        //  ADDED CASE 4: Validate payment fields if amount is entered
         case 4: 
             // Only strictly validate payment info if amount > 0, otherwise it's optional
             if (Number(methods.getValues("payment.amount")) > 0) {

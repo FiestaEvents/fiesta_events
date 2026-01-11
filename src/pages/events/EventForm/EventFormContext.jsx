@@ -85,7 +85,7 @@ const calculateEventFinancials = (formData) => {
   const suppliesMargin = suppliesTotalCharge - suppliesTotalCost;
 
   // 5. Calculate Subtotal
-  // ✅ FIX: Always add suppliesTotalCharge.
+  //  FIX: Always add suppliesTotalCharge.
   // If items are "included", suppliesTotalCharge is 0.
   // If items are "chargeable", suppliesTotalCharge is X, which should be added.
   const subtotalBeforeDiscount =

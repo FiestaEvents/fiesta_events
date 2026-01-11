@@ -11,7 +11,7 @@ const Select = forwardRef(
   (
     {
       label,
-      name, // ✅ CRITICAL: Added name to destructuring
+      name, //  CRITICAL: Added name to destructuring
       error,
       helperText,
       options,
@@ -51,13 +51,13 @@ const Select = forwardRef(
       parsedOptions = [];
     }
 
-    // ✅ FIXED: Include name in synthetic event
+    //  FIXED: Include name in synthetic event
     const handleChange = (val) => {
       if (typeof onChange === "function") {
         const syntheticEvent = { 
           target: { 
             value: val,
-            name: name // ✅ This is crucial!
+            name: name //  This is crucial!
           } 
         };
         onChange(syntheticEvent);

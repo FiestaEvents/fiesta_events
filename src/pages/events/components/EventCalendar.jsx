@@ -54,7 +54,7 @@ const EventCalendar = ({
     };
   });
 
-  // ✅ FIX: Apply background color directly to the inner container
+  //  FIX: Apply background color directly to the inner container
   const renderEventContent = (eventInfo) => {
     // Fallback to extendedProps color if standard prop isn't available immediately
     const color =
@@ -109,7 +109,7 @@ const EventCalendar = ({
         .fc-day-today { background-color: #fff7ed !important; }
         .dark .fc-day-today { background-color: #431407 !important; }
 
-        /* ✅ Event Container Reset */
+        /*  Event Container Reset */
         /* We remove default FullCalendar styling so our custom div takes full control */
         .fc-event { 
           background: transparent !important;

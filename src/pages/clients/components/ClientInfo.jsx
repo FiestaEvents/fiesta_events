@@ -2,7 +2,7 @@ import React from "react";
 import { Mail, Phone, MapPin, Tag, Calendar, User, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Badge from "../../../components/common/Badge";
 
 const ClientInfo = ({ client, formatDate }) => {

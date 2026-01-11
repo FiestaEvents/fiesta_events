@@ -26,7 +26,7 @@ import { useToast } from "../../hooks/useToast";
 import { clientService } from "../../api/index";
 import { useClientDetail } from "../../hooks/useClientDetail";
 import { statusToBadgeVariant } from "../../config/theme.config";
-import PermissionGuard from "../../components/auth/PermissionGuard"; // ✅ Guard Import
+import PermissionGuard from "../../components/auth/PermissionGuard"; //  Guard Import
 
 const ClientDetail = () => {
   const { t } = useTranslation();
@@ -219,7 +219,7 @@ const ClientDetail = () => {
           {/* Left Column */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              {/* ✅ Wrapped ClientHeader actions inside the component or pass guards */}
+              {/*  Wrapped ClientHeader actions inside the component or pass guards */}
               <ClientHeader
                 client={clientData}
                 onBack={() => navigate("/clients")}

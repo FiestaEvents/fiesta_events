@@ -1,22 +1,17 @@
-import { useAuth } from "../context/AuthContext";
+import { useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export const usePermission = (requiredPermission) => {
   const { user } = useAuth();
 
-  if (!user) return false;
+  return useMemo(() => {
+    if (!user || !user.permissions) return false;
+    
+    if (user.role?.name === 'Owner' || user.isSuperAdmin) return true;
 
-  // 1. Owner Override (Always true)
-  if (user.role?.name === "Owner" || user.role?.type === "owner") {
-    return true;
-  }
-
-  // 2. Check the flattened permissions array
-  // The backend now sends 'permissions' as an array of strings like ["events.read.all", "clients.create"]
-  const userPermissions = user.permissions || [];
-
-  if (Array.isArray(userPermissions)) {
-    return userPermissions.includes(requiredPermission);
-  }
-
-  return false;
+    return user.permissions.some(p => {
+      const name = typeof p === 'string' ? p : p.name;
+      return name === requiredPermission;
+    });
+  }, [user, requiredPermission]);
 };

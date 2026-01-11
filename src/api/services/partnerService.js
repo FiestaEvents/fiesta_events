@@ -1,4 +1,3 @@
-
 // ============================================
 // PARTNER SERVICE
 // ============================================
@@ -63,6 +62,28 @@ export const partnerService = {
   getStats: async () => {
     try {
       const response = await api.get("/partners/stats");
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Upload Portfolio Image
+  uploadImage: async (id, formData) => {
+    try {
+      const response = await api.post(`/partners/${id}/portfolio`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Delete Portfolio Image
+  deleteImage: async (id, imageId) => {
+    try {
+      const response = await api.delete(`/partners/${id}/portfolio/${imageId}`);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);

@@ -83,7 +83,7 @@ export const invoiceService = {
     try {
       const response = await api.get(`/invoices/${id}/download`, {
         params: { language },
-        responseType: "arraybuffer", // ✅ CRITICAL: Prevents data corruption
+        responseType: "arraybuffer", //  CRITICAL: Prevents data corruption
         headers: { Accept: "application/pdf" },
       });
 

@@ -13,11 +13,11 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
 
-// ✅ Utils
+//  Utils
 import formatCurrency from "../../../utils/formatCurrency";
 import PermissionGuard from "../../../components/auth/PermissionGuard";
 const EventsTab = ({

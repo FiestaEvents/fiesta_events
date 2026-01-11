@@ -17,6 +17,11 @@ import PageTransition from "../components/common/PageTransition.jsx";
 // ============================================
 // LAZY IMPORTS
 // ============================================
+//superadmin
+import SuperAdminRoute from "./SuperAdminRoute";
+import AdminLayout from "../components/layout/AdminLayout";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminBusinessList from "../pages/admin/AdminBusinessList";
 
 // Layouts
 const AuthLayout = lazy(() => import("../components/layout/AuthLayout.jsx"));
@@ -128,12 +133,28 @@ const AppRoutes = () => {
         {/* ============================================ */}
         {/* 🌎 PUBLIC WEBSITE ROUTES */}
         {/* ============================================ */}
-        <Route path="/landing" element={<PageTransition><Landing /></PageTransition>} />
-        <Route path="/fiesta-venue" element={<FiestaVenue />} />
-        
-        {/* Root Redirect Logic */}
-        <Route path="/" element={<Navigate to="/landing" replace />} />
+        <Route
+          path="/login"
+          element={
+            <PageTransition>
+              <Login />
+            </PageTransition>
+          }
+        />
 
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* SUPER ADMIN ROUTES */}
+        <Route element={<SuperAdminRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/businesses" element={<AdminBusinessList />} />
+            {/* Add User management route similarly */}
+            <Route
+              path="/admin"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+          </Route>
+        </Route>
         {/* ============================================ */}
         {/* 🔓 AUTHENTICATION ROUTES (Public Only) */}
         {/* ============================================ */}

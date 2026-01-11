@@ -26,18 +26,18 @@ import {
   FolderOpen,
 } from "lucide-react";
 
-// ✅ Services & Permissions
+//  Services & Permissions
 import { contractService } from "../../api/index";
 import PermissionGuard from "../../components/auth/PermissionGuard"; // Guard
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 
-// ✅ Context & Hooks
+//  Context & Hooks
 import { useToast } from "../../hooks/useToast";
 import formatCurrency from "../../utils/formatCurrency";
 
@@ -454,7 +454,7 @@ const ContractListPage = () => {
               <Eye size={16} className="text-orange-600" />
             </Button>
 
-            {/* ✅ GUARD: Edit */}
+            {/*  GUARD: Edit */}
             {canEdit && (
               <PermissionGuard permission="contracts.update.all">
                 <Button
@@ -483,7 +483,7 @@ const ContractListPage = () => {
               <Download size={16} className="text-green-600" />
             </Button>
 
-            {/* ✅ GUARD: Delete */}
+            {/*  GUARD: Delete */}
             {row.status === "draft" && (
               <PermissionGuard permission="contracts.delete.all">
                 <Button
@@ -713,7 +713,7 @@ const ContractListPage = () => {
               {t("contracts.list.emptyDesc")}
             </p>
 
-            {/* ✅ GUARD: Create Buttons */}
+            {/*  GUARD: Create Buttons */}
             <PermissionGuard permission="contracts.create">
               <div className="flex gap-4">
                 <Button

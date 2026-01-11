@@ -22,11 +22,11 @@ import {
   FileText,
 } from "lucide-react";
 
-// ✅ Services & Permissions
+//  Services & Permissions
 import { invoiceService } from "../../api/index";
 import PermissionGuard from "../../components/auth/PermissionGuard";
 
-// ✅ Generic Components
+//  Generic Components
 import OrbitLoader from "../../components/common/LoadingSpinner";
 import { StatusBadge } from "../../components/common/Badge";
 import Button from "../../components/common/Button";
@@ -35,7 +35,7 @@ import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
 import Select from "../../components/common/Select";
 
-// ✅ Context & Utils
+//  Context & Utils
 import { useToast } from "../../context/ToastContext";
 import formatCurrency from "../../utils/formatCurrency";
 
@@ -451,7 +451,7 @@ const InvoicesPage = () => {
             </p>
           </div>
 
-          {/* ✅ Type Toggle (Now Permanent) */}
+          {/*  Type Toggle (Now Permanent) */}
           <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 self-start">
             <button
               onClick={() => setInvoiceType("client")}

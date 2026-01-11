@@ -18,11 +18,11 @@ import {
   Eye,
 } from "lucide-react";
 
-// ✅ API & Permissions
+//  API & Permissions
 import { supplyService, supplyCategoryService } from "../../api/index";
 import PermissionGuard from "../../components/auth/PermissionGuard"; // Guard
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
@@ -31,10 +31,10 @@ import Table from "../../components/common/NewTable";
 import Modal from "../../components/common/Modal";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 
-// ✅ Context
+//  Context
 import { useToast } from "../../hooks/useToast";
 
-// ✅ Sub-components
+//  Sub-components
 import SupplyForm from "./SupplyForm";
 import SupplyDetailModal from "./SupplyDetailModal";
 
@@ -329,7 +329,7 @@ const SuppliesPage = () => {
             <Eye size={16} />
           </Button>
 
-          {/* ✅ Edit Guard */}
+          {/*  Edit Guard */}
           <PermissionGuard permission="supplies.update.all">
             <Button
               variant="ghost"
@@ -344,7 +344,7 @@ const SuppliesPage = () => {
             </Button>
           </PermissionGuard>
 
-          {/* ✅ Delete Guard */}
+          {/*  Delete Guard */}
           <PermissionGuard permission="supplies.delete.all">
             <Button
               variant="ghost"
@@ -377,7 +377,7 @@ const SuppliesPage = () => {
           </p>
         </div>
 
-        {/* ✅ Create Guard */}
+        {/*  Create Guard */}
         {!showEmptyState && (
           <PermissionGuard permission="supplies.create">
             <Button

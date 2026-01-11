@@ -23,7 +23,7 @@ import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-import Modal from "../../components/common/Modal"; // ✅ Imported Custom Modal
+import Modal from "../../components/common/Modal"; //  Imported Custom Modal
 import Badge from "../../components/common/Badge";
 
 const FleetManagement = () => {
@@ -37,7 +37,7 @@ const FleetManagement = () => {
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // ✅ New Delete Modal State
+  //  New Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
 
@@ -114,13 +114,13 @@ const FleetManagement = () => {
     }
   };
 
-  // ✅ Updated Delete Handler (Opens Modal)
+  //  Updated Delete Handler (Opens Modal)
   const handleDeleteClick = (id) => {
     setVehicleToDelete(id);
     setDeleteModalOpen(true);
   };
 
-  // ✅ Confirm Delete Action
+  //  Confirm Delete Action
   const confirmDelete = async () => {
     if (!vehicleToDelete) return;
     try {

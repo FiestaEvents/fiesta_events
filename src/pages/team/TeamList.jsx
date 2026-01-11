@@ -6,11 +6,11 @@ import {
  FolderOpen, X, Copy, Check, AlertTriangle
 } from "lucide-react"; 
 
-// ✅ API & Permissions
+//  API & Permissions
 import { teamService } from "../../api/index";
 import PermissionGuard from "../../components/auth/PermissionGuard";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Table from "../../components/common/NewTable"; 
 import Input from "../../components/common/Input";
@@ -107,7 +107,7 @@ const TeamList = () => {
   const handleApplyFilters = () => { setRole(localRole); setPage(1); setIsFilterOpen(false); };
   const handleClearFilters = () => { setSearch(""); setRole("all"); setLocalRole("all"); setPage(1); };
 
-  // ✅ 1. Enhanced Resend/Copy Handler
+  //  1. Enhanced Resend/Copy Handler
   const handleResendInvite = async (id) => {
     try {
       const res = await teamService.resendInvitation(id);
@@ -128,12 +128,12 @@ const TeamList = () => {
     }
   };
 
-  // ✅ 2. Open Revoke Modal
+  //  2. Open Revoke Modal
   const openRevokeModal = (id, email) => {
     setRevokeModal({ isOpen: true, id, email });
   };
 
-  // ✅ 3. Confirm Revoke Action
+  //  3. Confirm Revoke Action
   const handleConfirmRevoke = async () => {
     if (!revokeModal.id) return;
     try {
@@ -368,7 +368,7 @@ const TeamList = () => {
         </div>
       </div>
 
-      {/* ✅ Revoke Confirmation Modal */}
+      {/*  Revoke Confirmation Modal */}
       <Modal 
         isOpen={revokeModal.isOpen} 
         onClose={() => setRevokeModal({ isOpen: false, id: null, email: "" })}

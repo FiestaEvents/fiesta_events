@@ -12,7 +12,7 @@ import {
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
 
@@ -131,7 +131,7 @@ const EventPaymentsTab = ({ payments, event, onRecordPayment, formatDate }) => {
                         <span className="text-lg font-bold text-gray-900 dark:text-white">
                           {formatCurrency(payment.amount)}
                         </span>
-                        {/* ✅ Generic Status Badge */}
+                        {/*  Generic Status Badge */}
                         <StatusBadge status={payment.status} size="xs" />
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400 font-medium capitalize">

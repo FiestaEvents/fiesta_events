@@ -11,16 +11,16 @@ import {
   History
 } from "lucide-react";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ API & Services
+//  API & Services
 import { taskService } from "../../api/index";
 import { useTaskDetail } from "../../hooks/useTaskDetail";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import TaskForm from "./TaskForm";
 
-// ✅ Sub-components
+//  Sub-components
 import TaskHeader from "./components/TaskHeader";
 import TaskInfo from "./components/TaskInfo";
 import OverviewTab from "./components/OverviewTab";
@@ -29,7 +29,7 @@ import CommentsTab from "./components/CommentsTab";
 import AttachmentsTab from "./components/AttachmentsTab";
 import TimelineTab from "./components/TimelineTab";
 
-// ✅ Context
+//  Context
 import { useToast } from "../../context/ToastContext";
 
 const TaskDetail = () => {
@@ -80,7 +80,7 @@ const formatShortDate = useCallback((date) => {
   });
 }, []);
 
-  // ✅ Is Overdue Helper
+  //  Is Overdue Helper
   const isOverdue = useCallback((date, status) => {
     if (!date) return false;
     return (
@@ -269,7 +269,7 @@ const formatShortDate = useCallback((date) => {
                 task={taskData} 
                 formatDate={formatDate}
                 formatDateTime={formatDateTime}
-                isOverdue={isOverdue} // ✅ FIXED: Passed the isOverdue prop
+                isOverdue={isOverdue} //  FIXED: Passed the isOverdue prop
               />
             </div>
           </div>

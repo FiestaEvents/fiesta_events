@@ -41,7 +41,7 @@ const EventFormPage = () => {
         const res = await eventService.getById(id);
         const event = res.event || res.data; 
 
-        // ✅ SAFE MAPPING (Works for Venues AND Services)
+        //  SAFE MAPPING (Works for Venues AND Services)
         const formattedData = {
           ...event,
           // Use optional chaining because Service Events won't have venueSpaceId

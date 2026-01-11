@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-// ✅ Generic Components
+//  Generic Components
 import Badge from '../../../components/common/Badge';
 
 const PartnerInfo = ({ partner, formatDate }) => {

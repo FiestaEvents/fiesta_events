@@ -72,7 +72,7 @@ const Step3VenuePricing = () => {
     [spaces, watchedSpaceId]
   );
 
-  // ✅ FIX: Calculate maxVal here (Component Scope) so JSX can see it
+  //  FIX: Calculate maxVal here (Component Scope) so JSX can see it
   const maxCap = selectedSpace?.capacity?.seated || selectedSpace?.capacity || 0;
   const maxVal = typeof maxCap === "object" ? maxCap.max || 9999 : maxCap;
 

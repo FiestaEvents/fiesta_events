@@ -16,13 +16,13 @@ import {
   Check,
   Clock,
 } from "lucide-react";
-import { useToast } from "../../hooks/useToast"; // Only used for showError now
+import { useToast } from "../../hooks/useToast";
 import { useTranslation } from "react-i18next";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ API & Services
+//  API & Services
 import { partnerService } from "../../api/index";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
@@ -199,7 +199,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
     }
   };
 
-  // ✅ Submit - No Success Toast Here
+  //  Submit - No Success Toast Here
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -244,7 +244,7 @@ const PartnerForm = ({ partner, onSuccess, onCancel }) => {
         await partnerService.create(submitData);
       }
 
-      // ✅ Only trigger parent callback.
+      //  Only trigger parent callback.
         // The parent (PartnersList) is responsible for the Success Toast.
       onSuccess?.();
     } catch (err) {

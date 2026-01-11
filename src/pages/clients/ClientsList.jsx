@@ -14,10 +14,10 @@ import {
   FolderOpen,
 } from "lucide-react";
 
-// ✅ API & Services
+//  API & Services
 import { clientService } from "../../api/index";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
@@ -25,11 +25,11 @@ import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import { StatusBadge } from "../../components/common/Badge";
 
-// ✅ Auth & Permissions
+//  Auth & Permissions
 import PermissionGuard from "../../components/auth/PermissionGuard"; 
 import { useToast } from "../../context/ToastContext";
 
-// ✅ Sub-components
+//  Sub-components
 import ClientDetailModal from "./ClientDetailModal";
 import ClientForm from "./ClientForm";
 

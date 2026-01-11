@@ -3,13 +3,13 @@ import React from "react";
 import { History, Trash2, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../../../components/common/Button";
 
 const DraftRestoreModal = ({ draftData, onRestore, onDiscard }) => {
   const { t } = useTranslation();
   
-  // ✅ Format date to match app standard (DD/MM/YYYY HH:mm)
+  //  Format date to match app standard (DD/MM/YYYY HH:mm)
   const formattedDate = new Date(draftData.timestamp).toLocaleString("en-GB", {
     day: "2-digit",
     month: "2-digit",

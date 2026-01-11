@@ -15,6 +15,12 @@ const api = axios.create({
 // =====================================================================
 api.interceptors.request.use(
   (config) => {
+    // Add Authorization token if it exists
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+
     // This allows switching businesses without relogging
     const businessId = localStorage.getItem('businessId');
     if (businessId) {
@@ -41,7 +47,7 @@ api.interceptors.response.use(
   (response) => {
     // Dev Logging
     if (import.meta.env.DEV) {
-      console.log(`✅ [API] ${response.status} ${response.config.url}`);
+      console.log(` [API] ${response.status} ${response.config.url}`);
     }
     
     // (Services can decide to use response.data or response directly for Blobs)

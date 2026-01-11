@@ -3,10 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle } from "lucide-react";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
-
+import PortfolioTab from "./components/PortfolioTab";
 // Sub-components
 import EventDetailModal from "../events/EventDetailModal";
 import EventForm from "../events/EventForm/SharedEventForm";
@@ -21,29 +21,30 @@ import OverviewTab from "./components/OverviewTab";
 import { partnerService } from "../../api/index";
 import { usePartnerDetail } from "../../hooks/usePartnerDetail";
 import { useToast } from "../../hooks/useToast";
-import PermissionGuard from "../../components/auth/PermissionGuard"; 
+import PermissionGuard from "../../components/auth/PermissionGuard";
 
 const PartnerDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { t } = useTranslation();
-  
+
   const { showSuccess, apiError, showInfo, promise } = useToast();
-  const { partnerData, events, eventsStats, loading, error, refreshData } = usePartnerDetail(id);
+  const { partnerData, events, eventsStats, loading, error, refreshData } =
+    usePartnerDetail(id);
 
   // UI state
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  
+
   // Event Modal state
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isEventFormOpen, setIsEventFormOpen] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
 
-  // ✅ Helper: Strict DD/MM/YYYY format
+  //  Helper: Strict DD/MM/YYYY format
   const formatDate = useCallback((date) => {
     if (!date) return "-";
     try {
@@ -62,7 +63,7 @@ const PartnerDetail = () => {
 
   const handleEditEvent = useCallback((event) => {
     setIsEventModalOpen(false);
-    const eventId = typeof event === 'object' ? event._id : event;
+    const eventId = typeof event === "object" ? event._id : event;
     setEditingEventId(eventId);
     setIsEventFormOpen(true);
   }, []);
@@ -71,9 +72,9 @@ const PartnerDetail = () => {
     (eventId, e) => {
       if (e && e.stopPropagation) e.stopPropagation();
       navigate(`/events/${eventId}/detail`, {
-        state: { 
+        state: {
           fromPartner: id,
-          partnerData: partnerData 
+          partnerData: partnerData,
         },
       });
     },
@@ -102,14 +103,11 @@ const PartnerDetail = () => {
 
     try {
       setDeleteLoading(true);
-      await promise(
-        partnerService.delete(id),
-        {
-          loading: t("partnerDetail.modals.deletePartner.deleting"),
-          success: t("partnerDetail.notifications.deleted"),
-          error: t("partnerDetail.modals.deletePartner.errorDeleting")
-        }
-      );
+      await promise(partnerService.delete(id), {
+        loading: t("partnerDetail.modals.deletePartner.deleting"),
+        success: t("partnerDetail.notifications.deleted"),
+        error: t("partnerDetail.modals.deletePartner.errorDeleting"),
+      });
       setIsDeleteModalOpen(false);
       navigate("/partners");
     } catch (err) {
@@ -164,23 +162,19 @@ const PartnerDetail = () => {
             <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {!partnerData ? t("partnerDetail.error.notFound") : t("partnerDetail.error.loading")}
+            {!partnerData
+              ? t("partnerDetail.error.notFound")
+              : t("partnerDetail.error.loading")}
           </h3>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
             {error?.message || t("partnerDetail.error.message")}
           </p>
           <div className="flex gap-3 justify-center">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/partners")}
-            >
+            <Button variant="outline" onClick={() => navigate("/partners")}>
               {t("partnerDetail.backToPartners")}
             </Button>
             {error && (
-              <Button
-                variant="primary"
-                onClick={handleRetry}
-              >
+              <Button variant="primary" onClick={handleRetry}>
                 {t("partnerDetail.error.retry")}
               </Button>
             )}
@@ -195,12 +189,11 @@ const PartnerDetail = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          
           {/* Left Column - Partner Details */}
           <div className="lg:col-span-1">
             <div className="space-y-6">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
-                {/* ✅ Wrapped Header actions inside component, but passed protected handlers */}
+                {/*  Wrapped Header actions inside component, but passed protected handlers */}
                 <PartnerHeader
                   partner={partnerData}
                   onBack={() => navigate("/partners")}
@@ -210,10 +203,7 @@ const PartnerDetail = () => {
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800">
-                <PartnerInfo 
-                  partner={partnerData} 
-                  formatDate={formatDate}
-                />
+                <PartnerInfo partner={partnerData} formatDate={formatDate} />
               </div>
             </div>
           </div>
@@ -226,7 +216,14 @@ const PartnerDetail = () => {
                   {[
                     { id: "overview", label: t("partnerDetail.tabs.overview") },
                     { id: "events", label: t("partnerDetail.tabs.events") },
-                    { id: "performance", label: t("partnerDetail.tabs.performance") },
+                    {
+                      id: "performance",
+                      label: t("partnerDetail.tabs.performance"),
+                    },
+                    {
+                      id: "portfolio",
+                      label: t("partnerDetail.tabs.portfolio"),
+                    },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -277,6 +274,12 @@ const PartnerDetail = () => {
                     eventsStats={eventsStats}
                   />
                 )}
+                {activeTab === "portfolio" && (
+                  <PortfolioTab
+                    partner={partnerData}
+                    onUpdate={(newPortfolio) => refreshData()}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -303,7 +306,9 @@ const PartnerDetail = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeletePartner}
         title={t("partnerDetail.modals.deletePartner.title")}
-        message={t("partnerDetail.modals.deletePartner.message", { name: partnerData?.name })}
+        message={t("partnerDetail.modals.deletePartner.message", {
+          name: partnerData?.name,
+        })}
         confirmText={t("partnerDetail.modals.deletePartner.confirm")}
         cancelText={t("partnerDetail.modals.deletePartner.cancel")}
         variant="danger"

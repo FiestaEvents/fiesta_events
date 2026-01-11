@@ -14,7 +14,7 @@ import {
   Receipt,
 } from "lucide-react";
 
-// ✅ API & Services
+//  API & Services
 import {
   paymentService,
   eventService,
@@ -22,14 +22,14 @@ import {
   invoiceService,
 } from "../../api/index";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 
-// ✅ Utils & Hooks
+//  Utils & Hooks
 import { useToast } from "../../hooks/useToast";
 
 const PaymentForm = ({ payment, onSuccess, onCancel }) => {
@@ -56,7 +56,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     paidDate: new Date().toISOString().split("T")[0], // Default to today
     eventId: "",
     clientId: "",
-    invoiceId: "", // ✅ New field
+    invoiceId: "", //  New field
   });
 
   const [loading, setLoading] = useState(false);
@@ -148,7 +148,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
           }
         }
       } else {
-        // ✅ Auto-generate reference for new payments
+        //  Auto-generate reference for new payments
         setFormData((prev) => ({ ...prev, reference: generateReference() }));
       }
     };
@@ -192,7 +192,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
     if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
   };
 
-  // ✅ Smart Handler: When Invoice is selected
+  //  Smart Handler: When Invoice is selected
   const handleInvoiceChange = (invoiceId) => {
     handleChange("invoiceId", invoiceId);
 
@@ -358,7 +358,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
                 required
               />
 
-              {/* ✅ Updated: TND Label + Banknote Icon */}
+              {/*  Updated: TND Label + Banknote Icon */}
               <Input
                 label={`${t("payments.form.amount")} (TND)`}
                 type="number"
@@ -404,7 +404,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
               />
             </div>
 
-            {/* ✅ Updated: Reference with Icon */}
+            {/*  Updated: Reference with Icon */}
             <Input
               label={t("payments.form.reference")}
               value={formData.reference}
@@ -418,7 +418,7 @@ const PaymentForm = ({ payment, onSuccess, onCancel }) => {
         {/* STEP 2: Related Info */}
         {currentStep === 2 && (
           <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-            {/* ✅ Updated: Invoice Select */}
+            {/*  Updated: Invoice Select */}
             <div className="mb-4">
               <Select
                 label={

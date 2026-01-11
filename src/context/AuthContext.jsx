@@ -25,14 +25,16 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
       if (userData.venueId) localStorage.setItem("venueId", userData.venueId);
+      if (userData.token) localStorage.setItem("token", userData.token);
     } else {
       setUser(null);
       localStorage.removeItem("user");
       localStorage.removeItem("venueId");
+      localStorage.removeItem("token");
     }
   }, []);
 
-  // ✅ NEW: Silent Refresh (Updates permissions without logout)
+  //  NEW: Silent Refresh (Updates permissions without logout)
   const refreshUser = useCallback(async () => {
     try {
       const response = await authService.getMe();
@@ -42,8 +44,14 @@ export const AuthProvider = ({ children }) => {
         updateUser(userData); // Updates Context -> Re-renders Sidebar/Guards
       }
     } catch (error) {
-      console.warn("Silent refresh failed:", error.message);
-      // Don't force logout on simple network error during refresh
+      // Only logout on 401 (invalid token), not on network errors
+      if (error.status === 401) {
+        console.warn("Session expired (401):", error.message);
+        updateUser(null);
+      } else {
+        console.warn("Silent refresh failed (non-401):", error.message);
+        // Don't force logout on network errors or other issues
+      }
     }
   }, [updateUser]);
 
@@ -51,15 +59,45 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // Try to get stored token to send with the request
+        const storedToken = localStorage.getItem('token');
+        
+        // If no token, clear stored user data
+        if (!storedToken) {
+          localStorage.removeItem("user");
+          setLoading(false);
+          return;
+        }
+
         const response = await authService.getMe();
         const validUser = response.data?.user || response.user || response.data;
         if (validUser) {
-          updateUser(validUser);
+          // Keep the stored token when updating user
+          const userWithToken = { ...validUser, token: storedToken };
+          setUser(userWithToken);
+          localStorage.setItem("user", JSON.stringify(userWithToken));
         } else {
           throw new Error("No user data");
         }
       } catch (error) {
-        updateUser(null);
+        // Only clear auth on 401, not on network errors
+        if (error.status === 401) {
+          console.warn("Invalid or expired token:", error.message);
+          updateUser(null);
+        } else {
+          console.warn("Initial auth check failed (non-401):", error.message);
+          // Keep existing user in localStorage if network error during init
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            try {
+              setUser(JSON.parse(storedUser));
+            } catch (e) {
+              updateUser(null);
+            }
+          } else {
+            updateUser(null);
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -110,14 +148,24 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const response = await authService.login(email, password);
     const userData = response.data?.user || response.user || response.data;
-    if (userData) updateUser(userData);
+    const token = response.data?.token || response.token;
+    if (userData) {
+      // Store token with user data if it exists
+      const userWithToken = { ...userData, ...(token && { token }) };
+      updateUser(userWithToken);
+    }
     return response;
   };
 
   const register = async (data) => {
     const response = await authService.register(data);
     const userData = response.data?.user || response.user || response.data;
-    if (userData) updateUser(userData);
+    const token = response.data?.token || response.token;
+    if (userData) {
+      // Store token with user data if it exists
+      const userWithToken = { ...userData, ...(token && { token }) };
+      updateUser(userWithToken);
+    }
     return response;
   };
 

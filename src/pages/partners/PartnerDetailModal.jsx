@@ -17,7 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Badge, { StatusBadge } from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";

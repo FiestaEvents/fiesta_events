@@ -67,11 +67,11 @@ import { handleResponse, handleError } from "../../utils/apiUtils";
     try {
       const response = await api.get('/reminders/upcoming', {
         params: { hours },
-        signal, // ✅ Pass AbortController signal
+        signal, //  Pass AbortController signal
       });
       return response.data;
     } catch (error) {
-      // ✅ Handle abort gracefully
+      //  Handle abort gracefully
       if (error.name === 'AbortError' || error.name === 'CanceledError') {
         return { aborted: true };
       }

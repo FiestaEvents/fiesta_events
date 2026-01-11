@@ -16,10 +16,10 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ API & Services
+//  API & Services
 import { financeService } from "../../api/index";
 
-// ✅ Generic Components & Utils
+//  Generic Components & Utils
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
@@ -28,7 +28,7 @@ import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
 import formatCurrency from "../../utils/formatCurrency";
 
-// ✅ Hooks
+//  Hooks
 import { useToast } from "../../hooks/useToast";
 
 const Transactions = () => {
@@ -54,7 +54,7 @@ const Transactions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [pageSize, setPageSize] = useState(10);
 
-  // ✅ Helper: Strict DD/MM/YYYY format
+  //  Helper: Strict DD/MM/YYYY format
   const formatDate = (date) => {
     if (!date) return "-";
     try {

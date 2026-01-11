@@ -14,7 +14,7 @@ import {
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
 import PermissionGuard from "../../../components/auth/PermissionGuard"
@@ -118,7 +118,7 @@ const EventsTab = ({
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-orange-600 transition-colors">
                       {event.title}
                     </h4>
-                    {/* ✅ Using Generic StatusBadge */}
+                    {/*  Using Generic StatusBadge */}
                     <StatusBadge status={event.status} size="sm" />
                   </div>
 
@@ -153,7 +153,7 @@ const EventsTab = ({
                     {event.paymentSummary && (
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4 text-gray-400" />
-                        {/* ✅ Using Generic StatusBadge for Payment */}
+                        {/*  Using Generic StatusBadge for Payment */}
                         <StatusBadge
                           status={event.paymentSummary?.status || "pending"}
                           size="xs"

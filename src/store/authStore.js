@@ -8,7 +8,7 @@ const useAuthStore = create((set, get) => ({
   loading: true, // Start in loading state to verify session
   error: null,
 
-  // ✅ ACTION: Login (Cookie handled by Backend)
+  //  ACTION: Login (Cookie handled by Backend)
   login: async (credentials) => {
     set({ loading: true, error: null });
     try {
@@ -36,7 +36,7 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // ✅ ACTION: Register (Cookie handled by Backend)
+  //  ACTION: Register (Cookie handled by Backend)
   register: async (data) => {
     set({ loading: true, error: null });
     try {
@@ -62,7 +62,7 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // ✅ ACTION: Logout
+  //  ACTION: Logout
   logout: async () => {
     set({ loading: true });
     try {
@@ -84,13 +84,13 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // ✅ ACTION: Update User (Profile changes)
+  //  ACTION: Update User (Profile changes)
   updateUser: (userData) => {
     localStorage.setItem('user', JSON.stringify(userData));
     set({ user: userData });
   },
 
-  // ✅ ACTION: Verify Session (Called on App Mount)
+  //  ACTION: Verify Session (Called on App Mount)
   checkAuth: async () => {
     set({ loading: true });
     try {
@@ -108,7 +108,7 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // ✅ ACTION: Check Permission
+  //  ACTION: Check Permission
   hasPermission: (permissionName) => {
     const { user } = get();
     if (!user) return false;

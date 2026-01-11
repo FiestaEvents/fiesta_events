@@ -2,11 +2,11 @@ import React from "react";
 import { Building2, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
 
-// ✅ Auth Guard
+//  Auth Guard
 import PermissionGuard from "../../../components/auth/PermissionGuard";
 
 const getInitials = (name = "") =>
@@ -42,7 +42,7 @@ const ClientHeader = ({ client, onBack, onEdit, onDelete }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* ✅ Edit Guard */}
+          {/*  Edit Guard */}
           <PermissionGuard permission="clients.update.all">
             <Button
               variant="outline"
@@ -55,7 +55,7 @@ const ClientHeader = ({ client, onBack, onEdit, onDelete }) => {
             </Button>
           </PermissionGuard>
 
-          {/* ✅ Delete Guard */}
+          {/*  Delete Guard */}
           <PermissionGuard permission="clients.delete.all">
             <Button
               variant="outline"

@@ -456,7 +456,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
                       <Box className="w-4 h-4 text-orange-500" />{" "}
                       {t("supplies.form.steps.inventory")}
                     </h3>
-                    {/* ✅ CHANGED: grid-cols-1 to stack inputs properly */}
+                    {/*  CHANGED: grid-cols-1 to stack inputs properly */}
                     <div className="grid grid-cols-1 gap-5">
                       <Input
                         label={t("supplies.form.currentStock")}
@@ -495,7 +495,7 @@ const SupplyForm = ({ supply: supplyProp, onSuccess, onCancel }) => {
                       <DollarSign className="w-4 h-4 text-green-500" />{" "}
                       {t("supplies.pricing.title")}
                     </h3>
-                    {/* ✅ CHANGED: grid-cols-1 to give pricing inputs full width */}
+                    {/*  CHANGED: grid-cols-1 to give pricing inputs full width */}
                     <div className="grid grid-cols-1 gap-5">
                       <Input
                         label={t("supplies.form.costPerUnit")}

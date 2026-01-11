@@ -15,17 +15,17 @@ import {
   Calculator,
 } from "lucide-react";
 
-// ✅ API & Services
+//  API & Services
 import { financeService } from "../../api/index";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Select from "../../components/common/Select";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
 import formatCurrency from "../../utils/formatCurrency";
 
-// ✅ Context
+//  Context
 import { useToast } from "../../hooks/useToast";
 
 const Profitability = () => {
@@ -44,7 +44,7 @@ const Profitability = () => {
     tax: null,
   });
 
-  // ✅ Helper: Date Range (Same as Finance Page)
+  //  Helper: Date Range (Same as Finance Page)
   const getDateRange = useCallback((selectedPeriod) => {
     const now = new Date();
     let startDate = new Date();

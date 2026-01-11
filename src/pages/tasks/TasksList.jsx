@@ -123,7 +123,7 @@ const COLUMN_STYLES = {
   },
 };
 
-// ✅ ADDED MISSING STAT STYLES
+//  ADDED MISSING STAT STYLES
 const STAT_STYLES = {
   gray: "bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-900 dark:text-white",
   yellow:

@@ -17,11 +17,11 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-// ✅ API & Permissions
+//  API & Permissions
 import { paymentService } from "../../api/index";
 import PermissionGuard from "../../components/auth/PermissionGuard";
 
-// ✅ Generic Components & Utils
+//  Generic Components & Utils
 import OrbitLoader from "../../components/common/LoadingSpinner";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
@@ -31,10 +31,10 @@ import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import formatCurrency from "../../utils/formatCurrency";
 
-// ✅ Context
+//  Context
 import { useToast } from "../../context/ToastContext";
 
-// ✅ Sub-components
+//  Sub-components
 import PaymentForm from "./PaymentForm";
 import PaymentDetailModal from "./PaymentDetailModal";
 
@@ -376,7 +376,7 @@ const PaymentsList = () => {
   const showData =
     hasInitialLoad && (payments.length > 0 || (loading && totalCount > 0));
 
-  // ✅ FIX: Renamed 'columns' to 'tableColumns' to match usage
+  //  FIX: Renamed 'columns' to 'tableColumns' to match usage
   const tableColumns = useMemo(
     () => [
       {
@@ -484,7 +484,7 @@ const PaymentsList = () => {
               <Eye className="h-4 w-4" />
             </Button>
 
-            {/* ✅ Edit Guard */}
+            {/*  Edit Guard */}
             <PermissionGuard permission="payments.update.all">
               <Button
                 variant="outline"
@@ -521,7 +521,7 @@ const PaymentsList = () => {
                 </PermissionGuard>
               )}
 
-            {/* ✅ Delete Guard */}
+            {/*  Delete Guard */}
             <PermissionGuard permission="payments.delete.all">
               <Button
                 variant="outline"
@@ -558,7 +558,7 @@ const PaymentsList = () => {
           </p>
         </div>
 
-        {/* ✅ Create Guard */}
+        {/*  Create Guard */}
         {!showEmptyState && (
           <PermissionGuard permission="payments.create">
             <Button
@@ -762,7 +762,7 @@ const PaymentsList = () => {
         )}
         {showData && (
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            {/* ✅ FIX: Passed tableColumns variable here */}
+            {/*  FIX: Passed tableColumns variable here */}
             <Table
               columns={tableColumns}
               data={paginatedPayments}

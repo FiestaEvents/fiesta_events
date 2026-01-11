@@ -201,7 +201,7 @@ const SearchBar = () => {
             exit={{ opacity: 0, y: -10 }}
             className="absolute top-full w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden z-50 max-h-[60vh] overflow-y-auto custom-scrollbar"
           >
-            {/* ✅ FIX: Inner AnimatePresence with mode='wait' forces content to exit before new content enters */}
+            {/*  FIX: Inner AnimatePresence with mode='wait' forces content to exit before new content enters */}
             <AnimatePresence mode="wait">
               {loading ? (
                 <motion.div 
@@ -226,7 +226,7 @@ const SearchBar = () => {
                   <p className="text-sm text-gray-500">{t("common.noResults")}</p>
                 </motion.div>
               ) : (
-                /* ✅ FIX: Explicit variants on the RESULTS wrapper ensure items animate even if parent is already open */
+                /*  FIX: Explicit variants on the RESULTS wrapper ensure items animate even if parent is already open */
                 <motion.div 
                   key="results"
                   initial="hidden"

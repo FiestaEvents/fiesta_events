@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { usePermission } from "../hooks/usePermission";
-import { useAuth } from "../context/AuthContext"; // ✅ Added to get Category
+import { useAuth } from "../context/AuthContext"; //  Added to get Category
 import {
   LayoutDashboard,
   Calendar,
@@ -83,7 +83,7 @@ const Home = () => {
   const canViewTasks = usePermission("tasks.read.all");
   const canViewReminders = usePermission("reminders.read.all");
   
-  // New: Portfolio Permission
+  //  Portfolio Permission
   const canViewPortfolio = usePermission("portfolio.read.all");
 
   const canViewFinance = usePermission("finance.read.all");
@@ -112,9 +112,9 @@ const Home = () => {
     },
     // 2. Operations
     {
-      title: t(config.eventsTitle), // Dynamic Title
+      title: t(config.eventsTitle),
       id: "events",
-      icon: config.eventsIcon,      // Dynamic Icon
+      icon: config.eventsIcon, 
       path: "/events",
       show: canViewEvents,
       color: "text-emerald-600 dark:text-emerald-400",
@@ -123,7 +123,7 @@ const Home = () => {
       description: t(config.eventsDesc, "Management")
     },
     {
-      title: t("common.portfolio"), // New Portfolio Module
+      title: t("common.portfolio"),
       id: "portfolio",
       icon: Camera,
       path: "/portfolio",

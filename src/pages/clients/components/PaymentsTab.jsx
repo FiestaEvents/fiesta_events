@@ -11,7 +11,7 @@ import {
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components & Hooks
+//  Generic Components & Hooks
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
 import { useToast } from "../../../context/ToastContext"; // Assuming context path
@@ -34,7 +34,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
     return t(`payments.methods.${method}`) || method;
   };
 
-  // ✅ Helper: Strict DD/MM/YYYY format
+  //  Helper: Strict DD/MM/YYYY format
   const formatDate = (dateString) => {
     if (!dateString) return t("clients.table.defaultValues.noDate");
     return new Date(dateString).toLocaleDateString("en-GB");
@@ -107,7 +107,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                     <h5 className="font-semibold text-gray-900 dark:text-white text-lg">
                       {event.title}
                     </h5>
-                    {/* ✅ Generic Status Badge */}
+                    {/*  Generic Status Badge */}
                     <StatusBadge status={paymentStatus} />
                   </div>
 
@@ -213,7 +213,7 @@ const PaymentsTab = ({ events, eventsStats, onRecordPayment }) => {
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {payment.method &&
                           `${getPaymentMethodLabel(payment.method)} • `}
-                        {/* ✅ Formatted Date DD/MM/YYYY */}
+                        {/*  Formatted Date DD/MM/YYYY */}
                         {formatDate(payment.paidDate)}
                       </div>
                     </div>

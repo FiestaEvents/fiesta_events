@@ -57,7 +57,7 @@ export const useEventForm = (eventId, isEditMode, prefillClient, prefillPartner,
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   
-  // ✅ NEW: Resource Lists
+  //  NEW: Resource Lists
   const [clients, setClients] = useState([]);
   const [partners, setPartners] = useState([]);
   const [venueSpaces, setVenueSpaces] = useState([]);
@@ -94,7 +94,7 @@ export const useEventForm = (eventId, isEditMode, prefillClient, prefillPartner,
       if (prefillClient && !selectedClient) {
         const foundClient = clients.find(c => c._id === prefillClient._id);
         if (foundClient) {
-          console.log("✅ Auto-selecting prefilled client:", foundClient.name);
+          console.log(" Auto-selecting prefilled client:", foundClient.name);
           setSelectedClient(foundClient);
           setFormData(prev => ({ ...prev, clientId: foundClient._id }));
         }
@@ -199,7 +199,7 @@ export const useEventForm = (eventId, isEditMode, prefillClient, prefillPartner,
           if (spaceData) setSelectedVenueSpace(spaceData);
         }
 
-        console.log("✅ Event data loaded successfully");
+        console.log(" Event data loaded successfully");
       } catch (error) {
         console.error("❌ Error loading event data:", error);
         setErrors({ fetch: "Failed to load event data" });

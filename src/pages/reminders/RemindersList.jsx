@@ -22,11 +22,11 @@ import {
   Zap,
 } from "lucide-react";
 
-// ✅ API & Permissions
+// API & Services
 import { reminderService } from "../../api/index";
 import PermissionGuard from "../../components/auth/PermissionGuard"; // Guard
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Table from "../../components/common/NewTable";
@@ -35,10 +35,10 @@ import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 
-// ✅ Context
+// Context & Sub-components
 import { useToast } from "../../context/ToastContext";
 
-// ✅ Sub-components
+//  Sub-components
 import ReminderDetailModal from "./ReminderDetailModal";
 import ReminderForm from "./ReminderForm";
 
@@ -491,7 +491,7 @@ const RemindersList = () => {
           </p>
         </div>
 
-        {/* ✅ Create Guard */}
+        {/*  Create Guard */}
         {(!loading || hasInitialLoad) && (
           <PermissionGuard permission="reminders.create">
             <Button
@@ -563,7 +563,7 @@ const RemindersList = () => {
                 </button>
               </div>
 
-              {/* ✅ MERGED: Quick Presets Section */}
+              {/*  MERGED: Quick Presets Section */}
               <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-3 text-gray-700 dark:text-gray-200">
                 </div>
