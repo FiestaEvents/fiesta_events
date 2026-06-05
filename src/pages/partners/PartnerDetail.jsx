@@ -9,7 +9,7 @@ import Modal, { ConfirmModal } from "../../components/common/Modal";
 import PortfolioTab from "./components/PortfolioTab";
 // Sub-components
 import EventDetailModal from "../events/EventDetailModal";
-import EventForm from "../events/EventForm/SharedEventForm";
+// import EventForm from "../events/EventForm/SharedEventForm";
 import PartnerForm from "./PartnerForm";
 import PartnerHeader from "./components/PartnerHeader";
 import PartnerInfo from "./components/PartnerInfo";
@@ -78,7 +78,7 @@ const PartnerDetail = () => {
         },
       });
     },
-    [navigate, id, partnerData]
+    [navigate, id, partnerData],
   );
 
   const handleEditPartner = useCallback(() => {
@@ -130,7 +130,7 @@ const PartnerDetail = () => {
     showSuccess(
       editingEventId
         ? t("partnerDetail.notifications.eventUpdated")
-        : t("partnerDetail.notifications.eventCreated")
+        : t("partnerDetail.notifications.eventCreated"),
     );
   }, [editingEventId, refreshData, showSuccess, t]);
 
@@ -326,14 +326,14 @@ const PartnerDetail = () => {
         refreshData={refreshData}
       />
 
-      {isEventFormOpen && (
+      {/* {isEventFormOpen && (
         <EventForm
           isOpen={isEventFormOpen}
           onClose={handleEventFormClose}
           onSuccess={handleEventFormSuccess}
           eventId={editingEventId}
         />
-      )}
+      )} */}
     </div>
   );
 };

@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { 
-  AlertTriangle, 
+import {
+  AlertTriangle,
   ArrowLeft,
   Users,
   CreditCard,
@@ -20,23 +20,24 @@ import Button from "../../components/common/Button";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
 
 //  Sub-components
-import EventForm from "./EventForm/SharedEventForm";
+// import EventForm from "./EventForm/SharedEventForm";
 import EventHeader from "./components/EventHeader";
 import EventInfo from "./components/EventInfo";
 import EventPartnersTab from "./components/EventPartnersTab";
 import EventPaymentsTab from "./components/EventPaymentsTab";
 import EventActivityTab from "./components/EventActivityTab";
-import EventSuppliesTab from "./components/EventSuppliesTab"; 
+import EventSuppliesTab from "./components/EventSuppliesTab";
 const EventDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { t } = useTranslation();
-  
+
   //  Use extended toast methods
   const { showSuccess, apiError, showInfo, promise } = useToast();
 
   // Use custom hook for event data
-  const { eventData, payments, loading, error, refreshData } = useEventDetail(id);
+  const { eventData, payments, loading, error, refreshData } =
+    useEventDetail(id);
 
   // UI state
   const [activeTab, setActiveTab] = useState("partners");
@@ -64,7 +65,7 @@ const EventDetail = () => {
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false
+        hour12: false,
       });
     } catch {
       return date;
@@ -72,9 +73,9 @@ const EventDetail = () => {
   }, []);
 
   // Event handlers
-const handleEditEvent = useCallback(() => {
-  navigate(`/events/${id}/edit`);
-}, [navigate, id]);
+  const handleEditEvent = useCallback(() => {
+    navigate(`/events/${id}/edit`);
+  }, [navigate, id]);
 
   const handleEditSuccess = useCallback(async () => {
     setIsEditModalOpen(false);
@@ -90,14 +91,11 @@ const handleEditEvent = useCallback(() => {
 
     try {
       setDeleteLoading(true);
-      await promise(
-        eventService.delete(id),
-        {
-          loading: t("eventDetail.actions.deleteLoading"),
-          success: t("eventDetail.actions.deleteSuccess"),
-          error: t("eventDetail.actions.deleteError")
-        }
-      );
+      await promise(eventService.delete(id), {
+        loading: t("eventDetail.actions.deleteLoading"),
+        success: t("eventDetail.actions.deleteSuccess"),
+        error: t("eventDetail.actions.deleteError"),
+      });
       setIsDeleteModalOpen(false);
       navigate("/events");
     } catch (err) {
@@ -114,11 +112,14 @@ const handleEditEvent = useCallback(() => {
     }
   }, [navigate, eventData]);
 
-  const handleNavigateToPartner = useCallback((partnerId) => {
-    if (partnerId) {
-      navigate(`/partners/${partnerId}`);
-    }
-  }, [navigate]);
+  const handleNavigateToPartner = useCallback(
+    (partnerId) => {
+      if (partnerId) {
+        navigate(`/partners/${partnerId}`);
+      }
+    },
+    [navigate],
+  );
 
   const handleRecordPayment = useCallback(() => {
     if (!id) {
@@ -166,23 +167,19 @@ const handleEditEvent = useCallback(() => {
             <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {!eventData ? t("eventDetail.errors.notFound") : t("eventDetail.errors.loading")}
+            {!eventData
+              ? t("eventDetail.errors.notFound")
+              : t("eventDetail.errors.loading")}
           </h3>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
             {error?.message || t("eventDetail.errors.notFoundDescription")}
           </p>
           <div className="flex gap-3 justify-center">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/events")}
-            >
+            <Button variant="outline" onClick={() => navigate("/events")}>
               {t("eventDetail.actions.backToEvents")}
             </Button>
             {error && (
-              <Button
-                variant="primary"
-                onClick={handleRetry}
-              >
+              <Button variant="primary" onClick={handleRetry}>
                 {t("eventDetail.actions.tryAgain")}
               </Button>
             )}
@@ -205,7 +202,6 @@ const handleEditEvent = useCallback(() => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          
           {/* Left Column - Event Details */}
           <div className="lg:col-span-1">
             <div className="space-y-6">
@@ -219,8 +215,8 @@ const handleEditEvent = useCallback(() => {
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-800">
-                <EventInfo 
-                  event={eventData} 
+                <EventInfo
+                  event={eventData}
                   formatDate={formatDate}
                   formatDateTime={formatDateTime}
                   onNavigateToClient={handleNavigateToClient}
@@ -260,7 +256,7 @@ const handleEditEvent = useCallback(() => {
                     onNavigateToPartner={handleNavigateToPartner}
                   />
                 )}
-              {activeTab === "supplies" && (
+                {activeTab === "supplies" && (
                   <EventSuppliesTab event={eventData} />
                 )}
                 {activeTab === "payments" && (
@@ -285,21 +281,23 @@ const handleEditEvent = useCallback(() => {
       </div>
 
       {/* Modals */}
-      {isEditModalOpen && (
+      {/* {isEditModalOpen && (
         <EventForm
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           onSuccess={handleEditSuccess}
           eventId={id}
         />
-      )}
+      )} */}
 
       <ConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteEvent}
         title={t("eventDetail.deleteModal.title")}
-        message={t("eventDetail.deleteModal.message", { eventTitle: eventData?.title })}
+        message={t("eventDetail.deleteModal.message", {
+          eventTitle: eventData?.title,
+        })}
         confirmText={t("eventDetail.deleteModal.confirmText")}
         cancelText={t("eventDetail.deleteModal.cancelText")}
         variant="danger"
