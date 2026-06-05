@@ -94,10 +94,10 @@ const UserMenu = () => {
             </div>
             <div className="p-1">
               <button
-                onClick={() => { navigate("/settings"); setIsOpen(false); }}
+                onClick={() => { navigate("/Profile"); setIsOpen(false); }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               >
-                <Settings className="w-4 h-4" /> {t("common.settings")}
+                <Settings className="w-4 h-4" /> {t("common.ProfileSettings")}
               </button>
               <button
                 onClick={() => { logout(); setIsOpen(false); }}

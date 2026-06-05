@@ -14,12 +14,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Badge from "../../components/common/Badge";
 
-// ✅ Services & Hooks
+//  Services & Hooks
 import { useToast } from "../../hooks/useToast";
 import { supplyService } from "../../api/index";
 

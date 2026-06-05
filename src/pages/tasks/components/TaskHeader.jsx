@@ -11,7 +11,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../../components/common/Button";
 import Badge from "../../../components/common/Badge";
 

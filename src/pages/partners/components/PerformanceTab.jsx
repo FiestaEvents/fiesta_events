@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-// ✅ Generic Components & Utils
+//  Generic Components & Utils
 import ProgressBar from '../../../components/common/ProgressBar'; // Assuming this exists
 import formatCurrency from '../../../utils/formatCurrency';
 

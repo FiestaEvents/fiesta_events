@@ -92,7 +92,7 @@ const PaymentDetailModal = ({ isOpen, onClose, payment, onEdit, refreshData }) =
           <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
             <div className="flex gap-2 w-full sm:w-auto">
               <Button 
-                variant="danger" // ✅ Fixed: Danger Variant
+                variant="danger" //  Fixed: Danger Variant
                 icon={Trash2} 
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isProcessing}

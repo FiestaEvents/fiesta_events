@@ -569,137 +569,92 @@
     }
   },
   "eventList": {
-    "loading": {
-      "initial": "Chargement des evenements..."
-    },
-    "title": "Calendrier des Événements",
-    "subtitle": "Voir et gérer les événements de votre salle",
-    "showingEvents": "Affichage de {{count}} sur {{total}} événements",
-    "viewMode": {
-      "list": "Liste",
-      "calendar": "Calendrier"
-    },
-    "actions": {
-      "advancedFilters": "Filtres Avancés",
-      "reset": "Réinitialiser les Filtres",
-      "applyFilters": "Appliquer les Filtres",
-      "createEvent": "Créer un Événement",
-      "createFirstEvent": "Créer le Premier Événement",
-      "createEventOnDate": "Créer un Événement à Cette Date",
-      "retry": "Réessayer",
-      "clear": "Effacer",
-      "clearAllFilters": "Effacer Tous les Filtres",
-      "today": "Aujourd'hui",
-      "viewEvent": "Voir l'Événement",
-      "editEvent": "Modifier l'Événement",
-      "deleteEvent": "Supprimer l'Événement",
-      "cancel": "Annuler"
-    },
-    "error": {
-      "title": "Erreur de Chargement des Événements",
-      "message": "Impossible de charger les événements. Veuillez réessayer."
-    },
-    "search": {
-      "placeholder": "Rechercher des événements par titre, description ou lieu...",
-      "activeFilters": "Filtres actifs :",
-      "search": "Rechercher",
-      "status": "Statut",
-      "type": "Type",
-      "date": "Date"
-    },
-    "filters": {
-      "filterOptions": "Options de Filtrage",
-      "startDate": "Date de début",
-      "endDate": "Date de fin",
-      "allStatus": "Tous les Statuts",
-      "draft": "Brouillon",
-      "pending": "En Attente",
-      "confirmed": "Confirmé",
-      "inProgress": "En Cours",
-      "completed": "Terminé",
-      "cancelled": "Annulé",
-      "allTypes": "Tous les Types",
-      "wedding": "Mariage",
-      "corporate": "Entreprise",
-      "birthday": "Anniversaire",
-      "conference": "Conférence",
-      "party": "Fête",
-      "social": "Social",
-      "other": "Autre",
-      "allDates": "Toutes les Dates",
-      "today": "Aujourd'hui",
-      "tomorrow": "Demain",
-      "thisWeek": "Cette Semaine",
-      "nextWeek": "Semaine Prochaine",
-      "thisMonth": "Ce Mois",
-      "pastEvents": "Événements Passés",
-      "upcoming": "À Venir"
-    },
-    "table": {
-      "eventTitle": "Titre de l'Événement",
-      "client": "Client",
-      "dateTime": "Date et Heure",
-      "type": "Type",
-      "status": "Statut",
-      "guests": "Invités",
-      "actions": "Actions",
-      "unknownClient": "Client Inconnu",
-      "loading": "Chargement...",
-      "noEvents": "Aucun événement trouvé"
-    },
-    "emptyState": {
-      "noEvents": "Aucun événement",
-      "noEventsMessage": "Commencez par créer votre premier événement.",
-      "noResults": "Aucun événement trouvé",
-      "noResultsMessage": "Aucun événement ne correspond à vos critères de recherche ou de filtre actuels."
-    },
-    "calendar": {
-      "weekDays": {
-        "sun": "Dim",
-        "mon": "Lun",
-        "tue": "Mar",
-        "wed": "Mer",
-        "thu": "Jeu",
-        "fri": "Ven",
-        "sat": "Sam"
-      },
-      "eventTypes": "Types d'Événements",
-      "events": "événements",
-      "event": "événement",
-      "thisMonth": "Ce Mois",
-      "totalEvents": "Total Événements",
-      "upcoming": "À Venir",
-      "selected": "Sélectionné",
-      "eventsThisMonth": "événements ce mois",
-      "moreEvents": "+{{count}} de plus"
-    },
-    "dateEventsModal": {
-      "noEventsScheduled": "Aucun événement prévu",
-      "noEventsMessage": "Il n'y a aucun événement prévu pour cette date.",
-      "client": "Client",
-      "guests": "invités"
-    },
-    "deleteModal": {
-      "title": "Confirmer la Suppression",
-      "deleteEvent": "Supprimer l'Événement",
-      "confirmMessage": "Êtes-vous sûr de vouloir supprimer",
-      "warningMessage": "Cette action est irréversible et toutes les données associées seront définitivement supprimées."
-    },
-    "notifications": {
-
-      "filtersApplied": "Filtres appliqués",
-      "filtersCleared": "Filtres effacés",
-      "retrying": "Nouvelle tentative de chargement des événements...",
-      "navigatedToToday": "Navigation vers aujourd'hui",
-      "navigatedToYear": "Navigation vers {{year}}",
-      "filteringBy": "Filtrage par événements {{type}}",
-      "eventUpdated": "Événement mis à jour avec succès",
-      "eventCreated": "Événement créé avec succès",
-      "eventDeleted": "{{name}} supprimé avec succès",
-      "deletingEvent": "Suppression de {{name}}...",
-      "deleteError": "Échec de la suppression de {{name}}"
-    }
+  "title": "Calendrier des Événements",
+  "subtitle": "Consultez et gérez les événements de votre établissement",
+  "showingEvents": "Affichage de {{count}} sur {{total}} événements",
+  "viewMode": {
+    "list": "Liste",
+    "calendar": "Calendrier",
+    "month": "Mois",
+    "week": "Semaine",
+    "day": "Jour",
+    "listWeek": "Agenda"
   },
+  "actions": {
+    "advancedFilters": "Filtres Avancés",
+    "reset": "Réinitialiser",
+    "applyFilters": "Appliquer",
+    "createEvent": "Créer un Événement",
+    "createFirstEvent": "Créer le Premier Événement",
+    "createEventOnDate": "Créer un Événement à cette date",
+    "retry": "Réessayer",
+    "clear": "Effacer",
+    "clearAllFilters": "Effacer tous les filtres",
+    "today": "Aujourd'hui",
+    "viewEvent": "Voir l'Événement",
+    "editEvent": "Modifier",
+    "deleteEvent": "Supprimer",
+    "cancel": "Annuler"
+  },
+  "error": {
+    "title": "Erreur de Chargement",
+    "message": "Impossible de charger les événements. Veuillez réessayer."
+  },
+  "search": {
+    "placeholder": "Rechercher par titre...",
+    "activeFilters": "Filtres actifs :"
+  },
+  "filters": {
+    "filterOptions": "Options de Filtrage",
+    "startDate": "Date de Début",
+    "endDate": "Date de Fin",
+    "allStatus": "Tous les Statuts",
+    "draft": "Brouillon",
+    "pending": "En Attente",
+    "confirmed": "Confirmé",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "allTypes": "Tous les Types",
+    "wedding": "Mariage",
+    "corporate": "Entreprise",
+    "birthday": "Anniversaire",
+    "conference": "Conférence",
+    "party": "Soirée",
+    "social": "Social",
+    "other": "Autre"
+  },
+  "table": {
+    "eventTitle": "Titre",
+    "client": "Client",
+    "dateTime": "Date et Heure",
+    "type": "Type",
+    "status": "Statut",
+    "actions": "Actions",
+    "unknownClient": "Client Inconnu"
+  },
+  "emptyState": {
+    "noEvents": "Aucun événement",
+    "noEventsMessage": "Commencez par créer votre premier événement.",
+    "noResults": "Aucun résultat",
+    "noResultsMessage": "Aucun événement ne correspond à vos critères."
+  },
+  "calendar": {
+    "moreEvents": "+{{count}} autres"
+  },
+  "deleteModal": {
+    "title": "Confirmer la Suppression",
+    "confirmMessage": "Êtes-vous sûr de vouloir supprimer",
+    "warningMessage": "Cette action est irréversible et toutes les données associées seront définitivement supprimées."
+  },
+  "notifications": {
+    "rescheduled": "Événement reprogrammé avec succès",
+    "updateError": "Échec de la mise à jour de l'événement",
+    "filtersCleared": "Filtres effacés",
+    "eventDeleted": "Événement supprimé avec succès",
+    "deletingEvent": "Suppression de l'événement...",
+    "deleteError": "Échec de la suppression de l'événement"
+  }
+},
   "eventDetailModal": {
     "close": "Fermer",
     "client": "Client",
@@ -894,11 +849,15 @@
   },
   "eventForm": {
     "header": {
+      "venueEvent": "Événement de Lieu",
+      "creativeProject": "Projet Créatif",
       "createNewEvent": "Créer un Nouvel Événement",
       "editEvent": "Modifier l'Événement",
       "stepProgress": "Étape {{current}} sur {{total}} : {{title}}",
       "prefillClient": "Client : {{name}}",
-      "prefillPartner": "Partenaire : {{name}}"
+      "prefillPartner": "Partenaire : {{name}}",
+      "stepIndicator": "Étape {{current}} sur {{total}}"
+
     },
     "steps": {
       "eventDetails": "Détails de l'Événement",
@@ -912,8 +871,28 @@
       "continue": "Suivant",
       "createEvent": "Créer l'Événement",
       "updateEvent": "Mettre à jour",
-      "quickSave ": "Enregistrement Rapide"
+      "quickSave ": "Enregistrement Rapide",
+      "processing": "Traitement..."
     },
+    "errors": {
+    "collision": "Conflit détecté : Créneau horaire indisponible.",
+    "checkForm": "Veuillez vérifier le formulaire pour les erreurs."
+  },
+  "invoice": {
+    "venueRental": "Location de salle",
+    "supplyItem": "Fourniture",
+    "autoGenerated": "Généré automatiquement"
+  },
+  "preview": {
+    "title": "Aperçu de l'événement",
+    "newEvent": "Nouvel événement",
+    "venueFee": "Frais de salle",
+    "services": "Services",
+    "supplies": "Fournitures",
+    "discount": "Remise",
+    "tax": "Taxe",
+    "totalEstimated": "Total estimé"
+  },
     "validation": {
       "actionRequired": "Action requise",
       "fixErrors": "Veuillez corriger les erreurs ci-dessous pour continuer."
@@ -940,11 +919,27 @@
       "startTime": "Heure de Début",
       "endTime": "Heure de Fin",
       "guestCount": "Nombre d'Invités",
+      "basicsTitle": "Bases de l'événement",
+    "basicsDescription": "Définissez l'identité principale et le calendrier de l'événement.",
+    "timeDuration": "Temps et durée",
+    "duration": {
+      "oneDay": "Un jour",
+      "multiDay": "Plusieurs jours"
+    },
+    "notesLabel": "Description / Notes",
+    "placeholders": {
+      "title": "ex. Gala de mariage d'été 2024",
+      "type": "Sélectionner le type...",
+      "guests": "ex. 150",
+      "notes": "Ajoutez des instructions spécifiques, des détails sur l'ordre du jour ou des notes internes ici..."
+    },
       "eventTypes": {
         "wedding": "Mariage",
         "birthday": "Anniversaire",
         "corporate": "Entreprise",
         "conference": "Conférence",
+        "party": "Fête privée",
+        "social": "Social",
         "other": "Autre"
       }
     },
@@ -962,9 +957,140 @@
       "clientEmail": "Email du Client",
       "clientName": "Nom du Client",
       "clientPhone": "Téléphone du Client",
-      "searchClients": "Rechercher des clients par nom, email ou téléphone..."
+      "searchClients": "Rechercher des clients par nom, email ou téléphone...",
+      "title": "Sélection du client",
+     "description": "Pour qui est cet événement ? Sélectionnez un existant ou créez-en un nouveau.",
+      "selectExisting": "Sélectionner existant",
+     "createButton": "Créer et sélectionner",
+     "createForm": {
+      "title": "Créer un nouveau client",
+      "fullName": "Nom complet",
+      "phone": "Téléphone",
+      "email": "Email",
+      "placeholders": {
+        "name": "ex. Jean Dupont",
+        "phone": "20 000 000",
+        "email": "jean@exemple.com"
+      }
+       }
+    },
+      "components": {
+      "clientSelector": {
+        "searchPlaceholder": "Rechercher par nom, email ou téléphone...",
+        "noClients": "Aucun client trouvé",
+        "noResults": "Aucun client trouvé pour \"{{query}}\"",
+      "validation": {
+        "required": "Requis :",
+        "message": "Veuillez sélectionner un client."
+      }
+      },
+      "partnerSelector": {
+      "title": "Partenaires de service",
+      "subtitle": "Ajoutez des fournisseurs externes (traiteur, photo...)",
+      "noPartners": "Aucun partenaire ajouté.",
+      "dbEmpty": "Aucun partenaire ajouté. Veuillez créer des partenaires dans la section Partenaires avant de les ajouter ici.",
+      "addPartner": "Ajouter un partenaire",
+      "selectPartner": "Sélectionner un partenaire",
+      "createPartner": "Créer un nouveau partenaire",
+      "buttons": {
+        "add": "Ajouter",
+        "close": "Fermer",
+        "saving": "Enregistrement...",
+        "saveAndSelect": "Enregistrer et Sélectionner"
+      },
+      "tabs": {
+        "existing": "Sélectionner existant",
+        "create": "Créer nouveau"
+      },
+      "placeholders": {
+        "price": "Prix",
+        "name": "Nom du partenaire *",
+        "email": "Adresse Email *",
+        "phone": "Téléphone",
+        "rate": "Tarif (TND)"
+      },
+      "priceTypes": {
+        "fixed": "Prix Fixe",
+        "hourly": "Taux Horaire"
+      },
+      "validation": {
+        "name": "Le nom est requis",
+        "emailRequired": "L'email est requis",
+        "emailInvalid": "Format d'email invalide",
+        "createFailed": "Échec de la création du partenaire"
+      },
+      "categories": {
+        "catering": "Traiteur",
+        "photography": "Photographie",
+        "music": "Musique",
+        "decoration": "Décoration",
+        "security": "Sécurité",
+        "driver": "Chauffeur",
+        "cleaning": "Nettoyage",
+        "entertainment": "Divertissement",
+        "other": "Autre"
+      },
+      "table": {
+        "partner": "Partenaire",
+        "service": "Service",
+        "cost": "Coût",
+        "actions": "Actions"
+      }
+    },
+    "supplySelector": {
+      "title": "Fournitures de l'événement",
+      "subtitle": "Gérez les articles d'inventaire pour cet événement.",
+      "addSupply": "Ajouter une fourniture",
+      "noSupplies": "Aucune fourniture ajoutée.",
+      "status": {
+        "allocated": "{{count}} article(s) alloué(s)",
+        "none": "Aucun article alloué"
+      },
+      "buttons": {
+        "addInventory": "Ajouter du stock"
+      },
+      "item": {
+        "stock": "en stock",
+        "each": "unité",
+        "left": "restants"
+      },
+      "browser": {
+        "allItems": "Tous les articles",
+        "noStock": "Aucun stock disponible dans cette catégorie.",
+        "free": "Gratuit"
+      },
+      "table": {
+        "item": "Article",
+        "qty": "Qté",
+        "stock": "Stock",
+        "cost": "Coût",
+        "charge": "Facturé",
+        "actions": "Actions",
+        "price": "Prix"
+      }
+  },
+      "draftModal": {
+        "title": "Brouillon Trouvé",
+        "description": "Nous avons trouvé un brouillon non enregistré datant de :",
+        "discard": "Ignorer",
+        "restore": "Restaurer"
+      }
     },
     "step3": {
+    "Schedule":"Planning",
+    "title": "Configuration du lieu",
+    "loading": "Chargement des salles...",
+    "placeholder": "Choisir une salle...",
+    "selectedDetails": "Détails de l'espace sélectionné",
+    "maxCapacity": "Capacité Max",
+    "guests": "Invités",
+    "baseRate": "Tarif de base",
+    "noSpace": "Aucun espace sélectionné",
+    "warningCapacity": "Attention : {{count}} invités dépasse la capacité ({{max}})",
+    "pricingTitle": "Ajustements tarifaires",
+    "discountMode": "Mode de remise",
+    "discountValue": "Valeur de la remise",
+    "percent": "Pourcentage",
       "noPartnersSelected": "Aucun partenaire sélectionné",
       "fixedCost": "Coût Fixe (TND)",
       "hourlyRate": "Taux Horaire (TND)",
@@ -1018,30 +1144,67 @@
       "eventSuppliesDescription": "Gérer les fournitures pour cet événement"
     },
     "step4": {
-      "recordPayment": "Enregistrer un Paiement Initial",
+      "recodPayment": "Enregistrer un Paiement Initial",
       "paymentAmount": "Montant du Paiement",
       "paymentMethod": "Méthode de Paiement",
-      "paymentDate": "Date de Paiement",
-      "paymentNotes": "Notes de Paiement"
+      "paymentNotes": "Notes de Paiement",
+      "totalEstimated": "Total Estimé",
+      "grandTotal": "Total Général",
+    "recordPayment": "Enregistrer le paiement initial",
+    "amountReceived": "Montant reçu (Optionnel)",
+    "paymentStatus": "Statut du paiement",
+    "method": "Méthode",
+    "paymentDate": "Date de paiement",
+    "dueDate": "Date d'échéance",
+    "referenceId": "Référence",
+    "referencePlaceholder": "N° Chèque / Réf Transaction",
+    "descriptionLabel": "Description interne",
+    "descriptionPlaceholder": "Acompte pour réservation initiale...",
+    "createInvoice": "Créer une facture automatiquement",
+    "createInvoiceDesc": "Générera une facture brouillon liée à ce paiement.",
+    "status": {
+      "pending": "En attente",
+      "completed": "Payé",
+      "failed": "Échoué"
+    },
+    "methods": {
+      "cash": "Espèces",
+      "check": "Chèque",
+      "transfer": "Virement",
+      "online": "En ligne"
+    }
     },
     "step5": {
       "eventSummary": "Résumé de l'Événement",
-      "financialSummary": "Résumé Financier"
+      "financialSummary": "Résumé Financier",
+      "title": "Vérification finale",
+    "description": "Confirmez tous les détails avant d'enregistrer.",
+    "summaryTitle": "Résumé de l'événement",
+    "financialsTitle": "Finances",
+    "selectedPartners": "Partenaires sélectionnés",
+    "allocatedInventory": "Stock alloué",
+    "estimatedProfit": "Profit estimé sur fournitures",
+    "finalNotes": "Confirmer les demandes spéciales et notes",
+    "notesPlaceholder": "Dernière vérification des instructions...",
+    "fixed": "Fixe",
+    "extra": "Extra",
+    "included": "Inclus",
+    "fields": {
+      "title": "Titre",
+      "date": "Date",
+      "time": "Heure",
+      "guests": "Invités",
+      "client": "Client",
+      "venue": "Lieu"
     },
-    "components": {
-      "clientSelector": {
-        "searchPlaceholder": "Rechercher par nom, email ou téléphone...",
-        "noClients": "Aucun client trouvé"
-      },
-      "partnerSelector": {
-        "selectPartner": "Sélectionner un Partenaire"
-      },
-      "draftModal": {
-        "title": "Brouillon Trouvé",
-        "description": "Nous avons trouvé un brouillon non enregistré datant de :",
-        "discard": "Ignorer",
-        "restore": "Restaurer"
-      }
+    "financials": {
+      "baseFee": "Frais de base",
+      "partners": "Partenaires de service",
+      "supplies": "Fournitures (Facturables)",
+      "discount": "Remise",
+      "tax": "Taxe",
+      "total": "Total"
+    }
     }
   },
   "partners": {
@@ -1365,305 +1528,339 @@
       "goodProgress": "Bon progrès ! Continuez à maintenir des taux d'achèvement d'événements constants."
     }
   },
-  "tasks": {
-    "categoryLabel": "Catégorie", 
-    "untitled": "Untitled Task",
-    "toast": {
-      "status": {
-        "error": "Échec de la mise à jour de l'état",
-        "success": "État mis à jour avec succès",
-        "loading": "Mise à jour de l'état en cours..."
-      },
-      "archive": {
-        "error": "Échec de l'archivage",
-        "success": "Archivé avec succès",
-        "loading": "Archivage en cours..."
-      },
-      "restore": {
-        "error": "Échec de la restauration",
-        "success": "Restauré avec succès",
-        "loading": "Restauration en cours..."
-      },
-      "delete": {
-        "error": "Échec de la suppression",
-        "success": "Supprimé avec succès",
-        "loading": "Suppression en cours..."
-      },
-      "markComplete": {
-        "error": "Échec de la marquage comme terminé",
-        "success": "Marqué comme terminé avec succès",
-        "loading": "Marquage comme terminé en cours..."
-      },
-      "markIncomplete": {
-        "error": "Échec de la marquage comme non terminé",
-        "success": "Marqué comme non terminé avec succès",
-        "loading": "Marquage comme non terminé en cours..."
-      }
+ "tasks": {
+  "categoryLabel": "Catégorie",
+  "untitled": "Tâche sans titre",
+  "title": "Tâches",
+  "subtitle": "Gérez et suivez les tâches de votre équipe",
+  "archivedTasks": "Tâches Archivées",
+  "archivedSubtitle": "Consultez et gérez les tâches précédemment archivées",
+  "createTask": "Créer une Tâche",
+  "createFirstTask": "Créez votre première tâche",
+  "returnToActive": "Retour aux Tâches Actives",
+  "archived": "Archivées",
+  "searchPlaceholder": "Rechercher des tâches...",
+  "view": {
+    "list": "Liste",
+    "kanban": "Kanban"
+  },
+  "stats": {
+    "total": "Total des Tâches"
+  },
+  "filters": {
+    "allCategories": "Toutes les Catégories",
+    "allStatus": "Tous les Statuts",
+    "allPriorities": "Toutes les Priorités",
+    "clearFilters": "Effacer les Filtres",
+    "advanced": "Filtres Avancés",
+    "filterOptions": "Options de Filtrage",
+    "reset": "Réinitialiser",
+    "apply": "Appliquer",
+    "noResultsDesc": "Aucune tâche ne correspond à vos filtres"
+  },
+  "table": {
+    "title": "Tâche / Description",
+    "status": "Statut",
+    "priority": "Priorité",
+    "dueDate": "Échéance",
+    "assignedTo": "Assigné à",
+    "actions": "Actions"
+  },
+  "form": {
+    "createTitle": "Créer une Nouvelle Tâche",
+    "editTitle": "Modifier la Tâche",
+    "steps": {
+      "basicInfo": "Infos de Base",
+      "planning": "Planification",
+      "checklist": "Liste de contrôle"
     },
-    "title": "Tâches",
-    "subtitle": "Gérez et suivez les tâches de votre équipe",
-    "archivedTasks": "Tâches archivées",
-    "archivedSubtitle": "Voir et gérer les tâches précédemment archivées",
-    "createTask": "Créer une tâche",
-    "createFirstTask": "Créer votre première tâche",
-    "returnToActive": "Retour aux tâches actives",
-    "archived": "Archivés",
-    "searchPlaceholder": "Rechercher des tâches...",
-    "view": {
-      "list": "Liste",
-      "kanban": "Kanban"
-    },
-    "stats": {
-      "total": "Total des tâches"
-    },
-    "status": {
-      "todo": "À faire",
-      "blocked": "Bloqué",
-      "in_progress": "En cours",
-      "completed": "Terminé",
-      "cancelled": "Annulé",
-      "on_hold": "En pause",
-      "pending": "En attente"
-    },
-    "priority": {
-      "low": "Faible",
-      "medium": "Moyen",
-      "high": "Haute",
-      "urgent": "Urgent"
-    },
-    "category": {
-      "event_preparation": "Préparation de l'événement",
-      "marketing": "Marketing",
-      "maintenance": "Maintenance",
-      "client_followup": "Suivi client",
-      "partner_coordination": "Coordination des partenaires",
-      "administrative": "Administratif",
-      "finance": "Finance",
-      "setup": "Installation",
-      "cleanup": "Nettoyage",
-      "other": "Autre",
-      "design": "Design",
-      "development": "Development"
-    },
-    "detail": {
-      "toasts": {
-        "taskCreated": "Tâche créée avec succès",
-        "taskUpdated": "Tâche mise à jour avec succès",
-        "taskDeleted": "Tâche supprimée avec succès",
-        "taskArchived": "Tâche archivée avec succès",
-        "taskUnarchived": "Tâche déarchivée avec succès",
-        "archive": {
-          "success": "Tâche archivée avec succès",
-          "error": "Échec de l'archivage de la tâche",
-          "loading": "Archivage en cours..."
-        },
-        "unarchive": {
-          "success": "Tâche déarchivée avec succès",
-          "error": "Échec de la déarchivage de la tâche",
-          "loading": "Déarchivage en cours..."
-        },
-        "complete": {
-          "loading": "Marquage en cours...",
-          "success": "Tâche marquée comme terminée avec succès",
-          "error": "Échec de la marquage de la tâche comme terminée"
-        }
-      },
-      "loading": "Chargement des détails...",
-      "tabs": {
-        "overview": "Aperçu",
-        "subtasks": "Sous-tâches",
-        "comments": "Commentaires",
-        "attachments": "Pièces jointes",
-        "timeline": "Chronologie"
-      },
-      "header": {
-        "backToTasks": "Retour aux tâches",
-        "editTask": "Modifier",
-        "deleteTask": "Supprimer",
-        "actions": {
-          "archiveTask": "Archiver",
-          "deleteTask": "Supprimer",
-          "editTask": "Modifier",
-          "confirm": "Confirmer",
-          "cancel": "Annuler",
-          "loading": "Suppression...",
-          "markComplete": "Marquer comme terminé",
-          "markIncomplete": "Marquer comme non terminé"
-        }
-      },
-      "info": {
-        "title": "Info Tâche",
-        "dueDate": "Échéance",
-        "assignedTo": "Assigné à",
-        "category": "Catégorie"
-      },
-      "overview": {
-        "metrics": "Indicateurs",
-        "progress": "Progression",
-        "subtasks": "Sous-tâches terminées",
-        "estimated": "Heures Est.",
-        "actual": "Heures Réelles",
-        "description": "Description"
-      },
-      "subtasks": {
-        "title": "Sous-tâches",
-        "noSubtasks": "Aucune sous-tâche",
-        "noSubtasksDescription": "Divisez cette tâche en étapes plus petites pour mieux suivre la progression.",
-        "label": "Sous-tâches terminées"
-      },
-      "comments": {
-        "title": "Commentaires",
-        "noComments": "Aucun commentaire",
-        "noCommentsDescription": "Aucun commentaire n'a encore été ajouté à cette tâche."
-      },
-      "attachments": {
-        "title": "Pièces jointes",
-        "noAttachments": "Aucune pièce jointe",
-        "noAttachmentsDescription": "Aucun fichier n'a encore été joint à cette tâche."
-      },
-      "timeline": {
-        "title": "Chronologie",
-        "by": "par",
-        "events": {
-          "created": "Tâche créée"
-        }
-      },
-      "modals": {
-        "edit": {
-          "title": "Modifier la tâche"
-        },
-        "delete": {
-          "title": "Supprimer la tâche",
-          "message": "Êtes-vous sûr de vouloir supprimer cette tâche ? Cette action est irréversible."
-        }
-      }
-    },
-
-    "filters": {
-      "allCategories": "Toutes les catégories",
-      "allStatus": "Tous les statuts",
-      "allPriorities": "Toutes les priorités",
-      "clearFilters": "Effacer les filtres",
-      "advanced": "Filtres avancés",
-      "filterOptions": "Options de filtrage",
-      "reset": "Réinitialiser",
-      "apply": "Appliquer"
-    },
-    "table": {
-      "title": "Tâche / Description",
-      "status": "Statut",
+    "fields": {
+      "title": "Titre",
+      "titlePlaceholder": "Entrez le titre de la tâche",
+      "description": "Description",
+      "descriptionPlaceholder": "Entrez les détails de la tâche",
       "priority": "Priorité",
+      "status": "Statut",
+      "category": "Catégorie",
       "dueDate": "Échéance",
       "assignedTo": "Assigné à",
-      "actions": "Actions"
+      "unassigned": "Non assigné",
+      "tags": "Étiquettes",
+      "tagPlaceholder": "Ajouter une étiquette",
+      "subtasks": "Sous-tâches",
+      "subtaskTitlePlaceholder": "Entrez le titre de la sous-tâche"
     },
-    "form": {
-      "createTitle": "Créer une nouvelle tâche",
-      "editTitle": "Modifier la tâche",
-      "steps": {
-        "basicInfo": "Informations de base",
-        "planning": "Planification",
-        "checklist": "Liste de contrôle"
-      },
-      "fields": {
-        "subtasks": "Sous-tâches",
-        "tags": "Tags",
-        "assignedTo ": "Assigné à",
-        "dueDate": "Date d'échéance",
-        "title": "Titre",
-        "titlePlaceholder": "Entrez le titre de la tâche",
-        "description": "Description",
-        "descriptionPlaceholder": "Entrez les détails de la tâche",
-        "priority": "Priorité",
-        "status": "Statut",
-        "category": "Catégorie"
-      },
-      "buttons": {
-        "next": "Suivant",
-        "previous": "Précédent",
-        "create": "Créer la tâche",
-        "updateNow": "Mettre à jour maintenant"
-      },
-      "validation": {
-        "titleRequired": "Le titre est requis",
-        "fixErrors": "Veuillez corriger les erreurs"
+    "buttons": {
+      "add": "Ajouter",
+      "next": "Suivant",
+      "previous": "Précédent",
+      "create": "Créer la Tâche",
+      "update": "Mettre à jour la Tâche",
+      "updateNow": "Mettre à jour Maintenant"
+    },
+    "validation": {
+      "titleRequired": "Le titre est requis",
+      "categoryRequired": "La catégorie est requise",
+      "dueDateRequired": "La date d'échéance est requise",
+      "fixErrors": "Veuillez corriger les erreurs",
+      "fixAllErrors": "Veuillez corriger toutes les erreurs avant de soumettre"
+    }
+  },
+  "priority": {
+    "low": "Basse",
+    "medium": "Moyenne",
+    "high": "Haute",
+    "urgent": "Urgente"
+  },
+  "status": {
+    "pending": "En Attente",
+    "todo": "À Faire",
+    "in_progress": "En Cours",
+    "blocked": "Bloqué",
+    "completed": "Terminé",
+    "cancelled": "Annulé"
+  },
+  "category": {
+    "event_preparation": "Préparation d'Événement",
+    "marketing": "Marketing",
+    "maintenance": "Maintenance",
+    "client_followup": "Suivi Client",
+    "partner_coordination": "Coordination Partenaires",
+    "administrative": "Administratif",
+    "finance": "Finance",
+    "setup": "Installation",
+    "cleanup": "Nettoyage",
+    "other": "Autre",
+    "design": "Design",
+    "development": "Développement"
+  },
+  "messages": {
+    "noResults": "Aucune tâche trouvée",
+    "noResultsDescription": "Essayez d'ajuster votre recherche ou vos filtres.",
+    "noTasks": "Pas encore de tâches",
+    "noTasksDescription": "Commencez par créer une nouvelle tâche pour suivre votre travail.",
+    "thisTask": "cette tâche",
+    "resultsCount": "Affichage de {{count}}",
+    "error": {
+      "load": "Échec du chargement des tâches"
+    },
+    "success": {
+      "created": "Tâche créée avec succès",
+      "updated": "Tâche mise à jour avec succès",
+      "archived": "Tâche archivée avec succès",
+      "restored": "Tâche restaurée avec succès",
+      "deleted": "Tâche supprimée avec succès"
+    },
+    "archiveConfirm": {
+      "title": "Archiver la Tâche",
+      "message": "Êtes-vous sûr de vouloir archiver \"{{title}}\" ?"
+    },
+    "restoreConfirm": {
+      "title": "Restaurer la Tâche",
+      "message": "Êtes-vous sûr de vouloir restaurer \"{{title}}\" ?"
+    },
+    "deleteConfirm": {
+      "title": "Supprimer la Tâche",
+      "message": "Êtes-vous sûr de vouloir supprimer définitivement \"{{title}}\" ? Cette action est irréversible."
+    }
+  },
+  "toasts": {
+    "status": {
+      "error": "Échec de la mise à jour du statut",
+      "success": "Statut de la tâche mis à jour"
+    }
+  },
+  "notifications": {
+    "archiving": "Archivage de la tâche...",
+    "restoring": "Restauration de la tâche...",
+    "deleting": "Suppression de la tâche...",
+    "filtersApplied": "Filtres appliqués",
+    "statusUpdated": "Statut de la tâche met à jour"
+  },
+   "detail": {
+    "loading": "Chargement des détails de la tâche...",
+    "errorLoading": "Erreur de chargement",
+    "notFound": "Tâche introuvable ou vous n'avez pas la permission de la voir.",
+    "backToTasks": "Retour aux tâches",
+    "tryAgain": "Réessayer",
+    "tabs": {
+      "overview": "Aperçu",
+      "subtasks": "Sous-tâches",
+      "comments": "Commentaires",
+      "attachments": "Pièces jointes",
+      "timeline": "Historique"
+    },
+    "header": {
+      "backToTasks": "Retour",
+      "editTask": "Modifier",
+      "deleteTask": "Supprimer",
+      "actions": {
+        "startWorking": "Commencer",
+        "pauseTask": "Mettre en pause",
+        "markComplete": "Terminer",
+        "archiveTask": "Archiver"
       }
     },
-    "messages": {
-      "resultsCount": "Affichage de {{count}} tâches",
-      "noResults": "Aucune tâche trouvée",
-      "noResultsDescription": "Essayez d'ajuster votre recherche ou vos filtres.",
-      "noTasks": "Aucune tâche pour le moment",
-      "noTasksDescription": "Commencez par créer une nouvelle tâche pour suivre votre travail.",
-      "thisTask": "cette tâche",
-      "error": {
-        "load": "Échec du chargement des tâches"
-      },
-      "success": {
-        "created": "Tâche créée avec succès",
-        "updated": "Tâche mise à jour avec succès",
-        "archived": "Tâche archivée avec succès",
-        "restored": "Tâche restaurée avec succès",
-        "deleted": "Tâche supprimée avec succès"
-      },
-      "archiveConfirm": {
-        "title": "Archiver la tâche",
-        "message": "Êtes-vous sûr de vouloir archiver \"{{title}}\" ?"
-      },
-      "restoreConfirm": {
-        "title": "Restaurer la tâche",
-        "message": "Êtes-vous sûr de vouloir restaurer \"{{title}}\" ?"
-      },
-      "deleteConfirm": {
-        "title": "Supprimer la tâche",
-        "message": "Êtes-vous sûr de vouloir supprimer définitivement \"{{title}}\" ? Cette action est irréversible."
+    "info": {
+      "title": "Infos Tâche",
+      "dueDate": "Échéance",
+      "startDate": "Date de début",
+      "assignedTo": "Assigné à",
+      "category": "Catégorie",
+      "estimatedHours": "Heures Est.",
+      "actualHours": "Heures Réelles",
+      "taskBlocked": "Tâche Bloquée",
+      "overdue": "En Retard"
+    },
+    "overview": {
+      "metrics": "Métriques Clés",
+      "progress": "Progression",
+      "subtasks": "Sous-tâches",
+      "estimated": "Estimé",
+      "actual": "Réel",
+      "description": "Description",
+      "noDescription": "Aucune description fournie pour cette tâche."
+    },
+    "subtasks": {
+      "title": "Sous-tâches",
+      "noSubtasks": "Pas de sous-tâches",
+      "noSubtasksDescription": "Divisez cette tâche en étapes plus petites pour mieux suivre la progression.",
+      "errorToggle": "Échec de la mise à jour de la sous-tâche"
+    },
+    "comments": {
+      "title": "Commentaires",
+      "unknownUser": "Utilisateur Inconnu",
+      "edited": "Modifié",
+      "noComments": "Aucun commentaire",
+      "noCommentsDescription": "Soyez le premier à laisser un commentaire."
+    },
+    "attachments": {
+      "title": "Pièces jointes",
+      "noAttachments": "Aucune pièce jointe",
+      "noAttachmentsDescription": "Aucun fichier n'a encore été joint à cette tâche."
+    },
+    "timeline": {
+      "title": "Chronologie",
+      "unknownDate": "Date inconnue",
+      "noEvents": "Aucun historique",
+      "noEventsDescription": "Aucune activité enregistrée pour l'instant.",
+      "by": "par",
+      "to": "à",
+      "noReason": "Aucune raison fournie",
+      "events": {
+        "created": "Tâche Créée",
+        "assigned": "Tâche Assignée",
+        "statusChanged": "Statut Modifié",
+        "completed": "Tâche Terminée",
+        "cancelled": "Tâche Annulée"
       }
     },
     "toasts": {
       "status": {
-        "error": "Échec de la mise à jour du statut",
-        "success": "Statut de la tâche mis à jour"
-      }
-    },
-    "notifications": {
-      "archiving": "Archivage en cours...",
-      "restoring": "Restauration en cours...",
-      "deleting": "Suppression en cours...",
-      "filtersApplied": "Filtres appliqués"
-    }
-  },
-  "taskDetailModal": {
-    "title": "Détails de la tâche",
-    "overdue": "En retard",
-    "progress": "Progression",
-    "dueDate": "Date d'échéance",
-    "assignedTo": "Assigné à",
-    "estimatedHours": "Heures est.",
-    "description": "Description",
-    "actions": {
-      "moreDetails": "Voir Détails",
+        "loading": "Mise à jour du statut...",
+        "success": "Statut mis à jour : {{status}}",
+        "error": "Échec de la mise à jour"
+      },
+      "complete": {
+        "loading": "Finalisation...",
+        "success": "Tâche marquée comme terminée",
+        "error": "Échec de la finalisation"
+      },
       "archive": {
         "loading": "Archivage...",
-        "success": "Tâche archivée",
+        "success": "Tâche archivée avec succès",
         "error": "Échec de l'archivage"
-      },
-      "restore": {
-        "loading": "Restauration...",
-        "success": "Tâche restaurée",
-        "error": "Échec de la restauration"
       },
       "delete": {
         "loading": "Suppression...",
-        "success": "Tâche supprimée",
+        "success": "Tâche supprimée avec succès",
         "error": "Échec de la suppression"
-      }
+      },
+      "retry": "Nouvelle tentative..."
     },
-    "delete": {
-      "confirmMessage": "Voulez-vous vraiment supprimer \"{{title}}\" ? Cette action est irréversible."
+    "modals": {
+      "edit": { "title": "Modifier la Tâche" },
+      "delete": { 
+        "title": "Supprimer la Tâche", 
+        "message": "Êtes-vous sûr de vouloir supprimer définitivement \"{{title}}\" ? Cette action est irréversible." 
+      }
     }
   },
+  "loading": "Chargement des détails de la tâche...",
+  "tabs": {
+    "overview": "Vue d'ensemble",
+    "subtasks": "Sous-tâches",
+    "comments": "Commentaires",
+    "attachments": "Pièces jointes",
+    "timeline": "Chronologie"
+  },
+  "header": {
+    "backToTasks": "Retour aux Tâches",
+    "editTask": "Modifier",
+    "deleteTask": "Supprimer",
+    "actions": {
+      "archiveTask": "Archiver la Tâche"
+    }
+  },
+  "info": {
+    "title": "Infos Tâche",
+    "dueDate": "Date d'échéance",
+    "assignedTo": "Assigné à",
+    "category": "Catégorie"
+  },
+  "overview": {
+    "metrics": "Métriques",
+    "progress": "Progression",
+    "subtasks": "Sous-tâches terminées",
+    "estimated": "Heures Est.",
+    "actual": "Heures Réelles",
+    "description": "Description"
+  },
+  "subtasks": {
+    "label": "Sous-tâches Terminées"
+  },
+  "modals": {
+    "edit": {
+      "title": "Modifier la Tâche"
+    },
+    "delete": {
+      "title": "Supprimer la Tâche",
+      "message": "Êtes-vous sûr de vouloir supprimer cette tâche ? Cette action est irréversible."
+    }
+  }
+},
+"taskDetailModal": {
+  "title": "Détails de la Tâche",
+  "overdue": "En Retard",
+  "progress": "Progression",
+  "dueDate": "Échéance",
+  "assignedTo": "Assigné à",
+  "estimatedHours": "Heures Est.",
+  "description": "Description",
+  "actions": {
+    "moreDetails": "Voir Détails",
+    "archive": {
+      "loading": "Archivage...",
+      "success": "Tâche archivée",
+      "error": "Échec de l'archivage"
+    },
+    "restore": {
+      "loading": "Restauration...",
+      "success": "Tâche restaurée",
+      "error": "Échec de la restauration"
+    },
+    "delete": {
+      "loading": "Suppression...",
+      "success": "Tâche supprimée",
+      "error": "Échec de la suppression"
+    }
+  },
+  "delete": {
+    "confirmMessage": "Êtes-vous sûr de vouloir supprimer \"{{title}}\" ? Cela ne peut pas être annulé."
+  }
+},
   "reminders": {
-    "noResults": "Aucun résultat trouvé",
+    "emptyDesc":"Commencez par créer une nouvelle rappel pour suivre votre travail.",
     "tabs": {
       "overview": "Aperçu",
       "details": "Détails",
@@ -1927,6 +2124,7 @@
     }
   },
   "payments": {
+    "emptyStateDescription": "Aucun paiement pour le moment",
     "loading": {
       "initial": "Chargement des partenaires..."
     },
@@ -2048,6 +2246,8 @@
       "event": "Événement Associé",
       "createTitle": "Créer un paiement",
       "editTitle": "Modifier le paiement",
+      "linkInvoice": "Lier une facture (Optionnel)",
+     "descPlaceholder": "Saisissez les détails du paiement, notes ou remarques...",
       "fees": {
         "processingFee": "Frais de Traitement",
         "platformFee": "Frais de Plateforme",
@@ -2069,7 +2269,8 @@
         "feesNegative": "Les frais ne peuvent pas être négatifs",
         "feesExceedAmount": "Le total des frais ne peut pas dépasser le montant du paiement",
         "fixErrors": "Veuillez corriger les erreurs avant de continuer",
-        "fixAllErrors": "Veuillez corriger tous les champs obligatoires"
+        "fixAllErrors": "Veuillez corriger tous les champs obligatoires",
+        "clientOrEventRequired": "Veuillez sélectionner un client ou un événement associé"
       }
     },
     "steps": {
@@ -2515,13 +2716,279 @@
       "neutral": "↕"
     }
   },
+    "profileSettings": {
+  "title": "Paramètres du Profil",
+  "subtitle": "Gérez vos informations personnelles et les paramètres de votre compte",
+  "tabs": {
+    "personal": "Infos Personnelles",
+    "security": "Sécurité"
+  },
+  "personal": {
+    "title": "Informations Personnelles",
+    "fields": {
+      "fullName": "Nom Complet",
+      "phone": "Numéro de Téléphone",
+      "email": "Adresse Email",
+      "avatar": "URL de l'Avatar"
+    },
+    "avatarHint": "Besoin d'un avatar ? Essayez"
+  },
+  "security": {
+    "title": "Paramètres de Sécurité",
+    "description": "Mettez à jour votre mot de passe pour sécuriser votre compte.",
+    "fields": {
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe"
+    },
+    "updatePassword": "Mettre à jour le mot de passe"
+  },
   "common": {
+    "saveChanges": "Enregistrer les modifications"
+  },
+  "validation": {
+    "passwordMismatch": "Les mots de passe ne correspondent pas"
+  },
+  "notifications": {
+    "profileUpdated": "Profil mis à jour avec succès ! Actualisation...",
+    "passwordChanged": "Mot de passe modifié avec succès"
+  },
+  "errors": {
+    "loadFailed": "Échec du chargement du profil",
+    "updateFailed": "Échec de la mise à jour du profil",
+    "passwordFailed": "Échec de la modification du mot de passe"
+  }
+},
+     "roles": {
+    "title": "Rôles et Permissions",
+    "subtitle": "Gérer les rôles et leurs niveaux d'accès",
+    "create": "Créer un rôle",
+    "edit": "Modifier le rôle",
+    "delete": "Supprimer le rôle",
+    "view": "Voir le rôle",
+    "searchPlaceholder": "Rechercher un rôle...",
+    "systemRole": "Système",
+    "infoBanner": {
+      "title": "Rôles Système",
+      "description": "Les rôles comme Propriétaire, Manager et Staff sont protégés. Vous pouvez voir leurs permissions mais ne pouvez pas les supprimer."
+    },
+    "stats": {
+      "total": "Total Rôles",
+      "system": "Rôles Système",
+      "custom": "Rôles Personnalisés"
+    },
+    "table": {
+      "roleName": "Nom du Rôle",
+      "permissions": "Permissions",
+      "level": "Niveau",
+      "status": "Statut",
+      "actions": "Actions",
+      "permissionsCount": "{{count}} permissions"
+    },
+    "deleteConfirmation": {
+      "title": "Supprimer le rôle",
+      "warning": "Attention",
+      "message": "Êtes-vous sûr de vouloir supprimer le rôle **{{name}}** ? Les utilisateurs avec ce rôle perdront leurs permissions."
+    },
+    "alerts": {
+      "systemRoleDelete": "Impossible de supprimer les rôles système",
+      "deleteSuccess": "Rôle supprimé avec succès",
+      "deleteError": "Échec de la suppression",
+      "loadError": "Échec du chargement des rôles"
+    },
+    "form": {
+      "createTitle": "Créer un nouveau rôle",
+      "editTitle": "Modifier le rôle",
+      "subtitle": "Définir les niveaux d'accès et les capacités pour ce rôle",
+      "detailsTitle": "Détails du rôle",
+      "permissionsTitle": "Permissions d'accès",
+      "permissionsCount": "{{count}} permissions sélectionnées",
+      "ownerWarning": "Le rôle Propriétaire a un accès complet à toutes les fonctionnalités et ne peut pas être modifié.",
+      "selectAll": "Tout sélectionner",
+      "clear": "Effacer",
+      "fields": {
+        "name": "Nom du rôle",
+        "description": "Description"
+      },
+      "placeholders": {
+        "name": "ex : Coordinateur d'événements",
+        "description": "Brève description des responsabilités"
+      },
+      "validation": {
+        "nameRequired": "Le nom du rôle est requis",
+        "permissionRequired": "Veuillez sélectionner au moins une permission pour ce rôle"
+      },
+      "notifications": {
+        "created": "Rôle créé avec succès",
+        "updated": "Rôle mis à jour avec succès",
+        "loadError": "Échec du chargement des données du rôle",
+        "saveError": "Échec de l'enregistrement du rôle",
+        "selectedAll": "Toutes les permissions ont été sélectionnées",
+        "cleared": "Toutes les permissions ont été effacées"
+      }
+    },
+    "matrix": {
+      "feature": "Module de fonctionnalité",
+      "fullAccess": "Accès complet",
+      "view": "Voir",
+      "create": "Créer",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "export": "Exporter",
+      "manage": "Gérer"
+    },
+    "modules": {
+      "events": "Gestion des événements",
+      "clients": "Clients (CRM)",
+      "partners": "Partenaires de service",
+      "finance": "Finance et analyses",
+      "payments": "Paiements",
+      "invoices": "Factures",
+      "tasks": "Tâches",
+      "reminders": "Rappels",
+      "supplies": "Inventaire / Fournitures",
+      "contracts": "Contrats",
+      "users": "Gestion d'équipe",
+      "roles": "Gestion des rôles",
+      "venue": "Paramètres du lieu",
+      "settings": "Paramètres globaux",
+      "reports": "Rapports"
+    }
+  },
+  "team": {
+    "title": "Gestion d'Équipe",
+    "invite": "Inviter un membre",
+    "subtitle": "Gérez le personnel et les collaborateurs de votre lieu",
+    "searchPlaceholder": "Rechercher par nom ou e-mail...",
+    "inviteSubtitle": "Invitez des membres à rejoindre votre équipe en leur attribuant des rôles spécifiques.",
+    "noData": "Aucun membre actif trouvé.",
+    "inviteTitle": "Inviter un membre d'équipe",
+    "emailLabel": "Adresse E-mail",
+    "roleLabel": "Assigner un rôle",
+    "sendInvite": "Envoyer l'invitation",
+    "copyLink": "Copier le lien",
+    "alerts": {
+      "inviteSuccess": "Invitation créée avec succès !",
+      "linkCopied": "Lien copié dans le presse-papiers",
+      "resentSuccess": "Invitation renvoyée avec succès",
+      "resentError": "Échec du renvoi de l'invitation",
+      "revokedSuccess": "Invitation révoquée",
+      "revokedError": "Échec de la révocation de l'invitation",
+      "confirmRevoke": "Êtes-vous sûr de vouloir révoquer cette invitation ?",
+      "loadMembers": "Échec du chargement des membres",
+      "joinSuccess": "Compte créé ! Bienvenue dans l'équipe.",
+      "acceptFailed": "Échec de l'acceptation de l'invitation"
+    },
+    "stats": {
+      "total": "Total Membres",
+      "active": "Membres Actifs",
+      "pending": "Invitations En Attente"
+    },
+    "sections": {
+      "pending": "Invitations En Attente",
+      "active": "Membres Actifs"
+    },
+    "table": {
+      "email": "E-mail",
+      "name": "Nom",
+      "role": "Rôle",
+      "sentDate": "Date d'envoi",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "actions": {
+      "resend": "Renvoyer",
+      "revoke": "Révoquer"
+    },
+    "filters": {
+      "allRoles": "Tous les rôles"
+    },
+    "invitation": {
+      "joinTitle": "Rejoindre l'équipe",
+      "joinSubtitle": "Configurez votre compte pour commencer",
+      "venueInvite": "Vous avez été invité à rejoindre un espace de travail",
+      "roleSetup": "Créez votre compte pour accéder au tableau de bord",
+      "createAccount": "Créer un compte & Rejoindre",
+      "invalidTitle": "Lien d'invitation invalide",
+      "invalidDesc": "Ce lien d'invitation est manquant, invalide ou a expiré. Veuillez demander à votre administrateur d'envoyer une nouvelle invitation.",
+      "terms": "En rejoignant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité."
+    },
+    "form": {
+      "editTitle": "Modifier le membre",
+      "personalInfo": "Informations personnelles",
+      "accessControl": "Contrôle d'accès",
+      "name": "Nom complet",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "role": "Rôle",
+      "status": "Statut",
+      "active": "Actif",
+      "inactive": "Inactif (Verrouillé)"
+    },
+    "detail": {
+      "editProfile": "Modifier le profil",
+      "role": "Rôle",
+      "status": "Statut",
+      "joined": "Rejoint le {{date}}",
+      "activityHistory": "Historique d'activité",
+      "noActivity": "Aucune activité enregistrée.",
+      "notFound": "Utilisateur non trouvé"
+    },
+    "notifications": {
+      "updated": "Membre mis à jour avec succès",
+      "loadError": "Échec du chargement des détails",
+      "updateError": "Échec de la mise à jour"
+    }
+  },
+  "fleet": {
+  "title": "Gestion de la Flotte",
+  "subtitle": "Gérez vos véhicules et vos actifs de transport",
+  "searchPlaceholder": "Rechercher par modèle ou nom...",
+  "emptyState": "Aucun véhicule trouvé. Ajoutez-en un pour commencer !",
+  "actions": {
+    "addVehicle": "Ajouter un Véhicule",
+    "confirmDelete": "Supprimer le Véhicule",
+    "deleteMessage": "Êtes-vous sûr de vouloir retirer ce véhicule de votre flotte ? Cette action est irréversible."
+  },
+  "modal": {
+    "addTitle": "Ajouter un Véhicule",
+    "editTitle": "Modifier le Véhicule",
+    "nameLabel": "Nom du Véhicule / Modèle",
+    "seatsLabel": "Places / Capacité",
+    "priceLabel": "Tarif Standard (TND)",
+    "descLabel": "Description / Plaque d'immatriculation"
+  },
+  "notifications": {
+    "created": "Véhicule ajouté avec succès",
+    "updated": "Véhicule mis à jour avec succès",
+    "deleted": "Véhicule supprimé avec succès"
+  },
+  "errors": {
+    "loadFailed": "Échec du chargement des données de la flotte",
+    "saveFailed": "Échec de l'enregistrement du véhicule",
+    "deleteFailed": "Échec de la suppression du véhicule"
+  }
+},
+  "common": {
+    "spaces":"Espaces",
+    "schedule": "Planning",
+    "jobs": "Missions",
+    "orders": "Commandes",
+    "vehicles": "Véhicules",
+    "equipment": "Équipement",
+    "kitchen": "Cuisine",
+    "portfolio":"Portfolio",
+    "added": "Ajouté",
+    "copied" : "Copié !",
+    "ProfileSettings": "Paramètres du Profil",
+    "team":"Équipe",
+    "roles":"Rôles",
     "client": "Client",
     "partner": "Partenaire",
     "supplies": "Fournitures",
     "add": "Ajouter",
-   "searchPlaceholder": "Rechercher (⌘K)",
-    "loading": "Chargement...",
+    "searchPlaceholder": "Rechercher (⌘K)",
+   "loading": "Chargement...",
     "noResults": "Aucun résultat trouvé",
     "markAsDone": "Marquer comme fait",
     "dismiss": "Ignorer",
@@ -2557,6 +3024,9 @@
     "logout": "Déconnexion",
     "login": "Connexion",
     "signup": "S'inscrire",
+    "completed":"Terminé",
+    "markComplete": "marquer Complet",
+    "markIncomplete": "marquer incomplet",
     "all_rights_reserved": "Tous droits réservés",
     "home": "Accueil",
     "filtersCleared": "Filtres effacés",
@@ -2603,6 +3073,7 @@
     "contracts": "Contrats",
     "documents": "Documents",
     "settings": "Paramètres",
+    "invalidEmail": "Adresse email invalide",
     "nav": {
       "features": "Fonctionnalités",
       "marketplace": "Marché",
@@ -3035,6 +3506,8 @@
     "create": {
       "button": "Créer {{type}}",
       "firstButton": "Créer la première facture",
+      "partnerButton":"Créer facture Partenaire ",
+      "clientButton": "Créer facture Client ",
       "loading": "Chargement...",
       "success": "Facture créée avec succès"
     },
@@ -3065,7 +3538,8 @@
     },
     "download": {
       "generating": "Génération du PDF... Veuillez patienter",
-      "success": "Facture {{invoiceNumber}} téléchargée avec succès",
+      "success": "Facture téléchargée avec succès",
+      "loading":"Chargement...",
       "errors": {
         "generic": "Échec du téléchargement de la facture"
       }
@@ -3261,191 +3735,75 @@
       "paymentInstructions": "Instructions de paiement"
     }
   },
-  "venueSettings": {
-    "title": "Paramètres",
-    "subtitle": "Gérez votre profil, les détails du lieu et la sécurité",
-    "common": {
-      "loading": "Chargement...",
-      "saveChanges": "Enregistrer",
-      "saving": "Enregistrement...",
-      "saved": "Enregistré",
-      "cancel": "Annuler",
-      "add": "Ajouter",
-      "clearAll": "Tout effacer",
-      "tryAgain": "Réessayer",
-      "active": "Actif",
-      "inactive": "Inactif",
-      "open": "Ouvert",
-      "closed": "Fermé"
-    },
-    "tabs": {
-      "personal": "Personnel",
-      "security": "Sécurité",
-      "venue": "Infos Lieu",
-      "amenities": "Commodités",
-      "spaces": "Espaces"
-    },
-    "errors": {
-      "loadFailed": "Échec du chargement des données",
-      "saveFailed": "Échec de l'enregistrement",
-      "deleteFailed": "Échec de la suppression"
-    },
-    "validation": {
-      "required": "Ce champ est requis",
-      "minLength": "Le mot de passe est trop court",
-      "passwordMismatch": "Les mots de passe ne correspondent pas",
-      "emailInvalid": "Adresse e-mail invalide",
-      "fixErrors": "Veuillez corriger les erreurs avant d'enregistrer"
-    },
-    "notifications": {
-      "profileUpdated": "Profil mis à jour avec succès",
-      "passwordChanged": "Mot de passe modifié avec succès",
-      "venueUpdated": "Détails du lieu mis à jour avec succès"
-    },
-    "personal": {
-      "title": "Informations personnelles",
-      "description": "Mettez à jour vos coordonnées personnelles.",
-      "profilePicture": "Photo de profil",
-      "venueOwner": "Propriétaire",
-      "fields": {
-        "fullName": "Nom complet",
-        "phone": "Téléphone",
-        "email": "Adresse e-mail",
-        "avatar": "URL de l'avatar"
-      },
-      "placeholders": {
-        "fullName": "ex: Jean Dupont",
-        "phone": "ex: +33 6 12 34 56 78",
-        "avatar": "https://..."
-      }
-    },
-    "security": {
-      "title": "Paramètres de sécurité",
-      "description": "Gérez votre mot de passe et la sécurité du compte.",
-      "updatePassword": "Mettre à jour le mot de passe",
-      "fields": {
-        "currentPassword": "Mot de passe actuel",
-        "newPassword": "Nouveau mot de passe",
-        "confirmPassword": "Confirmer le mot de passe"
-      },
-      "placeholders": {
-        "currentPassword": "Entrez le mot de passe actuel",
-        "newPassword": "Entrez le nouveau mot de passe",
-        "confirmPassword": "Retapez le nouveau mot de passe"
-      },
-      "strength": {
-        "tooShort": "Trop court",
-        "weak": "Faible",
-        "fair": "Moyen",
-        "good": "Bon",
-        "strong": "Fort"
-      },
-      "requirements": {
-        "title": "Exigences du mot de passe :",
-        "minLength": "Au moins 6 caractères",
-        "uppercase": "Au moins une lettre majuscule",
-        "number": "Au moins un chiffre"
-      }
-    },
-    "venue": {
-      "basicInfo": {
-        "title": "Détails du lieu",
-        "description": "Informations générales visibles par les clients."
-      },
-      "location": {
-        "title": "Emplacement",
-        "description": "Où se trouve votre lieu ?"
-      },
-      "contact": {
-        "title": "Contact",
-        "description": "Comment les clients peuvent-ils vous joindre ?"
-      },
-      "fields": {
-        "name": "Nom du lieu",
-        "description": "Description",
-        "street": "Adresse",
-        "city": "Ville",
-        "state": "Région",
-        "zipCode": "Code Postal",
-        "country": "Pays",
-        "phone": "Tél. du lieu",
-        "email": "Email du lieu"
-      },
-      "placeholders": {
-        "name": "ex: Salle des Fêtes",
-        "description": "Décrivez votre lieu...",
-        "street": "123 Rue Principale",
-        "city": "Ville",
-        "state": "Région",
-        "zipCode": "75001",
-        "country": "France",
-        "phone": "+33 1 23 45 67 89",
-        "email": "contact@salle.com"
-      }
-    },
-    "amenities": {
-      "title": "Commodités",
-      "subtitle": "Commodités et Services",
-      "description": "Sélectionnez les services offerts par votre lieu.",
-      "selected": "Services sélectionnés",
-      "clickToAdd": "Cliquez sur les éléments pour les ajouter",
-      "quickAdd": "Ajout rapide",
-      "addCustom": "Ajouter personnalisé",
-      "placeholders": {
-        "custom": "ex: Service Voiturier"
-      },
-      "operatingHours": {
-        "title": "Heures d'ouverture",
-        "description": "Définissez les heures d'ouverture et de fermeture.",
-        "allDays": "Tous les jours",
-        "weekdays": "Semaine",
-        "weekends": "Week-end",
-        "days": {
-          "monday": "Lundi",
-          "tuesday": "Mardi",
-          "wednesday": "Mercredi",
-          "thursday": "Jeudi",
-          "friday": "Vendredi",
-          "saturday": "Samedi",
-          "sunday": "Dimanche"
-        }
-      }
-    },
-    "spaces": {
-      "capacity": "Capacité",
-      "basePrice": "Prix de base",
-      "addNew": "Ajouter un espace",
-      "addDescription": "Créez un nouvel espace réservable",
-      "emptyTitle": "Aucun espace ajouté",
-      "emptyDescription": "Commencez par ajouter votre premier espace (ex: Salle principale, Jardin).",
-      "addFirst": "Ajouter votre premier espace",
-      "edit": "Modifier l'espace",
-      "editDescription": "Mettre à jour les détails de l'espace",
-      "create": "Créer l'espace",
-      "availableForBooking": "Disponible à la réservation",
-      "availableDescription": "Les clients peuvent voir et demander cet espace",
-      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet espace ?",
-      "deleted": "Espace supprimé avec succès",
-      "created": "Espace créé avec succès",
-      "updated": "Espace mis à jour avec succès",
-      "fields": {
-        "name": "Nom de l'espace",
-        "basePrice": "Prix de base",
-        "minCapacity": "Cap. Min",
-        "maxCapacity": "Cap. Max",
-        "description": "Description"
-      },
-      "placeholders": {
-        "name": "ex: Salle Principale",
-        "basePrice": "0.00",
-        "description": "Décrivez l'espace..."
-      },
-      "validation": {
-        "capacity": "Veuillez définir la capacité min et max",
-        "price": "Veuillez définir un prix de base"
-      }
+  "settings": {
+  "title": "Paramètres de l'entreprise",
+  "subtitle": "Gérez la configuration de votre {{type}}",
+  "tabs": {
+    "general": "Info Générale",
+    "location": "Localisation",
+    "contact": "Contact",
+    "spaces": "Espaces",
+    "amenities": "Équipements",
+    "service": "Config Service"
+  },
+  "general": {
+    "title": "Informations de base",
+    "subtitle": "Mettez à jour votre profil public"
+  },
+  "location": { "title": "Localisation" },
+  "contact": { "title": "Coordonnées" },
+  "service": {
+    "title": "Configuration du Service",
+    "subtitle": "Définissez votre mode de fonctionnement et de facturation.",
+    "pricingModel": "Modèle de Prix",
+    "radius": "Rayon de Service (KM)",
+    "travelFee": "Frais de Déplacement (par KM)",
+    "models": {
+      "fixed": "Tarif Fixe",
+      "hourly": "Tarif Horaire",
+      "package": "Par Forfait"
     }
   },
+  "spaces": {
+    "addNew": "Ajouter un Espace",
+    "edit": "Modifier l'Espace",
+    "create": "Créer un Espace",
+    "guests": "Invités",
+    "updated": "Espace mis à jour",
+    "created": "Espace créé",
+    "deleted": "Espace supprimé",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet espace ?",
+    "fields": {
+      "name": "Nom",
+      "minCap": "Cap Min",
+      "maxCap": "Cap Max",
+      "basePrice": "Prix de Base"
+    }
+  },
+  "fields": {
+    "name": "Nom de l'entreprise",
+    "description": "Description",
+    "address": "Adresse",
+    "city": "Ville",
+    "zip": "Code Postal",
+    "country": "Pays",
+    "phone": "Téléphone",
+    "email": "Email"
+  },
+  "common": {
+    "saveChanges": "Enregistrer",
+    "unsavedChanges": "Vous avez des modifications non enregistrées",
+    "cancel": "Annuler",
+    "save": "Sauvegarder"
+  },
+  "notifications": {
+    "updated": "Paramètres mis à jour avec succès"
+  },
+  "errors": {
+    "loadFailed": "Échec du chargement des paramètres",
+    "saveFailed": "Échec de l'enregistrement"
+  }
+},
   "notFound": {
     "title": "404",
     "message": "Page non trouvée",
@@ -3453,6 +3811,7 @@
   },
   "allRightsReserved": "Tous droits réservés.",
   "sidebar": {
+    "team":"Staff et Roles",
     "overview": "Vue d'ensemble",
     "operations": "Opérations",
     "financial": "Financier",

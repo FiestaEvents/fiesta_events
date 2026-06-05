@@ -1,24 +1,17 @@
 import { useMemo } from 'react';
-import { useAuth } from './useAuth.jsx';
+import { useAuth } from '../context/AuthContext';
 
-export const usePermission = (permissionName) => {
+export const usePermission = (requiredPermission) => {
   const { user } = useAuth();
 
   return useMemo(() => {
-    if (!user?.permissions) return false;
-    return user.permissions.some(p => p.name === permissionName);
-  }, [user, permissionName]);
-};
-
-export const usePermissions = (permissionNames = []) => {
-  const { user } = useAuth();
-
-  return useMemo(() => {
-    if (!user?.permissions) return {};
+    if (!user || !user.permissions) return false;
     
-    return permissionNames.reduce((acc, permName) => {
-      acc[permName] = user.permissions.some(p => p.name === permName);
-      return acc;
-    }, {});
-  }, [user, permissionNames]);
+    if (user.role?.name === 'Owner' || user.isSuperAdmin) return true;
+
+    return user.permissions.some(p => {
+      const name = typeof p === 'string' ? p : p.name;
+      return name === requiredPermission;
+    });
+  }, [user, requiredPermission]);
 };

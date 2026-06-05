@@ -222,7 +222,7 @@ const SupplyDetail = () => {
           </div>
 
           <div className="flex gap-2">
-            {/* ✅ OPEN MODAL INSTEAD OF NAVIGATE */}
+            {/*  OPEN MODAL INSTEAD OF NAVIGATE */}
             <Button
               variant="outline"
               icon={Edit}

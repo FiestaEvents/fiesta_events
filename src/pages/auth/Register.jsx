@@ -13,20 +13,82 @@ import {
   X,
   Globe,
   ChevronDown,
+  Camera,
+  Car,
+  Utensils,
+  Music,
+  Briefcase,
+  MapPin,
+  DollarSign, // Added for cost icon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-// Contexts
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../context/ToastContext";
 import { useLanguage } from "../../context/LanguageContext";
 
+const TNDIndicator = () => (
+  <span className="text-[12px] font-bold text-gray-400 select-none px-1">
+    TND
+  </span>
+);
+
 // ==========================================
-// 1. INTERNAL COMPONENTS (Switcher, Input, Button)
+// 1. CONSTANTS & CONFIG
 // ==========================================
 
-// --- Language Switcher ---
+const SERVICE_CATEGORIES = [
+  { id: "photography", label: "Photography", icon: Camera },
+  { id: "driver", label: "Driver / Transport", icon: Car },
+  { id: "catering", label: "Catering", icon: Utensils },
+  { id: "music", label: "DJ / Band", icon: Music },
+  { id: "decoration", label: "Decoration", icon: Briefcase },
+  { id: "security", label: "Security", icon: Users },
+  { id: "other", label: "Other Service", icon: Briefcase },
+];
+
+const validationUtils = {
+  validatePhone: (phone) => {
+    if (!phone?.trim()) return "Phone number is required";
+    if (!/^\d+$/.test(phone)) return "Phone number must contain only numbers";
+    if (phone.length !== 8) return "Phone number must be exactly 8 digits";
+    return null;
+  },
+  validateEmail: (email) => {
+    if (!email?.trim()) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return "Please provide a valid email";
+    if (email.length > 100) return "Email must be less than 100 characters";
+    return null;
+  },
+  validatePositiveNumber: (value, fieldName) => {
+    if (!value && value !== 0) return `${fieldName} is required`;
+    if (!/^\d+$/.test(value.toString())) return `${fieldName} must be a number`;
+    if (parseFloat(value) < 0) return `${fieldName} cannot be negative`;
+    return null;
+  },
+  validateCapacity: (min, max) => {
+    const minError = validationUtils.validatePositiveNumber(
+      min,
+      "Min capacity",
+    );
+    if (minError) return minError;
+    const maxError = validationUtils.validatePositiveNumber(
+      max,
+      "Max capacity",
+    );
+    if (maxError) return maxError;
+    if (parseInt(min) > parseInt(max))
+      return "Min capacity cannot be greater than max capacity";
+    return null;
+  },
+};
+
+// ==========================================
+// 2. UI COMPONENTS
+// ==========================================
+
 const AuthLanguageSwitcher = () => {
   const { currentLanguage, changeLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -102,7 +164,6 @@ const AuthLanguageSwitcher = () => {
   );
 };
 
-// --- Input Component ---
 const Input = ({
   label,
   error,
@@ -113,37 +174,52 @@ const Input = ({
   dir = "auto",
   className = "",
   ...props
-}) => (
-  <div className={fullWidth ? "w-full" : ""}>
-    {label && (
-      <label className="block text-sm font-medium text-gray-700 mb-1 text-start">
-        {label}
-      </label>
-    )}
-    <div className="relative">
-      <input
-        type={type}
-        dir={dir}
-        className={`w-full px-4 py-1.5 text-base border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all duration-200 hover:shadow-md ${
-          error ? "border-red-500" : "border-gray-300"
-        } ${className}`}
-        {...props}
-      />
-      {IconRight && (
-        <button
-          type="button"
-          onClick={onIconClick}
-          className={`absolute ${document.dir === "rtl" ? "left-3" : "right-3"} top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200`}
-        >
-          <IconRight size={20} />
-        </button>
-      )}
-    </div>
-    {error && <p className="text-sm text-red-600 mt-1 text-start">{error}</p>}
-  </div>
-);
+}) => {
+  // Determine text direction for padding logic
+  const { i18n } = useTranslation();
+  const isRTL = i18n.dir() === "rtl";
 
-// --- Button Component ---
+  return (
+    <div className={fullWidth ? "w-full" : ""}>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-1 text-start">
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        <input
+          type={type}
+          dir={dir}
+          className={`w-full py-1.5 text-base border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all duration-200 hover:shadow-md 
+            ${error ? "border-red-500" : "border-gray-300"}
+            
+            /* DYNAMIC PADDING: 
+               In LTR: Add padding to the RIGHT (pr-12)
+               In RTL: Add padding to the LEFT (pl-12) 
+            */
+            ${IconRight ? (isRTL ? "pl-14 pr-4" : "pr-14 pl-4") : "px-4"}
+            
+            ${className}`}
+          {...props}
+        />
+        {IconRight && (
+          <div
+            onClick={onIconClick}
+            className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 transition-colors duration-200
+              /* Move position based on direction */
+              ${isRTL ? "left-3" : "right-3"}
+              ${onIconClick ? "cursor-pointer hover:text-gray-700" : ""}
+            `}
+          >
+            <IconRight size={20} />
+          </div>
+        )}
+      </div>
+      {error && <p className="text-sm text-red-600 mt-1 text-start">{error}</p>}
+    </div>
+  );
+};
+
 const Button = ({
   children,
   loading,
@@ -164,25 +240,54 @@ const Button = ({
       disabled={loading}
       {...props}
     >
-      {loading ? <OrbitLoader /> : children}
+      {loading ? <OrbitLoader size="sm" /> : children}
     </button>
   );
 };
 
-// --- Progress Steps ---
-const ProgressSteps = ({ currentStep, t }) => {
-  const steps = [
-    t("auth.register.steps.business"),
-    t("auth.register.steps.venue"),
-    t("auth.register.steps.spaces"),
-    t("auth.register.steps.address"),
-    t("auth.register.steps.review"),
-  ];
+const PasswordRequirementsTooltip = ({ password, isOpen, onClose, t }) => {
+  if (!isOpen) return null;
+  const requirement = {
+    label: t("auth.register.requirements.length"),
+    met: password.length >= 8,
+  };
 
   return (
+    <div className="absolute z-10 w-72 bg-white border border-gray-200 rounded-lg shadow-lg p-4 mt-2">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="font-semibold text-gray-900">
+          {t("auth.register.requirements.title")}
+        </h4>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <X size={16} />
+        </button>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-4 h-4 rounded-full flex items-center justify-center ${requirement.met ? "bg-green-500 text-white" : "bg-gray-200 text-gray-400"}`}
+          >
+            {requirement.met && <Check size={10} />}
+          </div>
+          <span
+            className={`text-sm ${requirement.met ? "text-green-600 font-medium" : "text-gray-600"}`}
+          >
+            {requirement.label}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProgressSteps = ({ currentStep, titles, t }) => {
+  return (
     <div className="mb-4">
-      <div className="flex items-center justify-between mb-1">
-        {steps.map((step, index) => (
+      <div className="flex items-center justify-between mb-1 pointer-events-none">
+        {titles.map((step, index) => (
           <React.Fragment key={index}>
             <div className="flex flex-col items-center flex-1">
               <div
@@ -197,20 +302,14 @@ const ProgressSteps = ({ currentStep, t }) => {
                 {index < currentStep ? <Check size={12} /> : index + 1}
               </div>
               <span
-                className={`text-xs mt-1 font-medium text-center px-1 hidden sm:block ${
-                  index === currentStep
-                    ? "text-orange-500 font-semibold"
-                    : "text-gray-500"
-                }`}
+                className={`text-[10px] md:text-xs mt-1 font-medium text-center px-1 hidden sm:block ${index === currentStep ? "text-orange-500 font-semibold" : "text-gray-500"}`}
               >
                 {step}
               </span>
             </div>
-            {index < steps.length - 1 && (
+            {index < titles.length - 1 && (
               <div
-                className={`h-0.5 flex-1 mx-1 rounded transition-all duration-500 ${
-                  index < currentStep ? "bg-green-500" : "bg-gray-200"
-                }`}
+                className={`h-0.5 flex-1 mx-1 rounded transition-all duration-500 ${index < currentStep ? "bg-green-500" : "bg-gray-200"}`}
               />
             )}
           </React.Fragment>
@@ -219,53 +318,14 @@ const ProgressSteps = ({ currentStep, t }) => {
     </div>
   );
 };
-
-// --- Validation Utils ---
-const validationUtils = {
-  validatePhone: (phone) => {
-    if (!phone?.trim()) return "Phone number is required";
-    if (!/^\d+$/.test(phone)) return "Phone number must contain only numbers";
-    if (phone.length !== 8) return "Phone number must be exactly 8 digits";
-    return null;
-  },
-  validateEmail: (email) => {
-    if (!email?.trim()) return "Email is required";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      return "Please provide a valid email";
-    if (email.length > 100) return "Email must be less than 100 characters";
-    return null;
-  },
-  validatePositiveNumber: (value, fieldName) => {
-    if (!value && value !== 0) return `${fieldName} is required`;
-    if (!/^\d+$/.test(value.toString())) return `${fieldName} must be a number`;
-    if (parseFloat(value) < 0) return `${fieldName} cannot be negative`;
-    return null;
-  },
-  validateCapacity: (min, max) => {
-    const minError = validationUtils.validatePositiveNumber(
-      min,
-      "Min capacity"
-    );
-    if (minError) return minError;
-    const maxError = validationUtils.validatePositiveNumber(
-      max,
-      "Max capacity"
-    );
-    if (maxError) return maxError;
-    if (parseInt(min) > parseInt(max))
-      return "Min capacity cannot be greater than max capacity";
-    return null;
-  },
-};
-
 // ==========================================
-// 2. REGISTRATION STEPS
+// 3. REGISTRATION SLIDER STEPS
 // ==========================================
 
-// Step 1: Business Type
-const BusinessTypeStep = ({ data, onChange, onNext, t }) => (
-  <div className="space-y-6 flex justify-center items-center flex-col gap-6 md:gap-10">
-    <div className="w-full flex justify-center items-center flex-col text-center">
+// STEP 0: Selection between Venue and Service
+const BusinessTypeSelectionStep = ({ data, onSelect, t }) => (
+  <div className="space-y-6 flex justify-center items-center flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="text-center">
       <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
         {t("auth.register.businessType.title")}
       </h3>
@@ -273,54 +333,137 @@ const BusinessTypeStep = ({ data, onChange, onNext, t }) => (
         {t("auth.register.businessType.subtitle")}
       </p>
     </div>
-    <div className="flex flex-col md:flex-row justify-around items-center gap-6 md:gap-10 w-full max-w-2xl">
+    <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
       <button
-        onClick={() => {
-          onChange({ businessType: "venue" });
-          setTimeout(onNext, 300);
-        }}
-        className={`p-4 md:p-6 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-300 transform w-full max-w-xs ${
-          data.businessType === "venue"
-            ? "border-orange-500 bg-orange-50 scale-105 shadow-lg"
-            : "border-gray-200 hover:border-orange-300 hover:shadow-md"
-        }`}
+        onClick={() => onSelect("venue")}
+        className={`p-6 border-2 rounded-xl flex-1 flex flex-col items-center transition-all ${data.businessType === "venue" ? "border-orange-500 bg-orange-50 shadow-lg" : "border-gray-200 hover:border-orange-300"}`}
       >
-        <Building2 className="w-10 h-10 md:w-12 md:h-12 mb-3 md:mb-4 text-orange-500" />
-        <h4 className="font-bold text-base md:text-lg mb-2 text-center">
+        <Building2 className="w-12 h-12 mb-4 text-orange-500" />
+        <h4 className="font-bold text-lg">
           {t("auth.register.businessType.venueOwner")}
         </h4>
-        <p className="text-xs md:text-sm text-gray-600 text-center">
-          {t("auth.register.businessType.venueDesc")}
-        </p>
       </button>
-      <div className="relative p-4 md:p-6 border-2 flex flex-col items-center justify-center border-gray-200 rounded-xl opacity-50 cursor-not-allowed w-full max-w-xs">
-        <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-          {t("auth.register.businessType.comingSoon")}
-        </div>
-        <Users className="w-10 h-10 md:w-12 md:h-12 text-gray-400 mb-3 md:mb-4" />
-        <h4 className="font-bold text-base md:text-lg mb-2 text-center">
+      <button
+        onClick={() => onSelect("service")}
+        className={`p-6 border-2 rounded-xl flex-1 flex flex-col items-center transition-all ${data.businessType === "service" ? "border-orange-500 bg-orange-50 shadow-lg" : "border-gray-200 hover:border-orange-300"}`}
+      >
+        <Briefcase className="w-12 h-12 mb-4 text-orange-500" />
+        <h4 className="font-bold text-lg">
           {t("auth.register.businessType.serviceBusiness")}
         </h4>
-        <p className="text-xs md:text-sm text-gray-600 text-center">
-          {t("auth.register.businessType.serviceDesc")}
-        </p>
-      </div>
+      </button>
     </div>
   </div>
 );
 
-// Step 2: Venue Details
-const VenueDetailsStep = ({ data, onChange, errors, t }) => {
-  const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 8);
-    onChange({ phone: value });
+// STEP 1 (INSERTED): Only for Service Providers
+const ServiceCategorySelectionStep = ({ data, onSelect }) => (
+  <div className="space-y-6 text-center animate-in fade-in slide-in-from-right-10 duration-500">
+    <h3 className="text-xl font-bold text-gray-900">Select your Profession</h3>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {SERVICE_CATEGORIES.map((cat) => (
+        <button
+          key={cat.id}
+          onClick={() => onSelect(cat.id)}
+          className={`p-4 border-2 rounded-xl flex flex-col items-center justify-center transition-all ${data.category === cat.id ? "border-orange-500 bg-orange-50 shadow-md" : "border-gray-200 hover:border-orange-500"}`}
+        >
+          <cat.icon className="w-8 h-8 text-orange-500 mb-2" />
+          <span className="text-sm font-medium text-gray-700">{cat.label}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+// Step 1: Category
+const BusinessTypeStep = ({ data, onChange, onNext, t }) => {
+  const [view, setView] = useState("main");
+
+  const selectCategory = (category, type) => {
+    onChange({ category, businessType: type });
+    setTimeout(onNext, 300);
   };
 
+  return (
+    <div className="relative overflow-hidden min-h-[400px]">
+      {view === "main" ? (
+        // Main Selection View
+        <div className="space-y-6 flex justify-center items-center flex-col gap-6 md:gap-10 animate-in fade-in slide-in-from-left-10 duration-500">
+          <div className="w-full flex justify-center items-center flex-col text-center">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+              {t("auth.register.businessType.title")}
+            </h3>
+            <p className="text-gray-600">
+              {t("auth.register.businessType.subtitle")}
+            </p>
+          </div>
+          <div className="flex flex-col md:flex-row justify-around items-center gap-6 md:gap-10 w-full max-w-2xl">
+            <button
+              onClick={() => selectCategory("venue", "venue")}
+              className="p-4 md:p-6 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-300 transform w-full max-w-xs border-gray-200 hover:border-orange-300 hover:shadow-md"
+            >
+              <Building2 className="w-10 h-10 md:w-12 md:h-12 mb-3 md:mb-4 text-orange-500" />
+              <h4 className="font-bold text-base md:text-lg mb-2 text-center">
+                {t("auth.register.businessType.venueOwner")}
+              </h4>
+            </button>
+
+            <button
+              onClick={() => setView("services")}
+              className="p-4 md:p-6 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-300 transform w-full max-w-xs border-gray-200 hover:border-orange-300 hover:shadow-md"
+            >
+              <Briefcase className="w-10 h-10 md:w-12 md:h-12 mb-3 md:mb-4 text-orange-500" />
+              <h4 className="font-bold text-base md:text-lg mb-2 text-center">
+                {t("auth.register.businessType.serviceBusiness")}
+              </h4>
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Services Category View
+        <div className="space-y-6 text-center animate-in fade-in slide-in-from-right-10 duration-500">
+          <h3 className="text-xl font-bold text-gray-900">
+            Select your Profession
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {SERVICE_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => selectCategory(cat.id, "service")}
+                className={`p-4 border-2 rounded-xl flex flex-col items-center justify-center transition-all hover:border-orange-500 hover:shadow-md ${
+                  data.category === cat.id
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200"
+                }`}
+              >
+                <cat.icon className="w-8 h-8 text-orange-500 mb-2" />
+                <span className="text-sm font-medium text-gray-700">
+                  {cat.label}
+                </span>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setView("main")}
+            className="text-gray-500 hover:text-orange-600 underline text-sm mt-4 block mx-auto"
+          >
+            {t("auth.register.actions.back")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Step 2: Details
+const BusinessDetailsStep = ({ data, onChange, errors, t }) => {
   return (
     <div className="space-y-6">
       <div>
         <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-          {t("auth.register.venueDetails.title")}
+          {data.category === "venue"
+            ? t("auth.register.venueDetails.title")
+            : "Business Details"}
         </h3>
         <p className="text-gray-600">
           {t("auth.register.venueDetails.subtitle")}
@@ -329,11 +472,19 @@ const VenueDetailsStep = ({ data, onChange, errors, t }) => {
       <div className="space-y-4">
         <Input
           required
-          label={t("auth.register.venueDetails.name")}
-          value={data.venueName}
-          onChange={(e) => onChange({ venueName: e.target.value })}
-          error={errors.venueName}
-          placeholder="e.g., Grand Palace Events"
+          label={
+            data.category === "venue"
+              ? t("auth.register.venueDetails.name")
+              : "Business / Brand Name"
+          }
+          value={data.businessName}
+          onChange={(e) => onChange({ businessName: e.target.value })}
+          error={errors.businessName}
+          placeholder={
+            data.category === "venue"
+              ? "e.g., Grand Palace"
+              : "e.g., Ahmed Photography"
+          }
           fullWidth
         />
         <div>
@@ -357,193 +508,220 @@ const VenueDetailsStep = ({ data, onChange, errors, t }) => {
           required
           label={t("auth.register.venueDetails.phone")}
           value={data.phone}
-          onChange={handlePhoneChange}
+          onChange={(e) =>
+            onChange({ phone: e.target.value.replace(/\D/g, "").slice(0, 8) })
+          }
           error={errors.phone}
           placeholder="12345678"
           fullWidth
-        />
-        <Input
-          disabled={true}
-          label={t("auth.register.email")}
-          type="email"
-          value={data.venueEmail || data.email}
-          onChange={(e) => onChange({ venueEmail: e.target.value })}
-          error={errors.venueEmail}
-          fullWidth
-          dir="ltr"
         />
       </div>
     </div>
   );
 };
 
-// Step 3: Spaces
-const SpacesStep = ({ data, onChange, errors, t }) => {
-  const initializeSpaces = () => {
-    if (!data.spaces || data.spaces.length === 0) {
-      return [
-        {
-          id: Date.now(),
-          name: "",
-          minCapacity: "",
-          maxCapacity: "",
-          basePrice: "",
-        },
-      ];
-    }
-    return data.spaces;
-  };
-
-  const [spaces, setSpaces] = useState(initializeSpaces());
-  const MAX_SPACES = 3;
+// Step 3 (Polymorphic): Spaces OR Service Config
+const SpecificsStep = ({ data, onChange, errors, t }) => {
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (spaces.length > 0 && (!data.spaces || data.spaces.length === 0)) {
-      onChange({ spaces });
-    }
-  }, []);
+  // --- VENUE LOGIC (Spaces) ---
+  if (data.category === "venue") {
+    const spaces = data.spaces || [];
 
-  const addSpace = () => {
-    if (spaces.length >= MAX_SPACES) {
-      toast(t("auth.register.spaces.maxReached"), "error");
-      return;
-    }
-    const newSpace = {
-      id: Date.now(),
-      name: "",
-      minCapacity: "",
-      maxCapacity: "",
-      basePrice: "",
+    const addSpace = () => {
+      if (spaces.length >= 3) {
+        toast(t("auth.register.spaces.maxReached"), "error");
+        return;
+      }
+      onChange({
+        spaces: [
+          ...spaces,
+          {
+            id: Date.now(),
+            name: "",
+            minCapacity: "",
+            maxCapacity: "",
+            basePrice: "",
+          },
+        ],
+      });
     };
-    const newSpaces = [...spaces, newSpace];
-    setSpaces(newSpaces);
-    onChange({ spaces: newSpaces });
-  };
 
-  const updateSpace = (id, field, value) => {
-    if (["minCapacity", "maxCapacity", "basePrice"].includes(field)) {
-      value = value.replace(/\D/g, "");
-    }
-    const newSpaces = spaces.map((space) =>
-      space.id === id ? { ...space, [field]: value } : space
+    const updateSpace = (id, field, value) => {
+      const val = ["minCapacity", "maxCapacity", "basePrice"].includes(field)
+        ? value.replace(/\D/g, "")
+        : value;
+      onChange({
+        spaces: spaces.map((s) => (s.id === id ? { ...s, [field]: val } : s)),
+      });
+    };
+
+    const removeSpace = (id) => {
+      if (spaces.length === 1) {
+        toast("At least one space is required", "error");
+        return;
+      }
+      onChange({ spaces: spaces.filter((s) => s.id !== id) });
+    };
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+            {t("auth.register.spaces.title")}
+          </h3>
+          <p className="text-gray-600">
+            {t("auth.register.spaces.subtitle", { max: 3 })}
+          </p>
+        </div>
+        <div className="space-y-4">
+          {spaces.map((space, index) => (
+            <div
+              key={space.id}
+              className="p-4 border-2 border-gray-200 rounded-xl"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-semibold text-gray-900">
+                  {t("auth.register.spaces.spaceName")} {index + 1}
+                </h4>
+                {spaces.length > 1 && (
+                  <button
+                    onClick={() => removeSpace(space.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <Input
+                  required
+                  label={t("auth.register.spaces.spaceName")}
+                  value={space.name}
+                  onChange={(e) =>
+                    updateSpace(space.id, "name", e.target.value)
+                  }
+                  error={errors[`space-${space.id}-name`]}
+                  placeholder="e.g., Main Hall"
+                  fullWidth
+                />
+                <Input
+                  required
+                  label={t("auth.register.spaces.basePrice")}
+                  type="number"
+                  value={space.basePrice}
+                  onChange={(e) =>
+                    updateSpace(space.id, "basePrice", e.target.value)
+                  }
+                  error={errors[`space-${space.id}-basePrice`]}
+                  placeholder="5000"
+                  min="0"
+                  fullWidth
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    required
+                    label={t("auth.register.spaces.minCap")}
+                    type="number"
+                    value={space.minCapacity}
+                    onChange={(e) =>
+                      updateSpace(space.id, "minCapacity", e.target.value)
+                    }
+                    error={errors[`space-${space.id}-minCapacity`]}
+                    placeholder="50"
+                    min="0"
+                    fullWidth
+                  />
+                  <Input
+                    required
+                    label={t("auth.register.spaces.maxCap")}
+                    type="number"
+                    value={space.maxCapacity}
+                    onChange={(e) =>
+                      updateSpace(space.id, "maxCapacity", e.target.value)
+                    }
+                    error={errors[`space-${space.id}-maxCapacity`]}
+                    placeholder="500"
+                    min="0"
+                    fullWidth
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={addSpace}
+            disabled={spaces.length >= 3}
+            className={`w-full py-3 border-2 border-dashed rounded-xl transition-all flex items-center justify-center gap-2 ${
+              spaces.length >= 3
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-500"
+            }`}
+          >
+            <Plus size={20} />
+            {spaces.length >= 3
+              ? t("auth.register.spaces.maxReached")
+              : t("auth.register.spaces.add")}
+          </button>
+        </div>
+      </div>
     );
-    setSpaces(newSpaces);
-    onChange({ spaces: newSpaces });
-  };
+  }
 
-  const removeSpace = (id) => {
-    if (spaces.length === 1) {
-      toast("At least one space is required", "error");
-      return;
-    }
-    const newSpaces = spaces.filter((space) => space.id !== id);
-    setSpaces(newSpaces);
-    onChange({ spaces: newSpaces });
-  };
-
+  // --- SERVICE PROVIDER LOGIC ---
   return (
     <div className="space-y-6">
       <div>
         <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-          {t("auth.register.spaces.title")}
+          Service Configuration
         </h3>
-        <p className="text-gray-600">
-          {t("auth.register.spaces.subtitle", { max: MAX_SPACES })}
-        </p>
+        <p className="text-gray-600">How do you operate and charge?</p>
       </div>
-      <div className="space-y-4">
-        {spaces.map((space, index) => (
-          <div
-            key={space.id}
-            className="p-4 border-2 border-gray-200 rounded-xl"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold text-gray-900">
-                {t("auth.register.spaces.spaceName")} {index + 1}
-              </h4>
-              {spaces.length > 1 && (
-                <button
-                  onClick={() => removeSpace(space.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 size={20} />
-                </button>
-              )}
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <Input
-                required
-                label={t("auth.register.spaces.spaceName")}
-                value={space.name}
-                onChange={(e) => updateSpace(space.id, "name", e.target.value)}
-                error={errors[`space-${space.id}-name`]}
-                placeholder="e.g., Main Hall"
-                fullWidth
-              />
-              <Input
-                required
-                label={t("auth.register.spaces.basePrice")}
-                type="number"
-                value={space.basePrice}
-                onChange={(e) =>
-                  updateSpace(space.id, "basePrice", e.target.value)
-                }
-                error={errors[`space-${space.id}-basePrice`]}
-                placeholder="5000"
-                min="0"
-                fullWidth
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  required
-                  label={t("auth.register.spaces.minCap")}
-                  type="number"
-                  value={space.minCapacity}
-                  onChange={(e) =>
-                    updateSpace(space.id, "minCapacity", e.target.value)
-                  }
-                  error={errors[`space-${space.id}-minCapacity`]}
-                  placeholder="50"
-                  min="0"
-                  fullWidth
-                />
-                <Input
-                  required
-                  label={t("auth.register.spaces.maxCap")}
-                  type="number"
-                  value={space.maxCapacity}
-                  onChange={(e) =>
-                    updateSpace(space.id, "maxCapacity", e.target.value)
-                  }
-                  error={errors[`space-${space.id}-maxCapacity`]}
-                  placeholder="500"
-                  min="0"
-                  fullWidth
-                />
-              </div>
-              {errors[`space-${space.id}-capacity`] && (
-                <p className="text-sm text-red-600 mt-1 text-start">
-                  {errors[`space-${space.id}-capacity`]}
-                </p>
-              )}
-            </div>
+
+      <div className="p-4 border-2 border-gray-200 rounded-xl space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
+            Pricing Model
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            {["fixed", "hourly"].map((type) => (
+              <button
+                key={type}
+                onClick={() => onChange({ pricingModel: type })}
+                className={`p-3 border rounded-lg capitalize transition-all ${
+                  data.pricingModel === type
+                    ? "border-orange-500 bg-orange-50 text-orange-700 font-bold"
+                    : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {type} Rate
+              </button>
+            ))}
           </div>
-        ))}
-        <button
-          onClick={addSpace}
-          disabled={spaces.length >= MAX_SPACES}
-          className={`w-full py-3 border-2 border-dashed rounded-xl transition-all flex items-center justify-center gap-2 ${
-            spaces.length >= MAX_SPACES
-              ? "border-gray-200 text-gray-400 cursor-not-allowed"
-              : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-500"
-          }`}
-        >
-          <Plus size={20} />
-          {spaces.length >= MAX_SPACES
-            ? t("auth.register.spaces.maxReached")
-            : t("auth.register.spaces.add")}
-        </button>
+        </div>
+
+        {/* 
+           REPLACED SERVICE RADIUS WITH COST INPUT 
+           Moved service radius to AddressStep
+        */}
+        <Input
+          type="number"
+          label={`Starting Cost (${data.pricingModel === "hourly" ? "/hr" : "Fixed"})`}
+          value={data.basePrice}
+          onChange={(e) => onChange({ basePrice: e.target.value })}
+          placeholder="e.g. 500"
+          error={errors.basePrice}
+          iconRight={TNDIndicator}
+          fullWidth
+        />
+
+        <div className="bg-blue-50 p-4 rounded-lg flex gap-3 text-sm text-blue-700 items-start">
+          <HelpCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <p>
+            This helps clients estimate the cost of your services. You can
+            create complex packages later.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -615,6 +793,28 @@ const AddressStep = ({ data, onChange, errors, t }) => (
           fullWidth
         />
       </div>
+
+      {/* 
+         MOVED SERVICE RADIUS HERE 
+         Only visible for non-venue categories
+      */}
+      {data.category !== "venue" && (
+        <div className="pt-2 border-t mt-2">
+          <Input
+            type="number"
+            label="Service Radius (KM)"
+            value={data.serviceRadius}
+            onChange={(e) => onChange({ serviceRadius: e.target.value })}
+            placeholder="e.g. 50"
+            error={errors.serviceRadius}
+            iconRight={MapPin}
+            fullWidth
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            How far from this address are you willing to travel?
+          </p>
+        </div>
+      )}
     </div>
   </div>
 );
@@ -629,7 +829,7 @@ const ReviewStep = ({ data, t }) => (
       <p className="text-gray-600">{t("auth.register.review.subtitle")}</p>
     </div>
     <div className="space-y-4">
-      <div className="p-4 bg-white rounded-xl">
+      <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
         <h4 className="font-semibold text-gray-900 mb-3">
           {t("auth.register.review.accountInfo")}
         </h4>
@@ -638,66 +838,81 @@ const ReviewStep = ({ data, t }) => (
             <span className="text-gray-600">
               {t("auth.register.fullName")}:
             </span>
-            <span className="font-medium">{data.name || "Not provided"}</span>
+            <span className="font-medium">{data.name}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">{t("auth.register.email")}:</span>
-            <span className="font-medium">{data.email || "Not provided"}</span>
+            <span className="font-medium">{data.email}</span>
           </div>
         </div>
       </div>
-      <div className="p-4 bg-white rounded-xl">
+
+      <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
         <h4 className="font-semibold text-gray-900 mb-3">
           {t("auth.register.review.venueInfo")}
         </h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-600">
-              {t("auth.register.venueDetails.name")}:
-            </span>
-            <span className="font-medium">{data.venueName}</span>
+            <span className="text-gray-600">Business Name:</span>
+            <span className="font-medium">{data.businessName}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">
-              {t("auth.register.venueDetails.phone")}:
-            </span>
+            <span className="text-gray-600">Category:</span>
+            <span className="font-medium capitalize">{data.category}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Phone:</span>
             <span className="font-medium">{data.phone}</span>
           </div>
-          {data.description && (
-            <div className="pt-2">
-              <span className="text-gray-600">
-                {t("auth.register.venueDetails.desc")}:
-              </span>
-              <p className="font-medium mt-1">{data.description}</p>
-            </div>
-          )}
         </div>
       </div>
-      {data.spaces && data.spaces.length > 0 && (
-        <div className="p-4 bg-white rounded-xl">
+
+      {data.category === "venue" && data.spaces && (
+        <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
           <h4 className="font-semibold text-gray-900 mb-3">
             {t("auth.register.spaces.title")} ({data.spaces.length})
           </h4>
           <div className="space-y-3">
             {data.spaces.map((space) => (
-              <div key={space.id} className="p-3 bg-white rounded-lg">
+              <div key={space.id} className="p-3 bg-gray-50 rounded-lg">
                 <p className="font-medium text-gray-900">{space.name}</p>
                 <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-gray-600">
                   <div>
-                    {t("auth.register.spaces.minCap")}: {space.minCapacity}-
-                    {space.maxCapacity}
+                    Cap: {space.minCapacity}-{space.maxCapacity}
                   </div>
-                  <div>
-                    {t("auth.register.spaces.basePrice")}: {space.basePrice} TND
-                  </div>
+                  <div>Price: {space.basePrice} TND</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* Show Service Config for Non-Venues */}
+      {data.category !== "venue" && (
+        <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+          <h4 className="font-semibold text-gray-900 mb-3">Configuration</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Pricing Model:</span>
+              <span className="font-medium capitalize">
+                {data.pricingModel}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Base Cost:</span>
+              <span className="font-medium">{data.basePrice} TND</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Radius:</span>
+              <span className="font-medium">{data.serviceRadius} KM</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {data.address && (
-        <div className="p-4 bg-white rounded-xl">
+        <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
           <h4 className="font-semibold text-gray-900 mb-3">
             {t("auth.register.address.title")}
           </h4>
@@ -714,7 +929,10 @@ const ReviewStep = ({ data, t }) => (
   </div>
 );
 
-// --- Slider Component ---
+// ==========================================
+// 4. MAIN SLIDER
+// ==========================================
+
 const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -724,31 +942,48 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.dir() === "rtl";
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     businessType: "venue",
-    spaces: [],
+    category: "venue",
+    spaces: [
+      {
+        id: Date.now(),
+        name: "",
+        minCapacity: "",
+        maxCapacity: "",
+        basePrice: "",
+      },
+    ],
+    serviceRadius: 50,
+    basePrice: "",
+    pricingModel: "fixed",
     address: { country: "Tunisia" },
     ...initialData,
   });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setFormData((prev) => ({ ...prev, ...initialData }));
-  }, [initialData]);
 
   useEffect(() => {
     if (isOpen) {
-      setIsSliderOpen(false);
+      setFormData((prev) => ({
+        ...prev,
+        ...initialData,
+      }));
+    }
+  }, [isOpen, initialData]);
+
+  useEffect(() => {
+    if (isOpen) {
       setShouldRender(true);
-      const timer = setTimeout(() => setIsSliderOpen(true), 50);
-      return () => clearTimeout(timer);
+      setTimeout(() => setIsSliderOpen(true), 50);
     } else {
       setIsSliderOpen(false);
-      const timer = setTimeout(() => setShouldRender(false), 500);
-      return () => clearTimeout(timer);
+      setTimeout(() => {
+        setShouldRender(false);
+        setCurrentStep(0);
+      }, 500);
     }
   }, [isOpen]);
 
@@ -757,117 +992,139 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
     setErrors({});
   };
 
+  // 1. Add this function inside RegistrationSlider (near handleNext)
+  const handleAutoNext = (newData) => {
+    // Directly update state
+    setFormData((prev) => ({ ...prev, ...newData }));
+    setErrors({});
+
+    // Advance the step immediately with animation, bypassing validateStep
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentStep((prev) => prev + 1);
+      setIsAnimating(false);
+    }, 300);
+  };
+
+  // --- DYNAMIC STEP DEFINITIONS ---
+  // 2. Update your 'steps' definition to use handleAutoNext
+  const steps = [
+    <BusinessTypeSelectionStep
+      data={formData}
+      onSelect={(type) => {
+        // Logic: If venue, set category to venue. If service, keep category empty for next step.
+        handleAutoNext({
+          businessType: type,
+          category: type === "venue" ? "venue" : "",
+        });
+      }}
+      t={t}
+    />,
+
+    formData.businessType === "service" && (
+      <ServiceCategorySelectionStep
+        data={formData}
+        onSelect={(cat) => {
+          handleAutoNext({ category: cat });
+        }}
+      />
+    ),
+
+    <BusinessDetailsStep
+      data={formData}
+      onChange={updateData}
+      errors={errors}
+      t={t}
+    />,
+    <SpecificsStep
+      data={formData}
+      onChange={updateData}
+      errors={errors}
+      t={t}
+    />,
+    <AddressStep data={formData} onChange={updateData} errors={errors} t={t} />,
+    <ReviewStep data={formData} t={t} />,
+  ].filter(Boolean);
+
+  const stepTitles = [
+    t("auth.register.steps.business"),
+    formData.businessType === "service" && "Profession",
+    "Details",
+    formData.category === "venue" ? "Spaces" : "Configuration",
+    "Address",
+    "Review",
+  ].filter(Boolean);
+
+  // --- VALIDATION LOGIC (FULL) ---
   const validateStep = () => {
+    const activeStep = steps[currentStep];
     const newErrors = {};
 
-    switch (currentStep) {
-      case 0: // Business Type - auto-advances, no validation needed
-        return true;
+    // 1. Validate Business Type Selection
+    if (activeStep.type === BusinessTypeSelectionStep) {
+      if (!formData.businessType) {
+        toast("Please select your business type", "error");
+        return false;
+      }
+    }
 
-      case 1: // Venue Details
-        if (!formData.venueName?.trim()) {
-          newErrors.venueName = t("auth.register.errors.nameRequired");
-        } else if (
-          formData.venueName.length < 2 ||
-          formData.venueName.length > 100
-        ) {
-          newErrors.venueName = "Venue name must be between 2 and 100 characters";
-        }
+    // 2. Validate Service Category Selection (The Inserted Step)
+    if (activeStep.type === ServiceCategorySelectionStep) {
+      // Check if category is empty OR just the generic 'service' string
+      if (
+        !formData.category ||
+        formData.category === "" ||
+        formData.category === "service"
+      ) {
+        toast("Please select a profession", "error");
+        return false;
+      }
+    }
 
-        const phoneError = validationUtils.validatePhone(formData.phone);
-        if (phoneError) {
-          newErrors.phone = phoneError;
-        }
+    // 3. Validate Business Details (Name and Phone)
+    if (activeStep.type === BusinessDetailsStep) {
+      if (!formData.businessName?.trim())
+        newErrors.businessName = "Business name is required";
+      const phErr = validationUtils.validatePhone(formData.phone);
+      if (phErr) newErrors.phone = phErr;
+    }
 
-        if (formData.description && formData.description.length > 500) {
-          newErrors.description = "Description must be less than 500 characters";
-        }
-        break;
-
-      case 2: // Spaces
-        if (!formData.spaces || formData.spaces.length === 0) {
-          toast("Please add at least one space", "error");
-          return false;
-        }
-
-        let hasInvalidSpace = false;
-        formData.spaces.forEach((space) => {
-          if (!space.name?.trim()) {
-            newErrors[`space-${space.id}-name`] = "Space name is required";
-            hasInvalidSpace = true;
-          }
-
-          const basePriceError = validationUtils.validatePositiveNumber(
-            space.basePrice,
-            "Base price"
-          );
-          if (basePriceError) {
-            newErrors[`space-${space.id}-basePrice`] = basePriceError;
-            hasInvalidSpace = true;
-          }
-
-          const minCapError = validationUtils.validatePositiveNumber(
-            space.minCapacity,
-            "Min capacity"
-          );
-          if (minCapError) {
-            newErrors[`space-${space.id}-minCapacity`] = minCapError;
-            hasInvalidSpace = true;
-          }
-
-          const maxCapError = validationUtils.validatePositiveNumber(
-            space.maxCapacity,
-            "Max capacity"
-          );
-          if (maxCapError) {
-            newErrors[`space-${space.id}-maxCapacity`] = maxCapError;
-            hasInvalidSpace = true;
-          }
-
-          if (!minCapError && !maxCapError) {
-            const capacityError = validationUtils.validateCapacity(
-              space.minCapacity,
-              space.maxCapacity
-            );
-            if (capacityError) {
-              newErrors[`space-${space.id}-capacity`] = capacityError;
-              hasInvalidSpace = true;
-            }
-          }
+    // 4. Validate Specifics (Spaces or Pricing)
+    if (activeStep.type === SpecificsStep) {
+      if (formData.category === "venue") {
+        formData.spaces.forEach((s) => {
+          if (!s.name) newErrors[`space-${s.id}-name`] = "Required";
+          if (!s.minCapacity)
+            newErrors[`space-${s.id}-minCapacity`] = "Required";
+          if (!s.maxCapacity)
+            newErrors[`space-${s.id}-maxCapacity`] = "Required";
+          if (!s.basePrice) newErrors[`space-${s.id}-basePrice`] = "Required";
         });
+      } else {
+        if (!formData.basePrice)
+          newErrors.basePrice = "Starting cost is required";
+      }
+    }
 
-        if (hasInvalidSpace) {
-          setErrors(newErrors);
-          return false;
-        }
-        break;
-
-      case 3: // Address
-        if (!formData.address?.street?.trim()) {
-          newErrors.street = "Full address is required";
-        }
-        if (!formData.address?.city?.trim()) {
-          newErrors.city = "City is required";
-        }
-        break;
-
-      case 4: // Review - no validation needed
-        return true;
+    // 5. Validate Address
+    if (activeStep.type === AddressStep) {
+      if (!formData.address?.street)
+        newErrors.street = "Street address is required";
+      if (!formData.address?.city) newErrors.city = "City is required";
+      if (formData.category !== "venue" && !formData.serviceRadius) {
+        newErrors.serviceRadius = "Service radius is required";
+      }
     }
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      toast("Please fix all errors before continuing", "error");
-      return false;
-    }
-    return true;
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
     if (validateStep()) {
       setIsAnimating(true);
       setTimeout(() => {
-        setCurrentStep((prev) => Math.min(prev + 1, 4));
+        setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
         setIsAnimating(false);
       }, 300);
     }
@@ -890,7 +1147,7 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
     setLoading(true);
     try {
       await register(formData);
-      navigate("/home");
+      navigate("/dashboard");
       toast(t("auth.login.success"), "success");
     } catch (err) {
       toast(err.response?.data?.message || "Registration failed", "error");
@@ -901,29 +1158,8 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
 
   if (!shouldRender) return null;
 
-  const steps = [
-    <BusinessTypeStep
-      data={formData}
-      onChange={updateData}
-      onNext={handleNext}
-      t={t}
-    />,
-    <VenueDetailsStep
-      data={formData}
-      onChange={updateData}
-      errors={errors}
-      t={t}
-    />,
-    <SpacesStep data={formData} onChange={updateData} errors={errors} t={t} />,
-    <AddressStep data={formData} onChange={updateData} errors={errors} t={t} />,
-    <ReviewStep data={formData} t={t} />,
-  ];
-
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
       className="fixed inset-0 z-50 flex items-center justify-center transition-all duration-300"
       style={{
         backgroundColor: isSliderOpen
@@ -932,6 +1168,7 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
         backdropFilter: isSliderOpen ? "blur(4px)" : "blur(0px)",
         pointerEvents: isSliderOpen ? "auto" : "none",
       }}
+      dir={isRTL ? "rtl" : "ltr"}
     >
       <div
         className="w-full h-full bg-white rounded-t-3xl shadow-2xl flex flex-col"
@@ -941,7 +1178,6 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
           transition:
             "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s",
         }}
-        dir={isRTL ? "rtl" : "ltr"}
       >
         <div className="flex items-center justify-between p-4">
           <h2 className="text-lg font-bold text-gray-900">
@@ -956,7 +1192,7 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
         </div>
 
         <div className="px-4 pt-3">
-          <ProgressSteps currentStep={currentStep} t={t} />
+          <ProgressSteps currentStep={currentStep} titles={stepTitles} t={t} />
         </div>
 
         <div className="overflow-y-auto hide-scrollbar flex flex-1 justify-center items-start">
@@ -981,7 +1217,7 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
               {isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}{" "}
               {t("auth.register.actions.back")}
             </Button>
-            {currentStep < 4 ? (
+            {currentStep < steps.length - 1 ? (
               <Button
                 onClick={handleNext}
                 variant="primary"
@@ -992,7 +1228,7 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
               </Button>
             ) : (
               <Button
-                onClick={() => handleComplete()}
+                onClick={handleComplete}
                 loading={loading}
                 variant="primary"
                 className="px-4 py-2 text-sm"
@@ -1007,56 +1243,10 @@ const RegistrationSlider = ({ isOpen, onClose, initialData }) => {
   );
 };
 
-// Password Requirements Tooltip Component (Simplified)
-const PasswordRequirementsTooltip = ({ password, isOpen, onClose, t }) => {
-  if (!isOpen) return null;
-
-  const requirement = {
-    label: t("auth.register.requirements.length"),
-    met: password.length >= 8,
-  };
-
-  return (
-    <div className="absolute z-10 w-72 bg-white border border-gray-200 rounded-lg shadow-lg p-4 mt-2">
-      <div className="flex justify-between items-center mb-3">
-        <h4 className="font-semibold text-gray-900">
-          {t("auth.register.requirements.title")}
-        </h4>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-4 h-4 rounded-full flex items-center justify-center ${
-              requirement.met
-                ? "bg-green-500 text-white"
-                : "bg-gray-200 text-gray-400"
-            }`}
-          >
-            {requirement.met && <Check size={10} />}
-          </div>
-          <span
-            className={`text-sm ${
-              requirement.met ? "text-green-600 font-medium" : "text-gray-600"
-            }`}
-          >
-            {requirement.label}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ==========================================
-// 3. MAIN REGISTER COMPONENT
+// 5. MAIN REGISTER FORM
 // ==========================================
+
 const Register = () => {
   const { verifyEmail } = useAuth();
   const [showSlider, setShowSlider] = useState(false);
@@ -1065,7 +1255,6 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    venueName: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -1081,26 +1270,19 @@ const Register = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
-
-    if (name === "password") {
+    if (name === "password")
       setPasswordStrength(calculatePasswordStrength(value));
-    }
   };
 
   const calculatePasswordStrength = (password) => {
     if (!password) return 0;
     let strength = 0;
-    
-    // Length check (most important)
     if (password.length >= 8) strength += 2;
     if (password.length >= 12) strength += 1;
-    
-    // Complexity bonuses
     if (/[a-z]/.test(password)) strength += 0.5;
     if (/[A-Z]/.test(password)) strength += 0.5;
     if (/[0-9]/.test(password)) strength += 0.5;
     if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength += 0.5;
-    
     return Math.min(5, strength);
   };
 
@@ -1110,47 +1292,20 @@ const Register = () => {
     return "bg-green-500";
   };
 
-  const getPasswordStrengthText = (strength) => {
-    if (strength < 2) return t("auth.register.strength.weak");
-    if (strength < 3.5) return t("auth.register.strength.medium");
-    return t("auth.register.strength.strong");
-  };
-
   const handleInitialSubmit = async () => {
     const newErrors = {};
-    
-    // Name validation
-    if (!formData.name?.trim()) {
+    if (!formData.name?.trim())
       newErrors.name = t("auth.register.errors.nameRequired");
-    } else if (formData.name.length < 2 || formData.name.length > 50) {
-      newErrors.name = "Name must be between 2 and 50 characters";
-    }
-
-    // Email validation
-    const emailError = validationUtils.validateEmail(formData.email);
-    if (emailError) {
-      newErrors.email = emailError;
-    }
-
-    // Password validation (simplified - only length check)
-    if (!formData.password) {
-      newErrors.password = t("auth.register.errors.passwordRequired");
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long";
-    } else if (formData.password.length > 128) {
-      newErrors.password = "Password must be less than 128 characters";
-    }
-
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
+    if (!formData.email)
+      newErrors.email = t("auth.register.errors.emailRequired");
+    if (!formData.password || formData.password.length < 8)
+      newErrors.password = "Min 8 characters";
+    if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = t("auth.register.errors.confirmMatch");
-    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      toast("Please fix all errors before continuing", "error");
+      toast("Please fix all errors", "error");
       return;
     }
 
@@ -1160,9 +1315,9 @@ const Register = () => {
       setShowSlider(true);
     } catch (error) {
       setErrors({
-        email: error.response?.data?.message || "Email verification failed",
+        email: error.response?.data?.message || "Verification failed",
       });
-      toast(error.response?.data?.message || "Email verification failed", "error");
+      toast("Email verification failed", "error");
     } finally {
       setLoading(false);
     }
@@ -1240,7 +1395,6 @@ const Register = () => {
                     <HelpCircle size={16} />
                   </button>
                 </div>
-
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
@@ -1260,25 +1414,8 @@ const Register = () => {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
-
                 {formData.password && (
                   <div className="mt-2 space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">
-                        {t("auth.register.passwordStrength")}
-                      </span>
-                      <span
-                        className={`font-medium ${
-                          passwordStrength < 2
-                            ? "text-red-500"
-                            : passwordStrength < 3.5
-                              ? "text-yellow-500"
-                              : "text-green-500"
-                        }`}
-                      >
-                        {getPasswordStrengthText(passwordStrength)}
-                      </span>
-                    </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full transition-all duration-300 ${getPasswordStrengthColor(passwordStrength)}`}
@@ -1287,7 +1424,6 @@ const Register = () => {
                     </div>
                   </div>
                 )}
-
                 <PasswordRequirementsTooltip
                   password={formData.password}
                   isOpen={showPasswordTooltip}

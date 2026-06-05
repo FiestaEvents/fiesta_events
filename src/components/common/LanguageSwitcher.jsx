@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { GlobeIcon } from '../icons/IconComponents';
+import { GlobeIcon } from "lucide-react";
 
 const LanguageSwitcher = () => {
   const { currentLanguage, changeLanguage } = useLanguage();

@@ -13,17 +13,18 @@ import {
   Clock,
   AlertCircle,
   RotateCcw,
-  Info,
   CheckSquare,
   LayoutGrid,
+  Filter,
   Calendar,
   Eye,
-  FolderOpen,
-  Filter,
 } from "lucide-react";
 
-// API & Services
+// API & Permissions
 import { taskService } from "../../api/index";
+import PermissionGuard from "../../components/auth/PermissionGuard";
+import { usePermission } from "../../hooks/usePermission";
+import { useToast } from "../../context/ToastContext";
 
 // Components
 import Button from "../../components/common/Button";
@@ -33,29 +34,11 @@ import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Badge from "../../components/common/Badge";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-
-// Context & Sub-components
-import { useToast } from "../../context/ToastContext";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskForm from "./TaskForm";
 
-// ================================================================
-// CONSTANTS
-// ================================================================
-
-const VIEW_MODES = {
-  LIST: "list",
-  KANBAN: "kanban",
-};
-
-const INITIAL_STATE = {
-  search: "",
-  status: "all",
-  priority: "all",
-  category: "all",
-  page: 1,
-  limit: 10,
-};
+// --- CONFIG ---
+const VIEW_MODES = { LIST: "list", KANBAN: "kanban" };
 
 const KANBAN_COLUMNS = [
   {
@@ -140,239 +123,151 @@ const COLUMN_STYLES = {
   },
 };
 
+//  ADDED MISSING STAT STYLES
 const STAT_STYLES = {
-  red: "bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30",
-  green:
-    "bg-green-50 border-green-100 dark:bg-green-900/10 dark:border-green-900/30",
+  gray: "bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-900 dark:text-white",
   yellow:
-    "bg-yellow-50 border-yellow-100 dark:bg-yellow-900/10 dark:border-yellow-900/30",
-  gray: "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
+    "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800 text-yellow-900 dark:text-yellow-100",
+  purple:
+    "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 text-purple-900 dark:text-purple-100",
+  red: "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800 text-red-900 dark:text-red-100",
+  green:
+    "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 text-green-900 dark:text-green-100",
+  blue: "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 text-blue-900 dark:text-blue-100",
 };
 
-// ================================================================
-// HELPER FUNCTIONS
-// ================================================================
-
-const getBadgeVariant = (value, type) => {
-  const variants =
-    type === "priority" ? BADGE_VARIANTS.PRIORITY : BADGE_VARIANTS.STATUS;
-  return variants[value?.toLowerCase()] || "secondary";
-};
-
-const isOverdue = (date, status) => {
-  const excludedStatuses = ["completed", "cancelled", "archived", "blocked"];
-  return new Date(date) < new Date() && !excludedStatuses.includes(status);
-};
-
-const formatDate = (date) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString("en-GB");
-};
-
-const getStoredViewMode = () =>
-  localStorage.getItem("tasksViewMode") || VIEW_MODES.KANBAN;
-const setStoredViewMode = (mode) => localStorage.setItem("tasksViewMode", mode);
-
-// ================================================================
-// MAIN COMPONENT
-// ================================================================
+// --- HELPERS ---
+const getBadgeVariant = (val, type) =>
+  (type === "priority" ? BADGE_VARIANTS.PRIORITY : BADGE_VARIANTS.STATUS)[
+    val?.toLowerCase()
+  ] || "secondary";
+const isOverdue = (date, status) =>
+  new Date(date) < new Date() &&
+  !["completed", "cancelled", "archived", "blocked"].includes(status);
+const formatDate = (date) =>
+  !date ? "-" : new Date(date).toLocaleDateString("en-GB");
 
 const TasksList = () => {
   const { t } = useTranslation();
   const { showSuccess, showError, promise } = useToast();
+  const canUpdate = usePermission("tasks.update.all");
 
   // State
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [hasInitialLoad, setHasInitialLoad] = useState(false);
-
-  // UI States
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [viewMode, setViewMode] = useState(getStoredViewMode);
+  const [viewMode, setViewMode] = useState(
+    localStorage.getItem("tasksViewMode") || VIEW_MODES.KANBAN
+  );
   const [showArchived, setShowArchived] = useState(false);
 
-  // Filter States
-  const [filters, setFilters] = useState(INITIAL_STATE);
+  // Filters
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [priority, setPriority] = useState("all");
+  const [category, setCategory] = useState("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Pagination (List Only)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Filter Panel
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [localStatus, setLocalStatus] = useState("all");
-  const [localPriority, setLocalPriority] = useState("all");
-  const [localCategory, setLocalCategory] = useState("all");
+  // Modals
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  // Confirmation Modal
-  const [confirmationModal, setConfirmationModal] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    confirmText: "",
-    onConfirm: null,
-    type: "info",
-  });
-
-  useEffect(() => {
-    if (isFilterOpen) {
-      setLocalStatus(filters.status);
-      setLocalPriority(filters.priority);
-      setLocalCategory(filters.category);
-    }
-  }, [isFilterOpen, filters]);
-
-  const handleApplyFilters = () => {
-    setFilters((prev) => ({
-      ...prev,
-      status: localStatus,
-      priority: localPriority,
-      category: localCategory,
-      page: 1,
-    }));
-    setIsFilterOpen(false);
-    showSuccess(t("tasks.notifications.filtersApplied"));
-  };
-
-  const handleResetLocalFilters = () => {
-    setLocalStatus("all");
-    setLocalPriority("all");
-    setLocalCategory("all");
-  };
-
-  const handleClearAllFilters = () => {
-    setFilters(INITIAL_STATE);
-  };
-
-  const updateFilter = useCallback((key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-      ...(key !== "page" && { page: 1 }),
-    }));
-  }, []);
-
-  const stats = {
-    total: tasks.length,
-    pending: tasks.filter((t) => t.status === "pending").length,
-    inProgress: tasks.filter((t) => t.status === "in_progress").length,
-    completed: tasks.filter((t) => t.status === "completed").length,
-    blocked: tasks.filter((t) => t.status === "blocked").length,
-  };
+  // --- STATS CALCULATION ---
+  const stats = useMemo(
+    () => ({
+      total: totalCount,
+      pending: tasks.filter((t) => t.status === "pending").length,
+      inProgress: tasks.filter((t) => t.status === "in_progress").length,
+      blocked: tasks.filter((t) => t.status === "blocked").length,
+      completed: tasks.filter((t) => t.status === "completed").length,
+    }),
+    [tasks, totalCount]
+  );
 
   const statCards = [
     {
-      label: t("tasks.stats.total"),
+      label: "tasks.stats.total",
       value: stats.total,
       color: "gray",
       icon: LayoutGrid,
+      filter: "all",
     },
     {
-      label: t("tasks.status.pending"),
+      label: "tasks.status.pending",
       value: stats.pending,
       color: "yellow",
       icon: Clock,
+      filter: "pending",
     },
     {
-      label: t("tasks.status.in_progress"),
+      label: "tasks.status.in_progress",
       value: stats.inProgress,
       color: "purple",
       icon: RotateCcw,
+      filter: "in_progress",
     },
     {
-      label: t("tasks.status.blocked"),
+      label: "tasks.status.blocked",
       value: stats.blocked,
       color: "red",
       icon: AlertCircle,
+      filter: "blocked",
     },
     {
-      label: t("tasks.status.completed"),
+      label: "tasks.status.completed",
       value: stats.completed,
       color: "green",
       icon: CheckSquare,
+      filter: "completed",
     },
   ];
 
+  // --- FETCHING ---
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-
       const params = {
-        page: filters.page,
-        limit: viewMode === VIEW_MODES.KANBAN ? 100 : filters.limit,
-        ...(filters.search.trim() && { search: filters.search.trim() }),
-        ...(filters.status !== "all" && { status: filters.status }),
-        ...(filters.priority !== "all" && { priority: filters.priority }),
-        ...(filters.category !== "all" && { category: filters.category }),
+        page,
+        limit: viewMode === VIEW_MODES.KANBAN ? 200 : limit,
+        search: search.trim() || undefined,
+        status: status !== "all" ? status : undefined,
+        priority: priority !== "all" ? priority : undefined,
+        category: category !== "all" ? category : undefined,
         isArchived: showArchived,
       };
 
-      const response = showArchived
-        ? await taskService.getArchived(params)
-        : await taskService.getAll(params);
+      const apiMethod = showArchived
+        ? taskService.getArchived
+        : taskService.getAll;
+      const res = await apiMethod(params);
 
-      let data =
-        response?.data?.data?.tasks ||
-        response?.data?.tasks ||
-        response?.tasks ||
-        [];
-      if (!Array.isArray(data)) data = [];
-
-      let totalItems =
-        response?.data?.data?.totalCount ||
-        response?.pagination?.total ||
-        data.length;
-      if (viewMode === VIEW_MODES.KANBAN && totalItems < data.length) {
-        totalItems = data.length;
-      }
-
-      const calculatedTotalPages = Math.ceil(
-        totalItems / (viewMode === VIEW_MODES.KANBAN ? 100 : filters.limit)
-      );
+      const data = res?.data?.tasks || res?.tasks || [];
+      const total = res?.pagination?.total || data.length;
 
       setTasks(data);
-      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
-      setTotalCount(totalItems);
+      setTotalCount(total);
+      setTotalPages(Math.ceil(total / limit));
     } catch (err) {
-      console.error("Fetch tasks error:", err);
-      setError(t("tasks.messages.error.load"));
-      setTasks([]);
-      setTotalCount(0);
+      console.error(err);
     } finally {
       setLoading(false);
-      setHasInitialLoad(true);
     }
-  }, [filters, showArchived, viewMode, t]);
+  }, [page, limit, search, status, priority, category, showArchived, viewMode]);
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
-
   useEffect(() => {
-    setStoredViewMode(viewMode);
+    localStorage.setItem("tasksViewMode", viewMode);
   }, [viewMode]);
 
-  const paginatedTasks = useMemo(() => {
-    if (viewMode === VIEW_MODES.LIST && tasks.length > filters.limit) {
-      const startIndex = (filters.page - 1) * filters.limit;
-      return tasks.slice(startIndex, startIndex + filters.limit);
-    }
-    return tasks;
-  }, [tasks, filters.page, filters.limit, viewMode]);
-
-  const handleFormSuccess = useCallback(() => {
-    fetchTasks();
-    setIsFormOpen(false);
-    setSelectedTask(null);
-    showSuccess(
-      selectedTask
-        ? t("tasks.messages.success.updated")
-        : t("tasks.messages.success.created")
-    );
-  }, [fetchTasks, selectedTask, showSuccess, t]);
-
+  // --- HANDLERS ---
   const handleDragEnd = async (result) => {
     const { destination, source, draggableId } = result;
     if (
@@ -381,148 +276,68 @@ const TasksList = () => {
         destination.index === source.index)
     )
       return;
+    if (!canUpdate) return showError(t("common.noPermission"));
 
     const newStatus = destination.droppableId;
     const oldStatus = source.droppableId;
 
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task._id === draggableId ? { ...task, status: newStatus } : task
-      )
+    setTasks((prev) =>
+      prev.map((t) => (t._id === draggableId ? { ...t, status: newStatus } : t))
     );
 
     try {
       await taskService.updateStatus(draggableId, newStatus);
-      showSuccess(
-        t("tasks.toasts.status.success", {
-          status: t(`tasks.status.${newStatus}`),
-        })
-      );
-    } catch (error) {
-      setTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task._id === draggableId ? { ...task, status: oldStatus } : task
+      showSuccess(t("tasks.notifications.statusUpdated"));
+    } catch (err) {
+      setTasks((prev) =>
+        prev.map((t) =>
+          t._id === draggableId ? { ...t, status: oldStatus } : t
         )
       );
-      showError(t("tasks.toasts.status.error"));
+      showError(t("tasks.notifications.updateError"));
     }
   };
 
-  const hasActiveFilters =
-    filters.search.trim() !== "" ||
-    filters.status !== "all" ||
-    filters.priority !== "all" ||
-    filters.category !== "all";
-  const showEmptyState =
-    !loading &&
-    !error &&
-    tasks.length === 0 &&
-    !hasActiveFilters &&
-    !showArchived &&
-    hasInitialLoad;
-  const showNoResults =
-    !loading &&
-    !error &&
-    tasks.length === 0 &&
-    (hasActiveFilters || showArchived) &&
-    hasInitialLoad;
+  const handleTaskAction = async (task, action) => {
+    if (!window.confirm(`Are you sure you want to ${action} this task?`))
+      return;
+    try {
+      if (action === "delete") await taskService.delete(task._id);
+      if (action === "archive") await taskService.archive(task._id);
+      if (action === "restore") await taskService.unarchive(task._id);
+      showSuccess(t(`tasks.notifications.${action}d`));
+      fetchTasks();
+    } catch (e) {
+      showError(t("common.error"));
+    }
+  };
 
-  const showConfirmation = useCallback(
-    (title, message, confirmText, type, onConfirm) => {
-      setConfirmationModal({
-        isOpen: true,
-        title,
-        message,
-        confirmText,
-        type,
-        onConfirm: () => {
-          onConfirm();
-          setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
-        },
-      });
-    },
-    []
-  );
+  const handleStatClick = (filterStatus) => {
+    setStatus(filterStatus);
+    setIsFilterOpen(true);
+  };
 
-  const handleTaskAction = useCallback(
-    (task, action) => {
-      const taskTitle = task.title || t("tasks.messages.thisTask");
-      const executeAction = async (apiMethod, loadingMsg, successMsg) => {
-        try {
-          await promise(apiMethod(task._id), {
-            loading: t(loadingMsg),
-            success: t(successMsg),
-            error: t("common.error"),
-          });
-          fetchTasks();
-          if (selectedTask?._id === task._id) setIsDetailModalOpen(false);
-        } catch (err) {}
-      };
+  const handleClearFilters = () => {
+    setSearch("");
+    setStatus("all");
+    setPriority("all");
+    setCategory("all");
+  };
 
-      if (action === "archive") {
-        showConfirmation(
-          t("tasks.messages.archiveConfirm.title"),
-          t("tasks.messages.archiveConfirm.message", { title: taskTitle }),
-          t("common.archive"),
-          "danger",
-          () =>
-            executeAction(
-              taskService.archive,
-              "tasks.notifications.archiving",
-              "tasks.messages.success.archived"
-            )
-        );
-      } else if (action === "restore") {
-        showConfirmation(
-          t("tasks.messages.restoreConfirm.title"),
-          t("tasks.messages.restoreConfirm.message", { title: taskTitle }),
-          t("common.restore"),
-          "info",
-          () =>
-            executeAction(
-              taskService.unarchive,
-              "tasks.notifications.restoring",
-              "tasks.messages.success.restored"
-            )
-        );
-      } else if (action === "delete") {
-        showConfirmation(
-          t("tasks.messages.deleteConfirm.title"),
-          t("tasks.messages.deleteConfirm.message", { title: taskTitle }),
-          t("common.delete"),
-          "danger",
-          () =>
-            executeAction(
-              taskService.delete,
-              "tasks.notifications.deleting",
-              "tasks.messages.success.deleted"
-            )
-        );
-      }
-    },
-    [showConfirmation, t, fetchTasks, selectedTask, promise]
-  );
-
-  const tableColumns = [
+  // --- RENDER ---
+  const columns = [
     {
       header: t("tasks.table.title"),
       accessor: "title",
-      width: "25%",
       render: (row) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-900 dark:text-white">
-            {row.title || t("tasks.untitled")}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-            {row.description}
-          </span>
+        <div className="font-medium text-gray-900 dark:text-white">
+          {row.title}
         </div>
       ),
     },
     {
       header: t("tasks.table.status"),
       accessor: "status",
-      width: "12%",
       render: (row) => (
         <Badge variant={getBadgeVariant(row.status, "status")}>
           {t(`tasks.status.${row.status}`)}
@@ -532,7 +347,6 @@ const TasksList = () => {
     {
       header: t("tasks.table.priority"),
       accessor: "priority",
-      width: "12%",
       render: (row) => (
         <Badge variant={getBadgeVariant(row.priority, "priority")}>
           {t(`tasks.priority.${row.priority}`)}
@@ -542,108 +356,60 @@ const TasksList = () => {
     {
       header: t("tasks.table.dueDate"),
       accessor: "dueDate",
-      width: "15%",
       render: (row) => (
         <div
-          className={`flex items-center gap-1.5 ${isOverdue(row.dueDate, row.status) ? "text-red-600 font-medium" : "text-gray-600 dark:text-gray-400"}`}
+          className={`flex items-center gap-1.5 ${isOverdue(row.dueDate, row.status) ? "text-red-600 font-bold" : "text-gray-500"}`}
         >
-          <Calendar className="w-3.5 h-3.5" />
-          {formatDate(row.dueDate)}
+          <Calendar size={14} /> {formatDate(row.dueDate)}
         </div>
       ),
     },
     {
-      header: t("tasks.table.assignedTo"),
-      accessor: "assignedTo",
-      width: "15%",
-      render: (row) =>
-        row.assignedTo ? (
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-              {row.assignedTo.name?.charAt(0) || "U"}
-            </div>
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              {row.assignedTo.name}
-            </span>
-          </div>
-        ) : (
-          <span className="text-gray-400">-</span>
-        ),
-    },
-    {
       header: t("tasks.table.actions"),
       accessor: "actions",
-      width: "12%",
       className: "text-center",
+      width: "100px",
       render: (row) => (
-        <div className="flex justify-center gap-1">
+        <div className="flex justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               setSelectedTask(row);
               setIsDetailModalOpen(true);
             }}
           >
-            <Eye className="w-4 h-4 text-blue-500" />
+            <Eye size={16} className="text-blue-500" />
           </Button>
-          {!showArchived ? (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedTask(row);
-                  setIsFormOpen(true);
-                }}
-              >
-                <Edit className="w-4 h-4 text-green-500" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTaskAction(row, "archive");
-                }}
-              >
-                <Archive className="w-4 h-4 text-orange-500" />
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTaskAction(row, "restore");
-                }}
-              >
-                <RotateCcw className="w-4 h-4 text-green-500" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTaskAction(row, "delete");
-                }}
-              >
-                <Trash2 className="w-4 h-4 text-red-500" />
-              </Button>
-            </>
-          )}
+          <PermissionGuard permission="tasks.update.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedTask(row);
+                setIsFormOpen(true);
+              }}
+            >
+              <Edit size={16} className="text-green-500" />
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="tasks.delete.all">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleTaskAction(row, "delete")}
+            >
+              <Trash2 size={16} className="text-red-500" />
+            </Button>
+          </PermissionGuard>
         </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-[#1f2937] rounded-lg shadow-md min-h-[500px] flex flex-col">
-      {/* Header */}
+    <div className="space-y-6 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md min-h-[600px] flex flex-col">
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -655,448 +421,255 @@ const TasksList = () => {
             )}
           </h1>
           <p className="mt-1 text-gray-500 dark:text-gray-400">
-            {showArchived ? t("tasks.archivedSubtitle") : t("tasks.subtitle")}
-            {hasInitialLoad &&
-              totalCount > 0 &&
-              ` • ${t("tasks.messages.resultsCount", { count: totalCount })}`}
+            {t("tasks.subtitle")}
           </p>
         </div>
 
-        {!showEmptyState && (
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            {showArchived ? (
-              <Button
-                variant="danger"
-                onClick={() => setShowArchived(false)}
-                icon={X}
-              >
-                {t("tasks.returnToActive")}
-              </Button>
-            ) : (
-              <>
-                <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                  <button
-                    onClick={() => setViewMode(VIEW_MODES.LIST)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === VIEW_MODES.LIST ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400 hover:text-gray-700"}`}
-                  >
-                    <ListIcon className="w-4 h-4" /> {t("tasks.view.list")}
-                  </button>
-                  <button
-                    onClick={() => setViewMode(VIEW_MODES.KANBAN)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === VIEW_MODES.KANBAN ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400 hover:text-gray-700"}`}
-                  >
-                    <KanbanIcon className=" w-4 h-4" /> {t("tasks.view.kanban")}
-                  </button>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowArchived(true)}
-                  icon={Archive}
-                >
-                  {t("tasks.archived")}
-                </Button>
-                <Button
-                  variant="primary"
-                  icon={<Plus className="size-4" />}
-                  onClick={() => {
-                    setSelectedTask(null);
-                    setIsFormOpen(true);
-                  }}
-                >
-                  {t("tasks.createTask")}
-                </Button>
-              </>
-            )}
+        <div className="flex items-center gap-3">
+          <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+            <button
+              onClick={() => setViewMode(VIEW_MODES.LIST)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === VIEW_MODES.LIST ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              <ListIcon size={16} /> {t("tasks.view.list")}
+            </button>
+            <button
+              onClick={() => setViewMode(VIEW_MODES.KANBAN)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === VIEW_MODES.KANBAN ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              <KanbanIcon size={16} /> {t("tasks.view.kanban")}
+            </button>
           </div>
-        )}
-      </div>
-
-      {/* Stats */}
-      {!showEmptyState &&
-        !showArchived &&
-        hasInitialLoad &&
-        tasks.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 shrink-0">
-            {statCards.map((stat) => (
-              <div
-                key={stat.label}
-                className={`p-4 rounded-lg border flex items-center justify-between ${STAT_STYLES[stat.color]}`}
-              >
-                <div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    {stat.label}
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                    {stat.value}
-                  </p>
-                </div>
-                <stat.icon className={`w-8 h-8 opacity-20 text-gray-600`} />
-              </div>
-            ))}
-          </div>
-        )}
-
-      {/* Filters */}
-      {!showEmptyState && hasInitialLoad && (
-        <div className="relative mb-6 z-20">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            <div className="w-full sm:max-w-md relative">
-              <Input
-                icon={Search}
-                placeholder={t("tasks.searchPlaceholder")}
-                value={filters.search}
-                onChange={(e) => updateFilter("search", e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <Button
-                variant={hasActiveFilters ? "primary" : "outline"}
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 transition-all whitespace-nowrap ${isFilterOpen ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
-              >
-                <Filter className="w-4 h-4" /> {t("tasks.filters.advanced")}
-                {hasActiveFilters && (
-                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
-                    !
-                  </span>
-                )}
-              </Button>
-              {hasActiveFilters && (
-                <Button
-                  variant="outline"
-                  icon={X}
-                  onClick={handleClearAllFilters}
-                  className="text-gray-500"
-                >
-                  {t("tasks.filters.clearFilters")}
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {isFilterOpen && (
-            <div className="mt-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                  {t("tasks.filters.filterOptions")}
-                </h3>
-                <button
-                  onClick={() => setIsFilterOpen(false)}
-                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
-                <Select
-                  label={t("tasks.filters.allStatus")}
-                  value={localStatus}
-                  onChange={(e) => setLocalStatus(e.target.value)}
-                  options={[
-                    { value: "all", label: t("tasks.filters.allStatus") },
-                    { value: "pending", label: t("tasks.status.pending") },
-                    { value: "todo", label: t("tasks.status.todo") },
-                    {
-                      value: "in_progress",
-                      label: t("tasks.status.in_progress"),
-                    },
-                    { value: "blocked", label: t("tasks.status.blocked") },
-                    { value: "completed", label: t("tasks.status.completed") },
-                  ]}
-                  className="w-full"
-                />
-                <Select
-                  label={t("tasks.filters.allPriorities")}
-                  value={localPriority}
-                  onChange={(e) => setLocalPriority(e.target.value)}
-                  options={[
-                    { value: "all", label: t("tasks.filters.allPriorities") },
-                    { value: "low", label: t("tasks.priority.low") },
-                    { value: "medium", label: t("tasks.priority.medium") },
-                    { value: "high", label: t("tasks.priority.high") },
-                    { value: "urgent", label: t("tasks.priority.urgent") },
-                  ]}
-                  className="w-full"
-                />
-                <Select
-                   label={t("tasks.categoryLabel")}
-                  value={localCategory}
-                  onChange={(e) => setLocalCategory(e.target.value)}
-                  options={[
-                    { value: "all", label: t("tasks.filters.allCategories") },
-                    { value: "event_preparation", label: t("tasks.category.event_preparation") },
-                    {
-                      value: "administrative",
-                      label: t("tasks.category.administrative"),
-                    },
-                    {
-                      value: "marketing",
-                      label: t("tasks.category.marketing"),
-                    },
-                    { value: "finance", label: t("tasks.category.finance") },
-                    { value: "other", label: t("tasks.category.other") },
-                  ]}
-                  className="w-full"
-                />
-              </div>
-              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleResetLocalFilters}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                >
-                  {t("tasks.filters.reset")}
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleApplyFilters}
-                  className="px-6"
-                >
-                  {t("tasks.filters.apply")}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ✅ FIX: Content Area + Loader Centering */}
-      <div className="flex-1 flex flex-col relative min-h-[400px]">
-        {/* Absolute Centered Loader */}
-        {loading && !hasInitialLoad && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/80 dark:bg-gray-900/80 rounded-lg">
-            <OrbitLoader />
-            <p className="mt-4 text-gray-500 dark:text-gray-400">
-              {t("common.loading")}
-            </p>
-          </div>
-        )}
-
-        {/* List View */}
-        {viewMode === VIEW_MODES.LIST &&
-          !showEmptyState &&
-          !showNoResults &&
-          hasInitialLoad && (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <Table
-                columns={tableColumns}
-                data={paginatedTasks}
-                loading={loading}
-                onRowClick={(row) => {
-                  setSelectedTask(row);
-                  setIsDetailModalOpen(true);
-                }}
-                striped
-                hoverable
-                pagination={true}
-                currentPage={filters.page}
-                totalPages={totalPages}
-                totalItems={totalCount}
-                pageSize={filters.limit}
-                onPageChange={(page) => updateFilter("page", page)}
-                onPageSizeChange={(newSize) => {
-                  updateFilter("limit", newSize);
-                  updateFilter("page", 1);
-                }}
-                pageSizeOptions={[10, 25, 50, 100]}
-              />
-            </div>
-          )}
-
-        {/* Kanban View */}
-        {viewMode === VIEW_MODES.KANBAN &&
-          !showEmptyState &&
-          !showNoResults &&
-          !showArchived &&
-          hasInitialLoad && (
-            <div className="overflow-x-auto pb-4">
-              <div className="min-w-[1000px]">
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <div className="grid grid-cols-5 gap-4 items-start h-full min-h-[600px]">
-                    {KANBAN_COLUMNS.map((column) => {
-                      const columnTasks = tasks.filter(
-                        (task) => task.status === column.status
-                      );
-                      return (
-                        <div
-                          key={column.id}
-                          className="flex flex-col h-full rounded-xl bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
-                        >
-                          <div
-                            className={`p-3 border-b rounded-t-xl flex items-center justify-between ${COLUMN_STYLES.BG[column.color]}`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <column.icon
-                                className={`w-4 h-4 ${COLUMN_STYLES.TEXT[column.color]}`}
-                              />
-                              <h3
-                                className={`font-semibold text-sm ${COLUMN_STYLES.TEXT[column.color]}`}
-                              >
-                                {t(column.label)}
-                              </h3>
-                            </div>
-                            <Badge
-                              variant={
-                                BADGE_VARIANTS.COLUMN_COLOR[column.color]
-                              }
-                              size="sm"
-                              className="bg-white/50 dark:bg-black/20 border-0"
-                            >
-                              {columnTasks.length}
-                            </Badge>
-                          </div>
-                          <Droppable droppableId={column.status}>
-                            {(provided, snapshot) => (
-                              <div
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}
-                                className={`p-3 flex-1 space-y-3 transition-colors duration-200 min-h-[150px] ${snapshot.isDraggingOver ? "bg-gray-100/50 dark:bg-gray-700/50" : ""}`}
-                              >
-                                {columnTasks.map((task, index) => (
-                                  <Draggable
-                                    key={task._id}
-                                    draggableId={task._id}
-                                    index={index}
-                                  >
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        onClick={() => {
-                                          setSelectedTask(task);
-                                          setIsDetailModalOpen(true);
-                                        }}
-                                        style={{
-                                          ...provided.draggableProps.style,
-                                        }}
-                                        className={`bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all cursor-grab ${snapshot.isDragging ? "shadow-xl ring-2 ring-blue-500/20 rotate-1 z-50" : ""}`}
-                                      >
-                                        <div className="flex justify-between items-start mb-2">
-                                          <Badge
-                                            variant={getBadgeVariant(
-                                              task.priority,
-                                              "priority"
-                                            )}
-                                            size="sm"
-                                            className="text-[10px] px-1.5 py-0.5 uppercase tracking-wider"
-                                          >
-                                            {task.priority}
-                                          </Badge>
-                                          {isOverdue(
-                                            task.dueDate,
-                                            task.status
-                                          ) && (
-                                            <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-                                          )}
-                                        </div>
-                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 leading-snug">
-                                          {task.title}
-                                        </h4>
-                                        <div className="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-gray-700 mt-2">
-                                          <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                                            <Calendar className="w-3 h-3" />
-                                            <span
-                                              className={
-                                                isOverdue(
-                                                  task.dueDate,
-                                                  task.status
-                                                )
-                                                  ? "text-red-500 font-medium"
-                                                  : ""
-                                              }
-                                            >
-                                              {formatDate(task.dueDate)}
-                                            </span>
-                                          </div>
-                                          {task.assignedTo && (
-                                            <div
-                                              className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center text-[10px] font-bold"
-                                              title={task.assignedTo.name}
-                                            >
-                                              {task.assignedTo.name.charAt(0)}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                                {provided.placeholder}
-                              </div>
-                            )}
-                          </Droppable>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </DragDropContext>
-              </div>
-            </div>
-          )}
-
-        {showNoResults && (
-          <div className="flex flex-col items-center justify-center flex-1 py-12">
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4">
-              <FolderOpen className="h-12 w-12 text-gray-400 dark:text-gray-500" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {t("tasks.messages.noResults")}
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-              {t("tasks.messages.noResultsDescription")}
-            </p>
-            <Button onClick={handleClearAllFilters} variant="outline" icon={X}>
-              {t("tasks.filters.clearFilters")}
-            </Button>
-          </div>
-        )}
-
-        {showEmptyState && (
-          <div className="flex flex-col items-center justify-center flex-1 py-16 px-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-900/50 transition-colors">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-6 ring-1 ring-gray-100 dark:ring-gray-700">
-              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-full">
-                <CheckSquare
-                  className="h-12 w-12 text-orange-500"
-                  strokeWidth={1.5}
-                />
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              {t("tasks.messages.noTasks")}
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8 leading-relaxed">
-              {t("tasks.messages.noTasksDescription")}
-            </p>
+          <PermissionGuard permission="tasks.create">
             <Button
+              variant="primary"
+              icon={<Plus size={16} />}
               onClick={() => {
                 setSelectedTask(null);
                 setIsFormOpen(true);
               }}
-              variant="primary"
-              size="lg"
-              icon={<Plus className="size-4" />}
-              className="shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-shadow"
             >
-              {t("tasks.createFirstTask")}
+              {t("tasks.createTask")}
             </Button>
+          </PermissionGuard>
+        </div>
+      </div>
+
+      {/* STATS GRID (Clickable) */}
+      {!showArchived && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {statCards.map((stat) => (
+            <div
+              key={stat.label}
+              onClick={() => handleStatClick(stat.filter)}
+              className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all hover:scale-105 hover:shadow-md ${STAT_STYLES[stat.color]}`}
+            >
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider opacity-70">
+                  {t(stat.label)}
+                </p>
+                <p className="text-2xl font-bold mt-1">{stat.value}</p>
+              </div>
+              <stat.icon className="w-8 h-8 opacity-20" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* FILTERS */}
+      <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="w-full sm:w-1/3">
+            <Input
+              icon={Search}
+              placeholder={t("tasks.searchPlaceholder")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              options={[
+                { value: "all", label: "All Status" },
+                { value: "pending", label: "Pending" },
+                { value: "todo", label: "To Do" },
+                { value: "in_progress", label: "In Progress" },
+                { value: "completed", label: "Completed" },
+              ]}
+              className="w-40"
+            />
+            <Select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              options={[
+                { value: "all", label: "All Priorities" },
+                { value: "urgent", label: "Urgent" },
+                { value: "high", label: "High" },
+                { value: "medium", label: "Medium" },
+                { value: "low", label: "Low" },
+              ]}
+              className="w-40"
+            />
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="flex items-center gap-2 text-gray-500 border-gray-300 dark:border-gray-600 hover:text-red-600 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+              title={t("tasks.filters.clearFilters")}
+            >
+              <X size={16} />
+              <span>{t("tasks.filters.reset")}</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTENT AREA */}
+      <div className="flex-1 relative min-h-[400px]">
+        {loading ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 z-10">
+            <OrbitLoader />
+          </div>
+        ) : viewMode === VIEW_MODES.LIST ? (
+          <Table
+            columns={columns}
+            data={tasks}
+            pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        ) : (
+          <div className="overflow-x-auto pb-4">
+            <div className="min-w-[1000px]">
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <div className="grid grid-cols-5 gap-4 items-start h-full min-h-[600px]">
+                  {KANBAN_COLUMNS.map((col) => {
+                    const colTasks = tasks.filter(
+                      (t) => t.status === col.status
+                    );
+                    return (
+                      <div
+                        key={col.id}
+                        className="flex flex-col h-full rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+                      >
+                        <div
+                          className={`p-3 border-b rounded-t-xl flex items-center justify-between ${COLUMN_STYLES.BG[col.color]}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <col.icon
+                              className={`w-4 h-4 ${COLUMN_STYLES.TEXT[col.color]}`}
+                            />
+                            <h3
+                              className={`font-semibold text-sm ${COLUMN_STYLES.TEXT[col.color]}`}
+                            >
+                              {t(col.label)}
+                            </h3>
+                          </div>
+                          <Badge
+                            variant="neutral"
+                            size="sm"
+                            className="bg-white/50"
+                          >
+                            {colTasks.length}
+                          </Badge>
+                        </div>
+
+                        <Droppable
+                          droppableId={col.status}
+                          isDropDisabled={!canUpdate}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                              className={`p-3 flex-1 space-y-3 min-h-[150px] ${snapshot.isDraggingOver ? "bg-blue-50/50 rounded-b-xl" : ""}`}
+                            >
+                              {colTasks.map((task, idx) => (
+                                <Draggable
+                                  key={task._id}
+                                  draggableId={task._id}
+                                  index={idx}
+                                  isDragDisabled={!canUpdate}
+                                >
+                                  {(provided, snapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      onClick={() => {
+                                        setSelectedTask(task);
+                                        setIsDetailModalOpen(true);
+                                      }}
+                                      className={`bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all cursor-grab ${snapshot.isDragging ? "shadow-xl rotate-2 z-50 scale-105" : ""}`}
+                                      style={provided.draggableProps.style}
+                                    >
+                                      <div className="flex justify-between items-start mb-2">
+                                        <Badge
+                                          variant={getBadgeVariant(
+                                            task.priority,
+                                            "priority"
+                                          )}
+                                          size="sm"
+                                        >
+                                          {t(`tasks.priority.${task.priority}`)}
+                                        </Badge>
+                                        {isOverdue(
+                                          task.dueDate,
+                                          task.status
+                                        ) && (
+                                          <AlertCircle
+                                            size={14}
+                                            className="text-red-500"
+                                          />
+                                        )}
+                                      </div>
+                                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
+                                        {task.title}
+                                      </h4>
+                                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-50 dark:border-gray-700">
+                                        <div className="flex items-center gap-1">
+                                          <Calendar size={12} />{" "}
+                                          {formatDate(task.dueDate)}
+                                        </div>
+                                        {task.assignedTo && (
+                                          <div
+                                            className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold"
+                                            title={task.assignedTo.name}
+                                          >
+                                            {task.assignedTo.name.charAt(0)}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+                      </div>
+                    );
+                  })}
+                </div>
+              </DragDropContext>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Modals */}
+      {/* MODALS */}
       <TaskDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         task={selectedTask}
-        onEdit={(t) => {
-          setSelectedTask(t);
+        onEdit={() => {
           setIsDetailModalOpen(false);
           setIsFormOpen(true);
         }}
         refreshData={fetchTasks}
-        showArchived={showArchived}
       />
       <Modal
         isOpen={isFormOpen}
@@ -1108,48 +681,12 @@ const TasksList = () => {
       >
         <TaskForm
           task={selectedTask}
-          onSuccess={handleFormSuccess}
+          onSuccess={() => {
+            fetchTasks();
+            setIsFormOpen(false);
+          }}
           onCancel={() => setIsFormOpen(false)}
         />
-      </Modal>
-      <Modal
-        isOpen={confirmationModal.isOpen}
-        onClose={() =>
-          setConfirmationModal((prev) => ({ ...prev, isOpen: false }))
-        }
-        title={confirmationModal.title}
-        size="sm"
-      >
-        <div className="p-6 text-center">
-          <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmationModal.type === "danger" ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}
-          >
-            {confirmationModal.type === "danger" ? (
-              <Trash2 className="w-6 h-6" />
-            ) : (
-              <Info className="w-6 h-6" />
-            )}
-          </div>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
-            {confirmationModal.message}
-          </p>
-          <div className="flex justify-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() =>
-                setConfirmationModal((prev) => ({ ...prev, isOpen: false }))
-              }
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant={confirmationModal.type}
-              onClick={confirmationModal.onConfirm}
-            >
-              {confirmationModal.confirmText}
-            </Button>
-          </div>
-        </div>
       </Modal>
     </div>
   );

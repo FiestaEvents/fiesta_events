@@ -12,13 +12,12 @@ import {
   ArrowRight,
   CheckCircle,
   AlertTriangle,
-  Users,
   FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Badge from "../../components/common/Badge";
@@ -36,7 +35,7 @@ const TaskDetailModal = ({
   showArchived = false,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Added confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); 
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { promise } = useToast();
@@ -210,7 +209,7 @@ const TaskDetailModal = ({
             <InfoRow
               icon={User}
               label={t("taskDetailModal.assignedTo")}
-              value={task.assignedTo?.name || t("tasks.unassigned")}
+              value={task.assignedTo?.name || t("tasks.form.fields.unassigned")}
               color="purple"
             />
             {task.estimatedHours && (

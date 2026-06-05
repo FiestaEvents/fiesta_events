@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-// ✅ Utils & Generics
+//  Utils & Generics
 import formatCurrency from '../../../utils/formatCurrency';
 import { StatusBadge } from '../../../components/common/Badge';
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, User } from 'lucide-react';
 
-// ✅ Generic Components
+//  Generic Components
 import Badge from '../../../components/common/Badge';
 
 const CommentsTab = ({ task, formatDateTime }) => {

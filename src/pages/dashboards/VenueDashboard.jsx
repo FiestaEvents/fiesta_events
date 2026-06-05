@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import formatCurrency from "../utils/formatCurrency";
+import formatCurrency from "../../utils/formatCurrency";
 import {
   motion,
   AnimatePresence,
@@ -12,7 +12,7 @@ import {
 } from "framer-motion";
 
 // Hooks & API
-import useToast from "../hooks/useToast";
+import useToast from "../../hooks/useToast";
 import {
   eventService,
   paymentService,
@@ -20,12 +20,12 @@ import {
   invoiceService,
   financeService,
   supplyService,
-} from "../api/index";
+} from "../../api/index";
 
 // Components
-import Button from "../components/common/Button";
-import { StatusBadge } from "../components/common/Badge";
-import OrbitLoader from "../components/common/LoadingSpinner";
+import Button from "../../components/common/Button";
+import { StatusBadge } from "../../components/common/Badge";
+import OrbitLoader from "../../components/common/LoadingSpinner";
 
 // Icons
 import {

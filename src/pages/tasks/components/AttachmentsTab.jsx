@@ -9,7 +9,7 @@ import {
   CloudDownload,
 } from "lucide-react";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../../components/common/Button";
 
 const AttachmentsTab = ({ task, formatShortDate }) => {

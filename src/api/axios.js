@@ -3,98 +3,109 @@ import axios from 'axios';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
-  timeout: 30000, // 30 seconds
+  timeout: 60000, // Increased to 60s for PDF generation
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - Add auth token to requests
+// =====================================================================
+// REQUEST INTERCEPTOR
+// =====================================================================
 api.interceptors.request.use(
   (config) => {
-    // Get token from localStorage
+    // Add Authorization token if it exists
     const token = localStorage.getItem('token');
-    
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Get venueId from localStorage (for multi-tenancy)
-    const venueId = localStorage.getItem('venueId');
-    if (venueId) {
-      config.headers['X-Venue-ID'] = venueId;
+    // This allows switching businesses without relogging
+    const businessId = localStorage.getItem('businessId');
+    if (businessId) {
+      config.headers['X-Business-ID'] = businessId;
     }
 
-    // Log request in development
+    // Dev Logging
     if (import.meta.env.DEV) {
-      console.log('🚀 API Request:', {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        data: config.data,
-      });
+      console.log(`🚀 [API] ${config.method?.toUpperCase()} ${config.url}`);
     }
 
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
+    console.error('❌ Request Setup Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor - Handle responses and errors
+// =====================================================================
+// RESPONSE INTERCEPTOR
+// =====================================================================
 api.interceptors.response.use(
   (response) => {
-    // Log response in development
+    // Dev Logging
     if (import.meta.env.DEV) {
-      console.log('✅ API Response:', {
-        url: response.config.url,
-        status: response.status,
-        data: response.data,
-      });
+      console.log(` [API] ${response.status} ${response.config.url}`);
     }
+    
+    // (Services can decide to use response.data or response directly for Blobs)
     return response;
   },
-  (error) => {
-    // ENHANCED ERROR LOGGING
-    console.error('❌ API Error Details:', {
-      url: error.config?.url,
-      method: error.config?.method?.toUpperCase(),
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      responseData: error.response?.data, // This is the key!
-      message: error.message,
-      requestData: error.config?.data, // See what we sent
-    });
+  async (error) => {
+    // 1. Prepare Error Details
+    let errorMessage = error.message || 'An error occurred';
+    let errorData = {};
+    const status = error.response?.status || 0;
 
-    // Handle specific error cases
-    if (error.response) {
-      const { status, data } = error.response;
-      
-      // Return a consistent error object with FULL error details
-      return Promise.reject({
+    // 2. Handle Blob Errors (CRITICAL for PDF Downloads)
+    // If a PDF download fails, the error comes as a Blob. We must convert it to JSON.
+    if (
+      error.response?.data instanceof Blob && 
+      error.response.data.type === 'application/json'
+    ) {
+      try {
+        const text = await error.response.data.text();
+        const jsonError = JSON.parse(text);
+        errorMessage = jsonError.message || errorMessage;
+        errorData = jsonError;
+      } catch (e) {
+        // Fallback if parsing fails
+        console.error("Error parsing blob error:", e);
+      }
+    } else if (error.response?.data) {
+      // Standard JSON Error
+      errorMessage = error.response.data.message || error.response.data.error || errorMessage;
+      errorData = error.response.data;
+    }
+
+    // 3. Log Detailed Error
+    if (import.meta.env.DEV) {
+      console.error('❌ [API Error]', {
+        url: error.config?.url,
         status,
-        message: data.message || data.error || 'An error occurred',
-        errors: data.errors || {},
-        data: data, // Include full error response
-      });
-    } else if (error.request) {
-      console.error('No response received:', error.message);
-      return Promise.reject({
-        status: 0,
-        message: 'No response from server. Please check your connection.',
-        errors: {},
-        data: {},
-      });
-    } else {
-      console.error('Request setup error:', error.message);
-      return Promise.reject({
-        status: 0,
-        message: error.message || 'Request failed',
-        errors: {},
-        data: {},
+        message: errorMessage,
       });
     }
+
+    // 4. Global Auth Handler (Session Expired)
+    if (status === 401) {
+      // Avoid infinite loops if already on login
+      if (!window.location.pathname.includes('/login')) {
+         window.dispatchEvent(new Event("auth:session-expired"));
+      }
+    }
+
+    // 5. Return Consistent Error Object
+    return Promise.reject({
+      status,
+      message: errorMessage,
+      errors: errorData.errors || {},
+      data: errorData,
+      originalError: error
+    });
   }
 );
+
 export default api;

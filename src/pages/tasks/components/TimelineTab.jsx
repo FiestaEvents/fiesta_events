@@ -10,7 +10,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-// ✅ Generic Components
+//  Generic Components
 import EmptyState from '../../../components/common/EmptyState'; // Assuming this exists based on input
 import Badge from '../../../components/common/Badge';
 

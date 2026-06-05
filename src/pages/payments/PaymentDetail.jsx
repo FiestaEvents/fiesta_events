@@ -21,17 +21,17 @@ import {
   Briefcase
 } from "lucide-react";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Badge, { StatusBadge } from "../../components/common/Badge";
 import OrbitLoader from "../../components/common/LoadingSpinner";
 import Modal from "../../components/common/Modal";
 import Input from "../../components/common/Input";
 
-// ✅ Sub-components (for editing within the page)
+//  Sub-components (for editing within the page)
 import PaymentForm from "./PaymentForm";
 
-// ✅ Services & Utils
+//  Services & Utils
 import { paymentService } from "../../api/index";
 import { useToast } from "../../hooks/useToast";
 import formatCurrency from "../../utils/formatCurrency";
@@ -52,7 +52,7 @@ const PaymentDetail = () => {
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [refundData, setRefundData] = useState({ amount: "", reason: "" });
 
-  // ✅ Helper: Strict DD/MM/YYYY format
+  //  Helper: Strict DD/MM/YYYY format
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("en-GB");
@@ -272,7 +272,7 @@ const PaymentDetail = () => {
               <Button 
                 variant="outline" 
                 icon={Edit} 
-                onClick={handleEdit} // ✅ Fixed missing handler
+                onClick={handleEdit} //  Fixed missing handler
                 className="w-full justify-start hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20"
               >
                 {t('payments.editPayment')}

@@ -14,12 +14,12 @@ export const useLanguage = () => {
 export const LanguageProvider = ({ children }) => {
   const { i18n } = useTranslation();
   
-  // ✅ Get current language from i18n (already set to 'fr' by default)
+  //  Get current language from i18n (already set to 'fr' by default)
   const [currentLanguage, setCurrentLanguage] = useState(() => {
     return i18n.language || 'fr';
   });
 
-  // ✅ Sync on mount and when i18n language changes
+  //  Sync on mount and when i18n language changes
   useEffect(() => {
     const handleLanguageChanged = (lng) => {
       setCurrentLanguage(lng);

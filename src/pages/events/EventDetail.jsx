@@ -10,16 +10,16 @@ import {
   Package,
 } from "lucide-react";
 import OrbitLoader from "../../components/common/LoadingSpinner";
-// ✅ API & Services
+//  API & Services
 import { eventService } from "../../api/index";
 import { useEventDetail } from "../../hooks/useEventDetail";
 import { useToast } from "../../hooks/useToast";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Modal, { ConfirmModal } from "../../components/common/Modal";
 
-// ✅ Sub-components
+//  Sub-components
 import EventForm from "./EventForm/SharedEventForm";
 import EventHeader from "./components/EventHeader";
 import EventInfo from "./components/EventInfo";
@@ -32,7 +32,7 @@ const EventDetail = () => {
   const { id } = useParams();
   const { t } = useTranslation();
   
-  // ✅ Use extended toast methods
+  //  Use extended toast methods
   const { showSuccess, apiError, showInfo, promise } = useToast();
 
   // Use custom hook for event data
@@ -44,7 +44,7 @@ const EventDetail = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // ✅ Helper: Strict DD/MM/YYYY
+  //  Helper: Strict DD/MM/YYYY
   const formatDate = useCallback((date) => {
     if (!date) return "-";
     try {
@@ -54,7 +54,7 @@ const EventDetail = () => {
     }
   }, []);
 
-  // ✅ Helper: Strict DD/MM/YYYY HH:MM
+  //  Helper: Strict DD/MM/YYYY HH:MM
   const formatDateTime = useCallback((date) => {
     if (!date) return "-";
     try {

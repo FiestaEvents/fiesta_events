@@ -4,43 +4,33 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useTranslation } from "react-i18next";
 
 // ==========================================
-// ZOOM CONTROLS COMPONENT
+// 1. HELPER COMPONENTS
 // ==========================================
+
 const ZoomControls = ({ zoom, onZoomIn, onZoomOut, onZoomReset }) => {
   const { t } = useTranslation();
-
   return (
     <div className="absolute top-4 right-4 z-50 flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
-      {/* Zoom In */}
       <button
         onClick={onZoomIn}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400"
-        title={t("invoicePreview.zoom.zoomIn")}
+        className="p-2 hover:bg-gray-100 rounded transition text-gray-700 hover:text-orange-600"
       >
         <ZoomIn size={20} />
       </button>
-
-      {/* Zoom Percentage */}
       <div className="px-2 py-1 text-center">
-        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <span className="text-xs font-semibold text-gray-700">
           {Math.round(zoom * 100)}%
         </span>
       </div>
-
-      {/* Zoom Out */}
       <button
         onClick={onZoomOut}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400"
-        title={t("invoicePreview.zoom.zoomOut")}
+        className="p-2 hover:bg-gray-100 rounded transition text-gray-700 hover:text-orange-600"
       >
         <ZoomOut size={20} />
       </button>
-
-      {/* Reset Zoom */}
       <button
         onClick={onZoomReset}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 border-t border-gray-200 dark:border-gray-600"
-        title={t("invoicePreview.zoom.reset")}
+        className="p-2 hover:bg-gray-100 rounded transition text-gray-700 hover:text-orange-600 border-t"
       >
         <Maximize2 size={20} />
       </button>
@@ -48,9 +38,6 @@ const ZoomControls = ({ zoom, onZoomIn, onZoomOut, onZoomReset }) => {
   );
 };
 
-// ==========================================
-// DRAGGABLE WRAPPER COMPONENT
-// ==========================================
 const DraggableBlock = ({
   id,
   index,
@@ -60,52 +47,37 @@ const DraggableBlock = ({
   style = {},
 }) => {
   const { t } = useTranslation();
-
   return (
     <Draggable draggableId={id} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`relative group mb-1 transition-all duration-200 ${
-            snapshot.isDragging
-              ? "z-50 shadow-2xl scale-105 bg-white ring-2 ring-orange-400 rounded-lg opacity-90"
-              : ""
-          } ${className}`}
+          className={`relative group mb-1 transition-all duration-200 ${snapshot.isDragging ? "z-50 shadow-2xl scale-105 bg-white ring-2 ring-orange-400 rounded-lg opacity-90" : ""} ${className}`}
           style={{ ...provided.draggableProps.style, ...style }}
         >
-          {/* Action Overlay (Visible on Hover) */}
           <div className="absolute -left-12 top-0 bottom-0 w-10 flex flex-col items-end justify-start pt-2 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
-            {/* Drag Handle */}
             <div
               {...provided.dragHandleProps}
-              className="p-1.5 bg-gray-100 hover:bg-orange-100 text-gray-500 hover:text-orange-600 rounded cursor-grab active:cursor-grabbing mb-1 shadow-sm transition-colors"
-              title={t("invoicePreview.tooltips.drag")}
+              className="p-1.5 bg-gray-100 hover:bg-orange-100 text-gray-500 hover:text-orange-600 rounded cursor-grab shadow-sm mb-1"
             >
               <GripVertical size={16} />
             </div>
-
-            {/* Edit Button */}
             {onEdit && (
               <div
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit();
                 }}
-                className="p-1.5 bg-gray-100 hover:bg-blue-100 text-gray-500 hover:text-blue-600 rounded cursor-pointer shadow-sm transition-colors"
-                title={t("invoicePreview.tooltips.edit")}
+                className="p-1.5 bg-gray-100 hover:bg-blue-100 text-gray-500 hover:text-blue-600 rounded cursor-pointer shadow-sm"
               >
                 <Edit2 size={16} />
               </div>
             )}
           </div>
-
-          {/* Hover Border Effect */}
           <div
             onClick={onEdit}
-            className={`border-2 border-transparent ${
-              onEdit ? "hover:border-dashed hover:border-gray-300 cursor-pointer" : ""
-            } rounded-sm transition-colors`}
+            className={`border-2 border-transparent ${onEdit ? "hover:border-dashed hover:border-gray-300 cursor-pointer" : ""} rounded-sm transition-colors`}
           >
             {children}
           </div>
@@ -116,141 +88,118 @@ const DraggableBlock = ({
 };
 
 // ==========================================
-// MAIN COMPONENT
+// 2. MAIN PREVIEW COMPONENT
 // ==========================================
+
 const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
   const { t, i18n } = useTranslation();
+  const [zoom, setZoom] = useState(0.8);
 
-  // ==========================================
-  // ZOOM STATE
-  // ==========================================
-  const [zoom, setZoom] = useState(1);
-  const MIN_ZOOM = 0.5;
-  const MAX_ZOOM = 2;
-  const ZOOM_STEP = 0.1;
-
-  const handleZoomIn = () => {
-    setZoom((prev) => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
-  };
-
-  const handleZoomOut = () => {
-    setZoom((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
-  };
-
-  const handleZoomReset = () => {
-    setZoom(1);
-  };
-
-  // Keyboard shortcuts for zoom
+  // --- SHORTCUTS ---
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Ctrl/Cmd + Plus/Equals
       if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "=")) {
         e.preventDefault();
-        handleZoomIn();
+        setZoom((z) => Math.min(z + 0.1, 2));
       }
-      // Ctrl/Cmd + Minus
       if ((e.ctrlKey || e.metaKey) && e.key === "-") {
         e.preventDefault();
-        handleZoomOut();
+        setZoom((z) => Math.max(z - 0.1, 0.5));
       }
-      // Ctrl/Cmd + 0
       if ((e.ctrlKey || e.metaKey) && e.key === "0") {
         e.preventDefault();
-        handleZoomReset();
+        setZoom(0.8);
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // ==========================================
-  // HELPER FUNCTIONS
-  // ==========================================
-
-  const formatCurrency = (amount, currency = "DT") => {
-    const localeMap = {
-      en: "en-US",
-      fr: "fr-FR",
-      ar: "ar-TN",
-    };
-    const locale = localeMap[i18n.language] || "fr-TN";
-
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "TND",
-    })
-      .format(amount)
-      .replace("TND", currency)
-      .replace("د.ت.‏", currency);
-  };
+  // --- UTILS ---
+  const formatCurrency = (amt) =>
+    new Intl.NumberFormat("fr-TN", {
+      style: "decimal",
+      minimumFractionDigits: 3,
+    }).format(amt) + " TND";
 
   const formatDate = (d) => {
     if (!d) return "...";
-    const localeMap = {
-      en: "en-GB",
-      fr: "fr-FR",
-      ar: "ar-TN",
-    };
-    return new Date(d).toLocaleDateString(localeMap[i18n.language] || "fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    return new Date(d).toLocaleDateString("fr-FR");
   };
 
-  // ==========================================
-  // SETTINGS & STYLES
-  // ==========================================
+  const formatAddress = (addr) => {
+    if (!addr) return null;
+    if (typeof addr === "object") {
+      return (
+        <>
+          <div>{addr.street}</div>
+          <div>{[addr.city, addr.zipCode].filter(Boolean).join(" ")}</div>
+          <div>{addr.country}</div>
+        </>
+      );
+    }
+    return <div className="whitespace-pre-line">{addr}</div>;
+  };
 
+  // --- STYLES & SETTINGS ---
   const s = {
     colors: settings?.branding?.colors || {
       primary: "#F18237",
       secondary: "#374151",
       text: "#1F2937",
     },
-    fonts: settings?.branding?.fonts || { body: "Helvetica", size: 10 },
+    fonts: settings?.branding?.fonts || { size: 10 },
     company: settings?.companyInfo || {},
     labels: settings?.labels || {},
-    layout: settings?.layout || {
-      density: "standard",
-      borderRadius: 4,
-      sections: [],
-    },
+    layout: settings?.layout || { sections: [] },
     table: settings?.table || {
-      headerColor: "",
+      headerColor: "#F18237",
       striped: false,
       rounded: true,
       columns: {},
     },
     logo: settings?.branding?.logo?.url,
-    currency: settings?.currency || { symbol: "DT", position: "after" },
     paymentTerms: settings?.paymentTerms || {},
   };
 
+  // Page Container Style
   const pageStyle = {
-    fontFamily: s.fonts.body,
+    width: "794px",
+    minHeight: "1123px",
+    backgroundColor: "white",
+    padding: "50px 60px", // Matches Backend Margin
+    fontFamily: "Helvetica, Arial, sans-serif",
     fontSize: `${s.fonts.size}px`,
     color: s.colors.text,
-    backgroundColor: "#FFFFFF",
-    padding:
-      s.layout.density === "compact"
-        ? "30px"
-        : s.layout.density === "spacious"
-          ? "70px"
-          : "50px",
+    lineHeight: 1.5,
+    transform: `scale(${zoom})`,
+    transformOrigin: "top center",
+    boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
+    position: "relative",
+    overflow: "hidden", // For brand strip
   };
 
-  const primaryText = { color: s.colors.primary };
-  const secondaryText = { color: s.colors.secondary };
-  const borderRadius = { borderRadius: `${s.layout.borderRadius}px` };
-  const tableHeaderStyle = {
-    backgroundColor: s.table.headerColor || s.colors.primary,
-    color: "#FFFFFF",
+  const styles = {
+    primaryText: { color: s.colors.primary },
+    secondaryText: { color: s.colors.secondary },
+    label: {
+      fontSize: "10px",
+      fontWeight: 700,
+      textTransform: "uppercase",
+      color: s.colors.secondary,
+      marginBottom: "5px",
+      display: "block",
+    },
+    headerValue: {
+      fontSize: "15px",
+      fontWeight: 700,
+      color: "#000",
+      marginBottom: "4px",
+    },
+    smallText: { fontSize: "11px", color: s.colors.secondary },
   };
 
-  // Mock Calculations
+  // Calculations
   const subtotal =
     data.items?.reduce((acc, item) => acc + (item.amount || 0), 0) || 0;
   const taxAmount = (subtotal * (data.taxRate || 19)) / 100;
@@ -258,42 +207,53 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
   const totalAmount = subtotal + taxAmount - discountAmount;
 
   // ==========================================
-  // BLOCK RENDERERS
+  // RENDERERS
   // ==========================================
 
   const renderers = {
     header: (
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex justify-between items-start mb-10 mt-4">
         <div>
           {s.logo ? (
             <img
               src={s.logo}
               alt="Logo"
               className="object-contain"
-              style={{
-                height: settings?.branding?.logo?.height || 60,
-                ...borderRadius,
-              }}
+              style={{ height: 80, maxWidth: 200 }}
             />
           ) : (
-            <div
-              className="bg-gray-100 text-gray-300 font-bold flex items-center justify-center border-2 border-dashed border-gray-200"
-              style={{ width: 150, height: 60, ...borderRadius }}
+            <h2
+              style={{
+                ...styles.primaryText,
+                fontSize: "28px",
+                fontWeight: 700,
+                margin: 0,
+              }}
             >
-              LOGO
-            </div>
+              {s.company.displayName || "My Company"}
+            </h2>
           )}
         </div>
         <div className="text-right">
           <h1
-            className="text-5xl font-black uppercase leading-none tracking-tighter"
-            style={primaryText}
+            style={{
+              ...styles.primaryText,
+              fontSize: "32px",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              margin: 0,
+              lineHeight: 1,
+            }}
           >
-            {s.labels.invoiceTitle || t("invoicePreview.defaultLabels.invoice")}
+            {s.labels.invoiceTitle || "FACTURE"}
           </h1>
           <p
-            className="mt-2 font-medium opacity-60 tracking-wide text-sm"
-            style={secondaryText}
+            style={{
+              ...styles.secondaryText,
+              fontSize: "14px",
+              fontWeight: 600,
+              marginTop: "8px",
+            }}
           >
             # {data.invoiceNumber}
           </p>
@@ -303,139 +263,126 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
 
     details: (
       <div className="mb-8">
-        <div className="flex justify-between items-start pt-4 border-t border-gray-100">
-          <div className="w-5/12">
-            <p className="text-[0.75em] font-bold uppercase tracking-widest opacity-40 mb-2 pb-1 border-b border-gray-100">
-              {s.labels.from || t("invoicePreview.defaultLabels.from")}
-            </p>
-            <p
-              className="font-bold text-[1.1em] mb-1"
-              style={{ color: "#111" }}
-            >
+        <div className="flex justify-between gap-10">
+          {/* SENDER BOX (Left) */}
+          <div className="w-1/2">
+            <span style={styles.label}>{s.labels.from || "FROM"}</span>
+            <div style={styles.headerValue}>
               {s.company.displayName || "Ma Société"}
-            </p>
-            <div className="opacity-70 text-[0.9em] leading-relaxed">
-              <p>123 Rue Exemple</p>
-              <p>Tunis, Tunisie</p>
+            </div>
+            <div style={styles.smallText}>
+              {formatAddress(
+                data.senderAddress || "123 Rue Exemple\nTunis, Tunisie"
+              )}
               {s.company.matriculeFiscale && (
-                <p>MF: {s.company.matriculeFiscale}</p>
+                <div className="mt-1">MF: {s.company.matriculeFiscale}</div>
               )}
             </div>
-          </div>
-          <div className="w-5/12 text-right">
-            <p className="text-[0.75em] font-bold uppercase tracking-widest opacity-40 mb-2 pb-1 border-b border-gray-100">
-              {s.labels.to || t("invoicePreview.defaultLabels.to")}
-            </p>
-            <p
-              className="font-bold text-[1.1em] mb-1"
-              style={{ color: "#111" }}
-            >
-              {data.recipient?.name || "Client Name"}
-            </p>
-            <div className="opacity-70 text-[0.9em] leading-relaxed">
-              <p>{data.recipient?.email}</p>
-              <p>{data.recipient?.phone}</p>
+
+            {/* Dates (Aligned Left under sender) */}
+            <div className="flex gap-8 mt-6">
+              <div>
+                <span style={styles.label}>DATE</span>
+                <span className="font-medium text-sm text-black">
+                  {formatDate(data.issueDate)}
+                </span>
+              </div>
+              <div>
+                <span style={styles.label}>DUE</span>
+                <span className="font-medium text-sm text-black">
+                  {formatDate(data.dueDate)}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex gap-8 mt-6 pt-2">
-          <div>
-            <span className="font-bold opacity-50 text-[0.8em] uppercase mr-2">
-              {t("invoicePreview.date")}:
-            </span>
-            <span className="font-medium">{formatDate(data.issueDate)}</span>
-          </div>
-          <div>
-            <span className="font-bold opacity-50 text-[0.8em] uppercase mr-2">
-              {t("invoicePreview.dueDate")}:
-            </span>
-            <span className="font-medium">{formatDate(data.dueDate)}</span>
+
+          {/* RECIPIENT BOX (Right - Gray Background) */}
+          <div
+            className="w-1/2 bg-gray-50 p-5 rounded-lg border-l-4"
+            style={{ borderColor: s.colors.primary }}
+          >
+            <span style={styles.label}>{s.labels.to || "BILL TO"}</span>
+            <div style={styles.headerValue}>
+              {data.recipient?.name || "Client Name"}
+            </div>
+            <div style={styles.smallText}>
+              {data.recipient?.email && <div>{data.recipient.email}</div>}
+              {data.recipient?.phone && <div>{data.recipient.phone}</div>}
+              {formatAddress(data.recipientAddress)}
+            </div>
           </div>
         </div>
       </div>
     ),
 
     items: (
-      <div className="mb-6">
-        <table
-          className="w-full mt-2"
-          style={{
-            borderCollapse: s.table.rounded ? "separate" : "collapse",
-            borderSpacing: 0,
-          }}
-        >
+      <div className="mb-6 mt-8">
+        <table className="w-full" style={{ borderCollapse: "collapse" }}>
           <thead>
-            <tr style={tableHeaderStyle}>
+            <tr>
               {s.table.columns.description && (
                 <th
-                  className="py-3 px-4 text-left font-bold text-[0.85em] uppercase tracking-wider"
-                  style={{
-                    borderTopLeftRadius: s.table.rounded
-                      ? s.layout.borderRadius
-                      : 0,
-                    borderBottomLeftRadius: s.table.rounded
-                      ? s.layout.borderRadius
-                      : 0,
-                  }}
+                  className="text-left py-3 px-3 text-[11px] font-bold uppercase text-white first:rounded-l-md"
+                  style={{ backgroundColor: s.table.headerColor }}
                 >
-                  {s.labels.item ||
-                    t("invoicePreview.defaultLabels.description")}
+                  {s.labels.item || "Description"}
                 </th>
               )}
               {s.table.columns.quantity && (
-                <th className="py-3 px-2 text-center font-bold text-[0.85em] uppercase tracking-wider">
-                  {s.labels.quantity ||
-                    t("invoicePreview.defaultLabels.quantity")}
+                <th
+                  className="text-center py-3 px-3 text-[11px] font-bold uppercase text-white"
+                  style={{ backgroundColor: s.table.headerColor }}
+                >
+                  {s.labels.quantity || "Qty"}
                 </th>
               )}
               {s.table.columns.rate && (
-                <th className="py-3 px-2 text-right font-bold text-[0.85em] uppercase tracking-wider">
-                  {s.labels.rate || t("invoicePreview.defaultLabels.price")}
+                <th
+                  className="text-right py-3 px-3 text-[11px] font-bold uppercase text-white"
+                  style={{ backgroundColor: s.table.headerColor }}
+                >
+                  {s.labels.rate || "Price"}
                 </th>
               )}
               {s.table.columns.total && (
                 <th
-                  className="py-3 px-4 text-right font-bold text-[0.85em] uppercase tracking-wider"
-                  style={{
-                    borderTopRightRadius: s.table.rounded
-                      ? s.layout.borderRadius
-                      : 0,
-                    borderBottomRightRadius: s.table.rounded
-                      ? s.layout.borderRadius
-                      : 0,
-                  }}
+                  className="text-right py-3 px-3 text-[11px] font-bold uppercase text-white last:rounded-r-md"
+                  style={{ backgroundColor: s.table.headerColor }}
                 >
-                  {s.labels.total || t("invoicePreview.defaultLabels.total")}
+                  {s.labels.total || "Total"}
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="text-[0.95em]">
+          <tbody>
             {data.items?.map((item, idx) => (
               <tr
                 key={idx}
-                className={s.table.striped && idx % 2 !== 0 ? "bg-gray-50" : ""}
+                style={{
+                  backgroundColor:
+                    s.table.striped && idx % 2 !== 0
+                      ? "#F9FAFB"
+                      : "transparent",
+                }}
               >
                 {s.table.columns.description && (
-                  <td className="py-4 px-4 border-b border-gray-100">
-                    <p className="font-bold text-gray-800">
-                      {item.description}
-                    </p>
+                  <td className="py-3 px-3 border-b border-gray-100 text-xs font-medium">
+                    {item.description}
                   </td>
                 )}
                 {s.table.columns.quantity && (
-                  <td className="py-4 px-2 text-center border-b border-gray-100 opacity-70">
+                  <td className="py-3 px-3 border-b border-gray-100 text-xs text-center">
                     {item.quantity}
                   </td>
                 )}
                 {s.table.columns.rate && (
-                  <td className="py-4 px-2 text-right border-b border-gray-100 opacity-70">
-                    {formatCurrency(item.rate, s.currency.symbol)}
+                  <td className="py-3 px-3 border-b border-gray-100 text-xs text-right">
+                    {formatCurrency(item.rate)}
                   </td>
                 )}
                 {s.table.columns.total && (
-                  <td className="py-4 px-4 text-right border-b border-gray-100 font-bold">
-                    {formatCurrency(item.amount, s.currency.symbol)}
+                  <td className="py-3 px-3 border-b border-gray-100 text-xs text-right font-bold">
+                    {formatCurrency(item.amount)}
                   </td>
                 )}
               </tr>
@@ -446,62 +393,56 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
     ),
 
     totals: (
-      <div className="flex justify-end pt-2 mb-6">
-        <div className="w-5/12 space-y-2">
-          <div className="flex justify-between text-[0.9em] opacity-70 border-b border-gray-100 pb-2">
-            <span>{t("invoicePreview.subtotal")}</span>
-            <span>{formatCurrency(subtotal, s.currency.symbol)}</span>
-          </div>
-          <div className="flex justify-between text-[0.9em] opacity-70 border-b border-gray-100 pb-2">
-            <span>
-              {t("invoicePreview.tax")} ({data.taxRate || 19}%)
+      <div className="flex justify-end mt-2">
+        <div style={{ width: "350px" }}>
+          <div className="flex justify-between py-1.5 border-b border-gray-100 text-xs">
+            <span style={styles.secondaryText}>
+              {t("invoicePreview.subtotal") || "Subtotal"}:
             </span>
-            <span>{formatCurrency(taxAmount, s.currency.symbol)}</span>
+            <span className="font-medium">{formatCurrency(subtotal)}</span>
+          </div>
+          <div className="flex justify-between py-1.5 border-b border-gray-100 text-xs">
+            <span style={styles.secondaryText}>
+              {t("invoicePreview.tax") || "Tax"} ({data.taxRate}%):
+            </span>
+            <span className="font-medium">{formatCurrency(taxAmount)}</span>
           </div>
           {discountAmount > 0 && (
-            <div className="flex justify-between text-[0.9em] text-red-500 border-b border-gray-100 pb-2">
-              <span>{t("invoicePreview.discount")}</span>
-              <span>-{formatCurrency(discountAmount, s.currency.symbol)}</span>
+            <div className="flex justify-between py-1.5 border-b border-gray-100 text-xs text-red-500">
+              <span>Discount:</span>
+              <span>-{formatCurrency(discountAmount)}</span>
             </div>
           )}
+
           <div
-            className="flex justify-between text-[1.4em] font-extrabold pt-2"
-            style={primaryText}
+            className="flex justify-between items-center p-3 mt-3 rounded-md text-white shadow-sm"
+            style={{ backgroundColor: s.colors.primary }}
           >
-            <span>
-              {s.labels.total || t("invoicePreview.defaultLabels.total")}
+            <span className="text-sm font-bold uppercase">
+              {s.labels.total || "Total"}
             </span>
-            <span>{formatCurrency(totalAmount, s.currency.symbol)}</span>
+            <span className="text-lg font-bold">
+              {formatCurrency(totalAmount)}
+            </span>
           </div>
         </div>
       </div>
     ),
 
-    footer: s.paymentTerms.bankDetails ? (
-      <div className="mt-8 pt-4">
-        <div
-          className="bg-gray-50 p-6 border border-gray-100"
-          style={borderRadius}
-        >
-          <h4
-            className="font-bold mb-3 uppercase text-[0.8em] tracking-wider"
-            style={primaryText}
-          >
-            {s.labels.paymentInstructions ||
-              t("invoicePreview.defaultLabels.paymentInstructions")}
-          </h4>
-          <div className="opacity-70 whitespace-pre-line leading-relaxed text-[0.9em] font-medium text-gray-600">
-            {s.paymentTerms.bankDetails}
+    footer:
+      s.paymentTerms.bankDetails || s.labels.paymentInstructions ? (
+        <div className="mt-auto pt-8 border-t-2 border-dashed border-gray-100">
+          <div style={{ ...styles.label, marginBottom: "8px" }}>
+            {s.labels.paymentInstructions || "Payment Instructions"}
+          </div>
+          <div className="text-xs text-gray-600 bg-gray-50 p-4 rounded-md whitespace-pre-line leading-relaxed">
+            {s.paymentTerms.bankDetails || "Bank details here..."}
           </div>
         </div>
-      </div>
-    ) : null,
+      ) : null,
   };
 
-  // ==========================================
-  // SECTION MAPPING & SORTING
-  // ==========================================
-
+  // --- SORTING ---
   const sectionEditMap = {
     header: "branding",
     details: "text",
@@ -509,61 +450,41 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
     totals: "text",
     footer: "text",
   };
-
   const activeSections = (s.layout.sections || [])
     .filter((sec) => sec.visible)
     .sort((a, b) => a.order - b.order);
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-
     const items = Array.from(activeSections);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-
-    if (onReorder) {
-      onReorder(items);
-    }
+    if (onReorder) onReorder(items);
   };
-
-  // ==========================================
-  // RENDER
-  // ==========================================
 
   return (
     <div className="flex justify-center items-start overflow-auto p-8 bg-gray-800/50 min-h-full select-none relative">
-      {/* Zoom Controls */}
       <ZoomControls
         zoom={zoom}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onZoomReset={handleZoomReset}
+        onZoomIn={() => setZoom((z) => Math.min(z + 0.1, 2))}
+        onZoomOut={() => setZoom((z) => Math.max(z - 0.1, 0.5))}
+        onZoomReset={() => setZoom(0.8)}
       />
 
-      {/* A4 PAGE CONTAINER with Zoom Transform */}
-      <div
-        className="shadow-2xl relative flex flex-col transition-all duration-300"
-        style={{
-          width: "794px",
-          minHeight: "1123px",
-          ...pageStyle,
-          transform: `scale(${zoom})`,
-          transformOrigin: "top center",
-        }}
-      >
-        {/* Watermark */}
-        {settings?.branding?.watermark?.enabled &&
-          settings.branding.watermark.url && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05] z-0 overflow-hidden">
-              <img
-                src={settings.branding.watermark.url}
-                className="w-2/3 object-contain"
-                alt="Watermark"
-              />
-            </div>
-          )}
+      <div style={pageStyle}>
+        {/* Brand Strip */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "10px",
+            backgroundColor: s.colors.primary,
+          }}
+        />
 
-        <div className="flex-1 z-10 flex flex-col h-full">
+        <div className="flex-1 z-10 flex flex-col h-full pt-4">
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="invoice-preview-sections">
               {(provided) => (
@@ -575,7 +496,6 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
                   {activeSections.map((section, index) => {
                     const content = renderers[section.id];
                     if (!content) return null;
-
                     return (
                       <DraggableBlock
                         key={section.id}
@@ -585,12 +505,7 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
                           onEditSection &&
                           onEditSection(sectionEditMap[section.id])
                         }
-                        className={
-                          section.id === "footer" &&
-                          index === activeSections.length - 1
-                            ? "mt-auto"
-                            : ""
-                        }
+                        className={section.id === "footer" ? "mt-auto" : ""}
                       >
                         {content}
                       </DraggableBlock>
@@ -603,9 +518,9 @@ const LiveInvoicePreview = ({ settings, data, onEditSection, onReorder }) => {
           </DragDropContext>
         </div>
 
-        {/* Page Numbers */}
-        <div className="absolute bottom-6 left-0 right-0 text-center text-[10px] text-gray-400 uppercase tracking-widest">
-          {t("invoicePreview.pageInfo", { current: 1, total: 1 })}
+        {/* Page Number Mockup */}
+        <div className="absolute bottom-4 left-0 w-full text-center text-[10px] text-gray-400 uppercase tracking-widest">
+          Page 1 / 1
         </div>
       </div>
     </div>

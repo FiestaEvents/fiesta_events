@@ -15,10 +15,10 @@ import {
 import { useToast } from "../../hooks/useToast";
 import { useTranslation } from "react-i18next";
 
-// ✅ API & Services
+//  API & Services
 import { clientService } from "../../api/index";
 
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
@@ -186,7 +186,7 @@ const ClientForm = ({ client, onSuccess, onCancel }) => {
         await clientService.create(submitData);
       }
 
-      // ✅ Parent handles success UI (Toast & Close)
+      //  Parent handles success UI (Toast & Close)
       onSuccess?.();
     } catch (err) {
       showError(err.message || t("clientForm.errors.saving"));

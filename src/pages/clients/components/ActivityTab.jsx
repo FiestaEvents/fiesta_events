@@ -13,7 +13,7 @@ import {
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { useTranslation } from "react-i18next";
 
-// ✅ Generic Components
+//  Generic Components
 import Badge, { StatusBadge } from "../../../components/common/Badge";
 
 const ActivityTab = ({

@@ -1,212 +1,190 @@
-import { Plus, X, Search } from "lucide-react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { clientService } from "../../../../api";
-import { useToast } from "../../../../hooks/useToast";
-import { useEventContext } from "../EventFormContext";
-import Button from "../../../../components/common/Button";
-import Input from "../../../../components/common/Input";
+import { UserPlus, User, Loader2 } from "lucide-react";
+import { clientService } from "../../../../api/index";
+import ClientSelector from "../components/ClientSelector";
+import Button from "../../../../components/common/Button"; 
 
 const Step2ClientSelection = () => {
   const { t } = useTranslation();
+
+  // 1. Get Form Methods
   const {
-    selectedClient,
-    handleSelectClient,
-    clients,
-    setClients,
-    errors,
-  } = useEventContext();
+    setValue,
+    control,
+    register,
+    formState: { errors },
+  } = useFormContext();
 
-  const { showSuccess, showError, validationError } = useToast();
+  // 2. Watch current value
+  const selectedClientId = useWatch({ control, name: "clientId" });
 
-  const [showClientForm, setShowClientForm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [newClient, setNewClient] = useState({
+  // 3. Local State for Logic
+  const [clients, setClients] = useState([]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+
+  // Local state for "Quick Create" form
+  const [newClientData, setNewClientData] = useState({
     name: "",
     email: "",
     phone: "",
   });
-  const [isCreating, setIsCreating] = useState(false);
 
-  const handleCreateClient = async () => {
-    if (!newClient.name.trim()) return validationError(t("eventForm.step2.nameRequired"));
-    if (!newClient.email.trim()) return validationError(t("eventForm.step2.emailRequired"));
-    if (!newClient.phone.trim()) return validationError(t("eventForm.step2.phoneRequired"));
+  // 4. Fetch Clients on Mount
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        const res = await clientService.getAll();
+        setClients(res.data?.clients || res.clients || []);
+      } catch (err) {
+        console.error("Error loading clients", err);
+      }
+    };
+    loadClients();
+  }, []);
+
+  // 5. Handlers
+  const handleClientSelect = (client) => {
+    setValue("clientId", client._id, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setShowCreateForm(false);
+  };
+
+  const handleCreateClient = async (e) => {
+    // 🛑 STOP SUBMIT PROPAGATION
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    if (!newClientData.name) return;
 
     try {
-      setIsCreating(true);
-      const response = await clientService.create(newClient);
-      const createdClient = response.client || response.data;
+      setCreateLoading(true);
+      const res = await clientService.create(newClientData);
+      const created = res.data?.client || res.client || res.data;
 
-      setClients(prev => [...prev, createdClient]);
-      handleSelectClient(createdClient);
-      
-      setShowClientForm(false);
-      setNewClient({ name: "", email: "", phone: "" });
-      showSuccess(t("eventForm.step2.clientCreated", { name: createdClient.name }));
-    } catch (error) {
-      console.error("Create client error:", error);
-      showError(t("eventForm.step2.createError"));
+      setClients((prev) => [...prev, created]);
+      handleClientSelect(created);
+
+      setShowCreateForm(false);
+      setNewClientData({ name: "", email: "", phone: "" });
+    } catch (err) {
+      console.error("Create client failed", err);
     } finally {
-      setIsCreating(false);
+      setCreateLoading(false);
     }
   };
 
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    client.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleNewClientChange = (field, value) => {
+    setNewClientData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+      
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-            {t("eventForm.step2.clientSelection")}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {t("eventForm.step2.clientSelectionDescription")}
-          </p>
         </div>
-        <Button
-          type="button"
-          variant={showClientForm ? "outline" : "primary"}
-          icon={showClientForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          size="sm"
-          onClick={() => setShowClientForm(!showClientForm)}
-          className="shrink-0"
+        
+        {/* NATIVE TOGGLE BUTTON */}
+        <button
+          type="button" 
+          onClick={(e) => { e.preventDefault(); setShowCreateForm(!showCreateForm); }}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded border transition-colors ${
+             showCreateForm 
+                ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600" 
+                : "bg-orange-600 text-white border-orange-600 hover:bg-orange-700"
+          }`}
         >
-          {showClientForm ? t("common.cancel") : t("eventForm.step2.newClient")}
-        </Button>
+          {showCreateForm ? (
+              <>
+                <User className="w-4 h-4" /> 
+                {t("eventForm.step2.selectExisting")}
+              </>
+          ) : (
+              <>
+                <UserPlus className="w-4 h-4" /> 
+                {t("eventForm.step2.newClient")}
+              </>
+          )}
+        </button>
       </div>
 
-      {/* Create Client Form */}
-      {showClientForm ? (
-        <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
-          <h4 className="font-bold text-gray-900 dark:text-white mb-4">
-            {t("eventForm.step2.newClientDetails")}
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Input
-              label={t("eventForm.step2.clientName")}
-              value={newClient.name}
-              onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
-              placeholder={t("eventForm.step2.namePlaceholder")}
-              required
-              className="w-full"
-            />
-            <Input
-              label={t("eventForm.step2.clientEmail")}
-              type="email"
-              value={newClient.email}
-              onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-              placeholder={t("eventForm.step2.emailPlaceholder")}
-              required
-              className="w-full"
-            />
-            <Input
-              label={t("eventForm.step2.clientPhone")}
-              type="tel"
-              value={newClient.phone}
-              onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
-              placeholder={t("eventForm.step2.phonePlaceholder")}
-              required
-              className="w-full"
-            />
+      {/* Logic: Show Create Form OR Search List */}
+      {showCreateForm ? (
+        <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 space-y-4">
+          <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+            {t("eventForm.step2.createForm.title")}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("eventForm.step2.createForm.fullName")}
+              </label>
+              <input
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                value={newClientData.name}
+                onChange={(e) => handleNewClientChange("name", e.target.value)}
+                placeholder={t("eventForm.step2.createForm.placeholders.name")}
+                // Block enter key submission
+                onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("eventForm.step2.createForm.phone")}
+              </label>
+              <input
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                value={newClientData.phone}
+                onChange={(e) => handleNewClientChange("phone", e.target.value)}
+                placeholder={t("eventForm.step2.createForm.placeholders.phone")}
+                onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("eventForm.step2.createForm.email")}
+              </label>
+              <input
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                value={newClientData.email}
+                onChange={(e) => handleNewClientChange("email", e.target.value)}
+                placeholder={t("eventForm.step2.createForm.placeholders.email")}
+                onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              />
+            </div>
           </div>
-          <div className="flex justify-end">
-            <Button
+          
+          <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+            <button
               type="button"
               onClick={handleCreateClient}
-              loading={isCreating}
-              icon={<Plus className="w-4 h-4" />}
+              disabled={createLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
-              {t("eventForm.step2.createClient")}
-            </Button>
+              {createLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <UserPlus className="w-4 h-4" />}
+              {t("eventForm.step2.createButton")}
+            </button>
           </div>
         </div>
       ) : (
-        /* Client Selector */
-        <div className="space-y-4">
-          {/* Search */}
-          <Input
-            icon={Search}
-            placeholder={t("eventForm.step2.searchClients")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-
-          {/* Client Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto pr-2">
-            {filteredClients.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                  <Search className="w-8 h-8 text-gray-400" />
-                </div>
-                <p className="text-gray-500 dark:text-gray-400 font-medium">
-                  {t("eventForm.step2.noClients")}
-                </p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                  {t("eventForm.step2.noClientsDescription")}
-                </p>
-              </div>
-            ) : (
-              filteredClients.map((client) => {
-                const isSelected = selectedClient?._id === client._id;
-                return (
-                  <button
-                    key={client._id}
-                    type="button"
-                    onClick={() => handleSelectClient(client)}
-                    className={`
-                      flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-all
-                      ${isSelected
-                        ? "bg-orange-50 border-orange-500 dark:bg-orange-900/20 dark:border-orange-500 ring-2 ring-orange-200 dark:ring-orange-800"
-                        : "bg-white border-gray-200 hover:border-orange-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-orange-600"
-                      }
-                    `}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                      {client.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-semibold text-sm truncate ${isSelected ? "text-orange-900 dark:text-orange-100" : "text-gray-900 dark:text-white"}`}>
-                        {client.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                        {client.email}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {client.phone}
-                      </p>
-                    </div>
-                    {isSelected && (
-                      <div className="shrink-0">
-                        <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
-
-          {/* Error Message */}
-          {errors.clientId && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {errors.clientId}
-              </p>
-            </div>
-          )}
-        </div>
+        <ClientSelector
+          clients={clients}
+          selectedClient={selectedClientId}
+          onSelectClient={handleClientSelect}
+          error={errors.clientId?.message}
+        />
       )}
+
+      {/* Hidden input to ensure RHF tracks validation */}
+      <input type="hidden" {...register("clientId")} />
     </div>
   );
 };

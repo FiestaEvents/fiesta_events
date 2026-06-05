@@ -10,7 +10,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import OrbitLoader from "../../../components/common/LoadingSpinner";
-// ✅ Generic Components
+//  Generic Components
 import Button from "../../../components/common/Button";
 import { StatusBadge } from "../../../components/common/Badge";
 
@@ -42,7 +42,7 @@ const EventPartnersTab = ({ partners, loading, onNavigateToPartner }) => {
     );
   }
 
-  // ✅ Calculate total cost from partners
+  //  Calculate total cost from partners
   const totalPartnersCost = partners.reduce(
     (sum, partner) => sum + (partner.cost || 0),
     0
