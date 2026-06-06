@@ -16,7 +16,14 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    try {
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   // Helper to sync state & localStorage
@@ -59,51 +66,36 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Try to get stored token to send with the request
-        const storedToken = localStorage.getItem('token');
-        
-        // If no token, clear stored user data
-        if (!storedToken) {
-          localStorage.removeItem("user");
-          setLoading(false);
-          return;
-        }
-
+        // 1. Don't check for 'token' in localStorage.
+        // Just call the API. The browser sends the HttpOnly cookie automatically.
         const response = await authService.getMe();
-        const validUser = response.data?.user || response.user || response.data;
+
+        // Look at how your handleResponse formats data
+        const validUser =
+          response?.user || response?.data?.user || response?.data;
+
         if (validUser) {
-          // Keep the stored token when updating user
-          const userWithToken = { ...validUser, token: storedToken };
-          setUser(userWithToken);
-          localStorage.setItem("user", JSON.stringify(userWithToken));
+          setUser(validUser);
+          localStorage.setItem("user", JSON.stringify(validUser));
         } else {
-          throw new Error("No user data");
+          // If the request succeeds but there's no user, clear state
+          updateUser(null);
         }
       } catch (error) {
-        // Only clear auth on 401, not on network errors
+        // 2. Only log out if the server explicitly says 401 Unauthorized
         if (error.status === 401) {
-          console.warn("Invalid or expired token:", error.message);
           updateUser(null);
         } else {
-          console.warn("Initial auth check failed (non-401):", error.message);
-          // Keep existing user in localStorage if network error during init
+          // If it's a network error, keep the local user so the UI doesn't flicker
           const storedUser = localStorage.getItem("user");
-          if (storedUser) {
-            try {
-              setUser(JSON.parse(storedUser));
-            } catch (e) {
-              updateUser(null);
-            }
-          } else {
-            updateUser(null);
-          }
+          if (storedUser) setUser(JSON.parse(storedUser));
         }
       } finally {
         setLoading(false);
       }
     };
     initAuth();
-  }, [updateUser]);
+  }, []);
 
   // 2. 🔒 GLOBAL EVENT LISTENERS
   useEffect(() => {
@@ -121,7 +113,7 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener("auth:session-expired", handleSessionExpired); // From Axios
     window.addEventListener("auth:refresh-profile", handleRefresh); // From Axios (403)
     window.addEventListener("profileUpdated", handleRefresh); // From Frontend Actions
-    window.addEventListener("focus", handleRefresh); // When tab becomes active
+    //window.addEventListener("focus", handleRefresh); // When tab becomes active
 
     return () => {
       window.removeEventListener("auth:session-expired", handleSessionExpired);
